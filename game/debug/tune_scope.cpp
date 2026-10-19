@@ -29,6 +29,11 @@ namespace
 		// MainMenuHome::init and Mode Select copy the tint into their UiTexture
 		// (as do the other main-menu pages when each page is built).
 		{ "presentation.main_menu.backgrounds.home", TuneScope::next_screen },
+		// Active, connected Team Select updates read both tints into FocusGroup
+		// during visual refresh. Frozen draws retain the previous refresh's
+		// colours; the page's atlas and frame names remain captured.
+		{ "presentation.main_menu.team_select.selected", TuneScope::live },
+		{ "presentation.main_menu.team_select.unselected", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

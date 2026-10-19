@@ -32,7 +32,7 @@ This is a selection guide, not another priority order; each owner defines a boun
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `DBG#1` | Audit further colour consumers; seven existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
+| `DBG#1` | Audit further colour consumers; nine existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 | `GAP#4.2` | Default action bindings and evaluators preserving today's controls | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
 | `GAP#8.4` | Extract generated player/device labels and composed setup/settings/results copy | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
 
@@ -185,7 +185,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#1` | OPEN | LOW | M | Extend colour tuning beyond the seven audited fields; general string/font edits and missing-key insertion remain separate slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
+| `DBG#1` | OPEN | LOW | M | Extend colour tuning beyond the nine audited fields; general string/font edits and missing-key insertion remain separate slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | BLOCKED | LOW | S | Typing in the live console blanks the whole keyboard seat. Waits on `ENG#9`. |
 | `DBG#5` | BLOCKED | LOW | S | The perf overlay has no GPU, present or submit time. Waits on `ENG#14`. |

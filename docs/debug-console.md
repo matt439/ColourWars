@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These seven existing string fields are supported; numeric path
+**Colours.** These nine existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -395,6 +395,8 @@ show the quoted JSON token.
 | `presentation.debug_overlay.shadow_colour` | live | Player debug text and console/status/perf text shadows. |
 | `presentation.debug_overlay.station_label.colour` | live | Existing station labels, refreshed before the match is drawn. |
 | `presentation.main_menu.backgrounds.home` | next screen | Home and Mode Select copy this tint into their background widgets when opened. |
+| `presentation.main_menu.team_select.selected` | live | Ready players' chosen Team Select icons, on the next active, connected visual refresh. |
+| `presentation.main_menu.team_select.unselected` | live | Team Select's other icons, on the next active, connected visual refresh. |
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -403,7 +405,11 @@ echo, caret, status and perf foreground inks keep their separate fixed colours.
 Station labels use the new premultiplied tint on the next layout refresh,
 including drawing beneath a paused console; hidden labels stay all-zero tint.
 An already-open Home or Mode page keeps its background until the page is
-reopened. These colour fields live inside fixed presentation records, so
+reopened. Team Select retains the colours from its last visual refresh while a
+draw is frozen or a pad is missing; an active update with every claimed device
+connected adopts both tints without reopening the page. Its atlas, frame names,
+text and fonts keep their existing captured behavior. These colour fields live
+inside fixed presentation records, so
 replacement preserves the addresses their live consumers borrow.
 
 ```text
@@ -433,7 +439,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the seven colour strings listed above join numbers and booleans in `tune`.
+only the nine colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1136,7 +1142,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the seven audited colour fields above are
+  and inserting keys in `tune.save`: the nine audited colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1145,9 +1151,9 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** The first bounded colour increment implements the seven existing
-paths listed under [Live tuning](#live-tuning), including read, validated
-apply, diff, reset and save. More existing colour fields remain, along with
+**OPEN.** Nine existing colour paths listed under [Live tuning](#live-tuning)
+support read, validated apply, diff, reset and save: the initial seven and
+Team Select's selected/unselected tints. More existing colour fields remain, along with
 arbitrary string/font edits and insertion of absent keys.
 
 The next bounded colour increment can follow an actual field's consumer,
@@ -1197,6 +1203,29 @@ Evidence is under `out/validation/tune-colours/`; the native run is
 `a2271b60ffb04b71860a8629e3a40d7a`. No tests were skipped. These muted hidden
 checks establish no physical-pad, listening, human readability or uncontended
 performance acceptance.
+
+Validation of the Team-colour increment (2026-10-19): both builds and all 37 CPU
+cases per preset pass. The nine-path checks cover the new fields' named/RGB/RGBA
+commands, exact tokens and scopes, invalid values, independent reset, LF/CRLF
+splices, conflicts/force, unrelated external changes and structural aliases.
+Independent review strengthened the save loop so each Team case introduces a
+fresh unrelated colour; the final Debug console case was recompiled and passed
+after that assertion-only change. The original full-suite source and receipts
+are retained, and Release compiles this test body out.
+
+`scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -TeamTuneColoursOnly`
+passes with actual tune/reset commands on one open two-player Team Select page.
+Seven updates, three CSV records and two compact icon strips show a ready and an
+unready seat retaining their colours before refresh, adopting both edits on the
+next connected update and restoring the exact same-page baseline after reset.
+Independent icon rasters, outside-strip pixels, captured artwork/fonts, sparse
+roster, input snapshots, settings, save bytes and draw RNG are checked. The
+dedicated Release guard refuses this scope before compilation or run creation;
+Release developer-tool exclusion still passes CPU acceptance. Both isolated
+system-path startups pass with the published audio bank and per-monitor-v2 DPI
+awareness. Evidence is under `out/validation/team-tune-colours/`. These muted
+hidden checks establish no physical-pad, listening, human readability or
+uncontended performance acceptance.
 
 ## Foreground checks (`CI#1`)
 

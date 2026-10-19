@@ -310,3 +310,169 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     std::cout << "PASS Team focus actual Team/Weapon pages: independent choice/readiness icon rasters, sparse1-4 rosters, semantic nonwrap endpoints, ready-row tint retention, local cursor motion, confirm/Back/shuffle priority, empty-team refusal, reconnect fresh press, committed teams/Weapon return and nonzero-origin reversed physical order; " <<
         ticks << " updates, " << records_written << " CSV rows, eight compact crops; no broad matrix, full match, physical-pad or foreground acceptance\n";
 }
+
+#if COLOURWARS_DEV_TOOLS
+// Two live colour commands only; this never invokes the broad Team focus or
+// general tune-colour matrices. All command targets and saves are scratch.
+void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
+    GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
+    const std::filesystem::path& output)
+{
+    const auto root = output / "team-tune-scratch", source = root / "source", staged = root / "staged";
+    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
+    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" };
+    std::array<std::string, 2> real_bytes;
+    for (size_t index = 0; index < files.size(); ++index)
+    {
+        real_bytes[index] = tune_colour_bytes(content / files[index]);
+        tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]);
+    }
+    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const GameTuning original_tuning = tuning; const Presentation original = presentation;
+    struct RestoreTeamTuneContent
+    {
+        GameTuning& tuning; Presentation& look; GameTuning original_tuning; Presentation original;
+        ~RestoreTeamTuneContent() { this->tuning = this->original_tuning; this->look = this->original; }
+    } restore{ tuning, presentation, original_tuning, original };
+    app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
+    std::ignore = app.renderer()->window_size_changed(1280, 720);
+    Save preferences; PlaySettings play = preferences.play_settings();
+    play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    require(preferences.set_play_settings_and_save(play), "Cannot seed the private Team tune profile");
+    const auto save_path = root / "profile/ColourWars/save_data.json"; const std::string saved = tune_colour_bytes(save_path);
+    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
+    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
+    impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
+    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
+    impl.log().set_mirror_to_debugger(false);
+    require(impl.log().set_transcript((output / "team-tune-commands.log").string()), "Cannot retain Team tune transcript");
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    settings.set_player_count(2); settings.begin_input_claims(3); require(settings.claim_input_slot(4), "Cannot claim Team tune keyboard seat");
+    settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3); settings.set_screen_layout(ScreenLayout::two_player);
+    settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
+    settings.set_player_weapon(0, WeaponType::roller); settings.set_player_weapon(1, WeaponType::sniper);
+    const MenuLevelSettings before = settings; MenuContext context(&data, &input, &settings); StateContext& stack = app;
+    struct ClearTeamTuneStack
+    {
+        StateContext& stack;
+        ~ClearTeamTuneStack() { this->stack.clear(); painter_scripted_pads::states = {}; }
+    } clear{ stack };
+    stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
+    for (const Key key : { Key::enter, Key::escape, Key::r, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
+    painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = true;
+    app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+    app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); int ticks = 0;
+    const auto tick = [&](float elapsed = 0.0f)
+    {
+        require(++ticks <= 12, "Team tune exceeded twelve bounded page updates");
+        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+    };
+    stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuTeamSelect>(&context)); tick(); tick();
+    const auto confirm = static_cast<uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));
+    painter_scripted_pads::states[3].buttons = confirm; tick(); painter_scripted_pads::states[3].buttons = 0; tick();
+    tick(0.51f); const auto input_before = painter_scripted_pads::states;
+    const auto unchanged = [&]
+    {
+        require(stack.depth() == 2 && settings.player_count() == before.player_count() && settings.stage() == before.stage() &&
+            settings.duration() == before.duration() && settings.best_of() == before.best_of() && settings.screen_layout() == before.screen_layout(),
+            "Team tune changed the page stack or match settings");
+        const auto actual = settings.player_settings(), expected = before.player_settings();
+        for (size_t seat = 0; seat < expected.size(); ++seat)
+        { require(actual[seat].num == expected[seat].num && actual[seat].team == expected[seat].team && actual[seat].weapon == expected[seat].weapon,
+            "Team tune changed a sparse roster claim, team or tool"); }
+        for (size_t slot = 0; slot < input_before.size(); ++slot)
+        {
+            const auto& actual_pad = painter_scripted_pads::states[slot]; const auto& expected_pad = input_before[slot];
+            require(actual_pad.connected == expected_pad.connected && actual_pad.buttons == expected_pad.buttons &&
+                actual_pad.left_stick == expected_pad.left_stick && actual_pad.right_stick == expected_pad.right_stick &&
+                actual_pad.left_trigger == expected_pad.left_trigger && actual_pad.right_trigger == expected_pad.right_trigger,
+                "Team tune changed a scripted input snapshot");
+        }
+        require(tune_colour_bytes(save_path) == saved, "Team tune wrote the private save");
+    };
+    const auto draw = [&] { unchanged(); return main_menu_frame(app); };
+    const Frame baseline = tune_colour_frozen(draw);
+    const auto& look = original.main_menu(); const auto& style = original.menu();
+    auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
+    auto row_art = art; row_art.paper = art.focus_fill;
+    const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
+    const auto position = [&](int column, int row) { return style.layout.position + Vector2F(
+        look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
+    RectangleF evidence(position(2, 2), Vector2F(look.team_select.size.x * 3.0f, look.team_select.spacing.y + look.team_select.size.y));
+    evidence.inflate(Vector2F(2.0f)); const auto viewport = app.viewport_manager()->fullscreen_viewport();
+    const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+    camera.calculate_view_rectangle(evidence); const RectangleI crop = countdown_crop_bounds(evidence);
+    // Fixed A/B choices and P1-only readiness are specified independently of
+    // FocusGroup. Only the two literal tints vary in this oracle.
+    const auto expected_strip = [&](const Colour& selected, const Colour& unselected)
+    {
+        Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, camera.visible_rectangle(viewport)); setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
+        const std::array<std::wstring, 2> labels{ L"P1 - Pad 4", L"P2 - Keyboard/mouse" };
+        for (int seat = 0; seat < 2; ++seat)
+        {
+            const UiTextDropShadow label("independent-team-tune-label", labels[static_cast<size_t>(seat)], style.detail_font,
+                position(0, seat + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset);
+            const RectangleF text = label.bounds(); const auto& identity = original.player_identity();
+            const RectangleF badge(text.x - identity.ui_size.x - identity.ui_gap,
+                text.y + (text.height - identity.ui_size.y) / 2.0f, identity.ui_size.x, identity.ui_size.y);
+            RectangleF row = RectangleF::union_of(RectangleF::union_of(text, badge),
+                RectangleF(position(2, seat + 2), Vector2F(look.team_select.size.x * 3.0f, look.team_select.size.y)));
+            row.inflate(art.focus_padding); setup_paper_reference(list, *app.render_resources(), style, row_art, row, RectangleF());
+            for (int choice = 0; choice < 3; ++choice)
+            {
+                const bool focused = choice == (seat == 0 ? 0 : 2);
+                const auto& frames = focused ? look.team_select_selected_frames : look.team_select_frames;
+                const UiTexture icon("independent-team-tune-icon", look.team_select_sheet, frames[static_cast<size_t>(choice)],
+                    RectangleF(position(2, seat + 2) + Vector2F(look.team_select.size.x * static_cast<float>(choice), 0.0f), look.team_select.size),
+                    app.render_resources(), seat == 0 && focused ? selected : unselected); icon.draw(list);
+            }
+        }
+        return foreground_crop(read(renderer), crop, 0);
+    };
+    const auto check_strip = [&](const Frame& actual, const Colour& selected, const Colour& unselected)
+    { require(foreground_crop(actual, crop, 0).pixels == expected_strip(selected, unselected).pixels,
+        "Team tune differs from independently fixed A/B cursors and P1-ready/P2-unready icon tints"); };
+    check_strip(baseline, look.team_select.selected, look.team_select.unselected);
+    std::ofstream records(output / "team-tune-colours.csv"); records << "check,adoption,selected,unselected,cursor_readiness_roster_preserved,pixels_match\n";
+    const auto command = [&](const std::string& line)
+    {
+        impl.log().write(DebugSeverity::echo, "] " + line); const DebugStatus status = impl.execute(line);
+        if (!status.ok) { std::cerr << line << ": " << status.message << '\n'; }
+        require(status.ok, "Actual Team tune colour command was rejected");
+    };
+    const std::string selected_path = "presentation.main_menu.team_select.selected", unselected_path = "presentation.main_menu.team_select.unselected";
+    command("tune " + selected_path + " 2266CC"); command("tune " + unselected_path + " D94518");
+    const Colour selected("2266CC"), unselected("D94518");
+    require(presentation.main_menu().team_select.selected == selected && presentation.main_menu().team_select.unselected == unselected &&
+        impl.tune_document("presentation")->edits().size() == 2, "Team commands did not update exactly both audited colour leaves");
+    require(tune_colour_frozen(draw).pixels == baseline.pixels, "Frozen Team drawing adopted commands before its existing refresh point");
+    records << "commands-before-update,retained,2266CC,D94518,true,true\n";
+    tick(); const Frame tuned = tune_colour_frozen(draw); check_strip(tuned, selected, unselected);
+    require(tuned.pixels != baseline.pixels, "The active connected Team page did not adopt its tuned colours");
+    for (int y = 0; y < baseline.height; ++y) { for (int x = 0; x < baseline.width; ++x)
+    {
+        if (x >= crop.x && x < crop.right() && y >= crop.y && y < crop.bottom()) { continue; }
+        const size_t pixel = (static_cast<size_t>(y) * static_cast<size_t>(baseline.width) + static_cast<size_t>(x)) * 4;
+        for (size_t channel = 0; channel < 4; ++channel) { require(baseline.pixels[pixel + channel] == tuned.pixels[pixel + channel],
+            "Team tune changed captured fonts, lettering, paper or other pixels outside its icon strip"); }
+    } }
+    records << "active-connected-refresh,live,2266CC,D94518,true,true\n";
+    command("tune.reset " + selected_path); command("tune.reset " + unselected_path);
+    require(impl.tune_document("presentation")->edits().empty() && tune_colour_frozen(draw).pixels == tuned.pixels,
+        "Team reset changed frozen widgets before refresh or retained edits");
+    tick(); require(tune_colour_frozen(draw).pixels == baseline.pixels, "Team tune reset did not restore its exact same-page baseline"); unchanged();
+    records << "reset-refresh,restored,baseline,baseline,true,true\n";
+    save(foreground_crop(baseline, crop, 0), output / "team-tune-colours-original-detail.ppm");
+    save(foreground_crop(tuned, crop, 0), output / "team-tune-colours-tuned-detail.ppm");
+    for (size_t index = 0; index < files.size(); ++index)
+    { require(tune_colour_bytes(content / files[index]) == real_bytes[index] && tune_colour_bytes(source / files[index]) == real_bytes[index] &&
+        tune_colour_bytes(staged / files[index]) == real_bytes[index], "Team tune wrote actual content or its scratch source/staged files"); }
+    require(records.good(), "Team tune CSV write failed");
+    std::cout << "PASS Team tune colours: real validated DebugDirector commands for both Team tints, same-page P1-ready/P2-unready independent icon rasters, frozen-before-refresh retention, connected-update adoption, exact reset reversal and unchanged captured frames/fonts/paper/roster/settings/inputs/save/draw RNG; " <<
+        ticks << " bounded updates, two compact crops and private scratch transcript/CSV; no broad matrix, full match or performance acceptance\n";
+}
+#endif
