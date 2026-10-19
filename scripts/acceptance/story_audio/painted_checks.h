@@ -1,4 +1,6 @@
 // Included after the story-audio fixtures, within their anonymous namespace.
+// Uses MovementCourse, movement_input and choice_plays from movement_checks.h
+// and paint_surface and paint_contact from paint_checks.h.
 // Use an actual rectangular projectile with an explicit splash footprint so
 // boundary checks do not depend on a particular tool's authored shot size.
 void paint_box(World& world, StructurePaintable& surface,
