@@ -130,7 +130,8 @@ $backdropRoles = @('bg_far','bg_mid','bg_line','bg_detail','paper')
 
 # Cell sizes are the contract: levels place these frames by name and size.
 $propSizes = [ordered]@{hill_wide=@(384,80);hill_small=@(192,48);tree_round=@(32,56);tree_tall=@(24,64)
-    house=@(96,88);cloud_big=@(64,24);cloud_small=@(40,16);sun=@(56,56);birds=@(24,8)}
+    house=@(96,88);cloud_big=@(64,24);cloud_small=@(40,16);sun=@(56,56);birds=@(24,8)
+    brush_pot=@(64,80);tape_roll=@(64,40)}
 if ((@($source.props.name) -join ',') -ne (@($propSizes.Keys) -join ',')) { throw 'Terrain prop list changed.' }
 $tileNames = @('shadow_0','shadow_1','shadow_2','shadow_3')
 if ((@($source.speckle.tiles.PSObject.Properties.Name) -join ',') -ne ($tileNames -join ',')) { throw 'Shadow tile list changed.' }
@@ -216,8 +217,10 @@ try {
         }
     }
 
-    # Tallest-first shelves, in a fixed order, then the 4x4 swatches.
+    # Keep the original thirteen drawings and all swatches in their fixed
+    # positions. New landmarks start on a fresh shelf after the old atlas.
     $order=@('house','hill_wide','tree_tall','sun','tree_round','hill_small','cloud_big','cloud_small','birds')+$tileNames
+    $landmarks=@('brush_pot','tape_roll')
     $width=[int]$source.atlas_width
     $frames=[Collections.Generic.List[object]]::new()
     $x=$gutter; $y=$gutter; $shelf=0
@@ -230,6 +233,9 @@ try {
     }
     foreach ($name in $order) { & $place $name ($drawings[$name].Width*$scale) ($drawings[$name].Height*$scale) }
     foreach ($role in $roles) { & $place ('swatch_'+$role) $scale $scale }
+    $x=$gutter; $y+=$shelf+$gutter; $shelf=0
+    foreach ($name in $landmarks) { & $place $name ($drawings[$name].Width*$scale) ($drawings[$name].Height*$scale) }
+    if ($frames.Count -ne 41) { throw 'Terrain atlas needs eleven props, four shadow tiles and 26 swatches.' }
     $height=$y+$shelf+$gutter
 
     $atlas=[Drawing.Bitmap]::new($width,$height,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
@@ -255,8 +261,12 @@ try {
         (($definition|ConvertTo-Json -Depth 6)+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
 
     # Review sheet on paper: authored cells at 3 px, every frame at 1 px, tile seams, swatches.
-    $preview=[Drawing.Bitmap]::new(1600,1160,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $preview=[Drawing.Bitmap]::new(1600,1400,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $lineupMargin=12; $lineupRight=$preview.Width-$lineupMargin; $lineupBottom=$preview.Height-$lineupMargin
     $g=[Drawing.Graphics]::FromImage($preview)
+    # Review labels must not inherit desktop ClearType/font-smoothing state.
+    $g.TextRenderingHint=[Drawing.Text.TextRenderingHint]::SingleBitPerPixelGridFit
+    $g.TextContrast=4
     $font=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,10)
     $small=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,8)
     $ink=[Drawing.SolidBrush]::new($colours['hud_ink'])
@@ -265,15 +275,24 @@ try {
         $g.InterpolationMode=[Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
         $g.PixelOffsetMode=[Drawing.Drawing2D.PixelOffsetMode]::Half
         $g.SmoothingMode=[Drawing.Drawing2D.SmoothingMode]::None
-        $g.DrawString("Terrain backdrop kit / Muted Day / atlas ${width}x$height",$font,$ink,12,10)
+        $title="Terrain backdrop kit / Muted Day / atlas ${width}x$height"
+        $titleSize=$g.MeasureString($title,$font)
+        if (12+$titleSize.Width -gt $lineupRight -or 10+$titleSize.Height -gt 40) { throw 'Terrain lineup title overflows its header.' }
+        $g.DrawString($title,$font,$ink,12,10)
         $script:lx=12; $script:ly=40; $script:lrow=0
+        $script:lineupUsedBottom=40
         $show={
             param($label,$bitmap,$px)
             $w=$bitmap.Width*$px; $h=$bitmap.Height*$px
-            if ($script:lx+$w -gt 1588) { $script:lx=12; $script:ly+=$script:lrow+28; $script:lrow=0 }
+            $labelSize=$g.MeasureString($label,$small)
+            $itemWidth=[Math]::Max($w,[Math]::Max($label.Length*7,[Math]::Ceiling($labelSize.Width)))
+            if ($itemWidth -gt $lineupRight-$lineupMargin -or $labelSize.Height -gt 16) { throw "Terrain lineup item '$label' exceeds its label/image span." }
+            if ($script:lx+$itemWidth -gt $lineupRight) { $script:lx=12; $script:ly+=$script:lrow+28; $script:lrow=0 }
+            if ($script:ly+16+$h -gt $lineupBottom) { throw "Terrain lineup item '$label' overflows the review sheet." }
+            $script:lineupUsedBottom=[Math]::Max($script:lineupUsedBottom,$script:ly+16+$h)
             $g.DrawString($label,$small,$ink,$script:lx,$script:ly)
             $g.DrawImage($bitmap,[Drawing.Rectangle]::new($script:lx,($script:ly+16),$w,$h))
-            $script:lx+=[Math]::Max($w,$label.Length*7)+16
+            $script:lx+=$itemWidth+16
             if ($h+16 -gt $script:lrow) { $script:lrow=$h+16 }
         }
         foreach ($name in @($propSizes.Keys)+$tileNames) { & $show "$name 3x" $drawings[$name] 3 }
@@ -289,7 +308,12 @@ try {
         foreach ($name in @($propSizes.Keys)+$tileNames) { & $show "$name 1x" $drawings[$name] 1 }
         $script:lx=12; $script:ly+=$script:lrow+28; $script:lrow=0
         foreach ($role in $roles) {
-            if ($script:lx+120 -gt 1588) { $script:lx=12; $script:ly+=40 }
+            $labelSize=$g.MeasureString($role,$small)
+            $swatchWidth=[Math]::Max(120,28+[Math]::Ceiling($labelSize.Width))
+            if ($swatchWidth -gt $lineupRight-$lineupMargin) { throw "Terrain lineup swatch '$role' is too wide." }
+            if ($script:lx+$swatchWidth -gt $lineupRight) { $script:lx=12; $script:ly+=40 }
+            if ($script:ly+[Math]::Max(26,6+$labelSize.Height) -gt $lineupBottom) { throw "Terrain lineup swatch '$role' overflows the review sheet." }
+            $script:lineupUsedBottom=[Math]::Max($script:lineupUsedBottom,$script:ly+[Math]::Max(26,6+$labelSize.Height))
             $brush=[Drawing.SolidBrush]::new($colours[$role])
             $pen=[Drawing.Pen]::new($colours['hud_ink'])
             try {
@@ -299,7 +323,9 @@ try {
             $g.DrawString($role,$small,$ink,($script:lx+28),($script:ly+6))
             $script:lx+=150
         }
+        $g.Flush([Drawing.Drawing2D.FlushIntention]::Sync)
         [ColourWars.TerrainArt]::SavePng($preview,(Join-Path $sourceDir 'lineup.png'))
+        Write-Output "Lineup $($preview.Width)x$($preview.Height): content bottom $lineupUsedBottom, limit $lineupBottom."
     } finally {$ink.Dispose();$small.Dispose();$font.Dispose();$g.Dispose();$preview.Dispose()}
 
     foreach ($frame in $frames) {
@@ -315,4 +341,4 @@ try {
 & (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'terrain.png') `
     -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
 if($LASTEXITCODE -ne 0){throw "texconv failed with exit code $LASTEXITCODE"}
-Write-Output "Built nine backdrop props, four shadow tiles and 26 swatches into a ${width}x$height terrain DDS and lineup."
+Write-Output "Built eleven backdrop props, four shadow tiles and 26 swatches into a ${width}x$height terrain DDS and lineup."

@@ -10,7 +10,7 @@ grid. Every hue lives in these texels; runtime draws the sheet with a WHITE tint
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-terrain-art.ps1`
 from the repository root. Windows System.Drawing fills the integer-cell shapes
 without antialiasing and draws lines cell by cell. Each cell expands to exactly
-4x4 texels, producing the 2048x596 working atlas
+4x4 texels, producing the 2048x920 working atlas
 `../sources/textures/terrain.png`, runtime
 `../../content/textures/terrain.json` and `.dds`, and the review
 [`lineup.png`](lineup.png). Ordinary builds need neither System.Drawing nor
@@ -37,6 +37,8 @@ gutter.
 | `cloud_small` | 160x64 | two bumps on a flat base |
 | `sun` | 224x224 | bg_detail disc, twelve bg_line rays, a flat little face; not yellow |
 | `birds` | 96x32 | two bg_line gull strokes |
+| `brush_pot` | 256x320 | quiet stationery pot with three differently shaped brushes; bg_line outlines distinguish it from walkable terrain |
+| `tape_roll` | 256x160 | flat roll with a paper core and short peeled end; the same backdrop roles, without team colours or text |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
 
@@ -48,4 +50,6 @@ The build checks the role list and order against that table.
 abutted in two orders to check the seams, every frame again at one pixel per
 cell, and the swatches, all on the paper colour. The DDS is premultiplied RGBA8
 UNORM with one mip. Frame order and coordinates are fixed, and rebuilding the
-same source produces byte-identical PNG, JSON, DDS and lineup.
+same source produces byte-identical PNG, JSON, DDS and lineup. The two landmarks
+occupy a new shelf after the original frames and swatches; all original frame
+coordinates and the original 2048x596 texel region remain unchanged.

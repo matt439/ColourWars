@@ -707,6 +707,34 @@
             "colour": "WHITE"
         },
         {
+            "name": "brush_pot",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "brush_pot",
+            "rectangle":
+            {
+                "x": 1088.0,
+                "y": 680.0,
+                "width": 256.0,
+                "height": 320.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "tape_roll",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "tape_roll",
+            "rectangle":
+            {
+                "x": 5040.0,
+                "y": 840.0,
+                "width": 256.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
             "name": "house",
             "type": "Visual",
             "sheet_name": "terrain",

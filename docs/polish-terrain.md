@@ -321,29 +321,100 @@ these checks establish no listening, physical-pad or performance acceptance.
 | Monitor | `384c0f05495744998586d217693486da` | `06ca1dc8100f40a99a0e7dd25a067800` |
 | Stage paper | `576301748e6c438db96b4d15368e4c67` | `52e2ed07aebc47748e7cc8a4163e15f0` |
 
+## Reusable static landmarks (2026-10-19)
+
+The kit adds a brush pot and tape roll, each used once in every current arena.
+They are quiet background silhouettes in the existing backdrop roles, with
+`bg_line` outlines rather than the black edges that identify walkable terrain.
+There are no captions, team colours or new runtime types. Both use ordinary
+WHITE-tinted `Visual` entries at their authored atlas size: 256x320 and 256x160.
+They remain stationary under pause and Reduce effects.
+
+The placements are provisional composition choices for review with the painter
+and tools. Each sits behind an existing floor or platform, whose collision and
+paint cover the decoration. Close Quarters uses the two lower side regions;
+King of the Hill uses the lower castle interior; Turbulence uses the side
+chambers; the Movement Course uses a short-gap landing and the right runway.
+This adds reusable room details to the existing layouts. Close Quarters' own
+composition and fitting to a redesigned blockout remain with `POL#17`.
+
+The atlas appends a new shelf after the original 39 frames. Every old frame's
+coordinates and the full original 2048x596 texel region are retained; the
+expanded atlas is 2048x920. The recipe and generator remain the editable source,
+and the [lineup](../game/art/terrain/lineup.png) includes both silhouettes. The
+game, StagePreview and overview/monitor paths use the existing scenery walk.
+
+Validation on 2026-10-19: both builds and all 38 consumer CPU cases per preset
+pass under `/W4 /WX`. The terrain case checks actual DDS/frame resolution,
+each arena's exact two native-size placements and drawing order, ordinary
+static Visuals, conservative fractional-camera culling, restart/time/reduction
+invariance and gameplay RNG. Existing material, cloud and miniature checks pass.
+Two complete art regenerations produce byte-identical PNG, JSON, DDS and lineup.
+The first reproduction exposed desktop-dependent ClearType fringes in lineup
+labels; explicit bitmap text rendering fixes those labels without changing the
+atlas. Both initial outputs and the original generator are retained as evidence.
+An independent byte/pixel proof also passes: removing only the two inserted
+decorations restores each original level byte-for-byte, including collision,
+spawns, bounds, sound and stations. The previous recipe data, all 39 frame
+definitions and every texel in the original atlas region are unchanged. Source
+PNG and runtime DDS pixels agree; the two additions use only backdrop roles,
+constant four-by-four cells and transparent gutters.
+
+`scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -LandmarkOnly` and its
+Release counterpart pass. Each makes 48 clean/heavy paired comparisons, or 96
+primary coverage states: all four arenas, three team pairs, 1P/4P pane layouts
+and 720p/1080p. These static Scene compositions use each arena's unchanged
+authored overview bounds. Actual projectile contacts establish more than 99%
+owned paint area; every prop retains visible pixels. Independent raw-atlas draws
+replace only the two landmark calls before actual terrain and paint, including
+the King of the Hill ruler that visibly crosses the brush handles.
+
+Supplementary checks cover 64 native clipped-edge cases, eight actual StagePreview
+size cases and 24 actual Level monitor/overview size cases. Scratch twin stages
+omit only the two decorations, with reconstruction checked against the original.
+Frozen state, paint attribution, RNG, Debug fingerprints, solo monitor bypass,
+static Reduce effects behavior and resize returns pass. Each preset records all
+1,100 reference/repeat render readbacks separately from its primary case count,
+and retains exactly eight compact clean/heavy crops. All 12 CSV/PPM files are
+byte-identical between presets; the contact sheet was inspected. These are
+scripted composition and renderer checks. Human style/route readability,
+listening, physical pads and uncontended performance remain unaccepted.
+
+Both editor document suites and their three hidden launch/selection/close
+checks per preset pass. A fresh 55-file Release ZIP retains all 28 reviewed
+runtime assets, accepted audio/provenance, runtimes and licences, with developer
+RTTI absent. Four isolated system-only-PATH startups pass with per-monitor-v2
+DPI awareness and graceful shutdown: both builds, the extracted ZIP, and a
+separate bank-free package copy. No existing artifacts or source bank were
+deleted. Local receipts, source snapshots and initial failure evidence are
+under `out/validation/terrain-landmarks/`.
+The evidence-only helper's initial PowerShell compatibility failures are retained
+alongside its final passed proof; they changed no game content.
+
 ## Not done (what `POL#9` still holds)
 
 - Human review in play, clean and heavily painted, with all three team pairs, at 1P
   and 4P (part of locking the style with `POL#7` and `POL#14`).
-- Landmarks, signage and further room life beyond cloud drift; captioned
-  Paint-artefact jokes in the backdrop; modest parallax after camera framing.
+- Author review of the reusable brush pot and tape roll in the current arenas;
+  signage and captioned Paint-artefact jokes need the author's wording. Further
+  room life and modest parallax remain choices after camera framing.
 - Close Quarters' own backdrop and fitting the kit to its blockout (`POL#17`); a
   palette and composition per arena (`POL#16`).
 
 ## Ready implementation slices (2026-10-18)
 
-The small-view treatment above is implemented. Two current-arena implementation
-choices remain below; retain checks and evidence for each. Final human style
+The small-view treatment and reusable static landmarks above are implemented.
+The current-arena parallax comparison remains below; retain checks and evidence
+for it. Final human style
 acceptance remains separate; no slice unlocks the phase-2 blockouts by itself.
 
 | Slice | Scope | Acceptance | Size |
 |---|---|---|---|
-| Reusable landmarks | Add a small set of non-text Tool Props landmarks/background details to the current arenas under the Muted Day rules. Keep them reusable when layouts change. | Compare clean/heavily painted scenes for every team pair at 1P/4P. Landing edges and routes stay truthful; decoration changes no collision, paint budget or gameplay RNG. Animated details must respect pause, culling and Reduce effects. | M |
 | Modest parallax prototype | Compare distant/middle backdrop layers with the static version in the current arenas. Establish the per-view draw approach before broadening the art. | Independent split-screen views, conservative culling, resize and overview/monitor transitions remain correct; define static preview/editor behaviour. Keep drawing free of simulation/RNG mutation and retain a static Reduce effects presentation. | L |
 
-The small-view treatment is ready for author review. Landmarks and the parallax
-prototype are further current-phase choices, not a request to finish all scenery
-before reviewing it.
+The small-view treatment and static landmarks are ready for author review. The
+parallax prototype is a further current-phase choice, not a request to finish
+all scenery before reviewing it.
 Retain parallax only if the comparison improves the composition and readability;
 the static backdrop remains a valid outcome of the prototype.
 Captioned jokes need the author's wording and do not gate non-text landmarks.

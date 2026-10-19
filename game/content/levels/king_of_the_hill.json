@@ -1203,6 +1203,34 @@
                 "height": 825.0
             },
             "colour": "WHITE"
+        },
+        {
+            "name": "brush_pot",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "brush_pot",
+            "rectangle":
+            {
+                "x": 2376.0,
+                "y": 4356.0,
+                "width": 256.0,
+                "height": 320.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "tape_roll",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "tape_roll",
+            "rectangle":
+            {
+                "x": 3368.0,
+                "y": 4516.0,
+                "width": 256.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
         }
     ]
 }
