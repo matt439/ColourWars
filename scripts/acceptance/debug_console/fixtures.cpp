@@ -120,5 +120,16 @@ namespace debug_console_acceptance
 	{
 		return log_index(log, text) != std::string::npos;
 	}
+
+	std::vector<labrador::Colour> colour_values(const Presentation& presentation)
+	{
+		return { presentation.movement_feedback().colour, presentation.movement_feedback().highlight,
+			presentation.movement_feedback().keyline, presentation.debug_overlay().colour,
+			presentation.debug_overlay().shadow_colour, presentation.debug_overlay().station_label.colour,
+			presentation.main_menu().home_background_colour, presentation.main_menu().team_select.selected,
+			presentation.main_menu().team_select.unselected, presentation.main_menu().weapon_select.selected,
+			presentation.main_menu().weapon_select.unselected, presentation.weapon_feedback().highlight,
+			presentation.weapon_feedback().keyline };
+	}
 #endif
 }

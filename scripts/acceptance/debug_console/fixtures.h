@@ -11,6 +11,7 @@
 #include "game/tuning.h"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <filesystem>
 #include <string>
@@ -306,6 +307,18 @@ namespace debug_console_acceptance
 	std::size_t log_index(const DebugLog& log, const std::string& text);
 	bool any_line(const DebugLog& log, const std::string& text);
 
+	// The thirteen audited colour tune paths and their values, in the same order;
+	// shared by tune_checks.cpp, tune_document_checks.cpp and tune_menu_checks.cpp.
+	inline const std::array<const char*, 13> colour_paths{
+		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
+		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
+		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
+		"presentation.main_menu.backgrounds.home", "presentation.main_menu.team_select.selected",
+		"presentation.main_menu.team_select.unselected", "presentation.main_menu.weapon_select.selected",
+		"presentation.main_menu.weapon_select.unselected", "presentation.weapon_feedback.highlight",
+		"presentation.weapon_feedback.keyline" };
+	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
+
 	// console_checks.cpp
 	void check_tokenizer();
 	void check_launch_arguments();
@@ -329,11 +342,15 @@ namespace debug_console_acceptance
 	void check_registry_menu_traits(GameTuning& tuning, Presentation& presentation);
 	void check_menu_model(GameTuning& tuning, Presentation& presentation);
 
-	// tune_checks.cpp
+	// tune_document_checks.cpp
 	void check_json_spans(const std::filesystem::path& game_directory);
 	void check_tune_scope(const std::filesystem::path& game_directory);
 	int check_tune_consumed(const std::filesystem::path& game_directory);
+
+	// tune_checks.cpp
 	void check_tune_commands(const std::filesystem::path& game_directory);
+
+	// tune_menu_checks.cpp
 	void check_tune_completion_and_menu(const std::filesystem::path& game_directory);
 
 	// bot_checks.cpp
@@ -343,6 +360,8 @@ namespace debug_console_acceptance
 	// replay_checks.cpp
 	void check_replay_codec();
 	std::string check_replay_cpu_match(const std::filesystem::path& game_directory);
+
+	// level_checks.cpp
 	void check_opening(const std::filesystem::path& game_directory);
 	void check_station_labels(const std::filesystem::path& game_directory);
 
@@ -357,7 +376,9 @@ namespace debug_console_acceptance
 	void check_binds(GameTuning& tuning, Presentation& presentation);
 	void check_history(GameTuning& tuning, Presentation& presentation);
 	void check_live_console_input(GameTuning& tuning, Presentation& presentation);
-	void check_perf();
 	void check_polish(GameTuning& tuning, Presentation& presentation);
+
+	// perf_checks.cpp
+	void check_perf();
 #endif
 }

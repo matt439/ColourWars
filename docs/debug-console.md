@@ -1143,7 +1143,9 @@ as the game. In Release:
   sees the file clean, checks with git that exactly one value changed, and
   writes the saved original bytes back (a `git checkout` would not restore them:
   it renormalises a working copy that mixes CRLF and LF). The pad chord needs a
-  pad and is covered on the CPU side only.
+  pad and is covered on the CPU side only. Its Win32 key and screenshot driver
+  and its launch, focus and transcript helpers are in
+  `scripts/check-debug-console/driver.ps1`, which it dot-sources.
 - The engine reports this forced are 9, 10, 11, 12, and the drafts 13 (key
   names) and 14 (frame statistics), in
   [engine-reports.md](review/engine-reports.md).

@@ -117,7 +117,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 15 | Runtime packaging and content staging are repeated in the client | `game/CMakeLists.txt`, `cmake/release_package.cmake`, `cmake/runtime_assets.cmake`, `cmake/stage_runtime_assets.cmake` | draft — exhibit present; checked against published master 2026-10-15 |
 | 16 | Windowed Apply shows a deliberately hidden window | the offscreen/hide guard in `settings_menu_checks.h` around real Options Apply | draft — checked against the pin; recheck upstream before filing |
 | 17 | The Win32 window ignores DPI once the client opts in | the `dpiAwareness` block in `game/settings.manifest`; the DPI assertion in `scripts/check-startup.ps1` | draft — checked against published master 2026-10-17 |
-| 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `replay_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
+| 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `level_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
 | 19 | The window is shown before the client has loaded anything | `initialize()` before `load_manifest` in `game/main.cpp`, with a startup timing | draft — low priority; checked against the pin |
 | 20 | Scene drawing gives client objects no view context | `draw_miniature_view`, `Level::draw_miniature_world`, the borrowed scenery mirror and `Structure::draw_miniature` | draft - source audit against the pin only; recheck upstream before filing |
 
@@ -367,7 +367,7 @@ value came from. Live tuning needs all three, so it does without:
 - **A dead key cannot be told from a live one** except by experiment: the
   acceptance case replaces every number and boolean, one at a time, with a
   string and requires the reader to throw naming it
-  (`check_tune_consumed` in `scripts/acceptance/debug_console/tune_checks.cpp`).
+  (`check_tune_consumed` in `scripts/acceptance/debug_console/tune_document_checks.cpp`).
   The colour allowlist has separate reader/consumer checks and explicit adoption
   scopes; numeric path wildcards cannot establish a string consumer's lifetime.
 
@@ -613,7 +613,7 @@ scaled display: this machine is at 100%, where nothing above is visible.
 station's name is a `Label` the level's scene holds and culls by
 `Label::bounds()`. Turning the overlay off sets every label's tint to zero
 in all four channels, and the `station_labels` case in
-[replay_checks.cpp](../../scripts/acceptance/debug_console/replay_checks.cpp)
+[level_checks.cpp](../../scripts/acceptance/debug_console/level_checks.cpp)
 pins that tint and that the labels stay in the scene after that.
 
 ### What happens
