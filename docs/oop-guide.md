@@ -24,7 +24,7 @@ the current code; the documents under `review/` remain historical records.
 | Ownership and borrowing | [Level](../game/objects/level.h), [LevelBuilder](../game/objects/level_builder.cpp) | Scene owns its objects; Level owns Scene and borrows Player pointers. Moving a `unique_ptr` transfers ownership. |
 | Dependency injection | [Player constructor](../game/objects/player.h), [GameData](../game/game_data.h), [main](../game/main.cpp) | Constructors receive their services and tuning. The application entry point owns and connects their lifetimes. |
 | Polymorphic states | [MenuPage](../game/states/menu_page.h), [MainMenuPage](../game/states/main_menu.h), [GameMenu and GameLevel](../game/states/game_states.h) | The state stack calls common `init`, `update` and `draw` operations; individual pages supply their behavior. |
-| Resource lifetime | [Level destructor](../game/objects/level.cpp), [GameLevel destructor](../game/states/game_states.cpp) | Destruction stops match audio and restores the previous screen layout as well as releasing owned objects. |
+| Resource lifetime | [Level destructor](../game/objects/level_audio.cpp), [GameLevel destructor](../game/states/game_states.cpp) | Destruction stops match audio and restores the previous screen layout as well as releasing owned objects. |
 
 `Weapon` and `RelativeVelocityWeapon` are concrete classes. Sprayer and mister
 are constructed directly as `RelativeVelocityWeapon` with different tuning.

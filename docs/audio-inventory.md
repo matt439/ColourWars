@@ -68,18 +68,18 @@ retired.
 |---|---|---|---|---|---|
 | 0 | `BowlingBallRoll` (:4) | PCM 16/2/44.1k, 0.930 s, peak -23.2 dBFS | Roller loop: instances `roller_a0..b3` (:64-95), named in `tuning.json:168-169`. It is also `weapons.roller.shoot_sound` (`tuning.json:166`), but that name is never played; see [trap 1](#33-traps-a-replacement-must-know) | L | Replace with `roller.loop`, `roller.start`, `roller.stop` |
 | 1 | `caramelldansen` (:5) | 174.2 s, 30.7 MB, 717 ms trailing below -60 dBFS | Turbulence music, `levels/turbulence.json:7` | L (music gain) | Retire (commercial track). Replace with `music.turbulence` |
-| 2 | `CartoonBoing` (:6) | 1.007 s | `player.sounds.jump` (`tuning.json:102`), played at `player.cpp:742` | W | Replace with `player.jump` |
-| 3 | `DeathImpactYellSingle` (:7) | 0.569 s | `player.sounds.death` (`tuning.json:101`), played on the alive-to-dead edge at `player.cpp:467` | W | Replace with `player.pop` (`STORY#1`). Map it to `death`, not to `respawn`: `backstory.md:78` puts the pop "as the paint comes off", and `TODO.md:36` calls it the "Respawn pop" only loosely |
+| 2 | `CartoonBoing` (:6) | 1.007 s | `player.sounds.jump` (`tuning.json:102`), played in `Player::start_jump` (`player.cpp`) | W | Replace with `player.jump` |
+| 3 | `DeathImpactYellSingle` (:7) | 0.569 s | `player.sounds.death` (`tuning.json:101`), played on the alive-to-dead edge in `Player::update` (`player.cpp`) | W | Replace with `player.pop` (`STORY#1`). Map it to `death`, not to `respawn`: `backstory.md:78` puts the pop "as the paint comes off", and `TODO.md:36` calls it the "Respawn pop" only loosely |
 | 4 | `dragostea_din_tei` (:8) | 214.1 s, 37.8 MB | King of the Hill music, `levels/king_of_the_hill.json:7`. It is also the music for three unloaded stages: `levels/unused/base.json:6`, `levels/unused/structure_test_old.json:6` and `levels/unused/test_1.json:6` | L (music) | Retire (commercial track). Replace with `music.king_of_the_hill`. Remove the three unused references, or the stages themselves (`GAP#8.6`) |
 | 5 | `DrumRoll` (:9) | 4.888 s | `results_menu.sounds.fill` (`presentation.json:192`). Looped at `results_menu.cpp:319` only when no reveal ran; stopped at :39 and :63 | L | Replace with `results.fill`. That path runs only in solo practice or debug ([trap 4](#33-traps-a-replacement-must-know)) |
 | 6 | `holly_dolly` (:10) | 174.5 s, 30.8 MB | Close Quarters music, `levels/close_quarters.json:7`. Movement Course music at volume 0.0 until 2026-10-14, when the stage became silent. The editor's new-level default, `editor/level_document.cpp:212` | L (music) | Retire (commercial track). Replace with `music.close_quarters`. Change the editor default in the same commit |
 | 7 | `LaserGun` (:11) | 0.307 s | `weapons.bucket.shoot_sound` (`tuning.json:204`), played once per throw at `weapon_bucket.cpp:29-35` | W | Replace with `bucket.throw` |
 | 8 | `party_horn` (:12) | 1.045 s | `results_menu.sounds.winner` (`presentation.json:191`), played once at `results_menu.cpp:64`, and on a draw too | W | Replace with `results.winner` and `results.draw` |
-| 9 | `slide_whistle_up` (:13) | 1.992 s | `match.sounds.zoom_out` (`tuning.json:28`). Started at time-up (`level.cpp:194-195`), hard-stopped when `match.zoom_out` (2.0 s, `tuning.json:5`) ends (`level.cpp:207`). Paused and resumed with the level (`level.cpp:107-122`) | E | Replace with `match.time_up` and `match.glass_out` |
+| 9 | `slide_whistle_up` (:13) | 1.992 s | `match.sounds.zoom_out` (`tuning.json:28`). Started at time-up (`level.cpp:194-195`), hard-stopped when `match.zoom_out` (2.0 s, `tuning.json:5`) ends (`level.cpp:207`). Paused and resumed with the level (`Level::pause_audio`/`resume`, `level_audio.cpp`) | E | Replace with `match.time_up` and `match.glass_out` |
 | 10 | `smash_countdown` (:14) | 5.375 s | `match.sounds.countdown` (`tuning.json:27`). Played once when the countdown starts (`level.cpp:155-156`) | W | Retire. The name suggests audio taken from another game, and the wave is longer than the 3.0 s countdown (`tuning.json:4`). Replace with `match.count_beat` and `match.go` |
-| 11 | `SplittingFireWood` (:15) | 0.124 s | `player.sounds.damage` (`tuning.json:100`), throttled by `damage_sound_delay` 0.25 s (`tuning.json:97`), played at `player.cpp:445` | W | Replace with `player.hurt` |
+| 11 | `SplittingFireWood` (:15) | 0.124 s | `player.sounds.damage` (`tuning.json:100`), throttled by `damage_sound_delay` 0.25 s (`tuning.json:97`), played in `Player::on_projectile_contact` (`player.cpp`) | W | Replace with `player.hurt` |
 | 12 | `Steamboat` (:16) | 122.7 s, 21.6 MB | **None.** It was the level music until `64c501b` (2023-12-23). Only the stale cue sheet names it (`sounds/sound list.txt:48`, `sound_bank_1/cmd.txt:9`) | none | Retire with no replacement. Delete it from `waves` so the recipe stops compiling it (`cmake/build_wave_bank.cmake:49-56`) |
-| 13 | `ThunderCrack` (:17) | 3.347 s | `player.sounds.respawn` (`tuning.json:103`), played at `player.cpp:949` | W | Replace with `player.respawn` (and `player.redraw`, new) |
+| 13 | `ThunderCrack` (:17) | 3.347 s | `player.sounds.respawn` (`tuning.json:103`), played in `Player::respawn` (`player.cpp`) | W | Replace with `player.respawn` (and `player.redraw`, new) |
 | 14 | `Top_Of_The_Morning` (:18) | 148.0 s, 26.1 MB, peaks at 0.0 dBFS | `main_menu.music` at volume 0.03 (`presentation.json:111`). Looped by `MenuPage::play_music` (`menu_page.cpp:294-298`) from every main-menu page's `init()`, and stopped at `main_menu_stage_select.cpp:56` and, for a debug start, `main_menu.cpp:22` | L (music) | Retire. Its source is unknown, and it may be the fourth commercial track. Replace with `music.menu` |
 | 15 | `UI_Clicks01` (:19) | 0.122 s | `menu_style.sounds.confirm` (`presentation.json:50`); `pause_menu.window_open_sound` (`presentation.json:145`); `match.sounds.click` (`tuning.json:30`, reveal click at `level_intro.cpp:360`) | W | Replace with three cues: `ui.confirm`, `ui.pause_open`, `match.reveal_click` |
 | 16 | `UI_Clicks14` (:20) | 0.179 s | `menu_style.sounds.direction` (`presentation.json:49`); `match.sounds.hover` at 0.6 (`tuning.json:29`, reveal hover at `level_intro.cpp:356`) | W | Replace with two cues: `ui.move` and `match.reveal_hover` |
@@ -171,7 +171,7 @@ editor default.
 | | `match.sounds.zoom_out` (:28) | effect | `level.cpp:65-66` | `tuning.cpp:535` |
 | | `match.sounds.hover` (:29), `click` (:30) | wave | `level.cpp:80-81`, only when the opening runs | `tuning.cpp:536-537` |
 | | `paint.sound_bank`, `paint.splash_sounds`, `capture_sound`, `dud_sound`, `impact_sounds` (2026-10-15) | waves | Level-owned `PaintAudio`; surfaces report contact results | `GameTuning::validate_resources`, every variant and projectile kind |
-| | `player.sound_bank` (:98), `player.sounds.*` (:100-103) | wave | `player.cpp:62-71` | `tuning.cpp:468-475` |
+| | `player.sound_bank` (:98), `player.sounds.*` (:100-103) | wave | the `Player` constructor (`player.cpp`) | `tuning.cpp:468-475` |
 | | `weapons.<w>.sound_bank` (:131, :151, :165, :183, :203) | bank | `weapon.cpp:49` | |
 | | `weapons.<w>.shoot_sound` (:132, :152, :166, :184, :204) | wave | `weapon.cpp:52-53` | `tuning.cpp:498` |
 | | `weapons.<w>.loop_sounds.team_a/team_b` (:136-137, :168-169, :188-189) | effect | `weapon.cpp:50-51, 324-344` | `tuning.cpp:500-509` |
@@ -194,7 +194,7 @@ above:
 | `game/states/stage_preview.cpp` and `level_object_builder.cpp` | Stage previews build real `StructurePaintable`s. Since 2026-10-15 surfaces report contact results; Level owns paint audio, so previews resolve no paint voices and play none | Every paint cue is checked at startup; match construction resolves the same choices in `PaintAudio` |
 | `game/debug/tune_scope.cpp:26`; `tune_target.cpp:31, 56, 90` | `tuning.match.sounds.*.volume` is live-tunable; a tuned candidate is re-validated against the loaded banks | New `match.sounds.*` slots inherit live tuning. `tune_checks.cpp` (section 3.2) pins the list |
 | `game/play_settings.h:8-12`; `save.cpp:79-80, 174-175, 309-310`; `controls_settings_menu.cpp:58-59, 84-97`; `menu_page.cpp:280-298`; every `* preferences_->sfx_gain()` / `music_gain()` in the play calls above | The player's 0-100 music and SFX volumes. Every wave and effect is multiplied by one of the two; Apply re-sets the menu music's volume by name (`controls_settings_menu.cpp:91-96`) | Every new cue must be routed through the right gain (music or SFX). Room tone and stings need a deliberate choice of which. `scripts/acceptance/settings.cpp:88-140` pins the stored values |
-| `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level.cpp:91-122`). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
+| `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level_audio.cpp`). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
 | `game/main.cpp:107`; `content_validation.cpp:9-34`; `resource_validation.h:37-47` | Startup validation of every name above against the loaded banks | Unchanged in shape; extend it for every new slot (section 4) |
 
 Validation can be fooled in a fresh clone. A silent bank accepts any name
@@ -265,7 +265,7 @@ cue fails only on a machine that has the real bank.
    the results fill loop do not pause on focus loss; only minimising does
    (`external/labrador/engine/app/application.cpp:389-403`). In a match,
    focus loss reaches `GameLevel::on_deactivated` (`game_states.cpp:199-203`),
-   and `Level::pause_audio` (`level.cpp:107-112`) pauses the music, the
+   and `Level::pause_audio` (`level_audio.cpp`) pauses the music, the
    time-up cue and the weapon loops, but not fire-and-forget waves.
 9. **Weapon loops call play every tick.** They call `play_effect` on every
    held tick (`weapon.cpp:286-291`), which reaches `SoundEffectInstance::Play`
@@ -276,7 +276,7 @@ cue fails only on a machine that has the real bank.
     (`ENG#6`, `docs/review/engine-reports.md`). Splashes arrive every tick from
     the sprayer and roller, so any limit has to be in the client.
 11. **The first 0.25 s is damage-silent.** The damage timer starts at 0 and
-    advances only while the player is alive (`player.cpp:486`).
+    advances only while the player is alive (`Player::update`, `player.cpp`).
 12. **Debug speed does not scale audio** (`game/debug/game_commands.cpp:265`).
     Do listening passes at 1×.
 13. **A named effect instance is one voice, shared by every owner.** The
@@ -344,16 +344,16 @@ detection logic is needed. Every new slot must be added to startup validation
 
 | Id | Trigger | Loop | Hook | Tier | Replaces |
 |---|---|---|---|---|---|
-| `player.jump` | `Player::start_jump`, every jump kind (`player.cpp:742`) | no | exists | 1 | `CartoonBoing` |
-| `player.land` | Airborne to supported (`player.cpp:274-282`); scale by `support_impact_speed_` | no | slot | 1 | — |
-| `player.step` | Gait contact while supported and moving | no | add: a distance accumulator in `update_movement` (`player.cpp:564-676`) or contact frames in the run cycle; 4-6 variants, rate-limited | 1 | — |
-| `player.skid` | Reversal at speed (`player.cpp:607-616`) | no | slot: threshold plus latch; nothing on small corrections | 1 | — |
-| `player.hurt` | Projectile damage (`player.cpp:443-447`) | no | exists | 1 | `SplittingFireWood` |
-| `player.pop` | Elimination: the paint comes off (`player.cpp:467`) | no | exists (`player.sounds.death`) | 1 | `DeathImpactYellSingle` (`STORY#1`) |
-| `player.redraw` | The respawn redraw, driven from the dead branch (`player.cpp:488-498`) | yes | add: one effect instance per player; must pause with the match | 2 | — |
-| `player.respawn` | Back in play (`player.cpp:949`) | no | exists | 1 | `ThunderCrack` |
+| `player.jump` | `Player::start_jump`, every jump kind (`player.cpp`) | no | exists | 1 | `CartoonBoing` |
+| `player.land` | Airborne to supported (`Player::end_contacts`, `player.cpp`); scale by `support_impact_speed_` | no | slot | 1 | — |
+| `player.step` | Gait contact while supported and moving | no | add: a distance accumulator in `update_movement` (`player.cpp`) or contact frames in the run cycle; 4-6 variants, rate-limited | 1 | — |
+| `player.skid` | Reversal at speed (`Player::end_contacts`, `player.cpp`) | no | slot: threshold plus latch; nothing on small corrections | 1 | — |
+| `player.hurt` | Projectile damage (`Player::on_projectile_contact`, `player.cpp`) | no | exists | 1 | `SplittingFireWood` |
+| `player.pop` | Elimination: the paint comes off (`Player::update`, `player.cpp`) | no | exists (`player.sounds.death`) | 1 | `DeathImpactYellSingle` (`STORY#1`) |
+| `player.redraw` | The respawn redraw, driven from the dead branch (`Player::update`, `player.cpp`) | yes | add: one effect instance per player; must pause with the match | 2 | — |
+| `player.respawn` | Back in play (`Player::respawn`, `player.cpp`) | no | exists | 1 | `ThunderCrack` |
 | `player.step_painted` | Step or landing on painted tiles | no | add: needs a support-tile ownership query | 2 | — |
-| `player.bonk`, `player.drop` | Ceiling hit (`player.cpp:361`); drop-through (`player.cpp:653-659`) | no | slot | 3 | — |
+| `player.bonk`, `player.drop` | Ceiling hit (`Player::on_structure_contact`, `player.cpp`); drop-through (`Player::update_movement`, `player.cpp`) | no | slot | 3 | — |
 | `player.hit_confirm` | The shooter's projectile hurt someone | no | add: there is no shooter-side event. Shared speakers make it ambiguous | 3 | — |
 
 ### 4.4 Weapons and paint
@@ -361,9 +361,9 @@ detection logic is needed. Every new slot must be added to startup validation
 | Id | Trigger | Loop | Hook | Tier | Replaces |
 |---|---|---|---|---|---|
 | `sprayer.loop` | Fire held and affordable | yes | exists (`weapon.cpp:279-297`) | 1 | `WaterSprayIntoBucket` |
-| `sprayer.start`, `sprayer.stop` | Loop start and stop edges | no | add: `handle_shoot_sound` keeps no edge state. Stop must not fire on death or teardown (`weapon.cpp:298-305`, `level.cpp:91-96`) | 1 | — |
+| `sprayer.start`, `sprayer.stop` | Loop start and stop edges | no | add: `handle_shoot_sound` keeps no edge state. Stop must not fire on death or teardown (`weapon.cpp:298-305`, `Level::~Level` in `level_audio.cpp`) | 1 | — |
 | `roller.loop` | Fire held | yes | exists | 1 | `BowlingBallRoll` |
-| `roller.start`, `roller.stop`, `roller.lift`, `roller.settle` | Edges; leaving and meeting the ground while rolling (`player.cpp:274-299`) | no | add | 1 | — |
+| `roller.start`, `roller.stop`, `roller.lift`, `roller.settle` | Edges; leaving and meeting the ground while rolling (`Player::end_contacts`, `player.cpp`) | no | add | 1 | — |
 | `weapon.empty` | Fire held without enough paint (`weapon.cpp:232-234, 262-263`) | no | slot: an edge latch, rate-limited while held | 1 | — |
 | `weapon.recovered` | Affordability returns, or the tank fills (`weapon.cpp:248-256`) | no | slot | 1 | — |
 | `mister.loop`, `mister.start`, `mister.stop` | as for the sprayer | loop yes | loop exists; edges add | 2 | `VulcanMachineGunSeries` |

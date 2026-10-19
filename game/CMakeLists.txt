@@ -79,6 +79,9 @@ add_executable(ColourWars WIN32
     objects/figure_acting.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
+    objects/level_audio.cpp
+    objects/level_dev_tools.cpp
+    objects/level_draw.cpp
     objects/level_builder.cpp
     objects/level_end_info.cpp
     objects/level_loaded_info.cpp
@@ -92,6 +95,7 @@ add_executable(ColourWars WIN32
     objects/paint_audio.cpp
     objects/paint_tile.cpp
     objects/player.cpp
+    objects/player_figure.cpp
     objects/player_badge.cpp
     objects/player_builder.cpp
     objects/player_camera.cpp
@@ -113,6 +117,7 @@ add_executable(ColourWars WIN32
     objects/terrain_material.cpp
     objects/team_colour.cpp
     objects/weapon.cpp
+    objects/weapon_motion.cpp
     objects/weapon_feedback.cpp
     objects/idle_drip.cpp
     objects/weapon_bucket.cpp

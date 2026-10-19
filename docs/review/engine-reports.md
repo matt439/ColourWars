@@ -132,7 +132,7 @@ reachable on a machine with no pad.
 
 **Exhibit added by the controls/audio increment.** `game/play_settings.h`
 holds the saved music and SFX gains; `game/states/menu_page.cpp`,
-`game/objects/level.cpp`, `player.cpp`, `weapon.cpp`, `weapon_bucket.cpp`,
+`game/objects/level.cpp`, `level_audio.cpp`, `player.cpp`, `weapon.cpp`, `weapon_bucket.cpp`,
 `weapon_sniper.cpp`, `structure_paintable.cpp`, `level_intro.cpp` (the
 reveal's hover and click) and `controls_settings_menu.cpp` (the music preview)
 apply them at individual emitters. Resuming a match or weapon also reapplies the gain. The client now
@@ -608,7 +608,7 @@ scaled display: this machine is at 100%, where nothing above is visible.
 ## 18. A `Label` in a `Scene` can be neither hidden nor raised — **draft with station-label exhibit**
 
 **Exhibit:** `Level::refresh_station_labels` in
-[game/objects/level.cpp](../../game/objects/level.cpp), the Debug overlay
+[game/objects/level_dev_tools.cpp](../../game/objects/level_dev_tools.cpp), the Debug overlay
 `overlay.stations` and `labrador::Label`'s first client (gap audit D4). Each
 station's name is a `Label` the level's scene holds and culls by
 `Label::bounds()`. Turning the overlay off sets every label's tint to zero
@@ -739,7 +739,7 @@ before filing.
 
 **Exhibit:** [draw_miniature_view](../../game/objects/miniature_view.cpp),
 `Level::draw_miniature_world` and its borrowed scenery mirror in
-[level.cpp](../../game/objects/level.cpp), with the admissions in
+[level_draw.cpp](../../game/objects/level_draw.cpp), with the admissions in
 [LevelBuilder](../../game/objects/level_builder.cpp) and the explicit-camera
 `draw_miniature` methods in [Structure](../../game/objects/structure.cpp) and
 [StructurePaintable](../../game/objects/structure_paintable.cpp).
