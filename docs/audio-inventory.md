@@ -212,12 +212,12 @@ cue fails only on a machine that has the real bank.
 | `cmake/release_assets.cmake:27, 49-54, 70-71` | The release ships only the definition, and the build stops unless every bank is optional |
 | `.github/workflows/ci.yml:90-92, 111-118` | Rejects `.xwb`, `.wav` and `.mp3` in the ZIP; the "A clone with no audio still starts" step |
 | `scripts/check-startup.ps1:23-25, 185-206`; `check-movement-feedback.ps1:188`; `check-workshop-playable.ps1:178`; `check-workshop-style.ps1:196` | Require the bank to be absent, or accept the exact "no audio" stderr line |
-| `scripts/acceptance/*`: `ammo.cpp:103`, `movement.cpp:224`, `movement_course.cpp:1557`, `paint.cpp:39`, `workshop_player.cpp:335`, `workshop_terrain.cpp:154`, `debug_console/replay_checks.cpp:198` | Register `SoundBank::silent()` under the literal `"sound_bank_1"` |
+| `scripts/acceptance/*`: `ammo.cpp:103`, `movement.cpp:42`, `movement_course.cpp:29`, `paint.cpp:39`, `workshop_player.cpp:335`, `workshop_terrain.cpp:154`, `debug_console/replay_checks.cpp:198` | Register `SoundBank::silent()` under the literal `"sound_bank_1"` (`movement.cpp` and `movement_course.cpp` now use `"paint_exe"`) |
 | `scripts/acceptance/debug_console/tune_checks.cpp:100, 207, 234, 261` | Pin which sound keys can be tuned live |
 | `.gitignore:369-372` | Ignores `*.wav`, `*.xwb` and `*.mp3`. Change this to suit the chosen source workflow |
 | `NOTICE:41-56`, `README.md:255-265, 305-325`, `CLAUDE.md:130` and `AGENTS.md:130` ("Audio: a fresh clone is silent"), `docs/feature-roadmap.md:79, 87`, `docs/backstory.md:152, 158` | Text that describes the legacy set or its absence |
 | `README.md:59, 76-83, 203` (`-RequireNoAudio`); `docs/feature-roadmap.md:17, 30, 98-108, 194-196`; `TODO.md:23, 36-37, 88`; `docs/level-editor.md:45, 100`; `docs/oop-guide.md:21, 26, 169-187`; `docs/polish-movement-course.md:14-15`; `docs/debug-console.md:316, 367` | Further text that names the legacy bank (`sound_bank_1.json`, `holly_dolly`), the "death sound", the silent ZIP, or how to add a wave. Revise each in the `POL#23` commit |
-| `scripts/acceptance/movement_feedback_visual.cpp:517-518`, `workshop_playable_visual.cpp:317-318`, `workshop_style_visual.cpp:444-445`; `scripts/check-debug-console.ps1:572` | Visual probes set both volumes to 0 and load the real banks; the console check writes a save with both at 100. Unaffected by the bank's contents, listed so a search for audio finds no unexplained site |
+| `scripts/acceptance/movement_feedback_visual.cpp:547-548`, `workshop_playable_visual.cpp:317-318`, `workshop_style_visual.cpp:444-445`; `scripts/check-debug-console.ps1:572` | Visual probes set both volumes to 0 and load the real banks; the console check writes a save with both at 100. Unaffected by the bank's contents, listed so a search for audio finds no unexplained site |
 
 ### 3.3 Traps a replacement must know
 
