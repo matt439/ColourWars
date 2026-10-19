@@ -69,6 +69,10 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 			"no levels: the manifest names no assets of kind 'level', so "
 			"there is no stage to play.");
 	}
+	// Counts belong to the actual manifest, including explicitly selectable
+	// stages excluded from Random. Check every reachable numbered label before
+	// the first page, and again through the same Debug reload validation path.
+	presentation.validate_stage_counts(*render, stages.size(), random_stage_indices(stages).size());
 
 	// All asset kinds are available now. Check every stage's actual object
 	// construction and resource references before opening the first menu,

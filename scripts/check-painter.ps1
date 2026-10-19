@@ -46,6 +46,7 @@ param(
     [switch] $WeaponTuneColoursOnly,
     [switch] $MenuLabelsOnly,
     [switch] $StageSummaryOnly,
+    [switch] $StageCountsOnly,
     [string] $OutputDirectory
 )
 
@@ -60,7 +61,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -153,7 +154,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
+                $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
                 $_.Name -like 'setup-motion-*-detail.ppm' -or
@@ -382,7 +383,21 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($StageSummaryOnly) {
+if ($StageCountsOnly) {
+    $result.scope = 'stage-counts-only'
+    $result.Remove('stage')
+    $result.stages = @('movement_course', 'close_quarters', 'king_of_the_hill', 'turbulence')
+    $result.player_counts = @(1)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('bucket')
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('literal-navigation-hint-status-record-rasters', 'mixed-four-three-eligible', 'excluded-one-zero-eligible', 'mixed-two-one-eligible', 'observable-random-lock-unlock-concrete', 'positive-record-room-and-fit', 'random-record-absence', 'captured-templates-fonts-positions', 'cached-versus-refreshed-hint-fit-shadow', 'reopen-reversal', 'private-save-plan-keyboard-claim-rng')
+    $result.input_slots = @(4)
+    $result.inputs = 'Actual solo Stage Select with the normal gamepad reader and public local keyboard events only. Mixed four-stage/three-eligible, excluded singleton/zero-eligible and mixed two-stage/one-eligible lists exercise actual navigation and Random admission. A nested private profile seeds long practice records and muted Reduce effects preferences. No scripted pad backend, foreground/global input or physical-device claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated both-preset probe for menu_text.stage.numbered_navigation/random_hint at720/1080. Independent literal navigation/hint/status/record strings and UiTextDropShadow rasters verify all four actual mixed-list indices, eligible0/1/3, unchanged singular available-arenas wording, excluded-only navigation refusal, first Random lock/unlock and concrete return. Every state proves actual status, record presence or empty record column, finite positive record room before an independently right-aligned width fit, and full shadow/paper bounds. A private paper reference derives card expansion from the supplied literal hint and fixed solo rows, without the older hardcoded Random-count leaf or new production formatters. Old/new templates, separate visible-digit detail/brand font IDs and captured navigation position/shadow persist through presentation assignment and actual refresh; hints preserve constructor copy/font/position/ink while adopting live width-fit/shadow on slot/state changes, then reopen/reverse correctly. Exact private save/records, match plan, keyboard ownership and frozen/provisional RNG stay unchanged. Exactly104 updates(hard120),54 observed states with four literal roles each,216 CSV data rows and8 compact crops per preset. No final Random draw, match launch, broad matrix, physical-device, listening, human readability or performance acceptance.'
+}
+elseif ($StageSummaryOnly) {
     $result.scope = 'stage-summary-only'
     $result.Remove('stage')
     $result.stages = @('close_quarters', 'movement_course', 'eligible-random-browse-lock-only')
@@ -1047,6 +1062,7 @@ try {
     elseif ($TeamTuneColoursOnly) { $probeArguments += 'team-tune-colours' }
     elseif ($MenuLabelsOnly) { $probeArguments += 'menu-labels' }
     elseif ($StageSummaryOnly) { $probeArguments += 'stage-summary' }
+    elseif ($StageCountsOnly) { $probeArguments += 'stage-counts' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -1164,7 +1180,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($StageSummaryOnly) {
+    if ($StageCountsOnly) {
+        $result.diagnostic = 'Stage counts passed independent literal actual navigation/hint/status/record rasters at720/1080 for mixed4/eligible3, excluded1/eligible0 and mixed2/eligible1 lists; all mixed indices, unchanged singular grammar, observable Random browse/first lock/unlock/concrete return, positive record room and fitted long records or Random absence. Supplied-literal hint paper expansion, constructor text/font/position/ink/navigation-shadow capture, live refresh-only hint width/shadow, cached fit, reopen/reversal, exact private save/records/keyboard claim/settings and frozen/provisional RNG passed. Exactly104 updates(hard120),54 observed states,216 four-role CSV rows and8 compact crops. No final Random draw, match launch, broad matrix, foreground/global input, physical-pad, listening, human readability or performance acceptance.'
+    }
+    elseif ($StageSummaryOnly) {
         $result.diagnostic = 'Stage summaries passed independent literal mode/roster rasters for all1-4 sparse rosters, BEST OF3/5, solo-bestof5 precedence and Single Match at720/1080; captured detail/brand font IDs with visible numeric-bearing differences, clear full-shadow/paper bounds, old-page actual browse/Random-lock/unlock refresh, reopen adoption and reversal, unchanged plan/claims/private save/input/frozen and provisional RNG. Exactly112 updates,60 summary comparisons,64 independent literal navigation/status raster guards after32 taps,120 CSV rows and8 compact crops. No final Random draw, match launch, broad matrix, Arena counter/count slice, foreground/global input, physical-pad, listening, human readability or performance acceptance.'
     }
     elseif ($MenuLabelsOnly) {

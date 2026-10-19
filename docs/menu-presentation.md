@@ -1840,19 +1840,82 @@ failure and final receipts remain under `out/validation/stage-summary-text/`.
 These checks establish no physical-pad, listening, human readability/style or
 performance acceptance.
 
+## Arena numbering and Random availability
+
+Two required `menu_text.stage` templates preserve the remaining composed setup
+copy:
+
+| Key | Shipped text | Required tokens |
+|---|---|---|
+| `numbered_navigation` | `<   ARENA {index} / {total}   >` | One `{index}` and one `{total}` |
+| `random_hint` | `Random: {count} available arenas.` followed by LF and `Confirm to lock your choice.` | One `{count}` |
+
+Arena numbering includes every manifest stage in its existing order. Random's
+count includes only stages eligible for Random; when none are eligible, browsing
+still offers the explicit stages and omits Random. The formatter requires a
+positive total and a one-based index within it, or a positive Random count.
+The shipped singular wording remains `1 available arenas.`
+
+Templates use the existing original-template token scan, normalization and
+named content errors. Navigation is a nonblank single line; Random's hint
+allows authored LF breaks with no blank lines. Direct formatter mutations must
+already use printable ASCII and those allowed LF breaks.
+
+The page retains its captured copy and constructor fonts. Numbered navigation
+remains unscaled. Hints retain their constructor position and ink, while each
+refresh resets their existing width-only fit and scaled detail shadow from the
+current layout. Reopening adopts new text and fonts. No selection, confirmation,
+eligibility, persistence or Random draw changes are part of this extraction.
+
+Resource validation checks the literals and all decimal digits in the actual
+navigation and hint fonts. Startup and Debug reload then check the loaded
+catalog: every numbered output from one through its actual total, and the
+actual eligible count when Random is offered. There is no four-arena or digit
+count cap. Navigation must retain its unscaled shadow bounds inside the Stage
+paper and leave finite positive space for the adjacent fitted record. The
+Random hint keeps its existing width-only fit, briefing/design/footer bounds
+and expanded artwork separation from the preview and outer paper.
+
+Validation (2026-10-19): both game builds and all 38 CPU cases per preset pass.
+The text case checks exact defaults, decimal transitions through 100, reordered
+tokens, normalized copy, required fields/types, original-template guards,
+direct mutations and the full `size_t` formatter domain. Geometry uses actual
+loaded counts, including a proportional-font case where `8/10` is wider than
+`10/10`, positive-versus-zero record room, signed-shadow paper contacts and
+independent width-only hint, footer and expanded-card overflow boundaries.
+All ten produced digits are checked without accepting a fallback glyph; an
+earlier countdown check retains diagnostic precedence for the shared detail
+font. Existing fixtures and negative assertions are unchanged.
+
+`StageCountsOnly` passes on both presets at 720p/1080p: 104 updates, 54 observed
+states, 216 literal raster checks across navigation/hint/status/record roles,
+and eight compact crops each. Mixed four-stage/three-eligible, excluded
+singleton/zero-eligible and two-stage/one-eligible lists exercise every actual
+mixed-list index, Random admission, lock/unlock, concrete return and the
+unchanged singular wording. A long saved record exercises positive room,
+shrinking and right alignment; Random hides it. Captured copy/fonts/positions,
+cached-versus-refreshed hint fitting, reopening/reversal, exact private save
+bytes, claims, match settings and provisional/drawing RNG are checked.
+Both presets' CSVs and crops are byte-identical, and the contact sheet was
+inspected. Both published-bank, System-only-PATH isolated startups pass with
+per-monitor-v2 DPI awareness. First-fixture and evidence-wrapper failures,
+their source snapshots and final receipts remain under
+`out/validation/stage-count-text/`. The probe never performs the final Random
+confirmation or launches a match; physical-pad, listening, human readability/
+style and performance acceptance remain separate.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
 bounded increments. Shared On/Off/Random values and the fixed labels described
 above, shared menu device/roster labels, packed missing-pad lists and Arena
-briefing mode/roster summaries are implemented. The next slices are:
+briefing mode/roster summaries, Arena numbering and Random availability are
+implemented. The next slices are:
 
-1. **Composed setup:** Arena navigation and Random availability count, retaining
-   their current numbers and order.
-2. **Numeric settings:** duration units and Default notation, resolution and
+1. **Numeric settings:** duration units and Default notation, resolution and
    percentage values, and inherited/default deadzone notation. Preserve current
    numeric precision, rounding, choices and saved identifiers.
-3. **Session and results:** continuation actions, round/results headings and
+2. **Session and results:** continuation actions, round/results headings and
    proceed prompt, contribution/team descriptions and composed match/result
    lines. Retain reveal timing and solo/series distinctions.
 

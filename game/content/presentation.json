@@ -152,7 +152,9 @@
       "single_match_mode": "SINGLE MATCH",
       "best_of_mode": "BEST OF {best_of}",
       "solo_roster": "{players} PLAYER",
-      "versus_roster": "{players} PLAYERS / 2 TEAMS"
+      "versus_roster": "{players} PLAYERS / 2 TEAMS",
+      "numbered_navigation": "<   ARENA {index} / {total}   >",
+      "random_hint": "Random: {count} available arenas.\nConfirm to lock your choice."
     },
     "records": {
       "new_best": "NEW BEST",

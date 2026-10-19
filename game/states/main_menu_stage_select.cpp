@@ -131,8 +131,8 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->stage_name_->set_colour(confirmed ? look.selected_ink : look.unselected);
 	this->random_mark_->set_hidden(!random);
 	this->navigation_->set_text(random ? this->text().stage.random_navigation :
-		L"<   ARENA " + std::to_wstring(slot + 1) + L" / " +
-		std::to_wstring(this->random_slot()) + L"   >");
+		this->text().stage_navigation(static_cast<size_t>(slot) + 1,
+			this->data()->stages()->size()));
 	// The record shares the navigation row, right-aligned to the preview. A
 	// long played count shrinks it rather than reaching the arena counter.
 	const std::wstring record = random ? std::wstring() : this->record_line(slot);
@@ -160,8 +160,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_status_->set_colour(confirmed ? look.selected_ink : look.unselected);
 	this->selection_hint_->set_text(confirmed ?
 		this->text().stage.locked_hint : random ?
-		L"Random: " + std::to_wstring(random_stage_indices(*this->data()->stages()).size()) +
-		L" available arenas.\nConfirm to lock your choice." :
+		this->text().stage_random_hint(random_stage_indices(*this->data()->stages()).size()) :
 		this->text().stage.browse_hint);
 	const RectangleF hint_bounds = RectangleF::union_of(
 		this->selection_hint_->text_bounds_at(Vector2F::ZERO, 1.0f),

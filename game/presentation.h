@@ -137,6 +137,8 @@ struct MenuStageText
 	std::wstring best_of_mode;
 	std::wstring solo_roster;
 	std::wstring versus_roster;
+	std::wstring numbered_navigation;
+	std::wstring random_hint;
 };
 
 // Labels for the per-stage records. The numbers and the joins between the
@@ -216,6 +218,9 @@ struct MenuText
 	// one solo player or two through four versus players.
 	std::wstring stage_best_of_mode(int best_of) const;
 	std::wstring stage_roster(int players) const;
+	// Concrete Arena indices are one-based; Random needs at least one eligible stage.
+	std::wstring stage_navigation(size_t index, size_t total) const;
+	std::wstring stage_random_hint(size_t count) const;
 	// -1 is unclaimed, 0-3 are pads and 4 is keyboard/mouse. Roster indices
 	// are 0-3 and substitute the canonical badge label, never a device number.
 	std::wstring device_label(int slot) const;
@@ -1056,6 +1061,10 @@ public:
 
 	void validate_resources(const labrador::RenderResources& render,
 		const labrador::AudioResources& audio) const;
+	// Validate composed Stage text against the actual loaded catalog, without
+	// assuming a maximum stage count or a particular widest numeric glyph.
+	void validate_stage_counts(const labrador::RenderResources& render,
+		size_t total, size_t eligible) const;
 
 	const TeamPalettePresentation& team_palette() const;
 	const MenuStyle& menu() const;

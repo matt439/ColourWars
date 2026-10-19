@@ -354,6 +354,25 @@ namespace
 		text.stage.best_of_mode = read_stage_summary("best_of_mode", L"{best_of}");
 		text.stage.solo_roster = read_stage_summary("solo_roster", L"{players}");
 		text.stage.versus_roster = read_stage_summary("versus_roster", L"{players}");
+		text.stage.numbered_navigation = read_menu_line(stage, "numbered_navigation");
+		try
+		{
+			std::ignore = format_label_template(text.stage.numbered_navigation,
+				{ { L"{index}", L"1" }, { L"{total}", L"1" } });
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(stage.where() + ": numbered_navigation: " + error.what());
+		}
+		text.stage.random_hint = read_menu_block(stage, "random_hint");
+		try
+		{
+			std::ignore = format_stick_template(text.stage.random_hint, { { L"{count}", L"1" } }, true);
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(stage.where() + ": random_hint: " + error.what());
+		}
 		const JsonValue records = json.object("records");
 		text.records.new_best = read_menu_line(records, "new_best");
 		text.records.stage_best = read_menu_line(records, "stage_best");
@@ -2004,6 +2023,25 @@ std::wstring MenuText::stage_roster(int players) const
 	}
 	return format_label_template(players == 1 ? this->stage.solo_roster : this->stage.versus_roster,
 		{ { L"{players}", std::to_wstring(players) } });
+}
+
+std::wstring MenuText::stage_navigation(size_t index, size_t total) const
+{
+	if (total == 0 || index == 0 || index > total)
+	{
+		throw std::invalid_argument("Stage numbered navigation requires 1 <= index <= total and a positive total.");
+	}
+	return format_label_template(this->stage.numbered_navigation,
+		{ { L"{index}", std::to_wstring(index) }, { L"{total}", std::to_wstring(total) } });
+}
+
+std::wstring MenuText::stage_random_hint(size_t count) const
+{
+	if (count == 0)
+	{
+		throw std::invalid_argument("Stage Random hint requires a positive eligible stage count.");
+	}
+	return format_stick_template(this->stage.random_hint, { { L"{count}", std::to_wstring(count) } }, true);
 }
 
 std::wstring MenuText::roster_label(int roster_index, int slot) const
@@ -3896,6 +3934,122 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		check_stage_summary(players == 1 ? "solo_roster" : "versus_roster", this->menu_text_.stage_roster(players),
 			this->menu_.brand_font, 2.0f, 3.0f);
+	}
+	// Only glyph coverage is independent of the stage catalog. Count-aware
+	// geometry is checked after the actual total and eligibility are known.
+	std::ignore = fixed_menu_size("menu_text.stage.numbered_navigation",
+		this->menu_text_.stage_navigation(1, 1) + L"0123456789", this->menu_.detail_font);
+	std::ignore = fixed_menu_size("menu_text.stage.random_hint",
+		this->menu_text_.stage_random_hint(1) + L"0123456789", this->menu_.brand_font);
+}
+
+void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const
+{
+	if (total == 0 || eligible > total)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.stage requires a positive stage total and an eligible count no greater than that total.");
+	}
+	const auto size_of = [&](const std::string& key, const std::wstring& text, const std::string& font)
+	{
+		const std::string where = this->source_path_ + ": " + key;
+		drawable_text::check_font_can_draw(&render, font, text, where);
+		const Vector2F size = render.measure_text(render.resolve_sprite_font(font), text);
+		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
+		{
+			throw std::runtime_error(where + " must have finite positive measured text bounds.");
+		}
+		return size;
+	};
+	const auto finite_rectangle = [](const RectangleF& bounds)
+	{
+		return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&
+			std::isfinite(bounds.width) && std::isfinite(bounds.height) &&
+			std::isfinite(bounds.right()) && std::isfinite(bounds.bottom()) &&
+			bounds.width > 0.0f && bounds.height > 0.0f;
+	};
+	const auto overlaps = [](const RectangleF& first, const RectangleF& second)
+	{
+		return first.x < second.right() && first.right() > second.x &&
+			first.y < second.bottom() && first.bottom() > second.y;
+	};
+	const MainMenuPresentation& main = this->main_menu_;
+	const StageSelectPresentation& stage = main.stage_select;
+	const Vector2F shadow = this->menu_.detail_shadow_offset;
+	const float edge = main.art.keyline_width * 3.0f;
+	const float inset = edge + main.setup_shadow_offset;
+	const RectangleF outer((Vector2F(1920.0f, this->menu_.footer_y) - main.stage_box_size) / 2.0f,
+		main.stage_box_size);
+	const RectangleF inside(outer.position() + Vector2F(edge),
+		outer.size() - Vector2F(edge * 2.0f + main.setup_shadow_offset));
+	const RectangleF briefing(stage.briefing.position, stage.briefing.size);
+	RectangleF preview_edge(stage.preview_position, stage.preview_size);
+	preview_edge.inflate(this->menu_.rule_height);
+	const RectangleF design(0.0f, 0.0f, 1920.0f, 1080.0f);
+	const std::string navigation_key = "menu_text.stage.numbered_navigation";
+	// Check every actual index: proportional digits and carried bearings can
+	// make an earlier number wider than the final one. The zero-based offset
+	// keeps the size_t domain from overflowing after its terminal index.
+	for (size_t offset = 0; offset < total; ++offset)
+	{
+		const size_t index = offset + 1;
+		std::wstring text;
+		try { text = this->menu_text_.stage_navigation(index, total); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + navigation_key + ": " + error.what());
+		}
+		const Vector2F size = size_of(navigation_key, text, this->menu_.detail_font);
+		const RectangleF bounds = RectangleF::union_of(RectangleF(stage.navigation_position, size),
+			RectangleF(stage.navigation_position + shadow, size));
+		if (!std::isfinite(shadow.x) || !std::isfinite(shadow.y) || !std::isfinite(this->menu_.footer_y) ||
+			!finite_rectangle(bounds) || !finite_rectangle(inside) || !finite_rectangle(preview_edge) ||
+			!finite_rectangle(briefing) || !inside.contains(bounds) || !design.contains(bounds) ||
+			bounds.bottom() > this->menu_.footer_y || overlaps(bounds, preview_edge) || overlaps(bounds, briefing))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + navigation_key +
+				" must fit unscaled inside the Stage paper and design area before the footer without overlapping the preview edge or briefing card, including its shadow.");
+		}
+		const float record_room = stage.preview_position.x + stage.preview_size.x - bounds.right() -
+			this->menu_.focus_padding.x;
+		if (!std::isfinite(record_room) || record_room <= 0.0f)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + navigation_key +
+				" must leave finite positive room for the stage record after menu_style focus padding.");
+		}
+	}
+	if (eligible == 0) { return; }
+	const std::string hint_key = "menu_text.stage.random_hint";
+	std::wstring hint;
+	try { hint = this->menu_text_.stage_random_hint(eligible); }
+	catch (const std::invalid_argument& error)
+	{
+		throw std::runtime_error(this->source_path_ + ": " + hint_key + ": " + error.what());
+	}
+	const Vector2F size = size_of(hint_key, hint, this->menu_.brand_font);
+	const RectangleF raw = RectangleF::union_of(RectangleF(Vector2F::ZERO, size), RectangleF(shadow, size));
+	const float width = stage.briefing.size.x - 2.0f * stage.briefing_padding.x;
+	if (!std::isfinite(width) || width <= 0.0f || !finite_rectangle(raw))
+	{
+		throw std::runtime_error(this->source_path_ + ": " + hint_key +
+			" must have a finite positive hint width and text bounds including its shadow.");
+	}
+	// Match the page's existing width-only fit, including the signed shadow.
+	const float scale = std::min(1.0f, width / raw.width);
+	const Vector2F position = stage.briefing.position + stage.briefing_padding + stage.briefing.spacing * 7.0f;
+	const Vector2F fitted = size * scale;
+	const RectangleF bounds = RectangleF::union_of(RectangleF(position, fitted),
+		RectangleF(position + shadow * scale, fitted));
+	RectangleF padded = bounds;
+	padded.inflate(inset);
+	const RectangleF card = RectangleF::union_of(briefing, padded);
+	if (!std::isfinite(scale) || scale <= 0.0f || !std::isfinite(edge) || !std::isfinite(inset) ||
+		!finite_rectangle(bounds) || !finite_rectangle(card) || !briefing.contains(bounds) ||
+		!design.contains(bounds) || bounds.bottom() > this->menu_.footer_y ||
+		!inside.contains(card) || overlaps(card, preview_edge))
+	{
+		throw std::runtime_error(this->source_path_ + ": " + hint_key +
+			" must fit its briefing panel, expanded Stage paper and design area before the footer using width-only fitting, including its scaled shadow.");
 	}
 }
 
