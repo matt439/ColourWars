@@ -35,7 +35,7 @@ This is a selection guide, not another priority order; each owner defines a boun
 |---|---|---|
 | `DBG#1` | Audit further colour consumers; thirteen existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 | `GAP#4.2` | Implement keyboard Jump rebinding through capture, save, gameplay and effective help | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
-| `GAP#8.4` | Extract Results headings/prompts and composed session/result lines | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
+| `GAP#8.4` | Extract the numbered Results heading and composed session/result lines | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Gameplay style:** review the implemented painter/tools (`POL#7`) and player/shot cues
@@ -138,7 +138,7 @@ owns the remaining `GAP#8.4` implementation slices.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#8.4` | OPEN | LOW | L | Move remaining Results headings/prompts and composed session/result text into presentation data, preserving existing wording. [Scope](docs/menu-presentation.md#remaining-text-slices-gap84). |
+| `GAP#8.4` | OPEN | LOW | L | Move the numbered Results heading and remaining composed session/result text into presentation data, preserving existing wording. [Scope](docs/menu-presentation.md#remaining-text-slices-gap84). |
 
 ## Engine demonstration
 

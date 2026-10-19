@@ -1158,9 +1158,10 @@ the edits. The values remain JSON strings outside numeric `tune`. Wording
 changes do not alter boolean choices, palette selection, cycling, disabled
 fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
-live. Duration/default and numeric settings text, composed setup copy,
-connection/readout text, player-specific Pause titles and session/results copy
-remain in the [remaining text slices](#remaining-text-slices-gap84).
+live. Duration/resolution/percentage values, Arena mode/roster summaries,
+connection/readout text, player-specific Pause titles and plain Results labels
+are described below. The numbered Results heading and remaining composed
+session/result text follow the [remaining text slices](#remaining-text-slices-gap84).
 
 ### Stage Select Random display name
 
@@ -1565,8 +1566,9 @@ the Team Select warning, Pad Sticks connection/raw/response readouts, and shared
 menu device/roster labels including the packed Pause missing-pad list, Arena
 briefing mode/roster summaries and numbered/count hints, preference percentages,
 duration and resolution values, and Session-selected End continuation labels.
-Remaining Results headings/prompts, contribution/team descriptions and composed
-session/match/results lines remain open under that item. Font
+The three plain Results labels below are also authored. The numbered series
+heading, contribution/team descriptions and composed session/match/results
+lines remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.
 
@@ -2105,6 +2107,70 @@ checks of the migrated callers, with no scripted runtime or match launch.
 Evidence is under `out/validation/end-continuation-text/`. These checks establish
 no physical-device, listening, human readability or performance acceptance.
 
+## Plain Results labels (`GAP#8.4`)
+
+Three required plain `menu_text.results` fields retain the shipped wording:
+
+| Field | Shipped text | Use |
+|---|---|---|
+| `single_match_heading` | `Results` | Single-match heading |
+| `proceed` | `Press A/Enter to proceed` | Existing delayed proceed prompt |
+| `contribution_heading` | `Surface held (% of arena)` | Contribution heading |
+
+The existing normalized, printable, nonblank single-line rules apply. Braces
+are literal characters; these fields have no substitutions or new character
+limit. The series heading still composes `Round N` in C++, independently of
+these three labels.
+
+Results retains unscaled text and explicit zero-offset transparent shadows.
+The single-match heading uses the heading font and `results_menu.heading_y`;
+the proceed prompt uses the detail font and `results_menu.proceed_y`. Both
+are centered horizontally in the full 1920 by 1080 design area. Resource checks
+require their actual glyphs and finite, positive text bounds to fit the outer
+Results paper, `results_menu.box_size` centered in that design area. Equality
+is accepted. No wrapping or automatic fitting is added.
+
+The contribution heading uses `results_menu.contribution_font` and
+`contribution_position`. Its authored measurement feeds the existing stage
+record and roster checks in their original order. A stage record must begin
+strictly to its right; horizontal contact is rejected. The first roster row
+must clear its bottom under the existing roster/badge rule.
+
+A Results page takes these strings from its captured `MenuText` and resolves
+each widget's font on construction. Open widgets retain their copy, font,
+bounds and centered positions through text/font edits; reopening adopts edits.
+The presentation's other layout and style services retain their existing
+borrowing behavior. Reveal timers, premature-input refusal, fresh continue
+input and Session state remain unchanged.
+
+Validation (2026-10-19): both game builds, the focused Debug text case and all
+38 CPU cases per preset passed. The text case checks all three defaults,
+required schema, normalization, literal braces, actual-font glyph failures,
+owned zero-shadow widgets and inclusive paper edges with quarter-unit overflow.
+Separate contribution fixtures pin strict record contact rejection and
+inclusive first complete roster/badge contact under the existing diagnostics.
+Both isolated published-bank/System-only-PATH startups passed with per-monitor
+v2 DPI awareness.
+
+`-ResultsTextOnly` passed on both presets: 43 updates, 52 readbacks and 51
+case/role comparisons across seventeen observations, six page openings and six
+fresh Enter pops. It checks the original reveal/proceed gates and premature
+Enter/Escape refusal, single/series headings, literal custom copy and three
+captured fonts through assignment, reopening, reversal and zero-update resize.
+Three font controls, unchanged Session/setup/private Save/RNG and exactly one
+successful private seed Save per preset are required. Eight compact strips per
+preset contain 1,428,000 pixels; all eleven shared artifacts, including ten raw
+CSV/PPM files, match byte for byte. All eight crops were inspected.
+
+Two failed native fixture versions remain retained: the first underestimated
+actual font bounds in its comparison regions; the second changed ordinary
+global font glyphs enough to trip an unrelated Stage bounds check. The final
+fixture rebalances the regions within the same pixel budget and changes only
+literal brace glyphs, retaining full resource validation and all font controls.
+These repairs changed no game or CPU source. Evidence is under
+`out/validation/results-plain-text/`. No match launch, physical-device,
+listening, human readability or performance acceptance is established.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
@@ -2112,11 +2178,12 @@ bounded increments. Shared On/Off/Random values and the fixed labels described
 above, shared menu device/roster labels, packed missing-pad lists and Arena
 briefing mode/roster summaries, Arena numbering and Random availability, and
 preference percentages, duration units/Default notation, resolution values and
-End continuation labels are implemented. The next slice is:
+End continuation labels and the three plain Results labels are implemented.
+The next slice is:
 
-1. **Session and results:** Results headings and
-   proceed prompt, contribution/team descriptions and composed match/result
-   lines. Retain reveal timing and solo/series distinctions.
+1. **Session and results:** the numbered series heading, contribution/team
+   descriptions and composed match/result lines. Retain reveal timing and
+   solo/series distinctions.
 
 Deadzones already use the shared percentage template, including the inherited
 value; introducing a new inheritance marker is separate work.

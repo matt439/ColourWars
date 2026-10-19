@@ -129,6 +129,13 @@ struct MenuEndText
 	std::wstring next_round;
 };
 
+struct MenuResultsText
+{
+	std::wstring single_match_heading;
+	std::wstring proceed;
+	std::wstring contribution_heading;
+};
+
 struct MenuStageText
 {
 	std::wstring browse_status;
@@ -210,6 +217,7 @@ struct MenuText
 	MenuValueText values;
 	MenuConfirmationText confirmations;
 	MenuEndText end;
+	MenuResultsText results;
 	MenuStageText stage;
 	MenuRecordText records;
 	MenuLabelText labels;

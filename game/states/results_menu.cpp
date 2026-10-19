@@ -146,7 +146,7 @@ void ResultsMenuInitial::init()
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"title",
 		this->session_.is_series() ? L"Round " +
-			std::to_wstring(this->session_.round()) : L"Results",
+			std::to_wstring(this->session_.round()) : this->text().results.single_match_heading,
 		style.heading_font,
 		Vector2F::ZERO,
 		this->render_resources(),
@@ -246,7 +246,7 @@ void ResultsMenuInitial::init()
 
 	this->proceed_ = std::make_unique<UiTextDropShadow>(
 		"proceed",
-		L"Press A/Enter to proceed",
+		this->text().results.proceed,
 		style.detail_font,
 		Vector2F::ZERO,
 		this->render_resources(),
@@ -326,7 +326,7 @@ void ResultsMenuInitial::init()
 		center_text(*add_detail(this->session_.result_string(), Vector2F::ZERO, style.detail_font),
 			look.session_result_y);
 	}
-	add_detail(L"Surface held (% of arena)",
+	add_detail(this->text().results.contribution_heading,
 		look.contribution_position, look.contribution_font);
 	const std::vector<MenuPlayerSettings> players =
 		this->level_settings()->player_settings();

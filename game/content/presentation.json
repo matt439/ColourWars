@@ -146,6 +146,11 @@
       "replay_draw": "Replay Draw",
       "next_round": "Next Round"
     },
+    "results": {
+      "single_match_heading": "Results",
+      "proceed": "Press A/Enter to proceed",
+      "contribution_heading": "Surface held (% of arena)"
+    },
     "stage": {
       "browse_status": "FIND YOUR ARENA",
       "locked_status": "ARENA LOCKED",

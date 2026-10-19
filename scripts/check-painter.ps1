@@ -15,6 +15,7 @@ param(
     [switch] $DurationTextOnly,
     [switch] $ResolutionTextOnly,
     [switch] $EndContinuationOnly,
+    [switch] $ResultsTextOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -68,7 +69,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -161,7 +162,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -299,6 +300,9 @@ function Write-ContactSheet {
         $endContinuation = @($images | Where-Object { $_.name -like 'end-continuation-*' })
         Write-ContactSheetPages -Images $endContinuation -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-end-continuation-contact'
+        $resultsText = @($images | Where-Object { $_.name -like 'results-text-*' })
+        Write-ContactSheetPages -Images $resultsText -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-results-text-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -409,7 +413,22 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($EndContinuationOnly) {
+if ($ResultsTextOnly) {
+    $result.scope = 'results-text-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @(2)
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('three-independent-plain-results-labels', 'actual-results-reveal-and-proceed', 'captured-copy-and-fonts', 'reopen-and-reversal', 'series-heading-control', 'frozen-session-setup-save-and-rng', 'resize')
+    $result.input_slots = @(4)
+    $result.inputs = 'Actual ResultsMenuInitial with the normal GamepadReader and public local keyboard events through StateContext; local proceed callbacks do not launch a match.'
+    $result.audio = 'Focused Results page fixture; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated three-label Results leaf. Independent literal copy and raw-font references compare the actual single-match heading, proceed line and contribution heading with their surrounding paper; generated series headings retain their existing behavior. Captured copy/fonts, reopening and reversal, actual reveal/proceed transitions, frozen Session/setup/private Save/RNG and zero-update resize checks are bounded separately. Exactly 43 StateContext updates, 52 readbacks, 51 CSV rows (seventeen observations across three roles), six page openings, six proceed pops, three font negative controls, eight compact crops (1428000 pixels) and one successful private seed Save are checked with exact schema, case, metric and RGB-payload gates. Both presets run the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+}
+elseif ($EndContinuationOnly) {
     $result.scope = 'end-continuation-only'
     $result.Remove('stage')
     $result.stages = @()
@@ -1187,6 +1206,7 @@ try {
     elseif ($DurationTextOnly) { $probeArguments += 'duration-text' }
     elseif ($ResolutionTextOnly) { $probeArguments += 'resolution-text' }
     elseif ($EndContinuationOnly) { $probeArguments += 'end-continuation' }
+    elseif ($ResultsTextOnly) { $probeArguments += 'results-text' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -1342,6 +1362,132 @@ try {
     if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
+    }
+    if ($ResultsTextOnly) {
+        $resultsTextSummary = Get-Content -LiteralPath (Join-Path $captures 'results-text-summary.json') -Raw | ConvertFrom-Json
+        $resultsTextRows = @(Import-Csv -LiteralPath (Join-Path $captures 'results-text.csv'))
+        $resultsTextCases = @('plain-initial', 'plain-fill-crossed', 'plain-details', 'plain-prompt-crossed',
+            'plain-ready', 'series-initial', 'series-ready', 'old-ready', 'retained-old', 'old-1080',
+            'old-return720', 'reopened-new', 'retained-new', 'new-1080', 'new-return720', 'new-series', 'restored-default')
+        $resultsTextRoles = @('heading', 'contribution', 'proceed')
+        $resultsTextExpectedPairs = @(
+            foreach ($case in $resultsTextCases) {
+                foreach ($role in $resultsTextRoles) { "$case|$role" }
+            }
+        )
+        $resultsTextExpectedColumns = @('case', 'session', 'role', 'width', 'height', 'revealed', 'details_visible',
+            'proceed_visible', 'series', 'round', 'a_wins', 'b_wins', 'expected_value', 'font', 'raw_width',
+            'raw_height', 'x', 'y', 'scale', 'shadow_x', 'shadow_y', 'visible', 'full_region_match',
+            'frozen_session_setup_save_rng')
+        if ($resultsTextSummary.outcome -ne 'passed' -or $resultsTextSummary.scope -ne 'results-text-only' -or
+            $resultsTextSummary.updates -ne 43 -or $resultsTextSummary.readbacks -ne 52 -or
+            $resultsTextSummary.csv_rows -ne 51 -or $resultsTextSummary.compact_crops -ne 8 -or
+            $resultsTextSummary.page_openings -ne 6 -or $resultsTextSummary.proceed_pops -ne 6 -or
+            $resultsTextSummary.font_negative_controls -ne 3 -or $resultsTextSummary.resize_updates -ne 0 -or
+            $resultsTextSummary.save_calls -ne 1 -or $resultsTextSummary.crop_pixels -ne 1428000 -or
+            $resultsTextRows.Count -ne 51 -or
+            (($resultsTextRows[0].PSObject.Properties.Name) -join '|') -ne ($resultsTextExpectedColumns -join '|') -or
+            (($resultsTextRows | ForEach-Object { "$($_.case)|$($_.role)" } | Sort-Object) -join ';') -ne
+                (($resultsTextExpectedPairs | Sort-Object) -join ';')) {
+            throw 'The Results text leaf does not match its frozen summary, CSV schema, cases or update/readback/proceed budgets.'
+        }
+        $resultsTextDefaultValues = @{
+            'heading' = 'Results'; 'contribution' = 'Surface held (% of arena)'; 'proceed' = 'Press A/Enter to proceed'
+        }
+        $resultsTextOldValues = @{
+            'heading' = 'Results~ {1}'; 'contribution' = 'Held~ {area}'; 'proceed' = 'Continue~ {A}'
+        }
+        $resultsTextNewValues = @{
+            'heading' = 'Score {2}'; 'contribution' = 'Owned {area}'; 'proceed' = 'Proceed {B}'
+        }
+        $resultsTextDefaultFonts = @{
+            'heading' = 'gill_sans_mt_bold_72'; 'contribution' = 'gill_sans_mt_bold_24'; 'proceed' = 'gill_sans_mt_bold_36'
+        }
+        $resultsTextNewFonts = @{
+            'heading' = 'results_text_heading_letters'; 'contribution' = 'results_text_contribution_letters'
+            'proceed' = 'results_text_detail_letters'
+        }
+        foreach ($row in $resultsTextRows) {
+            $isSeries = $row.case -in @('series-initial', 'series-ready', 'new-series')
+            $expectedSession = if ($isSeries) { 'series' } else { 'single' }
+            $expectedSeries = if ($isSeries) { 'true' } else { 'false' }
+            $expectedRound = if ($isSeries) { '2' } else { '1' }
+            $expectedWidth = if ($row.case -in @('old-1080', 'new-1080')) { '1920' } else { '1280' }
+            $expectedHeight = if ($expectedWidth -eq '1920') { '1080' } else { '720' }
+            $expectedRevealed = if ($row.case -like 'plain-*') { 'false' } else { 'true' }
+            $expectedDetails = if ($row.case -in @('plain-initial', 'plain-fill-crossed')) { 'false' } else { 'true' }
+            $expectedProceed = if ($row.case -in @('plain-initial', 'plain-fill-crossed', 'plain-details',
+                'plain-prompt-crossed', 'series-initial')) { 'false' } else { 'true' }
+            $expectedVisible = if ($row.role -eq 'contribution') { $expectedDetails }
+                elseif ($row.role -eq 'proceed') { $expectedProceed } else { 'true' }
+            $newCopy = $row.case -in @('reopened-new', 'retained-new', 'new-1080', 'new-return720', 'new-series')
+            $oldCopy = $row.case -in @('old-ready', 'retained-old', 'old-1080', 'old-return720')
+            $expectedValue = if ($isSeries -and $row.role -eq 'heading') { 'Round 2' }
+                elseif ($newCopy) { $resultsTextNewValues[$row.role] }
+                elseif ($oldCopy) { $resultsTextOldValues[$row.role] } else { $resultsTextDefaultValues[$row.role] }
+            $expectedFont = if ($newCopy) { $resultsTextNewFonts[$row.role] } else { $resultsTextDefaultFonts[$row.role] }
+            if ($row.session -ne $expectedSession -or $row.series -ne $expectedSeries -or
+                $row.round -ne $expectedRound -or $row.a_wins -ne '1' -or $row.b_wins -ne '0' -or
+                $row.width -ne $expectedWidth -or $row.height -ne $expectedHeight -or
+                $row.revealed -ne $expectedRevealed -or $row.details_visible -ne $expectedDetails -or
+                $row.proceed_visible -ne $expectedProceed -or $row.visible -ne $expectedVisible -or
+                $row.expected_value -cne $expectedValue -or $row.font -ne $expectedFont -or
+                $row.scale -ne '1' -or $row.shadow_x -ne '0' -or $row.shadow_y -ne '0' -or
+                $row.full_region_match -ne 'true' -or $row.frozen_session_setup_save_rng -ne 'true') {
+                throw "Results text case $($row.case)/$($row.role) changed its literal copy, session/reveal state, capture or geometry contract."
+            }
+            foreach ($metric in @('raw_width', 'raw_height', 'x', 'y')) {
+                $value = 0.0
+                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
+                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
+                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
+                    ($metric -in @('raw_width', 'raw_height') -and $value -le 0.0) -or
+                    ($metric -in @('x', 'y') -and $value -lt 0.0)) {
+                    throw "Results text case $($row.case)/$($row.role) contains an invalid $metric."
+                }
+            }
+        }
+        $resultsTextExpectedCrops = [ordered]@{
+            'results-text-default-single.ppm' = @(800, 170)
+            'results-text-default-series.ppm' = @(800, 170)
+            'results-text-old-720.ppm' = @(800, 170)
+            'results-text-new-720.ppm' = @(800, 170)
+            'results-text-new-series.ppm' = @(800, 170)
+            'results-text-restored-default.ppm' = @(800, 170)
+            'results-text-old-1080.ppm' = @(1200, 255)
+            'results-text-new-1080.ppm' = @(1200, 255)
+        }
+        $resultsTextCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'results-text-*.ppm' -File)
+        $resultsTextExpectedNames = @($resultsTextExpectedCrops.Keys) + @('results-text.csv', 'results-text-summary.json')
+        $resultsTextNames = @(Get-ChildItem -LiteralPath $captures -Filter 'results-text*' -File | Select-Object -ExpandProperty Name)
+        if ($resultsTextCrops.Count -ne 8 -or
+            (($resultsTextNames | Sort-Object) -join '|') -ne (($resultsTextExpectedNames | Sort-Object) -join '|')) {
+            throw 'The Results text leaf emitted unexpected or missing compact crops, CSV or summary files.'
+        }
+        foreach ($crop in $resultsTextCrops) {
+            $size = $resultsTextExpectedCrops[$crop.Name]
+            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
+            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
+            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
+                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
+                throw "Results text crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
+            }
+        }
+        $resultsTextSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
+        $resultsTextSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        if ($resultsTextSaveCalls -ne 1 -or $resultsTextSaveSuccesses -ne 1) {
+            throw 'The Results text leaf must perform exactly its one successful private seed Save.'
+        }
+        $result['observed_counts'] = [ordered]@{
+            fixture = $resultsTextSummary
+            updates = 43
+            readbacks = 52
+            csv_rows = 51
+            crops = 8
+            private_save_calls = $resultsTextSaveCalls
+            successful_private_saves = $resultsTextSaveSuccesses
+        }
     }
     if ($EndContinuationOnly) {
         $endContinuationSummary = Get-Content -LiteralPath (Join-Path $captures 'end-continuation-summary.json') -Raw | ConvertFrom-Json
@@ -1895,7 +2041,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($EndContinuationOnly) {
+    if ($ResultsTextOnly) {
+        $result.diagnostic = 'Results text passed three independent literal actual-page labels and their paper context, captured copy/fonts, retained pages, reopening/reversal, unchanged generated series headings, actual reveal/proceed transitions and frozen Session/setup/private Save/RNG. Zero-update resize checks passed. Exactly 43 updates, 52 readbacks, 51 CSV rows across seventeen three-role observations, six page openings, six proceed pops, three font negative controls, eight compact crops (1428000 pixels) and one successful private seed Save. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    }
+    elseif ($EndContinuationOnly) {
         $result.diagnostic = 'End continuation passed four independent literal primary labels, full primary ornaments and existing focus-arrow geometry across single/series and complete/drawn/next-round states. Captured copy/font assignment, retained pages, reopening/reversal, actual local typed restart/exit callbacks, deferred music completion, frozen Session/setup/private Save/RNG and zero-update resize checks passed. Exactly 68 updates, 94 readbacks, 31 CSV rows, fourteen page openings, one font negative control, six 540x96 crops (311040 pixels), fourteen typed actions (thirteen restart and one exit), four deferred actions, four music starts and one successful private Play-settings seed Save. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
     }
     elseif ($ResolutionTextOnly) {

@@ -364,6 +364,10 @@ namespace
 		text.end.play_series_again = read_menu_line(end, "play_series_again");
 		text.end.replay_draw = read_menu_line(end, "replay_draw");
 		text.end.next_round = read_menu_line(end, "next_round");
+		const JsonValue results = json.object("results");
+		text.results.single_match_heading = read_menu_line(results, "single_match_heading");
+		text.results.proceed = read_menu_line(results, "proceed");
+		text.results.contribution_heading = read_menu_line(results, "contribution_heading");
 		const JsonValue stage = json.object("stage");
 		text.stage.browse_status = read_menu_line(stage, "browse_status");
 		text.stage.locked_status = read_menu_line(stage, "locked_status");
@@ -2978,7 +2982,8 @@ void Presentation::validate_resources(const RenderResources& render,
 	const float results_fill_right = (1920.0f + results.fill_box_size.x) / 2.0f;
 	const float results_fill_bottom = results_panel.y + results.fill_box_y_offset + results.fill_box_size.y;
 	const RectangleF contribution_heading(results.contribution_position, fixed_menu_size(
-		"results_menu.contribution_position", L"Surface held (% of arena)", results.contribution_font));
+		"menu_text.results.contribution_heading", this->menu_text_.results.contribution_heading,
+		results.contribution_font));
 	for (const std::wstring* label : { &this->menu_text_.records.new_best, &this->menu_text_.records.stage_best })
 	{
 		const Vector2F size = fixed_menu_size("menu_text.records", *label + L" 100.0%", results.contribution_font);
@@ -4104,6 +4109,24 @@ void Presentation::validate_resources(const RenderResources& render,
 				" must fit its paper and row including focus padding.");
 		}
 	}
+	// Results uses zero-offset transparent text shadows. Center the actual
+	// unscaled text bounds on the full-height paper, as its widgets do.
+	const auto check_results_centered = [&](const char* role, const std::wstring& text,
+		const std::string& font, float y)
+	{
+		const std::string key = std::string("menu_text.results.") + role;
+		const Vector2F size = fixed_menu_size(key, text, font);
+		const RectangleF bounds((1920.0f - size.x) / 2.0f, y, size.x, size.y);
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !results_panel.contains(bounds))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit unscaled inside the Results paper.");
+		}
+	};
+	check_results_centered("single_match_heading", this->menu_text_.results.single_match_heading,
+		this->menu_.heading_font, results.heading_y);
+	check_results_centered("proceed", this->menu_text_.results.proceed,
+		this->menu_.detail_font, results.proceed_y);
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const

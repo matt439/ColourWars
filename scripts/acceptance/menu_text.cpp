@@ -157,6 +157,12 @@ namespace
         { "replay_draw", L"Replay Draw", &MenuEndText::replay_draw },
         { "next_round", L"Next Round", &MenuEndText::next_round }
     };
+    struct ResultsText { const char* key; const wchar_t* text; std::wstring MenuResultsText::* field; };
+    constexpr ResultsText results_text[]{
+        { "single_match_heading", L"Results", &MenuResultsText::single_match_heading },
+        { "proceed", L"Press A/Enter to proceed", &MenuResultsText::proceed },
+        { "contribution_heading", L"Surface held (% of arena)", &MenuResultsText::contribution_heading }
+    };
     struct RecordText { const char* key; const wchar_t* text; std::wstring MenuRecordText::* field; };
     constexpr RecordText record_text[]{
         { "new_best", L"NEW BEST", &MenuRecordText::new_best },
@@ -409,6 +415,10 @@ namespace
         for (const auto& entry : end_continuation_text)
         {
             require(text.end.*entry.field == entry.text, std::string("End continuation default changed: ") + entry.key);
+        }
+        for (const auto& entry : results_text)
+        {
+            require(text.results.*entry.field == entry.text, std::string("Plain Results default changed: ") + entry.key);
         }
         for (const auto& entry : stage_text)
         {
@@ -6405,6 +6415,172 @@ namespace
             d["menu_text"]["end"]["match_complete"].SetString("~"); d["menu_text"]["end"]["rematch"].SetString("~");
         }, &world);
     }
+    void check_results_plain_text(Variants& variants, World& world)
+    {
+        variants.rejects("results", [](rapidjson::Document& d) { d["menu_text"].RemoveMember("results"); });
+        variants.rejects("results", [](rapidjson::Document& d) { d["menu_text"]["results"].SetArray(); });
+        const auto reordered = variants.load([](rapidjson::Document& d)
+        {
+            auto& group = d["menu_text"]["results"]; rapidjson::Value reverse(rapidjson::kObjectType);
+            auto member = group.MemberEnd();
+            while (member != group.MemberBegin())
+            { --member; rapidjson::Value key; key.CopyFrom(member->name, d.GetAllocator());
+                rapidjson::Value value; value.CopyFrom(member->value, d.GetAllocator());
+                reverse.AddMember(key, value, d.GetAllocator()); }
+            group = std::move(reverse);
+        });
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            for (const auto& entry : results_text)
+                d["menu_text"]["results"][entry.key].SetString("  A\xC2\xA0\xE2\x80\x9C" "B\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
+        });
+        normalized.validate_resources(world.render, world.audio);
+        for (const auto& entry : results_text)
+        {
+            const std::string field = std::string("results.") + entry.key;
+            require(reordered.menu_text().results.*entry.field == entry.text &&
+                normalized.menu_text().results.*entry.field == L"  A \"B\"-C...  ",
+                "Plain Results copy depends on key order or lost normalized punctuation/outer spacing: " + field);
+            variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"].RemoveMember(entry.key); });
+            for (int type = 0; type < 5; ++type)
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    auto& value = d["menu_text"]["results"][entry.key];
+                    if (type == 0) { value.SetNull(); } else if (type == 1) { value.SetBool(true); }
+                    else if (type == 2) { value.SetInt(3); } else if (type == 3) { value.SetArray(); } else { value.SetObject(); }
+                });
+            }
+            for (const char* invalid : { "", "   ", " \xC2\xA0 ", "line\nbreak", "line\rbreak", "line\r\nbreak",
+                "tab\ttext", "control\x01", "delete\x7f", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28" })
+                variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"][entry.key].SetString(invalid, d.GetAllocator()); });
+            variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"][entry.key].SetString("A\0B", 3, d.GetAllocator()); });
+            const auto plain = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString("{copy} % again"); });
+            plain.validate_resources(world.render, world.audio);
+            std::wstring source = plain.menu_text().results.*entry.field;
+            const auto& look = plain.results_menu(); const auto& style = plain.menu();
+            const bool heading = entry.field == &MenuResultsText::single_match_heading;
+            const bool contribution = entry.field == &MenuResultsText::contribution_heading;
+            const std::string font = contribution ? look.contribution_font : heading ? style.heading_font : style.detail_font;
+            const auto measured = world.render.measure_text(world.render.resolve_sprite_font(font), L"{copy} % again");
+            const mattmath::Vector2F position = contribution ? look.contribution_position :
+                mattmath::Vector2F((1920.0f - measured.x) / 2.0f, heading ? look.heading_y : look.proceed_y);
+            UiTextDropShadow widget(entry.key, source, font, position, &world.render,
+                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            source = L"Changed after construction";
+            require(widget.text() == L"{copy} % again" && widget.bounds() == mattmath::RectangleF(position, measured) &&
+                widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+                "Actual Results text interpreted plain braces/percent, borrowed source, scaled or retained a shadow: " + field);
+            DrawList no_device; widget.draw(no_device);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                if (contribution) { d["results_menu"]["contribution_font"].SetString("menu_text_limited"); }
+                else { d["menu_style"]["fonts"][heading ? "heading" : "detail"].SetString("menu_text_limited"); }
+                d["menu_text"]["results"][entry.key].SetString("~");
+            }, &world);
+            const auto long_copy = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString(std::string(512, 'W').c_str(), d.GetAllocator()); });
+            require((long_copy.menu_text().results.*entry.field).size() == 512, "Plain Results text acquired a parser character cap");
+            variants.rejects(contribution ? "records" : field, [&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString(std::string(512, 'W').c_str(), d.GetAllocator()); }, &world);
+        }
+        require(world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'?') &&
+            !world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'~'),
+            "Plain Results missing-literal fixture lost its stand-in or missing glyph");
+    }
+
+    void check_results_plain_bounds(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const char* name, int width, int height, float x_offset = 0.0f, float y_offset = 0.0f)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                const bool marker = character == U'~';
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
+                    marker ? x_offset : 0.0f, marker ? y_offset : 0.0f, 0.0f });
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        };
+        add_font("menu_results_width", 1300, 16);
+        add_font("menu_results_width_overflow", 1300, 16, 0.25f);
+        add_font("menu_results_proceed_bottom", 8, 90);
+        add_font("menu_results_proceed_bottom_overflow", 8, 90, 0.0f, 0.25f);
+        add_font("menu_results_record_gap", 765, 16, 0.75f);
+        add_font("menu_results_record_contact", 765, 16, 1.0f);
+        add_font("menu_results_record_overlap", 765, 16, 1.25f);
+        add_font("menu_results_roster_contact", 8, 34);
+        add_font("menu_results_roster_overlap", 8, 34, 0.0f, 0.25f);
+        add_font("menu_results_zero_width", 0, 16);
+        add_font("menu_results_infinite_width", 8, 16, std::numeric_limits<float>::infinity());
+        add_font("menu_results_infinite_height", 8, 16, 0.0f, std::numeric_limits<float>::infinity());
+        const auto centered = [](rapidjson::Document& d, bool heading, const char* font_name)
+        {
+            d["menu_style"]["fonts"][heading ? "heading" : "detail"].SetString(font_name, d.GetAllocator());
+            d["menu_text"]["results"][heading ? "single_match_heading" : "proceed"].SetString("~");
+        };
+        for (const bool heading : { true, false })
+        {
+            const std::string field = heading ? "results.single_match_heading" : "results.proceed";
+            const auto edge = variants.load([&](rapidjson::Document& d) { centered(d, heading, "menu_results_width"); });
+            edge.validate_resources(world.render, world.audio);
+            const float y = heading ? 125.0f : 880.0f;
+            const std::string font = heading ? edge.menu().heading_font : edge.menu().detail_font;
+            UiTextDropShadow widget("results-edge", L"~", font, { 310.0f, y }, &world.render,
+                edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO);
+            require(widget.bounds() == mattmath::RectangleF(310.0f, y, 1300.0f, 20.0f),
+                "Centered Results edge lost its unscaled zero-offset shadow bounds");
+            variants.rejects(field, [&](rapidjson::Document& d) { centered(d, heading, "menu_results_width_overflow"); }, &world);
+            for (const char* font_name : { "menu_results_zero_width", "menu_results_infinite_width", "menu_results_infinite_height" })
+                variants.rejects(field, [&](rapidjson::Document& d) { centered(d, heading, font_name); }, &world);
+        }
+        const auto top = variants.load([&](rapidjson::Document& d)
+        { centered(d, true, "menu_results_width"); d["results_menu"]["heading_y"].SetFloat(110.0f); });
+        top.validate_resources(world.render, world.audio);
+        variants.rejects("results.single_match_heading", [&](rapidjson::Document& d)
+        { centered(d, true, "menu_results_width"); d["results_menu"]["heading_y"].SetFloat(109.75f); }, &world);
+        const auto bottom = variants.load([&](rapidjson::Document& d) { centered(d, false, "menu_results_proceed_bottom"); });
+        bottom.validate_resources(world.render, world.audio);
+        require(world.render.measure_text(world.render.resolve_sprite_font(bottom.menu().detail_font), L"~").y +
+            bottom.results_menu().proceed_y == 970.0f, "Results proceed text no longer touches the full paper bottom");
+        variants.rejects("results.proceed", [&](rapidjson::Document& d)
+            { centered(d, false, "menu_results_proceed_bottom_overflow"); }, &world);
+
+        const auto contribution = [](rapidjson::Document& d, const char* font_name)
+        {
+            d["results_menu"]["contribution_font"].SetString(font_name, d.GetAllocator());
+            d["menu_text"]["results"]["contribution_heading"].SetString("~");
+            d["menu_text"]["records"]["new_best"].SetString("R"); d["menu_text"]["records"]["stage_best"].SetString("R");
+        };
+        const auto record_gap = variants.load([&](rapidjson::Document& d) { contribution(d, "menu_results_record_gap"); });
+        record_gap.validate_resources(world.render, world.audio);
+        const auto font_handle = world.render.resolve_sprite_font(record_gap.results_menu().contribution_font);
+        require(world.render.measure_text(font_handle, L"R 100.0%") == mattmath::Vector2F(64.0f, 20.0f) &&
+            world.render.measure_text(font_handle, L"~") == mattmath::Vector2F(765.75f, 20.0f) &&
+            480.0f + 765.75f == 1246.0f - 0.25f,
+            "Authored contribution heading lost its independent quarter-unit strict record gap");
+        // Record clearance is STRICT: contact already rejects before overlap.
+        for (const char* font_name : { "menu_results_record_contact", "menu_results_record_overlap" })
+            variants.rejects("records", [&](rapidjson::Document& d) { contribution(d, font_name); }, &world);
+        const auto roster_contact = variants.load([&](rapidjson::Document& d) { contribution(d, "menu_results_roster_contact"); });
+        roster_contact.validate_resources(world.render, world.audio);
+        const auto& look = roster_contact.results_menu();
+        const auto raw = world.render.measure_text(world.render.resolve_sprite_font(look.contribution_font), L"P1 - Pad 1 | Team A | 0.0%");
+        require(raw.y == 20.0f && roster_contact.player_identity().ui_size == mattmath::Vector2F(54.0f, 42.0f) &&
+            look.contribution_position.y + 34.0f == 669.0f &&
+            look.contribution_position.y + look.contribution_spacing + (20.0f - 42.0f) / 2.0f == 669.0f,
+            "Authored contribution heading lost exact contact with the first complete roster/badge row");
+        variants.rejects("labels.roster_row with menu_text.labels.pad at Results", [&](rapidjson::Document& d)
+            { contribution(d, "menu_results_roster_overlap"); }, &world);
+        for (const char* font_name : { "menu_results_zero_width", "menu_results_infinite_width", "menu_results_infinite_height" })
+            variants.rejects("results.contribution_heading", [&](rapidjson::Document& d) { contribution(d, font_name); }, &world);
+        variants.rejects("values.on", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited"); d["menu_text"]["values"]["on"].SetString("~");
+            d["menu_text"]["results"]["proceed"].SetString(std::string(512, 'W').c_str(), d.GetAllocator());
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -6474,6 +6650,8 @@ int main(int argc, char** argv)
         check_setting_resolution_resources(variants, world);
         check_end_continuation_text(variants, world);
         check_end_continuation_bounds(variants, world);
+        check_results_plain_text(variants, world);
+        check_results_plain_bounds(variants, world);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
@@ -6481,6 +6659,7 @@ int main(int argc, char** argv)
             "authored duration templates, FLOAT/defaultfloat compatibility and actual tuning/default/choice row validation, "
             "authored resolution templates with full positive integer dimensions, strict original tokens and captured Options fitting, "
             "four plain End continuation labels with literal braces, actual-font glyphs and unscaled row0 padding boundaries, "
+            "three plain Results roles with zero-offset shadows, centered paper bounds and authored record/roster clearance dependencies, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "finite authored series/roster templates and expanded-card boundaries, "
