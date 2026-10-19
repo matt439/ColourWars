@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/play_settings.h"
+#include "game/action_bindings.h"
 
 #include "engine/input/gamepads.h"
 #include "engine/input/keyboard.h"
@@ -8,23 +9,6 @@
 #include "game/objects/player_input_data.h"
 #include "game/tuning.h"
 #include <vector>
-
-namespace player_input_consts
-{
-	// Fixed gameplay bindings for the keyboard/mouse slot.
-	constexpr labrador::Key move_left_key = labrador::Key::a;
-	constexpr labrador::Key move_right_key = labrador::Key::d;
-	constexpr labrador::Key jump_key = labrador::Key::space;
-
-	// S or Down requests dropping through a platform.
-	constexpr labrador::Key drop_key = labrador::Key::s;
-	constexpr labrador::Key drop_key_alternate = labrador::Key::down;
-	constexpr labrador::Key pause_key = labrador::Key::escape;
-	constexpr labrador::Key debug_key = labrador::Key::f1;
-	constexpr labrador::Key confirm_key = labrador::Key::enter;
-
-	constexpr labrador::MouseButton shoot_button = labrador::MouseButton::left;
-}
 
 // Map engine input snapshots to gameplay actions, one entry per device slot.
 // The engine tracks edges continuously, including while menus are open.

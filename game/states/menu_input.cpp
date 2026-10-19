@@ -3,7 +3,6 @@
 #include "game/states/menu_level_settings.h"
 
 using namespace mattmath;
-using namespace menu_input_consts;
 using namespace labrador;
 
 ProcessedMenuInput menu_input_for_owner(
@@ -58,11 +57,12 @@ Direction MenuDirectionRepeat::update(const std::array<bool, 4>& held,
 {
 	Direction wanted = Direction::none;
 	int count = 0;
-	for (int i = 0; i < direction_key_count; ++i)
+	const ActionBindings& bindings = default_action_bindings();
+	for (int i = 0; i < menu_direction_count; ++i)
 	{
 		if (held[i])
 		{
-			wanted = direction_keys[i].direction;
+			wanted = bindings.directions[i].direction;
 			++count;
 		}
 	}
@@ -90,14 +90,13 @@ Direction MenuDirectionRepeat::update_pad(const GamepadState& pad,
 {
 	const float values[] = { -pad.left_stick.y, pad.left_stick.y,
 		-pad.left_stick.x, pad.left_stick.x };
-	const GamepadButton buttons[] = { GamepadButton::dpad_up,
-		GamepadButton::dpad_down, GamepadButton::dpad_left, GamepadButton::dpad_right };
+	const auto dpad = dpad_direction_held(default_action_bindings(), pad);
 	std::array<bool, 4> held = {};
-	for (int i = 0; i < direction_key_count; ++i)
+	for (int i = 0; i < menu_direction_count; ++i)
 	{
 		this->stick_[i] = use_stick && values[i] >= (this->stick_[i] ?
 			tuning.menu_release_threshold : tuning.menu_engage_threshold);
-		held[i] = this->stick_[i] || pad.is_down(buttons[i]);
+		held[i] = this->stick_[i] || dpad[i];
 	}
 	return this->update(held, dt, delay, interval);
 }
@@ -122,12 +121,7 @@ void MenuInput::update_directions(float dt, float delay, float interval, bool us
 		this->directions_[slot] = Direction::none;
 		return;
 	}
-	std::array<bool, 4> held = {};
-	for (int i = 0; i < direction_key_count; ++i)
-	{
-		held[i] = this->keyboard_->held(direction_keys[i].key) ||
-			this->keyboard_->held(direction_keys[i].alternate);
-	}
+	const auto held = keyboard_direction_held(default_action_bindings(), this->keyboard_->state());
 	this->directions_[slot] = this->navigation_[slot].update(held, dt, delay, interval);
 }
 
@@ -156,12 +150,18 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 	// Do not arm on reconnect: a held button has a zeroed previous state.
 	bool* armed = this->armed_[slot];
 	const bool pad_just_connected = gamepads.just_connected(slot);
-	for (int i = 0; i < action_button_count; ++i)
+	const ActionBindings& bindings = default_action_bindings();
+	std::array<ActionSample, menu_action_count> actions{};
+	bool anything_down = false;
+	int was_down_count = 0;
+	for (int i = 0; i < menu_action_count; ++i)
 	{
-		const GamepadButton button = action_buttons[i].button;
-		const bool went_down = now.is_down(button) && !before.is_down(button);
+		const ActionSample sample = menu_action(bindings, static_cast<MenuInputAction>(i), now, before);
+		actions[i] = sample;
 		armed[i] = !pad_just_connected &&
-			(went_down || (armed[i] && before.is_down(button)));
+			(sample.pressed || (armed[i] && sample.was_held));
+		anything_down = anything_down || sample.held;
+		if (sample.was_held) { ++was_down_count; }
 	}
 
 	ProcessedMenuInput result;
@@ -169,33 +169,13 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 
 	// Accept a release only when exactly one action was down last frame,
 	// so releasing conflicting actions together does not choose between them.
-	const bool nothing_down = std::none_of(std::begin(action_buttons), std::end(action_buttons),
-		[&now](const ActionButton& entry) { return now.is_down(entry.button); });
-
-	const auto only_one_was = [&before](GamepadButton wanted)
+	if (!anything_down && was_down_count == 1)
 	{
-		if (!before.is_down(wanted))
+		for (int i = 0; i < menu_action_count; ++i)
 		{
-			return false;
-		}
-		int down = 0;
-		for (const ActionButton& entry : action_buttons)
-		{
-			if (before.is_down(entry.button))
+			if (armed[i] && actions[i].was_held)
 			{
-				++down;
-			}
-		}
-		return down == 1;
-	};
-
-	if (nothing_down)
-	{
-		for (int i = 0; i < action_button_count; ++i)
-		{
-			if (armed[i] && only_one_was(action_buttons[i].button))
-			{
-				result.action = action_buttons[i].action;
+				result.action = static_cast<MenuInputAction>(i);
 				break;
 			}
 		}
@@ -208,59 +188,38 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 
 ProcessedMenuInput MenuInput::keyboard_menu_input(const Keyboard& keyboard)
 {
-	const auto down = [&keyboard](const ActionKey& entry)
-	{
-		return keyboard.held(entry.key) || keyboard.held(entry.alternate);
-	};
-	const auto went_down = [&keyboard](const ActionKey& entry)
-	{
-		return keyboard.pressed(entry.key) || keyboard.pressed(entry.alternate);
-	};
-
-	// Recover the previous held state from the keyboard's edge queries.
-	const auto was_down = [&keyboard](const ActionKey& entry)
-	{
-		const auto key_was_down = [&keyboard](Key key)
-		{
-			return (keyboard.held(key) && !keyboard.pressed(key)) ||
-				keyboard.released(key);
-		};
-		return key_was_down(entry.key) || key_was_down(entry.alternate);
-	};
-
 	// Keep arming through the release frame, as for pads, for repeatable reads.
 	// Clear it on focus return: suppressed press edges would otherwise preserve
 	// ownership of a key held while the window was unfocused.
 	const bool just_focused = keyboard.just_focused();
-	for (int i = 0; i < action_key_count; ++i)
+	const ActionBindings& bindings = default_action_bindings();
+	std::array<ActionSample, menu_action_count> actions{};
+	bool anything_down = false;
+	int was_down_count = 0;
+	for (int i = 0; i < menu_action_count; ++i)
 	{
+		// The evaluator reconstructs previous-held per physical key before
+		// combining aliases: (held && !pressed) || released.
+		const ActionSample sample = menu_action(bindings, static_cast<MenuInputAction>(i),
+			keyboard.state(), keyboard.previous_state());
+		actions[i] = sample;
 		this->key_armed_[i] = !just_focused &&
-			(went_down(action_keys[i]) ||
-				(this->key_armed_[i] && was_down(action_keys[i])));
+			(sample.pressed || (this->key_armed_[i] && sample.was_held));
+		anything_down = anything_down || sample.held;
+		if (sample.was_held) { ++was_down_count; }
 	}
 
 	ProcessedMenuInput result;
 	result.connected = true;
 
-	bool anything_down = false;
-	int was_down_count = 0;
-	for (const ActionKey& entry : action_keys)
-	{
-		anything_down = anything_down || down(entry);
-		if (was_down(entry))
-		{
-			++was_down_count;
-		}
-	}
-
 	// Reject simultaneous releases of different actions.
 	if (!anything_down && was_down_count == 1)
 	{
-		for (int i = 0; i < action_key_count; ++i)
+		for (int i = 0; i < menu_action_count; ++i)
 		{
-			if (this->key_armed_[i] && was_down(action_keys[i]))
+			if (this->key_armed_[i] && actions[i].was_held)
 			{
-				result.action = action_keys[i].action;
+				result.action = static_cast<MenuInputAction>(i);
 				break;
 			}
 		}

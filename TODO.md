@@ -33,7 +33,7 @@ This is a selection guide, not another priority order; each owner defines a boun
 | id | next implementation slice | owner |
 |---|---|---|
 | `DBG#1` | Audit further colour consumers; nine existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
-| `GAP#4.2` | Default action bindings and evaluators preserving today's controls | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
+| `GAP#4.2` | Scope binding persistence and capture conflicts after the default evaluators | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
 | `GAP#8.4` | Extract generated player/device labels and composed setup/settings/results copy | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -123,7 +123,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
-| `GAP#4.2` | OPEN | MED | L | Build default action bindings/evaluators before persistence and rebinding UI; preserve current controls. `GAP#F2` follows the client exhibit. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
+| `GAP#4.2` | OPEN | MED | L | Scope binding persistence and capture/rebinding behavior using the default evaluators; UI artwork follows the style lock. `GAP#F2` follows the client exhibit. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
 | `GAP#5.1` | BLOCKED | LOW | M | Screen changes are hard cuts: the transition look is UI art after the gameplay style lock (`POL#7`, `POL#14`, `POL#9`). Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. The blank startup window waits on `ENG#19`. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | DEFERRED | LOW | L | No locale axis; waits on `GAP#8.4`. Fonts regenerate from [a recipe](game/art/README.md#sprite-font-recipe-gap87) and text can wrap. |

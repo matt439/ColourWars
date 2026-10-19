@@ -4,6 +4,7 @@ find_package(xaudio2redist CONFIG REQUIRED)
 find_package(directxtk CONFIG REQUIRED)
 
 add_executable(ColourWars WIN32
+    action_bindings.cpp
     content_validation.cpp
     content_value.cpp
     directory_consts.cpp

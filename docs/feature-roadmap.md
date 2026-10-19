@@ -494,11 +494,28 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 
 ## Action bindings (`GAP#4.2`)
 
-**OPEN; first slice:** introduce client-owned actions and binding evaluators for
-the existing gameplay and menu controls, retaining today's default mappings.
-Evaluate keyboard, mouse and pad snapshots with the same held, press and release
-semantics, trigger thresholds, stick response and disconnected-device behavior.
-Menu arming, neutral gates and direction repeat keep their current ownership.
+**OPEN; the default-evaluator slice is implemented.**
+[Action bindings](../game/action_bindings.h) name the existing gameplay actions
+and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
+menu action and direction bindings. Pure evaluators consume engine snapshots;
+both `PlayerInput` and `MenuInput` use them immediately. There is no new service
+or input provider, and today's controls are retained.
+
+Aliases combine each source's held, press and release result independently. In
+particular, crossing the jump trigger while A remains held still produces a jump
+press. Trigger thresholds remain live tuning with strict `>` comparisons.
+Keyboard/mouse focus, mouse button epochs and pad connection retain the engine's
+edge suppression. Menu keyboard prior-held reconstruction still happens per key
+before combining aliases, and the menu reader retains its arming, conflict,
+reconnect/focus-reset and repeated-read rules. Its unbound keyboard Pause action
+stays neutral; Escape still means Back in menus.
+
+Stick response, per-slot preferences, raw stick reporting, the strict stick-Y
+drop comparison and camera-dependent mouse aim stay in the gameplay reader.
+Menu hysteresis, neutral gates and direction repeat stay in their existing
+classes, including D-pad navigation while stick navigation is disabled for the
+calibration page. The developer bind warning retains its existing seven gameplay
+keys, including the existing omission of Enter.
 
 Acceptance: compare default action output with the existing readers, including
 opposing/aliased keys, thresholds, held entry, reconnect, focus return and
@@ -506,8 +523,30 @@ simultaneous inputs. Real-page checks retain joining, selection, pause and
 confirmation behavior. Synthetic devices establish mapping behavior; physical-pad
 comfort remains `ROAD#2`.
 
-Persistence and the rebinding/capture page follow that working client seam; the
-first slice alone does not close `GAP#4.2`. Use its concrete input requirements
+Validation (2026-10-19): both builds and all 38 CPU cases per preset pass. The
+new headless case compares literal frozen-reader oracles with pure evaluations
+and actual `PlayerInput`/`MenuInput` instances using scripted pad snapshots.
+It covers independent alias edges, focus/connection/mouse epochs, asymmetric
+live trigger thresholds and adjacent float boundaries, held entry, repeated
+reads, menu chords/reset/reconnect, direction aliases, strict drop thresholds,
+raw sticks, sparse roster extraction and live per-slot preferences.
+
+`ConnectionTextOnly` and `TeamFocusOnly` pass on both presets: 347 comparisons,
+362 manual page updates and 16 compact crops per preset. All 32 crops match the
+previously accepted captures byte for byte. These checks drive actual Join,
+Count, Team and Weapon routes plus a directly constructed Pause page, interrupted
+Restart confirmation and fresh Back Resume. They do not test native
+`PlayerInput`-to-`GameLevel` pause opening or affirmative Restart/Quit; gameplay
+mapping and release edges are covered by the independent CPU case. Both
+isolated system-path startups pass with the published bank and per-monitor-v2
+DPI awareness. Production and oracle reviews found no remaining issue. Evidence
+is under `out/validation/default-actions/`; these hidden checks establish no
+physical-pad comfort, attended readability or performance acceptance.
+
+Persistence and the rebinding/capture page remain open after this default slice.
+Scope their save/version/validation and capture-conflict behavior against these
+working tables before adding either. This slice alone does not close `GAP#4.2`.
+Use its concrete input requirements
 as the exhibit for `GAP#F2`, checking engine master before filing a report.
 Rebinding artwork follows the gameplay style lock; its implementation does not
 gate the default evaluator. Upstream filing follows the

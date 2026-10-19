@@ -4,7 +4,6 @@
 #include "game/objects/stick_response.h"
 
 using namespace mattmath;
-using namespace player_input_consts;
 using namespace labrador;
 
 PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
@@ -16,6 +15,12 @@ PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
 PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 {
 	const GamepadState& pad = gamepads.state(slot);
+	const GamepadState& before = gamepads.previous_state(slot);
+	const ActionBindings& bindings = default_action_bindings();
+	const auto action = [&](GameAction name)
+	{
+		return game_action(bindings, name, pad, before, this->tuning_->input());
+	};
 
 	PlayerInputData result;
 	result.connected = true;
@@ -23,25 +28,18 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 	// Jump uses A or the left trigger crossing its threshold. Suppress press
 	// edges on reconnect: the previous state is neutral, so an already-held
 	// button would otherwise look newly pressed. Preserve the held state.
-	result.jump_held = gamepads.held(slot, GamepadButton::a) ||
-		gamepads.trigger_held(slot, GamepadTrigger::left,
-			this->tuning_->input().trigger_jump_threshold);
-	result.jump_pressed = !gamepads.just_connected(slot) &&
-		(gamepads.pressed(slot, GamepadButton::a) ||
-			gamepads.trigger_pressed(slot, GamepadTrigger::left,
-				this->tuning_->input().trigger_jump_threshold));
-
-	result.primary_shoot = gamepads.trigger_held(slot, GamepadTrigger::right,
-		this->tuning_->input().trigger_shoot_threshold);
+	const ActionSample jump = action(GameAction::jump);
+	result.jump_held = jump.held;
+	result.jump_pressed = !gamepads.just_connected(slot) && jump.pressed;
+	result.primary_shoot = action(GameAction::shoot).held;
 
 	// Open menus on release so the opening button is no longer held.
 	// MenuInput arming also handles other buttons held during the transition.
-	result.toggle_pause_menu = gamepads.released(slot, GamepadButton::start);
-	result.pause_held = gamepads.held(slot, GamepadButton::start);
-	result.toggle_debug = gamepads.released(slot, GamepadButton::back);
-	result.skip_intro = gamepads.released(slot, GamepadButton::a) ||
-		gamepads.released(slot, GamepadButton::b) ||
-		gamepads.released(slot, GamepadButton::start);
+	const ActionSample pause = action(GameAction::pause);
+	result.toggle_pause_menu = pause.released;
+	result.pause_held = pause.held;
+	result.toggle_debug = action(GameAction::debug).released;
+	result.skip_intro = action(GameAction::skip_intro).released;
 
 	const StickResponse response = stick_response(pad.left_stick, pad.right_stick,
 		this->tuning_->input().movement_deadzone, *this->preferences_, slot);
@@ -69,29 +67,34 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 	const Mouse& mouse)
 {
+	const ActionBindings& bindings = default_action_bindings();
+	const auto action = [&](GameAction name)
+	{
+		return game_action(bindings, name, keyboard.state(), keyboard.previous_state(),
+			mouse.state(), mouse.previous_state());
+	};
 	PlayerInputData result;
 	result.connected = true;
 
 	// Opposing movement keys cancel.
-	const float left = keyboard.held(move_left_key) ? 1.0f : 0.0f;
-	const float right = keyboard.held(move_right_key) ? 1.0f : 0.0f;
+	const float left = action(GameAction::move_left).held ? 1.0f : 0.0f;
+	const float right = action(GameAction::move_right).held ? 1.0f : 0.0f;
 	result.x_movement = right - left;
 
-	result.jump_held = keyboard.held(jump_key);
-	result.jump_pressed = keyboard.pressed(jump_key);
-
-	result.primary_shoot = mouse.held(shoot_button);
+	const ActionSample jump = action(GameAction::jump);
+	result.jump_held = jump.held;
+	result.jump_pressed = jump.pressed;
+	result.primary_shoot = action(GameAction::shoot).held;
 
 	// Dropping is a held request, checked when the player is on a pass-through platform.
-	result.drop_through = keyboard.held(drop_key) ||
-		keyboard.held(drop_key_alternate);
+	result.drop_through = action(GameAction::drop).held;
 
 	// Match the pad's release edges so the opening key is no longer held.
-	result.toggle_pause_menu = keyboard.released(pause_key);
-	result.pause_held = keyboard.held(pause_key);
-	result.toggle_debug = keyboard.released(debug_key);
-	result.skip_intro = keyboard.released(jump_key) || keyboard.released(pause_key) ||
-		keyboard.released(confirm_key);
+	const ActionSample pause = action(GameAction::pause);
+	result.toggle_pause_menu = pause.released;
+	result.pause_held = pause.held;
+	result.toggle_debug = action(GameAction::debug).released;
+	result.skip_intro = action(GameAction::skip_intro).released;
 
 	// Level fills mouse aim after converting the player centre to screen coordinates.
 

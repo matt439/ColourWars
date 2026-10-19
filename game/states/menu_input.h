@@ -4,70 +4,13 @@
 #include "engine/input/keyboard.h"
 #include "engine/ui/navigation.h"
 #include "game/input_slots.h"
+#include "game/action_bindings.h"
 #include "game/tuning.h"
 #include "game/states/menu_input_action.h"
 #include <array>
 #include <vector>
 
 class MenuLevelSettings;
-
-namespace menu_input_consts
-{
-	// Menu button mappings; arming flags use these table indices.
-	struct ActionButton
-	{
-		labrador::GamepadButton button;
-		MenuInputAction action;
-	};
-
-	constexpr int action_button_count = 4;
-
-	constexpr ActionButton action_buttons[action_button_count] =
-	{
-		{ labrador::GamepadButton::a, MenuInputAction::proceed },
-		{ labrador::GamepadButton::b, MenuInputAction::back },
-		{ labrador::GamepadButton::start, MenuInputAction::pause },
-		{ labrador::GamepadButton::x, MenuInputAction::shuffle },
-	};
-
-	// Each action has primary and alternate keys and one shared arming flag.
-	// Escape maps to back, which also resumes the pause menu.
-	struct ActionKey
-	{
-		labrador::Key key;
-		labrador::Key alternate;
-		MenuInputAction action;
-	};
-
-	constexpr int action_key_count = 3;
-
-	constexpr ActionKey action_keys[action_key_count] =
-	{
-		{ labrador::Key::enter, labrador::Key::space,
-			MenuInputAction::proceed },
-		{ labrador::Key::escape, labrador::Key::backspace,
-			MenuInputAction::back },
-		{ labrador::Key::r, labrador::Key::r, MenuInputAction::shuffle },
-	};
-
-	// Menu navigation accepts arrows and WASD.
-	struct DirectionKey
-	{
-		labrador::Key key;
-		labrador::Key alternate;
-		labrador::Direction direction;
-	};
-
-	constexpr int direction_key_count = 4;
-
-	constexpr DirectionKey direction_keys[direction_key_count] =
-	{
-		{ labrador::Key::up, labrador::Key::w, labrador::Direction::up },
-		{ labrador::Key::down, labrador::Key::s, labrador::Direction::down },
-		{ labrador::Key::left, labrador::Key::a, labrador::Direction::left },
-		{ labrador::Key::right, labrador::Key::d, labrador::Direction::right },
-	};
-}
 
 // One device's held navigation, blocked until neutral after a context change.
 class MenuDirectionRepeat
@@ -135,11 +78,11 @@ private:
 	// This prevents releasing a gameplay-held button from activating a new menu.
 	// reset_actions() clears ownership when input changes context.
 	bool armed_[input_slots::pad_count]
-		[menu_input_consts::action_button_count] = {};
+		[menu_action_count] = {};
 
 	MenuDirectionRepeat navigation_[input_slots::count];
 	labrador::Direction directions_[input_slots::count] = {};
 
-	// Keyboard arming is indexed by action_keys, not the pad button table.
-	bool key_armed_[menu_input_consts::action_key_count] = {};
+	// Each logical action owns its aliases; the unbound keyboard Pause stays neutral.
+	bool key_armed_[menu_action_count] = {};
 };
