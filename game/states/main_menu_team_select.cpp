@@ -9,7 +9,7 @@ using namespace labrador;
 #pragma region MainMenuTeamSelect
 
 MainMenuTeamSelect::MainMenuTeamSelect(MenuContext* context) :
-	MainMenuPage(context)
+	MainMenuPage(context), team_focus_(context->level_settings()->player_count())
 {
 
 }
@@ -39,6 +39,7 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
+		const PlayerTeam team = this->selected_team(i);
 		if (inputs[i].action == MenuInputAction::back)
 		{
 			if (can_leave)
@@ -49,17 +50,17 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 						this->menu_context()));
 				return;
 			}
-			if (this->select_states_[i].state == ConfirmationState::confirmed)
+			if (this->confirmations_[i] == ConfirmationState::confirmed)
 			{
 				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
-				this->select_states_[i].state =
+				this->confirmations_[i] =
 					ConfirmationState::unconfirmed;
 				this->player_widgets_[i]->motion.press();
 			}
 			// Continue so other players can act in the same frame.
 		}
 		else if (inputs[i].action == MenuInputAction::proceed &&
-			this->select_states_[i].team != PlayerTeam::none)
+			team != PlayerTeam::none)
 		{
 			// Require both teams only on the confirmation that completes a multiplayer
 			// roster, allowing earlier players to choose either side.
@@ -72,38 +73,38 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 			else
 			{
 				this->play_wave(this->confirm_sound_);
-				if (this->select_states_[i].state != ConfirmationState::confirmed)
+				if (this->confirmations_[i] != ConfirmationState::confirmed)
 				{
 					this->player_widgets_[i]->motion.press();
 				}
-				this->select_states_[i].state = ConfirmationState::confirmed;
+				this->confirmations_[i] = ConfirmationState::confirmed;
 			}
 		}
-		else if (this->select_states_[i].state ==
+		else if (this->confirmations_[i] ==
 			ConfirmationState::unconfirmed)
 		{
 			if (inputs[i].direction == labrador::Direction::left)
 			{
 				this->play_wave(this->direction_sound_);
-				if (this->select_states_[i].team == PlayerTeam::none)
+				if (team == PlayerTeam::none)
 				{
-					this->select_states_[i].team = PlayerTeam::a;
+					this->team_focus_.set_focused(i, this->team_widget(i, PlayerTeam::a));
 				}
-				else if (this->select_states_[i].team == PlayerTeam::b)
+				else if (team == PlayerTeam::b)
 				{
-					this->select_states_[i].team = PlayerTeam::none;
+					this->team_focus_.set_focused(i, this->team_widget(i, PlayerTeam::none));
 				}
 			}
 			else if (inputs[i].direction == labrador::Direction::right)
 			{
 				this->play_wave(this->direction_sound_);
-				if (this->select_states_[i].team == PlayerTeam::none)
+				if (team == PlayerTeam::none)
 				{
-					this->select_states_[i].team = PlayerTeam::b;
+					this->team_focus_.set_focused(i, this->team_widget(i, PlayerTeam::b));
 				}
-				else if (this->select_states_[i].team == PlayerTeam::a)
+				else if (team == PlayerTeam::a)
 				{
-					this->select_states_[i].team = PlayerTeam::none;
+					this->team_focus_.set_focused(i, this->team_widget(i, PlayerTeam::none));
 				}
 			}
 		}
@@ -133,8 +134,8 @@ void MainMenuTeamSelect::shuffle_teams()
 	for (int i = 0; i < this->player_count(); ++i)
 	{
 		this->player_widgets_[i]->motion.reset();
-		this->select_states_[i].team = shuffled.player_team(i);
-		this->select_states_[i].state = ConfirmationState::unconfirmed;
+		this->team_focus_.set_focused(i, this->team_widget(i, shuffled.player_team(i)));
+		this->confirmations_[i] = ConfirmationState::unconfirmed;
 	}
 	this->both_teams_needed_->set_hidden(true);
 	this->play_wave(this->direction_sound_);
@@ -148,7 +149,7 @@ bool MainMenuTeamSelect::confirm_completes_roster(int player) const
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		if (i != player &&
-			this->select_states_[i].state != ConfirmationState::confirmed)
+			this->confirmations_[i] != ConfirmationState::confirmed)
 		{
 			return false;
 		}
@@ -171,7 +172,7 @@ bool MainMenuTeamSelect::both_teams_chosen() const
 	bool team_b = false;
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		switch (this->select_states_[i].team)
+		switch (this->selected_team(i))
 		{
 		case PlayerTeam::a:
 			team_a = true;
@@ -190,14 +191,14 @@ void MainMenuTeamSelect::set_level_settings() const
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->level_settings()->
-			set_player_team(i, this->select_states_[i].team);
+			set_player_team(i, this->selected_team(i));
 	}
 }
 bool MainMenuTeamSelect::all_players_confirmed() const
 {
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		if (this->select_states_[i].state != ConfirmationState::confirmed)
+		if (this->confirmations_[i] != ConfirmationState::confirmed)
 		{
 			return false;
 		}
@@ -208,7 +209,7 @@ bool MainMenuTeamSelect::all_players_unconfirmed() const
 {
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		if (this->select_states_[i].state == ConfirmationState::confirmed)
+		if (this->confirmations_[i] == ConfirmationState::confirmed)
 		{
 			return false;
 		}
@@ -223,7 +224,7 @@ void MainMenuTeamSelect::update_team_select_visuals()
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		MenuChoiceIcon* selected_widget = nullptr;
-		switch (this->select_states_[i].team)
+		switch (this->selected_team(i))
 		{
 		case PlayerTeam::a:
 			this->player_widgets_[i]->player_a->set_sprite_frame(
@@ -243,17 +244,19 @@ void MainMenuTeamSelect::update_team_select_visuals()
 		}
 		this->player_widgets_[i]->motion.observe(selected_widget);
 		selected_widget->set_motion_selected(true);
-		if (this->select_states_[i].state ==
+		if (this->confirmations_[i] ==
 			ConfirmationState::confirmed)
 		{
-			selected_widget->set_colour(
-				this->look().team_select.selected);
+			// Readiness locks only this row's chosen icon; its cursor stays put.
+			this->team_focus_.set_enabled(selected_widget, false);
 		}
 	}
 }
 void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 {
 	const auto& frames = this->team_select_frames_;
+	const SelectPresentation& look = this->look().team_select;
+	this->team_focus_.set_style({ look.unselected, look.unselected, look.selected });
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->player_widgets_[i]->player_a->set_motion_selected(false);
@@ -266,14 +269,34 @@ void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 		this->player_widgets_[i]->player_b->set_sprite_frame(
 			frames[2]);
 
-		this->player_widgets_[i]->player_a->set_colour(
-			this->look().team_select.unselected);
-		this->player_widgets_[i]->player_center->set_colour(
-			this->look().team_select.unselected);
-		this->player_widgets_[i]->player_b->set_colour(
-			this->look().team_select.unselected);
+		this->team_focus_.set_enabled(this->player_widgets_[i]->player_a.get(), true);
+		this->team_focus_.set_enabled(this->player_widgets_[i]->player_center.get(), true);
+		this->team_focus_.set_enabled(this->player_widgets_[i]->player_b.get(), true);
 	}
 }
+
+MenuChoiceIcon* MainMenuTeamSelect::team_widget(int player, PlayerTeam team) const
+{
+	const PlayerWidgets& widgets = *this->player_widgets_.at(static_cast<size_t>(player));
+	switch (team)
+	{
+	case PlayerTeam::a: return widgets.player_a.get();
+	case PlayerTeam::none: return widgets.player_center.get();
+	case PlayerTeam::b: return widgets.player_b.get();
+	}
+	throw std::logic_error("Team Select has an invalid team choice.");
+}
+
+PlayerTeam MainMenuTeamSelect::selected_team(int player) const
+{
+	const UiWidget* focused = this->team_focus_.focused(player);
+	const PlayerWidgets& widgets = *this->player_widgets_.at(static_cast<size_t>(player));
+	if (focused == widgets.player_a.get()) { return PlayerTeam::a; }
+	if (focused == widgets.player_center.get()) { return PlayerTeam::none; }
+	if (focused == widgets.player_b.get()) { return PlayerTeam::b; }
+	throw std::logic_error("Team Select cursor must remain in its player's row.");
+}
+
 void MainMenuTeamSelect::init()
 {
 	// A button held on the preceding page cannot shuffle or confirm this one.
@@ -343,11 +366,7 @@ void MainMenuTeamSelect::init()
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		auto state = TeamSelectState();
-		state.state = ConfirmationState::unconfirmed;
-		state.team = this->level_settings()->
-			player_team(i);
-		this->select_states_.push_back(state);
+		this->confirmations_.push_back(ConfirmationState::unconfirmed);
 
 		auto widgets = std::make_unique<PlayerWidgets>(this->menu_style().motion);
 
@@ -409,6 +428,11 @@ void MainMenuTeamSelect::init()
 
 		this->register_selection_motion(&widgets->motion);
 		this->player_widgets_.push_back(std::move(widgets));
+		const PlayerWidgets& row_widgets = *this->player_widgets_.back();
+		this->team_focus_.add(row_widgets.player_a.get());
+		this->team_focus_.add(row_widgets.player_center.get());
+		this->team_focus_.add(row_widgets.player_b.get());
+		this->team_focus_.set_focused(i, this->team_widget(i, this->level_settings()->player_team(i)));
 	}
 	this->update_team_select_visuals();
 	this->check_paper_geometry();

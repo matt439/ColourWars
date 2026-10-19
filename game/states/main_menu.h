@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/ui/widget.h"
+#include "engine/ui/focus.h"
 #include "engine/render/text_encoding.h"
 #include "game/objects/player_team.h"
 #include "game/states/confirmation_state.h"
@@ -283,11 +284,6 @@ protected:
 private:
 	MenuPaperArtPresentation setup_art_;
 	MenuPaperArtPresentation row_art_;
-	struct TeamSelectState
-	{
-		PlayerTeam team = PlayerTeam::none;
-		ConfirmationState state = ConfirmationState::unconfirmed;
-	};
 	struct PlayerWidgets
 	{
 		explicit PlayerWidgets(const MenuFocusMotionPresentation& look) : motion(look) {}
@@ -307,7 +303,10 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> both_teams_needed_ = nullptr;
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
-	std::vector<TeamSelectState> select_states_;
+	// Roster seats are cursor slots, independent of each seat's input device.
+	// Declared after its borrowed icons so this group is destroyed first.
+	labrador::FocusGroup team_focus_;
+	std::vector<ConfirmationState> confirmations_;
 	// Pair frame names with the atlas captured by this page's UiTextures.
 	// A presentation rebase reaches newly opened pages, never this pairing.
 	std::array<std::string, 3> team_select_frames_;
@@ -315,6 +314,8 @@ private:
 	void shuffle_teams();
 	void update_team_select_visuals();
 	void deselect_and_unconfirm_all_widgets();
+	MenuChoiceIcon* team_widget(int player, PlayerTeam team) const;
+	PlayerTeam selected_team(int player) const;
 	bool all_players_confirmed() const;
 	bool all_players_unconfirmed() const;
 

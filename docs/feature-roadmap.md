@@ -515,18 +515,58 @@ gate the default evaluator. Upstream filing follows the
 
 ## Per-player menu focus (`GAP#D1`)
 
-**OPEN; Team Select first.** Try the engine's per-slot `FocusGroup` cursors on
-the existing three choices per player. Preserve each seat's row, the current
-Left/Right limits, team requirements, shuffle, readiness, cancellation and choice
-motion. Establish that shared candidate selection and derived focus painting can
-retain those rules before extracting a shared page base.
+**Implemented and evaluated (2026-10-19).** Team Select now
+registers its three icons per row in one private `FocusGroup`, with exactly one
+cursor per roster seat. Input slots still map through the joined roster: keyboard
+slot 4 is not a fifth cursor, and sparse/reordered devices retain their own rows.
+The focused pointer supplies the provisional team choice; readiness remains
+separate. Final confirmation is still the only point that commits choices.
 
-Acceptance: drive one to four seats, simultaneous choices/confirmation/back,
-shuffle and held inputs, missing devices and return from Weapon Select. Compare
-the existing page's choices, readiness, appearance and RNG consumption. If the
-API cannot keep row ownership or readiness painting, retain the working page
-and draft a concrete local engine exhibit. Evaluate Weapon Select only after this
-fit; its single cycled icon is a different navigation case.
+Left/Right keeps the existing discrete A/none/B order and endpoint limits through
+explicit `set_focused` calls. It does not use the geometric candidate walker:
+valid artwork origins can shift physical icon bounds without changing the team
+order. Registered choice validation, cursor storage and derived painting fit
+this page without navigation proxies, an engine change or a shared page base.
+
+Focused and unfocused entries use the existing live unselected colour. A ready
+seat disables only its chosen entry, retaining its cursor and deriving the
+existing selected colour even while another cursor changes. Visual refresh
+re-enables entries before applying current readiness. The colour snapshot updates
+at the same refresh points as before; changing presentation data alone does not
+recolour a frozen draw. Atlas/frame pairs, copy, fonts, paper and motion retain
+their existing captured behavior. The inherited single-cursor group stays empty
+because the paper uses it for a shared focus card/arrow.
+
+Pre-frame Back handling, early shuffle priority, held/reconnect action resets,
+repeated confirmation and endpoint sounds, team requirements, cancellation,
+choice motion and RNG consumption are retained.
+
+Weapon Select retains its existing value adjustment. Each seat owns one reused
+`MenuIcon`; `cycle_weapons` changes a six-value enum and explicitly starts choice
+motion, while Random resolves only after final confirmation. A cursor pinned to
+that icon cannot represent those values. Walking the registered widgets would
+move between seats, and a separate single-entry group per seat would never move.
+Readiness also paints the weapon name, and repeated confirmation still plays its
+sound, so disabled-entry activation would not replace that flow. These are
+concrete differences in [the page](../game/states/main_menu_weapon_select.cpp),
+not an engine defect: [FocusGroup](../external/labrador/engine/ui/focus.h)
+explicitly leaves Left/Right value adjustment to the client, as `OptionRow`
+already demonstrates. No proxy widgets or shared page base are needed. Team's
+registered choices supply the useful per-player cursor client that this finding
+was missing.
+
+Validation: Debug and Release builds and all 37 CPU acceptance cases per preset
+pass. The compact `TeamFocusOnly` native check passes 258 raster comparisons over
+226 page updates per preset, including all roster counts, sparse/reordered device
+slots, readiness retention, motion, input priorities, reconnect, final commit into
+the actual Weapon page and an unready return. Captured artwork/text/fonts and
+live-colour refresh boundaries are exercised, along with valid nonzero sprite
+origins that reverse the physical A/B order. Each preset produces eight compact
+icon-strip crops; the crops and CSV are byte-identical across presets. Both
+isolated system-path startups pass with the published audio bank and per-monitor
+DPI awareness. Evidence is under `out/validation/team-focus-cursors/`; a probe-only
+camera API compile correction and its failed logs are retained. This establishes
+no physical-pad, attended readability or performance acceptance.
 
 ## Other demonstration gaps
 

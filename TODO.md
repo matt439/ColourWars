@@ -35,7 +35,6 @@ This is a selection guide, not another priority order; each owner defines a boun
 | `DBG#1` | Audit further colour consumers; seven existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 | `GAP#4.2` | Default action bindings and evaluators preserving today's controls | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
 | `GAP#8.4` | Extract generated player/device labels and composed setup/settings/results copy | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
-| `GAP#D1` | Use per-slot FocusGroup cursors on Team Select without changing its behaviour | [Menu client](docs/feature-roadmap.md#per-player-menu-focus-gapd1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Gameplay style:** review the implemented painter/tools (`POL#7`) and player/shot cues
@@ -148,7 +147,6 @@ These add to the hierarchies, never flatten them (CLAUDE.md); D6 is `GAP#4.2`.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#D1` | OPEN | MED | M | Give per-slot FocusGroup cursors a Team Select client, preserving selection/readiness; evaluate Weapon Select only after that fit. [Scope](docs/feature-roadmap.md#per-player-menu-focus-gapd1). |
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
 | `GAP#D5` | DEFERRED | MED | M | Add rotated/moving builder structures and useful arena placements during `POL#17`/`POL#21` blockouts; qualify collision, support and paint. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
 
