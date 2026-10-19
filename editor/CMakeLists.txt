@@ -21,7 +21,13 @@ target_compile_definitions(ColourWarsEditor PRIVATE
 
 # Consumer checks are explicit, like scripts/acceptance's game checks; no CTest.
 add_executable(colourwars_editor_acceptance EXCLUDE_FROM_ALL
-    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor.cpp")
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/fixtures.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/content_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/format_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/field_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/editing_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/registration_checks.cpp")
 target_link_libraries(colourwars_editor_acceptance PRIVATE colourwars_level_document)
 target_include_directories(colourwars_editor_acceptance SYSTEM PRIVATE
     "${PROJECT_SOURCE_DIR}/external/rapidjson/include")
