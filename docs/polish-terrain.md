@@ -391,32 +391,103 @@ under `out/validation/terrain-landmarks/`.
 The evidence-only helper's initial PowerShell compatibility failures are retained
 alongside its final passed proof; they changed no game content.
 
+## Parallax comparison prototype
+
+The comparison belongs to the native painter probe, with the shipped rendering
+path and content kept static. It compares the existing scene with two small
+horizontal offsets: distant sun/cloud/bird art at two percent of camera travel,
+capped at 32 world units, and the same distant motion plus hills at one percent,
+capped at 16. Displacements snap to the existing four-unit pencil cells. The
+anchor is the authored overview's horizontal center; each view calculates its
+own displacement from its visible world center. Every hill uses the same
+offset, preserving the overlapping joins. Vertical movement is excluded: the
+hill bottoms already meet the foreground floors with no spare artwork below.
+
+House/tree details, brush pots, tape rolls, shadows, terrain and paint keep the
+ordinary camera. Each moving range gets a local camera for both drawing and
+culling, then restores the ordinary one. The cloud's existing conservative
+drift bounds remain valid in that camera; there is no per-view object mutation,
+extra world update, random draw, asset rewrite or new scene owner.
+
+Primary comparisons use scenery built from the current arenas, with clean or
+measured heavy paint. They use the actual `PlayerCamera` framing policy,
+camera bounds and authored spawn centers, plus explicitly placed focus points
+near the landmarks, at 1P/4P. A far layer outside those
+views is recorded as such; the probe does not zoom out to make motion visible.
+This is a scenery comparison through the current framing policy, rather than
+an active player match or a claim about route reachability. The compact paired
+captures include both 1P and 4P context.
+
+CSV cull-candidate counts use the objects' conservative bounds; they do not
+claim that every candidate contributes a visible pixel. Separate frame-wide
+pixel deltas measure static-to-distant and distant-to-distant-plus-hills changes.
+Per-view rows repeat those frame-wide deltas; the totals count each frame once.
+
+The explicit-camera traversal is local to the probe. Labrador's current
+`Scene` culls before an object's `draw(DrawList&)`, which has no camera input;
+its callback runs after the world. The same friction is recorded by the
+[miniature-terrain exhibit](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit).
+Runtime adoption would need a separate review of world ordering, scene-owned
+object admission/retirement, overlays and rendering cost. The current preview,
+editor, monitor and overview paths retain their static behavior; Reduce effects
+and zero prototype motion use the static comparison path.
+
+Validation on 2026-10-19: `scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -ParallaxOnly`
+and its Release counterpart pass under `/W4 /WX`.
+Each preset covers 32 primary contexts: four arenas, clean/heavy paint, 1P/4P
+and two camera poses at 720p. Supplementary checks cover clipped layer edges,
+fractional and negative camera origins, displacement caps, independent views,
+1080p and return to 720p, static StagePreview, zero motion, Reduce effects,
+ordinary Scene/static parity, anchor cameras and frozen state/paint/RNG.
+An independent raw-atlas reference checks moving decorations without using
+the candidate layer-camera helper. Black/white masks compare opaque static
+coverage against the static image; transparent holes and partial shadows are
+excluded. Matching prop-reference samples prove agreement with that reference,
+not a prop's unique contribution when another object has the same colour.
+
+Each preset records 372 render readbacks, 80 primary per-view CSV rows and 48
+supplementary rows. Exactly eight native 1536x720 comparison sheets show static,
+distant and distant-plus-hills columns, with a 1P crop above a 4P crop. The eight
+PPMs total 26,542,208 bytes per preset; all 12 CSV/PPM files are byte-identical
+between Debug and Release. Counting each primary frame once gives 60,742
+static-to-distant changed pixels and 141,418 additional hill-changed pixels.
+Fourteen of the 32 contexts have no distant change, and fourteen have no
+additional hill change; current framing can exclude those layers.
+
+Visual inspection of all eight sheets finds small decoration/hill-outline
+shifts, with foreground landmarks, terrain and heavy paint staying aligned.
+The comparison establishes no readability improvement. Keep the shipped
+backdrops static and retain the prototype for the existing author style review.
+These are scripted scenery comparisons, with explicit focus placement, rather
+than active-match traversal, human acceptance or uncontended performance data.
+
+Receipts and source archives are under `out/validation/parallax-prototype/`.
+The initial compile failure and its source are retained: value-initializing the
+fixture's `PlayerCamera` fixes MSVC's `/WX` uninitialized-const warning; both
+presets then pass. Game code, content, executables and staged presentation are
+unchanged from the verified Arena-count batch (`c701d76`). Its two game builds,
+38 CPU cases per preset and two isolated accepted-bank/DPI-v2 startups are
+retained baseline evidence, not newly rerun checks for this probe-only change.
+
 ## Not done (what `POL#9` still holds)
 
 - Human review in play, clean and heavily painted, with all three team pairs, at 1P
   and 4P (part of locking the style with `POL#7` and `POL#14`).
 - Author review of the reusable brush pot and tape roll in the current arenas;
   signage and captioned Paint-artefact jokes need the author's wording. Further
-  room life and modest parallax remain choices after camera framing.
+  room life remains a choice after the style review. The retained parallax
+  comparison recommends the current static backdrop.
 - Close Quarters' own backdrop and fitting the kit to its blockout (`POL#17`); a
   palette and composition per arena (`POL#16`).
 
 ## Ready implementation slices (2026-10-18)
 
-The small-view treatment and reusable static landmarks above are implemented.
-The current-arena parallax comparison remains below; retain checks and evidence
-for it. Final human style
-acceptance remains separate; no slice unlocks the phase-2 blockouts by itself.
-
-| Slice | Scope | Acceptance | Size |
-|---|---|---|---|
-| Modest parallax prototype | Compare distant/middle backdrop layers with the static version in the current arenas. Establish the per-view draw approach before broadening the art. | Independent split-screen views, conservative culling, resize and overview/monitor transitions remain correct; define static preview/editor behaviour. Keep drawing free of simulation/RNG mutation and retain a static Reduce effects presentation. | L |
-
-The small-view treatment and static landmarks are ready for author review. The
-parallax prototype is a further current-phase choice, not a request to finish
-all scenery before reviewing it.
-Retain parallax only if the comparison improves the composition and readability;
-the static backdrop remains a valid outcome of the prototype.
+The small-view treatment, reusable static landmarks and current-arena parallax
+comparison above are implemented, with checks and evidence retained. They are
+ready for author review; final human style acceptance remains separate, and no
+slice unlocks the phase-2 blockouts by itself. The comparison supplies no reason
+to change the shipped static backdrop. Runtime parallax would need a separately
+scoped implementation and the world-traversal review described above.
 Captioned jokes need the author's wording and do not gate non-text landmarks.
 Close Quarters' own composition and fitting the kit to revised geometry stay
 with `POL#17`; final per-arena production stays with `POL#16`/`POL#21`.

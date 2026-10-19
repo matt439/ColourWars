@@ -8,6 +8,7 @@ param(
     [switch] $DriftOnly,
     [switch] $MiniatureTerrainOnly,
     [switch] $LandmarkOnly,
+    [switch] $ParallaxOnly,
     [switch] $TuneColoursOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
@@ -61,7 +62,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -147,7 +148,7 @@ function Write-ContactSheet {
         foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File |
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
                 $_.Name -like 'drift-*-detail.ppm' -or $_.Name -like 'miniature-terrain-*-detail.ppm' -or
-                $_.Name -like 'tune-colours-*-detail.ppm' -or
+                $_.Name -like 'tune-colours-*-detail.ppm' -or $_.Name -like 'parallax-*.ppm' -or
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
                 $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
@@ -521,6 +522,20 @@ elseif ($TuneColoursOnly) {
     $result.inputs = 'Real DebugDirector validated commands and actual consumers/pages/match; no foreground input or physical-device claim. Source/staged/user/profile and candidate TEMP/TMP directories are private to this probe.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.checks = 'Debug-only hidden720p renderer proof for seven audited existing colour strings through the real validated tune path: unpainted movement fallback/highlight/keyline, ordinary DebugText foreground/shadow and existing station Label premultiplied RGBA update live; Home and Mode retain captured backgrounds until reopening, including reset reversal. Named/RGB/RGBA values, same-size station refresh and hidden zero tint, complete resource candidate rejection, actual queued scratch reload refusing tune/reset/save until rebuild/rebase, staged fallback when source files are absent, private save/reload and original content preservation. Compact native crops/CSV, repeated frozen pixels, draw RNG and real match observations/Debug fingerprint retained. No Release native run, physical-pad, human readability, listening or performance acceptance.'
+}
+elseif ($ParallaxOnly) {
+    $result.scope = 'parallax-comparison-only'
+    $result.Remove('stage')
+    $result.stages = @('close_quarters', 'king_of_the_hill', 'turbulence', 'movement_course')
+    $result.player_counts = @(1, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('32-clean-heavy-gameplay-camera-cases', 'ordinary-scene-factor-zero-parity', 'independent-raw-atlas-offset-reference', '16-literal-clipped-edges', 'opaque-static-foreground-masks', 'matching-opaque-prop-reference-samples', 'live-reduced-static-parity', 'actual-static-stage-preview', 'resize-return', 'frozen-draw-rng')
+    $result.input_slots = @()
+    $result.inputs = 'Comparison fixture only: real builder-owned scenery and painted terrain in Scene; PlayerCamera::follow uses the actual full-screen-height gameplay scale for 1P/4P, authored spawns and explicitly placed landmark-near focus points with authored camera bounds. Independent panes, normal reader, no synthetic native activation or input. Placed points establish no route reachability.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Bounded static/A/B current-arena prototype only. A moves far sun/clouds/birds by2percent horizontal camera-centre lag capped32worldunits; B adds one shared1percent hill lag capped16, both snapped in4worldunits about each unchanged overview centre. Actual objects draw with local per-view cameras and matching culls; static props/shadows/ordinary terrain and paint restore the original camera. Ordinary Scene/factor0 parity precedes independent unculled raw-atlas/destination comparisons; frozen cloud phase is read through rectangle(), while isolated nondrifting Sun/hill edges use literal sources/displacements and negative/fractional origins outside the ordinary cull.32 clean/heavy cases, measured>99percent real paint ownership, opaque black/white foreground and matching prop-reference samples,4P independence, resize/back, Reduce effects plus cloud-anchor parity, neutral anchor and actual unchanged StagePreview.372 readbacks and exactly8 native1536x720 contact sheets, each512x360 cells: columns static/A/B, rows1Pspawn/4Pplaced-focus. Conservative far/hill cull-candidate counts do not imply raster contribution. Per-view CSV rows repeat framewide A/static and B/A deltas; count totals increment once per primary case. Far absence in gameplay panes is recorded, not hidden by changing zoom. No shipped parallax, new art/levels/schema, live-match transitions, route, human style/readability, physical-device, listening or performance acceptance.'
 }
 elseif ($LandmarkOnly) {
     $result.scope = 'static-landmarks-only'
@@ -1024,6 +1039,7 @@ try {
     elseif ($DriftOnly) { $probeArguments += 'drift' }
     elseif ($MiniatureTerrainOnly) { $probeArguments += 'miniature-terrain' }
     elseif ($LandmarkOnly) { $probeArguments += 'landmark' }
+    elseif ($ParallaxOnly) { $probeArguments += 'parallax' }
     elseif ($TuneColoursOnly) { $probeArguments += 'tune-colours' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
@@ -1209,6 +1225,9 @@ try {
     }
     elseif ($TuneColoursOnly) {
         $result.diagnostic = 'Tune-colours-only Debug D3D11 hardware checks passed: seven audited named/RGB/RGBA commands reached existing live movement/ordinary DebugText/StationLabel consumers or captured-and-reopened Home/Mode as documented. Reset reversal, premultiplied and hidden-zero station tint, full resource rejection, queued scratch reload guards/rebuild/rebase, private save, original content, frozen state/RNG/fingerprint and compact evidence passed. No Release native, foreground input, physical-pad, listening, human readability or performance acceptance.'
+    }
+    elseif ($ParallaxOnly) {
+        $result.diagnostic = 'Parallax comparison-only fixture passed32 clean/heavy current-arena gameplay-camera cases, ordinary Scene/factor0 parity, independent raw-atlas offsets and16 literal negative/fractional clipped entries, opaque static foreground/matching prop-reference samples, reduced static/cloud-anchor parity,4 actual StagePreviews and resize returns. Exactly372 readbacks and8 compact native static/A/B1P/4P context sheets retained. Zero far differences in natural gameplay panes are legitimate observations. Production backgrounds, preview/editor/monitor/overview, art, content, simulation and engine remain unchanged; no gameplay-route, human style/readability, listening, physical-device or performance acceptance.'
     }
     elseif ($LandmarkOnly) {
         $result.diagnostic = 'Static landmarks passed48 clean/heavy pairs /96 primary Scene states over all4 arenas,3 palettes,1P/4P overview pane layouts and720/1080; measured>99percent actual paint ownership, positive per-prop pixels, independent raw-atlas/order/culling equality and frozen state/RNG/resize.64 native edge cases,8 actual StagePreview size cases and24 actual Level monitor/overview size cases passed with omission-only scratch twins and frozen Debug fingerprints. Exactly8 compact native clean/heavy crops and bounded CSV receipts retained; reference/repeat render counts are separate. No broad older matrices, gameplay-route, human readability, physical-device, listening or performance acceptance.'

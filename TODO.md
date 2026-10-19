@@ -23,10 +23,10 @@ order is gameplay style first, UI after.
 UI artwork follows the gameplay style. Rows outside this sequence (audio, release, engine,
 tooling) are picked from OPEN when they don't compete with it.
 
-**Ready implementation choices.** `POL#9`'s small-view treatment and reusable
-static landmarks are implemented; a
-[parallax prototype](docs/polish-terrain.md#ready-implementation-slices-2026-10-18)
-remains a current-arena choice.
+**Ready implementation choices.** `POL#9`'s small-view treatment, reusable
+static landmarks and
+[parallax comparison](docs/polish-terrain.md#parallax-comparison-prototype)
+are implemented and ready for author review. The shipped arenas remain static.
 These use the current arenas; Close Quarters' redesign stays in phase 2.
 When that work is awaiting review, the following supporting work can proceed locally.
 This is a selection guide, not another priority order; each owner defines a bounded first slice.
@@ -57,7 +57,7 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#7` | DECISION | HIGH | M | Author review of the implemented painter and five tools in current-arena 1P/4P play; re-check in CQ (`POL#17`). [Painter](docs/polish-painter.md#remaining-character-work), [tools](docs/polish-tools.md). |
-| `POL#9` | OPEN | HIGH | XL | Current-arena terrain: compare modest parallax; static non-text landmarks and small-view strokes are implemented, with author readability/style review retained. CQ-specific fitting follows `POL#17`. [Slices](docs/polish-terrain.md#ready-implementation-slices-2026-10-18). |
+| `POL#9` | DECISION | HIGH | XL | Author review of current-arena materials, small-view strokes, static landmarks and the retained parallax comparison; shipped backdrops remain static. CQ-specific fitting follows `POL#17`. [Comparison](docs/polish-terrain.md#parallax-comparison-prototype). |
 | `POL#16` | DEFERRED | MED | XL | Extend the treatment through accepted arenas after `POL#17`/`POL#21`; remaining UI art follows the gameplay style lock. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
