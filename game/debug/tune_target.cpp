@@ -8,6 +8,7 @@
 #include "game/game_data.h"
 #include "game/presentation.h"
 #include "game/save.h"
+#include "game/states/main_menu.h"
 #include "game/tuning.h"
 
 namespace
@@ -54,6 +55,7 @@ void TuningTarget::validate(const std::string& candidate_file, const GameData* c
 		// Startup's checks of numbers against the loaded resources, without
 		// building every stage.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
+		MainMenuModeSelect::validate_durations(context->render_resources(), *candidate, *this->presentation_);
 	}
 	this->candidate_ = std::move(candidate);
 }
@@ -88,6 +90,7 @@ void PresentationTarget::validate(const std::string& candidate_file, const GameD
 		// Frame sizes against each frame's native texels, and the countdown
 		// box against its heading: startup's checks that need the resources.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
+		MainMenuModeSelect::validate_durations(context->render_resources(), *this->tuning_, *candidate);
 	}
 	this->candidate_ = std::move(candidate);
 }

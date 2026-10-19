@@ -5,6 +5,7 @@
 #include "game/resource_validation.h"
 #include "game/text_wrap.h"
 #include "game/tunnelling_limits.h"
+#include "game/states/main_menu.h"
 
 using namespace labrador;
 
@@ -117,4 +118,8 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 		drawable_text::check_font_can_draw(render, menu.item_font, name, where);
 		drawable_text::check_font_can_draw(render, menu.heading_font, name, where);
 	}
+	// Duration words depend on actual tuning, not a Presentation-only sample.
+	// Keep this after all established diagnostics, and retain the exact Mode
+	// row/shadow/card/shade/arrow geometry without fitting the value.
+	MainMenuModeSelect::validate_durations(render, tuning, presentation);
 }

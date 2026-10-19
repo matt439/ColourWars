@@ -1958,17 +1958,71 @@ under `out/validation/percentage-text/`. The correction changed only the probe.
 These checks establish no gameplay, physical-pad, listening, human readability/
 style or performance acceptance.
 
+## Duration values (`GAP#8.4`)
+
+Mode's two duration templates are required presentation data:
+
+| Field | Shipped template | Role |
+|---|---|---|
+| `menu_text.values.duration_minutes` | `{value} min` | Formats the effective duration in minutes. |
+| `menu_text.values.duration_default` | `Default ({value})` | Wraps the complete minute value when no duration override is present. |
+
+Each template contains exactly one `{value}` token and no other brace tokens.
+They use the existing bounded, normalized, printable single-line rules. The
+formatter substitutes into the original template once; the wrapper receives the
+complete formatted minutes. An explicit 240 seconds remains `4 min`, while an
+absent override remains `Default (4 min)`.
+
+Numeric formatting is unchanged: divide positive finite float seconds by
+`60.0f`, then use the default wide-stream precision and notation. Thus 90 seconds
+is `1.5 min`, 61 is `1.01667 min`, and 600,000,000 is `1e+07 min`. Extremely small
+positive seconds may underflow to `0` minutes. There is no integer rounding,
+fixed decimal count, new duration cap or restriction to the configured choices.
+Saved overrides remain optional seconds, including values outside that list;
+cycling an unmatched override retains its existing behavior.
+
+The page retains its captured templates, actual item font, positions, invisible
+shadow bounds and row spacing until reopened. Numeric tuning is still read on
+refresh. The duration row stays at scale 1 without width fitting; its complete
+label/value union, focus padding, shade and arrow must fit inside the paper;
+the full height must also fit the row spacing, including exact edge contact.
+
+Startup and reload check the actual tuning default and every configured choice
+after the established content diagnostics. Ordinary tuning/presentation
+candidates also run the paired duration check after their resource checks;
+they need no full stage build for this. Runtime refresh checks the actual
+captured font and row for retained or off-choice values. These checks share the
+production row construction and geometry guard. No save keys, numeric choices,
+navigation or gameplay values change.
+
+Validation: Debug and Release builds, all 38 consumer acceptance cases in each,
+and isolated bank-backed DPI-aware startup checks passed. CPU checks pin float
+division and stream formatting, schema/token failures, diagnostic ordering,
+actual default/choice glyphs and exact inclusive compound-row geometry. The
+focused native `-DurationTextOnly` matrix passed in both presets: 86 updates,
+76 readbacks, 25 value rows, eight page openings, one font negative control,
+five 1168 by 80 crops and one successful private settings seed Save per preset.
+All eight shared raw/summary artifacts match byte for byte. The five crops
+were inspected. Debug additionally proves both actual resource-only tuning
+targets reject invalid paired duration data, discard an already primed
+candidate on failure, leave live data unchanged on failed apply, and accept
+and consume a valid retry: six validations and six private candidate writes,
+with no extra updates, readbacks, Save calls or console commands. Evidence is
+under `out/validation/duration-text/`. This is focused content/menu coverage;
+physical devices, listening, human readability and performance remain separate.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
 bounded increments. Shared On/Off/Random values and the fixed labels described
 above, shared menu device/roster labels, packed missing-pad lists and Arena
 briefing mode/roster summaries, Arena numbering and Random availability, and
-preference percentages are implemented. The next slices are:
+preference percentages and duration units/Default notation are implemented. The
+next slices are:
 
-1. **Numeric settings:** duration units and Default notation, and resolution
-   values. Preserve current numeric precision, rounding, choices and saved
-   identifiers. Deadzones already use the shared percentage template, including
+1. **Numeric settings:** resolution values. Preserve current numeric precision,
+   rounding, choices and saved identifiers. Deadzones already use the shared
+   percentage template, including
    the inherited value; introducing a new inheritance marker is separate work.
 2. **Session and results:** continuation actions, round/results headings and
    proceed prompt, contribution/team descriptions and composed match/result

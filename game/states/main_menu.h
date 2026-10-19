@@ -199,6 +199,15 @@ public:
 	explicit MainMenuModeSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+	// Candidate validation uses the same unscaled row and complete ornament
+	// as a real Mode page, after the ordinary resource checks have passed.
+	static std::unique_ptr<OptionRow> make_duration_row(labrador::RenderResources* render,
+		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+		OptionRow::Adjust on_adjust = {});
+	static void check_duration_row(const OptionRow& duration_row,
+		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
+	static void validate_durations(labrador::RenderResources* render,
+		const GameTuning& tuning, const Presentation& presentation);
 protected:
 	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
@@ -207,6 +216,9 @@ private:
 	void cycle_duration(labrador::Direction direction);
 	void refresh_duration();
 	std::unique_ptr<OptionRow> duration_row_;
+	labrador::FontHandle duration_font_{};
+	std::string duration_font_name_;
+	float duration_row_spacing_ = 0.0f;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;

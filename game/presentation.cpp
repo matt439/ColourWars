@@ -17,6 +17,7 @@
 #include <initializer_list>
 #include <limits>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string_view>
 #include <utility>
@@ -325,6 +326,19 @@ namespace
 		catch (const std::invalid_argument& error)
 		{
 			throw std::runtime_error(values.where() + ": percentage: " + error.what());
+		}
+		for (const auto& field : { std::pair("duration_minutes", &text.values.duration_minutes),
+			std::pair("duration_default", &text.values.duration_default) })
+		{
+			*field.second = read_menu_line(values, field.first);
+			try
+			{
+				std::ignore = format_label_template(*field.second, { { L"{value}", L"0" } });
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(values.where() + ": " + field.first + ": " + error.what());
+			}
 		}
 		const JsonValue confirmations = json.object("confirmations");
 		text.confirmations.restart = read_menu_line(confirmations, "restart");
@@ -2022,6 +2036,20 @@ std::wstring MenuText::setting_percentage(int value) const
 		throw std::invalid_argument("Setting percentage requires an integer from 0 to 100.");
 	}
 	return format_label_template(this->values.percentage, { { L"{value}", std::to_wstring(value) } });
+}
+
+std::wstring MenuText::setting_duration(float seconds, bool use_default) const
+{
+	if (!std::isfinite(seconds) || seconds <= 0.0f)
+	{
+		throw std::invalid_argument("Setting duration requires positive finite seconds.");
+	}
+	std::wostringstream number;
+	number << seconds / 60.0f;
+	const std::wstring minutes = format_label_template(this->values.duration_minutes,
+		{ { L"{value}", number.str() } });
+	return use_default ? format_label_template(this->values.duration_default,
+		{ { L"{value}", minutes } }) : minutes;
 }
 
 std::wstring MenuText::stage_best_of_mode(int best_of) const
@@ -3971,6 +3999,23 @@ void Presentation::validate_resources(const RenderResources& render,
 				Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * static_cast<float>(row));
 			check_value("percentage", text, controls.item_font, position, controls_value_limit,
 				controls.box_size, controls.art, controls.layout.spacing.y, true);
+		}
+	}
+	// No tuning value belongs to Presentation alone. Validate each original
+	// duration template and its literal glyphs here; the joint content check
+	// measures actual defaults/choices, and Mode checks retained values at refresh.
+	for (const auto& field : { std::pair("duration_minutes", &values.duration_minutes),
+		std::pair("duration_default", &values.duration_default) })
+	{
+		const std::string where = this->source_path_ + ": menu_text.values." + field.first;
+		try
+		{
+			const std::wstring literal = format_label_template(*field.second, { { L"{value}", L"" } });
+			drawable_text::check_font_can_draw(&render, this->menu_.item_font, literal, where);
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(where + ": " + error.what());
 		}
 	}
 }

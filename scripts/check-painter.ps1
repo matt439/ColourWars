@@ -12,6 +12,7 @@ param(
     [switch] $TuneColoursOnly,
     [switch] $FeedbackTuneColoursOnly,
     [switch] $ExposedColourAlphaOnly,
+    [switch] $DurationTextOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -65,7 +66,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -158,7 +159,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -287,6 +288,9 @@ function Write-ContactSheet {
         $exposedAlpha = @($images | Where-Object { $_.name -like 'alpha-*' })
         Write-ContactSheetPages -Images $exposedAlpha -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-exposed-alpha-contact'
+        $duration = @($images | Where-Object { $_.name -like 'duration-*' })
+        Write-ContactSheetPages -Images $duration -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-duration-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -397,7 +401,29 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($ExposedColourAlphaOnly) {
+if ($DurationTextOnly) {
+    $result.scope = 'duration-text-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @()
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('literal-duration-rows', 'compound-ornament', 'actual-mode-keyboard-cycles', 'captured-text-and-fonts', 'reopen-and-reversal', 'frozen-draw-state-and-rng')
+    $result.input_slots = @(4)
+    $result.inputs = 'Actual Mode page with the normal GamepadReader and public local keyboard events through StateContext; no scripted pad seam, foreground/global input or match launch.'
+    $result.audio = 'Muted page fixture; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated two-template duration leaf. Independent literal duration rows and the complete compound ornament are compared with actual Mode page drawing through keyboard cycling, explicit/default choices, fractional and scientific defaults, captured text/font replacement, reopening and reversal. Frozen redraw and RNG, one font negative control, byte-identical private preferences and zero-update 720/1080/720 resize checks are retained. Exactly 86 StateContext updates, 76 readbacks, 25 CSV rows, eight page openings, five 1168x80 crops (467200 pixels) and one successful private Play-settings seed Save per preset. No broad menu matrix, gameplay, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    if ($Preset -eq 'x64-debug') {
+        $result.checks += ' Debug separately exercises the real TuningTarget and PresentationTarget resource-only validation: two legacy stand-in acceptances, paired-content refusals, primed candidate refusals, inert failed applies, valid retries and consumed candidates. Six target validations and six private candidate writes add zero state updates, readbacks, Save calls or commands; actual content bytes and draw RNG remain unchanged.'
+        $result['target_validation_scope'] = 'debug-resource-targets-only'
+    }
+    else {
+        $result['target_validation_scope'] = 'not-run-release'
+    }
+}
+elseif ($ExposedColourAlphaOnly) {
     $result.scope = 'exposed-colour-alpha-only'
     $result.Remove('stage')
     $result.stages = @()
@@ -1120,6 +1146,7 @@ try {
     elseif ($TuneColoursOnly) { $probeArguments += 'tune-colours' }
     elseif ($FeedbackTuneColoursOnly) { $probeArguments += 'feedback-tune-colours' }
     elseif ($ExposedColourAlphaOnly) { $probeArguments += 'exposed-colour-alpha' }
+    elseif ($DurationTextOnly) { $probeArguments += 'duration-text' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -1275,6 +1302,94 @@ try {
     if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
+    }
+    if ($DurationTextOnly) {
+        $durationSummary = Get-Content -LiteralPath (Join-Path $captures 'duration-summary.json') -Raw | ConvertFrom-Json
+        $durationRows = @(Import-Csv -LiteralPath (Join-Path $captures 'duration-values.csv'))
+        $durationExpectedCases = @('default-240', 'cycle-60', 'cycle-120', 'explicit-240', 'left-120',
+            'confirm-240', 'wrapped-default', 'fractional-90', 'fractional-61', 'scientific-off-choice',
+            'off-choice-right', 'numeric-live-before', 'live-explicit-90', 'live-default-90', 'old-default',
+            'retained-old-after-assignment', 'old-live-explicit', 'old-live-default', 'reopened-new-default',
+            'retained-new-after-reversal', 'new-live-explicit', 'new-live-default', 'resized-1080',
+            'resized-720', 'restored-default')
+        if ($durationSummary.outcome -ne 'passed' -or $durationSummary.scope -ne 'duration-text-only' -or
+            $durationSummary.updates -ne 86 -or $durationSummary.readbacks -ne 76 -or
+            $durationSummary.csv_rows -ne 25 -or $durationSummary.compact_crops -ne 5 -or
+            $durationSummary.page_openings -ne 8 -or $durationSummary.font_negative_controls -ne 1 -or
+            $durationSummary.resize_updates -ne 0 -or $durationSummary.save_calls -ne 1 -or
+            $durationSummary.crop_pixels -ne 467200 -or $durationRows.Count -ne 25 -or
+            @($durationRows | Where-Object {
+                $_.focus -ne '3' -or $_.scale -ne '1' -or $_.full_row_match -ne 'true' -or
+                $_.ornament_inside -ne 'true' -or $_.frozen_state_rng -ne 'true' -or
+                ($_.case -eq 'resized-1080' -and ($_.width -ne '1920' -or $_.height -ne '1080')) -or
+                ($_.case -ne 'resized-1080' -and ($_.width -ne '1280' -or $_.height -ne '720'))
+            }).Count -ne 0 -or
+            (($durationRows.case | Sort-Object) -join '|') -ne (($durationExpectedCases | Sort-Object) -join '|')) {
+            throw 'The duration leaf evidence does not match its frozen update, row, font-control and readback/crop budgets.'
+        }
+        foreach ($row in $durationRows) {
+            foreach ($metric in @('value_width', 'value_height', 'row_width', 'row_height')) {
+                $value = 0.0
+                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
+                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
+                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or $value -le 0.0) {
+                    throw "Duration case $($row.case) contains an invalid $metric."
+                }
+            }
+        }
+        $durationExpectedNames = @('duration-text-default.ppm', 'duration-text-fraction.ppm',
+            'duration-text-scientific.ppm', 'duration-text-old-long.ppm', 'duration-text-new-long.ppm')
+        $durationCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'duration-*.ppm' -File)
+        $durationCsvNames = @(Get-ChildItem -LiteralPath $captures -Filter 'duration-*.csv' -File | Select-Object -ExpandProperty Name)
+        $durationSummaryNames = @(Get-ChildItem -LiteralPath $captures -Filter 'duration-*.json' -File | Select-Object -ExpandProperty Name)
+        $durationExpectedSummaryNames = @('duration-summary.json')
+        if ($debug) {
+            $durationTargetSummary = Get-Content -LiteralPath (Join-Path $captures 'duration-target-summary.json') -Raw | ConvertFrom-Json
+            if ($durationTargetSummary.outcome -ne 'passed' -or $durationTargetSummary.scope -ne 'duration-targets-only' -or
+                $durationTargetSummary.targets -ne 2 -or $durationTargetSummary.legacy_candidate_acceptances -ne 2 -or
+                $durationTargetSummary.paired_refusals -ne 2 -or $durationTargetSummary.primed_candidates -ne 2 -or
+                $durationTargetSummary.target_refusals -ne 2 -or $durationTargetSummary.failed_apply_inert -ne 2 -or
+                $durationTargetSummary.valid_retries -ne 2 -or $durationTargetSummary.consumed_candidates -ne 2 -or
+                $durationTargetSummary.target_validate_calls -ne 6 -or $durationTargetSummary.candidate_writes -ne 6 -or
+                $durationTargetSummary.state_updates -ne 0 -or $durationTargetSummary.readbacks -ne 0 -or
+                $durationTargetSummary.save_calls -ne 0 -or $durationTargetSummary.real_content_unchanged -ne $true -or
+                $durationTargetSummary.frozen_rng -ne $true) {
+                throw 'The duration Debug target evidence does not match its frozen resource-refusal/retry contract.'
+            }
+            $durationExpectedSummaryNames += 'duration-target-summary.json'
+        }
+        elseif (@(Get-ChildItem -LiteralPath $captures -Filter 'duration-target-*').Count -ne 0) {
+            throw 'Release duration evidence must not contain Debug target artifacts.'
+        }
+        if ($durationCrops.Count -ne 5 -or
+            (($durationCrops.Name | Sort-Object) -join '|') -ne (($durationExpectedNames | Sort-Object) -join '|') -or
+            ($durationCsvNames -join '|') -ne 'duration-values.csv' -or
+            (($durationSummaryNames | Sort-Object) -join '|') -ne (($durationExpectedSummaryNames | Sort-Object) -join '|')) {
+            throw 'The duration leaf emitted unexpected or missing compact crops, CSV or summary files.'
+        }
+        foreach ($crop in $durationCrops) {
+            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
+            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount("P6`n1168 80`n255`n") + 1168 * 80 * 3
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne '1168 80' -or
+                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
+                throw "Duration crop $($crop.Name) differs from its exact 1168x80 RGB payload budget."
+            }
+        }
+        $durationSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
+        $durationSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        if ($durationSaveCalls -ne 1 -or $durationSaveSuccesses -ne 1) {
+            throw 'The duration leaf must perform exactly its one successful private Play-settings seed Save.'
+        }
+        $result['observed_counts'] = [ordered]@{
+            fixture = $durationSummary
+            updates = 86
+            readbacks = 76
+            csv_rows = 25
+            crops = 5
+            private_save_calls = $durationSaveCalls
+            successful_private_saves = $durationSaveSuccesses
+        }
+        if ($debug) { $result.observed_counts['target_validation'] = $durationTargetSummary }
     }
     if ($ExposedColourAlphaOnly) {
         $alphaExpectedCsvNames = @('alpha-home.csv', 'alpha-movement.csv')
@@ -1513,7 +1628,13 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($ExposedColourAlphaOnly) {
+    if ($DurationTextOnly) {
+        $result.diagnostic = 'Duration text passed independent literal Mode rows and complete compound ornaments through actual keyboard cycles, explicit/default choices, fractional/scientific defaults, captured copy and numeric font metrics, reopening and reversal. Frozen redraw/RNG, exact private preferences and zero-update 720/1080/720 resize checks passed. Exactly 86 updates, 76 readbacks, 25 CSV rows, eight page openings, one font negative control, five 1168x80 crops and one successful private Play-settings seed Save. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+        if ($debug) {
+            $result.diagnostic += ' Debug resource-only TuningTarget/PresentationTarget proof also passed two legacy-candidate acceptances, paired refusals, primed-target refusals, inert failed applies, valid retries and consumed candidates. Six target validations and six private candidate writes added zero updates, readbacks, Save calls or commands; actual content and draw RNG were unchanged.'
+        }
+    }
+    elseif ($ExposedColourAlphaOnly) {
         $result.diagnostic = 'Exposed-colour alpha passed thirteen actual Home-background menu sites through default/RGBA128/alpha0 capture, retained pages, reopening and restoration over black/nonblack underlays. Independent literal-channel references, frozen state/draw RNG and same-mode private Display confirmation rollback passed. Movement/debug-text consumers passed independent raw-source references, opaque parity, straight-alpha/double-fade negative controls, captured-paint retention and frozen effect state/bounds/RNG. Shared evidence: 285 readbacks, 142 CSV rows, twelve exact compact crops, two successful private seed Saves and zero StateContext/gameplay updates.'
         if ($debug) {
             $result.diagnostic += ' Debug also passed frozen/live console text, panel shadows and performance text with eight validated private tune/reset commands, 104 readbacks, 48 CSV rows and four crops; no Save write commands. Debug totals: 389 readbacks, 190 CSV rows, sixteen crops.'

@@ -3,7 +3,7 @@
 #include "game/states/match_start.h"
 #include "game/build_info.h"
 #include "game/objects/crude_drawing.h"
-#include <sstream>
+#include "game/drawable_text.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -301,30 +301,83 @@ MainMenuModeSelect::MainMenuModeSelect(MenuContext* context) :
 
 }
 
-void MainMenuModeSelect::refresh_duration()
+std::unique_ptr<OptionRow> MainMenuModeSelect::make_duration_row(RenderResources* render,
+	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+	OptionRow::Adjust on_adjust)
 {
-	const std::optional<float> seconds = this->level_settings()->duration();
-	std::wostringstream label;
-	label << seconds.value_or(this->data()->tuning()->match().duration) / 60.0f << L" min";
-	const std::wstring time = label.str();
-	this->duration_row_->set_value(seconds ? time : L"Default (" + time + L")");
-	// Numeric copy comes from tuning. Check the actual compound row after each
-	// refresh, keeping its authored font size and navigation geometry unchanged.
-	const RectangleF panel = this->paper_->rectangle();
-	const float pen = this->setup_art_.keyline_width;
-	const float shade = this->setup_art_.shadow_offset;
+	MenuStyle row_style = style;
+	row_style.highlight = look.art.focus_ink;
+	row_style.unhighlight = look.art.ink;
+	row_style.disabled = look.art.disabled_ink;
+	row_style.shadow_colour = Colour{};
+	return std::make_unique<OptionRow>("duration", text.item(MenuItem::match_length),
+		style.layout.position + Vector2F(0.0f, look.mode_select_spacing.y * 5.0f),
+		style.layout.position + Vector2F(look.mode_select_spacing.x * 2.0f, look.mode_select_spacing.y * 5.0f),
+		row_style, look.art.ink, render, std::move(on_adjust));
+}
+
+void MainMenuModeSelect::check_duration_row(const OptionRow& duration_row,
+	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
+{
+	const float pen = art.keyline_width;
+	const float shade = art.shadow_offset;
 	const RectangleF inside(panel.position() + Vector2F(pen * 3.0f),
 		panel.size() - Vector2F(pen * 6.0f + shade));
-	RectangleF row = this->duration_row_->bounds();
-	row.inflate(this->setup_art_.focus_padding);
+	RectangleF row = duration_row.bounds();
+	row.inflate(art.focus_padding);
 	const RectangleF arrow(row.x - pen * 7.0f, row.center().y - pen * 3.0f,
 		pen * 5.0f, pen * 6.0f);
 	const RectangleF ornament = RectangleF::union_of(arrow, RectangleF::union_of(row,
 		RectangleF(row.position() + Vector2F(shade), row.size())));
-	if (!inside.contains(ornament))
+	if (!std::isfinite(row.x) || !std::isfinite(row.y) || !std::isfinite(row.width) || !std::isfinite(row.height) ||
+		row.width <= 0.0f || row.height <= 0.0f || !std::isfinite(row_spacing) || row_spacing <= 0.0f ||
+		!inside.contains(ornament) || std::max(row.height + shade, pen * 6.0f) > row_spacing)
 	{
 		throw std::runtime_error("main_menu.mode_select_spacing: the complete duration row must fit main_menu.setup_box_size.");
 	}
+}
+
+void MainMenuModeSelect::validate_durations(RenderResources* render,
+	const GameTuning& tuning, const Presentation& presentation)
+{
+	const MenuStyle& style = presentation.menu();
+	const MainMenuPresentation& look = presentation.main_menu();
+	const MenuText& text = presentation.menu_text();
+	const RectangleF panel((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
+		look.setup_box_size);
+	MenuPaperArtPresentation art = look.art;
+	art.focus_padding = look.setup_focus_padding;
+	art.shadow_offset = look.setup_shadow_offset;
+	const auto check = [&](float seconds, bool use_default)
+	{
+		const std::string where = std::string("presentation.json: menu_text.values.") +
+			(use_default ? "duration_default" : "duration_minutes");
+		const std::wstring value = text.setting_duration(seconds, use_default);
+		drawable_text::check_font_can_draw(render, style.item_font, value, where);
+		auto row = make_duration_row(render, style, look, text);
+		row->set_value(value);
+		check_duration_row(*row, panel, art, look.mode_select_spacing.y);
+	};
+	check(tuning.match().duration, true);
+	for (const float seconds : tuning.match().duration_choices) { check(seconds, false); }
+}
+
+void MainMenuModeSelect::refresh_duration()
+{
+	const std::optional<float> seconds = this->level_settings()->duration();
+	const std::wstring value = this->text().setting_duration(
+		seconds.value_or(this->data()->tuning()->match().duration), !seconds.has_value());
+	const size_t missing = this->render_resources()->first_unrenderable(this->duration_font_, value);
+	if (missing != std::wstring::npos)
+	{
+		throw std::runtime_error(std::string("menu_text.values.") +
+			(seconds ? "duration_minutes" : "duration_default") + " cannot draw character at index " +
+			std::to_string(missing) + " with the captured duration font '" + this->duration_font_name_ + "'.");
+	}
+	this->duration_row_->set_value(value);
+	// The row, font, spacing, shadow and paper were captured at construction.
+	// Only the default's numeric tuning remains live through later refreshes.
+	check_duration_row(*this->duration_row_, this->paper_->rectangle(), this->setup_art_, this->duration_row_spacing_);
 }
 
 void MainMenuModeSelect::cycle_duration(Direction direction)
@@ -458,14 +511,10 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	MenuStyle row_style = style;
-	row_style.highlight = look.art.focus_ink;
-	row_style.unhighlight = look.art.ink;
-	row_style.disabled = look.art.disabled_ink;
-	row_style.shadow_colour = Colour{};
-	this->duration_row_ = std::make_unique<OptionRow>("duration", this->text().item(MenuItem::match_length),
-		this->calculate_widget_position(0, 5), this->calculate_widget_position(2, 5),
-		row_style, look.art.ink, this->render_resources(),
+	this->duration_font_name_ = style.item_font;
+	this->duration_font_ = this->render_resources()->resolve_sprite_font(this->duration_font_name_);
+	this->duration_row_spacing_ = look.mode_select_spacing.y;
+	this->duration_row_ = make_duration_row(this->render_resources(), style, look, this->text(),
 		[this](Direction direction) { this->cycle_duration(direction); });
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,

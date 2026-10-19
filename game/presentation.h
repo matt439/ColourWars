@@ -105,6 +105,8 @@ struct MenuValueText
 	std::wstring off;
 	std::wstring random;
 	std::wstring percentage;
+	std::wstring duration_minutes;
+	std::wstring duration_default;
 };
 
 struct MenuConfirmationText
@@ -217,6 +219,9 @@ struct MenuText
 	std::wstring display_countdown(int seconds) const;
 	// Integer volume and rounded effective-deadzone values share the 0-100 domain.
 	std::wstring setting_percentage(int value) const;
+	// Positive finite seconds retain the Mode row's float division and default
+	// stream precision, including scientific notation and minutes underflowing to 0.
+	std::wstring setting_duration(float seconds, bool use_default) const;
 	// Stage summary domains follow the existing choices: best-of 3/5, and
 	// one solo player or two through four versus players.
 	std::wstring stage_best_of_mode(int best_of) const;

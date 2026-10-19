@@ -35,6 +35,7 @@
 #include "game/debug/debug_console_view.h"
 #include "game/debug/debug_perf.h"
 #include "game/debug/tune_document.h"
+#include "game/debug/tune_target.h"
 #include "game/debug/replay.h"
 #endif
 
@@ -2601,6 +2602,7 @@ namespace
 #if COLOURWARS_DEV_TOOLS
 #include "scripts/acceptance/painter_visual/debug_console_alpha_checks.h"
 #endif
+#include "scripts/acceptance/painter_visual/duration_text_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 #include "scripts/acceptance/painter_visual/team_setup_checks.h"
 #include "scripts/acceptance/painter_visual/remembered_setup_checks.h"
@@ -2637,7 +2639,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
             std::wstring(argv[3]) == L"percentage-text" || std::wstring(argv[3]) == L"feedback-tune-colours" ||
-            std::wstring(argv[3]) == L"exposed-colour-alpha" ||
+            std::wstring(argv[3]) == L"exposed-colour-alpha" || std::wstring(argv[3]) == L"duration-text" ||
             std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"remembered-setup" ||
             std::wstring(argv[3]) == L"remembered-setup-read" || std::wstring(argv[3]) == L"connection-text" ||
             std::wstring(argv[3]) == L"stick-readouts" || std::wstring(argv[3]) == L"team-focus" || std::wstring(argv[3]) == L"team-tune-colours" || std::wstring(argv[3]) == L"weapon-tune-colours" || std::wstring(argv[3]) == L"stage-summary" || std::wstring(argv[3]) == L"menu-labels" ||
@@ -2645,7 +2647,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|tune-colours|feedback-tune-colours|exposed-colour-alpha|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|tune-colours|feedback-tune-colours|exposed-colour-alpha|duration-text|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2673,6 +2675,7 @@ int wmain(int argc, wchar_t** argv)
         const bool weapon_tune_colours_only = argc == 4 && std::wstring(argv[3]) == L"weapon-tune-colours";
         const bool feedback_tune_colours_only = argc == 4 && std::wstring(argv[3]) == L"feedback-tune-colours";
         const bool exposed_colour_alpha_only = argc == 4 && std::wstring(argv[3]) == L"exposed-colour-alpha";
+        const bool duration_text_only = argc == 4 && std::wstring(argv[3]) == L"duration-text";
         const bool menu_labels_only = argc == 4 && std::wstring(argv[3]) == L"menu-labels";
         const bool stage_summary_only = argc == 4 && std::wstring(argv[3]) == L"stage-summary";
 #if !COLOURWARS_DEV_TOOLS
@@ -2681,6 +2684,7 @@ int wmain(int argc, wchar_t** argv)
         require(!weapon_tune_colours_only, "WeaponTuneColoursOnly requires a Debug build");
 #endif
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        require(!duration_text_only, "DurationTextOnly requires the normal gamepad reader");
         require(!exposed_colour_alpha_only, "ExposedColourAlphaOnly requires the normal gamepad reader");
         require(!feedback_tune_colours_only, "FeedbackTuneColoursOnly requires the normal gamepad reader");
         require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || menu_labels_only || menu_text_only ||
@@ -2738,6 +2742,14 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (duration_text_only)
+        {
+            duration_text_checks(app, canvas, tuning, presentation, output);
+#if COLOURWARS_DEV_TOOLS
+            duration_target_checks(app, tuning, presentation, content, output);
+#endif
+            return 0;
+        }
         if (exposed_colour_alpha_only)
         {
             home_alpha_checks(app, levels, tuning, presentation, content, output);

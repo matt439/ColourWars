@@ -126,7 +126,9 @@
       "on": "On",
       "off": "Off",
       "random": "Random",
-      "percentage": "{value}%"
+      "percentage": "{value}%",
+      "duration_minutes": "{value} min",
+      "duration_default": "Default ({value})"
     },
     "confirmations": {
       "restart": "Are you sure you want to restart?",
