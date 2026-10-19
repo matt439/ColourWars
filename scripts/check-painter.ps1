@@ -20,6 +20,7 @@ param(
     [switch] $SeriesScoreOnly,
     [switch] $RoundHeadingOnly,
     [switch] $CompetitiveWinnerOnly,
+    [switch] $ContributionTeamOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -73,7 +74,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -166,7 +167,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or $_.Name -like 'competitive-winner-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or $_.Name -like 'competitive-winner-*.ppm' -or $_.Name -like 'contribution-team-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -319,6 +320,9 @@ function Write-ContactSheet {
         $competitiveWinner = @($images | Where-Object { $_.name -like 'competitive-winner-*' })
         Write-ContactSheetPages -Images $competitiveWinner -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-competitive-winner-contact'
+        $contributionTeam = @($images | Where-Object { $_.name -like 'contribution-team-*' })
+        Write-ContactSheetPages -Images $contributionTeam -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-contribution-team-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -429,7 +433,22 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($CompetitiveWinnerOnly) {
+if ($ContributionTeamOnly) {
+    $result.scope = 'contribution-team-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @(4)
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('two-literal-contribution-team-separators', 'sparse-roster-owner-credit', 'actual-results-reveal-and-proceed', 'captured-copy-and-font', 'reopen-and-reversal', 'frozen-session-setup-save-and-rng', 'resize')
+    $result.input_slots = @(4, 2, -1, 0)
+    $result.inputs = 'Actual ResultsMenuInitial with the normal GamepadReader and public local keyboard events through StateContext; local proceed callbacks do not launch a match.'
+    $result.audio = 'Focused Results page fixture; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated contribution team text leaf. Independent complete literal rows compare both team separators on the actual sparse four-player Results roster and preserve owner-credit percentages. Captured copy/font assignment, retained pages, reopening/reversal, actual reveal/proceed transitions and frozen Session/setup/private Save/RNG retain the existing layout. Exactly 45 StateContext updates, 56 readbacks, 72 CSV rows across eighteen four-row observations, five page openings and proceed pops, four font row controls, four wrong-view-credit row controls, zero-update resize, six compact crops (599508 pixels) and one successful private seed Save are checked with exact schema, case, metric and RGB-payload gates. Both presets run the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+}
+elseif ($CompetitiveWinnerOnly) {
     $result.scope = 'competitive-winner-only'
     $result.Remove('stage')
     $result.stages = @()
@@ -1287,6 +1306,7 @@ try {
     elseif ($SeriesScoreOnly) { $probeArguments += 'series-score' }
     elseif ($RoundHeadingOnly) { $probeArguments += 'round-heading' }
     elseif ($CompetitiveWinnerOnly) { $probeArguments += 'competitive-winner' }
+    elseif ($ContributionTeamOnly) { $probeArguments += 'contribution-team' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -1442,6 +1462,139 @@ try {
     if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
+    }
+    if ($ContributionTeamOnly) {
+        $contributionTeamSummary = Get-Content -LiteralPath (Join-Path $captures 'contribution-team-summary.json') -Raw | ConvertFrom-Json
+        $contributionTeamRows = @(Import-Csv -LiteralPath (Join-Path $captures 'contribution-team.csv'))
+        $contributionTeamCases = @('legacy-initial', 'legacy-fill-crossed', 'legacy-details', 'legacy-prompt-crossed',
+            'legacy-ready', 'default-1080', 'default-return720', 'old-primary', 'retained-old', 'old-1080',
+            'old-return720', 'reopened-new', 'retained-new', 'new-1080', 'new-return720', 'restored-default',
+            'revealed-initial', 'revealed-ready')
+        $contributionTeamExpectedPairs = @(
+            foreach ($case in $contributionTeamCases) {
+                foreach ($rowNumber in 0..3) { "$case|$rowNumber" }
+            }
+        )
+        $contributionTeamExpectedColumns = @('case', 'row', 'width', 'height', 'device_slot', 'paint_owner', 'team',
+            'revealed', 'details_visible', 'proceed_visible', 'expected_value', 'font', 'raw_width', 'raw_height',
+            'x', 'y', 'badge_x', 'badge_y', 'badge_width', 'badge_height', 'scale', 'shadow_x', 'shadow_y',
+            'percentage_literal', 'heading_literal', 'contribution_heading_literal', 'score_literal', 'outcome_literal',
+            'row_match', 'badge_match', 'heading_match', 'neighbor_match', 'frozen_session_setup_save_rng')
+        if ($contributionTeamSummary.outcome -ne 'passed' -or $contributionTeamSummary.scope -ne 'contribution-team-only' -or
+            $contributionTeamSummary.updates -ne 45 -or $contributionTeamSummary.readbacks -ne 56 -or
+            $contributionTeamSummary.csv_rows -ne 72 -or $contributionTeamSummary.compact_crops -ne 6 -or
+            $contributionTeamSummary.page_openings -ne 5 -or $contributionTeamSummary.proceed_pops -ne 5 -or
+            $contributionTeamSummary.font_negative_controls -ne 4 -or $contributionTeamSummary.owner_negative_controls -ne 4 -or
+            $contributionTeamSummary.resize_updates -ne 0 -or $contributionTeamSummary.save_calls -ne 1 -or
+            $contributionTeamSummary.crop_pixels -ne 599508 -or $contributionTeamRows.Count -ne 72 -or
+            (($contributionTeamRows[0].PSObject.Properties.Name) -join '|') -ne ($contributionTeamExpectedColumns -join '|') -or
+            (($contributionTeamRows | ForEach-Object { "$($_.case)|$($_.row)" } | Sort-Object) -join ';') -ne
+                (($contributionTeamExpectedPairs | Sort-Object) -join ';')) {
+            throw 'The Contribution team leaf does not match its frozen summary, CSV schema, rows or update/readback/proceed budgets.'
+        }
+        $contributionTeamState = @{
+            '0' = @('4', '4', 'A', '18.7%', '680', '679.5')
+            '1' = @('2', '2', 'B', '25.0%', '725', '724.5')
+            '2' = @('-1', '7', 'A', '31.2%', '770', '769.5')
+            '3' = @('0', '0', 'B', '25.0%', '815', '814.5')
+        }
+        $contributionTeamDefaultValues = @(
+            'P1 - Keyboard/mouse | Team A | 18.7%',
+            'P2 - Pad 3 | Team B | 25.0%',
+            'P3 - Waiting to join | Team A | 31.2%',
+            'P4 - Pad 1 | Team B | 25.0%'
+        )
+        $contributionTeamOldValues = @(
+            'P1 - Keyboard/mouse | Old~ A {A} | 18.7%',
+            'P2 - Pad 3 | Old~ B {B} | 25.0%',
+            'P3 - Waiting to join | Old~ A {A} | 31.2%',
+            'P4 - Pad 1 | Old~ B {B} | 25.0%'
+        )
+        $contributionTeamNewValues = @(
+            'P1 - Keyboard/mouse | {A} team | 18.7%',
+            'P2 - Pad 3 | {B} team | 25.0%',
+            'P3 - Waiting to join | {A} team | 31.2%',
+            'P4 - Pad 1 | {B} team | 25.0%'
+        )
+        foreach ($row in $contributionTeamRows) {
+            $rowNumber = [int]$row.row
+            $expectedState = $contributionTeamState[$row.row]
+            $expectedWidth = if ($row.case -in @('default-1080', 'old-1080', 'new-1080')) { '1920' } else { '1280' }
+            $expectedHeight = if ($expectedWidth -eq '1920') { '1080' } else { '720' }
+            $expectedRevealed = if ($row.case -in @('revealed-initial', 'revealed-ready')) { 'true' } else { 'false' }
+            $expectedDetails = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed')) { 'false' } else { 'true' }
+            $expectedProceed = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed', 'legacy-details',
+                'legacy-prompt-crossed', 'revealed-initial')) { 'false' } else { 'true' }
+            $newCopy = $row.case -in @('reopened-new', 'retained-new', 'new-1080', 'new-return720')
+            $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
+            $expectedValue = if ($newCopy) { $contributionTeamNewValues[$rowNumber] }
+                elseif ($oldCopy) { $contributionTeamOldValues[$rowNumber] } else { $contributionTeamDefaultValues[$rowNumber] }
+            $expectedFont = if ($newCopy) { 'contribution_team_braces' } else { 'gill_sans_mt_bold_24' }
+            if ($row.width -ne $expectedWidth -or $row.height -ne $expectedHeight -or
+                $row.device_slot -ne $expectedState[0] -or $row.paint_owner -ne $expectedState[1] -or
+                $row.team -cne $expectedState[2] -or $row.percentage_literal -cne $expectedState[3] -or
+                $row.x -ne '480' -or $row.y -ne $expectedState[4] -or
+                $row.badge_x -ne '414' -or $row.badge_y -ne $expectedState[5] -or
+                $row.badge_width -ne '54' -or $row.badge_height -ne '42' -or
+                $row.revealed -ne $expectedRevealed -or $row.details_visible -ne $expectedDetails -or
+                $row.proceed_visible -ne $expectedProceed -or $row.expected_value -cne $expectedValue -or
+                $row.font -ne $expectedFont -or $row.scale -ne '1' -or $row.shadow_x -ne '0' -or $row.shadow_y -ne '0' -or
+                $row.heading_literal -cne 'Round 1' -or $row.contribution_heading_literal -cne 'Surface held (% of arena)' -or
+                $row.score_literal -cne 'Wins: A 0 - B 0  |  First to 2' -or $row.outcome_literal -cne 'Draw - no win awarded' -or
+                $row.row_match -ne 'true' -or $row.badge_match -ne 'true' -or $row.heading_match -ne 'true' -or
+                $row.neighbor_match -ne 'true' -or $row.frozen_session_setup_save_rng -ne 'true') {
+                throw "Contribution team case $($row.case)/row $($row.row) changed its literal row, owner credit, reveal, capture or geometry contract."
+            }
+            foreach ($metric in @('raw_width', 'raw_height', 'x', 'y', 'badge_x', 'badge_y', 'badge_width', 'badge_height')) {
+                $value = 0.0
+                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
+                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
+                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
+                    ($metric -in @('raw_width', 'raw_height', 'badge_width', 'badge_height') -and $value -le 0.0) -or
+                    ($metric -in @('x', 'y', 'badge_x', 'badge_y') -and $value -lt 0.0)) {
+                    throw "Contribution team case $($row.case)/row $($row.row) contains an invalid $metric."
+                }
+            }
+        }
+        $contributionTeamExpectedCrops = [ordered]@{
+            'contribution-team-default-720.ppm' = @(504, 122)
+            'contribution-team-default-1080.ppm' = @(756, 183)
+            'contribution-team-old-720.ppm' = @(504, 122)
+            'contribution-team-old-1080.ppm' = @(756, 183)
+            'contribution-team-new-720.ppm' = @(504, 122)
+            'contribution-team-new-1080.ppm' = @(756, 183)
+        }
+        $contributionTeamCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'contribution-team-*.ppm' -File)
+        $contributionTeamExpectedNames = @($contributionTeamExpectedCrops.Keys) + @('contribution-team.csv', 'contribution-team-summary.json')
+        $contributionTeamNames = @(Get-ChildItem -LiteralPath $captures -Filter 'contribution-team*' -File | Select-Object -ExpandProperty Name)
+        if ($contributionTeamCrops.Count -ne 6 -or
+            (($contributionTeamNames | Sort-Object) -join '|') -ne (($contributionTeamExpectedNames | Sort-Object) -join '|')) {
+            throw 'The Contribution team leaf emitted unexpected or missing compact crops, CSV or summary files.'
+        }
+        foreach ($crop in $contributionTeamCrops) {
+            $size = $contributionTeamExpectedCrops[$crop.Name]
+            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
+            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
+            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
+                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
+                throw "Contribution team crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
+            }
+        }
+        $contributionTeamSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
+        $contributionTeamSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        if ($contributionTeamSaveCalls -ne 1 -or $contributionTeamSaveSuccesses -ne 1) {
+            throw 'The Contribution team leaf must perform exactly its one successful private seed Save.'
+        }
+        $result['observed_counts'] = [ordered]@{
+            fixture = $contributionTeamSummary
+            updates = 45
+            readbacks = 56
+            csv_rows = 72
+            crops = 6
+            private_save_calls = $contributionTeamSaveCalls
+            successful_private_saves = $contributionTeamSaveSuccesses
+        }
     }
     if ($CompetitiveWinnerOnly) {
         $competitiveWinnerSummary = Get-Content -LiteralPath (Join-Path $captures 'competitive-winner-summary.json') -Raw | ConvertFrom-Json
@@ -2656,7 +2809,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($CompetitiveWinnerOnly) {
+    if ($ContributionTeamOnly) {
+        $result.diagnostic = 'Contribution team text passed independent complete rows for both separators on a sparse four-player Results roster, preserving owner-credit percentages and badge context. Captured copy/font assignment, retained pages, reopening/reversal, actual reveal/proceed transitions, frozen Session/setup/private Save/RNG and zero-update resize passed. Exactly 45 updates, 56 readbacks, 72 CSV rows across eighteen four-row observations, five page openings and proceed pops, four font row controls, four wrong-view-credit row controls, six compact crops (599508 pixels) and one successful private seed Save. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    }
+    elseif ($CompetitiveWinnerOnly) {
         $result.diagnostic = 'Competitive winner text passed independent complete Team A, Team B and Draw labels, unchanged solo copy and explicit hidden-winner controls. Captured copy/item-font assignment, retained pages, reopening/reversal, actual reveal/proceed transitions, frozen Session/setup/private Save/RNG and zero-update resize passed. Exactly 102 updates, 99 readbacks, 32 CSV rows, fourteen page openings and proceed pops, three font negative controls, eight compact crops (312480 pixels) and one successful private seed Save. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
     }
     elseif ($RoundHeadingOnly) {

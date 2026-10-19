@@ -504,6 +504,8 @@ namespace
 		text.results.competitive_team_a_wins = read_menu_line(results, "competitive_team_a_wins");
 		text.results.competitive_team_b_wins = read_menu_line(results, "competitive_team_b_wins");
 		text.results.competitive_draw = read_menu_line(results, "competitive_draw");
+		text.results.contribution_team_a = read_menu_line(results, "contribution_team_a");
+		text.results.contribution_team_b = read_menu_line(results, "contribution_team_b");
 		const JsonValue stage = json.object("stage");
 		text.stage.browse_status = read_menu_line(stage, "browse_status");
 		text.stage.locked_status = read_menu_line(stage, "locked_status");
@@ -4102,13 +4104,16 @@ void Presentation::validate_resources(const RenderResources& render,
 		for (int slot = 0; slot < input_slots::count; ++slot)
 		{
 			const std::string key = label_key(slot) + " at Results";
-			const std::string where = this->source_path_ + ": " + key;
 			RectangleF envelope;
 			bool first = true;
-			for (const wchar_t* team : { L" | Team A | ", L" | Team B | " })
+			for (const std::wstring* team : { &this->menu_text_.results.contribution_team_a,
+				&this->menu_text_.results.contribution_team_b })
 			{
-				const std::wstring prefix = this->menu_text_.roster_label(player, slot) + team;
-				std::ignore = label_size(key, prefix, results.contribution_font);
+				const std::string team_key = key + " with menu_text.results." +
+					(team == &this->menu_text_.results.contribution_team_a ? "contribution_team_a" : "contribution_team_b");
+				const std::string where = this->source_path_ + ": " + team_key;
+				const std::wstring prefix = this->menu_text_.roster_label(player, slot) + *team;
+				std::ignore = label_size(team_key, prefix, results.contribution_font);
 				LabelPen prefix_pen;
 				append_label_text(prefix_pen, contribution_font, prefix, where);
 				for (const PercentageSuffix& suffix : percentages)
@@ -4126,7 +4131,7 @@ void Presentation::validate_resources(const RenderResources& render,
 					// position: shorter lines can put its top above a taller line's.
 					const RectangleF text(position, pen.extent);
 					const RectangleF row = RectangleF::union_of(text, UiPlayerBadge::before(text, this->player_identity_));
-					check_label_bounds(key, row, results_panel);
+					check_label_bounds(team_key, row, results_panel);
 					envelope = first ? row : RectangleF::union_of(envelope, row);
 					first = false;
 				}
@@ -4134,7 +4139,8 @@ void Presentation::validate_resources(const RenderResources& render,
 			results_rows[static_cast<size_t>(player)][static_cast<size_t>(slot)] = envelope;
 		}
 	}
-	check_roster_rows(results_rows, contribution_heading.bottom(), results.proceed_y, "Results");
+	check_roster_rows(results_rows, contribution_heading.bottom(), results.proceed_y,
+		"Results with menu_text.results.contribution_team_a and menu_text.results.contribution_team_b");
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		const std::string key = "menu_text.labels.pad at Pad Sticks value";

@@ -143,6 +143,8 @@ struct MenuResultsText
 	std::wstring competitive_team_a_wins;
 	std::wstring competitive_team_b_wins;
 	std::wstring competitive_draw;
+	std::wstring contribution_team_a;
+	std::wstring contribution_team_b;
 	// Current Sessions are first to 1, 2 or 3; completion prevents both
 	// teams reaching the target in the same ledger.
 	std::wstring score_line(int team_a_wins, int team_b_wins, int target) const;

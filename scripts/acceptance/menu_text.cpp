@@ -5,6 +5,7 @@
 #include "game/objects/level_end_info.h"
 #include "game/states/option_row.h"
 #include "game/states/main_menu.h"
+#include "game/states/menu_level_settings.h"
 #include "game/states/prompt_bar.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
@@ -173,6 +174,10 @@ namespace
         { "competitive_team_a_wins", L"Team A Wins!", &MenuResultsText::competitive_team_a_wins },
         { "competitive_team_b_wins", L"Team B Wins!", &MenuResultsText::competitive_team_b_wins },
         { "competitive_draw", L"Draw!", &MenuResultsText::competitive_draw }
+    };
+    constexpr ResultsText contribution_team_text[]{
+        { "contribution_team_a", L" | Team A | ", &MenuResultsText::contribution_team_a },
+        { "contribution_team_b", L" | Team B | ", &MenuResultsText::contribution_team_b }
     };
     struct SeriesScoreExample { int team_a; int team_b; int target; };
     constexpr SeriesScoreExample series_score_examples[]{
@@ -447,6 +452,8 @@ namespace
         }
         for (const auto& entry : competitive_winner_text)
             require(text.results.*entry.field == entry.text, std::string("Competitive winner default changed: ") + entry.key);
+        for (const auto& entry : contribution_team_text)
+            require(text.results.*entry.field == entry.text, std::string("Contribution team default or its outer spaces changed: ") + entry.key);
         require(text.results.series_score == L"Wins: A {team_a_wins} - B {team_b_wins}  |  First to {target}",
             "Default series-score template changed its literal labels, token names or double spaces");
         require(text.results.round_heading == L"Round {round}",
@@ -7402,6 +7409,201 @@ namespace
             d["menu_text"]["results"]["competitive_draw"].SetString(text.c_str(), d.GetAllocator());
         }, &world);
     }
+    void check_contribution_team_text(Variants& variants, World& world)
+    {
+        const auto reordered = variants.load([](rapidjson::Document& d)
+        {
+            auto& group = d["menu_text"]["results"]; rapidjson::Value reverse(rapidjson::kObjectType);
+            auto member = group.MemberEnd();
+            while (member != group.MemberBegin())
+            { --member; rapidjson::Value key; key.CopyFrom(member->name, d.GetAllocator());
+                rapidjson::Value value; value.CopyFrom(member->value, d.GetAllocator());
+                reverse.AddMember(key, value, d.GetAllocator()); }
+            group = std::move(reverse);
+        });
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        { for (const auto& entry : contribution_team_text)
+            d["menu_text"]["results"][entry.key].SetString("  A\xC2\xA0\xE2\x80\x9C" "B\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  "); });
+        normalized.validate_resources(world.render, world.audio);
+        for (const auto& entry : contribution_team_text)
+        {
+            const std::string field = std::string("results.") + entry.key;
+            const std::string resource_role = std::string("labels.roster_row.Results.menu_text.results.") + entry.key;
+            require(reordered.menu_text().results.*entry.field == entry.text &&
+                normalized.menu_text().results.*entry.field == L"  A \"B\"-C...  ",
+                "Contribution separator depends on key order or lost normalized punctuation/outer spaces: " + field);
+            variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"].RemoveMember(entry.key); });
+            for (int type = 0; type < 5; ++type)
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    auto& value = d["menu_text"]["results"][entry.key];
+                    if (type == 0) { value.SetNull(); } else if (type == 1) { value.SetBool(true); }
+                    else if (type == 2) { value.SetInt(3); } else if (type == 3) { value.SetArray(); } else { value.SetObject(); }
+                });
+            for (const char* invalid : { "", "   ", " \xC2\xA0 ", "line\nbreak", "line\rbreak", "line\r\nbreak",
+                "tab\ttext", "control\x01", "delete\x7f", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28" })
+                variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"][entry.key].SetString(invalid, d.GetAllocator()); });
+            variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"][entry.key].SetString("A\0B", 3, d.GetAllocator()); });
+            const auto plain = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString("  {side} %  "); });
+            plain.validate_resources(world.render, world.audio);
+            require(plain.menu_text().results.*entry.field == L"  {side} %  ", "Contribution separator was trimmed or interpreted as a template");
+            std::wstring source = L"P1 - Pad 1" + (plain.menu_text().results.*entry.field) + L"12.5%";
+            const auto& look = plain.results_menu();
+            const auto size = world.render.measure_text(world.render.resolve_sprite_font(look.contribution_font), L"P1 - Pad 1  {side} %  12.5%");
+            const auto position = look.contribution_position + mattmath::Vector2F(0.0f, look.contribution_spacing);
+            UiTextDropShadow widget(entry.key, source, look.contribution_font, position, &world.render,
+                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            source.clear();
+            require(widget.text() == L"P1 - Pad 1  {side} %  12.5%" && widget.bounds() == mattmath::RectangleF(position, size) &&
+                widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+                "Contribution row lost full literal composition, owned text, its actual font or explicit zero shadow");
+            DrawList no_device; widget.draw(no_device);
+            variants.rejects(resource_role, [&](rapidjson::Document& d)
+            {
+                d["results_menu"]["contribution_font"].SetString("menu_text_limited"); d["menu_text"]["results"][entry.key].SetString("~");
+            }, &world);
+            const auto long_copy = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString(std::string(512, 'W').c_str(), d.GetAllocator()); });
+            require((long_copy.menu_text().results.*entry.field).size() == 512, "Contribution separator acquired a parser character cap");
+            variants.rejects(resource_role, [&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString(std::string(512, 'W').c_str(), d.GetAllocator()); }, &world);
+        }
+        require(world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'?') &&
+            !world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'~'),
+            "Contribution separator missing-literal fixture lost its functioning stand-in");
+    }
+
+    void check_contribution_team_roster(World& world, const Presentation& defaults)
+    {
+        MenuLevelSettings settings; settings.set_player_count(2); settings.begin_input_claims(3);
+        require(settings.claim_input_slot(4), "Sparse Results roster must claim Pad4 and keyboard/mouse");
+        settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
+        LevelEndInfo result; result.total_area = 100.0f; result.player_areas[3] = 12.5f; result.player_areas[4] = 87.5f;
+        const auto original_roster = settings.player_settings(); const auto original_areas = result.player_areas;
+        MenuText custom = defaults.menu_text(); custom.results.contribution_team_a = L" <{A}> "; custom.results.contribution_team_b = L" /{B}/ ";
+        const auto compose = [&](int index, const MenuText& text)
+        {
+            const auto player = settings.player_settings().at(static_cast<size_t>(index));
+            return settings.player_label(index, text) + (player.team == PlayerTeam::a ?
+                text.results.contribution_team_a : text.results.contribution_team_b) +
+                result.player_percentage_string(paint_owners::index(player.num, index));
+        };
+        const wchar_t* canonical[]{ L"P1 - Pad 4 | Team A | 12.5%", L"P2 - Keyboard/mouse | Team B | 87.5%" };
+        const wchar_t* authored[]{ L"P1 - Pad 4 <{A}> 12.5%", L"P2 - Keyboard/mouse /{B}/ 87.5%" };
+        for (int index = 0; index < 2; ++index)
+        {
+            require(compose(index, defaults.menu_text()) == canonical[index] && compose(index, custom) == authored[index],
+                "Contribution composition changed default bytes, authored team selection or sparse owner credit");
+            const auto& look = defaults.results_menu();
+            const auto position = look.contribution_position + mattmath::Vector2F(0.0f, look.contribution_spacing * static_cast<float>(index + 1));
+            std::wstring source = compose(index, custom);
+            UiTextDropShadow widget("sparse-contribution", source, look.contribution_font, position, &world.render,
+                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            source.clear();
+            const auto size = world.render.measure_text(world.render.resolve_sprite_font(look.contribution_font), authored[index]);
+            require(widget.text() == authored[index] && widget.bounds() == mattmath::RectangleF(position, size),
+                "Sparse contribution widget lost literal authored row ownership or its full measured suffix");
+            const auto current = settings.player_settings().at(static_cast<size_t>(index));
+            require(current.num == original_roster[static_cast<size_t>(index)].num && current.team == original_roster[static_cast<size_t>(index)].team &&
+                current.weapon == original_roster[static_cast<size_t>(index)].weapon && result.player_areas == original_areas && result.total_area == 100.0f,
+                "Contribution text inspection mutated roster, weapon choices or retained owner credit");
+        }
+        settings.set_player_team(0, PlayerTeam::b); settings.set_player_team(1, PlayerTeam::a);
+        require(compose(0, custom) == L"P1 - Pad 4 /{B}/ 12.5%" && compose(1, custom) == L"P2 - Keyboard/mouse <{A}> 87.5%" &&
+            result.player_areas == original_areas && custom.results.contribution_team_a == L" <{A}> " && custom.results.contribution_team_b == L" /{B}/ ",
+            "Swapping teams must change only the authored separator, retaining device-slot percentages and source copy");
+    }
+
+    void check_contribution_team_bounds(Variants& variants, World& world)
+    {
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            const bool digit = character >= U'0' && character <= U'9';
+            const bool marker = character == U'~' || character == U'^';
+            glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? 240 : character == U'8' ? 80 : digit ? 1 : 16,
+                character == U'^' ? 32 : character == U'~' || character == U'8' ? 24 : 16),
+                marker ? 0.375f : character == U'8' ? 0.00003f : character == U'6' ? -5.0f : 0.0f, 0.0f,
+                marker ? 0.625f : character == U'8' ? -80.0f : character == U'1' || character == U'7' ? 19.0f : 0.0f });
+        }
+        auto font_owner = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f); font_owner->set_stand_in(U'?');
+        world.render.add_font("menu_contribution_teams", std::move(font_owner));
+        const Font& font = *world.render.font(world.render.resolve_sprite_font("menu_contribution_teams"));
+        constexpr const wchar_t* devices[]{ L"Pad 1", L"Pad 2", L"Pad 3", L"Pad 4", L"Keyboard/mouse" };
+        constexpr const wchar_t* separators[]{ L" {A}~", L"^{B} " };
+        float maximum[2]{}, maximum_at_100[2]{}; std::wstring attained[2]; int attained_player[2]{};
+        // Measure complete literal rows through Font, independently of the
+        // production cached-prefix/suffix walk and all regrouped fragment sums.
+        for (int team = 0; team < 2; ++team)
+            for (int player = 1; player <= 4; ++player)
+                for (const wchar_t* device : devices)
+                {
+                    const std::wstring prefix = L"P" + std::to_wstring(player) + L" - " + device + separators[team];
+                    maximum_at_100[team] = std::max(maximum_at_100[team], font.measure(prefix + L"100.0%").x);
+                    for (int tenth = 0; tenth <= 1000; ++tenth)
+                    {
+                        const std::wstring row = prefix + std::to_wstring(tenth / 10) + L'.' + std::to_wstring(tenth % 10) + L'%';
+                        const float width = font.measure(row).x;
+                        if (width > maximum[team]) { maximum[team] = width; attained[team] = row; attained_player[team] = player; }
+                    }
+                }
+        require(font.measure(L"P4 - Keyboard/mouse {A}~0.0%").x == font.measure(L"P4 - Keyboard/mouse {A}~").x + font.measure(L"0.0%").x + 0.625f &&
+            font.measure(L"P4 - Keyboard/mouse {A}~6.6%").x == font.measure(L"P4 - Keyboard/mouse {A}~").x + font.measure(L"6.6%").x - 4.375f,
+            "Authored separator must carry its terminal advance and signed suffix bearing into the complete measured row");
+        const auto edit = [&](rapidjson::Document& d, float x)
+        {
+            d["results_menu"]["contribution_font"].SetString("menu_contribution_teams");
+            d["results_menu"]["contribution_position"]["x"].SetFloat(x); d["results_menu"]["contribution_spacing"].SetFloat(46.0f);
+            d["results_menu"]["fill"]["box_size"]["x"].SetFloat(1280.0f);
+            d["menu_text"]["results"]["contribution_heading"].SetString("R");
+            d["menu_text"]["records"]["new_best"].SetString("R"); d["menu_text"]["records"]["stage_best"].SetString("R");
+            d["menu_text"]["results"]["contribution_team_a"].SetString(" {A}~"); d["menu_text"]["results"]["contribution_team_b"].SetString("^{B} ");
+        };
+        for (int team = 0; team < 2; ++team)
+        {
+            require(maximum[team] > maximum_at_100[team] && maximum[team] < 1234.0f &&
+                font.measure(attained[team]).y == (team == 0 ? 24.0f : 32.0f),
+                "Contribution font must distinguish earlier percentage extrema and the two authored team heights");
+            const float x = 1610.0f - maximum[team];
+            const auto select_team = [&](rapidjson::Document& d, bool outside)
+            {
+                edit(d, x + (outside ? 0.25f : 0.0f));
+                d["menu_text"]["results"][team == 0 ? "contribution_team_b" : "contribution_team_a"].SetString(team == 0 ? "^" : "~", d.GetAllocator());
+            };
+            const auto edge = variants.load([&](rapidjson::Document& d) { select_team(d, false); });
+            edge.validate_resources(world.render, world.audio);
+            require(edge.player_identity().ui_size == mattmath::Vector2F(54.0f, 42.0f) && edge.player_identity().ui_gap == 12.0f,
+                "Contribution badge boundary fixture changed the shipped badge size/gap");
+            const float y = 635.0f + 46.0f * static_cast<float>(attained_player[team]);
+            UiTextDropShadow row("authored-contribution-edge", attained[team], edge.results_menu().contribution_font,
+                { x, y }, &world.render, Colour::black, Colour{}, mattmath::Vector2F::ZERO, true);
+            const auto badge = UiPlayerBadge::before(row.bounds(), edge.player_identity());
+            const auto full_row = mattmath::RectangleF::union_of(row.bounds(), badge);
+            const float top = y - (team == 0 ? 9.0f : 5.0f);
+            require(row.bounds().right() == 1610.0f && badge == mattmath::RectangleF(x - 66.0f, top, 54.0f, 42.0f) &&
+                full_row == mattmath::RectangleF(x - 66.0f, top, 1610.0f - (x - 66.0f), 42.0f),
+                "Complete contribution text and actual badge lost exact full-paper contact or team-specific vertical placement");
+            const std::string owner = std::string("labels.roster_row.Results.menu_text.results.") + contribution_team_text[team].key;
+            variants.rejects(owner, [&](rapidjson::Document& d) { select_team(d, true); }, &world);
+        }
+        const auto left = variants.load([&](rapidjson::Document& d) { edit(d, 376.0f); });
+        left.validate_resources(world.render, world.audio);
+        require(UiPlayerBadge::before(mattmath::RectangleF(376.0f, 681.0f, 100.0f, 24.0f), left.player_identity()) ==
+            mattmath::RectangleF(310.0f, 672.0f, 54.0f, 42.0f), "Complete first-row badge must meet the Results paper left edge");
+        variants.rejects("labels.roster_row.Results.menu_text.results.contribution_team_a", [&](rapidjson::Document& d) { edit(d, 375.75f); }, &world);
+        // A's shorter text gives the higher badge top, while B's taller text
+        // gives the lower badge bottom: their legal-team envelope is 46 high.
+        require(681.0f - 9.0f == 672.0f && 681.0f + 37.0f == 718.0f && 727.0f - 9.0f == 718.0f,
+            "Mixed-team row envelope must touch the next row at exactly46 units");
+        variants.rejects("labels.roster_row.Results.menu_text.results.contribution_team_a.and menu_text.results.contribution_team_b", [&](rapidjson::Document& d)
+        { edit(d, 376.0f); d["results_menu"]["contribution_spacing"].SetFloat(45.75f); }, &world);
+        variants.rejects("results.contribution_heading", [](rapidjson::Document& d)
+        {
+            d["results_menu"]["contribution_font"].SetString("menu_text_limited");
+            d["menu_text"]["results"]["contribution_heading"].SetString("~"); d["menu_text"]["results"]["contribution_team_a"].SetString("~");
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -7482,6 +7684,9 @@ int main(int argc, char** argv)
         check_competitive_winner_text(variants, world);
         check_competitive_winner_selection(defaults.menu_text());
         check_competitive_winner_bounds(variants, world);
+        check_contribution_team_text(variants, world);
+        check_contribution_team_roster(world, defaults);
+        check_contribution_team_bounds(variants, world);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
@@ -7494,6 +7699,7 @@ int main(int argc, char** argv)
             "strict authored series-score tokens, all26 legal ledgers and proportional-font full-paper boundaries, "
             "authored numbered Results headings over the full positive-int domain, "
             "plain competitive winners with original float/solo selection and inclusive actual item-font paper bounds, "
+            "authored contribution team separators with sparse-slot credit, sequential full-row font bounds and complete mixed-team badge clearance, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "finite authored series/roster templates and expanded-card boundaries, "

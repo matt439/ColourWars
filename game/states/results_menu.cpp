@@ -334,7 +334,8 @@ void ResultsMenuInitial::init()
 	{
 		const MenuPlayerSettings& player = players[i];
 		add_detail(this->level_settings()->player_label(static_cast<int>(i), this->text()) +
-			(player.team == PlayerTeam::a ? L" | Team A | " : L" | Team B | ") +
+			(player.team == PlayerTeam::a ? this->text().results.contribution_team_a :
+				this->text().results.contribution_team_b) +
 			end_info.player_percentage_string(paint_owners::index(player.num, static_cast<int>(i))),
 			look.contribution_position + Vector2F(0.0f,
 				look.contribution_spacing * static_cast<float>(i + 1)), look.contribution_font);

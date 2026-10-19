@@ -1161,7 +1161,7 @@ Fixed palette labels remain in the existing palette data and are still read
 live. Duration/resolution/percentage values, Arena mode/roster summaries,
 connection/readout text, player-specific Pause titles and plain Results labels
 are described below. The numbered Results heading is also data-owned; remaining
-coverage and contribution text follows the [remaining text slices](#remaining-text-slices-gap84).
+coverage and team-percentage wrappers follow the [remaining text slices](#remaining-text-slices-gap84).
 
 ### Stage Select Random display name
 
@@ -2384,6 +2384,47 @@ artifacts, match byte for byte. All eight crops were inspected. Evidence is
 under `out/validation/competitive-winner-text/`. These checks establish no match
 launch, physical-device, listening, human readability or performance acceptance.
 
+## Contribution team separators (`GAP#8.4`)
+
+Required plain fields `menu_text.results.contribution_team_a` and
+`contribution_team_b` retain ` | Team A | ` and ` | Team B | ` respectively,
+including both outer spaces. They use the existing normalized printable,
+nonblank single-line rules. Braces are literal and there is no character cap.
+
+Results uses its captured separator between the unchanged captured roster
+label and the existing percentage string. Team selection, sequential string
+composition and `paint_owners::index(player.num, roster_index)` remain exact;
+the roster index does not replace the device slot. Text, contribution font,
+zero-offset shadow and badge geometry retain their existing capture and reveal
+behavior. Reopening adopts new text and font.
+
+Resource checks retain all 40,040 roster/team/reference-percentage combinations
+and their sequential FLOAT prefix-and-suffix glyph walk. Each complete row
+includes its actual badge in the paper and row-spacing checks. Per-team errors
+retain the existing roster-label diagnostic and name the corresponding
+separator field. Combined-envelope errors name both separators. No numeric,
+fitting, badge, record-clearance or collision rule is changed.
+
+Validation (2026-10-19): both builds, all 38 CPU cases per preset, the focused
+menu-text case and isolated published-bank/DPI-v2 startups pass. The full-suite
+Release team-selection case returned zero with an empty capture; its unchanged
+binary passes an explicit-stream rerun (161 stdout bytes, no stderr). The
+original empty log is retained; its cause is unestablished. Independent
+font measurements cover all 40,040 complete rows, including signed bearings,
+terminal advances, exact paper edges, badge bounds and mixed-team spacing.
+The source-only width fixture correction is preserved with its reviewed drafts.
+
+`ContributionTeamOnly` passes in both presets: 45 page updates, 56 readbacks,
+72 rows, five fresh openings/pops, four font controls and four owner controls
+per preset. The sparse roster includes keyboard, Pad 3, a missing device and
+Pad 1; literal owner percentages, raw badge masks and complete row geometry
+provide independent references. All six individual default/old/new crops at
+720p and 1080p were inspected. Nine shared artifacts, including eight raw
+CSV/PPM files, match between presets. These hidden checks cover capture,
+reopening, reversed adoption, reveal/input gating and resize without claiming
+physical-pad, human style, gameplay or performance acceptance. Evidence:
+`out/validation/contribution-team-text/`.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
@@ -2393,12 +2434,11 @@ briefing mode/roster summaries, Arena numbering and Random availability, and
 preference percentages, duration units/Default notation, resolution values and
 End continuation labels, the three plain Results labels, four fixed Session
 result messages, the series score line, numbered Results heading and three
-competitive winner messages are implemented.
+competitive winner messages and contribution team separators are implemented.
 The next slice is:
 
-1. **Session and results:** solo-coverage copy and contribution/team
-   descriptions. Retain reveal timing and solo/series
-   distinctions.
+1. **Result percentages:** solo-coverage and A/B percentage wrappers, retaining
+   the existing numeric formatter, reveal timing and solo/series distinctions.
 
 Deadzones already use the shared percentage template, including the inherited
 value; introducing a new inheritance marker is separate work.
