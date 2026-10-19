@@ -195,7 +195,7 @@ void ResultsMenuInitial::init()
 
 	this->team_a_percentage_ = std::make_unique<UiTextDropShadow>(
 		"team_a_percentage",
-		end_info.team_a_percentage_string(),
+		end_info.team_a_percentage_string(this->text().results),
 		style.detail_font,
 		this->team_a_fill_->rectangle().position(),
 		this->render_resources(),
@@ -206,7 +206,7 @@ void ResultsMenuInitial::init()
 
 	this->team_b_percentage_ = std::make_unique<UiTextDropShadow>(
 		"team_b_percentage",
-		end_info.team_b_percentage_string(),
+		end_info.team_b_percentage_string(this->text().results),
 		style.detail_font,
 		Vector2F::ZERO,
 		this->render_resources(),

@@ -145,6 +145,14 @@ struct MenuResultsText
 	std::wstring competitive_draw;
 	std::wstring contribution_team_a;
 	std::wstring contribution_team_b;
+	std::wstring solo_coverage;
+	std::wstring team_a_percentage;
+	std::wstring team_b_percentage;
+	// The caller renders the percentage. These wrappers preserve that string,
+	// including unusual numeric spellings, without imposing a numeric domain.
+	std::wstring solo_coverage_line(const std::wstring& percentage) const;
+	std::wstring team_a_percentage_line(const std::wstring& percentage) const;
+	std::wstring team_b_percentage_line(const std::wstring& percentage) const;
 	// Current Sessions are first to 1, 2 or 3; completion prevents both
 	// teams reaching the target in the same ledger.
 	std::wstring score_line(int team_a_wins, int team_b_wins, int target) const;

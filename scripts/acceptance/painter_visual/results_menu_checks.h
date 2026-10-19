@@ -167,7 +167,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     };
     const auto percentage = [&](const LevelEndInfo& info, bool team_b)
     {
-        const std::wstring text = team_b ? info.team_b_percentage_string() : info.team_a_percentage_string();
+        const std::wstring text = team_b ? info.team_b_percentage_string(presentation.menu_text().results) : info.team_a_percentage_string(presentation.menu_text().results);
         const Vector2F measured = app.render_resources()->measure_text(detail_font, text);
         return RectangleF(Vector2F(team_b ? fill_box.right() - look.team_fill_border.x - measured.x :
             fill_box.x + look.team_fill_border.x, fill_box.y + look.team_fill_border.y), measured);

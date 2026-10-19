@@ -134,6 +134,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
 		this->acting_ = std::make_unique<FigureActing>(&look, &presentation->respawn_redraw(),
 			render_resources);
+		this->reveal_text_ = presentation->menu_text().results;
 		this->reveal_art_ = std::make_unique<RevealArt>(&look, render_resources);
 		this->hover_sound_ = this->sound_bank_->resolve_wave(match.hover_sound.name);
 		this->click_sound_ = this->sound_bank_->resolve_wave(match.click_sound.name);

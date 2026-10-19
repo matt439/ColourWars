@@ -160,7 +160,10 @@
       "competitive_team_b_wins": "Team B Wins!",
       "competitive_draw": "Draw!",
       "contribution_team_a": " | Team A | ",
-      "contribution_team_b": " | Team B | "
+      "contribution_team_b": " | Team B | ",
+      "solo_coverage": "{percentage} Painted",
+      "team_a_percentage": "A {percentage}",
+      "team_b_percentage": "B {percentage}"
     },
     "stage": {
       "browse_status": "FIND YOUR ARENA",

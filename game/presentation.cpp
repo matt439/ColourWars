@@ -506,6 +506,22 @@ namespace
 		text.results.competitive_draw = read_menu_line(results, "competitive_draw");
 		text.results.contribution_team_a = read_menu_line(results, "contribution_team_a");
 		text.results.contribution_team_b = read_menu_line(results, "contribution_team_b");
+		const auto read_results_percentage = [&](const char* key)
+		{
+			const std::wstring value = read_menu_line(results, key);
+			try
+			{
+				std::ignore = format_label_template(value, { { L"{percentage}", L"0.0%" } });
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(results.where() + ": " + key + ": " + error.what());
+			}
+			return value;
+		};
+		text.results.solo_coverage = read_results_percentage("solo_coverage");
+		text.results.team_a_percentage = read_results_percentage("team_a_percentage");
+		text.results.team_b_percentage = read_results_percentage("team_b_percentage");
 		const JsonValue stage = json.object("stage");
 		text.stage.browse_status = read_menu_line(stage, "browse_status");
 		text.stage.locked_status = read_menu_line(stage, "locked_status");
@@ -2184,6 +2200,21 @@ std::wstring MenuText::device_label(int slot) const
 		return format_label_template(this->labels.waiting, {});
 	}
 	throw std::invalid_argument("Menu device label requires a slot from -1 to 4.");
+}
+
+std::wstring MenuResultsText::solo_coverage_line(const std::wstring& percentage) const
+{
+	return format_label_template(this->solo_coverage, { { L"{percentage}", percentage } });
+}
+
+std::wstring MenuResultsText::team_a_percentage_line(const std::wstring& percentage) const
+{
+	return format_label_template(this->team_a_percentage, { { L"{percentage}", percentage } });
+}
+
+std::wstring MenuResultsText::team_b_percentage_line(const std::wstring& percentage) const
+{
+	return format_label_template(this->team_b_percentage, { { L"{percentage}", percentage } });
 }
 
 std::wstring MenuResultsText::score_line(int team_a_wins, int team_b_wins, int target) const
@@ -4349,6 +4380,59 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->menu_.item_font, results.winner_y);
 	check_results_centered("competitive_draw", this->menu_text_.results.competitive_draw,
 		this->menu_.item_font, results.winner_y);
+	// These are reference rendering outputs, not a restriction on the public
+	// float arithmetic or percentage_text's spellings. Wrappers accept the
+	// caller's already-rendered value without parsing or sanitizing it.
+	for (const auto& field : { std::pair("solo_coverage", &this->menu_text_.results.solo_coverage),
+		std::pair("team_a_percentage", &this->menu_text_.results.team_a_percentage),
+		std::pair("team_b_percentage", &this->menu_text_.results.team_b_percentage) })
+	{
+		try
+		{
+			std::ignore = format_label_template(*field.second, { { L"{percentage}", L"" } });
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(this->source_path_ + ": menu_text.results." + field.first + ": " + error.what());
+		}
+	}
+	const Vector2F results_fill_position((1920.0f - results.fill_box_size.x) / 2.0f,
+		results_panel.y + results.fill_box_y_offset);
+	const Vector2F percentage_a_position = results_fill_position + results.team_fill_border;
+	const Vector2F percentage_b_top_right = results_fill_position + Vector2F(results.fill_box_size.x, 0.0f) +
+		Vector2F(-results.team_fill_border.x, results.team_fill_border.y);
+	const auto check_results_percentage = [&](const char* role, const std::wstring& text, bool right_aligned)
+	{
+		const std::string key = std::string("menu_text.results.") + role;
+		const Vector2F size = fixed_menu_size(key, text, this->menu_.detail_font);
+		const Vector2F position = right_aligned ?
+			Vector2F(percentage_b_top_right.x - size.x, percentage_b_top_right.y) : percentage_a_position;
+		RectangleF plate(position, size);
+		// MenuPaperArtwork draws its face and shade within the supplied bounds.
+		// Match the widgets' single padding inflation and zero text shadow.
+		plate.inflate(results.art.focus_padding);
+		if (!finite_stage_rectangle(plate) || !results_panel.contains(plate))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit unscaled inside the Results paper including its percentage plate padding.");
+		}
+	};
+	for (int tenth = 0; tenth <= 1000; ++tenth)
+	{
+		const std::wstring percentage = std::to_wstring(tenth / 10) + L"." + std::to_wstring(tenth % 10) + L"%";
+		check_results_centered("solo_coverage", this->menu_text_.results.solo_coverage_line(percentage),
+			this->menu_.item_font, results.winner_y);
+		const std::wstring team_a = this->menu_text_.results.team_a_percentage_line(percentage);
+		const std::wstring team_b = this->menu_text_.results.team_b_percentage_line(percentage);
+		check_results_percentage("team_a_percentage", team_a, false);
+		check_results_percentage("team_b_percentage", team_b, true);
+		// The monitor has its own font. Check the complete reference strings;
+		// RevealArt keeps its existing runtime width/height fit and outline.
+		std::ignore = fixed_menu_size("menu_text.results.team_a_percentage at monitor", team_a,
+			this->opening_.percent_font);
+		std::ignore = fixed_menu_size("menu_text.results.team_b_percentage at monitor", team_b,
+			this->opening_.percent_font);
+	}
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const

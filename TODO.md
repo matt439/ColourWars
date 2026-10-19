@@ -35,7 +35,6 @@ This is a selection guide, not another priority order; each owner defines a boun
 |---|---|---|
 | `DBG#1` | Audit further colour consumers; thirteen existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 | `GAP#4.2` | Implement keyboard Jump rebinding through capture, save, gameplay and effective help | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
-| `GAP#8.4` | Extract the remaining coverage and team-percentage wrappers | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Gameplay style:** review the implemented painter/tools (`POL#7`) and player/shot cues
@@ -127,18 +126,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#4.2` | OPEN | MED | L | Implement the scoped keyboard Jump slice: capture, independent saved preference, actual gameplay and effective help. Broader rebinding remains open; UI artwork follows the style lock. `GAP#F2` follows the client exhibit. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
 | `GAP#5.1` | BLOCKED | LOW | M | Screen changes are hard cuts: the transition look is UI art after the gameplay style lock (`POL#7`, `POL#14`, `POL#9`). Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. The blank startup window waits on `ENG#19`. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
-| `GAP#L11` | DEFERRED | LOW | L | No locale axis; waits on `GAP#8.4`. Fonts regenerate from [a recipe](game/art/README.md#sprite-font-recipe-gap87) and text can wrap. |
-
-## Content pipeline
-
-**Owner:** [docs/review/gap-audit.md](docs/review/gap-audit.md) Theme 8, frozen as above.
-The live [art/content policy](game/art/README.md#runtime-content-separation-gap86) owns
-the accepted `GAP#8.6` scope; [menu presentation](docs/menu-presentation.md#remaining-text-slices-gap84)
-owns the remaining `GAP#8.4` implementation slices.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `GAP#8.4` | OPEN | LOW | L | Move the remaining coverage and team-percentage wrappers into presentation data, preserving existing wording and numeric formatting. [Scope](docs/menu-presentation.md#remaining-text-slices-gap84). |
+| `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
 
 ## Engine demonstration
 
@@ -214,6 +202,7 @@ A new row for one of these gets its section back.
 | The OOP showcase | [oop-guide.md](docs/oop-guide.md) | a base class or weapon contract the guide no longer describes |
 | Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1 | only the author reversing the decision |
 | Startup content validation | gap audit 8.1, `game/content_validation.cpp` | a content kind added without validation |
+| Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
 | Code TODO/FIXME markers | `game/`, `editor/`, `scripts/`, `cmake/` | a new marker, which should be a row here instead |
 | Movement Course icon (`ED#6`, retired) | [level-editor.md](docs/level-editor.md#movement-course-icon-ed6-retired) | an accepted screen actually displays stage icons; current Stage Select uses a live preview |
 

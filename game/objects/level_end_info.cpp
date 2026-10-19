@@ -102,20 +102,20 @@ float LevelEndInfo::team_b_percentage() const
 	return 100.0f * this->team_b_ratio();
 }
 // Label each team explicitly rather than relying on bar position or colour.
-std::wstring LevelEndInfo::team_a_percentage_string() const
+std::wstring LevelEndInfo::team_a_percentage_string(const MenuResultsText& text) const
 {
-	return L"A " + percentage_text(this->team_a_percentage());
+	return text.team_a_percentage_line(percentage_text(this->team_a_percentage()));
 }
-std::wstring LevelEndInfo::team_b_percentage_string() const
+std::wstring LevelEndInfo::team_b_percentage_string(const MenuResultsText& text) const
 {
-	return L"B " + percentage_text(this->team_b_percentage());
+	return text.team_b_percentage_line(percentage_text(this->team_b_percentage()));
 }
 std::wstring LevelEndInfo::winning_team_string(const MenuResultsText& text) const
 {
 	// A single-team match reports coverage without declaring a winner.
 	if (this->one_team_only())
 	{
-		return percentage_text(100.0f * this->coverage_ratio()) + L" Painted";
+		return text.solo_coverage_line(percentage_text(100.0f * this->coverage_ratio()));
 	}
 
 	PlayerTeam winning = this->winning_team();

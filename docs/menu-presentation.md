@@ -797,8 +797,8 @@ Equality is accepted; no item-text shadow or fitting scale is added.
 Each Pause page uses its captured `MenuText` and resolves the item font when it
 opens. An open initial or confirmation page keeps its current labels through
 presentation edits; reopening adopts the new text. These strings remain outside
-numeric `tune`. Player-specific titles and connection status remain separate C++
-text.
+numeric `tune`. [Player-specific titles and connection messages](#connection-messages-and-player-specific-pause-titles)
+use their own authored fields.
 
 ### Pause confirmation questions
 
@@ -948,7 +948,8 @@ on opening. Presentation changes leave an open page's text, font and fitted
 label sizes intact; reopening adopts the edits. They remain JSON string
 settings outside numeric `tune`. Labels do not change navigation, adjustment
 steps, Apply/Back behavior, saved preferences or stick previews. Dynamic
-connection and live readout strings remain separate C++ text.
+connection and live readout strings use the separate
+[Pad Sticks fields](#pad-sticks-preview-readouts).
 
 ### Controls / audio and Pad Sticks help
 
@@ -1160,8 +1161,9 @@ fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
 live. Duration/resolution/percentage values, Arena mode/roster summaries,
 connection/readout text, player-specific Pause titles and plain Results labels
-are described below. The numbered Results heading is also data-owned; remaining
-coverage and team-percentage wrappers follow the [remaining text slices](#remaining-text-slices-gap84).
+are described below. The numbered Results heading, solo-coverage wording and
+team-percentage wrappers are also data-owned; the [text scope](#remaining-text-slices-gap84)
+records its completion.
 
 ### Stage Select Random display name
 
@@ -1200,8 +1202,8 @@ snapshots. Name colours use live `stage_select.selected_ink` or `unselected`.
 The
 string stays outside numeric `tune`. It does not change eligible stages, cycling, lock/unlock,
 confirm-again start, random selection or RNG draws. Numbered Arena navigation,
-the Random availability count and composed best-of mode/roster text remain separate
-C++ copy under GAP#8.4.
+the Random availability count and composed best-of mode/roster text use the
+[authored Arena templates](#arena-numbering-and-random-availability).
 
 ### Stage Select status messages
 
@@ -1237,8 +1239,8 @@ reopening adopts the edits. A refresh reads the live
 `stage_select.selected_ink` or `unselected` foreground colour. These complete
 strings remain outside numeric `tune`, introduce no placeholders and do not
 change eligible stages, random selection, RNG draws, navigation, confirmation,
-unlocking or confirm-again start. Composed navigation/count hints and best-of mode/roster
-strings remain separate C++ text under GAP#8.4.
+unlocking or confirm-again start. Composed navigation/count hints and best-of
+mode/roster strings use their separate authored Arena templates below.
 
 ### Fixed Stage Select briefing copy
 
@@ -1299,8 +1301,8 @@ and foreground ink through presentation replacement and selection refreshes;
 reopening adopts the edits. These strings stay outside numeric `tune` and
 introduce no placeholders or runtime formatting. They do not change match mode,
 roster, stage eligibility, navigation, locking, starting, random selection or
-RNG draws. Composed best-of mode/roster copy and navigation/count hints remain C++ text
-under GAP#8.4.
+RNG draws. Composed best-of mode/roster copy and navigation/count hints use
+their separate authored Arena templates below.
 
 ### Fixed Stage Select mode labels
 
@@ -1402,8 +1404,8 @@ live presentation values for the fit. Reopening adopts the edits. An idle
 update does not force a visual refresh. The strings stay outside numeric
 `tune`, introduce no placeholders and do not change navigation, eligibility,
 confirmation, unlocking, confirm-again start, random selection or RNG draws.
-Numbered Arena navigation and the composed Random availability-count hint
-remain C++ text under GAP#8.4.
+Numbered Arena navigation and the composed Random availability-count hint use
+the separate [numbering/count templates](#arena-numbering-and-random-availability).
 
 ## Verification and boundary
 
@@ -1567,10 +1569,10 @@ menu device/roster labels including the packed Pause missing-pad list, Arena
 briefing mode/roster summaries and numbered/count hints, preference percentages,
 duration and resolution values, and Session-selected End continuation labels.
 The three plain Results labels, four fixed Session result messages and series
-score line described below are also authored. The numbered series heading,
-winner/coverage copy and contribution/team descriptions remain open under that
-item. Font regeneration, wrapping and locale selection remain separate work.
-The historical audit is unchanged.
+score line described below are also authored, along with the numbered series
+heading, winner/coverage copy and contribution/team descriptions. The scoped
+text extraction is complete. Font recipes and wrapping retain their separate
+contracts; locale selection is unscoped. The historical audit is unchanged.
 
 ## Connection messages and player-specific Pause titles
 
@@ -2347,9 +2349,9 @@ wording, distinct from the existing series messages:
 The normalized printable, nonblank single-line rules apply. Braces are literal
 and no character cap is added. `LevelEndInfo::winning_team_string` receives the
 narrow captured `MenuResultsText` record and returns an owned string. Its
-competitive predicates remain unchanged. The solo branch still returns the
-existing percentage expression followed by ` Painted`; no range, finite-value
-or rounding policy is introduced.
+competitive predicates remain unchanged. The solo branch uses the separate
+[coverage wrapper](#result-percentage-wrappers-gap84), preserving the existing
+percentage expression; no range, finite-value or rounding policy is introduced.
 
 Results uses its captured copy and item font at the original centered
 `results_menu.winner_y`, unscaled with an explicit zero-offset transparent
@@ -2425,25 +2427,89 @@ reopening, reversed adoption, reveal/input gating and resize without claiming
 physical-pad, human style, gameplay or performance acceptance. Evidence:
 `out/validation/contribution-team-text/`.
 
+## Result percentage wrappers (`GAP#8.4`)
+
+Three required `menu_text.results` templates retain the shipped words:
+`solo_coverage` is `{percentage} Painted`, `team_a_percentage` is
+`A {percentage}` and `team_b_percentage` is `B {percentage}`. Each normalized,
+nonblank single line requires exactly one `{percentage}` token. Missing,
+repeated or unknown tokens fail with the field's name. There is no character
+cap and inserted strings are never scanned for tokens a second time.
+
+`LevelEndInfo` still performs the same FLOAT operations and calls the existing
+`percentage_text`: `std::to_wstring`, truncated after the first decimal place,
+then `%`. The wrapper accepts that already-rendered string without parsing or
+sanitizing it. The public arithmetic keeps its unrestricted float domain,
+including negative values, signed zero, nonfinite values and overflow. Record
+sanitization is a separate boundary. Participation, coverage versus painted-area
+share, zero-area behavior, winner selection and reveal timing remain unchanged.
+
+Results passes its captured `MenuResultsText`. A Level copies the wrappers
+immediately beside construction of `RevealArt`, so its percentage font and
+wording have the same capture epoch. Assignment to Presentation retains the
+existing page and Level copies; reopening a page or building a new Level adopts
+the new copy. Resizing refits the existing monitor text without advancing the
+match or rebasing those copies.
+
+Resource checks enumerate 1,001 nominal reference strings, `0.0%` through
+`100.0%`, independently of the public float domain. Solo coverage uses the
+actual Results item font, horizontal centering and winner position inside the
+full paper. A/B labels use the actual detail font and their existing left/right
+fill anchors, with exactly one plate-padding inflation inside the full paper.
+The monitor checks its own percentage-font glyphs and finite, positive complete
+measurements. Its existing runtime width/height fit and outline are retained;
+there is no new raw-width, minimum-scale, inner-fill or monitor-paper rule.
+
+Validation (2026-10-19): both builds, the focused Debug menu-text check, all 38
+CPU cases per preset and both isolated published-bank/DPI-v2 startups pass.
+The full suites produced 75 populated logs; Release Team Selection returned zero
+with an empty capture. Two redirected-stream reruns were also empty. The same
+unchanged binary shows its PASS line and child exit 0 in a captured local
+terminal run. The originals remain retained; the capture difference is
+unexplained. Added CPU checks retain 96 independent
+numeric/participation contexts, arbitrary already-rendered insertion and 1,001
+literal font references, including an earlier percentage wider than `100.0%`.
+Inclusive solo-paper and padded A/B plate boundaries use the actual fonts and
+anchors; monitor checks retain the existing runtime fitting contract.
+
+`ResultPercentageOnly` passes with normal readers in both presets. Each run
+uses 60 StateContext updates and, separately, 240 Level updates across three
+seeded public-builder matches, 120 readbacks, 105 CSV rows (81 Results and 24
+monitor), eight fresh page openings/pops and six font controls. Capture,
+retained pages, reopening, rebuilt Levels, reversed adoption and zero-update
+resizing are checked. All eight compact crops were inspected; eleven shared
+artifacts, including ten raw CSV/PPM files, match between presets. The monitor
+proof covers opaque inner-card bands and independent literal font/outline/fit
+math. Fixture simulation intentionally advances; state and RNG stability are
+checked during drawing and resizing.
+
+All failed attempts and reviewed corrections remain under
+`out/validation/result-percentage-text/`: stale objects caused by copied draft
+timestamps, two unrelated wide-fill fixtures, an adversarial resolution font's
+global-validity expectation, a strict-compiler local-name shadow and a missing
+fixed A mark in the complete-band reference. Corrected runs retain the full
+comparison areas and numeric/component oracles. These hidden checks establish
+no whole monitor picture/foreground, physical-device, listening, human style
+or performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
-**OPEN.** Preserve the existing wording and move it into presentation data in
-bounded increments. Shared On/Off/Random values and the fixed labels described
-above, shared menu device/roster labels, packed missing-pad lists and Arena
-briefing mode/roster summaries, Arena numbering and Random availability, and
+**Current scope completed (2026-10-19).** The existing wording is owned by
+presentation data in the bounded roles described above. Shared On/Off/Random
+values and fixed labels, shared menu device/roster labels, packed missing-pad
+lists and Arena briefing mode/roster summaries, Arena numbering and Random
+availability, and
 preference percentages, duration units/Default notation, resolution values and
 End continuation labels, the three plain Results labels, four fixed Session
 result messages, the series score line, numbered Results heading and three
-competitive winner messages and contribution team separators are implemented.
-The next slice is:
-
-1. **Result percentages:** solo-coverage and A/B percentage wrappers, retaining
-   the existing numeric formatter, reveal timing and solo/series distinctions.
+competitive winner messages, contribution team separators and solo-coverage
+and A/B percentage wrappers are implemented. Existing numeric formatting,
+reveal timing and solo/series distinctions are retained.
 
 Deadzones already use the shared percentage template, including the inherited
 value; introducing a new inheritance marker is separate work.
 
-Each increment adds only the fields and bounded substitutions its callers need;
+Each implemented role adds only the fields and substitutions its callers need;
 there is no general formatting language. Required tokens must occur exactly as
 the caller expects; reject missing, repeated or unknown tokens with a named
 content error. Check actual font glyphs and measured bounds for the composed
@@ -2453,4 +2519,7 @@ Keep the existing page capture/adoption behavior: a page retains its captured
 copy where it does today, and reopening adopts edits. Acceptance covers actual
 refreshes and reopening as well as malformed content. Navigation, readiness,
 input ownership, RNG, gameplay values, persistence and results stay unchanged.
-Use the current shipped copy; new wording or localisation is separate work.
+The shipped copy is retained. A locale axis remains unscoped (`GAP#L11`): locale
+selection/storage, fallback, font coverage and numeric conventions need their
+own contract. This text extraction does not introduce a general formatter or
+change canonical player identities, A/B marks or numeric percentage spelling.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/play_settings.h"
+#include "game/presentation.h"
 
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
@@ -365,6 +366,9 @@ private:
 	labrador::SoundBank::WaveHandle click_sound_;
 	labrador::SoundBank::WaveHandle close_sound_;
 	std::unique_ptr<RevealArt> reveal_art_;
+	// Capture the wrappers alongside RevealArt's percent font, so replacement
+	// presentation text never draws against the preceding font snapshot.
+	MenuResultsText reveal_text_;
 
 	RevealBeat reveal_beat() const;
 	float reveal_length() const;

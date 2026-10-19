@@ -35,8 +35,8 @@ struct LevelEndInfo
 	float team_b_ratio() const;
 	float team_a_percentage() const;
 	float team_b_percentage() const;
-	std::wstring team_a_percentage_string() const;
-	std::wstring team_b_percentage_string() const;
+	std::wstring team_a_percentage_string(const MenuResultsText& text) const;
+	std::wstring team_b_percentage_string(const MenuResultsText& text) const;
 	std::wstring winning_team_string(const MenuResultsText& text) const;
 
 	// Whether only one team participated; results then show coverage instead
