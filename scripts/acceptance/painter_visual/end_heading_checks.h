@@ -155,7 +155,12 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     const Headings new_words{ L"Paint match done", L"Round is over", L"Series finished" };
     const auto with_words = [&](const Headings& words)
     {
-        Presentation result = original; const_cast<MenuText&>(result.menu_text()).end = words; return result;
+        Presentation result = original;
+        auto& text = const_cast<MenuText&>(result.menu_text()).end;
+        text.match_complete = words.match_complete;
+        text.round_complete = words.round_complete;
+        text.series_complete = words.series_complete;
+        return result;
     };
     Presentation old = with_words(old_words); old.validate_resources(*app.render_resources(), *app.audio_resources());
     const Font* source = app.render_resources()->font(
@@ -233,7 +238,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             "End heading regression failed to restore the exact original session raster");
         tap(Key::enter); require(choice == EndMenuAction::restart && results == 1 && stack.depth() == 1,
             "Repeated restored End page changed fresh continuation");
-        require(session.continue_string() == fixture.continuation && session.score_string() == score &&
+        require(session.continue_string(original.menu_text().end) == fixture.continuation && session.score_string() == score &&
             session.result_string() == result && session.round() == round && session.team_a_wins() == team_a_wins &&
             session.team_b_wins() == team_b_wins,
             "Authored End headings or repeated typed actions mutated the Session ledger");

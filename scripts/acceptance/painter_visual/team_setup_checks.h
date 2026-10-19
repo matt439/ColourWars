@@ -405,7 +405,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         const RectangleI primary = countdown_crop_bounds(camera.calculate_view_rectangle(
-            RectangleF(end.layout.position, measure(style.item_font, expected_session.continue_string()))));
+            RectangleF(end.layout.position, measure(style.item_font, expected_session.continue_string(presentation.menu_text().end)))));
         require(foreground_crop(frame(), primary, 0).pixels == foreground_crop(expected_end, primary, 0).pixels,
             "Series End page lost its expected ongoing-series continuation");
         if (round == 1)

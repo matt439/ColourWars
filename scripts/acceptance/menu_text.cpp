@@ -151,6 +151,12 @@ namespace
         { "round_complete", L"Round Complete", &MenuEndText::round_complete },
         { "series_complete", L"Series Complete", &MenuEndText::series_complete }
     };
+    constexpr EndText end_continuation_text[]{
+        { "rematch", L"Rematch", &MenuEndText::rematch },
+        { "play_series_again", L"Play Series Again", &MenuEndText::play_series_again },
+        { "replay_draw", L"Replay Draw", &MenuEndText::replay_draw },
+        { "next_round", L"Next Round", &MenuEndText::next_round }
+    };
     struct RecordText { const char* key; const wchar_t* text; std::wstring MenuRecordText::* field; };
     constexpr RecordText record_text[]{
         { "new_best", L"NEW BEST", &MenuRecordText::new_best },
@@ -400,6 +406,10 @@ namespace
         {
             require(text.end.*entry.field == entry.text, std::string("End heading default changed: ") + entry.key);
         }
+        for (const auto& entry : end_continuation_text)
+        {
+            require(text.end.*entry.field == entry.text, std::string("End continuation default changed: ") + entry.key);
+        }
         for (const auto& entry : stage_text)
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena status default changed: ") + entry.key);
@@ -522,6 +532,7 @@ namespace
         required("values", "resolution");
         for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
         for (const auto& entry : end_text) { required("end", entry.key); }
+        for (const auto& entry : end_continuation_text) { required("end", entry.key); }
         for (const auto& entry : record_text) { required("records", entry.key); }
         for (const auto& entry : stage_text) { required("stage", entry.key); }
         for (const auto& entry : stage_count_text) { required("stage", entry.key); }
@@ -2216,6 +2227,9 @@ namespace
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+            // Keep the unrelated new row 0 copy at the same 24-unit width while
+            // the original static-action right-edge and row 4 owners are tested.
+            for (const auto& entry : end_continuation_text) { d["menu_text"]["end"][entry.key].SetString("Fit"); }
         };
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& end = original.end_menu();
@@ -6244,6 +6258,153 @@ namespace
         require(long_supported.menu_text().setting_resolution(1, 1) == std::wstring(512, L'W') + L"1x1",
             "Resolution formatting truncated supported text or introduced an unrelated length cap");
     }
+    void check_end_continuation_text(Variants& variants, World& world)
+    {
+        for (const auto& entry : end_continuation_text)
+        {
+            const std::string field = std::string("end.") + entry.key;
+            const auto normalized = variants.load([&](rapidjson::Document& d)
+            {
+                d["menu_text"]["end"][entry.key].SetString("  A\xC2\xA0\xE2\x80\x9C" "B\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
+            });
+            normalized.validate_resources(world.render, world.audio);
+            require(normalized.menu_text().end.*entry.field == L"  A \"B\"-C...  ",
+                "End continuation lost normalized punctuation or authored outer spaces: " + field);
+            const auto plain = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["end"][entry.key].SetString("{next} % [again]"); });
+            plain.validate_resources(world.render, world.audio);
+            std::wstring source = plain.menu_text().end.*entry.field;
+            const auto position = plain.end_menu().layout.position;
+            const auto measured = world.render.measure_text(world.render.resolve_sprite_font(plain.menu().item_font), L"{next} % [again]");
+            UiText text(entry.key, source, plain.menu().item_font, position, &world.render, plain.end_menu().art.ink);
+            source = L"Changed after construction";
+            require(text.text() == L"{next} % [again]" && text.bounds() == mattmath::RectangleF(position, measured),
+                "Plain End continuation interpreted braces/percent, borrowed text, scaled or retained a text shadow: " + field);
+            text.set_hidden(true); DrawList no_device; text.draw(no_device);
+            for (const char* invalid : { "   ", " \xC2\xA0 ", "line\nbreak", "line\rbreak", "line\r\nbreak", "tab\ttext",
+                "control\x01", "delete\x7f", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28" })
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                    { d["menu_text"]["end"][entry.key].SetString(invalid, d.GetAllocator()); });
+            }
+            for (int type = 0; type < 3; ++type)
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    auto& target = d["menu_text"]["end"][entry.key];
+                    if (type == 0) { target.SetArray(); }
+                    else if (type == 1) { target.SetObject(); }
+                    else { target.SetInt(7); }
+                });
+            }
+            variants.rejects(field, [&](rapidjson::Document& d)
+                { d["menu_text"]["end"][entry.key].SetString("A\0B", 3, d.GetAllocator()); });
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                d["menu_text"]["end"][entry.key].SetString("~");
+            }, &world);
+            const auto long_copy = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["end"][entry.key].SetString(std::string(512, 'W').c_str(), d.GetAllocator()); });
+            require((long_copy.menu_text().end.*entry.field).size() == 512,
+                "Plain End continuation acquired a parser character cap: " + field);
+            variants.rejects(field, [&](rapidjson::Document& d)
+                { d["menu_text"]["end"][entry.key].SetString(std::string(512, 'W').c_str(), d.GetAllocator()); }, &world);
+        }
+        require(world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'?') &&
+            !world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'~'),
+            "End continuation missing-literal fixture lost its stand-in or absent glyph");
+    }
+
+    void check_end_continuation_bounds(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const char* name, int width, int height, float x_offset = 0.0f,
+            float y_offset = 0.0f, float line_spacing = 20.0f)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                const bool marker = character == U'~';
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
+                    marker ? x_offset : 0.0f, marker ? y_offset : 0.0f, 0.0f });
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));
+        };
+        add_font("menu_continue_right", 722, 16);
+        add_font("menu_continue_right_overflow", 722, 16, 0.25f);
+        add_font("menu_continue_height", 8, 89);
+        add_font("menu_continue_height_overflow", 8, 89, 0.0f, 0.25f);
+        add_font("menu_continue_zero_width", 0, 20);
+        add_font("menu_continue_zero_height", 8, 0, 0.0f, 0.0f, 0.0f);
+        add_font("menu_continue_infinite_width", 8, 20, std::numeric_limits<float>::infinity());
+        add_font("menu_continue_infinite_height", 8, 20, 0.0f, std::numeric_limits<float>::infinity());
+        const auto use_font = [](rapidjson::Document& d, const char* key, const char* font_name)
+        {
+            d["menu_style"]["fonts"]["item"].SetString(font_name, d.GetAllocator());
+            d["menu_text"]["end"][key].SetString("~");
+        };
+        for (const auto& entry : end_continuation_text)
+        {
+            const std::string field = std::string("end.") + entry.key;
+            for (const bool height_edge : { false, true })
+            {
+                const auto edge = variants.load([&](rapidjson::Document& d)
+                    { use_font(d, entry.key, height_edge ? "menu_continue_height" : "menu_continue_right"); });
+                edge.validate_resources(world.render, world.audio);
+                const auto& end = edge.end_menu();
+                const auto measured = world.render.measure_text(world.render.resolve_sprite_font(edge.menu().item_font), L"~");
+                UiText value("continuation", L"~", edge.menu().item_font, end.layout.position, &world.render, end.art.ink);
+                const mattmath::RectangleF paper(470.0f, 130.0f, 980.0f, 820.0f);
+                require(value.bounds() == mattmath::RectangleF(700.0f, 330.0f,
+                    height_edge ? 8.0f : 722.0f, height_edge ? 89.0f : 20.0f) &&
+                    value.bounds().size() == measured, "Continuation edge fixture changed the actual plain unscaled UiText bounds");
+                auto padded = value.bounds(); padded.inflate(end.art.focus_padding);
+                require(paper.contains(padded) && (height_edge ? padded.height == 125.0f : padded.right() == 1450.0f),
+                    "Continuation edge fixture lost exact inclusive text-plus-focus-padding contact");
+                require(height_edge ? padded.height + end.art.shadow_offset > end.layout.spacing.y :
+                    padded.right() + end.art.shadow_offset > paper.right(),
+                    "Continuation fixture no longer distinguishes the existing plain rule from an added card-shade constraint");
+                variants.rejects(field, [&](rapidjson::Document& d)
+                    { use_font(d, entry.key, height_edge ? "menu_continue_height_overflow" : "menu_continue_right_overflow"); }, &world);
+            }
+            for (const char* font_name : { "menu_continue_zero_width", "menu_continue_zero_height",
+                "menu_continue_infinite_width", "menu_continue_infinite_height" })
+            {
+                // Zero measured height needs zero font line spacing. The earlier
+                // shared-font Join roster guard owns that globally invalid font.
+                const std::string owner = std::string(font_name) == "menu_continue_zero_height" ?
+                    "labels.roster_row with menu_text.labels.waiting at Join requires finite positive font line spacing" : field;
+                variants.rejects(owner, [&](rapidjson::Document& d) { use_font(d, entry.key, font_name); }, &world);
+            }
+        }
+        const auto full_height = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["heading"].SetString("menu_text_exact");
+            d["menu_style"]["fonts"]["item"].SetString("menu_end_heading_small_actions");
+            d["end_menu"]["heading_y"].SetFloat(900.0f);
+            d["end_menu"]["layout"]["position"]["y"].SetFloat(920.5f);
+            d["end_menu"]["layout"]["spacing"]["y"].SetFloat(3.0f);
+            d["end_menu"]["art"]["focus_padding"]["y"].SetFloat(0.5f);
+            d["end_menu"]["art"]["keyline_width"].SetFloat(0.125f);
+            d["end_menu"]["art"]["shadow_offset"].SetFloat(0.125f);
+        });
+        full_height.validate_resources(world.render, world.audio);
+        const auto& end = full_height.end_menu();
+        require(end.layout.position.y + 2.0f + end.art.focus_padding.y == 923.0f &&
+            923.0f > (full_height.menu().footer_y + end.box_size.y) / 2.0f && 923.0f < 950.0f,
+            "Continuation full-height fixture no longer distinguishes End paper from the menu-footer paper");
+        variants.rejects("items.change_teams", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["menu_text"]["items"]["change_teams"].SetString("~"); d["menu_text"]["end"]["rematch"].SetString("~");
+        }, &world);
+        variants.rejects("end.match_complete", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["heading"].SetString("menu_text_limited");
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["menu_text"]["end"]["match_complete"].SetString("~"); d["menu_text"]["end"]["rematch"].SetString("~");
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -6311,12 +6472,15 @@ int main(int argc, char** argv)
         check_setting_duration_content(variants, world, content);
         check_setting_resolution_text(variants, defaults.menu_text());
         check_setting_resolution_resources(variants, world);
+        check_end_continuation_text(variants, world);
+        check_end_continuation_bounds(variants, world);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
             "all101 setting percentages with captured Controls/Sticks value fitting, "
             "authored duration templates, FLOAT/defaultfloat compatibility and actual tuning/default/choice row validation, "
             "authored resolution templates with full positive integer dimensions, strict original tokens and captured Options fitting, "
+            "four plain End continuation labels with literal braces, actual-font glyphs and unscaled row0 padding boundaries, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "finite authored series/roster templates and expanded-card boundaries, "

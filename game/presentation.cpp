@@ -360,6 +360,10 @@ namespace
 		text.end.match_complete = read_menu_line(end, "match_complete");
 		text.end.round_complete = read_menu_line(end, "round_complete");
 		text.end.series_complete = read_menu_line(end, "series_complete");
+		text.end.rematch = read_menu_line(end, "rematch");
+		text.end.play_series_again = read_menu_line(end, "play_series_again");
+		text.end.replay_draw = read_menu_line(end, "replay_draw");
+		text.end.next_round = read_menu_line(end, "next_round");
 		const JsonValue stage = json.object("stage");
 		text.stage.browse_status = read_menu_line(stage, "browse_status");
 		text.stage.locked_status = read_menu_line(stage, "locked_status");
@@ -4077,6 +4081,29 @@ void Presentation::validate_resources(const RenderResources& render,
 	// INT_MAX is a domain endpoint, not an assertion about the widest digits.
 	check_fixed_paper(resolution_key, RectangleF(options_value_position(0), options_value_limit),
 		main.options_box_size, options_art.focus_padding);
+	// Session selects one of these plain, unscaled labels for End's first
+	// action. Retain the same paper, padding and row rule as its other actions.
+	const Vector2F end_top = (Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f;
+	const Vector2F end_bottom = end_top + end.box_size;
+	for (const auto& field : { std::pair("rematch", &this->menu_text_.end.rematch),
+		std::pair("play_series_again", &this->menu_text_.end.play_series_again),
+		std::pair("replay_draw", &this->menu_text_.end.replay_draw),
+		std::pair("next_round", &this->menu_text_.end.next_round) })
+	{
+		const std::string key = std::string("menu_text.end.") + field.first;
+		const Vector2F size = fixed_menu_size(key, *field.second, this->menu_.item_font);
+		const Vector2F position = end.layout.position;
+		const Vector2F padding = end.art.focus_padding;
+		if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
+			position.x - padding.x < end_top.x || position.y - padding.y < end_top.y ||
+			position.x + size.x + padding.x > end_bottom.x ||
+			position.y + size.y + padding.y > end_bottom.y ||
+			size.y + padding.y * 2.0f > end.layout.spacing.y)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit its paper and row including focus padding.");
+		}
+	}
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const

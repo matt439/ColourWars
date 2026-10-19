@@ -140,7 +140,11 @@
     "end": {
       "match_complete": "Match Complete",
       "round_complete": "Round Complete",
-      "series_complete": "Series Complete"
+      "series_complete": "Series Complete",
+      "rematch": "Rematch",
+      "play_series_again": "Play Series Again",
+      "replay_draw": "Replay Draw",
+      "next_round": "Next Round"
     },
     "stage": {
       "browse_status": "FIND YOUR ARENA",

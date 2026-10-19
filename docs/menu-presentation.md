@@ -841,8 +841,8 @@ Four required `menu_text.items` roles supply the static End Menu actions:
 | `change_level` | `Change Level` | Completed-match/series row 3 |
 | `exit_to_main_menu` | `Exit to Main Menu` | Ongoing-series row 1; completed-match/series row 4 |
 
-The configuration actions remain hidden during an ongoing series. The existing
-continuation action at row 0 remains in code.
+The configuration actions remain hidden during an ongoing series. Session
+selects row 0 from the four [continuation labels](#end-continuation-labels-gap84).
 Editing these four labels does not change which actions are available, their
 order, navigation, session continuation or music transitions.
 
@@ -862,8 +862,8 @@ accepted; these plain actions add no item-text shadow or fitting scale.
 An End page takes its labels from the captured `MenuText` and resolves their
 item font when it opens. An open page keeps its text and font after
 presentation changes; reopening adopts the edits. The strings are edited in
-JSON, outside numeric `tune`. Session-dependent continuation text remains
-separate C++ text.
+JSON, outside numeric `tune`. Session-dependent continuation labels follow the
+same captured-text policy.
 
 ### End Menu completion headings
 
@@ -1562,11 +1562,11 @@ setting values, Stage Select's shared Random display name, fixed selection
 statuses, fixed briefing copy, fixed mode labels and fixed navigation/hints, fixed Pause confirmation questions and End
 completion headings, Join/Pause connection messages and player-specific Pause titles,
 the Team Select warning, Pad Sticks connection/raw/response readouts, and shared
-menu device/roster labels including the packed Pause missing-pad list.
-Other setting values,
-composed stage navigation/count hints, best-of mode and roster summaries,
-session continuation text, composed match/results text and other
-player-visible C++ text remain open under that item. Font
+menu device/roster labels including the packed Pause missing-pad list, Arena
+briefing mode/roster summaries and numbered/count hints, preference percentages,
+duration and resolution values, and Session-selected End continuation labels.
+Remaining Results headings/prompts, contribution/team descriptions and composed
+session/match/results lines remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.
 
@@ -2056,16 +2056,65 @@ trial, fullscreen activation, match launch, hardware, listening, human
 readability or performance acceptance is claimed. Evidence is under
 `out/validation/resolution-text/`.
 
+## End continuation labels (`GAP#8.4`)
+
+Four required plain `menu_text.end` strings supply the existing primary action:
+
+| Field | Shipped text | Existing Session branch |
+|---|---|---|
+| `rematch` | `Rematch` | Single match. |
+| `play_series_again` | `Play Series Again` | Completed series. |
+| `replay_draw` | `Replay Draw` | Draw in an ongoing series. |
+| `next_round` | `Next Round` | Won round in an ongoing series. |
+
+Session selects from the supplied record using its unchanged predicates. End
+supplies its captured `MenuText`, so a constructed page keeps its wording and
+actual item font until reopened. The primary card, focus, typed actions, music,
+score, round and win ledger keep their existing behavior.
+
+These are normalized, printable, nonblank single-line labels. Braces are
+literal characters; no formatter or new character limit is introduced.
+Resource validation follows the established diagnostics and checks all four
+labels in the actual End item font at row zero. Plain text remains unscaled;
+its measured bounds expanded by End's focus padding must fit the existing End
+paper, centered in the full 1920 by 1080 design area. Its height with padding
+must fit the existing row spacing. The same rule already applies to the other
+End actions. Layout and ornament policies are unchanged.
+
+Validation: Debug and Release builds, all 38 consumer acceptance cases per
+preset, focused Debug menu-text/session checks and isolated bank-backed
+DPI-aware startups passed. CPU checks cover all four required defaults, plain
+brace characters, normalization, glyphs, unscaled bounds and exact existing
+padding/row boundaries; Session checks retain literal branch expectations and
+test supplied wording without changing its ledger. An initial zero-height font
+fixture expected the new-label diagnostic before an established Join guard;
+only that expectation was corrected. Its source and failed log remain retained.
+The Release Team Selection case returned success with an empty captured log;
+the unchanged binary then passed with explicit output captured separately. Both
+logs are retained, and the original capture gap's cause is not established.
+The focused native `-EndContinuationOnly` matrix passed in both presets:
+68 updates, 94 readbacks, 31 comparisons, fourteen openings, one font negative
+control and six 540 by 96 crops per preset. Fourteen typed results (thirteen
+restart, one exit) include four held music callbacks with inert repeated
+completion. Default/custom copy and fonts, the persistent primary card off
+focus, reopening/reversal, frozen Session/setup/save/RNG and zero-update resize
+are checked. One successful private settings seed Save per preset is required.
+All nine shared raw/summary artifacts match byte for byte; all six crops were
+inspected. Both scripted-reader variants also passed separate `/Zs` syntax/API
+checks of the migrated callers, with no scripted runtime or match launch.
+Evidence is under `out/validation/end-continuation-text/`. These checks establish
+no physical-device, listening, human readability or performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
 bounded increments. Shared On/Off/Random values and the fixed labels described
 above, shared menu device/roster labels, packed missing-pad lists and Arena
 briefing mode/roster summaries, Arena numbering and Random availability, and
-preference percentages, duration units/Default notation and resolution values
-are implemented. The next slice is:
+preference percentages, duration units/Default notation, resolution values and
+End continuation labels are implemented. The next slice is:
 
-1. **Session and results:** continuation actions, round/results headings and
+1. **Session and results:** Results headings and
    proceed prompt, contribution/team descriptions and composed match/result
    lines. Retain reveal timing and solo/series distinctions.
 

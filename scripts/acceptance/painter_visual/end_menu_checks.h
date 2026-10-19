@@ -328,7 +328,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
         presentation = original; open(fixture);
         require(compare("restored-default", fixture, 0, original, legacy).pixels == baseline[index].pixels,
             "End item regression did not restore the original exact session raster");
-        require(fixture.session.continue_string() == fixture.continuation,
+        require(fixture.session.continue_string(original.menu_text().end) == fixture.continuation,
             "Authored End labels changed their session continuation");
     }
     require(settings.player_count() == 2 &&
@@ -444,7 +444,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     std::vector<unsigned char> next_round_pixels;
     for (const EndMenuProbeCase& fixture : cases)
     {
-        require(fixture.session.continue_string() == fixture.continuation,
+        require(fixture.session.continue_string(presentation.menu_text().end) == fixture.continuation,
             "End-menu continuation label did not match its single/series state");
         const bool ongoing = fixture.session.is_series() && !fixture.session.complete();
         const std::vector<EndMenuAction> actions = ongoing ?
@@ -587,8 +587,8 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
                 std::ignore = app.renderer()->window_size_changed(1280, 720);
                 require(normal.pixels == end_menu_frame(app).pixels && !choice.has_value(),
                     "Resizing the same actual end page changed its pixels, focus or action");
-                if (fixture.session.continue_string() == L"Next Round") { next_round_pixels = normal.pixels; }
-                if (fixture.session.continue_string() == L"Replay Draw")
+                if (fixture.session.continue_string(presentation.menu_text().end) == L"Next Round") { next_round_pixels = normal.pixels; }
+                if (fixture.session.continue_string(presentation.menu_text().end) == L"Replay Draw")
                 {
                     require(!next_round_pixels.empty() && next_round_pixels != normal.pixels,
                         "Next Round and Replay Draw rendered the same continuation label");

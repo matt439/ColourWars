@@ -109,7 +109,7 @@ void EndMenuInitial::init()
 
 	this->restart_ = std::make_unique<UiText>(
 		"restart",
-		this->session_.continue_string(),
+		this->session_.continue_string(this->text().end),
 		style.item_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),

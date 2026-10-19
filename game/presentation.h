@@ -123,6 +123,10 @@ struct MenuEndText
 	std::wstring match_complete;
 	std::wstring round_complete;
 	std::wstring series_complete;
+	std::wstring rematch;
+	std::wstring play_series_again;
+	std::wstring replay_draw;
+	std::wstring next_round;
 };
 
 struct MenuStageText

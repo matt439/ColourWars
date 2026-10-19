@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/session.h"
+#include "game/presentation.h"
 
 Session::Session(int best_of) : best_of_(best_of)
 {
@@ -61,9 +62,9 @@ std::wstring Session::result_string() const
 		L"Draw - no win awarded" : L"Series continues";
 }
 
-std::wstring Session::continue_string() const
+std::wstring Session::continue_string(const MenuEndText& text) const
 {
-	if (!this->is_series()) return L"Rematch";
-	if (this->complete()) return L"Play Series Again";
-	return this->round_winner_ == PlayerTeam::none ? L"Replay Draw" : L"Next Round";
+	if (!this->is_series()) return text.rematch;
+	if (this->complete()) return text.play_series_again;
+	return this->round_winner_ == PlayerTeam::none ? text.replay_draw : text.next_round;
 }

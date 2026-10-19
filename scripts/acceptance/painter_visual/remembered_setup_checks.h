@@ -257,7 +257,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         app.renderer()->begin_frame(); end_stack.draw(*app.renderer()); const Frame wanted = read(*app.renderer());
         const auto& end = presentation.end_menu();
         const Vector2F extent = app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(
-            presentation.menu().item_font), session.continue_string());
+            presentation.menu().item_font), session.continue_string(presentation.menu_text().end));
         const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         const RectangleI card = countdown_crop_bounds(camera.calculate_view_rectangle(RectangleF(end.layout.position, extent)));

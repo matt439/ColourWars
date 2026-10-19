@@ -483,38 +483,63 @@ namespace debug_console_acceptance
 		// The end page offers the next playable action for each kind of finish.
 		LevelEndInfo win;
 		win.team_a_area = 1.0f;
+		MenuEndText custom = presentation.menu_text().end;
+		custom.rematch = L"Single {again}";
+		custom.play_series_again = L"Series {again}";
+		custom.replay_draw = L"Draw {again}";
+		custom.next_round = L"Round {next}";
+		const auto check_continuation = [&](const Session& session, const wchar_t* expected)
+		{
+			const bool series = session.is_series(), complete = session.complete();
+			const int round = session.round(), a_wins = session.team_a_wins(), b_wins = session.team_b_wins();
+			const std::wstring score = session.score_string(), result = session.result_string();
+			std::wstring selected = session.continue_string(custom);
+			require(selected == expected, "Session selects the supplied continuation without formatting literal braces");
+			selected.clear();
+			require(session.continue_string(custom) == expected && session.is_series() == series &&
+				session.complete() == complete && session.round() == round && session.team_a_wins() == a_wins &&
+				session.team_b_wins() == b_wins && session.score_string() == score && session.result_string() == result,
+				"Continuation selection returns an owned copy and leaves the Session ledger unchanged");
+		};
 		for (const bool solo : { false, true })
 		{
 			Session single;
 			LevelEndInfo finish = win;
 			finish.team_b_played = !solo;
 			single.finish_round(finish);
-			require(single.complete() && single.continue_string() == L"Rematch",
+			require(single.complete() && single.continue_string(presentation.menu_text().end) == L"Rematch",
 				"A finished single round or solo practice offers Rematch");
+			check_continuation(single, L"Single {again}");
 		}
 		for (const int length : { 3, 5 })
 		{
 			Session series(length);
 			series.finish_round(LevelEndInfo{});
-			require(!series.complete() && series.continue_string() == L"Replay Draw",
+			require(!series.complete() && series.continue_string(presentation.menu_text().end) == L"Replay Draw",
 				"An unresolved series draw offers Replay Draw");
+			check_continuation(series, L"Draw {again}");
 			series.next_round();
 			for (int wins = 1; wins <= length / 2 + 1; ++wins)
 			{
 				series.finish_round(win);
 				if (series.complete())
 				{
-					require(series.continue_string() == L"Play Series Again",
+					require(series.continue_string(presentation.menu_text().end) == L"Play Series Again",
 						"A completed best-of series offers Play Series Again");
+					check_continuation(series, L"Series {again}");
 				}
 				else
 				{
-					require(series.continue_string() == L"Next Round",
+					require(series.continue_string(presentation.menu_text().end) == L"Next Round",
 						"A decisive unfinished series offers Next Round");
+					check_continuation(series, L"Round {next}");
 					series.next_round();
 				}
 			}
 		}
+		require(custom.rematch == L"Single {again}" && custom.play_series_again == L"Series {again}" &&
+			custom.replay_draw == L"Draw {again}" && custom.next_round == L"Round {next}",
+			"Session selection leaves supplied continuation text unchanged");
 		// The strip at 1280x720 with a KEYBOARD + MOUSE card at the bottom
 		// right and the paint panel bottom left: lifted clear of both.
 		const Vector2F screen(1280.0f, 720.0f);
