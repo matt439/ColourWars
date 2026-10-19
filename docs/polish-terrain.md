@@ -101,6 +101,11 @@ negative/fractional camera origins, exposed seams, light thin rulers, surviving
 major marks and unchanged ramp pixel occupancy. These are geometry/raster rules,
 not human style acceptance.
 
+`terrain.cpp` remains the case's entry, holding the stage checks, the shared
+geometry helpers and the material refusals; the cloud drift, miniature projection
+and landmark checks live beside it in `scripts/acceptance/terrain/`
+(`cloud_checks.h`, `miniature_checks.h`, `landmark_checks.h`).
+
 ## Decisions made while building it
 
 These are calls the author has not yet seen; each is easy to reverse.
