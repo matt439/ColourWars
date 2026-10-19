@@ -15,6 +15,8 @@
 #include <limits>
 #include <optional>
 #include <stdexcept>
+#include <string_view>
+#include <utility>
 
 using namespace labrador;
 using namespace mattmath;
@@ -74,6 +76,88 @@ namespace
 			begin = end + 1;
 		} while (begin <= text.size());
 		return text;
+	}
+
+	struct StickReadoutToken
+	{
+		std::wstring_view name;
+		std::wstring value;
+	};
+
+	void validate_stick_template(const std::wstring& text,
+		std::initializer_list<StickReadoutToken> tokens, bool multiline)
+	{
+		for (const wchar_t character : text)
+		{
+			if ((character < L' ' || character > L'~') && !(multiline && character == L'\n'))
+			{
+				throw std::invalid_argument("Stick readout text must use drawable characters and its allowed LF line breaks.");
+			}
+		}
+		size_t begin = 0;
+		do
+		{
+			const size_t end = text.find(L'\n', begin);
+			if (text.substr(begin, end == std::wstring::npos ? end : end - begin).find_first_not_of(L' ') ==
+				std::wstring::npos)
+			{
+				throw std::invalid_argument("Stick readout text must have a nonblank line between each authored LF break.");
+			}
+			if (end == std::wstring::npos) { break; }
+			begin = end + 1;
+		} while (begin <= text.size());
+		// Count in the original template: erasing one token must never create
+		// a different required token from nested fragments around it.
+		for (const StickReadoutToken& token : tokens)
+		{
+			const size_t at = text.find(token.name);
+			if (at == std::wstring::npos || text.find(token.name, at + token.name.size()) != std::wstring::npos)
+			{
+				throw std::invalid_argument("Stick readout text requires each declared token exactly once.");
+			}
+		}
+		begin = 0;
+		for (;;)
+		{
+			const size_t at = text.find_first_of(L"{}", begin);
+			if (at == std::wstring::npos) { break; }
+			const size_t end = text.find(L'}', at);
+			bool known = false;
+			if (text[at] == L'{' && end != std::wstring::npos)
+			{
+				const std::wstring_view name = std::wstring_view(text).substr(at, end - at + 1);
+				for (const StickReadoutToken& token : tokens)
+				{
+					known = known || name == token.name;
+				}
+			}
+			if (!known)
+			{
+				throw std::invalid_argument("Stick readout text requires each declared token exactly once and no other braces.");
+			}
+			begin = end + 1;
+		}
+	}
+
+	std::wstring format_stick_template(const std::wstring& text,
+		std::initializer_list<StickReadoutToken> tokens, bool multiline)
+	{
+		validate_stick_template(text, tokens, multiline);
+		std::wstring result = text;
+		for (const StickReadoutToken& token : tokens)
+		{
+			result.replace(result.find(token.name), token.name.size(), token.value);
+		}
+		return result;
+	}
+
+	std::wstring stick_percent_value(int value)
+	{
+		if (value < -100 || value > 100)
+		{
+			throw std::invalid_argument("Stick readout percentages must be between -100 and 100.");
+		}
+		return std::to_wstring(value);
 	}
 
 	MenuText read_menu_text(const JsonValue& root)
@@ -179,6 +263,29 @@ namespace
 			throw std::runtime_error(connection.where() +
 				": pause_player_title must contain exactly one {player} token and no other braces.");
 		}
+		const JsonValue stick_readouts = json.object("stick_readouts");
+		const auto read_stick = [&](const char* key, bool multiline,
+			std::initializer_list<StickReadoutToken> tokens)
+		{
+			const std::wstring value = multiline ? read_menu_block(stick_readouts, key) : read_menu_line(stick_readouts, key);
+			try
+			{
+				validate_stick_template(value, tokens, multiline);
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(stick_readouts.where() + ": " + key + ": " + error.what());
+			}
+			return value;
+		};
+		text.stick_readouts.connected = read_stick("connected", false, { { L"{device}", L"" } });
+		text.stick_readouts.disconnected = read_stick("disconnected", false, { { L"{device}", L"" } });
+		text.stick_readouts.raw_movement = read_stick("raw_movement", false, { { L"{value}", L"" } });
+		text.stick_readouts.movement_response = read_stick("movement_response", false, { { L"{value}", L"" } });
+		text.stick_readouts.aim_inactive = read_stick("aim_inactive", true,
+			{ { L"{raw_x}", L"" }, { L"{raw_y}", L"" } });
+		text.stick_readouts.aim_active = read_stick("aim_active", true,
+			{ { L"{raw_x}", L"" }, { L"{raw_y}", L"" }, { L"{aim_x}", L"" }, { L"{aim_y}", L"" } });
 		return text;
 	}
 
@@ -1714,6 +1821,39 @@ std::wstring MenuText::pause_title_for_player(int number) const
 	return result;
 }
 
+std::wstring MenuText::stick_connection(int pad_slot, bool connected) const
+{
+	if (!input_slots::is_pad(pad_slot))
+	{
+		throw std::invalid_argument("Stick readout requires a pad slot from 0 to 3.");
+	}
+	return format_stick_template(connected ? this->stick_readouts.connected : this->stick_readouts.disconnected,
+		{ { L"{device}", input_slots::device_name(pad_slot) } }, false);
+}
+
+std::wstring MenuText::stick_raw_movement(int value) const
+{
+	return format_stick_template(this->stick_readouts.raw_movement, { { L"{value}", stick_percent_value(value) } }, false);
+}
+
+std::wstring MenuText::stick_movement_response(int value) const
+{
+	return format_stick_template(this->stick_readouts.movement_response, { { L"{value}", stick_percent_value(value) } }, false);
+}
+
+std::wstring MenuText::stick_aim_inactive(int raw_x, int raw_y) const
+{
+	return format_stick_template(this->stick_readouts.aim_inactive,
+		{ { L"{raw_x}", stick_percent_value(raw_x) }, { L"{raw_y}", stick_percent_value(raw_y) } }, true);
+}
+
+std::wstring MenuText::stick_aim_active(int raw_x, int raw_y, int aim_x, int aim_y) const
+{
+	return format_stick_template(this->stick_readouts.aim_active,
+		{ { L"{raw_x}", stick_percent_value(raw_x) }, { L"{raw_y}", stick_percent_value(raw_y) },
+		{ L"{aim_x}", stick_percent_value(aim_x) }, { L"{aim_y}", stick_percent_value(aim_y) } }, true);
+}
+
 const WeaponChoicePresentation& WeaponSelectArtworkPresentation::choice(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
@@ -3109,6 +3249,133 @@ void Presentation::validate_resources(const RenderResources& render,
 	}
 	check_pause_connection("controller_lost", connection.controller_lost, true);
 	check_pause_connection("all_connected", connection.all_connected, false);
+	const Font& stick_font = *render.font(render.resolve_sprite_font(controls.help_font));
+	const auto stick_numeric_size = [&](const char* role, const std::wstring& text)
+	{
+		const std::string where = this->source_path_ + ": menu_text.stick_readouts." + role;
+		drawable_text::check_font_can_draw(&render, controls.help_font, L"-0123456789", where);
+		struct Pen
+		{
+			float x = 0.0f;
+			float y = 0.0f;
+			Vector2F extent = Vector2F::ZERO;
+		};
+		const auto walk = [&](Pen& pen, std::wstring_view words)
+		{
+			// Match Font's pen order, including accumulated bearings, the clamp
+			// at zero, whitespace suppression and glyph overhang beyond a line.
+			for (const wchar_t character : words)
+			{
+				if (character == L'\n')
+				{
+					pen.x = 0.0f;
+					pen.y += stick_font.line_spacing();
+					continue;
+				}
+				const Glyph& glyph = stick_font.drawn(static_cast<char32_t>(character));
+				if (!std::isfinite(glyph.x_offset) || !std::isfinite(glyph.y_offset) ||
+					!std::isfinite(glyph.x_advance))
+				{
+					throw std::runtime_error(where + " requires finite font glyph metrics.");
+				}
+				const float width = static_cast<float>(glyph.subrect.width);
+				pen.x += glyph.x_offset;
+				if (pen.x < 0.0f) { pen.x = 0.0f; }
+				if (character != L' ' || glyph.subrect.width > 1 || glyph.subrect.height > 1)
+				{
+					const float height = character == L' ' ? stick_font.line_spacing() :
+						std::max(stick_font.line_spacing(), static_cast<float>(glyph.subrect.height) + glyph.y_offset);
+					pen.extent.x = std::max(pen.extent.x, pen.x + width);
+					pen.extent.y = std::max(pen.extent.y, pen.y + height);
+				}
+				pen.x += width + glyph.x_advance;
+			}
+		};
+		if (!std::isfinite(stick_font.line_spacing()) || stick_font.line_spacing() <= 0.0f)
+		{
+			throw std::runtime_error(where + " requires finite positive font line spacing.");
+		}
+		Pen pen;
+		size_t begin = 0;
+		for (;;)
+		{
+			const size_t token = text.find(L'{', begin);
+			const std::wstring_view literal = std::wstring_view(text).substr(begin,
+				token == std::wstring::npos ? token : token - begin);
+			drawable_text::check_font_can_draw(&render, controls.help_font, literal, where);
+			walk(pen, literal);
+			if (token == std::wstring::npos) { break; }
+			// Every incoming-pen transform is monotone. The maximum reachable
+			// pen suffices for the next token, but its greatest ink extent may
+			// come from a different value, so retain both maxima independently.
+			// Tokens contain no LF; their line position is independent of value.
+			float maximum_pen = -std::numeric_limits<float>::infinity();
+			Vector2F maximum_extent = pen.extent;
+			for (int value = -100; value <= 100; ++value)
+			{
+				Pen candidate = pen;
+				walk(candidate, std::to_wstring(value));
+				maximum_pen = std::max(maximum_pen, candidate.x);
+				maximum_extent.x = std::max(maximum_extent.x, candidate.extent.x);
+				maximum_extent.y = std::max(maximum_extent.y, candidate.extent.y);
+			}
+			pen.x = maximum_pen;
+			pen.extent = maximum_extent;
+			// The required template was checked while its source key was read.
+			begin = text.find(L'}', token) + 1;
+		}
+		if (!std::isfinite(pen.x) || !std::isfinite(pen.y) ||
+			!std::isfinite(pen.extent.x) || !std::isfinite(pen.extent.y) ||
+			pen.extent.x <= 0.0f || pen.extent.y <= 0.0f)
+		{
+			throw std::runtime_error(where + " must retain finite positive measured text bounds for every rounded percentage.");
+		}
+		return pen.extent;
+	};
+	const auto check_stick_region = [&](const char* role, const Vector2F& size,
+		const Vector2F& position, float top, float bottom)
+	{
+		const RectangleF bounds(position, size);
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+			!std::isfinite(top) || !std::isfinite(bottom) || !help_area.contains(bounds) ||
+			bounds.y < top || bounds.bottom() > bottom)
+		{
+			throw std::runtime_error(this->source_path_ + ": menu_text.stick_readouts." + role +
+				" must fit unscaled inside its controls preview/readout region without overlapping the adjacent preview or help text.");
+		}
+		return bounds;
+	};
+	const Vector2F raw_caption_position = preview.raw_movement.position() -
+		Vector2F(0.0f, probe_height + controls.art.focus_padding.y);
+	const Vector2F response_caption_position = preview.movement_response.position() -
+		Vector2F(0.0f, probe_height + controls.art.focus_padding.y);
+	const MenuText& stick_text = this->menu_text_;
+	for (const bool connected : { true, false })
+	{
+		const char* role = connected ? "connected" : "disconnected";
+		for (int slot = 0; slot < input_slots::pad_count; ++slot)
+		{
+			const Vector2F size = fixed_menu_size(std::string("menu_text.stick_readouts.") + role,
+				stick_text.stick_connection(slot, connected), controls.help_font);
+			check_stick_region(role, size, controls.controls_position, help_area.y, raw_caption_position.y);
+		}
+	}
+	check_stick_region("raw_movement", stick_numeric_size("raw_movement", stick_text.stick_readouts.raw_movement),
+		raw_caption_position, help_area.y, preview.raw_movement.y);
+	check_stick_region("movement_response", stick_numeric_size("movement_response", stick_text.stick_readouts.movement_response),
+		response_caption_position, preview.raw_movement.bottom(), preview.movement_response.y);
+	for (const auto& readout : { std::pair("aim_inactive", &stick_text.stick_readouts.aim_inactive),
+		std::pair("aim_active", &stick_text.stick_readouts.aim_active) })
+	{
+		check_stick_region(readout.first, stick_numeric_size(readout.first, *readout.second),
+			preview.aim_readout_position, preview.aim.y, preview.association_position.y);
+		if (preview.aim_readout_position.x < preview.aim.right())
+		{
+			throw std::runtime_error(this->source_path_ + ": menu_text.stick_readouts." + readout.first +
+				" must remain beside the aim preview.");
+		}
+	}
 }
 
 const MenuStyle& Presentation::menu() const

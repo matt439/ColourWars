@@ -168,6 +168,14 @@
       "all_connected": "All players connected.",
       "teams_required": "Both teams need a player"
     },
+    "stick_readouts": {
+      "connected": "{device} - connected",
+      "disconnected": "{device} - disconnected",
+      "raw_movement": "Left stick raw X: {value}%",
+      "movement_response": "Move response: {value}%",
+      "aim_inactive": "Raw X: {raw_x}%\nRaw Y: {raw_y}%\nNo new aim\nRaw: hollow\nAim: solid",
+      "aim_active": "Raw X: {raw_x}%\nRaw Y: {raw_y}%\nAim X: {aim_x}%\nAim Y: {aim_y}%\nRaw: hollow\nAim: solid"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

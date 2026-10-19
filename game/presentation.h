@@ -161,6 +161,18 @@ struct MenuConnectionText
 	std::wstring teams_required;
 };
 
+// Pad Sticks preview copy. Percent signs and authored line breaks are literal;
+// the menu supplies rounded integers rather than formatting raw input here.
+struct MenuStickReadoutsText
+{
+	std::wstring connected;
+	std::wstring disconnected;
+	std::wstring raw_movement;
+	std::wstring movement_response;
+	std::wstring aim_inactive;
+	std::wstring aim_active;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
@@ -178,6 +190,7 @@ struct MenuText
 	MenuStageText stage;
 	MenuRecordText records;
 	MenuConnectionText connection;
+	MenuStickReadoutsText stick_readouts;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;
@@ -187,6 +200,12 @@ struct MenuText
 	std::wstring display_countdown(int seconds) const;
 	// Player numbers are the visible roster numbers 1-4, never device slots.
 	std::wstring pause_title_for_player(int number) const;
+	// Pad slots are 0-3; rounded percentages are -100 through 100 inclusive.
+	std::wstring stick_connection(int pad_slot, bool connected) const;
+	std::wstring stick_raw_movement(int value) const;
+	std::wstring stick_movement_response(int value) const;
+	std::wstring stick_aim_inactive(int raw_x, int raw_y) const;
+	std::wstring stick_aim_active(int raw_x, int raw_y, int aim_x, int aim_y) const;
 };
 
 // Optional focus ornaments, captured when a menu page is constructed.

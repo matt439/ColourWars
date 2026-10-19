@@ -90,9 +90,14 @@ private:
 
 namespace
 {
+	int rounded_percent(float value)
+	{
+		return static_cast<int>(std::lround(value * 100.0f));
+	}
+
 	std::wstring percent(float value)
 	{
-		return std::to_wstring(static_cast<int>(std::lround(value * 100.0f))) + L"%";
+		return std::to_wstring(rounded_percent(value)) + L"%";
 	}
 }
 
@@ -232,15 +237,14 @@ void StickSettingsMenu::refresh_preview()
 	const StickResponse response = stick_response(left, right, authored, this->selection_, this->slot_);
 	this->preview_->set_response(left, right, response, this->selection_.movement_deadzone(this->slot_, authored),
 		this->selection_.aim_deadzone(this->slot_));
-	this->connection_->set_text(input_slots::device_name(this->slot_) +
-		(pad.connected ? L" - connected" : L" - disconnected"));
-	this->raw_movement_->set_text(L"Left stick raw X: " + percent(left.x));
-	this->movement_response_->set_text(L"Move response: " + percent(response.movement));
+	this->connection_->set_text(this->text().stick_connection(this->slot_, pad.connected));
+	this->raw_movement_->set_text(this->text().stick_raw_movement(rounded_percent(left.x)));
+	this->movement_response_->set_text(this->text().stick_movement_response(rounded_percent(response.movement)));
 	const Vector2F aim = response.aim.normalized();
-	this->aim_readout_->set_text(L"Raw X: " + percent(right.x) + L"\nRaw Y: " + percent(right.y) +
-		L"\n" + (response.aim == Vector2F::ZERO ? std::wstring(L"No new aim") :
-			L"Aim X: " + percent(aim.x) + L"\nAim Y: " + percent(aim.y)) +
-		L"\nRaw: hollow\nAim: solid");
+	const int raw_x = rounded_percent(right.x), raw_y = rounded_percent(right.y);
+	this->aim_readout_->set_text(response.aim == Vector2F::ZERO ?
+		this->text().stick_aim_inactive(raw_x, raw_y) :
+		this->text().stick_aim_active(raw_x, raw_y, rounded_percent(aim.x), rounded_percent(aim.y)));
 }
 
 void StickSettingsMenu::apply_settings()

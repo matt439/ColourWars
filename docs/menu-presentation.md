@@ -1561,9 +1561,9 @@ Title/Home copy, fixed settings save-status messages, shared On/Off/Random
 setting values, Stage Select's shared Random display name, fixed selection
 statuses, fixed briefing copy, fixed mode labels and fixed navigation/hints, fixed Pause confirmation questions and End
 completion headings, Join/Pause connection messages and player-specific Pause titles,
-and the Team Select warning.
+the Team Select warning, and Pad Sticks connection/raw/response readouts.
 Other setting values,
-composed stage navigation/count hints, best-of mode and roster copy, Pad Sticks readouts and generated player/device labels,
+composed stage navigation/count hints, best-of mode and roster copy, generated player/device labels,
 session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
@@ -1604,8 +1604,8 @@ Actual glyphs and finite positive measured bounds are required for each role.
 
 Pages retain captured copy and resolved fonts through refreshes; reopening
 adopts edits. Reconnect acknowledgement, readiness, input ownership, centering,
-navigation and RNG are unchanged. Generated player/device names, missing-player
-lists and Pad Sticks readouts remain C++ copy for later slices. This adds only
+navigation and RNG are unchanged. Generated player/device names and missing-player
+lists remain C++ copy for later slices. This adds only
 the bounded player-number substitution, with no general formatting language.
 
 Validation (2026-10-18): Debug and Release builds and all 37 consumer CPU cases
@@ -1629,15 +1629,98 @@ awareness. Failed fixture/compile epochs are retained beside the final receipts
 under `out/validation/connection-text/`. This establishes no physical-pad,
 listening, human readability/style or performance acceptance.
 
+## Pad Sticks preview readouts
+
+Six required `menu_text.stick_readouts` templates preserve the shipped preview
+copy. `connected` and `disconnected` contain exactly one `{device}`; the caller
+supplies a Pad 1-4 slot name. `raw_movement` and `movement_response` contain
+exactly one `{value}`. Their defaults are:
+
+```text
+{device} - connected
+{device} - disconnected
+Left stick raw X: {value}%
+Move response: {value}%
+```
+
+`aim_inactive` requires `{raw_x}` and `{raw_y}` exactly once:
+
+```text
+Raw X: {raw_x}%
+Raw Y: {raw_y}%
+No new aim
+Raw: hollow
+Aim: solid
+```
+
+`aim_active` additionally requires `{aim_x}` and `{aim_y}` exactly once:
+
+```text
+Raw X: {raw_x}%
+Raw Y: {raw_y}%
+Aim X: {aim_x}%
+Aim Y: {aim_y}%
+Raw: hollow
+Aim: solid
+```
+
+Only those complete tokens are accepted; missing, repeated, nested or unknown
+braces are content errors. The four short templates use the existing normalized
+single-line rules. Both aim blocks use normalized nonblank LF-separated lines.
+Direct formatter calls also reject malformed templates. Pad slots are 0-3;
+each numeric argument is an independently bounded integer from -100 through
+100. The caller retains `std::lround(value * 100.0f)`, its active/zero-aim branch,
+and aim normalization. Percent signs are authored literals, and no input,
+deadzone, rounding, persistence or preview drawing rule changes.
+
+Resource validation checks all four device names in each connection state and
+every permitted numeric substitution against the actual Controls help font.
+It retains separate maximum pen and measured extents across token alternatives:
+glyph bearing/clamp/advance steps are monotone, so each token needs only its 201
+legal values, even with negative advances or several tokens on the same line.
+The bounds cover the public formatter's independent arguments; they do not
+assume the physically reachable stick vectors or that `100%` is widest.
+
+All six readouts remain plain, unscaled text in their original positions. The
+connection line ends before the raw caption, raw and response captions stay
+above their tracks, and the full aim block fits beside the aim box and before
+association help. Caption positions retain the existing measured `Move` probe
+and focus-padding offset. Pages capture their copy and font, refresh values from
+the existing input snapshots, and adopt edits only when reopened. The Pad row's
+generated device label and both deadzone-setting percentage values remain for
+later text slices.
+
+Validation (2026-10-19): both game builds and all 37 CPU cases per preset pass.
+The text case checks the six defaults, normalization and malformed/nested tokens,
+all 201 signed values on each argument, generated pad glyphs, full multiline
+regions and exact inclusive edges. Independent measurements of all 40,401
+inactive-aim value pairs use adversarial glyph bearings/advances; the widest
+measured number and the number with greatest terminal pen differ, and the full
+readout bounds still match. Active-aim extrema and same-line/reordered tokens
+also pass. The source-review regression rejects nested fragments that could
+otherwise manufacture a later required token.
+
+`StickReadoutsOnly` passes on Debug and Release at 720p/1080p: 164 independent
+literal-text raster/bounds checks and 107 page updates per preset, with exactly
+eight compact crops each. It checks signed half-percent rounding, all four pad
+slots, disconnected stale inputs, normalized aim and radial cutoff, inherited
+and pending deadzones, discard without saving, captured custom templates/help
+font through real refreshes and reopening/reversal, and frozen drawing/RNG.
+Both presets' CSV/crops are byte-identical and the contact sheet was inspected.
+Both isolated published-bank/System-only-PATH startup checks also pass with
+per-monitor v2 DPI awareness. Corrected fixture failures and final receipts are
+retained under `out/validation/stick-readouts/`; no physical-pad, listening,
+human readability/style or performance acceptance is claimed.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
 bounded increments. Shared On/Off/Random values and the fixed labels described
 above are already implemented. The next slices are:
 
-1. **Remaining connection and player readouts:** Pad Sticks' connection/raw/response
-   readouts and generated player/device labels. Join/Pause fixed connection copy,
-   player-specific Pause titles and the team-required warning are implemented.
+1. **Generated player/device labels:** shared roster/device names and missing-pad
+   lists. Join/Pause fixed connection copy, player-specific Pause titles, the
+   team-required warning and Pad Sticks preview readouts are implemented.
 2. **Composed setup:** Arena navigation and Random availability count, best-of
    mode and player/team roster lines, retaining their current numbers and order.
 3. **Numeric settings:** duration units and Default notation, resolution and
