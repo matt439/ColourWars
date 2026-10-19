@@ -125,7 +125,8 @@
     "values": {
       "on": "On",
       "off": "Off",
-      "random": "Random"
+      "random": "Random",
+      "percentage": "{value}%"
     },
     "confirmations": {
       "restart": "Are you sure you want to restart?",

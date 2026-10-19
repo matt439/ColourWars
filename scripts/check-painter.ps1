@@ -37,6 +37,7 @@ param(
     [switch] $PausedOptionsOnly,
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
+    [switch] $PercentageTextOnly,
     [switch] $StickSettingsOnly,
     [switch] $TeamSetupOnly,
     [switch] $RememberedSetupOnly,
@@ -62,7 +63,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -155,6 +156,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -274,6 +276,9 @@ function Write-ContactSheet {
         $menuText = @($images | Where-Object { $_.name -like 'menu-text-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuText -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-text-contact'
+        $percentages = @($images | Where-Object { $_.name -like 'percentage-*' })
+        Write-ContactSheetPages -Images $percentages -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-percentage-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -384,7 +389,21 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($StageCountsOnly) {
+if ($PercentageTextOnly) {
+    $result.scope = 'percentage-text-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @()
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('four-literal-percentage-value-rows', 'saved-volume-17-0-100', 'inherited-cutoff-rounded-100', 'explicit-deadzone-0-90', 'actual-music-sfx-movement-aim-adjustments', 'long-value-column-fitting', 'captured-template-and-visible-numeric-font-metrics', 'refresh-child-return-reopen-reversal', 'apply-reload-repeat', 'active-versus-disk-save-failure', 'pending-discard', 'frozen-preview-rng-resize')
+    $result.input_slots = @(4)
+    $result.inputs = 'Actual Controls/audio parent and Pad Sticks child with the normal GamepadReader and public local keyboard events. All four nested private pad profiles are seeded identically; the existing page chooses its initial slot. No scripted pad backend, foreground/global input, physical-device or gameplay claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated both-preset leaf for menu_text.values.percentage. Independent literal strings and UiText/OptionRow-equivalent linear references cover music/SFX and movement/aim values, saved17/0/100, inherited movement0.999 rounding to100 and explicit0/90. Existing captured controls item fonts and width-then-height value fitting remain intact. Old long copy with tilde, a new font ID missing tilde and distinct numeric bearings, real adjustments, child return, reopen/reversal and zero-update720/1080/720 drawing comparisons prove retention and adoption. Actual child Apply/reload/repeat preserves pending parent volumes and unrelated preferences; controlled private-save failure keeps active10/85 while disk remains5/85, and later Escape discards pending edits. Full private save bytes, observed status colours, unchanged current preview across source replacement, frozen redraw and draw RNG are checked. Exactly114 state updates(hard120),87 readbacks,52 value CSV rows,4 status comparisons and8 compact crops per preset. No broad Controls matrix, gameplay, foreground/global input, physical-pad, hardware qualification, listening, human readability or performance acceptance.'
+}
+elseif ($StageCountsOnly) {
     $result.scope = 'stage-counts-only'
     $result.Remove('stage')
     $result.stages = @('movement_course', 'close_quarters', 'king_of_the_hill', 'turbulence')
@@ -1068,6 +1087,7 @@ try {
     elseif ($PausedOptionsOnly) { $probeArguments += 'paused-options' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
+    elseif ($PercentageTextOnly) { $probeArguments += 'percentage-text' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
     elseif ($TeamSetupOnly) { $probeArguments += 'team-setup' }
     elseif ($RememberedSetupOnly) { $probeArguments += 'remembered-setup' }
@@ -1138,6 +1158,10 @@ try {
         }
     }
     $expectedSaveFailures = @{}
+    if ($PercentageTextOnly) {
+        $line = 'save failure: Could not write ' + (Join-Path $captures 'percentage-profile/ColourWars/save_data.json') + '.'
+        $expectedSaveFailures[$line] = 1
+    }
     if ($PausedOptionsOnly) {
         $line = 'save failure: Could not write ' + (Join-Path $captures 'paused-options-profile/ColourWars/save_data.json') + '.'
         $expectedSaveFailures[$line] = 1
@@ -1192,11 +1216,27 @@ try {
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
     }
+    if ($PercentageTextOnly) {
+        $percentageSummary = Get-Content -LiteralPath (Join-Path $captures 'percentage-summary.json') -Raw | ConvertFrom-Json
+        $percentageRows = @(Import-Csv -LiteralPath (Join-Path $captures 'percentage-values.csv'))
+        $percentageCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'percentage-*.ppm' -File)
+        if ($percentageSummary.outcome -ne 'passed' -or $percentageSummary.updates -ne 114 -or
+            $percentageSummary.readbacks -ne 87 -or $percentageSummary.value_csv_rows -ne 52 -or
+            $percentageSummary.status_comparisons -ne 4 -or $percentageSummary.compact_crops -ne 8 -or
+            $percentageRows.Count -ne 52 -or @($percentageRows | Where-Object { $_.match -ne 'true' }).Count -ne 0 -or
+            $percentageCrops.Count -ne 8) {
+            throw 'The percentage leaf evidence does not match its frozen update/readback/CSV/crop budgets.'
+        }
+        $result['observed_counts'] = $percentageSummary
+    }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($StageCountsOnly) {
+    if ($PercentageTextOnly) {
+        $result.diagnostic = 'Preference percentages passed independent literal actual music/SFX/movement/aim rasters at720/1080, saved17/0/100, inherited movement rounded100 and explicit0/90; long OptionRow fitting, captured text and visibly distinct numeric font metrics through real adjustments, child return, reopen/reversal and zero-update resize returns. Child Apply/reload/repeat, active10/85 versus persisted5/85 after the controlled private-save failure, pending parent10/90 preservation and Escape discard retain unrelated preferences/private bytes. Current preview across source replacement and frozen draw RNG are unchanged. Exactly114 state updates(hard120),87 readbacks,52 value CSV rows,4 status comparisons and8 compact crops. No broad matrix, gameplay, foreground/global input, physical-pad, hardware qualification, listening, human readability or performance acceptance.'
+    }
+    elseif ($StageCountsOnly) {
         $result.diagnostic = 'Stage counts passed independent literal actual navigation/hint/status/record rasters at720/1080 for mixed4/eligible3, excluded1/eligible0 and mixed2/eligible1 lists; all mixed indices, unchanged singular grammar, observable Random browse/first lock/unlock/concrete return, positive record room and fitted long records or Random absence. Supplied-literal hint paper expansion, constructor text/font/position/ink/navigation-shadow capture, live refresh-only hint width/shadow, cached fit, reopen/reversal, exact private save/records/keyboard claim/settings and frozen/provisional RNG passed. Exactly104 updates(hard120),54 observed states,216 four-role CSV rows and8 compact crops. No final Random draw, match launch, broad matrix, foreground/global input, physical-pad, listening, human readability or performance acceptance.'
     }
     elseif ($StageSummaryOnly) {

@@ -1904,17 +1904,72 @@ their source snapshots and final receipts remain under
 confirmation or launches a match; physical-pad, listening, human readability/
 style and performance acceptance remain separate.
 
+## Preference percentages
+
+The required `menu_text.values.percentage` template defaults to `{value}%` and
+contains exactly one `{value}` token. Controls music/SFX volumes and Pad Sticks
+movement/aim deadzones use it. The formatter accepts every integer from zero
+through 100, including saved non-step volumes such as 17. Deadzones retain the
+existing `lround(value * 100.0f)` calculation: inherited movement tuning below
+one can round to 100, while explicit saved deadzones remain clamped to 0-90.
+There is no new inherited/default marker or preference.
+
+Loading retains the existing punctuation/space normalization, single-line and
+nonblank rules. Missing, repeated, nested, unmatched or unknown tokens are
+content errors; direct formatter edits must already be printable ASCII. The
+formatter scans the original template once and rejects values outside 0-100.
+
+Resource validation measures all 101 outputs in the actual captured Controls
+item font at both value rows. It uses the existing OptionRow value column,
+width-then-height fitting, focus/paper and design bounds. These checks follow
+the older resource checks so their diagnostic precedence stays intact. Both
+pages keep their existing text/font snapshots through adjustments and child
+return; reopening adopts edits. Values, rounding, response previews, pending
+edits, Apply/discard and save behavior are unchanged.
+
+Validation (2026-10-19): both game builds, the focused Debug text case and all
+38 CPU cases per preset pass. The text case covers every integer output,
+normalization, required fields/types, original-template guards, direct edits,
+out-of-range values, inherited rounding and actual font selection. Missing
+glyphs and invalid metrics are rejected without changing older diagnostic
+precedence. Actual OptionRows exercise width, height and combined fitting,
+captured copy and resetting scale when short values return.
+
+`PercentageTextOnly` passes on both presets at 720p/1080p: 114 page updates,
+87 readbacks, 52 literal value raster checks, four status comparisons and eight
+compact crops each. Normal keyboard readers drive all four real value callbacks,
+the Controls parent and its Pad Sticks child. Saved 17/0/100, inherited 100 and
+explicit 0/90 retain their wording. Long templates, distinct numeric font
+bearings, old-glyph retention, reopening/reversal and zero-update resize returns
+prove capture and adoption. Child Apply/reload/repeat, failed save, parent return
+and Escape discard preserve pending parent volumes and unrelated preferences.
+After the controlled failure, active deadzones are 10/85 while disk retains
+5/85; later pending edits are discarded. Fixed status wording/colours, current
+response previews across source replacement, private bytes and draw RNG pass.
+
+The eight PPM crops total 912,612 bytes per preset. All ten CSV/PPM files and the
+structured summary JSON are byte-identical between Debug and Release; all eight
+crops were inspected. Both isolated accepted-bank, System-only-PATH startups
+pass with per-monitor-v2 DPI awareness. The first native reference omitted
+legitimate paper shading and right-column help inside the wide status crop;
+adding that context retains the full pixel comparison. That failed run, its
+source, the unexecuted intermediate correction and final receipts are retained
+under `out/validation/percentage-text/`. The correction changed only the probe.
+These checks establish no gameplay, physical-pad, listening, human readability/
+style or performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
 bounded increments. Shared On/Off/Random values and the fixed labels described
 above, shared menu device/roster labels, packed missing-pad lists and Arena
-briefing mode/roster summaries, Arena numbering and Random availability are
-implemented. The next slices are:
+briefing mode/roster summaries, Arena numbering and Random availability, and
+preference percentages are implemented. The next slices are:
 
-1. **Numeric settings:** duration units and Default notation, resolution and
-   percentage values, and inherited/default deadzone notation. Preserve current
-   numeric precision, rounding, choices and saved identifiers.
+1. **Numeric settings:** duration units and Default notation, and resolution
+   values. Preserve current numeric precision, rounding, choices and saved
+   identifiers. Deadzones already use the shared percentage template, including
+   the inherited value; introducing a new inheritance marker is separate work.
 2. **Session and results:** continuation actions, round/results headings and
    proceed prompt, contribution/team descriptions and composed match/result
    lines. Retain reveal timing and solo/series distinctions.

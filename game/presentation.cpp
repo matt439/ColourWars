@@ -317,6 +317,15 @@ namespace
 		text.values.on = read_menu_line(values, "on");
 		text.values.off = read_menu_line(values, "off");
 		text.values.random = read_menu_line(values, "random");
+		text.values.percentage = read_menu_line(values, "percentage");
+		try
+		{
+			std::ignore = format_label_template(text.values.percentage, { { L"{value}", L"0" } });
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(values.where() + ": percentage: " + error.what());
+		}
 		const JsonValue confirmations = json.object("confirmations");
 		text.confirmations.restart = read_menu_line(confirmations, "restart");
 		text.confirmations.quit = read_menu_line(confirmations, "quit");
@@ -2004,6 +2013,15 @@ std::wstring MenuText::device_label(int slot) const
 		return format_label_template(this->labels.waiting, {});
 	}
 	throw std::invalid_argument("Menu device label requires a slot from -1 to 4.");
+}
+
+std::wstring MenuText::setting_percentage(int value) const
+{
+	if (value < 0 || value > 100)
+	{
+		throw std::invalid_argument("Setting percentage requires an integer from 0 to 100.");
+	}
+	return format_label_template(this->values.percentage, { { L"{value}", std::to_wstring(value) } });
 }
 
 std::wstring MenuText::stage_best_of_mode(int best_of) const
@@ -3941,6 +3959,20 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->menu_text_.stage_navigation(1, 1) + L"0123456789", this->menu_.detail_font);
 	std::ignore = fixed_menu_size("menu_text.stage.random_hint",
 		this->menu_text_.stage_random_hint(1) + L"0123456789", this->menu_.brand_font);
+	// Controls volumes and Sticks effective deadzones share the same captured
+	// item font and OptionRow value columns at rows one and two. Validate every
+	// integer output, including saved non-step volumes and inherited 100%.
+	for (int value = 0; value <= 100; ++value)
+	{
+		const std::wstring text = this->menu_text_.setting_percentage(value);
+		for (const int row : { 1, 2 })
+		{
+			const Vector2F position = controls.layout.position +
+				Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * static_cast<float>(row));
+			check_value("percentage", text, controls.item_font, position, controls_value_limit,
+				controls.box_size, controls.art, controls.layout.spacing.y, true);
+		}
+	}
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const

@@ -94,11 +94,6 @@ namespace
 	{
 		return static_cast<int>(std::lround(value * 100.0f));
 	}
-
-	std::wstring percent(float value)
-	{
-		return std::to_wstring(rounded_percent(value)) + L"%";
-	}
 }
 
 StickSettingsMenu::StickSettingsMenu(MenuContext* context, int player) : PauseMenuPage(context, player) {}
@@ -222,9 +217,9 @@ void StickSettingsMenu::set_status(const std::wstring& text, bool warning)
 void StickSettingsMenu::refresh_values()
 {
 	this->pad_->set_value(this->text().device_label(this->slot_));
-	this->movement_->set_value(percent(this->selection_.movement_deadzone(this->slot_,
-		this->data()->tuning()->input().movement_deadzone)));
-	this->aim_->set_value(percent(this->selection_.aim_deadzone(this->slot_)));
+	this->movement_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.movement_deadzone(this->slot_,
+		this->data()->tuning()->input().movement_deadzone))));
+	this->aim_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.aim_deadzone(this->slot_))));
 	this->refresh_preview();
 }
 

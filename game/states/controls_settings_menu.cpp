@@ -146,8 +146,8 @@ void ControlsSettingsMenu::set_status(const std::wstring& text, const Colour& co
 
 void ControlsSettingsMenu::refresh_values()
 {
-	this->music_->set_value(std::to_wstring(this->selection_.music_volume) + L"%");
-	this->sfx_->set_value(std::to_wstring(this->selection_.sfx_volume) + L"%");
+	this->music_->set_value(this->text().setting_percentage(this->selection_.music_volume));
+	this->sfx_->set_value(this->text().setting_percentage(this->selection_.sfx_volume));
 	this->view_shake_->set_value(this->selection_.view_shake ? this->text().values.on : this->text().values.off);
 	this->aim_marker_->set_value(this->selection_.aim_marker ? this->text().values.on : this->text().values.off);
 	this->reduce_effects_->set_value(this->selection_.reduce_effects ? this->text().values.on : this->text().values.off);

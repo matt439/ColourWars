@@ -104,6 +104,7 @@ struct MenuValueText
 	std::wstring on;
 	std::wstring off;
 	std::wstring random;
+	std::wstring percentage;
 };
 
 struct MenuConfirmationText
@@ -214,6 +215,8 @@ struct MenuText
 	const std::wstring& prompt(MenuPrompt prompt) const;
 	const std::wstring& item(MenuItem item) const;
 	std::wstring display_countdown(int seconds) const;
+	// Integer volume and rounded effective-deadzone values share the 0-100 domain.
+	std::wstring setting_percentage(int value) const;
 	// Stage summary domains follow the existing choices: best-of 3/5, and
 	// one solo player or two through four versus players.
 	std::wstring stage_best_of_mode(int best_of) const;

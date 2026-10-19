@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/presentation.h"
+#include "game/play_settings.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/option_row.h"
 #include "game/states/prompt_bar.h"
@@ -8,6 +9,7 @@
 #include "engine/render/sprite_font_file.h"
 
 #include <filesystem>
+#include <cmath>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -342,6 +344,7 @@ namespace
     void check_defaults(const Presentation& presentation)
     {
         const MenuText& text = presentation.menu_text();
+        require(text.values.percentage == L"{value}%", "Default setting percentage template changed");
         require(text.brand == brand && text.solo_practice_hint == practice_hint && text.home_subtitle == home_subtitle &&
             text.options_palette_timing == palette_timing &&
             text.display_trial_countdown == L"Reverting in {seconds}s" &&
@@ -508,6 +511,7 @@ namespace
         for (const auto& entry : label_text) { required("labels", entry.key); }
         for (const auto& entry : stick_readout_text) { required("stick_readouts", entry.key); }
         for (const auto& entry : value_text) { required("values", entry.key); }
+        required("values", "percentage");
         for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
         for (const auto& entry : end_text) { required("end", entry.key); }
         for (const auto& entry : record_text) { required("records", entry.key); }
@@ -2996,6 +3000,204 @@ namespace
         });
         tall_blocks.validate_resources(world.render, world.audio);
         check_blocks(tall_blocks, false, true);
+    }
+
+    void check_setting_percentage_text(Variants& variants, World& world, const MenuText& defaults)
+    {
+        for (int value = 0; value <= 100; ++value)
+        {
+            require(defaults.setting_percentage(value) == std::to_wstring(value) + L"%",
+                "Default setting percentage changed its exact integer, percent sign or inclusive domain");
+        }
+        require(defaults.setting_percentage(17) == L"17%" && defaults.setting_percentage(100) == L"100%",
+            "Setting percentage lost a non-step value or the inclusive upper endpoint");
+        PlaySettings inherited;
+        const int rounded_movement = static_cast<int>(std::lround(inherited.movement_deadzone(0, 0.999f) * 100.0f));
+        require(inherited.sticks[0].movement_deadzone == -1 && rounded_movement == 100 &&
+            defaults.setting_percentage(rounded_movement) == L"100%",
+            "Inherited movement rounding no longer reaches 100 without clamping the saved deadzone profile");
+        const auto reject_format = [](auto format)
+        {
+            bool rejected = false;
+            try { format(); }
+            catch (const std::invalid_argument&) { rejected = true; }
+            require(rejected, "Invalid setting percentage argument or direct template formatted silently");
+        };
+        for (int invalid : {std::numeric_limits<int>::min(), -1, 101, std::numeric_limits<int>::max()})
+        {
+            reject_format([&] { defaults.setting_percentage(invalid); });
+        }
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["values"]["percentage"].SetString("  % {value}\xC2\xA0\xE2\x80\x9C" "level\xE2\x80\x9D\xE2\x80\x94" "set\xE2\x80\xA6  ");
+        });
+        normalized.validate_resources(world.render, world.audio);
+        require(normalized.menu_text().values.percentage == L"  % {value} \"level\"-set...  " &&
+            normalized.menu_text().setting_percentage(17) == L"  % 17 \"level\"-set...  ",
+            "Setting percentage lost normalized punctuation, authored outer spaces or literal placement");
+        const auto literal = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["values"]["percentage"].SetString("value={value} literal%%");
+        });
+        literal.validate_resources(world.render, world.audio);
+        require(literal.menu_text().setting_percentage(0) == L"value=0 literal%%",
+            "Setting percentage treated authored percent signs as another formatting language");
+        for (const char* blank : {"   ", " \xC2\xA0 "})
+        {
+            variants.rejects("values.percentage", [&](rapidjson::Document& d)
+                { d["menu_text"]["values"]["percentage"].SetString(blank, d.GetAllocator()); });
+        }
+        for (const char* extra : {"\n", "\r", "\r\n", "\t", "\x01", "\x7f", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28"})
+        {
+            variants.rejects("values.percentage", [&](rapidjson::Document& d)
+            {
+                const std::string invalid = std::string("{value}%") + extra;
+                d["menu_text"]["values"]["percentage"].SetString(invalid.c_str(), d.GetAllocator());
+            });
+        }
+        for (const char* invalid : {"No token", "{value}{value}", "{Value}", "{value }", "{{value}}", "{value",
+            "value}", "{value}{unknown}", "{va{value}lue}", "{value}{count}", "{value}%{"})
+        {
+            variants.rejects("values.percentage", [&](rapidjson::Document& d)
+                { d["menu_text"]["values"]["percentage"].SetString(invalid, d.GetAllocator()); });
+            MenuText mutated = defaults;
+            mutated.values.percentage = std::wstring(invalid, invalid + std::strlen(invalid));
+            reject_format([&] { mutated.setting_percentage(17); });
+        }
+        for (const wchar_t* invalid : {L"", L"   ", L"{value}\n", L"{value}\r", L"{value}\t", L"{value}\x01",
+            L"{value}\x7f", L"{value}\u00e9", L"{value}\u00a0", L"{value}\u2014"})
+        {
+            MenuText mutated = defaults;
+            mutated.values.percentage = invalid;
+            reject_format([&] { mutated.setting_percentage(17); });
+        }
+        MenuText nul = defaults;
+        nul.values.percentage.push_back(L'\0');
+        reject_format([&] { nul.setting_percentage(17); });
+    }
+
+    void check_setting_percentage_rows(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const char* name, int width, int height, char32_t missing = U'\0', bool zero_digits = false,
+            float tilde_offset = 0.0f)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                if (character == missing) { continue; }
+                const bool zero = zero_digits && ((character >= U'0' && character <= U'9') || character == U'%');
+                glyphs.push_back({character, mattmath::RectangleI(0, 0, zero ? 0 : character == U'~' ? width : 8,
+                    character == U'~' ? height : 16), character == U'~' ? tilde_offset : 0.0f, 0.0f, 0.0f});
+            }
+            auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f);
+            font->set_stand_in(U'?');
+            world.render.add_font(name, std::move(font));
+        };
+        add_font("menu_percentage_width", 1000, 16);
+        add_font("menu_percentage_height", 8, 200);
+        add_font("menu_percentage_both", 2000, 2000);
+        add_font("menu_percentage_missing8", 8, 16, U'8');
+        add_font("menu_percentage_missing1", 8, 16, U'1');
+        add_font("menu_percentage_zero", 8, 16, U'\0', true);
+        add_font("menu_percentage_nonfinite", 8, 16, U'\0', false, std::numeric_limits<float>::infinity());
+        const auto check_rows = [&](const Presentation& look, int fit)
+        {
+            const auto& controls = look.controls_settings();
+            MenuStyle style = look.menu();
+            style.item_font = controls.item_font;
+            const auto& art = controls.art;
+            const mattmath::Vector2F limit(controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset -
+                controls.layout.position.x - controls.layout.spacing.x,
+                controls.layout.spacing.y - art.focus_padding.y * 2.0f);
+            require(limit == mattmath::Vector2F(332.0f, 68.0f), "Percentage rows lost the actual Controls/Sticks value limits");
+            struct Use { int row; MenuItem label; };
+            constexpr Use uses[]{{1, MenuItem::music_volume}, {2, MenuItem::sfx_volume},
+                {1, MenuItem::move_deadzone}, {2, MenuItem::aim_deadzone}};
+            for (const auto& use : uses)
+            {
+                const auto position = controls.layout.position + mattmath::Vector2F(0.0f,
+                    controls.layout.spacing.y * static_cast<float>(use.row));
+                const auto value_position = position + mattmath::Vector2F(controls.layout.spacing.x, 0.0f);
+                OptionRow row("percentage", look.menu_text().item(use.label), position, value_position,
+                    style, art.ink, &world.render, {}, &art, limit);
+                UiText* value = row_text(row, "percentage_value");
+                UiText* label = row_text(row, "percentage_label");
+                require(value != nullptr && label != nullptr, "Percentage fixture lost its real OptionRow widgets");
+                const auto label_bounds = label->bounds();
+                std::wstring copy = look.menu_text().setting_percentage(17);
+                const auto retained = copy;
+                const auto raw = world.render.measure_text(world.render.resolve_sprite_font(style.item_font), retained);
+                row.set_value(copy);
+                copy = L"Changed after set_value";
+                const auto bounds = value->bounds();
+                require(value->text() == retained && bounds.position() == value_position && label->bounds() == label_bounds &&
+                    bounds.width > 0.0f && bounds.height > 0.0f && bounds.width <= 332.01f && bounds.height <= 68.01f,
+                    "Percentage OptionRow lost its copied text, fixed position/label or fitted dimensions");
+                if (fit == 1)
+                {
+                    require(raw == mattmath::Vector2F(1024.0f, 20.0f) && std::abs(bounds.width - 332.0f) <= 0.01f &&
+                        std::abs(bounds.height - 6.484375f) <= 0.01f,
+                        "Long percentage copy did not retain its independent width-only fit");
+                }
+                else if (fit == 2 || fit == 3)
+                {
+                    const float expected_width = fit == 2 ? 10.88f : 68.816f;
+                    require(raw == (fit == 2 ? mattmath::Vector2F(32.0f, 200.0f) : mattmath::Vector2F(2024.0f, 2000.0f)) &&
+                        std::abs(bounds.height - 68.0f) <= 0.01f && std::abs(bounds.width - expected_width) <= 0.01f,
+                        "Percentage copy did not fit height after its independent width decision");
+                }
+                else { require(bounds == mattmath::RectangleF(value_position, raw), "Default percentage was enlarged or unnecessarily shrunk"); }
+                auto padded = bounds;
+                padded.inflate(art.focus_padding);
+                const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, style.footer_y) - controls.box_size) / 2.0f,
+                    controls.box_size);
+                require(paper.contains(padded) && padded.right() <= controls.controls_position.x &&
+                    padded.bottom() <= controls.status_position.y && bounds.height + art.focus_padding.y * 2.0f <= controls.layout.spacing.y + 0.01f,
+                    "Actual percentage value/focus padding escaped its paper, row, help column or status boundary");
+                MenuText short_copy = look.menu_text();
+                short_copy.values.percentage = L"{value}%";
+                row.set_value(short_copy.setting_percentage(0));
+                const auto short_size = world.render.measure_text(world.render.resolve_sprite_font(style.item_font), L"0%");
+                require(value->text() == L"0%" && value->bounds() == mattmath::RectangleF(value_position, short_size) &&
+                    label->bounds() == label_bounds, "Short percentage replacement retained a stale shrink scale or changed its label");
+            }
+        };
+        const auto defaults = variants.load([](rapidjson::Document&) {});
+        defaults.validate_resources(world.render, world.audio);
+        check_rows(defaults, 0);
+        const char* fonts[]{"menu_percentage_width", "menu_percentage_height", "menu_percentage_both"};
+        for (int fit = 1; fit <= 3; ++fit)
+        {
+            const auto fitted = variants.load([&](rapidjson::Document& d)
+            {
+                d["controls_settings"]["item_font"].SetString(fonts[fit - 1], d.GetAllocator());
+                d["menu_text"]["values"]["percentage"].SetString("~{value}%");
+            });
+            fitted.validate_resources(world.render, world.audio);
+            check_rows(fitted, fit);
+        }
+        variants.rejects("values.percentage", [](rapidjson::Document& d)
+            { d["controls_settings"]["item_font"].SetString("menu_percentage_missing8"); }, &world);
+        // Pad 1's earlier selector guard owns this shared-font failure. The
+        // independent missing8 case above reaches the new 101-output check.
+        variants.rejects("labels.pad", [](rapidjson::Document& d)
+            { d["controls_settings"]["item_font"].SetString("menu_percentage_missing1"); }, &world);
+        variants.rejects("values.percentage", [](rapidjson::Document& d)
+            { d["controls_settings"]["item_font"].SetString("menu_percentage_zero"); }, &world);
+        for (const char* font : {"menu_text_limited", "menu_percentage_nonfinite"})
+        {
+            variants.rejects("values.percentage", [&](rapidjson::Document& d)
+            {
+                d["controls_settings"]["item_font"].SetString(font, d.GetAllocator());
+                d["menu_text"]["values"]["percentage"].SetString("~{value}%");
+            }, &world);
+        }
+        const auto unrelated_font = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["menu_text"]["values"]["percentage"].SetString("~{value}%");
+        });
+        unrelated_font.validate_resources(world.render, world.audio);
     }
 
     void check_value_text(Variants& variants, World& world)
@@ -5541,6 +5743,8 @@ int main(int argc, char** argv)
         check_end_heading_bounds(variants, world);
         check_controls_text(variants, world);
         check_controls_option_rows(variants, world);
+        check_setting_percentage_text(variants, world, defaults.menu_text());
+        check_setting_percentage_rows(variants, world);
         check_value_text(variants, world);
         check_value_fitting(variants, world);
         check_stage_random_fitting(variants, world);
@@ -5571,6 +5775,7 @@ int main(int argc, char** argv)
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
+            "all101 setting percentages with captured Controls/Sticks value fitting, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "finite authored series/roster templates and expanded-card boundaries, "
