@@ -154,7 +154,8 @@
       "series_team_b_wins": "Team B wins the series!",
       "draw_no_win": "Draw - no win awarded",
       "series_continues": "Series continues",
-      "series_score": "Wins: A {team_a_wins} - B {team_b_wins}  |  First to {target}"
+      "series_score": "Wins: A {team_a_wins} - B {team_b_wins}  |  First to {target}",
+      "round_heading": "Round {round}"
     },
     "stage": {
       "browse_status": "FIND YOUR ARENA",

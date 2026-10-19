@@ -18,6 +18,7 @@ param(
     [switch] $ResultsTextOnly,
     [switch] $SessionResultOnly,
     [switch] $SeriesScoreOnly,
+    [switch] $RoundHeadingOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -71,7 +72,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -164,7 +165,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -311,6 +312,9 @@ function Write-ContactSheet {
         $seriesScore = @($images | Where-Object { $_.name -like 'series-score-*' })
         Write-ContactSheetPages -Images $seriesScore -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-series-score-contact'
+        $roundHeading = @($images | Where-Object { $_.name -like 'round-heading-*' })
+        Write-ContactSheetPages -Images $roundHeading -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-round-heading-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -421,7 +425,22 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($SeriesScoreOnly) {
+if ($RoundHeadingOnly) {
+    $result.scope = 'round-heading-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @(2)
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('literal-numbered-round-headings', 'single-match-heading-control', 'actual-results-reveal-and-proceed', 'captured-template-and-font', 'reopen-and-reversal', 'frozen-session-setup-save-and-rng', 'resize')
+    $result.input_slots = @(4)
+    $result.inputs = 'Actual ResultsMenuInitial with the normal GamepadReader and public local keyboard events through StateContext; local proceed callbacks do not launch a match.'
+    $result.audio = 'Focused Results page fixture; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated numbered Results heading leaf. Independent literal headings and raw-font references compare actual all-draw Session rounds 1, 10 and 100, with the unchanged single-match heading under the replacement template/font as a separate control. Captured prefix/suffix template and heading-font assignment, retained pages, reopening/reversal, actual reveal/proceed transitions, unchanged literal score/outcome rows and frozen Session/setup/private Save/RNG retain the existing unscaled zero-offset layout. Exactly 66 StateContext updates, 81 readbacks, 26 CSV rows, eleven page openings and proceed pops, three font negative controls, zero-update resize, eight compact crops (722400 pixels) and one successful private seed Save are checked with exact schema, case, metric and RGB-payload gates. Both presets run the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+}
+elseif ($SeriesScoreOnly) {
     $result.scope = 'series-score-only'
     $result.Remove('stage')
     $result.stages = @()
@@ -1247,6 +1266,7 @@ try {
     elseif ($ResultsTextOnly) { $probeArguments += 'results-text' }
     elseif ($SessionResultOnly) { $probeArguments += 'session-result' }
     elseif ($SeriesScoreOnly) { $probeArguments += 'series-score' }
+    elseif ($RoundHeadingOnly) { $probeArguments += 'round-heading' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -1402,6 +1422,140 @@ try {
     if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
+    }
+    if ($RoundHeadingOnly) {
+        $roundHeadingSummary = Get-Content -LiteralPath (Join-Path $captures 'round-heading-summary.json') -Raw | ConvertFrom-Json
+        $roundHeadingRows = @(Import-Csv -LiteralPath (Join-Path $captures 'round-heading.csv'))
+        $roundHeadingSessions = @('series-round1', 'series-round10', 'series-round100')
+        $roundHeadingExpectedPairs = @(
+            foreach ($case in @('legacy-initial', 'legacy-fill-crossed', 'legacy-details', 'legacy-prompt-crossed')) {
+                "$case|series-round1"
+            }
+            foreach ($session in $roundHeadingSessions) { "legacy-ready|$session" }
+            'revealed-initial|series-round10'
+            'single-control|single'
+            foreach ($case in @('old-primary', 'retained-old', 'reopened-new', 'retained-new')) {
+                foreach ($session in $roundHeadingSessions) { "$case|$session" }
+            }
+            foreach ($case in @('old-1080', 'old-return720', 'new-1080', 'new-return720', 'restored-default')) {
+                "$case|series-round1"
+            }
+        )
+        $roundHeadingExpectedColumns = @('case', 'session', 'width', 'height', 'best_of', 'target', 'complete', 'round',
+            'a_wins', 'b_wins', 'revealed', 'details_visible', 'proceed_visible', 'expected_value', 'font',
+            'raw_width', 'raw_height', 'x', 'y', 'scale', 'shadow_x', 'shadow_y', 'visible', 'score_literal',
+            'outcome_literal', 'row_neighbor_match', 'heading_match', 'frozen_session_setup_save_rng')
+        if ($roundHeadingSummary.outcome -ne 'passed' -or $roundHeadingSummary.scope -ne 'round-heading-only' -or
+            $roundHeadingSummary.updates -ne 66 -or $roundHeadingSummary.readbacks -ne 81 -or
+            $roundHeadingSummary.csv_rows -ne 26 -or $roundHeadingSummary.compact_crops -ne 8 -or
+            $roundHeadingSummary.page_openings -ne 11 -or $roundHeadingSummary.proceed_pops -ne 11 -or
+            $roundHeadingSummary.font_negative_controls -ne 3 -or $roundHeadingSummary.resize_updates -ne 0 -or
+            $roundHeadingSummary.save_calls -ne 1 -or $roundHeadingSummary.crop_pixels -ne 722400 -or
+            $roundHeadingRows.Count -ne 26 -or
+            (($roundHeadingRows[0].PSObject.Properties.Name) -join '|') -ne ($roundHeadingExpectedColumns -join '|') -or
+            (($roundHeadingRows | ForEach-Object { "$($_.case)|$($_.session)" } | Sort-Object) -join ';') -ne
+                (($roundHeadingExpectedPairs | Sort-Object) -join ';')) {
+            throw 'The Round heading leaf does not match its frozen summary, CSV schema, cases or update/readback/proceed budgets.'
+        }
+        $roundHeadingState = @{
+            'series-round1' = @('3', '2', 'false', '1', '0', '0')
+            'series-round10' = @('3', '2', 'false', '10', '0', '0')
+            'series-round100' = @('3', '2', 'false', '100', '0', '0')
+            'single' = @('1', '1', 'true', '1', '1', '0')
+        }
+        $roundHeadingDefaultValues = @{
+            'series-round1' = 'Round 1'; 'series-round10' = 'Round 10'; 'series-round100' = 'Round 100'
+            'single' = 'Results'
+        }
+        $roundHeadingOldValues = @{
+            'series-round1' = 'Old~ 1'; 'series-round10' = 'Old~ 10'; 'series-round100' = 'Old~ 100'
+        }
+        $roundHeadingNewValues = @{
+            'series-round1' = '1 ^ Round'; 'series-round10' = '10 ^ Round'; 'series-round100' = '100 ^ Round'
+            'single' = 'Results'
+        }
+        foreach ($row in $roundHeadingRows) {
+            $expectedState = $roundHeadingState[$row.session]
+            $expectedWidth = if ($row.case -in @('old-1080', 'new-1080')) { '1920' } else { '1280' }
+            $expectedHeight = if ($expectedWidth -eq '1920') { '1080' } else { '720' }
+            $expectedRevealed = if ($row.session -eq 'series-round1' -and $row.case -like 'legacy-*') { 'false' } else { 'true' }
+            $expectedDetails = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed')) { 'false' } else { 'true' }
+            $expectedProceed = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed', 'legacy-details',
+                'legacy-prompt-crossed', 'revealed-initial')) { 'false' } else { 'true' }
+            $newCopy = $row.case -in @('reopened-new', 'retained-new', 'new-1080', 'new-return720', 'single-control')
+            $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
+            $expectedValue = if ($newCopy) { $roundHeadingNewValues[$row.session] }
+                elseif ($oldCopy) { $roundHeadingOldValues[$row.session] } else { $roundHeadingDefaultValues[$row.session] }
+            $expectedFont = if ($newCopy) { 'round_heading_caret' } else { 'gill_sans_mt_bold_72' }
+            $expectedScore = if ($row.session -eq 'single') { 'Wins: A 1 - B 0  |  First to 1' }
+                else { 'Wins: A 0 - B 0  |  First to 2' }
+            $expectedOutcome = if ($row.session -eq 'single') { 'Team A wins the series!' }
+                else { 'Draw - no win awarded' }
+            if ($row.width -ne $expectedWidth -or $row.height -ne $expectedHeight -or
+                $row.best_of -ne $expectedState[0] -or $row.target -ne $expectedState[1] -or
+                $row.complete -ne $expectedState[2] -or $row.round -ne $expectedState[3] -or
+                $row.a_wins -ne $expectedState[4] -or $row.b_wins -ne $expectedState[5] -or
+                $row.score_literal -cne $expectedScore -or $row.outcome_literal -cne $expectedOutcome -or
+                $row.revealed -ne $expectedRevealed -or $row.details_visible -ne $expectedDetails -or
+                $row.proceed_visible -ne $expectedProceed -or $row.visible -ne 'true' -or
+                $row.expected_value -cne $expectedValue -or $row.font -ne $expectedFont -or
+                $row.scale -ne '1' -or $row.shadow_x -ne '0' -or $row.shadow_y -ne '0' -or
+                $row.row_neighbor_match -ne 'true' -or $row.heading_match -ne 'true' -or
+                $row.frozen_session_setup_save_rng -ne 'true') {
+                throw "Round heading case $($row.case)/$($row.session) changed its literal heading, ledger, reveal, capture or geometry contract."
+            }
+            foreach ($metric in @('raw_width', 'raw_height', 'x', 'y')) {
+                $value = 0.0
+                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
+                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
+                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
+                    ($metric -in @('raw_width', 'raw_height') -and $value -le 0.0) -or
+                    ($metric -in @('x', 'y') -and $value -lt 0.0)) {
+                    throw "Round heading case $($row.case)/$($row.session) contains an invalid $metric."
+                }
+            }
+        }
+        $roundHeadingExpectedCrops = [ordered]@{
+            'round-heading-round1.ppm' = @(800, 86)
+            'round-heading-round10.ppm' = @(800, 86)
+            'round-heading-round100.ppm' = @(800, 86)
+            'round-heading-single.ppm' = @(800, 86)
+            'round-heading-old-720.ppm' = @(800, 86)
+            'round-heading-new-720.ppm' = @(800, 86)
+            'round-heading-old-1080.ppm' = @(1200, 129)
+            'round-heading-new-1080.ppm' = @(1200, 129)
+        }
+        $roundHeadingCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'round-heading-*.ppm' -File)
+        $roundHeadingExpectedNames = @($roundHeadingExpectedCrops.Keys) + @('round-heading.csv', 'round-heading-summary.json')
+        $roundHeadingNames = @(Get-ChildItem -LiteralPath $captures -Filter 'round-heading*' -File | Select-Object -ExpandProperty Name)
+        if ($roundHeadingCrops.Count -ne 8 -or
+            (($roundHeadingNames | Sort-Object) -join '|') -ne (($roundHeadingExpectedNames | Sort-Object) -join '|')) {
+            throw 'The Round heading leaf emitted unexpected or missing compact crops, CSV or summary files.'
+        }
+        foreach ($crop in $roundHeadingCrops) {
+            $size = $roundHeadingExpectedCrops[$crop.Name]
+            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
+            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
+            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
+                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
+                throw "Round heading crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
+            }
+        }
+        $roundHeadingSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
+        $roundHeadingSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        if ($roundHeadingSaveCalls -ne 1 -or $roundHeadingSaveSuccesses -ne 1) {
+            throw 'The Round heading leaf must perform exactly its one successful private seed Save.'
+        }
+        $result['observed_counts'] = [ordered]@{
+            fixture = $roundHeadingSummary
+            updates = 66
+            readbacks = 81
+            csv_rows = 26
+            crops = 8
+            private_save_calls = $roundHeadingSaveCalls
+            successful_private_saves = $roundHeadingSaveSuccesses
+        }
     }
     if ($SeriesScoreOnly) {
         $seriesScoreSummary = Get-Content -LiteralPath (Join-Path $captures 'series-score-summary.json') -Raw | ConvertFrom-Json
@@ -2343,7 +2497,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($SeriesScoreOnly) {
+    if ($RoundHeadingOnly) {
+        $result.diagnostic = 'Round heading text passed independent complete literal headings on actual all-draw Session rounds 1, 10 and 100, plus the unchanged single-match heading under the replacement template/font. Captured prefix/suffix template and heading-font assignment, retained pages, reopening/reversal, unchanged literal score/outcome controls, actual reveal/proceed transitions, frozen Session/setup/private Save/RNG and zero-update resize passed. Exactly 66 updates, 81 readbacks, 26 CSV rows, eleven page openings and proceed pops, three font negative controls, eight compact crops (722400 pixels) and one successful private seed Save. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    }
+    elseif ($SeriesScoreOnly) {
         $result.diagnostic = 'Series score text passed independent complete literal scores and outcome/heading controls across scoreless draw, ongoing series and both maximum-round winners, plus single-match score absence. Captured template/font assignment, reordered tokens, retained pages, reopening/reversal, actual reveal/proceed transitions, frozen Session/setup/private Save/RNG and zero-update resize passed. Exactly 81 updates, 97 readbacks, 31 CSV rows, fourteen page openings and proceed pops, four font negative controls, eight compact crops (710640 pixels) and one successful private seed Save. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
     }
     elseif ($SessionResultOnly) {

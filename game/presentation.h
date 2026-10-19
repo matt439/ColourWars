@@ -139,9 +139,14 @@ struct MenuResultsText
 	std::wstring draw_no_win;
 	std::wstring series_continues;
 	std::wstring series_score;
+	std::wstring round_heading;
 	// Current Sessions are first to 1, 2 or 3; completion prevents both
 	// teams reaching the target in the same ledger.
 	std::wstring score_line(int team_a_wins, int team_b_wins, int target) const;
+	// Draws can advance a series beyond its best-of length. Every positive
+	// int is supported; resource validation requires finite line spacing,
+	// glyph offsets/advances and resulting pen/extents. Spacing may be zero or negative.
+	std::wstring round_title(int round) const;
 };
 
 struct MenuStageText

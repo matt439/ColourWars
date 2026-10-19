@@ -145,8 +145,8 @@ void ResultsMenuInitial::init()
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"title",
-		this->session_.is_series() ? L"Round " +
-			std::to_wstring(this->session_.round()) : this->text().results.single_match_heading,
+		this->session_.is_series() ? this->text().results.round_title(this->session_.round()) :
+			this->text().results.single_match_heading,
 		style.heading_font,
 		Vector2F::ZERO,
 		this->render_resources(),

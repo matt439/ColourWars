@@ -442,6 +442,8 @@ namespace
         }
         require(text.results.series_score == L"Wins: A {team_a_wins} - B {team_b_wins}  |  First to {target}",
             "Default series-score template changed its literal labels, token names or double spaces");
+        require(text.results.round_heading == L"Round {round}",
+            "Default numbered Results heading changed its exact literal prefix or token");
         for (const auto& entry : stage_text)
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena status default changed: ") + entry.key);
@@ -6952,6 +6954,249 @@ namespace
         { contextual = std::string(error.what()).find("menu_text.results.series_score") != std::string::npos; }
         require(contextual, "Directly manufactured score tokens escaped resource validation or lost the named score role");
     }
+    void check_round_heading_text(Variants& variants, const MenuText& defaults)
+    {
+        struct RoundExample { int number; const wchar_t* expected; };
+        const RoundExample examples[]{
+            { 1, L"Round 1" }, { 9, L"Round 9" }, { 10, L"Round 10" }, { 99, L"Round 99" },
+            { 100, L"Round 100" }, { 999, L"Round 999" }, { 1000, L"Round 1000" }, { 10000, L"Round 10000" },
+            { 100000, L"Round 100000" }, { 1000000, L"Round 1000000" }, { 10000000, L"Round 10000000" },
+            { 100000000, L"Round 100000000" }, { 1000000000, L"Round 1000000000" },
+            { 1999999999, L"Round 1999999999" }, { 2122222222, L"Round 2122222222" },
+            { (std::numeric_limits<int>::max)(), L"Round 2147483647" }
+        };
+        for (const auto& example : examples)
+            require(defaults.results.round_title(example.number) == example.expected,
+                "Numbered Results heading changed its original decimal composition or positive-int domain");
+        const auto refuses = [](auto action)
+        {
+            bool refused = false; try { action(); } catch (const std::invalid_argument&) { refused = true; }
+            require(refused, "Invalid round or directly mutated round-heading template formatted silently");
+        };
+        for (const int number : { 0, -1, (std::numeric_limits<int>::min)() })
+            refuses([&] { defaults.results.round_title(number); });
+        const auto reordered = variants.load([](rapidjson::Document& d)
+            { d["menu_text"]["results"]["round_heading"].SetString("{round}% = Round"); });
+        require(reordered.menu_text().results.round_title(12345) == L"12345% = Round",
+            "Numbered Results heading lost authored token position or interpreted a literal percent sign");
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["results"]["round_heading"].SetString("  {round}\xC2\xA0\xE2\x80\x9C" "round\xE2\x80\x9D\xE2\x80\x94...  ");
+        });
+        require(normalized.menu_text().results.round_heading == L"  {round} \"round\"-...  " &&
+            normalized.menu_text().results.round_title(10) == L"  10 \"round\"-...  ",
+            "Numbered Results heading lost normalized punctuation, token position or authored outer spaces");
+        variants.rejects("results.round_heading", [](rapidjson::Document& d) { d["menu_text"]["results"].RemoveMember("round_heading"); });
+        for (int type = 0; type < 5; ++type)
+            variants.rejects("results.round_heading", [&](rapidjson::Document& d)
+            {
+                auto& value = d["menu_text"]["results"]["round_heading"];
+                if (type == 0) { value.SetNull(); } else if (type == 1) { value.SetBool(true); }
+                else if (type == 2) { value.SetInt(3); } else if (type == 3) { value.SetArray(); } else { value.SetObject(); }
+            });
+        for (const char* invalid : { "", "   ", "No token", "{Round}", "{round }", "{round}{round}", "{{round}}",
+            "{round}{unknown}", "{round", "round}", "{round}{", "{round}}", "{ro{round}und}" })
+        {
+            variants.rejects("results.round_heading", [&](rapidjson::Document& d)
+                { d["menu_text"]["results"]["round_heading"].SetString(invalid, d.GetAllocator()); });
+            MenuResultsText mutated = defaults.results; mutated.round_heading = std::wstring(invalid, invalid + std::strlen(invalid));
+            refuses([&] { mutated.round_title(1); });
+        }
+        for (const char* suffix : { "\n", "\r", "\r\n", "\t", "\x01", "\x7f", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28" })
+            variants.rejects("results.round_heading", [&](rapidjson::Document& d)
+            { const std::string invalid = std::string("{round}") + suffix;
+                d["menu_text"]["results"]["round_heading"].SetString(invalid.c_str(), d.GetAllocator()); });
+        for (const wchar_t* suffix : { L"\n", L"\r", L"\t", L"\x01", L"\x7f", L"\u00e9", L"\u00a0", L"\u2014" })
+        {
+            MenuResultsText mutated = defaults.results; mutated.round_heading += suffix;
+            refuses([&] { mutated.round_title(1); });
+        }
+        variants.rejects("results.round_heading", [](rapidjson::Document& d)
+        {
+            const std::string invalid("{round}\0tail", 12);
+            d["menu_text"]["results"]["round_heading"].SetString(invalid.data(), static_cast<rapidjson::SizeType>(invalid.size()), d.GetAllocator());
+        });
+        MenuResultsText nul = defaults.results; nul.round_heading.push_back(L'\0');
+        refuses([&] { nul.round_title(1); });
+        const auto long_copy = variants.load([](rapidjson::Document& d)
+        { const std::string text = std::string(512, 'W') + "{round}";
+            d["menu_text"]["results"]["round_heading"].SetString(text.c_str(), d.GetAllocator()); });
+        require(long_copy.menu_text().results.round_title(123) == std::wstring(512, L'W') + L"123",
+            "Numbered Results heading acquired a character cap or lost its long supported literal prefix");
+    }
+    void check_round_heading_resources(Variants& variants, World& world, const Presentation& defaults)
+    {
+        const auto add_font = [&](const std::string& name, float line_spacing, auto alter, char32_t omitted = U'\0')
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                if (character == omitted) { continue; }
+                Glyph glyph{ character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f };
+                alter(glyph); glyphs.push_back(glyph);
+            }
+            auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing);
+            font->set_stand_in(U'?'); world.render.add_font(name, std::move(font));
+        };
+        const auto wide = [&](const char* name, char32_t digit, float marker_offset)
+        {
+            add_font(name, 20.0f, [&](Glyph& glyph)
+            {
+                if (glyph.character == digit) { glyph.subrect.width = 16; }
+                if (glyph.character == U'~') { glyph.subrect.width = 1148; glyph.x_offset = marker_offset; }
+            });
+        };
+        wide("menu_round_wide9", U'9', 0.0f); wide("menu_round_wide9_overflow", U'9', 0.25f);
+        wide("menu_round_wide2", U'2', 0.0f); wide("menu_round_wide2_overflow", U'2', 0.25f);
+        add_font("menu_round_bottom", 20.0f, [](Glyph& glyph)
+            { if (glyph.character == U'~') { glyph.subrect.height = 845; } });
+        add_font("menu_round_bottom_overflow", 20.0f, [](Glyph& glyph)
+            { if (glyph.character == U'~') { glyph.subrect.height = 845; glyph.y_offset = 0.25f; } });
+        const auto signed_metrics = [&](const char* name, float marker_offset)
+        {
+            add_font(name, 20.0f, [&](Glyph& glyph)
+            {
+                if (glyph.character == U'9') { glyph.x_offset = -2.25f; glyph.x_advance = 1.5f; }
+                if (glyph.character == U'8') { glyph.x_offset = 0.25f; glyph.x_advance = -1.5f; }
+                if (glyph.character == U'~') { glyph.subrect.width = 1219; glyph.x_offset = marker_offset; }
+            });
+        };
+        signed_metrics("menu_round_signed", 1.0f); signed_metrics("menu_round_signed_overflow", 1.25f);
+        add_font("menu_round_zero_width", 20.0f, [](Glyph& glyph)
+            { if (glyph.character == U'1') { glyph.subrect.width = 0; glyph.x_advance = -2.0f; } });
+        add_font("menu_round_zero_height", 0.0f, [](Glyph& glyph)
+            { if (glyph.character == U'1') { glyph.subrect.height = 0; } });
+        add_font("menu_round_zero_both", 0.0f, [](Glyph& glyph)
+            { if (glyph.character == U'1') { glyph.subrect.width = 0; glyph.subrect.height = 0; glyph.x_advance = -2.0f; } });
+        add_font("menu_round_zero_spacing", 0.0f, [](Glyph&) {});
+        add_font("menu_round_negative_spacing", -4.0f, [](Glyph&) {});
+        add_font("menu_round_negative_infinite_spacing", -std::numeric_limits<float>::infinity(), [](Glyph&) {});
+        add_font("menu_round_infinite_bearing", 20.0f, [](Glyph& glyph)
+            { if (glyph.character == U'9') { glyph.x_offset = std::numeric_limits<float>::infinity(); } });
+        add_font("menu_round_nan_bearing", 20.0f, [](Glyph& glyph)
+            { if (glyph.character == U'9') { glyph.x_offset = std::numeric_limits<float>::quiet_NaN(); } });
+        add_font("menu_round_infinite_height", 20.0f, [](Glyph& glyph)
+            { if (glyph.character == U'9') { glyph.y_offset = std::numeric_limits<float>::infinity(); } });
+        add_font("menu_round_infinite_advance", 20.0f, [](Glyph& glyph)
+            { if (glyph.character == U'9') { glyph.x_advance = std::numeric_limits<float>::infinity(); } });
+        add_font("menu_round_overflowing_pen", 20.0f, [](Glyph& glyph)
+            { if (glyph.character == U'9') { glyph.x_advance = (std::numeric_limits<float>::max)(); } });
+        const auto select = [](rapidjson::Document& d, const char* font_name, const char* text = "~{round}")
+        {
+            d["menu_style"]["fonts"]["heading"].SetString(font_name, d.GetAllocator());
+            d["menu_text"]["results"]["round_heading"].SetString(text, d.GetAllocator());
+        };
+        const auto wide_nines = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_wide9"); });
+        wide_nines.validate_resources(world.render, world.audio);
+        const auto nines_font = world.render.resolve_sprite_font(wide_nines.menu().heading_font);
+        require(world.render.measure_text(nines_font, L"~1999999999") == mattmath::Vector2F(1300.0f, 20.0f) &&
+            world.render.measure_text(nines_font, L"~2147483647") == mattmath::Vector2F(1228.0f, 20.0f),
+            "The positive-int heading maximum cannot be inferred from the numeric INT_MAX string");
+        require(wide_nines.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) &&
+            wide_nines.results_menu().heading_y == 125.0f, "Numbered heading boundary changed the actual paper or row");
+        std::wstring source = wide_nines.menu_text().results.round_title(1999999999);
+        UiTextDropShadow widget("round-heading-edge", source, wide_nines.menu().heading_font, { 310.0f, 125.0f },
+            &world.render, wide_nines.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+        source.clear();
+        require(widget.text() == L"~1999999999" && widget.bounds() == mattmath::RectangleF(310.0f, 125.0f, 1300.0f, 20.0f) &&
+            widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+            "Numbered Results heading lost owned captured copy, unscaled paper contact or its zero-offset shadow");
+        DrawList no_device; widget.draw(no_device);
+        variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_wide9_overflow"); }, &world);
+        const auto wide_twos = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_wide2"); });
+        wide_twos.validate_resources(world.render, world.audio);
+        const auto twos_font = world.render.resolve_sprite_font(wide_twos.menu().heading_font);
+        require(world.render.measure_text(twos_font, L"~2122222222") == mattmath::Vector2F(1300.0f, 20.0f) &&
+            world.render.measure_text(twos_font, L"~2222222222") == mattmath::Vector2F(1308.0f, 20.0f),
+            "The numbered-heading bound must exclude the genuinely wider illegal ten-digit string");
+        variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_wide2_overflow"); }, &world);
+        const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_bottom"); });
+        bottom.validate_resources(world.render, world.audio);
+        UiTextDropShadow tall("round-heading-bottom", L"~1", bottom.menu().heading_font, { 952.0f, 125.0f },
+            &world.render, bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+        require(tall.bounds() == mattmath::RectangleF(952.0f, 125.0f, 16.0f, 845.0f) && tall.bounds().bottom() == 970.0f,
+            "Numbered heading must meet the full paper bottom without a new collision or row-height restriction");
+        variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_bottom_overflow"); }, &world);
+        const auto signed_look = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_signed", "{round}~"); });
+        signed_look.validate_resources(world.render, world.audio);
+        const auto signed_font = world.render.resolve_sprite_font(signed_look.menu().heading_font);
+        require(world.render.measure_text(signed_font, L"9~") == mattmath::Vector2F(1229.5f, 20.0f) &&
+            world.render.measure_text(signed_font, L"99~") == mattmath::Vector2F(1236.75f, 20.0f) &&
+            world.render.measure_text(signed_font, L"1999999999~") == mattmath::Vector2F(1293.25f, 20.0f) &&
+            world.render.measure_text(signed_font, L"2147483647~") == mattmath::Vector2F(1298.75f, 20.0f) &&
+            world.render.measure_text(signed_font, L"2000000000~") == mattmath::Vector2F(1300.0f, 20.0f),
+            "Signed fractional bearings/advances must preserve the clamp and carry terminal pen, rather than ink extent, into the suffix");
+        variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_signed_overflow", "{round}~"); }, &world);
+        const auto zero_width_font = world.render.resolve_sprite_font("menu_round_zero_width");
+        const auto zero_height_font = world.render.resolve_sprite_font("menu_round_zero_height");
+        require(world.render.measure_text(zero_width_font, L"1") == mattmath::Vector2F(0.0f, 20.0f) &&
+            world.render.measure_text(zero_width_font, L"2") == mattmath::Vector2F(8.0f, 20.0f) &&
+            world.render.measure_text(zero_height_font, L"1") == mattmath::Vector2F(8.0f, 0.0f) &&
+            world.render.measure_text(zero_height_font, L"2") == mattmath::Vector2F(8.0f, 16.0f),
+            "Minimum-size witnesses must contain a genuinely zero path as well as a positive path");
+        for (const char* font_name : { "menu_round_zero_width", "menu_round_zero_height", "menu_round_zero_both" })
+        {
+            variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, font_name, "{round}"); }, &world);
+            for (const char* text : { "{round}~", "~{round}" })
+            {
+                const auto rescued = variants.load([&](rapidjson::Document& d) { select(d, font_name, text); });
+                rescued.validate_resources(world.render, world.audio);
+                const auto literal = rescued.menu_text().results.round_title(1);
+                require(world.render.measure_text(world.render.resolve_sprite_font(rescued.menu().heading_font), literal).x > 0.0f &&
+                    world.render.measure_text(world.render.resolve_sprite_font(rescued.menu().heading_font), literal).y > 0.0f,
+                    "A visible prefix or suffix must rescue the zero-size digit path without borrowing unrelated maxima");
+            }
+        }
+        for (const char* font_name : { "menu_round_zero_spacing", "menu_round_negative_spacing" })
+        {
+            const auto visible = variants.load([&](rapidjson::Document& d) { select(d, font_name, "{round}"); });
+            visible.validate_resources(world.render, world.audio);
+            require(world.render.measure_text(world.render.resolve_sprite_font(visible.menu().heading_font), L"1") == mattmath::Vector2F(8.0f, 16.0f),
+                "A blanket positive line-spacing requirement must not reject a positive measured single-line heading");
+        }
+        require(world.render.measure_text(world.render.resolve_sprite_font("menu_round_negative_infinite_spacing"), L"1") == mattmath::Vector2F(8.0f, 16.0f),
+            "Positive glyph height must genuinely mask negative infinite line spacing in the raw Font measurement witness");
+        variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_negative_infinite_spacing", "{round}"); }, &world);
+        for (const char* font_name : { "menu_round_infinite_bearing", "menu_round_nan_bearing", "menu_round_infinite_height", "menu_round_infinite_advance" })
+            variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, font_name, "{round}"); }, &world);
+        require(world.render.measure_text(world.render.resolve_sprite_font("menu_round_overflowing_pen"), L"9") == mattmath::Vector2F(8.0f, 20.0f),
+            "The overflowing-pen fixture must leave the single-glyph measured ink finite before the unsafe carried advance");
+        variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_overflowing_pen", "{round}"); }, &world);
+        variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_text_limited"); }, &world);
+        for (int digit = 0; digit <= 9; ++digit)
+        {
+            const auto omitted = static_cast<char32_t>(U'0' + digit);
+            const std::string name = "menu_round_missing" + std::to_string(digit);
+            add_font(name, 20.0f, [](Glyph&) {}, omitted);
+            const auto font = world.render.font(world.render.resolve_sprite_font(name));
+            require(font->contains(U'?') && !font->contains(omitted) && font->measure(std::to_wstring(digit == 0 ? 10 : digit)).x > 0.0f,
+                "Round-heading digit fixture must retain a working stand-in while omitting an actual generated decimal");
+            // Pause's existing P1-P4 title check owns those four missing digits.
+            const char* owner = digit >= 1 && digit <= 4 ? "connection.pause_player_title" : "results.round_heading";
+            variants.rejects(owner, [&](rapidjson::Document& d) { select(d, name.c_str(), "{round}"); }, &world);
+        }
+        variants.rejects("results.round_heading", [](rapidjson::Document& d)
+        { const std::string text = std::string(512, 'W') + "{round}";
+            d["menu_text"]["results"]["round_heading"].SetString(text.c_str(), d.GetAllocator()); }, &world);
+        variants.rejects("headings.home", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["heading"].SetString("menu_text_limited"); d["menu_text"]["headings"]["home"].SetString("~");
+            d["menu_text"]["results"]["round_heading"].SetString("~{round}");
+        }, &world);
+        variants.rejects("results.series_score", [](rapidjson::Document& d)
+        {
+            const std::string long_copy(512, 'W');
+            d["menu_text"]["results"]["series_score"].SetString((long_copy + "{team_a_wins}{team_b_wins}{target}").c_str(), d.GetAllocator());
+            d["menu_text"]["results"]["round_heading"].SetString((long_copy + "{round}").c_str(), d.GetAllocator());
+        }, &world);
+        Presentation mutated = defaults;
+        const_cast<MenuText&>(mutated.menu_text()).results.round_heading = L"{ro{round}und}";
+        bool contextual = false;
+        try { mutated.validate_resources(world.render, world.audio); }
+        catch (const std::runtime_error& error)
+        { contextual = std::string(error.what()).find("menu_text.results.round_heading") != std::string::npos; }
+        require(contextual, "Directly manufactured round token escaped resource validation or lost its named heading role");
+    }
 }
 
 int main(int argc, char** argv)
@@ -7027,6 +7272,8 @@ int main(int argc, char** argv)
         check_session_result_bounds(variants, world);
         check_series_score_text(variants, defaults.menu_text());
         check_series_score_resources(variants, world, defaults);
+        check_round_heading_text(variants, defaults.menu_text());
+        check_round_heading_resources(variants, world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
@@ -7037,6 +7284,7 @@ int main(int argc, char** argv)
             "three plain Results roles with zero-offset shadows, centered paper bounds and authored record/roster clearance dependencies, "
             "four plain Session result outcomes with owned zero-shadow text and inclusive unscaled Results-paper bounds, "
             "strict authored series-score tokens, all26 legal ledgers and proportional-font full-paper boundaries, "
+            "authored numbered Results headings over the full positive-int domain, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "finite authored series/roster templates and expanded-card boundaries, "

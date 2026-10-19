@@ -1160,8 +1160,8 @@ fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
 live. Duration/resolution/percentage values, Arena mode/roster summaries,
 connection/readout text, player-specific Pause titles and plain Results labels
-are described below. The numbered Results heading and remaining composed
-session/result text follow the [remaining text slices](#remaining-text-slices-gap84).
+are described below. The numbered Results heading is also data-owned; remaining
+winner and contribution text follows the [remaining text slices](#remaining-text-slices-gap84).
 
 ### Stage Select Random display name
 
@@ -2283,6 +2283,56 @@ All eight crops were inspected. Evidence is under
 `out/validation/series-score-text/`. These checks establish no match launch,
 physical-device, listening, human readability or performance acceptance.
 
+## Numbered Results heading (`GAP#8.4`)
+
+Required `menu_text.results.round_heading` ships as `Round {round}`. The
+original template must contain exactly one `{round}` token and no other braces.
+The normalized printable, nonblank single-line rules apply, with no character
+cap. `MenuResultsText::round_title` returns an owned string and validates direct
+calls too. It accepts every positive `int`; draws can extend a series beyond
+its best-of length, so that length is not a round-number limit.
+
+Only the series heading uses this template. Results retains its constructed
+copy and heading font, centered at the existing `results_menu.heading_y`,
+unscaled with a zero-offset transparent shadow. Single matches retain their
+separate heading. Reveal, input, Session counters and layout do not change.
+
+Resource validation checks actual literal and decimal glyphs before measuring
+all possible positive-int compositions against the full Results paper. The
+greatest number need not have the widest glyphs. A bounded digit walk keeps
+the exact font pen/clamp operation order and the distinct upper-bound prefix
+classes, carrying maximum pen and ink independently through the suffix.
+It also tracks zero-width paths and minimum height so that every output must
+have positive bounds; a visible prefix or suffix can rescue a zero-size digit.
+Line spacing, each used glyph's offsets and advance, and resulting pen and
+extents must be finite. This role does not impose positive line spacing when the actual
+single-line bounds are positive. Paper-edge equality is accepted; no fitting
+or new collision rule is added.
+
+Validation (2026-10-19): both builds, focused Debug text checks and all 38 CPU
+cases per preset passed. All earlier text checks remain. Independent measured
+examples cover a legal value wider than `INT_MAX`, a genuinely wider illegal
+ten-digit value, signed fractional pen/suffix carry, zero-size paths and prefix
+or suffix rescue, finite zero/negative spacing, masked negative infinity,
+actual glyphs, owned zero-shadow text, inclusive paper edges and quarter-unit
+overflow. The finite-spacing guard was added during source review; its earlier
+draft is retained and was not executed. Both isolated published-bank,
+System-only-PATH startups passed with per-monitor v2 DPI awareness.
+
+`-RoundHeadingOnly` passed in both presets: 66 updates, 81 readbacks, 26
+comparisons, eleven actual page openings and eleven fresh Enter pops. Real
+drawn Sessions reach rounds 1, 10 and 100 with independent literal headings,
+scores and outcomes. A single match opened under the new template/font retains
+its separate `Results` heading and absent series rows. Captured copy and font
+survive assignment, reopening and reversal. Three caret-only font controls,
+reveal/proceed timing, premature Enter/Escape refusal, zero-update resize,
+full resource validation, frozen Session/setup/private Save/RNG and one
+successful private seed Save per preset are checked. Eight crops contain
+722,400 pixels per preset; all eleven shared files, including ten raw CSV/PPM
+artifacts, match byte for byte. All eight crops were inspected. Evidence is
+under `out/validation/round-heading-text/`. These checks establish no match
+launch, physical-device, listening, human readability or performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
@@ -2291,11 +2341,11 @@ above, shared menu device/roster labels, packed missing-pad lists and Arena
 briefing mode/roster summaries, Arena numbering and Random availability, and
 preference percentages, duration units/Default notation, resolution values and
 End continuation labels, the three plain Results labels, four fixed Session
-result messages and the series score line are implemented.
+result messages, the series score line and numbered Results heading are implemented.
 The next slice is:
 
-1. **Session and results:** the numbered series heading, winner/solo-coverage
-   copy and contribution/team descriptions. Retain reveal timing and solo/series
+1. **Session and results:** winner/solo-coverage copy and contribution/team
+   descriptions. Retain reveal timing and solo/series
    distinctions.
 
 Deadzones already use the shared percentage template, including the inherited
