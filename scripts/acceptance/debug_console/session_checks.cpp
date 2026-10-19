@@ -481,6 +481,7 @@ namespace debug_console_acceptance
 		using mattmath::RectangleF;
 		using mattmath::Vector2F;
 		// The end page offers the next playable action for each kind of finish.
+		const MenuResultsText original_results = presentation.menu_text().results;
 		LevelEndInfo win;
 		win.team_a_area = 1.0f;
 		MenuEndText custom = presentation.menu_text().end;
@@ -492,13 +493,13 @@ namespace debug_console_acceptance
 		{
 			const bool series = session.is_series(), complete = session.complete();
 			const int round = session.round(), a_wins = session.team_a_wins(), b_wins = session.team_b_wins();
-			const std::wstring score = session.score_string(), result = session.result_string();
+			const std::wstring score = session.score_string(), result = session.result_string(original_results);
 			std::wstring selected = session.continue_string(custom);
 			require(selected == expected, "Session selects the supplied continuation without formatting literal braces");
 			selected.clear();
 			require(session.continue_string(custom) == expected && session.is_series() == series &&
 				session.complete() == complete && session.round() == round && session.team_a_wins() == a_wins &&
-				session.team_b_wins() == b_wins && session.score_string() == score && session.result_string() == result,
+				session.team_b_wins() == b_wins && session.score_string() == score && session.result_string(original_results) == result,
 				"Continuation selection returns an owned copy and leaves the Session ledger unchanged");
 		};
 		for (const bool solo : { false, true })
@@ -540,6 +541,74 @@ namespace debug_console_acceptance
 		require(custom.rematch == L"Single {again}" && custom.play_series_again == L"Series {again}" &&
 			custom.replay_draw == L"Draw {again}" && custom.next_round == L"Round {next}",
 			"Session selection leaves supplied continuation text unchanged");
+		MenuResultsText custom_results = original_results;
+		custom_results.series_team_a_wins = L"Alpha {series}";
+		custom_results.series_team_b_wins = L"Beta {series}";
+		custom_results.draw_no_win = L"Draw {award}";
+		custom_results.series_continues = L"Continue {series}";
+		const auto check_result = [&](const Session& session, const wchar_t* expected_default, const wchar_t* expected_custom)
+		{
+			const bool series = session.is_series(), complete = session.complete();
+			const int round = session.round(), a_wins = session.team_a_wins(), b_wins = session.team_b_wins();
+			const std::wstring score = session.score_string(), continuation = session.continue_string(custom);
+			std::wstring selected = session.result_string(custom_results);
+			require(selected == expected_custom && session.result_string(original_results) == expected_default,
+				"Session selects the exact default or supplied result while retaining literal braces");
+			selected.clear();
+			require(session.result_string(custom_results) == expected_custom && session.is_series() == series &&
+				session.complete() == complete && session.round() == round && session.team_a_wins() == a_wins &&
+				session.team_b_wins() == b_wins && session.score_string() == score &&
+				session.continue_string(custom) == continuation && session.result_string(original_results) == expected_default,
+				"Result selection returns an owned copy without changing the Session ledger, score or continuation");
+		};
+		LevelEndInfo win_b = win;
+		win_b.team_a_area = 0.0f; win_b.team_b_area = 1.0f;
+		LevelEndInfo draw = win;
+		draw.team_a_area = draw.team_b_area = 0.5f;
+		for (const int length : { 1, 3, 5 })
+		{
+			Session fresh(length);
+			check_result(fresh, L"Draw - no win awarded", L"Draw {award}");
+		}
+		for (const bool team_b : { false, true })
+		{
+			const LevelEndInfo decisive = team_b ? win_b : win;
+			Session single; single.finish_round(decisive);
+			check_result(single, team_b ? L"Team B wins the series!" : L"Team A wins the series!",
+				team_b ? L"Beta {series}" : L"Alpha {series}");
+			// Completion takes precedence over the last round: solo finishes
+			// award no win and retain the historical tied-ledger B result.
+			LevelEndInfo solo = decisive;
+			solo.team_a_played = !team_b; solo.team_b_played = team_b;
+			Session practice; practice.finish_round(solo);
+			check_result(practice, L"Team B wins the series!", L"Beta {series}");
+		}
+		Session single_draw; single_draw.finish_round(draw);
+		check_result(single_draw, L"Team B wins the series!", L"Beta {series}");
+		for (const int length : { 3, 5 })
+		{
+			Session ongoing(length); ongoing.finish_round(win);
+			check_result(ongoing, L"Series continues", L"Continue {series}");
+			ongoing.next_round(); ongoing.finish_round(draw);
+			check_result(ongoing, L"Draw - no win awarded", L"Draw {award}");
+			ongoing.next_round(); ongoing.finish_round(win_b);
+			check_result(ongoing, L"Series continues", L"Continue {series}");
+			for (const bool team_b : { false, true })
+			{
+				Session completed(length);
+				for (int wins = 0; wins < length / 2 + 1; ++wins)
+				{
+					completed.finish_round(team_b ? win_b : win);
+					if (!completed.complete()) { completed.next_round(); }
+				}
+				check_result(completed, team_b ? L"Team B wins the series!" : L"Team A wins the series!",
+					team_b ? L"Beta {series}" : L"Alpha {series}");
+			}
+		}
+		require(custom_results.series_team_a_wins == L"Alpha {series}" &&
+			custom_results.series_team_b_wins == L"Beta {series}" && custom_results.draw_no_win == L"Draw {award}" &&
+			custom_results.series_continues == L"Continue {series}",
+			"Session result selection leaves supplied text unchanged, including completed single-round ties");
 		// The strip at 1280x720 with a KEYBOARD + MOUSE card at the bottom
 		// right and the paint panel bottom left: lifted clear of both.
 		const Vector2F screen(1280.0f, 720.0f);

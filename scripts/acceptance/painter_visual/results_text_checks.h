@@ -56,8 +56,8 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     {
         const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
         require(ledger(single) == single_ledger && ledger(series) == series_ledger &&
-            single.score_string() == L"Wins: A 1 - B 0  |  First to 1" && single.result_string() == L"Team A wins the series!" &&
-            series.score_string() == L"Wins: A 1 - B 0  |  First to 2" && series.result_string() == L"Draw - no win awarded" &&
+            single.score_string() == L"Wins: A 1 - B 0  |  First to 1" && single.result_string(original.menu_text().results) == L"Team A wins the series!" &&
+            series.score_string() == L"Wins: A 1 - B 0  |  First to 2" && series.result_string(original.menu_text().results) == L"Draw - no win awarded" &&
             record.recorded && record.new_best && !record.coverage && record.value == 68.4f && record.best == 68.4f &&
             victory.total_area == 100.0f && victory.team_a_area == 60.0f && victory.team_b_area == 40.0f &&
             victory.player_areas[paint_owners::index(input_slots::keyboard_and_mouse, 0)] == 35.0f &&

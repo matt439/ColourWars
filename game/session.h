@@ -3,6 +3,7 @@
 #include "game/objects/level_end_info.h"
 
 struct MenuEndText;
+struct MenuResultsText;
 
 // Win ledger for a fixed-roster series. Draws award no win, so best-of counts
 // decisive rounds. Restarting an unfinished round leaves the ledger unchanged;
@@ -19,7 +20,7 @@ public:
 	int team_a_wins() const;
 	int team_b_wins() const;
 	std::wstring score_string() const;
-	std::wstring result_string() const;
+	std::wstring result_string(const MenuResultsText& text) const;
 	std::wstring continue_string(const MenuEndText& text) const;
 
 private:

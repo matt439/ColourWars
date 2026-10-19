@@ -184,7 +184,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     {
         const auto& fixture = cases[index]; const Session& session = fixture.session;
         const bool ongoing = session.is_series() && !session.complete();
-        const std::wstring score = session.score_string(), result = session.result_string();
+        const std::wstring score = session.score_string(), result = session.result_string(original.menu_text().results);
         const int round = session.round(), team_a_wins = session.team_a_wins(), team_b_wins = session.team_b_wins();
         const auto measured_width = [&](const Headings& words)
         {
@@ -239,7 +239,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         tap(Key::enter); require(choice == EndMenuAction::restart && results == 1 && stack.depth() == 1,
             "Repeated restored End page changed fresh continuation");
         require(session.continue_string(original.menu_text().end) == fixture.continuation && session.score_string() == score &&
-            session.result_string() == result && session.round() == round && session.team_a_wins() == team_a_wins &&
+            session.result_string(original.menu_text().results) == result && session.round() == round && session.team_a_wins() == team_a_wins &&
             session.team_b_wins() == team_b_wins,
             "Authored End headings or repeated typed actions mutated the Session ledger");
     }

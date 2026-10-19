@@ -51,15 +51,15 @@ std::wstring Session::score_string() const
 		std::to_wstring(this->best_of_ / 2 + 1);
 }
 
-std::wstring Session::result_string() const
+std::wstring Session::result_string(const MenuResultsText& text) const
 {
 	if (this->complete())
 	{
 		return this->team_a_wins_ > this->team_b_wins_ ?
-			L"Team A wins the series!" : L"Team B wins the series!";
+			text.series_team_a_wins : text.series_team_b_wins;
 	}
 	return this->round_winner_ == PlayerTeam::none ?
-		L"Draw - no win awarded" : L"Series continues";
+		text.draw_no_win : text.series_continues;
 }
 
 std::wstring Session::continue_string(const MenuEndText& text) const

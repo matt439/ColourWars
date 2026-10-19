@@ -323,7 +323,7 @@ void ResultsMenuInitial::init()
 	{
 		center_text(*add_detail(this->session_.score_string(), Vector2F::ZERO, style.detail_font),
 			look.session_score_y);
-		center_text(*add_detail(this->session_.result_string(), Vector2F::ZERO, style.detail_font),
+		center_text(*add_detail(this->session_.result_string(this->text().results), Vector2F::ZERO, style.detail_font),
 			look.session_result_y);
 	}
 	add_detail(this->text().results.contribution_heading,

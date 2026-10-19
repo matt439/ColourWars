@@ -134,6 +134,10 @@ struct MenuResultsText
 	std::wstring single_match_heading;
 	std::wstring proceed;
 	std::wstring contribution_heading;
+	std::wstring series_team_a_wins;
+	std::wstring series_team_b_wins;
+	std::wstring draw_no_win;
+	std::wstring series_continues;
 };
 
 struct MenuStageText

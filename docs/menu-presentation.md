@@ -1566,9 +1566,9 @@ the Team Select warning, Pad Sticks connection/raw/response readouts, and shared
 menu device/roster labels including the packed Pause missing-pad list, Arena
 briefing mode/roster summaries and numbered/count hints, preference percentages,
 duration and resolution values, and Session-selected End continuation labels.
-The three plain Results labels below are also authored. The numbered series
-heading, contribution/team descriptions and composed session/match/results
-lines remain open under that item. Font
+The three plain Results labels and four fixed Session result messages below
+are also authored. The numbered series heading, score line, winner/coverage
+copy and contribution/team descriptions remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.
 
@@ -2171,6 +2171,60 @@ These repairs changed no game or CPU source. Evidence is under
 `out/validation/results-plain-text/`. No match launch, physical-device,
 listening, human readability or performance acceptance is established.
 
+## Fixed Session result messages (`GAP#8.4`)
+
+Four required plain `menu_text.results` fields supply the existing Session
+result row:
+
+| Field | Shipped text | Existing selection |
+|---|---|---|
+| `series_team_a_wins` | `Team A wins the series!` | Complete Session with more A wins |
+| `series_team_b_wins` | `Team B wins the series!` | Other complete Session |
+| `draw_no_win` | `Draw - no win awarded` | Incomplete Session without a round winner |
+| `series_continues` | `Series continues` | Other incomplete Session |
+
+These use the same normalized, printable, nonblank single-line rules as the
+other plain Results labels. Braces are literal, and there is no new character
+limit or substitution grammar. `Session::result_string` receives the narrow
+`MenuResultsText` record and returns an owned string. Its complete-first
+predicates, including historical single-session results, remain unchanged;
+Results still shows this row only for a series.
+
+Results supplies its captured text and constructs the same initially hidden,
+unscaled detail-font widget with an explicit zero-offset transparent shadow.
+The line is centered in the 1920 by 1080 design area at
+`results_menu.session_result_y`. Resource checks use the actual detail font,
+require finite positive bounds and apply the existing centered Results paper
+containment rule. Equality is accepted. No new collision or fitting policy is
+added. Constructed copy and font survive presentation replacement; reopening
+adopts edits. Scores, round numbering, ledger changes, reveal and input retain
+their existing behavior.
+
+Validation (2026-10-19): both game builds, focused Debug text and Session checks,
+and all 38 CPU cases per preset passed. The text case retains every prior check
+and adds the four fields' schema, normalization, plain braces, owned widgets,
+font failures and inclusive centered paper bounds with quarter-unit overflow.
+The Debug Session checks cover eighteen default/custom contexts, including
+fresh sessions, both ongoing winners, draws, best-of-3/5 completion and the
+historical single-draw/solo branch. They check unchanged ledger, score,
+continuation and source text. Nine test call sites now supply the appropriate
+text snapshots while retaining their original assertions. Both isolated
+published-bank/System-only-PATH startups passed with per-monitor v2 DPI
+awareness.
+
+`-SessionResultOnly` passed on both presets: 76 updates, 94 readbacks, thirty
+comparisons, thirteen actual page openings and thirteen fresh Enter pops.
+Four real Session branches retain independent literal score, round and result
+references. Custom copy and the detail font survive source assignment,
+reopening and reversal; four font controls change only literal braces. The
+original reveal/proceed gates and premature Enter/Escape refusal, zero-update
+resize, full resource validation, Session/setup/private Save/RNG and exactly
+one successful private seed Save per preset are checked. Eight crops per
+preset contain 710,640 pixels; all eleven shared artifacts, including ten raw
+CSV/PPM files, match byte for byte. All eight crops were inspected. Evidence is
+under `out/validation/session-result-text/`. These checks establish no match
+launch, physical-device, listening, human readability or performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
@@ -2178,12 +2232,13 @@ bounded increments. Shared On/Off/Random values and the fixed labels described
 above, shared menu device/roster labels, packed missing-pad lists and Arena
 briefing mode/roster summaries, Arena numbering and Random availability, and
 preference percentages, duration units/Default notation, resolution values and
-End continuation labels and the three plain Results labels are implemented.
+End continuation labels, the three plain Results labels and four fixed Session
+result messages are implemented.
 The next slice is:
 
-1. **Session and results:** the numbered series heading, contribution/team
-   descriptions and composed match/result lines. Retain reveal timing and
-   solo/series distinctions.
+1. **Session and results:** the numbered series heading, series score line,
+   winner/solo-coverage copy and contribution/team descriptions. Retain reveal
+   timing and solo/series distinctions.
 
 Deadzones already use the shared percentage template, including the inherited
 value; introducing a new inheritance marker is separate work.

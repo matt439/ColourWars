@@ -163,6 +163,12 @@ namespace
         { "proceed", L"Press A/Enter to proceed", &MenuResultsText::proceed },
         { "contribution_heading", L"Surface held (% of arena)", &MenuResultsText::contribution_heading }
     };
+    constexpr ResultsText session_result_text[]{
+        { "series_team_a_wins", L"Team A wins the series!", &MenuResultsText::series_team_a_wins },
+        { "series_team_b_wins", L"Team B wins the series!", &MenuResultsText::series_team_b_wins },
+        { "draw_no_win", L"Draw - no win awarded", &MenuResultsText::draw_no_win },
+        { "series_continues", L"Series continues", &MenuResultsText::series_continues }
+    };
     struct RecordText { const char* key; const wchar_t* text; std::wstring MenuRecordText::* field; };
     constexpr RecordText record_text[]{
         { "new_best", L"NEW BEST", &MenuRecordText::new_best },
@@ -419,6 +425,10 @@ namespace
         for (const auto& entry : results_text)
         {
             require(text.results.*entry.field == entry.text, std::string("Plain Results default changed: ") + entry.key);
+        }
+        for (const auto& entry : session_result_text)
+        {
+            require(text.results.*entry.field == entry.text, std::string("Session result default changed: ") + entry.key);
         }
         for (const auto& entry : stage_text)
         {
@@ -6581,6 +6591,139 @@ namespace
             d["menu_text"]["results"]["proceed"].SetString(std::string(512, 'W').c_str(), d.GetAllocator());
         }, &world);
     }
+    void check_session_result_text(Variants& variants, World& world)
+    {
+        const auto reordered = variants.load([](rapidjson::Document& d)
+        {
+            auto& group = d["menu_text"]["results"]; rapidjson::Value reverse(rapidjson::kObjectType);
+            auto member = group.MemberEnd();
+            while (member != group.MemberBegin())
+            { --member; rapidjson::Value key; key.CopyFrom(member->name, d.GetAllocator());
+                rapidjson::Value value; value.CopyFrom(member->value, d.GetAllocator());
+                reverse.AddMember(key, value, d.GetAllocator()); }
+            group = std::move(reverse);
+        });
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            for (const auto& entry : session_result_text)
+                d["menu_text"]["results"][entry.key].SetString("  A\xC2\xA0\xE2\x80\x9C" "B\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
+        });
+        normalized.validate_resources(world.render, world.audio);
+        for (const auto& entry : session_result_text)
+        {
+            const std::string field = std::string("results.") + entry.key;
+            require(reordered.menu_text().results.*entry.field == entry.text &&
+                normalized.menu_text().results.*entry.field == L"  A \"B\"-C...  ",
+                "Session result copy depends on key order or lost normalized punctuation/outer spacing: " + field);
+            variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"].RemoveMember(entry.key); });
+            for (int type = 0; type < 5; ++type)
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    auto& value = d["menu_text"]["results"][entry.key];
+                    if (type == 0) { value.SetNull(); } else if (type == 1) { value.SetBool(true); }
+                    else if (type == 2) { value.SetInt(3); } else if (type == 3) { value.SetArray(); } else { value.SetObject(); }
+                });
+            }
+            for (const char* invalid : { "", "   ", " \xC2\xA0 ", "line\nbreak", "line\rbreak", "line\r\nbreak",
+                "tab\ttext", "control\x01", "delete\x7f", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28" })
+                variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"][entry.key].SetString(invalid, d.GetAllocator()); });
+            variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"][entry.key].SetString("A\0B", 3, d.GetAllocator()); });
+            const auto plain = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString("{outcome} 100%"); });
+            plain.validate_resources(world.render, world.audio);
+            std::wstring source = plain.menu_text().results.*entry.field;
+            const auto& look = plain.results_menu(); const auto& style = plain.menu();
+            const auto size = world.render.measure_text(world.render.resolve_sprite_font(style.detail_font), L"{outcome} 100%");
+            const mattmath::Vector2F position((1920.0f - size.x) / 2.0f, look.session_result_y);
+            UiTextDropShadow widget(entry.key, source, style.detail_font, position, &world.render,
+                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            source = L"Changed after construction";
+            require(widget.text() == L"{outcome} 100%" && widget.bounds() == mattmath::RectangleF(position, size) &&
+                widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+                "Session result widget borrowed copy, formatted braces, fitted text or retained a shadow: " + field);
+            DrawList no_device; widget.draw(no_device);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["detail"].SetString("menu_text_limited");
+                d["menu_text"]["results"][entry.key].SetString("~");
+            }, &world);
+            const auto long_copy = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString(std::string(512, 'W').c_str(), d.GetAllocator()); });
+            require((long_copy.menu_text().results.*entry.field).size() == 512,
+                "Session result copy acquired a parser character cap");
+            variants.rejects(field, [&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString(std::string(512, 'W').c_str(), d.GetAllocator()); }, &world);
+        }
+        require(world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'?') &&
+            !world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'~'),
+            "Session result missing-literal fixture lost its stand-in or missing glyph");
+    }
+
+    void check_session_result_bounds(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const char* name, int width, int height, float x_offset = 0.0f, float y_offset = 0.0f)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                const bool marker = character == U'~';
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
+                    marker ? x_offset : 0.0f, marker ? y_offset : 0.0f, 0.0f });
+            }
+            // Positive line spacing keeps unrelated shared-font guards valid.
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        };
+        add_font("menu_session_result_width", 1300, 16);
+        add_font("menu_session_result_width_overflow", 1300, 16, 0.25f);
+        add_font("menu_session_result_bottom", 8, 565);
+        add_font("menu_session_result_bottom_overflow", 8, 565, 0.0f, 0.25f);
+        add_font("menu_session_result_zero_width", 0, 16);
+        add_font("menu_session_result_infinite_width", 8, 16, std::numeric_limits<float>::infinity());
+        add_font("menu_session_result_nan_width", 8, 16, std::numeric_limits<float>::quiet_NaN());
+        add_font("menu_session_result_infinite_height", 8, 16, 0.0f, std::numeric_limits<float>::infinity());
+        const auto select = [](rapidjson::Document& d, const char* key, const char* font_name)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString(font_name, d.GetAllocator());
+            d["menu_text"]["results"][key].SetString("~");
+        };
+        for (const auto& entry : session_result_text)
+        {
+            const std::string field = std::string("results.") + entry.key;
+            const auto edge = variants.load([&](rapidjson::Document& d) { select(d, entry.key, "menu_session_result_width"); });
+            edge.validate_resources(world.render, world.audio);
+            require(edge.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) &&
+                edge.results_menu().session_result_y == 405.0f, "Session result boundary fixture changed the shipped paper/row");
+            UiTextDropShadow widget("session-result-edge", L"~", edge.menu().detail_font, { 310.0f, 405.0f },
+                &world.render, edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            require(widget.bounds() == mattmath::RectangleF(310.0f, 405.0f, 1300.0f, 20.0f),
+                "Session result width must meet both paper edges at its actual unscaled row with no shadow");
+            variants.rejects(field, [&](rapidjson::Document& d) { select(d, entry.key, "menu_session_result_width_overflow"); }, &world);
+            const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, entry.key, "menu_session_result_bottom"); });
+            bottom.validate_resources(world.render, world.audio);
+            const auto size = world.render.measure_text(world.render.resolve_sprite_font(bottom.menu().detail_font), L"~");
+            require(size == mattmath::Vector2F(8.0f, 565.0f) && 405.0f + size.y == 970.0f,
+                "Session result bottom edge must use the full-height paper without an extra collision/row-fit policy");
+            UiTextDropShadow tall("session-result-bottom", L"~", bottom.menu().detail_font, { 956.0f, 405.0f },
+                &world.render, bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            require(tall.bounds() == mattmath::RectangleF(956.0f, 405.0f, 8.0f, 565.0f),
+                "Session result height boundary was fitted or measured with a shadow");
+            variants.rejects(field, [&](rapidjson::Document& d) { select(d, entry.key, "menu_session_result_bottom_overflow"); }, &world);
+            for (const char* font_name : { "menu_session_result_zero_width", "menu_session_result_infinite_width",
+                "menu_session_result_nan_width", "menu_session_result_infinite_height" })
+                variants.rejects(field, [&](rapidjson::Document& d) { select(d, entry.key, font_name); }, &world);
+        }
+        variants.rejects("values.on", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited"); d["menu_text"]["values"]["on"].SetString("~");
+            d["menu_text"]["results"]["series_team_a_wins"].SetString(std::string(512, 'W').c_str(), d.GetAllocator());
+        }, &world);
+        variants.rejects("results.proceed", [](rapidjson::Document& d)
+        {
+            d["menu_text"]["results"]["proceed"].SetString(std::string(512, 'W').c_str(), d.GetAllocator());
+            d["menu_text"]["results"]["series_continues"].SetString(std::string(512, 'W').c_str(), d.GetAllocator());
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -6652,6 +6795,8 @@ int main(int argc, char** argv)
         check_end_continuation_bounds(variants, world);
         check_results_plain_text(variants, world);
         check_results_plain_bounds(variants, world);
+        check_session_result_text(variants, world);
+        check_session_result_bounds(variants, world);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
@@ -6660,6 +6805,7 @@ int main(int argc, char** argv)
             "authored resolution templates with full positive integer dimensions, strict original tokens and captured Options fitting, "
             "four plain End continuation labels with literal braces, actual-font glyphs and unscaled row0 padding boundaries, "
             "three plain Results roles with zero-offset shadows, centered paper bounds and authored record/roster clearance dependencies, "
+            "four plain Session result outcomes with owned zero-shadow text and inclusive unscaled Results-paper bounds, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "finite authored series/roster templates and expanded-card boundaries, "

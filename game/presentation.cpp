@@ -368,6 +368,10 @@ namespace
 		text.results.single_match_heading = read_menu_line(results, "single_match_heading");
 		text.results.proceed = read_menu_line(results, "proceed");
 		text.results.contribution_heading = read_menu_line(results, "contribution_heading");
+		text.results.series_team_a_wins = read_menu_line(results, "series_team_a_wins");
+		text.results.series_team_b_wins = read_menu_line(results, "series_team_b_wins");
+		text.results.draw_no_win = read_menu_line(results, "draw_no_win");
+		text.results.series_continues = read_menu_line(results, "series_continues");
 		const JsonValue stage = json.object("stage");
 		text.stage.browse_status = read_menu_line(stage, "browse_status");
 		text.stage.locked_status = read_menu_line(stage, "locked_status");
@@ -4127,6 +4131,14 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->menu_.heading_font, results.heading_y);
 	check_results_centered("proceed", this->menu_text_.results.proceed,
 		this->menu_.detail_font, results.proceed_y);
+	check_results_centered("series_team_a_wins", this->menu_text_.results.series_team_a_wins,
+		this->menu_.detail_font, results.session_result_y);
+	check_results_centered("series_team_b_wins", this->menu_text_.results.series_team_b_wins,
+		this->menu_.detail_font, results.session_result_y);
+	check_results_centered("draw_no_win", this->menu_text_.results.draw_no_win,
+		this->menu_.detail_font, results.session_result_y);
+	check_results_centered("series_continues", this->menu_text_.results.series_continues,
+		this->menu_.detail_font, results.session_result_y);
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const
