@@ -10,6 +10,7 @@ param(
     [switch] $LandmarkOnly,
     [switch] $ParallaxOnly,
     [switch] $TuneColoursOnly,
+    [switch] $FeedbackTuneColoursOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -63,7 +64,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -156,7 +157,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'percentage-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -279,6 +280,9 @@ function Write-ContactSheet {
         $percentages = @($images | Where-Object { $_.name -like 'percentage-*' })
         Write-ContactSheetPages -Images $percentages -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-percentage-contact'
+        $feedbackColours = @($images | Where-Object { $_.name -like 'feedback-colour-*' })
+        Write-ContactSheetPages -Images $feedbackColours -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-feedback-colour-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -389,7 +393,33 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($PercentageTextOnly) {
+if ($FeedbackTuneColoursOnly) {
+    $result.scope = 'feedback-tune-colours-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @()
+    $result.palettes = @('opaque-default', 'literal-rgb', 'literal-rgba128', 'literal-alpha0-nonzero-rgb')
+    $result.weapons = @('isolated-sprayer-feedback-only')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('nine-isolated-event-and-readiness-cells', 'full-and-half-life', 'black-and-nonblack-backgrounds', 'independent-raw-source-premultiplied-channels', 'opaque-legacy-parity', 'double-fade-and-straight-alpha-negative-controls', 'reduce-effects-static-information', 'opaque-team-centres', 'frozen-timers-bounds-rng')
+    $result.input_slots = @()
+    $result.inputs = 'Normal GamepadReader backend; no reader sampling, keyboard events, scripted pads, StateContext updates or match objects. The nine-cell fixture directly calls existing WeaponFeedback consumers with frozen cue states and literal colours.'
+    $result.audio = 'No gameplay audio events; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Both presets render empty/recovered/Sprayer muzzle at full and half life plus all three readiness shapes over black and nonblack. Independent raw-source sprite geometry and explicit RGBA channels verify four literal palettes, opaque-default legacy parity, rejection of RGB double-fade and straight-alpha submissions, unchanged opaque team centres, Reduce Effects policy and frozen timers/bounds/draw RNG. Shared evidence is exactly zero StateContext updates,56 readbacks,eight CSV rows,eight360x280 crops and eight parity/negative controls. No gameplay, global input, physical-device, listening, human readability or performance acceptance.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('fifteen-real-validated-named-rgb-rgba-reset-save-commands', 'two-token-private-save-and-rebase', 'unchanged-active-preferences-and-private-bytes')
+        $result.inputs += ' Debug additionally uses a private DebugDirector and isolated source/staged/user/profile/TEMP/TMP paths; exactly two successful Save calls seed private preferences, with no controlled save failure.'
+        $result.checks += ' Debug adds15 real validated named/RGB/RGBA/reset/save commands on the same preconstructed borrowed consumers,66 readbacks,20 CSV rows and zero extra crops. Exact two-token source/staged save and ledger rebase, unchanged tuning/actual content/private preferences and absence of queued match work are checked. Total Debug evidence is122 readbacks,28 CSV rows and eight crops.'
+        $result['developer_command_scope'] = 'debug-validated-commands'
+    }
+    else {
+        $result.inputs += ' Release runs consumer-only evidence and creates no developer director, command transcript or nested save.'
+        $result.checks += ' Release evidence remains consumer-only:56 readbacks,eight CSV rows and eight crops. No developer commands are executed or claimed.'
+        $result['developer_command_scope'] = 'not-run-release-consumer-only'
+    }
+}
+elseif ($PercentageTextOnly) {
     $result.scope = 'percentage-text-only'
     $result.Remove('stage')
     $result.stages = @()
@@ -1060,6 +1090,7 @@ try {
     elseif ($LandmarkOnly) { $probeArguments += 'landmark' }
     elseif ($ParallaxOnly) { $probeArguments += 'parallax' }
     elseif ($TuneColoursOnly) { $probeArguments += 'tune-colours' }
+    elseif ($FeedbackTuneColoursOnly) { $probeArguments += 'feedback-tune-colours' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -1216,6 +1247,85 @@ try {
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
     }
+    if ($FeedbackTuneColoursOnly) {
+        $feedbackConsumerSummary = Get-Content -LiteralPath (Join-Path $captures 'feedback-colour-consumer-summary.json') -Raw | ConvertFrom-Json
+        $feedbackConsumerRows = @(Import-Csv -LiteralPath (Join-Path $captures 'feedback-colour-consumers.csv'))
+        $feedbackCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'feedback-*.ppm' -File)
+        $feedbackExpectedNames = @(foreach ($palette in @('default', 'rgb', 'rgba128', 'alpha0')) {
+            foreach ($background in @('black', 'nonblack')) { "feedback-colour-$palette-$background.ppm" }
+        })
+        $feedbackExpectedPairs = @(foreach ($palette in @('default', 'rgb', 'rgba128', 'alpha0')) {
+            foreach ($background in @('black', 'nonblack')) { "$palette/$background" }
+        })
+        $feedbackObservedPairs = @($feedbackConsumerRows | ForEach-Object { "$($_.palette)/$($_.background)" })
+        if ($feedbackConsumerSummary.scope -ne 'consumer-only' -or $feedbackConsumerSummary.state_updates -ne 0 -or
+            $feedbackConsumerSummary.readbacks -ne 56 -or $feedbackConsumerSummary.csv_rows -ne 8 -or
+            $feedbackConsumerSummary.crops -ne 8 -or $feedbackConsumerSummary.controls -ne 8 -or
+            $feedbackConsumerRows.Count -ne 8 -or @($feedbackConsumerRows | Where-Object {
+                $_.normal_match -ne 'true' -or $_.reduced_match -ne 'true' -or $_.team_centres -ne 'true' -or
+                $_.frozen_geometry_timers_rng -ne 'true' -or $_.scope -ne 'consumer-only' -or
+                ($_.palette -eq 'default' -and $_.control -ne 'opaque-legacy-parity-and-double-fade-rejected') -or
+                ($_.palette -eq 'rgb' -and $_.control -ne 'changed-rgb') -or
+                ($_.palette -in @('rgba128', 'alpha0') -and $_.control -ne 'legacy-straight-alpha-rejected')
+            }).Count -ne 0 -or $feedbackCrops.Count -ne 8 -or
+            (($feedbackObservedPairs | Sort-Object) -join '|') -ne (($feedbackExpectedPairs | Sort-Object) -join '|') -or
+            (($feedbackCrops.Name | Sort-Object) -join '|') -ne (($feedbackExpectedNames | Sort-Object) -join '|')) {
+            throw 'The feedback consumer evidence does not match its frozen literal-oracle/readback/CSV/crop/control budgets.'
+        }
+        foreach ($crop in $feedbackCrops) {
+            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne '360 280' -or $header[2] -ne '255') {
+                throw 'A feedback colour crop exceeds its frozen 360x280 pixel budget.'
+            }
+        }
+        $feedbackSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
+        $feedbackSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $feedbackObserved = [ordered]@{
+            consumer = $feedbackConsumerSummary
+            state_updates = 0
+            readbacks = 56
+            csv_rows = 8
+            crops = 8
+            private_save_calls = $feedbackSaveCalls
+            successful_private_saves = $feedbackSaveSuccesses
+        }
+        if ($debug) {
+            $feedbackTuneSummary = Get-Content -LiteralPath (Join-Path $captures 'feedback-tune-summary.json') -Raw | ConvertFrom-Json
+            $feedbackTuneRows = @(Import-Csv -LiteralPath (Join-Path $captures 'feedback-tune-colours.csv'))
+            $feedbackTranscript = Get-Item -LiteralPath (Join-Path $captures 'feedback-tune-commands.log')
+            $feedbackExpectedStates = @('baseline', 'named', 'reset-original', 'rgb', 'rgba128', 'saved-rgba',
+                'edited-after-save', 'reset-saved-rgba', 'alpha0', 'reset-alpha0-to-saved')
+            $feedbackExpectedTunePairs = @(foreach ($state in $feedbackExpectedStates) {
+                foreach ($background in @('black', 'nonblack')) { "$state/$background" }
+            })
+            $feedbackObservedTunePairs = @($feedbackTuneRows | ForEach-Object { "$($_.state)/$($_.background)" })
+            if ($feedbackTuneSummary.scope -ne 'debug-validated-commands' -or $feedbackTuneSummary.state_updates -ne 0 -or
+                $feedbackTuneSummary.commands -ne 15 -or $feedbackTuneSummary.readbacks -ne 66 -or
+                $feedbackTuneSummary.csv_rows -ne 20 -or $feedbackTuneSummary.crops -ne 0 -or
+                $feedbackTuneRows.Count -ne 20 -or $feedbackTranscript.Length -le 0 -or
+                $feedbackSaveCalls -ne 2 -or $feedbackSaveSuccesses -ne 2 -or
+                @($feedbackTuneRows | Where-Object {
+                    $_.normal_match -ne 'true' -or $_.team_centres -ne 'true' -or
+                    $_.frozen_geometry_timers_rng -ne 'true' -or $_.private_bytes -ne 'true' -or $_.adoption -ne 'live' -or
+                    ($_.state -eq 'rgba128' -and $_.reduced_match -ne 'true') -or
+                    ($_.state -ne 'rgba128' -and $_.reduced_match -ne 'not-sampled')
+                }).Count -ne 0 -or
+                (($feedbackObservedTunePairs | Sort-Object) -join '|') -ne (($feedbackExpectedTunePairs | Sort-Object) -join '|')) {
+                throw 'The feedback Debug evidence does not match its frozen validated-command/private-save/readback/CSV budgets.'
+            }
+            $feedbackObserved['developer_commands'] = $feedbackTuneSummary
+            $feedbackObserved.readbacks = 122
+            $feedbackObserved.csv_rows = 28
+        }
+        elseif ($feedbackSaveCalls -ne 0 -or $feedbackSaveSuccesses -ne 0 -or
+            (Test-Path -LiteralPath (Join-Path $captures 'feedback-tune-summary.json')) -or
+            (Test-Path -LiteralPath (Join-Path $captures 'feedback-tune-colours.csv')) -or
+            (Test-Path -LiteralPath (Join-Path $captures 'feedback-tune-commands.log')) -or
+            (Test-Path -LiteralPath (Join-Path $captures 'feedback-tune-scratch'))) {
+            throw 'Release feedback evidence must remain consumer-only without developer artifacts or save calls.'
+        }
+        $result['observed_counts'] = $feedbackObserved
+    }
     if ($PercentageTextOnly) {
         $percentageSummary = Get-Content -LiteralPath (Join-Path $captures 'percentage-summary.json') -Raw | ConvertFrom-Json
         $percentageRows = @(Import-Csv -LiteralPath (Join-Path $captures 'percentage-values.csv'))
@@ -1233,7 +1343,17 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($PercentageTextOnly) {
+    if ($FeedbackTuneColoursOnly) {
+        $result.diagnostic = 'Feedback colours passed nine isolated empty/recovered/Sprayer muzzle/readiness cells, full/half life, black/nonblack backgrounds, independent raw-source premultiplied channels, opaque-default legacy parity, double-fade/straight-alpha negative controls, static Reduce Effects information, opaque team centres and frozen timers/bounds/RNG. Shared consumer evidence is56 readbacks,eight CSV rows,eight360x280 crops and eight parity/negative controls, with zero StateContext updates.'
+        if ($debug) {
+            $result.diagnostic += ' Debug also passed15 real validated named/RGB/RGBA/reset/save commands on preconstructed borrowed consumers, exact two-token private source/staged save and ledger rebase, unchanged actual content/tuning/preferences/private bytes and no queued match work. Exactly two successful private Save calls and no controlled save failure. Debug totals:122 readbacks,28 CSV rows,eight crops.'
+        }
+        else {
+            $result.diagnostic += ' Release ran consumer-only evidence:56 readbacks,eight CSV rows,eight crops; no developer commands, transcript or nested save.'
+        }
+        $result.diagnostic += ' No gameplay route, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    }
+    elseif ($PercentageTextOnly) {
         $result.diagnostic = 'Preference percentages passed independent literal actual music/SFX/movement/aim rasters at720/1080, saved17/0/100, inherited movement rounded100 and explicit0/90; long OptionRow fitting, captured text and visibly distinct numeric font metrics through real adjustments, child return, reopen/reversal and zero-update resize returns. Child Apply/reload/repeat, active10/85 versus persisted5/85 after the controlled private-save failure, pending parent10/90 preservation and Escape discard retain unrelated preferences/private bytes. Current preview across source replacement and frozen draw RNG are unchanged. Exactly114 state updates(hard120),87 readbacks,52 value CSV rows,4 status comparisons and8 compact crops. No broad matrix, gameplay, foreground/global input, physical-pad, hardware qualification, listening, human readability or performance acceptance.'
     }
     elseif ($StageCountsOnly) {

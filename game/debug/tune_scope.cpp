@@ -39,6 +39,10 @@ namespace
 		// catalog, names, descriptions, fonts and page paper remain captured.
 		{ "presentation.main_menu.weapon_select.selected", TuneScope::live },
 		{ "presentation.main_menu.weapon_select.unselected", TuneScope::live },
+		// WeaponFeedback reads both borrowed colours during each cue and aim
+		// marker draw. Cue state, team tint and captured sheet/fill stay intact.
+		{ "presentation.weapon_feedback.highlight", TuneScope::live },
+		{ "presentation.weapon_feedback.keyline", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

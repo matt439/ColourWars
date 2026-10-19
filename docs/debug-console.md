@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of eleven audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirteen audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -330,7 +330,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-eleven audited colour paths below, can be read and changed while the game runs,
+thirteen audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These eleven existing string fields are supported; numeric path
+**Colours.** These thirteen existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -399,11 +399,20 @@ show the quoted JSON token.
 | `presentation.main_menu.team_select.unselected` | live | Team Select's other icons, on the next active, connected visual refresh. |
 | `presentation.main_menu.weapon_select.selected` | live | Ready players' Weapon Select tiles, on the next active, connected visual refresh. |
 | `presentation.main_menu.weapon_select.unselected` | live | Unready players' Weapon Select tiles, on the next active, connected visual refresh. |
+| `presentation.weapon_feedback.highlight` | live | Existing dry-fire crosses, recovery rays and all three aim-readiness shapes, on the next draw. |
+| `presentation.weapon_feedback.keyline` | live | Outlines of existing muzzle/status cues and aim-readiness shapes, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
 paint/supply masks, names, descriptions, fonts and page paper keep their captured
 styles; these two Weapon paths tint only the readiness tiles.
+
+Weapon-feedback colours are read on every draw, including frozen cues beneath
+a paused console. Their team-paint centres, geometry and event timers stay
+unchanged; sheet/frame bindings retain their constructor capture. Both base
+colours use ordinary straight RGBA: drawing premultiplies base RGB by its alpha
+before applying the event fade. Applying that fade a second time would change
+the existing opaque presentation. A zero-alpha colour contributes no RGB.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -446,7 +455,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the eleven colour strings listed above join numbers and booleans in `tune`.
+only the thirteen colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1149,7 +1158,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the eleven audited colour fields above are
+  and inserting keys in `tune.save`: the thirteen audited colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1158,9 +1167,10 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Eleven existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Thirteen existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven and both
-readiness colours on Team Select and Weapon Select. More colour fields remain, along with
+readiness colours on Team Select and Weapon Select, plus weapon-feedback
+highlight/keyline. More colour fields remain, along with
 arbitrary string/font edits and insertion of absent keys.
 
 The next bounded colour increment can follow an actual field's consumer,
@@ -1254,6 +1264,37 @@ compilation or run creation. Both isolated system-path startups pass with the
 published audio bank and per-monitor-v2 DPI awareness. Evidence is under
 `out/validation/weapon-tune-colours/`. These muted hidden checks establish no
 physical-pad, listening, human readability or uncontended performance acceptance.
+
+Validation of the weapon-feedback increment (2026-10-19): both builds and all
+38 CPU cases per preset pass. The thirteen-path checks cover named/RGB/RGBA
+commands, independent reset, exact LF/CRLF save splices, conflicts/force, fresh
+unrelated external edits and completion. The new keyline colour shares its
+completion prefix with the existing numeric `keyline_width`; both remain
+available. Release developer-tool exclusion still passes.
+
+`scripts/check-painter.ps1 -Preset <preset> -SkipBuild -FeedbackTuneColoursOnly`
+passes in both presets at hidden 1280x720. Each consumer-only run uses 56
+readbacks, eight CSV records and eight 360x280 crops (2,419,320 PPM bytes).
+Independent raw-source rasters check opaque defaults, RGB, half-alpha RGBA and
+nonblack zero-alpha colours over black and coloured backgrounds. Opaque-default
+legacy parity, deliberate straight-alpha and doubled-fade negative controls,
+Reduce Effects, team centres and frozen geometry/timers/RNG are checked. The
+eleven shared CSV/PPM/summary files are byte-identical between presets.
+
+Debug additionally executes fifteen actual tune/reset/save commands against
+preconstructed consumers, using 66 more readbacks and twenty CSV records.
+Private two-token save/rebase, reset to saved values, preferences and source/
+staged bytes are checked. Release runs the consumer proof alone. Neither path
+updates a state or enters a match. Both isolated system-PATH startups pass with
+the published audio bank and per-monitor-v2 DPI awareness.
+
+Evidence is under `out/validation/feedback-tune-colours/`. The initial CPU
+completion assertion and two native fixture assertions were corrected; their
+sources, failed logs and receipts remain alongside the passing runs. Native
+corrections sample the readiness bead's interior and read successful command
+replies from the console log. No checks were skipped. These hidden checks
+establish no physical-pad, listening, human readability or uncontended
+performance acceptance. `DBG#1` remains open beyond the thirteen audited paths.
 
 ## Foreground checks (`CI#1`)
 

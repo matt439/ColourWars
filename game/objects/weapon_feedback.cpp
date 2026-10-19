@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon_feedback.h"
+#include "game/objects/crude_drawing.h"
 
 #include <cmath>
 
@@ -64,8 +65,8 @@ void WeaponFeedback::draw_block(DrawList& draw_list, const Vector2F& center,
         static_cast<float>(source.height) * 0.5f);
     const float border = this->presentation_->keyline_width * 2.0f;
     this->draw_with(draw_list, RectangleF(center, size + Vector2F(border, border)),
-        this->frame(), this->presentation_->keyline * alpha, origin, SpriteFlip::none, angle);
-    this->draw_with(draw_list, RectangleF(center, size), this->frame(), colour * alpha,
+        this->frame(), CrudeDrawing::premultiplied(this->presentation_->keyline) * alpha, origin, SpriteFlip::none, angle);
+    this->draw_with(draw_list, RectangleF(center, size), this->frame(), CrudeDrawing::premultiplied(colour) * alpha,
         origin, SpriteFlip::none, angle);
 }
 
