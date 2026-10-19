@@ -15,6 +15,10 @@ add_executable(ColourWars WIN32
     main.cpp
     match_records.cpp
     presentation.cpp
+    presentation_menu_text.cpp
+    presentation_read_match.cpp
+    presentation_read_menu.cpp
+    presentation_validation.cpp
     save.cpp
     session.cpp
     text_wrap.cpp

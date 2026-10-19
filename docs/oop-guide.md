@@ -196,7 +196,7 @@ For a new selectable primary weapon, keep these registrations together:
    [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu_weapon_select.cpp).
    Add the description to `main_menu.weapon_descriptions` in
    [presentation.json](../game/content/presentation.json) and the corresponding
-   `describe` registration in [presentation.cpp](../game/presentation.cpp).
+   `describe` registration in [presentation_read_menu.cpp](../game/presentation_read_menu.cpp).
    The description array in [presentation.h](../game/presentation.h) includes
    `random_primary`; keep that relationship if reorganizing the enum.
 5. Supply any new frames/animations in the sprite-sheet definition and texture,
