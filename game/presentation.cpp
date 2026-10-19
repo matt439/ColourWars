@@ -338,6 +338,22 @@ namespace
 		text.stage.browse_hint = read_menu_block(stage, "browse_hint");
 		text.stage.solo_mode = read_menu_line(stage, "solo_mode");
 		text.stage.single_match_mode = read_menu_line(stage, "single_match_mode");
+		const auto read_stage_summary = [&](const char* key, const wchar_t* token)
+		{
+			const std::wstring value = read_menu_line(stage, key);
+			try
+			{
+				std::ignore = format_label_template(value, { { token, L"1" } });
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(stage.where() + ": " + key + ": " + error.what());
+			}
+			return value;
+		};
+		text.stage.best_of_mode = read_stage_summary("best_of_mode", L"{best_of}");
+		text.stage.solo_roster = read_stage_summary("solo_roster", L"{players}");
+		text.stage.versus_roster = read_stage_summary("versus_roster", L"{players}");
 		const JsonValue records = json.object("records");
 		text.records.new_best = read_menu_line(records, "new_best");
 		text.records.stage_best = read_menu_line(records, "stage_best");
@@ -1971,6 +1987,25 @@ std::wstring MenuText::device_label(int slot) const
 	throw std::invalid_argument("Menu device label requires a slot from -1 to 4.");
 }
 
+std::wstring MenuText::stage_best_of_mode(int best_of) const
+{
+	if (best_of != 3 && best_of != 5)
+	{
+		throw std::invalid_argument("Stage best-of mode requires 3 or 5.");
+	}
+	return format_label_template(this->stage.best_of_mode, { { L"{best_of}", std::to_wstring(best_of) } });
+}
+
+std::wstring MenuText::stage_roster(int players) const
+{
+	if (players < 1 || players > 4)
+	{
+		throw std::invalid_argument("Stage roster requires a player count from 1 to 4.");
+	}
+	return format_label_template(players == 1 ? this->stage.solo_roster : this->stage.versus_roster,
+		{ { L"{players}", std::to_wstring(players) } });
+}
+
 std::wstring MenuText::roster_label(int roster_index, int slot) const
 {
 	return format_label_template(this->labels.roster_row,
@@ -2770,6 +2805,7 @@ void Presentation::validate_resources(const RenderResources& render,
 			throw std::runtime_error(this->source_path_ + ": " + key +
 				" must fit unscaled inside the design area and briefing vertical span before the next authored row origin, including its shadow.");
 		}
+		return bounds;
 	};
 	check_stage_briefing("briefing_label", this->menu_text_.stage.briefing_label, this->menu_.brand_font, 0.0f, 1.0f);
 	check_stage_briefing("goal", this->menu_text_.stage.goal, this->menu_.brand_font, 3.0f, 4.0f);
@@ -2777,6 +2813,39 @@ void Presentation::validate_resources(const RenderResources& render,
 	check_stage_briefing("versus_objective", this->menu_text_.stage.versus_objective, this->menu_.brand_font, 4.0f, 6.0f);
 	check_stage_briefing("solo_mode", this->menu_text_.stage.solo_mode, this->menu_.detail_font, 1.0f, 2.0f);
 	check_stage_briefing("single_match_mode", this->menu_text_.stage.single_match_mode, this->menu_.detail_font, 1.0f, 2.0f);
+	const auto check_stage_summary = [&](const char* role, const std::wstring& text, const std::string& font,
+		float line, float next_line)
+	{
+		RectangleF bounds = check_stage_briefing(role, text, font, line, next_line);
+		// The page expands the briefing artwork around unscaled copy rather
+		// than fitting copy to its authored width. That expanded card must
+		// still fit the outer paper and remain separate from the preview.
+		const float edge = main.art.keyline_width * 3.0f;
+		const float inset = edge + main.setup_shadow_offset;
+		bounds.inflate(inset);
+		const RectangleF card = RectangleF::union_of(stage_briefing, bounds);
+		const RectangleF outer((Vector2F(1920.0f, this->menu_.footer_y) - main.stage_box_size) / 2.0f,
+			main.stage_box_size);
+		const RectangleF inside(outer.position() + Vector2F(edge),
+			outer.size() - Vector2F(edge * 2.0f + main.setup_shadow_offset));
+		RectangleF preview(stage.preview_position, stage.preview_size);
+		preview.inflate(this->menu_.rule_height);
+		const auto finite_rectangle = [](const RectangleF& rectangle)
+		{
+			return std::isfinite(rectangle.x) && std::isfinite(rectangle.y) &&
+				std::isfinite(rectangle.width) && std::isfinite(rectangle.height) &&
+				std::isfinite(rectangle.right()) && std::isfinite(rectangle.bottom()) &&
+				rectangle.width > 0.0f && rectangle.height > 0.0f;
+		};
+		if (!std::isfinite(edge) || !std::isfinite(inset) || !finite_rectangle(card) ||
+			!finite_rectangle(inside) || !finite_rectangle(preview) || !inside.contains(card) ||
+			(card.x < preview.right() && card.right() > preview.x &&
+				card.y < preview.bottom() && card.bottom() > preview.y))
+		{
+			throw std::runtime_error(this->source_path_ + ": menu_text.stage." + role +
+				" must keep the expanded briefing card inside the Stage paper and separate from the preview edge, including its retained artwork and shadow.");
+		}
+	};
 	// Stage records share the navigation row, right-aligned to the preview,
 	// and the page shrinks a line to the room beside the arena counter. The
 	// copy must draw in its font and the row must sit below the preview edge
@@ -3818,6 +3887,15 @@ void Presentation::validate_resources(const RenderResources& render,
 			throw std::runtime_error(this->source_path_ + ": " + key +
 				" must fit its row before the controls help and status including focus padding.");
 		}
+	}
+	for (const int best_of : { 3, 5 })
+	{
+		check_stage_summary("best_of_mode", this->menu_text_.stage_best_of_mode(best_of), this->menu_.detail_font, 1.0f, 2.0f);
+	}
+	for (int players = 1; players <= 4; ++players)
+	{
+		check_stage_summary(players == 1 ? "solo_roster" : "versus_roster", this->menu_text_.stage_roster(players),
+			this->menu_.brand_font, 2.0f, 3.0f);
 	}
 }
 

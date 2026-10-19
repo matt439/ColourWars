@@ -1783,15 +1783,72 @@ failed, diagnostic and final evidence remains under `out/validation/menu-labels/
 These checks establish no physical-pad, listening, human readability/style or
 performance acceptance.
 
+## Arena briefing mode and roster summaries
+
+Three required `menu_text.stage` templates preserve the current briefing words:
+
+| Key | Shipped text | Required token |
+|---|---|---|
+| `best_of_mode` | `BEST OF {best_of}` | One `{best_of}` |
+| `solo_roster` | `{players} PLAYER` | One `{players}` |
+| `versus_roster` | `{players} PLAYERS / 2 TEAMS` | One `{players}` |
+
+The best-of formatter accepts three or five; the roster formatter accepts one
+through four and chooses the solo template only for one player. Solo mode still
+takes precedence over the selected best-of setting, and the existing fixed
+Single Match label remains in use. The page formats these summaries once from
+its captured copy and keeps them through browsing and locking refreshes;
+reopening adopts presentation edits.
+
+Loading uses the existing punctuation/space normalization. Templates are
+nonblank single lines, with exactly one declared token; unknown, missing,
+repeated, nested or unmatched braces are content errors. Direct formatter
+mutations must already be printable ASCII. Substitution scans the original
+template once, and invalid numeric domains are rejected.
+
+Resource validation checks all six reachable outputs with the actual fonts and
+shadow: best-of mode uses the detail font, roster uses the brand font. Their
+unscaled text retains its row and design bounds. Longer summaries can expand
+the briefing artwork beyond its authored width while remaining inside the
+Stage Select paper and separate from the preview edge. The new fields also
+check that expanded artwork at load time; accepted text must not fail only when
+the actual page is constructed. Navigation, claims, readiness, Random selection,
+saved identifiers and game rules are unchanged.
+
+Validation (2026-10-19): both game builds and all 38 CPU cases per preset pass.
+The text case covers every legal summary, required fields/types, normalized
+copy, direct mutations and token guards, missing produced digits, distinct
+font metrics, inclusive row/shadow contacts and quarter-unit overflow. Expanded
+paper contacts against the Stage paper and preview are checked independently.
+Older synthetic fixtures retain their exact legacy text contacts and negative
+diagnostics; where their complete paper was already outside its usable region,
+they now also assert the new summary field's rejection. The new checks run
+after the existing resource checks to preserve diagnostic precedence.
+
+`StageSummaryOnly` passes on both presets at 720p/1080p. Each run uses 112 page
+updates for 60 literal summary comparisons and 64 additional navigation/status
+raster guards after 32 actual browse/lock/unlock taps, with 120 CSV rows and
+eight compact crops. It covers all four sparse rosters, both best-of choices,
+solo precedence, Single Match, captured old/new copy and visibly distinct
+detail/brand font IDs through refreshes, reopening and reversal. Settings,
+claims, exact private save bytes and provisional/drawing RNG remain unchanged;
+the probe never confirms a final Random selection or launches a match.
+Both presets' CSVs and crops are byte-identical, and the contact sheet was
+inspected. Both isolated published-bank, System-only-PATH startups pass with
+per-monitor-v2 DPI awareness. Source snapshots, the corrected evidence-wrapper
+failure and final receipts remain under `out/validation/stage-summary-text/`.
+These checks establish no physical-pad, listening, human readability/style or
+performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
 bounded increments. Shared On/Off/Random values and the fixed labels described
-above, shared menu device/roster labels and packed missing-pad lists are already
-implemented. The next slices are:
+above, shared menu device/roster labels, packed missing-pad lists and Arena
+briefing mode/roster summaries are implemented. The next slices are:
 
-1. **Composed setup:** Arena navigation and Random availability count, best-of
-   mode and player/team roster lines, retaining their current numbers and order.
+1. **Composed setup:** Arena navigation and Random availability count, retaining
+   their current numbers and order.
 2. **Numeric settings:** duration units and Default notation, resolution and
    percentage values, and inherited/default deadzone notation. Preserve current
    numeric precision, rounding, choices and saved identifiers.

@@ -160,6 +160,25 @@ namespace
         { "browse_status", L"FIND YOUR ARENA", &MenuStageText::browse_status },
         { "locked_status", L"ARENA LOCKED", &MenuStageText::locked_status }
     };
+    struct StageSummaryText
+    {
+        const char* key;
+        const wchar_t* text;
+        std::wstring MenuStageText::* field;
+        const char* token;
+        int row;
+        int value;
+        bool detail;
+    };
+    constexpr StageSummaryText stage_summary_text[]{
+        { "best_of_mode", L"BEST OF {best_of}", &MenuStageText::best_of_mode, "{best_of}", 1, 5, true },
+        { "solo_roster", L"{players} PLAYER", &MenuStageText::solo_roster, "{players}", 2, 1, false },
+        { "versus_roster", L"{players} PLAYERS / 2 TEAMS", &MenuStageText::versus_roster, "{players}", 2, 4, false }
+    };
+    std::wstring stage_summary(const MenuText& text, const StageSummaryText& entry, int value)
+    {
+        return entry.detail ? text.stage_best_of_mode(value) : text.stage_roster(value);
+    }
     struct StageBriefingText {
         const char* key; const wchar_t* text; std::wstring MenuStageText::* field; int row; int next_row; bool multiline;
         bool detail = false;
@@ -366,6 +385,10 @@ namespace
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena status default changed: ") + entry.key);
         }
+        for (const auto& entry : stage_summary_text)
+        {
+            require(text.stage.*entry.field == entry.text, std::string("Arena summary default changed: ") + entry.key);
+        }
         for (const auto& entry : record_text)
         {
             require(text.records.*entry.field == entry.text, std::string("Stage record default changed: ") + entry.key);
@@ -474,6 +497,7 @@ namespace
         for (const auto& entry : end_text) { required("end", entry.key); }
         for (const auto& entry : record_text) { required("records", entry.key); }
         for (const auto& entry : stage_text) { required("stage", entry.key); }
+        for (const auto& entry : stage_summary_text) { required("stage", entry.key); }
         for (const auto& entry : stage_briefing_text) { required("stage", entry.key); }
         for (const auto& entry : stage_cue_text) { required("stage", entry.key); }
         for (const auto& entry : headings) { required("headings", entry.key); }
@@ -3383,6 +3407,257 @@ namespace
         for (const double width : { 0.0, -1.0, 1e100 }) { reject_preview_width(width); }
     }
 
+    void check_stage_summary_text(Variants& variants, World& world, const MenuText& defaults)
+    {
+        require(defaults.stage_best_of_mode(3) == L"BEST OF 3" &&
+            defaults.stage_best_of_mode(5) == L"BEST OF 5",
+            "Arena series summary changed its literal default wording");
+        constexpr const wchar_t* rosters[]{L"1 PLAYER", L"2 PLAYERS / 2 TEAMS",
+            L"3 PLAYERS / 2 TEAMS", L"4 PLAYERS / 2 TEAMS"};
+        for (int players = 1; players <= 4; ++players)
+        {
+            require(defaults.stage_roster(players) == rosters[players - 1],
+                "Arena roster summary changed singular/plural wording or the fixed team count");
+        }
+        const auto reject_format = [](auto format)
+        {
+            bool rejected = false;
+            try { format(); }
+            catch (const std::invalid_argument&) { rejected = true; }
+            require(rejected, "Invalid arena summary template or argument formatted silently");
+        };
+        for (int invalid : {std::numeric_limits<int>::min(), -1, 0, 1, 2, 4, 6, std::numeric_limits<int>::max()})
+        {
+            reject_format([&] { defaults.stage_best_of_mode(invalid); });
+        }
+        for (int invalid : {std::numeric_limits<int>::min(), -1, 0, 5, std::numeric_limits<int>::max()})
+        {
+            reject_format([&] { defaults.stage_roster(invalid); });
+        }
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            auto& stage = d["menu_text"]["stage"];
+            stage["best_of_mode"].SetString("  {best_of}\xC2\xA0\xE2\x80\x9C" "rounds\xE2\x80\x9D\xE2\x80\x94" "best\xE2\x80\xA6  ");
+            stage["solo_roster"].SetString("  {players}\xC2\xA0solo\xE2\x80\xA6  ");
+            stage["versus_roster"].SetString("  {players}\xC2\xA0\xE2\x80\x94" "teams  ");
+        });
+        normalized.validate_resources(world.render, world.audio);
+        require(normalized.menu_text().stage.best_of_mode == L"  {best_of} \"rounds\"-best...  " &&
+            normalized.menu_text().stage.solo_roster == L"  {players} solo...  " &&
+            normalized.menu_text().stage.versus_roster == L"  {players} -teams  ",
+            "Arena summary lost punctuation normalization, original tokens or authored outer spaces");
+        for (int best_of : {3, 5})
+        {
+            require(normalized.menu_text().stage_best_of_mode(best_of) ==
+                L"  " + std::to_wstring(best_of) + L" \"rounds\"-best...  ",
+                "Arena series summary fixed token order or authored wording in code");
+        }
+        for (int players = 1; players <= 4; ++players)
+        {
+            require(normalized.menu_text().stage_roster(players) == L"  " + std::to_wstring(players) +
+                (players == 1 ? L" solo...  " : L" -teams  "),
+                "Arena roster summary ignored authored text or selected the wrong count branch");
+        }
+        for (const auto& entry : stage_summary_text)
+        {
+            const std::string field = std::string("stage.") + entry.key;
+            const std::string token = entry.token;
+            for (const char* blank : {"   ", " \xC2\xA0 "})
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["stage"][entry.key].SetString(blank, d.GetAllocator());
+                });
+            }
+            for (const char* invalid : {"first\nsecond", "first\rsecond", "first\r\nsecond",
+                "tab\ttext", "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28"})
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    const std::string invalid_text = token + invalid;
+                    d["menu_text"]["stage"][entry.key].SetString(invalid_text.c_str(), d.GetAllocator());
+                });
+            }
+            for (const bool array : {false, true})
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    if (array) { d["menu_text"]["stage"][entry.key].SetArray(); }
+                    else { d["menu_text"]["stage"][entry.key].SetInt(3); }
+                });
+            }
+            const std::vector<std::string> malformed{
+                "No token", token + token, "{" + token + "}", token + "{unknown}", token + "{", token + "}",
+                entry.detail ? "{players}" : "{best_of}",
+                entry.detail ? "{best_of }" : "{players }", entry.detail ? "{Best_of}" : "{Players}",
+                entry.detail ? "{best_{best_of}of}" : "{pla{players}yers}"
+            };
+            for (const auto& invalid : malformed)
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["stage"][entry.key].SetString(invalid.c_str(), d.GetAllocator());
+                });
+                MenuText mutated = defaults;
+                mutated.stage.*entry.field = std::wstring(invalid.begin(), invalid.end());
+                reject_format([&] { stage_summary(mutated, entry, entry.value); });
+            }
+            for (const wchar_t* invalid : {L"", L"   ", L"first\nsecond", L"first\rsecond", L"tab\ttext"})
+            {
+                MenuText mutated = defaults;
+                mutated.stage.*entry.field = invalid;
+                reject_format([&] { stage_summary(mutated, entry, entry.value); });
+            }
+            for (const wchar_t* extra : {L"\n", L"\r", L"\t", L"\x01", L"\x7f", L"\u00e9", L"\u00a0", L"\u2014"})
+            {
+                MenuText mutated = defaults;
+                (mutated.stage.*entry.field) += extra;
+                reject_format([&] { stage_summary(mutated, entry, entry.value); });
+            }
+            MenuText nul = defaults;
+            (nul.stage.*entry.field).push_back(L'\0');
+            reject_format([&] { stage_summary(nul, entry, entry.value); });
+        }
+    }
+
+    void check_stage_summary_bounds(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const std::string& name, int tilde_width, int tilde_height,
+            char32_t digit = U'\0', float digit_x = 0.0f, float digit_y = 0.0f,
+            int digit_height = 16, bool omit_digit = false)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                if (omit_digit && character == digit) { continue; }
+                glyphs.push_back({character, mattmath::RectangleI(0, 0, character == U'~' ? tilde_width : 8,
+                    character == U'~' ? tilde_height : character == digit ? digit_height : 16),
+                    character == digit ? digit_x : 0.0f, character == digit ? digit_y : 0.0f, 0.0f});
+            }
+            auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f);
+            font->set_stand_in(U'?');
+            world.render.add_font(name, std::move(font));
+        };
+        const auto use_font = [](rapidjson::Document& d, const StageSummaryText& entry, const std::string& font)
+        {
+            if (entry.detail) { d["menu_style"]["fonts"]["detail"].SetString(font.c_str(), d.GetAllocator()); }
+            else { d["menu_style"]["chrome"]["brand_font"].SetString(font.c_str(), d.GetAllocator()); }
+            d["main_menu"]["fonts"]["weapon_description"].SetString("menu_text_exact");
+            const std::string value = std::string("~") + entry.token;
+            d["menu_text"]["stage"][entry.key].SetString(value.c_str(), d.GetAllocator());
+        };
+        const auto widget = [&](const Presentation& look, const StageSummaryText& entry)
+        {
+            const auto& style = look.menu();
+            const auto& stage = look.main_menu().stage_select;
+            const std::wstring literal = L"~" + std::to_wstring(entry.value);
+            const std::string& font = entry.detail ? style.detail_font : style.brand_font;
+            const auto point = stage.briefing.position + stage.briefing_padding +
+                stage.briefing.spacing * static_cast<float>(entry.row);
+            std::wstring source = stage_summary(look.menu_text(), entry, entry.value);
+            require(source == literal, "Boundary fixture did not format the independent literal arena summary");
+            const auto size = world.render.measure_text(world.render.resolve_sprite_font(font), literal);
+            UiTextDropShadow label(entry.key, source, font, point, &world.render,
+                Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.detail_shadow_offset);
+            source = L"Changed after construction";
+            const auto bounds = mattmath::RectangleF::union_of(mattmath::RectangleF(point, size),
+                mattmath::RectangleF(point + style.detail_shadow_offset, size));
+            require(label.text() == literal && label.text_bounds() == mattmath::RectangleF(point, size) &&
+                label.bounds() == bounds && label.shadow_scale() == 1.0f &&
+                label.shadow_offset() == style.detail_shadow_offset,
+                "Arena summary did not retain literal text, actual role font and unscaled transparent shadow bounds");
+            return bounds;
+        };
+        for (const auto& entry : stage_summary_text)
+        {
+            const std::string field = std::string("stage.") + entry.key;
+            const std::string name = std::string("menu_stage_summary_") + entry.key;
+            const char32_t last_digit = static_cast<char32_t>(U'0' + entry.value);
+            add_font(name + "_width", 581, 20);
+            const auto width = variants.load([&](rapidjson::Document& d) { use_font(d, entry, name + "_width"); });
+            width.validate_resources(world.render, world.audio);
+            const auto width_bounds = widget(width, entry);
+            require(width_bounds.right() == 1852.0f && width_bounds.right() >
+                width.main_menu().stage_select.briefing.position.x + width.main_menu().stage_select.briefing.size.x &&
+                width_bounds.right() + 14.0f == 1866.0f,
+                "Arena summary no longer overhangs the authored panel while touching the outer paper with its expanded card");
+            // Only the last legal value gains a quarter-pixel bearing. Testing
+            // one representative count would miss this complete-output overflow.
+            add_font(name + "_width_over", 581, 20, last_digit, 0.25f);
+            variants.rejects(field, [&](rapidjson::Document& d) { use_font(d, entry, name + "_width_over"); }, &world);
+            add_font(name + "_row", 8, 74);
+            const auto row = variants.load([&](rapidjson::Document& d) { use_font(d, entry, name + "_row"); });
+            row.validate_resources(world.render, world.audio);
+            const auto row_bounds = widget(row, entry);
+            const auto& stage = row.main_menu().stage_select;
+            require(row_bounds.bottom() == stage.briefing.position.y + stage.briefing_padding.y +
+                stage.briefing.spacing.y * static_cast<float>(entry.row + 1),
+                "Arena summary no longer reaches the next authored row with its complete one-pixel shadow");
+            add_font(name + "_row_over", 8, 74, last_digit, 0.0f, 0.25f, 74);
+            variants.rejects(field, [&](rapidjson::Document& d) { use_font(d, entry, name + "_row_over"); }, &world);
+            const auto negative = variants.load([&](rapidjson::Document& d)
+            {
+                use_font(d, entry, name + "_row");
+                d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-1.5f);
+                d["menu_style"]["shadow"]["detail_offset"]["y"].SetFloat(-1.5f);
+            });
+            negative.validate_resources(world.render, world.audio);
+            require(widget(negative, entry).height == 75.5f,
+                "Arena summary discarded the negative transparent shadow from its actual bounds");
+            add_font(name + "_missing", 8, 16, last_digit, 0.0f, 0.0f, 16, true);
+            variants.rejects(field, [&](rapidjson::Document& d) { use_font(d, entry, name + "_missing"); }, &world);
+            variants.rejects(field, [&](rapidjson::Document& d) { use_font(d, entry, "menu_text_limited"); }, &world);
+        }
+        const auto compact = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+            d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
+            d["main_menu"]["fonts"]["weapon_description"].SetString("menu_text_exact");
+        };
+        const auto preview_contact = [&](rapidjson::Document& d)
+        {
+            compact(d);
+            d["main_menu"]["stage_select"]["briefing"]["position"]["x"].SetFloat(1176.0f);
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-32.0f);
+        };
+        const auto touching = variants.load(preview_contact);
+        touching.validate_resources(world.render, world.audio);
+        const auto& stage = touching.main_menu().stage_select;
+        const float text_left = stage.briefing.position.x + stage.briefing_padding.x + touching.menu().detail_shadow_offset.x;
+        require(text_left == 1176.0f && text_left - 14.0f == 1162.0f &&
+            stage.preview_position.x + stage.preview_size.x + touching.menu().rule_height == 1162.0f,
+            "Expanded summary card no longer touches the actual two-pixel preview edge at its inclusive left boundary");
+        variants.rejects("stage.best_of_mode", [&](rapidjson::Document& d)
+        {
+            preview_contact(d);
+            d["main_menu"]["stage_select"]["briefing"]["position"]["x"].SetFloat(1175.75f);
+        }, &world);
+        const auto paper_left = [&](rapidjson::Document& d)
+        {
+            compact(d);
+            auto& select = d["main_menu"]["stage_select"];
+            select["briefing"]["position"]["x"].SetFloat(54.0f);
+            select["preview_position"]["x"].SetFloat(1000.0f);
+            select["preview_size"]["x"].SetFloat(200.0f);
+            select["name_position"]["x"].SetFloat(1000.0f);
+            select["navigation_position"]["x"].SetFloat(1000.0f);
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-20.0f);
+        };
+        const auto left = variants.load(paper_left);
+        left.validate_resources(world.render, world.audio);
+        const auto& left_stage = left.main_menu().stage_select;
+        require(left_stage.briefing.position.x + left_stage.briefing_padding.x +
+            left.menu().detail_shadow_offset.x - 14.0f == 52.0f &&
+            (1920.0f - left.main_menu().stage_box_size.x) / 2.0f + 12.0f == 52.0f &&
+            left_stage.briefing.position.x + left_stage.briefing.size.x < left_stage.preview_position.x - left.menu().rule_height,
+            "Expanded summary left-paper contact lost its literal edge or separate preview arrangement");
+        variants.rejects("stage.best_of_mode", [&](rapidjson::Document& d)
+        {
+            paper_left(d);
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-20.25f);
+        }, &world);
+    }
+
     void check_stage_briefing_text(Variants& variants, World& world)
     {
         for (const auto& entry : stage_briefing_text)
@@ -3569,7 +3844,15 @@ namespace
             exact(d);
             d["main_menu"]["stage_select"]["briefing"]["position"]["y"].SetFloat(-28.0f);
         };
-        variants.load(screen_top).validate_resources(world.render, world.audio);
+        const auto top = variants.load(screen_top);
+        UiTextDropShadow top_label("legacy_briefing_top", L"Fit", "menu_text_exact",
+            top.main_menu().stage_select.briefing.position + top.main_menu().stage_select.briefing_padding,
+            &world.render, Colour::black, top.menu().shadow_colour, top.menu().detail_shadow_offset);
+        require(top_label.bounds().y == 0.0f,
+            "Legacy briefing text no longer touches the inclusive design top at authored y=-28");
+        // The old text contact remains exact, but an authored card above the
+        // outer Stage paper is no longer a globally valid summary fixture.
+        variants.rejects("stage.best_of_mode", screen_top, &world);
         variants.rejects("stage.briefing_label", [&](rapidjson::Document& d)
         {
             screen_top(d);
@@ -3581,7 +3864,13 @@ namespace
             d["main_menu"]["stage_select"]["briefing"]["position"]["x"].SetFloat(-32.0f);
             d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(1.0f);
         };
-        variants.load(screen_left).validate_resources(world.render, world.audio);
+        const auto left = variants.load(screen_left);
+        UiTextDropShadow left_label("legacy_briefing_left", L"Fit", "menu_text_exact",
+            left.main_menu().stage_select.briefing.position + left.main_menu().stage_select.briefing_padding,
+            &world.render, Colour::black, left.menu().shadow_colour, left.menu().detail_shadow_offset);
+        require(left_label.bounds().x == 0.0f,
+            "Legacy briefing text no longer touches the inclusive design left at authored x=-32");
+        variants.rejects("stage.best_of_mode", screen_left, &world);
         variants.rejects("stage.briefing_label", [&](rapidjson::Document& d)
         {
             screen_left(d);
@@ -3864,7 +4153,21 @@ namespace
                 use_hint(d, "menu_stage_hint_footer_edge", key);
                 d["main_menu"]["stage_select"]["briefing"]["size"]["y"].SetFloat(800.0f);
             };
-            variants.load(footer).validate_resources(world.render, world.audio);
+            const auto footer_contact = variants.load(footer);
+            const auto& footer_stage = footer_contact.main_menu().stage_select;
+            UiTextDropShadow hint("legacy_hint_footer", L"~", "menu_stage_hint_footer_edge",
+                footer_stage.briefing.position + footer_stage.briefing_padding + footer_stage.briefing.spacing * 7.0f,
+                &world.render, Colour::black, footer_contact.menu().shadow_colour,
+                footer_contact.menu().detail_shadow_offset);
+            hint.set_scale(0.5f);
+            hint.set_shadow_scale(0.5f);
+            hint.set_shadow_offset(footer_contact.menu().detail_shadow_offset * 0.5f);
+            require(hint.bounds().width == 476.0f && hint.bounds().bottom() == 960.0f &&
+                footer_stage.briefing.position.y + footer_stage.briefing.size.y == 1045.0f,
+                "Legacy width-fitted hint no longer touches its exact footer at the original 800-high panel");
+            // The fitted hint still reaches the footer; its backing card now
+            // exceeds the outer Stage paper, which the new summary guard rejects.
+            variants.rejects("stage.best_of_mode", footer, &world);
             variants.rejects(field, [&](rapidjson::Document& d)
             {
                 footer(d);
@@ -4123,7 +4426,16 @@ namespace
                 exact(d);
                 d["main_menu"]["stage_select"]["briefing"]["position"][edge.axis].SetFloat(edge.position);
             };
-            variants.load(contact).validate_resources(world.render, world.audio);
+            const auto old_contact = variants.load(contact);
+            const auto& old_stage = old_contact.main_menu().stage_select;
+            UiTextDropShadow status("legacy_status_design", L"Fit", "menu_text_exact",
+                old_stage.briefing.position + old_stage.briefing_padding + old_stage.briefing.spacing * 6.0f,
+                &world.render, Colour::black, old_contact.menu().shadow_colour, old_contact.menu().detail_shadow_offset);
+            require(edge.position == -32.0f ? status.bounds().x == 0.0f : status.bounds().right() == 1920.0f,
+                "Legacy status no longer touches its original inclusive design edge with the full shadow");
+            // The literal status contact remains valid in design space; its
+            // off-paper authored card is rejected by the new summary contract.
+            variants.rejects("stage.best_of_mode", contact, &world);
             variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
             {
                 contact(d);
@@ -4886,6 +5198,8 @@ int main(int argc, char** argv)
         check_value_fitting(variants, world);
         check_stage_random_fitting(variants, world);
         check_stage_random_bounds(variants, world);
+        check_stage_summary_text(variants, world, defaults.menu_text());
+        check_stage_summary_bounds(variants, world);
         check_stage_briefing_text(variants, world);
         check_stage_briefing_bounds(variants, world);
         check_stage_status_text(variants, world);
@@ -4910,6 +5224,7 @@ int main(int argc, char** argv)
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
+            "finite authored series/roster templates and expanded-card boundaries, "
             "Pad Sticks exact-token/range/201-value/schema guards, multiline boundaries and adversarial pen/ink extrema, "
             "width-only arena hints and actual PromptBar measurement compatibility.\n";
         return 0;

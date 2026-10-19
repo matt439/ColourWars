@@ -134,6 +134,9 @@ struct MenuStageText
 	std::wstring browse_hint;
 	std::wstring solo_mode;
 	std::wstring single_match_mode;
+	std::wstring best_of_mode;
+	std::wstring solo_roster;
+	std::wstring versus_roster;
 };
 
 // Labels for the per-stage records. The numbers and the joins between the
@@ -209,6 +212,10 @@ struct MenuText
 	const std::wstring& prompt(MenuPrompt prompt) const;
 	const std::wstring& item(MenuItem item) const;
 	std::wstring display_countdown(int seconds) const;
+	// Stage summary domains follow the existing choices: best-of 3/5, and
+	// one solo player or two through four versus players.
+	std::wstring stage_best_of_mode(int best_of) const;
+	std::wstring stage_roster(int players) const;
 	// -1 is unclaimed, 0-3 are pads and 4 is keyboard/mouse. Roster indices
 	// are 0-3 and substitute the canonical badge label, never a device number.
 	std::wstring device_label(int slot) const;

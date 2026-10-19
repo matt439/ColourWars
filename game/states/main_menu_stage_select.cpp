@@ -343,10 +343,9 @@ void MainMenuStageSelect::init()
 	add_briefing("briefing_label", this->text().stage.briefing_label, style.brand_font, 0.0f,
 		this->paper_art_.focus_ink);
 	add_briefing("mode", solo ? this->text().stage.solo_mode : best_of == 1 ?
-		this->text().stage.single_match_mode : L"BEST OF " + std::to_wstring(best_of),
+		this->text().stage.single_match_mode : this->text().stage_best_of_mode(best_of),
 		style.detail_font, 1.0f, this->paper_art_.ink);
-	add_briefing("roster", std::to_wstring(this->player_count()) +
-		(solo ? L" PLAYER" : L" PLAYERS / 2 TEAMS"),
+	add_briefing("roster", this->text().stage_roster(this->player_count()),
 		style.brand_font, 2.0f, this->paper_art_.ink);
 	add_briefing("goal", this->text().stage.goal, style.brand_font, 3.0f, this->paper_art_.focus_ink);
 	add_briefing("objective", solo ?

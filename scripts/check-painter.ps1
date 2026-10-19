@@ -45,6 +45,7 @@ param(
     [switch] $TeamTuneColoursOnly,
     [switch] $WeaponTuneColoursOnly,
     [switch] $MenuLabelsOnly,
+    [switch] $StageSummaryOnly,
     [string] $OutputDirectory
 )
 
@@ -59,7 +60,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -152,7 +153,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
+                $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
                 $_.Name -like 'setup-motion-*-detail.ppm' -or
@@ -381,7 +382,21 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($MenuLabelsOnly) {
+if ($StageSummaryOnly) {
+    $result.scope = 'stage-summary-only'
+    $result.Remove('stage')
+    $result.stages = @('close_quarters', 'movement_course', 'eligible-random-browse-lock-only')
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('bucket', 'sniper', 'sprayer', 'mister')
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('literal-composed-mode-roster-rasters', 'best-of-three-five', 'solo-best-five-precedence', 'single-match-preserved', 'all-four-sparse-rosters', 'captured-font-ids-visible-digit-bearing', 'clear-shadow-bounds', 'actual-browse-lock-unlock-refresh', 'literal-navigation-status-state-guards', 'captured-copy-reopen-reversal', 'private-save-plan-claims-input-rng')
+    $result.input_slots = @(4, 3, 0, 2)
+    $result.inputs = 'Actual Stage Select with public local keyboard events and neutral scripted connected sparse pad snapshots. Four contexts cover solo best-of-five precedence,2P best-of-three,3P best-of-five and4P Single Match. A nested private profile applies Reduce effects and muted volumes, keeping static text responses settled without extra timing updates. No foreground/global input or physical pad.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated compact both-preset probe for menu_text.stage.best_of_mode/solo_roster/versus_roster. Independent literal mode/roster strings and unscaled UiTextDropShadow references use the actual captured detail/brand fonts, positions, paper ink and zero-alpha shadow with retained full shadow bounds; no production summary formatter supplies expectations. Defaults cover every roster count and both best-of values plus solo precedence/Single Match at720/1080. Short old/new templates preserve old pages through actual concrete-to-Random browse, first lock, unlock and return refresh; reopening adopts the new copy and separate font IDs whose numeric bearings visibly differ, and reversal retains the reopened snapshot until another reopen restores defaults. Independent summary rows fit the authored paper and precede following rows; only the existing paper leaf is reused. Match settings/stage/duration/layout, sparse claims/teams/tools, neutral input, exact private save bytes and draw/provisional-action RNG stay unchanged. Exactly112 updates(hard120),60 summary comparisons,64 additional independent literal navigation/status raster guards after32 actual taps,120 CSV data rows with a refresh_state_verified column and8 compact two-row crops. No final Random confirmation, match launch, broad briefing/MenuText matrix, Arena counter/availability text, physical-device, listening, human readability or performance acceptance.'
+}
+elseif ($MenuLabelsOnly) {
     $result.scope = 'menu-labels-only'
     $result.Remove('stage')
     $result.player_counts = @(3, 4)
@@ -955,7 +970,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -1031,6 +1046,7 @@ try {
     elseif ($WeaponTuneColoursOnly) { $probeArguments += 'weapon-tune-colours' }
     elseif ($TeamTuneColoursOnly) { $probeArguments += 'team-tune-colours' }
     elseif ($MenuLabelsOnly) { $probeArguments += 'menu-labels' }
+    elseif ($StageSummaryOnly) { $probeArguments += 'stage-summary' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -1148,7 +1164,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($MenuLabelsOnly) {
+    if ($StageSummaryOnly) {
+        $result.diagnostic = 'Stage summaries passed independent literal mode/roster rasters for all1-4 sparse rosters, BEST OF3/5, solo-bestof5 precedence and Single Match at720/1080; captured detail/brand font IDs with visible numeric-bearing differences, clear full-shadow/paper bounds, old-page actual browse/Random-lock/unlock refresh, reopen adoption and reversal, unchanged plan/claims/private save/input/frozen and provisional RNG. Exactly112 updates,60 summary comparisons,64 independent literal navigation/status raster guards after32 taps,120 CSV rows and8 compact crops. No final Random draw, match launch, broad matrix, Arena counter/count slice, foreground/global input, physical-pad, listening, human readability or performance acceptance.'
+    }
+    elseif ($MenuLabelsOnly) {
         $result.diagnostic = 'Menu labels passed compact720/1080 actual Join/Team/Weapon/Pause/Results/Stick literal rasters, sparse player/device mappings, waiting/explicit claim/reconnect, preserved missing-pad packing/result truncation, captured copy and actual fonts through refresh/assignment/reopen/reversal, fitted Stick value and connection readout, save/settings/RNG and resize checks. Eight small crops and CSV retained. No broad matrix, full match/series, developer command, foreground/global input, physical-pad, listening, human readability or performance acceptance.'
     }
     elseif ($WeaponTuneColoursOnly) {

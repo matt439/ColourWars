@@ -712,9 +712,16 @@ namespace
             d["menu_text"]["headings"]["arena"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
         };
         const auto width = variants.load(width_edge);
-        width.validate_resources(world.render, world.audio);
-        // These headings fit every prior design-area and paper check. Stage's
-        // own paper owns this exact shadow edge and the tall-glyph rejection.
+        UiTextDropShadow heading("legacy_stage_heading", std::wstring(130, L'F'), "setup_exact",
+            width.menu().layout.position, &world.render, Colour::black, width.menu().shadow_colour,
+            width.menu().heading_shadow_offset);
+        require(heading.bounds().right() == 1546.0f &&
+            (1920.0f + width.main_menu().stage_box_size.x) / 2.0f - 14.0f == 1546.0f,
+            "Legacy Stage heading no longer touches the exact 1200-wide paper's inclusive right edge");
+        // The heading contact remains exact, but that narrow paper cannot
+        // contain the authored briefing card required by the new summaries.
+        variants.rejects("menu_text.stage", "best_of_mode", width_edge, &world);
+        // Retain the original heading overflow and tall-glyph diagnostics.
         variants.rejects("menu_text.headings", "arena", [&](rapidjson::Document& d)
         {
             width_edge(d);
