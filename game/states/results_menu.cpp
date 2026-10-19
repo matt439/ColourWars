@@ -234,7 +234,7 @@ void ResultsMenuInitial::init()
 
 	this->winner_ = std::make_unique<UiTextDropShadow>(
 		"winner",
-		end_info.winning_team_string(),
+		end_info.winning_team_string(this->text().results),
 		style.item_font,
 		Vector2F::ZERO,
 		this->render_resources(),

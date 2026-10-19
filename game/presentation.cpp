@@ -501,6 +501,9 @@ namespace
 		{
 			throw std::runtime_error(results.where() + ": round_heading: " + error.what());
 		}
+		text.results.competitive_team_a_wins = read_menu_line(results, "competitive_team_a_wins");
+		text.results.competitive_team_b_wins = read_menu_line(results, "competitive_team_b_wins");
+		text.results.competitive_draw = read_menu_line(results, "competitive_draw");
 		const JsonValue stage = json.object("stage");
 		text.stage.browse_status = read_menu_line(stage, "browse_status");
 		text.stage.locked_status = read_menu_line(stage, "locked_status");
@@ -4334,6 +4337,12 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		throw std::runtime_error(round_where + " must fit unscaled inside the Results paper for every positive int round.");
 	}
+	check_results_centered("competitive_team_a_wins", this->menu_text_.results.competitive_team_a_wins,
+		this->menu_.item_font, results.winner_y);
+	check_results_centered("competitive_team_b_wins", this->menu_text_.results.competitive_team_b_wins,
+		this->menu_.item_font, results.winner_y);
+	check_results_centered("competitive_draw", this->menu_text_.results.competitive_draw,
+		this->menu_.item_font, results.winner_y);
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const

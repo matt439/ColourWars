@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_end_info.h"
+#include "game/presentation.h"
 using namespace labrador;
 
 namespace
@@ -109,7 +110,7 @@ std::wstring LevelEndInfo::team_b_percentage_string() const
 {
 	return L"B " + percentage_text(this->team_b_percentage());
 }
-std::wstring LevelEndInfo::winning_team_string() const
+std::wstring LevelEndInfo::winning_team_string(const MenuResultsText& text) const
 {
 	// A single-team match reports coverage without declaring a winner.
 	if (this->one_team_only())
@@ -120,15 +121,15 @@ std::wstring LevelEndInfo::winning_team_string() const
 	PlayerTeam winning = this->winning_team();
 	if (winning == PlayerTeam::a)
 	{
-		return L"Team A Wins!";
+		return text.competitive_team_a_wins;
 	}
 	else if (winning == PlayerTeam::b)
 	{
-		return L"Team B Wins!";
+		return text.competitive_team_b_wins;
 	}
 	else if (winning == PlayerTeam::none)
 	{
-		return L"Draw!";
+		return text.competitive_draw;
 	}
 	throw std::exception("No winning team");
 }

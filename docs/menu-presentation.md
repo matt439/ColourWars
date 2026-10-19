@@ -1161,7 +1161,7 @@ Fixed palette labels remain in the existing palette data and are still read
 live. Duration/resolution/percentage values, Arena mode/roster summaries,
 connection/readout text, player-specific Pause titles and plain Results labels
 are described below. The numbered Results heading is also data-owned; remaining
-winner and contribution text follows the [remaining text slices](#remaining-text-slices-gap84).
+coverage and contribution text follows the [remaining text slices](#remaining-text-slices-gap84).
 
 ### Stage Select Random display name
 
@@ -2333,6 +2333,57 @@ artifacts, match byte for byte. All eight crops were inspected. Evidence is
 under `out/validation/round-heading-text/`. These checks establish no match
 launch, physical-device, listening, human readability or performance acceptance.
 
+## Competitive winner messages (`GAP#8.4`)
+
+Three required plain fields under `menu_text.results` retain the match's exact
+wording, distinct from the existing series messages:
+
+| Field | Shipped copy |
+|---|---|
+| `competitive_team_a_wins` | `Team A Wins!` |
+| `competitive_team_b_wins` | `Team B Wins!` |
+| `competitive_draw` | `Draw!` |
+
+The normalized printable, nonblank single-line rules apply. Braces are literal
+and no character cap is added. `LevelEndInfo::winning_team_string` receives the
+narrow captured `MenuResultsText` record and returns an owned string. Its
+competitive predicates remain unchanged. The solo branch still returns the
+existing percentage expression followed by ` Painted`; no range, finite-value
+or rounding policy is introduced.
+
+Results uses its captured copy and item font at the original centered
+`results_menu.winner_y`, unscaled with an explicit zero-offset transparent
+shadow. Resource checks measure each field in that font against the existing
+full Results paper. Equality is accepted; no fitting or collision rule is
+added. Copy and font survive source assignment; reopening adopts changes.
+Reveal behavior is retained, including hidden winners on already-revealed
+competitive wins and solo results and the visible draw message in that path.
+
+Validation (2026-10-19): both builds, focused Debug text checks and all 38 CPU
+cases per preset passed, with all 76 case logs populated. Prior assertions
+remain unchanged. Added checks cover the three fields' schema, normalization,
+literal braces, owned text, actual item-font glyphs, inclusive paper edges and
+quarter-unit overflow. Sixty-four independent selection contexts retain the
+old competitive and solo behavior, including negative/nonfinite public inputs,
+the exact percentage expression, unchanged source bits and owned output.
+One existing native reference call now supplies its text snapshot. Both
+isolated published-bank/System-only-PATH startups passed with per-monitor v2
+DPI awareness.
+
+`-CompetitiveWinnerOnly` passed on both presets: 102 updates, 99 readbacks,
+32 comparisons, fourteen actual page openings and fourteen fresh Enter pops.
+Independent literals cover A, B, draw and solo coverage, unchanged heading,
+score and outcome rows, captured copy/item font, reopening and reversal.
+Three brace-only font controls check the custom font. Six observations retain
+the hidden winner policy for already-revealed A/B/solo pages; the draw stays
+visible. Reveal/proceed timing, premature Enter/Escape refusal, zero-update
+resize, full resource validation, frozen Session/setup/private Save/RNG and one
+successful private seed Save per preset are checked. Eight crops contain
+312,480 pixels per preset; all eleven shared files, including ten raw CSV/PPM
+artifacts, match byte for byte. All eight crops were inspected. Evidence is
+under `out/validation/competitive-winner-text/`. These checks establish no match
+launch, physical-device, listening, human readability or performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
@@ -2341,10 +2392,11 @@ above, shared menu device/roster labels, packed missing-pad lists and Arena
 briefing mode/roster summaries, Arena numbering and Random availability, and
 preference percentages, duration units/Default notation, resolution values and
 End continuation labels, the three plain Results labels, four fixed Session
-result messages, the series score line and numbered Results heading are implemented.
+result messages, the series score line, numbered Results heading and three
+competitive winner messages are implemented.
 The next slice is:
 
-1. **Session and results:** winner/solo-coverage copy and contribution/team
+1. **Session and results:** solo-coverage copy and contribution/team
    descriptions. Retain reveal timing and solo/series
    distinctions.
 

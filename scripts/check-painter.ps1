@@ -19,6 +19,7 @@ param(
     [switch] $SessionResultOnly,
     [switch] $SeriesScoreOnly,
     [switch] $RoundHeadingOnly,
+    [switch] $CompetitiveWinnerOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -72,7 +73,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -165,7 +166,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or $_.Name -like 'competitive-winner-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -315,6 +316,9 @@ function Write-ContactSheet {
         $roundHeading = @($images | Where-Object { $_.name -like 'round-heading-*' })
         Write-ContactSheetPages -Images $roundHeading -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-round-heading-contact'
+        $competitiveWinner = @($images | Where-Object { $_.name -like 'competitive-winner-*' })
+        Write-ContactSheetPages -Images $competitiveWinner -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-competitive-winner-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -425,7 +429,22 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($RoundHeadingOnly) {
+if ($CompetitiveWinnerOnly) {
+    $result.scope = 'competitive-winner-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @(1, 2)
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('three-literal-competitive-winner-labels', 'solo-copy-and-visibility-control', 'actual-results-reveal-and-proceed', 'captured-copy-and-font', 'reopen-and-reversal', 'frozen-session-setup-save-and-rng', 'resize')
+    $result.input_slots = @(4)
+    $result.inputs = 'Actual ResultsMenuInitial with the normal GamepadReader and public local keyboard events through StateContext; local proceed callbacks do not launch a match.'
+    $result.audio = 'Focused Results page fixture; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated competitive winner text leaf. Independent complete literal copy and raw-font references compare Team A, Team B and Draw winner labels, with unchanged solo copy and explicit hidden-winner controls. Captured copy/item-font assignment, retained pages, reopening/reversal, actual reveal/proceed transitions and frozen Session/setup/private Save/RNG retain the existing unscaled zero-offset layout. Exactly 102 StateContext updates, 99 readbacks, 32 CSV rows, fourteen page openings and proceed pops, three font negative controls, zero-update resize, eight compact crops (312480 pixels) and one successful private seed Save are checked with exact schema, case, metric and RGB-payload gates. Both presets run the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+}
+elseif ($RoundHeadingOnly) {
     $result.scope = 'round-heading-only'
     $result.Remove('stage')
     $result.stages = @()
@@ -1267,6 +1286,7 @@ try {
     elseif ($SessionResultOnly) { $probeArguments += 'session-result' }
     elseif ($SeriesScoreOnly) { $probeArguments += 'series-score' }
     elseif ($RoundHeadingOnly) { $probeArguments += 'round-heading' }
+    elseif ($CompetitiveWinnerOnly) { $probeArguments += 'competitive-winner' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -1422,6 +1442,145 @@ try {
     if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
+    }
+    if ($CompetitiveWinnerOnly) {
+        $competitiveWinnerSummary = Get-Content -LiteralPath (Join-Path $captures 'competitive-winner-summary.json') -Raw | ConvertFrom-Json
+        $competitiveWinnerRows = @(Import-Csv -LiteralPath (Join-Path $captures 'competitive-winner.csv'))
+        $competitiveWinnerSessions = @('competitive-a', 'competitive-b', 'competitive-draw')
+        $competitiveWinnerExpectedPairs = @(
+            foreach ($case in @('legacy-initial', 'legacy-fill-crossed', 'legacy-details', 'legacy-prompt-crossed')) {
+                "$case|competitive-a"
+            }
+            foreach ($session in $competitiveWinnerSessions) { "legacy-ready|$session" }
+            'revealed-initial|competitive-draw'
+            'solo-control|solo'
+            foreach ($case in @('old-primary', 'retained-old', 'reopened-new', 'retained-new')) {
+                foreach ($session in $competitiveWinnerSessions) { "$case|$session" }
+            }
+            foreach ($case in @('old-1080', 'old-return720', 'new-1080', 'new-return720', 'restored-default')) {
+                "$case|competitive-a"
+            }
+            foreach ($case in @('already-revealed-initial', 'already-revealed-ready')) {
+                foreach ($session in @('competitive-a', 'competitive-b', 'solo')) { "$case|$session" }
+            }
+        )
+        $competitiveWinnerExpectedColumns = @('case', 'session', 'width', 'height', 'players', 'best_of', 'target',
+            'complete', 'round', 'a_wins', 'b_wins', 'revealed', 'details_visible', 'proceed_visible', 'winner_visible',
+            'hidden_policy_control', 'expected_value', 'font', 'raw_width', 'raw_height', 'x', 'y', 'scale',
+            'shadow_x', 'shadow_y', 'score_literal', 'outcome_literal', 'heading_literal', 'winner_match',
+            'row_neighbor_match', 'heading_match', 'frozen_session_setup_save_rng')
+        if ($competitiveWinnerSummary.outcome -ne 'passed' -or $competitiveWinnerSummary.scope -ne 'competitive-winner-only' -or
+            $competitiveWinnerSummary.updates -ne 102 -or $competitiveWinnerSummary.readbacks -ne 99 -or
+            $competitiveWinnerSummary.csv_rows -ne 32 -or $competitiveWinnerSummary.compact_crops -ne 8 -or
+            $competitiveWinnerSummary.page_openings -ne 14 -or $competitiveWinnerSummary.proceed_pops -ne 14 -or
+            $competitiveWinnerSummary.font_negative_controls -ne 3 -or $competitiveWinnerSummary.resize_updates -ne 0 -or
+            $competitiveWinnerSummary.save_calls -ne 1 -or $competitiveWinnerSummary.crop_pixels -ne 312480 -or
+            $competitiveWinnerRows.Count -ne 32 -or
+            (($competitiveWinnerRows[0].PSObject.Properties.Name) -join '|') -ne ($competitiveWinnerExpectedColumns -join '|') -or
+            (($competitiveWinnerRows | ForEach-Object { "$($_.case)|$($_.session)" } | Sort-Object) -join ';') -ne
+                (($competitiveWinnerExpectedPairs | Sort-Object) -join ';')) {
+            throw 'The Competitive winner leaf does not match its frozen summary, CSV schema, cases or update/readback/proceed budgets.'
+        }
+        $competitiveWinnerState = @{
+            'competitive-a' = @('2', '3', '2', 'false', '1', '1', '0', 'Wins: A 1 - B 0  |  First to 2', 'Series continues', 'Round 1')
+            'competitive-b' = @('2', '3', '2', 'false', '1', '0', '1', 'Wins: A 0 - B 1  |  First to 2', 'Series continues', 'Round 1')
+            'competitive-draw' = @('2', '3', '2', 'false', '1', '0', '0', 'Wins: A 0 - B 0  |  First to 2', 'Draw - no win awarded', 'Round 1')
+            'solo' = @('1', '1', '1', 'true', '1', '0', '0', 'Wins: A 0 - B 0  |  First to 1', 'Team B wins the series!', 'Results')
+        }
+        $competitiveWinnerDefaultValues = @{
+            'competitive-a' = 'Team A Wins!'; 'competitive-b' = 'Team B Wins!'; 'competitive-draw' = 'Draw!'
+            'solo' = '72.0% Painted'
+        }
+        $competitiveWinnerOldValues = @{
+            'competitive-a' = 'A won~ {A}'; 'competitive-b' = 'B won~ {B}'; 'competitive-draw' = 'Draw~ {D}'
+        }
+        $competitiveWinnerNewValues = @{
+            'competitive-a' = 'A wins {A}'; 'competitive-b' = 'B wins {B}'; 'competitive-draw' = 'Even {D}'
+            'solo' = '72.0% Painted'
+        }
+        foreach ($row in $competitiveWinnerRows) {
+            $expectedState = $competitiveWinnerState[$row.session]
+            $expectedWidth = if ($row.case -in @('old-1080', 'new-1080')) { '1920' } else { '1280' }
+            $expectedHeight = if ($expectedWidth -eq '1920') { '1080' } else { '720' }
+            $hiddenPolicyControl = $row.case -in @('already-revealed-initial', 'already-revealed-ready')
+            $expectedHiddenPolicy = if ($hiddenPolicyControl) { 'true' } else { 'false' }
+            $expectedRevealed = if ($row.session -eq 'competitive-draw' -or $hiddenPolicyControl) { 'true' } else { 'false' }
+            $expectedDetails = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed')) { 'false' } else { 'true' }
+            $expectedProceed = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed', 'legacy-details',
+                'legacy-prompt-crossed', 'revealed-initial', 'already-revealed-initial')) { 'false' } else { 'true' }
+            $expectedWinnerVisible = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed') -or $hiddenPolicyControl) { 'false' } else { 'true' }
+            $newCopy = $row.case -in @('reopened-new', 'retained-new', 'new-1080', 'new-return720', 'solo-control') -or $hiddenPolicyControl
+            $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
+            $expectedValue = if ($newCopy) { $competitiveWinnerNewValues[$row.session] }
+                elseif ($oldCopy) { $competitiveWinnerOldValues[$row.session] } else { $competitiveWinnerDefaultValues[$row.session] }
+            $expectedFont = if ($newCopy) { 'competitive_winner_braces' } else { 'gill_sans_mt_bold_48' }
+            if ($row.width -ne $expectedWidth -or $row.height -ne $expectedHeight -or
+                $row.players -ne $expectedState[0] -or $row.best_of -ne $expectedState[1] -or
+                $row.target -ne $expectedState[2] -or $row.complete -ne $expectedState[3] -or
+                $row.round -ne $expectedState[4] -or $row.a_wins -ne $expectedState[5] -or $row.b_wins -ne $expectedState[6] -or
+                $row.score_literal -cne $expectedState[7] -or $row.outcome_literal -cne $expectedState[8] -or
+                $row.heading_literal -cne $expectedState[9] -or
+                $row.revealed -ne $expectedRevealed -or $row.details_visible -ne $expectedDetails -or
+                $row.proceed_visible -ne $expectedProceed -or $row.winner_visible -ne $expectedWinnerVisible -or
+                $row.hidden_policy_control -ne $expectedHiddenPolicy -or
+                $row.expected_value -cne $expectedValue -or $row.font -ne $expectedFont -or
+                $row.scale -ne '1' -or $row.shadow_x -ne '0' -or $row.shadow_y -ne '0' -or
+                $row.winner_match -ne 'true' -or $row.row_neighbor_match -ne 'true' -or $row.heading_match -ne 'true' -or
+                $row.frozen_session_setup_save_rng -ne 'true') {
+                throw "Competitive winner case $($row.case)/$($row.session) changed its literal winner, ledger, reveal, capture or geometry contract."
+            }
+            foreach ($metric in @('raw_width', 'raw_height', 'x', 'y')) {
+                $value = 0.0
+                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
+                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
+                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
+                    ($metric -in @('raw_width', 'raw_height') -and $value -le 0.0) -or
+                    ($metric -in @('x', 'y') -and $value -lt 0.0)) {
+                    throw "Competitive winner case $($row.case)/$($row.session) contains an invalid $metric."
+                }
+            }
+        }
+        $competitiveWinnerExpectedCrops = [ordered]@{
+            'competitive-winner-a.ppm' = @(480, 62)
+            'competitive-winner-b.ppm' = @(480, 62)
+            'competitive-winner-draw.ppm' = @(480, 62)
+            'competitive-winner-solo.ppm' = @(480, 62)
+            'competitive-winner-old-720.ppm' = @(480, 62)
+            'competitive-winner-new-720.ppm' = @(480, 62)
+            'competitive-winner-old-1080.ppm' = @(720, 93)
+            'competitive-winner-new-1080.ppm' = @(720, 93)
+        }
+        $competitiveWinnerCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'competitive-winner-*.ppm' -File)
+        $competitiveWinnerExpectedNames = @($competitiveWinnerExpectedCrops.Keys) + @('competitive-winner.csv', 'competitive-winner-summary.json')
+        $competitiveWinnerNames = @(Get-ChildItem -LiteralPath $captures -Filter 'competitive-winner*' -File | Select-Object -ExpandProperty Name)
+        if ($competitiveWinnerCrops.Count -ne 8 -or
+            (($competitiveWinnerNames | Sort-Object) -join '|') -ne (($competitiveWinnerExpectedNames | Sort-Object) -join '|')) {
+            throw 'The Competitive winner leaf emitted unexpected or missing compact crops, CSV or summary files.'
+        }
+        foreach ($crop in $competitiveWinnerCrops) {
+            $size = $competitiveWinnerExpectedCrops[$crop.Name]
+            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
+            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
+            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
+                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
+                throw "Competitive winner crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
+            }
+        }
+        $competitiveWinnerSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
+        $competitiveWinnerSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        if ($competitiveWinnerSaveCalls -ne 1 -or $competitiveWinnerSaveSuccesses -ne 1) {
+            throw 'The Competitive winner leaf must perform exactly its one successful private seed Save.'
+        }
+        $result['observed_counts'] = [ordered]@{
+            fixture = $competitiveWinnerSummary
+            updates = 102
+            readbacks = 99
+            csv_rows = 32
+            crops = 8
+            private_save_calls = $competitiveWinnerSaveCalls
+            successful_private_saves = $competitiveWinnerSaveSuccesses
+        }
     }
     if ($RoundHeadingOnly) {
         $roundHeadingSummary = Get-Content -LiteralPath (Join-Path $captures 'round-heading-summary.json') -Raw | ConvertFrom-Json
@@ -2497,7 +2656,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($RoundHeadingOnly) {
+    if ($CompetitiveWinnerOnly) {
+        $result.diagnostic = 'Competitive winner text passed independent complete Team A, Team B and Draw labels, unchanged solo copy and explicit hidden-winner controls. Captured copy/item-font assignment, retained pages, reopening/reversal, actual reveal/proceed transitions, frozen Session/setup/private Save/RNG and zero-update resize passed. Exactly 102 updates, 99 readbacks, 32 CSV rows, fourteen page openings and proceed pops, three font negative controls, eight compact crops (312480 pixels) and one successful private seed Save. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    }
+    elseif ($RoundHeadingOnly) {
         $result.diagnostic = 'Round heading text passed independent complete literal headings on actual all-draw Session rounds 1, 10 and 100, plus the unchanged single-match heading under the replacement template/font. Captured prefix/suffix template and heading-font assignment, retained pages, reopening/reversal, unchanged literal score/outcome controls, actual reveal/proceed transitions, frozen Session/setup/private Save/RNG and zero-update resize passed. Exactly 66 updates, 81 readbacks, 26 CSV rows, eleven page openings and proceed pops, three font negative controls, eight compact crops (722400 pixels) and one successful private seed Save. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
     }
     elseif ($SeriesScoreOnly) {

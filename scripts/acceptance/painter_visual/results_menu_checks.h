@@ -225,7 +225,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
         }
         require(panel.contains(heading) && heading.bottom() < look.winner_y,
             "Results heading escapes the paper or overlaps the winner line");
-        const RectangleF winner = centered(item_font, fixture.info.winning_team_string(), look.winner_y);
+        const RectangleF winner = centered(item_font, fixture.info.winning_team_string(presentation.menu_text().results), look.winner_y);
         require(panel.contains(winner) && winner.bottom() < look.session_score_y,
             "Results winner/coverage line escapes the paper or overlaps the series ledger");
         if (fixture.session.is_series())

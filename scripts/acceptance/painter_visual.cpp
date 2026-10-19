@@ -2609,6 +2609,7 @@ namespace
 #include "scripts/acceptance/painter_visual/session_result_checks.h"
 #include "scripts/acceptance/painter_visual/series_score_checks.h"
 #include "scripts/acceptance/painter_visual/round_heading_checks.h"
+#include "scripts/acceptance/painter_visual/competitive_winner_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 #include "scripts/acceptance/painter_visual/team_setup_checks.h"
 #include "scripts/acceptance/painter_visual/remembered_setup_checks.h"
@@ -2646,7 +2647,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
             std::wstring(argv[3]) == L"percentage-text" || std::wstring(argv[3]) == L"feedback-tune-colours" ||
             std::wstring(argv[3]) == L"exposed-colour-alpha" || std::wstring(argv[3]) == L"duration-text" ||
-            std::wstring(argv[3]) == L"resolution-text" || std::wstring(argv[3]) == L"end-continuation" || std::wstring(argv[3]) == L"results-text" || std::wstring(argv[3]) == L"session-result" || std::wstring(argv[3]) == L"series-score" || std::wstring(argv[3]) == L"round-heading" ||
+            std::wstring(argv[3]) == L"resolution-text" || std::wstring(argv[3]) == L"end-continuation" || std::wstring(argv[3]) == L"results-text" || std::wstring(argv[3]) == L"session-result" || std::wstring(argv[3]) == L"series-score" || std::wstring(argv[3]) == L"round-heading" || std::wstring(argv[3]) == L"competitive-winner" ||
             std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"remembered-setup" ||
             std::wstring(argv[3]) == L"remembered-setup-read" || std::wstring(argv[3]) == L"connection-text" ||
             std::wstring(argv[3]) == L"stick-readouts" || std::wstring(argv[3]) == L"team-focus" || std::wstring(argv[3]) == L"team-tune-colours" || std::wstring(argv[3]) == L"weapon-tune-colours" || std::wstring(argv[3]) == L"stage-summary" || std::wstring(argv[3]) == L"menu-labels" ||
@@ -2654,7 +2655,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|tune-colours|feedback-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|tune-colours|feedback-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2689,6 +2690,7 @@ int wmain(int argc, wchar_t** argv)
         const bool session_result_only = argc == 4 && std::wstring(argv[3]) == L"session-result";
         const bool series_score_only = argc == 4 && std::wstring(argv[3]) == L"series-score";
         const bool round_heading_only = argc == 4 && std::wstring(argv[3]) == L"round-heading";
+        const bool competitive_winner_only = argc == 4 && std::wstring(argv[3]) == L"competitive-winner";
         const bool menu_labels_only = argc == 4 && std::wstring(argv[3]) == L"menu-labels";
         const bool stage_summary_only = argc == 4 && std::wstring(argv[3]) == L"stage-summary";
 #if !COLOURWARS_DEV_TOOLS
@@ -2697,6 +2699,7 @@ int wmain(int argc, wchar_t** argv)
         require(!weapon_tune_colours_only, "WeaponTuneColoursOnly requires a Debug build");
 #endif
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        require(!competitive_winner_only, "CompetitiveWinnerOnly requires the normal gamepad reader");
         require(!round_heading_only, "RoundHeadingOnly requires the normal gamepad reader");
         require(!series_score_only, "SeriesScoreOnly requires the normal gamepad reader");
         require(!session_result_only, "SessionResultOnly requires the normal gamepad reader");
@@ -2761,6 +2764,11 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (competitive_winner_only)
+        {
+            competitive_winner_checks(app, canvas, tuning, presentation, output);
+            return 0;
+        }
         if (round_heading_only)
         {
             round_heading_checks(app, canvas, tuning, presentation, output);

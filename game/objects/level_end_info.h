@@ -6,6 +6,8 @@
 #include "game/objects/team_colour.h"
 #include "game/objects/player_team.h"
 
+struct MenuResultsText;
+
 // A percentage as the results show it: one decimal place, truncated, then "%".
 std::wstring percentage_text(float percentage);
 // The number percentage_text shows, in tenths (68.4% is 684), so a comparison
@@ -35,7 +37,7 @@ struct LevelEndInfo
 	float team_b_percentage() const;
 	std::wstring team_a_percentage_string() const;
 	std::wstring team_b_percentage_string() const;
-	std::wstring winning_team_string() const;
+	std::wstring winning_team_string(const MenuResultsText& text) const;
 
 	// Whether only one team participated; results then show coverage instead
 	// of a competitive paint share.
