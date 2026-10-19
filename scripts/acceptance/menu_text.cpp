@@ -349,6 +349,7 @@ namespace
         require(text.values.percentage == L"{value}%", "Default setting percentage template changed");
         require(text.values.duration_minutes == L"{value} min" && text.values.duration_default == L"Default ({value})",
             "Default match-duration templates changed");
+        require(text.values.resolution == L"{width}x{height}", "Default resolution template changed");
         require(text.brand == brand && text.solo_practice_hint == practice_hint && text.home_subtitle == home_subtitle &&
             text.options_palette_timing == palette_timing &&
             text.display_trial_countdown == L"Reverting in {seconds}s" &&
@@ -518,6 +519,7 @@ namespace
         required("values", "percentage");
         required("values", "duration_minutes");
         required("values", "duration_default");
+        required("values", "resolution");
         for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
         for (const auto& entry : end_text) { required("end", entry.key); }
         for (const auto& entry : record_text) { required("records", entry.key); }
@@ -6012,6 +6014,236 @@ namespace
         require(long_supported.menu_text().setting_duration(240.0f, false) == std::wstring(512, L'W') + L"4",
             "Duration formatter truncated supported authored text or imposed an unrelated length cap");
     }
+    void check_setting_resolution_resources(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const char* name, int eight_width, int eight_height,
+            char32_t missing = U'\0', bool zero_resolution = false, float eight_offset = 0.0f)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                if (character == missing) { continue; }
+                const bool eight = character == U'8';
+                const bool zero = zero_resolution && ((character >= U'0' && character <= U'9') || character == U'x');
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, zero ? 0 : eight ? eight_width : 8,
+                    eight ? eight_height : 16), eight ? eight_offset : 0.0f, 0.0f, 0.0f });
+            }
+            auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f);
+            font->set_stand_in(U'?'); world.render.add_font(name, std::move(font));
+        };
+        add_font("menu_resolution_width", 2000, 16);
+        add_font("menu_resolution_height", 8, 200);
+        add_font("menu_resolution_both", 2000, 2000);
+        add_font("menu_resolution_missing9", 8, 16, U'9');
+        add_font("menu_resolution_zero", 8, 16, U'\0', true);
+        add_font("menu_resolution_nonfinite", 8, 16, U'\0', false, std::numeric_limits<float>::infinity());
+        const auto check_row = [&](const Presentation& look, bool width_limited, bool height_limited)
+        {
+            const MainMenuPresentation& main = look.main_menu(); const MenuStyle& style = look.menu();
+            const MenuPaperArtPresentation art = options_art(main);
+            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, style.footer_y) - main.options_box_size) / 2.0f,
+                main.options_box_size);
+            const mattmath::Vector2F value_position(main.options_value_x, main.options_position.y);
+            const mattmath::Vector2F limit(paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x,
+                main.options_spacing.y - art.focus_padding.y * 2.0f);
+            require(value_position == mattmath::Vector2F(820.0f, 220.0f) && limit == mattmath::Vector2F(930.0f, 86.0f),
+                "Resolution fixture no longer exercises the actual Options value column and row");
+            const FontHandle font_handle = world.render.resolve_sprite_font(style.item_font);
+            const std::wstring expected = L"1280x720";
+            const auto measured = world.render.measure_text(font_handle, expected);
+            float expected_scale = 1.0f;
+            if (measured.x > 930.0f) { expected_scale = 930.0f / measured.x; }
+            require(width_limited == (expected_scale < 1.0f) &&
+                height_limited == (measured.y * expected_scale > 86.0f),
+                "Resolution font does not independently exercise its claimed width-then-height fitting path");
+            if (measured.y * expected_scale > 86.0f) { expected_scale = 86.0f / measured.y; }
+            int adjustments = 0;
+            OptionRow row("resolution", L"Resolution", main.options_position, value_position, style, art.ink, &world.render,
+                [&](Direction direction) { adjustments += direction == Direction::right ? 1 : -1; }, &art, limit);
+            UiText* value = row_text(row, "resolution_value"); UiText* label = row_text(row, "resolution_label");
+            require(value != nullptr && label != nullptr, "Resolution row lost its actual plain-ink OptionRow children");
+            const auto retained_label = label->bounds();
+            std::wstring formatted = look.menu_text().setting_resolution(1280, 720);
+            require(formatted == expected, "Resolution fitting oracle lost its independent literal");
+            row.set_value(formatted); formatted = L"Changed after set_value";
+            const auto bounds = value->bounds();
+            require(value->text() == expected && bounds.position() == value_position && label->bounds() == retained_label &&
+                std::abs(bounds.width - measured.x * expected_scale) <= 0.01f &&
+                std::abs(bounds.height - measured.y * expected_scale) <= 0.01f &&
+                bounds.width > 0.0f && bounds.height > 0.0f && bounds.width <= 930.01f && bounds.height <= 86.01f,
+                "Resolution OptionRow lost copied text, its fixed column/label or proportional fitting");
+            auto padded = bounds; padded.inflate(art.focus_padding);
+            require(paper.contains(padded) && bounds.height + art.focus_padding.y * 2.0f <= main.options_spacing.y + 0.01f,
+                "Resolution value or focus padding escaped the actual Options paper/row");
+            if (height_limited) { require(std::abs(bounds.height - 86.0f) <= 0.01f, "Resolution height fitting lost inclusive row contact"); }
+            else if (width_limited) { require(std::abs(bounds.width - 930.0f) <= 0.01f, "Resolution width fitting lost inclusive column contact"); }
+            else { require(bounds == mattmath::RectangleF(value_position, measured), "Short resolution value was enlarged"); }
+            row.set_value(look.menu_text().setting_resolution(1, 1));
+            require(value->text() == L"1x1" && value->bounds() == mattmath::RectangleF(value_position,
+                world.render.measure_text(font_handle, L"1x1")) && label->bounds() == retained_label,
+                "Short resolution retained the previous long/tall shrink scale or changed its label");
+            row.adjust(Direction::right); require(adjustments == 1, "Resolution row lost its right adjustment callback");
+            row.adjust(Direction::left); require(adjustments == 0, "Resolution row lost its left adjustment callback");
+            row.set_hidden(true); DrawList no_device; row.draw(no_device);
+        };
+        const auto defaults = variants.load([](rapidjson::Document&) {});
+        defaults.validate_resources(world.render, world.audio); check_row(defaults, false, false);
+        for (int mode = 0; mode < 3; ++mode)
+        {
+            const char* names[]{ "menu_resolution_width", "menu_resolution_height", "menu_resolution_both" };
+            const auto look = variants.load([&](rapidjson::Document& d)
+                { d["menu_style"]["fonts"]["item"].SetString(names[mode], d.GetAllocator()); });
+            look.validate_resources(world.render, world.audio);
+            const auto raw = world.render.measure_text(world.render.resolve_sprite_font(names[mode]), L"1280x720");
+            require(raw == (mode == 0 ? mattmath::Vector2F(2056.0f, 20.0f) : mode == 1 ?
+                mattmath::Vector2F(64.0f, 200.0f) : mattmath::Vector2F(2056.0f, 2000.0f)),
+                "Adversarial resolution glyph fixture changed its independent literal dimensions");
+            check_row(look, mode != 1, mode != 0);
+        }
+        for (const char* font_name : { "menu_resolution_missing9", "menu_resolution_zero", "menu_resolution_nonfinite" })
+        {
+            variants.rejects("values.resolution", [&](rapidjson::Document& d)
+                { d["menu_style"]["fonts"]["item"].SetString(font_name, d.GetAllocator()); }, &world);
+        }
+        require(world.render.font(world.render.resolve_sprite_font("menu_resolution_missing9"))->contains(U'?') &&
+            !world.render.font(world.render.resolve_sprite_font("menu_resolution_missing9"))->contains(U'9'),
+            "Resolution decimal-glyph fixture lost its stand-in or missing digit");
+        require(world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'?') &&
+            !world.render.font(world.render.resolve_sprite_font("menu_text_limited"))->contains(U'~'),
+            "Resolution literal-glyph fixture lost its stand-in or missing tilde");
+        variants.rejects("values.resolution", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["menu_text"]["values"]["resolution"].SetString("~{width}x{height}");
+        }, &world);
+        const auto separate_controls = variants.load([](rapidjson::Document& d)
+        {
+            d["controls_settings"]["item_font"].SetString("menu_text_limited");
+            d["menu_text"]["values"]["resolution"].SetString("~{width}x{height}");
+        });
+        separate_controls.validate_resources(world.render, world.audio);
+        const auto long_supported = variants.load([](rapidjson::Document& d)
+        {
+            const std::string words = std::string(512, 'W') + "{width}x{height}";
+            d["menu_text"]["values"]["resolution"].SetString(words.c_str(), d.GetAllocator());
+        });
+        long_supported.validate_resources(world.render, world.audio);
+        const MenuPaperArtPresentation art = options_art(long_supported.main_menu());
+        OptionRow long_row("long_resolution", L"Resolution", { 280.0f, 220.0f }, { 820.0f, 220.0f },
+            long_supported.menu(), art.ink, &world.render, {}, &art, { 930.0f, 86.0f });
+        long_row.set_value(long_supported.menu_text().setting_resolution(1, 1));
+        const UiText* long_value = row_text(long_row, "long_resolution_value");
+        require(long_value != nullptr && long_value->text() == std::wstring(512, L'W') + L"1x1" &&
+            std::abs(long_value->bounds().width - 930.0f) <= 0.01f && long_value->bounds().height < 86.0f,
+            "Long supported resolution template was truncated or failed width-only fitting");
+        // Preserve the existing value diagnostic before the appended resolution
+        // guard when the shared item font cannot draw both authored literals.
+        variants.rejects("values.on", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["menu_text"]["values"]["on"].SetString("~");
+            d["menu_text"]["values"]["resolution"].SetString("~{width}x{height}");
+        }, &world);
+        variants.rejects("values.duration_minutes", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["menu_text"]["values"]["duration_minutes"].SetString("~{value}");
+            d["menu_text"]["values"]["resolution"].SetString("~{width}x{height}");
+        }, &world);
+        Presentation mutated = defaults;
+        const_cast<MenuText&>(mutated.menu_text()).values.resolution = L"{he{width}ight}";
+        bool contextual = false;
+        try { mutated.validate_resources(world.render, world.audio); }
+        catch (const std::runtime_error& error)
+        { contextual = std::string(error.what()).find("menu_text.values.resolution") != std::string::npos; }
+        require(contextual, "Direct malformed resolution template escaped resource validation or lost its named role");
+    }
+
+    void check_setting_resolution_text(Variants& variants, const MenuText& defaults)
+    {
+        struct ResolutionExample { int width; int height; const wchar_t* label; };
+        const ResolutionExample examples[]{
+            { 1280, 720, L"1280x720" }, { 1920, 1080, L"1920x1080" },
+            { 2560, 1440, L"2560x1440" }, { 3840, 2160, L"3840x2160" },
+            { 1, 1, L"1x1" }, { 801, 601, L"801x601" }, { 12345, 67890, L"12345x67890" },
+            { std::numeric_limits<int>::max(), 1, L"2147483647x1" },
+            { 1, std::numeric_limits<int>::max(), L"1x2147483647" },
+            { std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), L"2147483647x2147483647" }
+        };
+        for (const auto& example : examples)
+        {
+            require(defaults.setting_resolution(example.width, example.height) == example.label,
+                "Resolution formatter changed decimal dimensions, separator/order or the full positive integer domain");
+        }
+        const auto rejects_format = [](auto action)
+        {
+            bool refused = false;
+            try { action(); }
+            catch (const std::invalid_argument&) { refused = true; }
+            require(refused, "Invalid resolution dimensions or directly mutated template formatted silently");
+        };
+        for (const int invalid : { 0, -1, std::numeric_limits<int>::min() })
+        {
+            rejects_format([&] { defaults.setting_resolution(invalid, 720); });
+            rejects_format([&] { defaults.setting_resolution(1280, invalid); });
+            rejects_format([&] { defaults.setting_resolution(invalid, invalid); });
+        }
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["values"]["resolution"].SetString(
+                "  {height}\xC2\xA0\xE2\x80\x9C" "high\xE2\x80\x9D\xE2\x80\x94" "{width}\xE2\x80\xA6  ");
+        });
+        require(normalized.menu_text().values.resolution == L"  {height} \"high\"-{width}...  " &&
+            normalized.menu_text().setting_resolution(801, 601) == L"  601 \"high\"-801...  ",
+            "Resolution template lost normalized punctuation, authored outer spacing or reversed token order");
+        const auto literals = variants.load([](rapidjson::Document& d)
+            { d["menu_text"]["values"]["resolution"].SetString("H={height}% W={width}%%"); });
+        require(literals.menu_text().setting_resolution(1, 23) == L"H=23% W=1%%",
+            "Resolution template treated literal percent signs as another formatting language");
+        for (const char* invalid : { "   ", " \xC2\xA0 ", "{width}x{height}\n", "{width}x{height}\r", "{width}x{height}\r\n",
+            "{width}x{height}\t", "{width}x{height}\x01", "{width}x{height}\x7f", "{width}x{height}caf\xC3\xA9",
+            "{width}x{height}\xF0\x9F\x8E\xA8", "{width}x{height}\xC3\x28", "No tokens", "{width}", "{height}",
+            "{width}{width}{height}", "{width}{height}{height}", "{Width}{height}", "{width }{height}",
+            "{{width}}{height}", "{width}{unknown}{height}", "{width}{height", "width}{height}",
+            "{width}{height}}", "{width}{height}{", "{he{width}ight}", "{wi{width}dth}{height}", "{width}{he{height}ight}" })
+        {
+            variants.rejects("values.resolution", [&](rapidjson::Document& d)
+                { d["menu_text"]["values"]["resolution"].SetString(invalid, d.GetAllocator()); });
+        }
+        for (int type = 0; type < 3; ++type)
+        {
+            variants.rejects("values.resolution", [&](rapidjson::Document& d)
+            {
+                auto& field = d["menu_text"]["values"]["resolution"];
+                if (type == 0) { field.SetArray(); }
+                else if (type == 1) { field.SetObject(); }
+                else { field.SetInt(1280); }
+            });
+        }
+        variants.rejects("values.resolution", [](rapidjson::Document& d)
+        {
+            const std::string nul("{width}x{height}\0tail", 21);
+            d["menu_text"]["values"]["resolution"].SetString(nul.data(), static_cast<rapidjson::SizeType>(nul.size()), d.GetAllocator());
+        });
+        for (const wchar_t* invalid : { L"", L"   ", L"{width}", L"{height}", L"{width}{width}{height}",
+            L"{width}{height}{height}", L"{Width}{height}", L"{{width}}{height}", L"{width}{height}}", L"{width}{height}{",
+            L"{width}{height", L"{width}{unknown}{height}", L"{he{width}ight}", L"{wi{width}dth}{height}", L"{width}{he{height}ight}",
+            L"{width}{height}\n", L"{width}{height}\r", L"{width}{height}\t", L"{width}{height}\x01", L"{width}{height}\x7f",
+            L"{width}{height}\u00e9", L"{width}{height}\u00a0", L"{width}{height}\u2014" })
+        {
+            MenuText mutated = defaults; mutated.values.resolution = invalid;
+            rejects_format([&] { mutated.setting_resolution(1280, 720); });
+        }
+        MenuText nul = defaults; nul.values.resolution.push_back(L'\0');
+        rejects_format([&] { nul.setting_resolution(1280, 720); });
+        const auto long_supported = variants.load([](rapidjson::Document& d)
+        {
+            const std::string words = std::string(512, 'W') + "{width}x{height}";
+            d["menu_text"]["values"]["resolution"].SetString(words.c_str(), d.GetAllocator());
+        });
+        require(long_supported.menu_text().setting_resolution(1, 1) == std::wstring(512, L'W') + L"1x1",
+            "Resolution formatting truncated supported text or introduced an unrelated length cap");
+    }
 }
 
 int main(int argc, char** argv)
@@ -6077,11 +6309,14 @@ int main(int argc, char** argv)
         check_prompt_bar(world, defaults);
         check_setting_duration_text(variants, defaults.menu_text());
         check_setting_duration_content(variants, world, content);
+        check_setting_resolution_text(variants, defaults.menu_text());
+        check_setting_resolution_resources(variants, world);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
             "all101 setting percentages with captured Controls/Sticks value fitting, "
             "authored duration templates, FLOAT/defaultfloat compatibility and actual tuning/default/choice row validation, "
+            "authored resolution templates with full positive integer dimensions, strict original tokens and captured Options fitting, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "finite authored series/roster templates and expanded-card boundaries, "

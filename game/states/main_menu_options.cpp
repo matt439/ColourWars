@@ -242,6 +242,8 @@ void MainMenuOptions::init()
 			this->render_resources(), look.art.ink);
 	}
 
+	this->resolution_font_name_ = style.item_font;
+	this->resolution_font_ = this->render_resources()->resolve_sprite_font(this->resolution_font_name_);
 	this->resolution_row_ = std::make_unique<OptionRow>(
 		"resolution",
 		this->text().item(MenuItem::resolution),
@@ -388,9 +390,22 @@ void MainMenuOptions::cycle_resolution(
 
 void MainMenuOptions::update_resolution_selection_text()
 {
-	const std::string res_text = this->resolution_manager()->
-		convert_resolution_to_string(this->resolution_selection_);
-	this->resolution_row_->set_value(widen(res_text));
+	ResolutionManager preset;
+	preset.set_resolution(this->resolution_selection_);
+	const Vector2I size = preset.resolution_ivec();
+	this->set_resolution_value(size.x, size.y);
+}
+
+void MainMenuOptions::set_resolution_value(int width, int height)
+{
+	const std::wstring value = this->text().setting_resolution(width, height);
+	const size_t missing = this->render_resources()->first_unrenderable(this->resolution_font_, value);
+	if (missing != std::wstring::npos)
+	{
+		throw std::runtime_error("menu_text.values.resolution cannot draw character at index " +
+			std::to_string(missing) + " with the captured resolution font '" + this->resolution_font_name_ + "'.");
+	}
+	this->resolution_row_->set_value(value);
 }
 
 // While fullscreen, show the live client dimensions and disable the row.
@@ -402,8 +417,7 @@ void MainMenuOptions::refresh_resolution_row()
 	if (fullscreen)
 	{
 		const Vector2I size = this->resolution_manager()->resolution_ivec();
-		this->resolution_row_->set_value(
-			widen(std::to_string(size.x) + "x" + std::to_string(size.y)));
+		this->set_resolution_value(size.x, size.y);
 	}
 	else
 	{

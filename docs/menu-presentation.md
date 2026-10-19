@@ -1968,7 +1968,7 @@ Mode's two duration templates are required presentation data:
 | `menu_text.values.duration_default` | `Default ({value})` | Wraps the complete minute value when no duration override is present. |
 
 Each template contains exactly one `{value}` token and no other brace tokens.
-They use the existing bounded, normalized, printable single-line rules. The
+They use the existing normalized, printable single-line rules. The
 formatter substitutes into the original template once; the wrapper receives the
 complete formatted minutes. An explicit 240 seconds remains `4 min`, while an
 absent override remains `Default (4 min)`.
@@ -2011,22 +2011,66 @@ with no extra updates, readbacks, Save calls or console commands. Evidence is
 under `out/validation/duration-text/`. This is focused content/menu coverage;
 physical devices, listening, human readability and performance remain separate.
 
+## Resolution values (`GAP#8.4`)
+
+Options' resolution value is the required
+`menu_text.values.resolution` template, shipped as `{width}x{height}`. It
+contains exactly one `{width}` and one `{height}` token; their order may change.
+The existing normalized, printable single-line rules apply. Expansion
+uses the original template once and accepts positive integer dimensions,
+including live sizes outside the four windowed presets.
+
+Windowed Options shows the selected preset's actual dimensions. Saved fullscreen
+Options shows the current client dimensions and disables the resolution row,
+retaining the saved windowed preset. A pending Fullscreen toggle keeps the
+existing resolution value and enabled state until the settings are applied.
+The row refreshes at the same initialization, defaults and Apply/trial-return
+points as before; resizing alone does not refresh an open row.
+
+Each page retains its captured template and actual item font until reopened.
+The plain value still resets to its authored size, fits width first and then
+height, and returns to full size for a shorter value. This changes no resolution
+identifiers, presets, display trial, save keys or fullscreen behavior.
+
+Resource validation follows the established diagnostics. It checks the original
+template, literal and decimal glyphs, all actual presets, representative live
+sizes and positive integer endpoints through the existing fitting rule. The
+complete available value rectangle must fit the Options paper and row; the
+largest integer is an endpoint rather than a claim about the widest digits.
+Runtime checks each actual value against the captured font before fitting it.
+
+Validation: Debug and Release builds, all 38 consumer acceptance cases per
+preset and isolated bank-backed DPI-aware startups passed. CPU checks pin the
+four preset literals, arbitrary positive sizes and integer boundaries, strict
+schema/tokens, missing glyphs despite stand-ins, independent width/height
+fitting and short-value reset, and established diagnostic order. The focused
+native `-ResolutionTextOnly` matrix passed in both presets: 43 updates,
+76 readbacks, 25 value rows, seven openings, one font negative control and six
+crops totaling 1,050,840 pixels per preset. All nine shared raw/summary artifacts
+match byte for byte; all six crops were inspected. Actual Options keyboard
+cycles, both pending-fullscreen states, captured copy/fonts, reopening/reversal,
+existing defaults/reopen refresh timing and a zero-update resize round trip are
+covered. Three successful private metadata seed Saves per preset establish the
+saved-fullscreen cases while the application stays windowed. No display Apply,
+trial, fullscreen activation, match launch, hardware, listening, human
+readability or performance acceptance is claimed. Evidence is under
+`out/validation/resolution-text/`.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
 bounded increments. Shared On/Off/Random values and the fixed labels described
 above, shared menu device/roster labels, packed missing-pad lists and Arena
 briefing mode/roster summaries, Arena numbering and Random availability, and
-preference percentages and duration units/Default notation are implemented. The
-next slices are:
+preference percentages, duration units/Default notation and resolution values
+are implemented. The next slice is:
 
-1. **Numeric settings:** resolution values. Preserve current numeric precision,
-   rounding, choices and saved identifiers. Deadzones already use the shared
-   percentage template, including
-   the inherited value; introducing a new inheritance marker is separate work.
-2. **Session and results:** continuation actions, round/results headings and
+1. **Session and results:** continuation actions, round/results headings and
    proceed prompt, contribution/team descriptions and composed match/result
    lines. Retain reveal timing and solo/series distinctions.
+
+Deadzones already use the shared percentage template, including the inherited
+value; introducing a new inheritance marker is separate work.
 
 Each increment adds only the fields and bounded substitutions its callers need;
 there is no general formatting language. Required tokens must occur exactly as

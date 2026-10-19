@@ -107,6 +107,7 @@ struct MenuValueText
 	std::wstring percentage;
 	std::wstring duration_minutes;
 	std::wstring duration_default;
+	std::wstring resolution;
 };
 
 struct MenuConfirmationText
@@ -222,6 +223,8 @@ struct MenuText
 	// Positive finite seconds retain the Mode row's float division and default
 	// stream precision, including scientific notation and minutes underflowing to 0.
 	std::wstring setting_duration(float seconds, bool use_default) const;
+	// Window presets and live fullscreen sizes share the positive int domain.
+	std::wstring setting_resolution(int width, int height) const;
 	// Stage summary domains follow the existing choices: best-of 3/5, and
 	// one solo player or two through four versus players.
 	std::wstring stage_best_of_mode(int best_of) const;

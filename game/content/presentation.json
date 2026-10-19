@@ -128,7 +128,8 @@
       "random": "Random",
       "percentage": "{value}%",
       "duration_minutes": "{value} min",
-      "duration_default": "Default ({value})"
+      "duration_default": "Default ({value})",
+      "resolution": "{width}x{height}"
     },
     "confirmations": {
       "restart": "Are you sure you want to restart?",

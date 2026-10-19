@@ -165,6 +165,8 @@ private:
 	std::unique_ptr<labrador::UiText> palette_timing_;
 
 	std::unique_ptr<OptionRow> resolution_row_ = nullptr;
+	labrador::FontHandle resolution_font_{};
+	std::string resolution_font_name_;
 	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
 	std::unique_ptr<labrador::UiText> controls_ = nullptr;
@@ -186,6 +188,7 @@ private:
 	void restore_defaults();
 	void close();
 	void update_resolution_selection_text();
+	void set_resolution_value(int width, int height);
 
 	// Shows the selected preset when windowed, or the live size in a disabled row
 	// while fullscreen.

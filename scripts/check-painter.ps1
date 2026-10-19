@@ -13,6 +13,7 @@ param(
     [switch] $FeedbackTuneColoursOnly,
     [switch] $ExposedColourAlphaOnly,
     [switch] $DurationTextOnly,
+    [switch] $ResolutionTextOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -66,7 +67,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -159,7 +160,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -291,6 +292,9 @@ function Write-ContactSheet {
         $duration = @($images | Where-Object { $_.name -like 'duration-*' })
         Write-ContactSheetPages -Images $duration -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-duration-contact'
+        $resolution = @($images | Where-Object { $_.name -like 'resolution-*' })
+        Write-ContactSheetPages -Images $resolution -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-resolution-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -401,7 +405,22 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($DurationTextOnly) {
+if ($ResolutionTextOnly) {
+    $result.scope = 'resolution-text-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @()
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080', '1600x900', '1001x777')
+    $result.actions = @('literal-resolution-rows', 'actual-options-keyboard-cycles', 'captured-copy-and-fonts', 'reopen-and-reversal', 'frozen-state-and-draw-rng', 'resize')
+    $result.input_slots = @(4)
+    $result.inputs = 'Actual Options page with the normal GamepadReader and public local keyboard events through StateContext; no scripted pad seam, foreground/global input or match launch.'
+    $result.audio = 'Focused menu fixture; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated resolution-template leaf. Independent literal copy and raw-font references compare the actual Options resolution row through normal keyboard changes, captured template/font assignment, reopening and reversal. Saved windowed presets and saved-fullscreen live client values retain their existing enablement and pending-toggle behavior; the application remains windowed, with no Apply or display trial. Exactly 43 StateContext updates, 76 readbacks, 25 CSV rows, seven page openings, one font negative control, six compact crops (1050840 pixels) and three successful private metadata seed Saves are checked with exact summary, case, metric and RGB-payload gates. Both presets run the same shared consumer scope without developer targets or commands. No broad menu matrix, display Apply, gameplay, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+}
+elseif ($DurationTextOnly) {
     $result.scope = 'duration-text-only'
     $result.Remove('stage')
     $result.stages = @()
@@ -1147,6 +1166,7 @@ try {
     elseif ($FeedbackTuneColoursOnly) { $probeArguments += 'feedback-tune-colours' }
     elseif ($ExposedColourAlphaOnly) { $probeArguments += 'exposed-colour-alpha' }
     elseif ($DurationTextOnly) { $probeArguments += 'duration-text' }
+    elseif ($ResolutionTextOnly) { $probeArguments += 'resolution-text' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -1302,6 +1322,114 @@ try {
     if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
+    }
+    if ($ResolutionTextOnly) {
+        $resolutionSummary = Get-Content -LiteralPath (Join-Path $captures 'resolution-summary.json') -Raw | ConvertFrom-Json
+        $resolutionRows = @(Import-Csv -LiteralPath (Join-Path $captures 'resolution-values.csv'))
+        $resolutionExpectedCases = @('saved-windowed-preset', 'left-1280', 'left-wrap-3840', 'right-wrap-1280',
+            'right-2560', 'pending-on-enabled', 'pending-on-cycle', 'old-width-height', 'retained-old-source',
+            'old-short-height', 'reopened-new-width', 'retained-new-reversal', 'new-short-reset', 'new-long-refit',
+            'new-short-reset-again', 'resized-1080', 'resized-720', 'restored-windowed', 'fullscreen-live-client',
+            'pending-off-disabled', 'disabled-skip-back', 'fullscreen-retained-size', 'fullscreen-defaults-refresh',
+            'fullscreen-reopened-client', 'metadata-windowed-preset')
+        $resolutionExpectedValues = @('1920x1080', '1280x720', '3840x2160', '1280x720', '2560x1440',
+            '2560x1440', '1920x1080', 'OLD~ display pixels: 1920x1080', 'OLD~ display pixels: 1920x1080',
+            'OLD~ display pixels: 1280x720', 'Next display pixels: 1920x1080.', 'Next display pixels: 1920x1080.',
+            'Next display pixels: 1280x720.', 'Next display pixels: 3840x2160.', 'Next display pixels: 1280x720.',
+            'Next display pixels: 1280x720.', 'Next display pixels: 1280x720.', '1920x1080',
+            'Next display pixels: 1600x900.', 'Next display pixels: 1600x900.', 'Next display pixels: 1600x900.',
+            'Next display pixels: 1600x900.', 'Next display pixels: 1001x777.', '1001x777', '3840x2160')
+        $resolutionExpectedColumns = @('case', 'width', 'height', 'focus', 'saved_preset', 'saved_fullscreen',
+            'pending_fullscreen', 'enabled', 'expected_value', 'font', 'raw_width', 'raw_height', 'width_scale',
+            'height_scale', 'scale', 'row_width', 'row_height', 'fit', 'full_row_match', 'ornament_inside', 'frozen_state_rng')
+        if ($resolutionSummary.outcome -ne 'passed' -or $resolutionSummary.scope -ne 'resolution-text-only' -or
+            $resolutionSummary.updates -ne 43 -or $resolutionSummary.readbacks -ne 76 -or
+            $resolutionSummary.csv_rows -ne 25 -or $resolutionSummary.compact_crops -ne 6 -or
+            $resolutionSummary.page_openings -ne 7 -or $resolutionSummary.font_negative_controls -ne 1 -or
+            $resolutionSummary.resize_updates -ne 0 -or $resolutionSummary.save_calls -ne 3 -or
+            $resolutionSummary.crop_pixels -ne 1050840 -or $resolutionSummary.metadata_only -ne $true -or
+            $resolutionSummary.windowed_application -ne $true -or $resolutionRows.Count -ne 25 -or
+            (($resolutionRows[0].PSObject.Properties.Name) -join '|') -ne ($resolutionExpectedColumns -join '|') -or
+            (($resolutionRows.case | Sort-Object) -join '|') -ne (($resolutionExpectedCases | Sort-Object) -join '|')) {
+            throw 'The resolution leaf does not match its frozen summary, CSV schema, cases or update/readback budgets.'
+        }
+        foreach ($row in $resolutionRows) {
+            $caseIndex = [array]::IndexOf($resolutionExpectedCases, $row.case) + 1
+            $expectedWidth = 1280
+            $expectedHeight = 720
+            if ($caseIndex -eq 16) { $expectedWidth = 1920; $expectedHeight = 1080 }
+            elseif ($caseIndex -eq 19) { $expectedWidth = 1600; $expectedHeight = 900 }
+            elseif ($caseIndex -ge 20) { $expectedWidth = 1001; $expectedHeight = 777 }
+            $expectedFocus = if ($caseIndex -in @(19, 20, 22, 24)) { '1' }
+                elseif ($caseIndex -eq 21) { '6' } elseif ($caseIndex -eq 23) { '4' } else { '0' }
+            $expectedPreset = if ($caseIndex -ge 19) { '3840x2160' } else { '1920x1080' }
+            $expectedSavedFullscreen = if ($caseIndex -ge 19 -and $caseIndex -le 24) { 'true' } else { 'false' }
+            $expectedPendingFullscreen = if ($caseIndex -in @(6, 7, 19, 22, 24)) { 'true' } else { 'false' }
+            $expectedEnabled = if ($expectedSavedFullscreen -eq 'true') { 'false' } else { 'true' }
+            $expectedFont = if ($caseIndex -ge 8 -and $caseIndex -le 10) { 'resolution_tall_tilde' }
+                elseif (($caseIndex -ge 11 -and $caseIndex -le 17) -or
+                    ($caseIndex -ge 19 -and $caseIndex -le 23)) { 'resolution_numeric_shift' } else { 'gill_sans_mt_bold_48' }
+            $expectedFit = if ($caseIndex -in @(8, 9)) { 'width_then_height' } elseif ($caseIndex -eq 10) { 'height' }
+                elseif ($caseIndex -in @(11, 12, 14)) { 'width' }
+                elseif ($caseIndex -in @(13, 15, 16, 17)) { 'reset' } else { 'none' }
+            if ($row.width -ne [string]$expectedWidth -or $row.height -ne [string]$expectedHeight -or
+                $row.focus -ne $expectedFocus -or $row.saved_preset -ne $expectedPreset -or
+                $row.saved_fullscreen -ne $expectedSavedFullscreen -or $row.pending_fullscreen -ne $expectedPendingFullscreen -or
+                $row.enabled -ne $expectedEnabled -or $row.font -ne $expectedFont -or $row.fit -ne $expectedFit -or
+                $row.expected_value -ne $resolutionExpectedValues[$caseIndex - 1] -or
+                $row.full_row_match -ne 'true' -or $row.ornament_inside -ne 'true' -or $row.frozen_state_rng -ne 'true' -or
+                [string]::IsNullOrWhiteSpace($row.expected_value) -or $row.expected_value -match '[^\x20-\x7e]') {
+                throw "Resolution case $($row.case) changed its fixed viewport/focus, capture, fullscreen-metadata or oracle contract."
+            }
+            foreach ($metric in @('raw_width', 'raw_height', 'width_scale', 'height_scale', 'scale', 'row_width', 'row_height')) {
+                $value = 0.0
+                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
+                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
+                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or $value -le 0.0 -or
+                    ($metric -eq 'scale' -and $value -gt 1.0)) {
+                    throw "Resolution case $($row.case) contains an invalid $metric."
+                }
+            }
+        }
+        $resolutionExpectedCrops = [ordered]@{
+            'resolution-text-default.ppm' = @(1112, 144)
+            'resolution-text-wrap.ppm' = @(1112, 144)
+            'resolution-text-old-fit.ppm' = @(1112, 144)
+            'resolution-text-new-width.ppm' = @(1112, 144)
+            'resolution-text-new-reset.ppm' = @(1112, 144)
+            'resolution-text-fullscreen.ppm' = @(1390, 180)
+        }
+        $resolutionCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'resolution-*.ppm' -File)
+        $resolutionExpectedNames = @($resolutionExpectedCrops.Keys) + @('resolution-values.csv', 'resolution-summary.json')
+        $resolutionNames = @(Get-ChildItem -LiteralPath $captures -Filter 'resolution-*' -File | Select-Object -ExpandProperty Name)
+        if ($resolutionCrops.Count -ne 6 -or
+            (($resolutionNames | Sort-Object) -join '|') -ne (($resolutionExpectedNames | Sort-Object) -join '|')) {
+            throw 'The resolution leaf emitted unexpected or missing compact crops, CSV or summary files.'
+        }
+        foreach ($crop in $resolutionCrops) {
+            $size = $resolutionExpectedCrops[$crop.Name]
+            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
+            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
+            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
+                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
+                throw "Resolution crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
+            }
+        }
+        $resolutionSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
+        $resolutionSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        if ($resolutionSaveCalls -ne 3 -or $resolutionSaveSuccesses -ne 3) {
+            throw 'The resolution leaf must perform exactly its three successful private metadata seed Saves.'
+        }
+        $result['observed_counts'] = [ordered]@{
+            fixture = $resolutionSummary
+            updates = 43
+            readbacks = 76
+            csv_rows = 25
+            crops = 6
+            private_save_calls = $resolutionSaveCalls
+            successful_private_saves = $resolutionSaveSuccesses
+        }
     }
     if ($DurationTextOnly) {
         $durationSummary = Get-Content -LiteralPath (Join-Path $captures 'duration-summary.json') -Raw | ConvertFrom-Json
@@ -1628,7 +1756,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($DurationTextOnly) {
+    if ($ResolutionTextOnly) {
+        $result.diagnostic = 'Resolution text passed independent literal actual Options rows, raw-font fitting, captured copy/font assignment, reopening and reversal, frozen state/draw RNG, private preferences and bounded resize checks. Saved fullscreen metadata retained its existing disabled/live-client row behavior while the application stayed windowed; no display Apply or trial ran. Exactly 43 updates, 76 readbacks, 25 CSV rows, seven page openings, one font negative control, six compact crops (1050840 pixels) and three successful private metadata seed Saves. Both presets ran the same shared consumer scope without developer targets or commands. No broad menu matrix, display Apply, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    }
+    elseif ($DurationTextOnly) {
         $result.diagnostic = 'Duration text passed independent literal Mode rows and complete compound ornaments through actual keyboard cycles, explicit/default choices, fractional/scientific defaults, captured copy and numeric font metrics, reopening and reversal. Frozen redraw/RNG, exact private preferences and zero-update 720/1080/720 resize checks passed. Exactly 86 updates, 76 readbacks, 25 CSV rows, eight page openings, one font negative control, five 1168x80 crops and one successful private Play-settings seed Save. No broad menu matrix, match launch, foreground/global input, physical-device, listening, human readability or performance acceptance.'
         if ($debug) {
             $result.diagnostic += ' Debug resource-only TuningTarget/PresentationTarget proof also passed two legacy-candidate acceptances, paired refusals, primed-target refusals, inert failed applies, valid retries and consumed candidates. Six target validations and six private candidate writes added zero updates, readbacks, Save calls or commands; actual content and draw RNG were unchanged.'

@@ -5,6 +5,7 @@
 
 #include "engine/assets/json.h"
 #include "engine/render/text_encoding.h"
+#include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
 #include "game/objects/player_badge.h"
@@ -339,6 +340,16 @@ namespace
 			{
 				throw std::runtime_error(values.where() + ": " + field.first + ": " + error.what());
 			}
+		}
+		text.values.resolution = read_menu_line(values, "resolution");
+		try
+		{
+			std::ignore = format_label_template(text.values.resolution,
+				{ { L"{width}", L"1" }, { L"{height}", L"1" } });
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(values.where() + ": resolution: " + error.what());
 		}
 		const JsonValue confirmations = json.object("confirmations");
 		text.confirmations.restart = read_menu_line(confirmations, "restart");
@@ -2050,6 +2061,16 @@ std::wstring MenuText::setting_duration(float seconds, bool use_default) const
 		{ { L"{value}", number.str() } });
 	return use_default ? format_label_template(this->values.duration_default,
 		{ { L"{value}", minutes } }) : minutes;
+}
+
+std::wstring MenuText::setting_resolution(int width, int height) const
+{
+	if (width <= 0 || height <= 0)
+	{
+		throw std::invalid_argument("Setting resolution requires positive integer width and height.");
+	}
+	return format_label_template(this->values.resolution,
+		{ { L"{width}", std::to_wstring(width) }, { L"{height}", std::to_wstring(height) } });
 }
 
 std::wstring MenuText::stage_best_of_mode(int best_of) const
@@ -4018,6 +4039,44 @@ void Presentation::validate_resources(const RenderResources& render,
 			throw std::runtime_error(where + ": " + error.what());
 		}
 	}
+	// Fullscreen sizes are positive integers, not a closed set of presets.
+	// Check every generated glyph and retain the value column's complete fit
+	// area: a shorter, narrower value can stay taller than a long fitted one.
+	const std::string resolution_key = "menu_text.values.resolution";
+	try
+	{
+		const std::wstring literal = format_label_template(values.resolution,
+			{ { L"{width}", L"" }, { L"{height}", L"" } });
+		drawable_text::check_font_can_draw(&render, this->menu_.item_font,
+			literal + L"0123456789", this->source_path_ + ": " + resolution_key);
+	}
+	catch (const std::invalid_argument& error)
+	{
+		throw std::runtime_error(this->source_path_ + ": " + resolution_key + ": " + error.what());
+	}
+	const auto check_resolution = [&](const Vector2I& size)
+	{
+		check_value("resolution", this->menu_text_.setting_resolution(size.x, size.y), this->menu_.item_font,
+			options_value_position(0), options_value_limit, main.options_box_size, options_art,
+			main.options_spacing.y, false);
+	};
+	ResolutionManager preset;
+	for (int index = 0; index <= static_cast<int>(ScreenResolution::max); ++index)
+	{
+		preset.set_resolution(static_cast<ScreenResolution>(index));
+		check_resolution(preset.resolution_ivec());
+	}
+	const int largest = std::numeric_limits<int>::max();
+	for (const Vector2I size : { Vector2I(1, 1), Vector2I(1600, 900),
+		Vector2I(1, largest), Vector2I(largest, 1), Vector2I(largest, largest) })
+	{
+		check_resolution(size);
+	}
+	// OptionRow always resets to scale 1, then fits width and height. Each
+	// actual finite positive output therefore stays within this rectangle;
+	// INT_MAX is a domain endpoint, not an assertion about the widest digits.
+	check_fixed_paper(resolution_key, RectangleF(options_value_position(0), options_value_limit),
+		main.options_box_size, options_art.focus_padding);
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const
