@@ -42,6 +42,7 @@ param(
     [switch] $StickReadoutsOnly,
     [switch] $TeamFocusOnly,
     [switch] $TeamTuneColoursOnly,
+    [switch] $WeaponTuneColoursOnly,
     [switch] $MenuLabelsOnly,
     [string] $OutputDirectory
 )
@@ -54,7 +55,10 @@ if ($TuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'TeamTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent) -gt 1) {
+if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
+    throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
+}
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -147,7 +151,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
+                $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
                 $_.Name -like 'setup-motion-*-detail.ppm' -or
@@ -388,6 +392,19 @@ if ($MenuLabelsOnly) {
     $result.inputs = 'Actual Join/Team/Weapon/Pause/Results/Stick pages with deterministic scripted pad snapshots and local keyboard menu events. Sparse/reordered pad/keyboard claims and an all-pad missing list exercise device numbers independently of player numbers. A nested private profile preserves exact save bytes; no foreground/global input or physical-pad claim.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.checks = 'Bounded actual-page literal rasters cover the four authored label fields and every menu consumer without calling device_label/roster_label/player_label in the oracle. Defaults preserve Waiting to join. Short alternate pad/keyboard/waiting/row templates reorder device and player text; captured copy/fonts survive presentation assignment and actual Join/Pause/Stick refresh, adopt on reopen, and reverse on reopen. Independent UiText/UiTextDropShadow references preserve Join item shadow, Team item shadow/card, Weapon default2,2 transparent shadow, plain point-filtered Pause, zero-shadow Results contribution rows and fitted plain Stick option/help fonts. Explicit Join claim/reconnect preserves readiness/ownership, Pause keeps its three-space/two-per-line packing, and Results retain supplied canonical player numbers/Team suffixes plus literal fractional truncation12.375to12.3 and21.625to21.6. Save/settings/claims/tools/result data, frozen pixels and RNG stay unchanged. At most120 page updates, concise CSV and exactly eight small crops total per preset across720/1080. No broad matrices, full matches/series, developer commands, physical-device, human readability or performance acceptance.'
+}
+elseif ($WeaponTuneColoursOnly) {
+    $result.scope = 'weapon-tune-colours-only'
+    $result.Remove('stage')
+    $result.player_counts = @(2)
+    $result.palettes = @('blue-orange')
+    $result.weapons = @('sprayer', 'mister')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('validated-two-weapon-colour-commands', 'frozen-before-update-retention', 'inactive-missing-player-retention', 'neutral-reconnect-refresh', 'path-reset-reversal', 'independent-premultiplied-card-rasters', 'captured-canvas-and-outside-card-invariants', 'private-content-profile', 'frozen-draw-rng')
+    $result.input_slots = @(3, 4)
+    $result.inputs = 'Four actual DebugDirector tune/tune.reset commands use private source/staged/user/profile and TEMP/TMP directories. Actual Weapon Select uses sparse Pad4/keyboard seats, fixed Sprayer/Mister and blue-orange paint, with P1 ready and P2 unready. Only the GamepadReader seam is scripted; no foreground/global input or physical pad.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated Debug-only hidden720p proof for presentation.main_menu.weapon_select.selected/unselected. Two validated RGBA tune commands change both leaves; frozen draws, inactive updates and missing-claimed-device updates retain their prior card tints, then one neutral active connected update adopts both without another confirmation. Independent explicit RGBA inputs and fixed Sprayer/Mister artwork references verify premultiplied readiness paper separately from the unchanged opaque body/paint/supply canvases. Missing-device footer changes are checked within their own state; after reconnect every pixel outside the two separate card rectangles equals the connected baseline, preserving captured names/descriptions/fonts/catalog/paper. Sparse roster/tools/settings/neutral inputs, fixed palette, exact private save bytes and draw RNG remain unchanged. Two path-specific resets retain frozen widgets until refresh, then restore the exact same-page baseline with an empty edit ledger. Actual content and scratch source/staged bytes stay unchanged. At most16 bounded updates, exactly two compact crops, six-row CSV and echoed director transcript. No broad matrices, full matches or performance/human/physical-pad acceptance.'
 }
 elseif ($TeamTuneColoursOnly) {
     $result.scope = 'team-tune-colours-only'
@@ -923,7 +940,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -995,6 +1012,7 @@ try {
     elseif ($ConnectionTextOnly) { $probeArguments += 'connection-text' }
     elseif ($StickReadoutsOnly) { $probeArguments += 'stick-readouts' }
     elseif ($TeamFocusOnly) { $probeArguments += 'team-focus' }
+    elseif ($WeaponTuneColoursOnly) { $probeArguments += 'weapon-tune-colours' }
     elseif ($TeamTuneColoursOnly) { $probeArguments += 'team-tune-colours' }
     elseif ($MenuLabelsOnly) { $probeArguments += 'menu-labels' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
@@ -1116,6 +1134,9 @@ try {
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
     if ($MenuLabelsOnly) {
         $result.diagnostic = 'Menu labels passed compact720/1080 actual Join/Team/Weapon/Pause/Results/Stick literal rasters, sparse player/device mappings, waiting/explicit claim/reconnect, preserved missing-pad packing/result truncation, captured copy and actual fonts through refresh/assignment/reopen/reversal, fitted Stick value and connection readout, save/settings/RNG and resize checks. Eight small crops and CSV retained. No broad matrix, full match/series, developer command, foreground/global input, physical-pad, listening, human readability or performance acceptance.'
+    }
+    elseif ($WeaponTuneColoursOnly) {
+        $result.diagnostic = 'Weapon tune colours passed the dedicated Debug720p four validated tune/reset commands, actual sparse2P P1-ready/P2-unready Sprayer/Mister, frozen/inactive/missing retention and neutral reconnect adoption, independent premultiplied RGBA cards, unchanged opaque body/paint/supply and all outside-card pixels, exact same-page reset reversal, captured names/fonts/catalog/paper and roster/settings/input/palette/save/RNG preservation. Two compact crops, six-row CSV and private transcript retained. No Release native, broad matrix, full match, foreground/global input, physical-pad, listening, human readability or performance acceptance.'
     }
     elseif ($TeamTuneColoursOnly) {
         $result.diagnostic = 'Team tune colours passed the dedicated Debug720p actual validated commands for both Team tints: P1-ready/P2-unready independent icon rasters, frozen retention before update, active connected refresh adoption, exact same-page reset reversal, captured frames/fonts/paper and roster/settings/input/save/RNG preservation. Two compact crops, three-row CSV and private transcript retained. No Release native, broad TeamFocus/TuneColours matrix, full match, foreground/global input, physical-pad, listening, human readability or performance acceptance.'

@@ -46,12 +46,13 @@ namespace debug_console_acceptance
 		throw std::runtime_error("The debug menu has no row '" + label + "' on any page");
 	}
 
-	const std::array<const char*, 9> colour_paths{
+	const std::array<const char*, 11> colour_paths{
 		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
 		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
 		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
 		"presentation.main_menu.backgrounds.home", "presentation.main_menu.team_select.selected",
-		"presentation.main_menu.team_select.unselected" };
+		"presentation.main_menu.team_select.unselected", "presentation.main_menu.weapon_select.selected",
+		"presentation.main_menu.weapon_select.unselected" };
 
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation)
 	{
@@ -59,7 +60,8 @@ namespace debug_console_acceptance
 			presentation.movement_feedback().keyline, presentation.debug_overlay().colour,
 			presentation.debug_overlay().shadow_colour, presentation.debug_overlay().station_label.colour,
 			presentation.main_menu().home_background_colour, presentation.main_menu().team_select.selected,
-			presentation.main_menu().team_select.unselected };
+			presentation.main_menu().team_select.unselected, presentation.main_menu().weapon_select.selected,
+			presentation.main_menu().weapon_select.unselected };
 	}
 
 	void check_colour_tunes(const std::filesystem::path& game_directory)
@@ -77,16 +79,21 @@ namespace debug_console_acceptance
 		const DebugOverlayPresentation* const overlay = &presentation.debug_overlay();
 		const StationLabelPresentation* const station = &overlay->station_label;
 		const SelectPresentation* const team = &presentation.main_menu().team_select;
+		const SelectPresentation* const weapon = &presentation.main_menu().weapon_select;
+		const WeaponSelectArtworkPresentation* const weapon_art = &presentation.main_menu().weapon_select_art;
+		const char* const weapon_sheet = weapon_art->sheet.data();
+		const char* const weapon_fill = weapon_art->fill_frame.data();
+		const char* const weapon_frame = weapon_art->choices.front().frame.data();
 		const std::string team_sheet = presentation.main_menu().team_select_sheet;
 		const auto team_frames = presentation.main_menu().team_select_frames;
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 9> words{ "RED", "112233", "a1B2c3", "00000080",
-			"FFFFFF", "12345678", "654321", "BLUE", "10203040" };
+		std::array<std::string, 11> words{ "RED", "112233", "a1B2c3", "00000080",
+			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
-			{ 0, 0, 255 }, { 16, 32, 48, 64 } };
+			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -104,7 +111,7 @@ namespace debug_console_acceptance
 				log_contains(impl.log(), path + " = " + token, DebugSeverity::info),
 				"A colour getter prints the exact quoted token: " + path);
 		}
-		for (const std::size_t index : { std::size_t(7), std::size_t(8) })
+		for (const std::size_t index : { std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10) })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -114,7 +121,7 @@ namespace debug_console_acceptance
 				expected[index] = colour;
 				require(impl.execute("tune " + path + " " + word).ok && impl.tune_token(path) == token &&
 					colour_values(presentation) == expected,
-					"Each Team colour accepts named, RGB and RGBA values without changing the other colours: " + path);
+					"Each Team/Weapon colour accepts named, RGB and RGBA values without changing the other colours: " + path);
 			}
 		}
 		require(colour_values(presentation) == expected && !presentation.movement_feedback().enabled &&
@@ -123,7 +130,10 @@ namespace debug_console_acceptance
 			movement->sprite_sheet.data() == sheet && &presentation.main_menu().team_select == team &&
 			presentation.main_menu().team_select_sheet == team_sheet &&
 			presentation.main_menu().team_select_frames == team_frames &&
-			presentation.main_menu().team_select_selected_frames == team_selected_frames,
+			presentation.main_menu().team_select_selected_frames == team_selected_frames &&
+			&presentation.main_menu().weapon_select == weapon && &presentation.main_menu().weapon_select_art == weapon_art &&
+			weapon_art->sheet.data() == weapon_sheet && weapon_art->fill_frame.data() == weapon_fill &&
+			weapon_art->choices.front().frame.data() == weapon_frame,
 			"Colour adoption keeps the borrowed records, unrelated string buffers and live F9 override");
 		require(read_text(scratch.source / L"presentation.json") == source_before &&
 			read_text(scratch.staged / L"presentation.json") == staged_before,
@@ -147,7 +157,7 @@ namespace debug_console_acceptance
 				impl.tune_document("presentation")->edits().size() == edits,
 				"Rejected colour word/path keeps all live values and pending JSON: " + path + "=" + value);
 		};
-		for (const char* path : { colour_paths.front(), colour_paths[7], colour_paths[8] })
+		for (const char* path : { colour_paths.front(), colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -161,8 +171,10 @@ namespace debug_console_acceptance
 			"tuning.player.sound_bank", "presentation.main_menu.team_select.sheet",
 			"presentation.main_menu.team_select.frames.a", "presentation.main_menu.team_select.selected_frames.a",
 			"presentation.main_menu.team_select.selected.r", "presentation.main_menu.team_select.unselected_extra",
-			"presentation.main_menu.team_select.selected_colour", "presentation.main_menu.weapon_select.selected",
-			"presentation.main_menu.weapon_select.unselected" })
+			"presentation.main_menu.team_select.selected_colour", "presentation.main_menu.weapon_select.sheet",
+			"presentation.main_menu.weapon_select.fill_frame", "presentation.main_menu.weapon_select.choices.sprayer.frame",
+			"presentation.main_menu.weapon_select.choices.sprayer.name", "presentation.main_menu.weapon_select.selected.r",
+			"presentation.main_menu.weapon_select.selected_colour", "presentation.main_menu.weapon_select.unselected_extra" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -177,12 +189,25 @@ namespace debug_console_acceptance
 			impl.tune_document("presentation")->edits().count("main_menu.team_select.selected") == 0 &&
 			impl.tune_document("presentation")->edits().count("main_menu.team_select.unselected") == 1,
 			"Resetting the selected Team tint retains the unselected tint's independent edit");
+		for (const std::size_t index : { std::size_t(9), std::size_t(10) })
+		{
+			const std::string path = colour_paths[index];
+			const std::string local = path.substr(std::string("presentation.").size());
+			auto restored = colour_values(presentation);
+			restored[index] = initial[index];
+			require(impl.tune_document("presentation")->edits().count(local) == 1 &&
+				impl.execute("tune.reset " + path).ok && colour_values(presentation) == restored &&
+				impl.tune_document("presentation")->edits().count(local) == 0 &&
+				impl.tune_document("presentation")->edits().count("main_menu.team_select.unselected") == 1 &&
+				(index != 9 || impl.tune_document("presentation")->edits().count("main_menu.weapon_select.unselected") == 1),
+				"Each Weapon tint resets independently while every other pending colour remains intact: " + path);
+		}
 		require(impl.execute("tune.reset presentation").ok && colour_values(presentation) == initial &&
 			impl.tune_document("presentation")->edits().empty(), "A presentation reset restores every colour token");
 
 		// The literal save oracle replaces one exact span in otherwise untouched
 		// LF content. A subsequent external edit to another field must survive.
-		for (const std::size_t index : { std::size_t(5), std::size_t(7), std::size_t(8) })
+		for (const std::size_t index : { std::size_t(5), std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10) })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -204,7 +229,8 @@ namespace debug_console_acceptance
 			const JsonSpanDocument disk(saved, "colour-save-reference");
 			std::string external = disk.replaced(*disk.find(local), "\"FEDCBA\"");
 			const JsonSpanDocument external_document(external, "colour-save-reference");
-			const char* unrelated_word = index == 5 ? "102030" : index == 7 ? "203040" : "304050";
+			const char* unrelated_word = index == 5 ? "102030" : index == 7 ? "203040" :
+				index == 8 ? "304050" : index == 9 ? "405060" : "506070";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -226,6 +252,74 @@ namespace debug_console_acceptance
 			require(!original_token.empty() && !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
 				!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
 				"Colour save leaves no temporary files beside either content copy");
+		}
+		for (const std::size_t index : { std::size_t(9), std::size_t(10) })
+		{
+			// Each new path also starts from an independent CRLF document, so
+			// external adoption cannot pass by reusing an earlier case's value.
+			ScratchContent crlf_scratch(game_directory, index == 9 ? L"weapon-selected-crlf" : L"weapon-unselected-crlf");
+			std::string crlf;
+			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
+			{
+				crlf += character == '\n' ? std::string("\r\n") : std::string(1, character);
+			}
+			for (const auto& directory : { crlf_scratch.source, crlf_scratch.staged })
+				{ write_text(directory / L"presentation.json", crlf); }
+			GameTuning crlf_tuning((crlf_scratch.staged / L"tuning.json").string().c_str());
+			Presentation crlf_presentation((crlf_scratch.staged / L"presentation.json").string().c_str());
+			TestDirector crlf_test(crlf_tuning, crlf_presentation);
+			DebugDirectorImpl& crlf_impl = crlf_test.impl;
+			crlf_impl.set_content_directories(crlf_scratch.source, crlf_scratch.staged);
+			const std::string path = colour_paths[index];
+			const std::string local = path.substr(std::string("presentation.").size());
+			const auto original_values = colour_values(crlf_presentation);
+			const JsonSpanDocument original(crlf, "weapon-crlf-reference");
+			const JsonLeaf* leaf = original.find(local);
+			require(leaf != nullptr && original.token(*leaf) != "\"89ABCDEF\"" && count_of(crlf, "\r\n") > 0,
+				"Each Weapon CRLF save begins with a different authored token: " + path);
+			const std::string saved = original.replaced(*leaf, "\"89ABCDEF\"");
+			require(crlf_impl.execute("tune " + path + " 89ABCDEF").ok && crlf_impl.execute("tune.save presentation").ok &&
+				read_text(crlf_scratch.source / L"presentation.json") == saved &&
+				read_text(crlf_scratch.staged / L"presentation.json") == saved &&
+				crlf_impl.tune_document("presentation")->edits().empty() &&
+				colour_values(Presentation((crlf_scratch.source / L"presentation.json").string().c_str()))[index] ==
+					labrador::Colour(137, 171, 205, 239),
+				"Weapon save changes exactly one CRLF string token, loads RGBA and rebases staging: " + path);
+			require(crlf_impl.execute("tune " + path + " ABCDEF").ok,
+				"A Weapon CRLF edit is pending before its independent conflict: " + path);
+			const JsonSpanDocument saved_document(saved, "weapon-crlf-reference");
+			const std::string theirs = saved_document.replaced(*saved_document.find(local), "\"FEDCBA\"");
+			const JsonSpanDocument theirs_document(theirs, "weapon-crlf-reference");
+			const char* unrelated_word = index == 9 ? "607080" : "708090";
+			const labrador::Colour unrelated_colour(unrelated_word);
+			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
+				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
+				"Each Weapon CRLF conflict introduces a fresh live and disk unrelated colour: " + path);
+			const std::string external = theirs_document.replaced(*theirs_document.find("debug_overlay.colour"),
+				std::string("\"") + unrelated_word + '"');
+			write_text(crlf_scratch.source / L"presentation.json", external);
+			require(!crlf_impl.execute("tune.save presentation").ok &&
+				read_text(crlf_scratch.source / L"presentation.json") == external &&
+				read_text(crlf_scratch.staged / L"presentation.json") == saved && crlf_impl.tune_token(path) == "\"ABCDEF\"",
+				"A Weapon CRLF conflict preserves disk, staging and the pending token: " + path);
+			const JsonSpanDocument external_document(external, "weapon-crlf-reference");
+			const std::string forced = external_document.replaced(*external_document.find(local), "\"ABCDEF\"");
+			auto adopted = original_values;
+			adopted[index] = labrador::Colour(171, 205, 239);
+			adopted[3] = unrelated_colour;
+			require(crlf_impl.execute("tune.save presentation force").ok &&
+				read_text(crlf_scratch.source / L"presentation.json") == forced &&
+				read_text(crlf_scratch.staged / L"presentation.json") == forced && colour_values(crlf_presentation) == adopted &&
+				crlf_impl.tune_document("presentation")->current().text() == forced &&
+				crlf_impl.tune_document("presentation")->edits().empty() &&
+				count_of(forced, "\r\n") == count_of(crlf, "\r\n") && count_of(forced, "\n") == count_of(crlf, "\r\n"),
+				"Force saves only the Weapon conflict, adopts the fresh external colour and preserves every CRLF: " + path);
+			require(crlf_impl.execute("tune " + path + " RED").ok && crlf_impl.execute("tune.reset " + path).ok &&
+				crlf_impl.tune_document("presentation")->current().text() == forced &&
+				colour_values(crlf_presentation) == adopted && crlf_impl.tune_document("presentation")->edits().empty() &&
+				!std::filesystem::exists(crlf_scratch.source / L"presentation.json.tmp") &&
+				!std::filesystem::exists(crlf_scratch.staged / L"presentation.json.tmp"),
+				"A Weapon CRLF reset uses the saved baseline and leaves no temporary files: " + path);
 		}
 	}
 
@@ -316,61 +410,64 @@ namespace debug_console_acceptance
 		const TuneSplice number_string = number.splice(R"({"number":"1"})", true);
 		require(number_string.written == 0 && number_string.conflicts.size() == 1,
 			"Scanning general strings does not make an on-disk numeric-to-string change force-writable");
-		const std::string team_baseline = "{\r\n  \"main_menu\":{\"team_select\":{"
-			"\"selected\":\"\\u0052ED\",\"unselected\":\"WHITE\",\"sheet\":\"unchanged\"}},\r\n"
-			"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
-		for (const char* field : { "selected", "unselected" })
+		for (const char* section : { "team_select", "weapon_select" })
 		{
-			const std::string team_path = std::string("main_menu.team_select.") + field;
-			TuneDocument team_document("presentation", team_baseline);
-			const JsonLeaf* leaf = team_document.find(team_path);
-			require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
-				team_document.find("main_menu.team_select.sheet") == nullptr,
-				"The Team colour is eligible while its neighbouring atlas is not: " + team_path);
-			team_document.commit(team_document.edited(*leaf, "\"11223344\""), team_path);
-			require(team_document.reverted(team_path) == team_baseline,
-				"A Team colour reset restores its original escaped token and CRLF bytes: " + team_path);
-			const JsonSpanDocument baseline_document(team_baseline, "team-colour-reference");
-			const std::string external_number = baseline_document.replaced(*baseline_document.find("number"), "25");
-			const JsonSpanDocument team_external_document(external_number, "team-colour-reference");
-			const TuneSplice team_splice = team_document.splice(external_number, false);
-			require(team_splice.conflicts.empty() && team_splice.written == 1 && team_splice.text ==
-				team_external_document.replaced(*team_external_document.find(team_path), "\"11223344\"") &&
-				count_of(team_splice.text, "\r\n") == count_of(team_baseline, "\r\n"),
-				"A Team colour splice preserves every unrelated byte, external number and CRLF: " + team_path);
-			const std::string pending_team = team_document.current().text();
-			bool wrong_type = false;
-			try { team_document.commit(team_document.edited(*team_document.find(team_path), "false"), team_path); }
-			catch (const std::invalid_argument&) { wrong_type = true; }
-			require(wrong_type && team_document.current().text() == pending_team && team_document.edits().size() == 1,
-				"A wrong-type Team colour commit preserves the pending string edit: " + team_path);
-			for (const std::string& missing : { std::string("{}"),
-				baseline_document.replaced(*baseline_document.find(team_path), "null"),
-				baseline_document.replaced(*baseline_document.find(team_path), "{\"value\":\"RED\"}") })
+			const std::string section_path = std::string("main_menu.") + section;
+			const std::string selector_baseline = "{\r\n  \"main_menu\":{\"" + std::string(section) + "\":{"
+				"\"selected\":\"\\u0052ED\",\"unselected\":\"\\u0057HITE\",\"sheet\":\"unchanged\"}},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			for (const char* field : { "selected", "unselected" })
 			{
-				const TuneSplice refused = team_document.splice(missing, true);
-				require(refused.written == 0 && refused.conflicts.size() == 1 && refused.text == missing,
-					"Force cannot insert a missing Team colour or replace null/a container: " + team_path);
-			}
-			for (const std::string& alias : { "{\"" + team_path + "\":\"RED\"}",
-				std::string("{\"main_menu\":{\"team_select.") + field + "\":\"RED\"}}",
-				std::string("{\"main_menu.team_select\":{\"") + field + "\":\"RED\"}}" })
-			{
-				const TuneDocument literal("presentation", alias);
-				const TuneSplice refused = team_document.splice(alias, true);
-				require(literal.prefixed_paths().empty() && literal.find(team_path) == nullptr &&
-					refused.written == 0 && refused.conflicts.size() == 1 && refused.text == alias,
-					"Literal key aliases cannot expose or receive a Team colour, even with force: " + team_path);
-			}
-			const std::string alias_member = "\"" + team_path + "\":\"BLUE\"";
-			for (const std::string& text : { "{" + alias_member + "," + team_baseline.substr(1),
-				team_baseline.substr(0, team_baseline.find_last_of('}')) + "," + alias_member + "}" })
-			{
-				const TuneDocument literal("presentation", text);
-				const JsonLeaf* actual = literal.find(team_path);
-				require(actual == nullptr || (actual->plain_path && literal.current().token(*actual) ==
-					baseline_document.token(*baseline_document.find(team_path))),
-					"An alias before or after the nested Team colour never exposes the literal-key token: " + team_path);
+				const std::string path = section_path + '.' + field;
+				TuneDocument selector_document("presentation", selector_baseline);
+				const JsonLeaf* leaf = selector_document.find(path);
+				require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string && selector_document.find(section_path + ".sheet") == nullptr,
+					"The selector colour is eligible while its neighbouring atlas is not: " + path);
+				selector_document.commit(selector_document.edited(*leaf, "\"11223344\""), path);
+				require(selector_document.reverted(path) == selector_baseline,
+					"A selector colour reset restores its original escaped token and CRLF bytes: " + path);
+				const JsonSpanDocument baseline_document(selector_baseline, "selector-colour-reference");
+				const std::string external_number = baseline_document.replaced(*baseline_document.find("number"), "25");
+				const JsonSpanDocument selector_external(external_number, "selector-colour-reference");
+				const TuneSplice selector_splice = selector_document.splice(external_number, false);
+				require(selector_splice.conflicts.empty() && selector_splice.written == 1 && selector_splice.text ==
+					selector_external.replaced(*selector_external.find(path), "\"11223344\"") &&
+					count_of(selector_splice.text, "\r\n") == count_of(selector_baseline, "\r\n"),
+					"A selector colour splice preserves every unrelated byte, external number and CRLF: " + path);
+				const std::string selector_pending = selector_document.current().text();
+				bool wrong_type = false;
+				try { selector_document.commit(selector_document.edited(*selector_document.find(path), "false"), path); }
+				catch (const std::invalid_argument&) { wrong_type = true; }
+				require(wrong_type && selector_document.current().text() == selector_pending && selector_document.edits().size() == 1,
+					"A wrong-type selector colour commit preserves the pending string edit: " + path);
+				for (const std::string& missing : { std::string("{}"),
+					baseline_document.replaced(*baseline_document.find(path), "null"),
+					baseline_document.replaced(*baseline_document.find(path), "{\"value\":\"RED\"}") })
+				{
+					const TuneSplice refused = selector_document.splice(missing, true);
+					require(refused.written == 0 && refused.conflicts.size() == 1 && refused.text == missing,
+						"Force cannot insert a missing selector colour or replace null/a container: " + path);
+				}
+				for (const std::string& alias : { "{\"" + path + "\":\"RED\"}",
+					std::string("{\"main_menu\":{\"") + section + '.' + field + "\":\"RED\"}}",
+					"{\"" + section_path + "\":{\"" + field + "\":\"RED\"}}" })
+				{
+					const TuneDocument literal("presentation", alias);
+					const TuneSplice refused = selector_document.splice(alias, true);
+					require(literal.prefixed_paths().empty() && literal.find(path) == nullptr &&
+						refused.written == 0 && refused.conflicts.size() == 1 && refused.text == alias,
+						"Literal key aliases cannot expose or receive a selector colour, even with force: " + path);
+				}
+				const std::string alias_member = "\"" + path + "\":\"BLUE\"";
+				for (const std::string& text : { "{" + alias_member + "," + selector_baseline.substr(1),
+					selector_baseline.substr(0, selector_baseline.find_last_of('}')) + "," + alias_member + "}" })
+				{
+					const TuneDocument literal("presentation", text);
+					const JsonLeaf* actual = literal.find(path);
+					require(actual == nullptr || (actual->plain_path && literal.current().token(*actual) ==
+						baseline_document.token(*baseline_document.find(path))),
+						"An alias before or after the nested selector colour never exposes the literal-key token: " + path);
+				}
 			}
 		}
 	}
@@ -678,10 +775,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited nine colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited eleven colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly nine authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly eleven authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -695,7 +792,10 @@ namespace debug_console_acceptance
 			"presentation.main_menu.team_select.sheet", "presentation.main_menu.team_select.frames.a",
 			"presentation.main_menu.team_select.selected_frames.a", "presentation.main_menu.team_select.spacing.x",
 			"presentation.main_menu.team_select.size.y", "presentation.main_menu.team_select.selected_extra",
-			"presentation.main_menu.weapon_select.selected", "presentation.main_menu.weapon_select.unselected" })
+			"presentation.main_menu.weapon_select.sheet", "presentation.main_menu.weapon_select.fill_frame",
+			"presentation.main_menu.weapon_select.choices.sprayer.frame", "presentation.main_menu.weapon_select.spacing.x",
+			"presentation.main_menu.weapon_select.size.y", "presentation.main_menu.weapon_select.selected.r",
+			"presentation.main_menu.weapon_select.selected_colour", "presentation.main_menu.weapon_select.unselected_extra" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -831,7 +931,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All nine colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All eleven colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;
@@ -1040,11 +1140,11 @@ namespace debug_console_acceptance
 			registry.complete("tune presentation.debug_overlay.font ").candidates.empty(),
 			"Colour leaves complete as paths while arbitrary font strings stay outside the tree");
 		const auto colour_choices = registry.complete("tune presentation.movement_feedback.colour ").candidates;
-		for (const char* path : { colour_paths[7], colour_paths[8] })
+		for (const char* path : { colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10] })
 		{
 			require(registry.complete(std::string("tune ") + path).line == std::string("tune ") + path + " " &&
 				registry.complete(std::string("tune ") + path + " ").candidates == colour_choices,
-				std::string("The Team colour completes as an exact leaf with literal colour choices: ") + path);
+				std::string("The Team/Weapon colour completes as an exact leaf with literal colour choices: ") + path);
 		}
 		require(colour_choices.size() >= 2 &&
 			std::find(colour_choices.begin(), colour_choices.end(), "next") == colour_choices.end() &&

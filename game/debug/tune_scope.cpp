@@ -34,6 +34,11 @@ namespace
 		// colours; the page's atlas and frame names remain captured.
 		{ "presentation.main_menu.team_select.selected", TuneScope::live },
 		{ "presentation.main_menu.team_select.unselected", TuneScope::live },
+		// Active, connected Weapon Select visual refresh reads both tile tints.
+		// Frozen draws or missing claimed devices retain the last refresh;
+		// catalog, names, descriptions, fonts and page paper remain captured.
+		{ "presentation.main_menu.weapon_select.selected", TuneScope::live },
+		{ "presentation.main_menu.weapon_select.unselected", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a
