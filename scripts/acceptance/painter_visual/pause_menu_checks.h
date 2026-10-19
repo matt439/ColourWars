@@ -663,11 +663,16 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         const Frame disconnected = pause_menu_frame(app);
         std::wstring missing;
         const int first_missing = keyboard_participates ? 1 : 0;
+        const auto players = settings.player_settings();
+        constexpr std::array<const wchar_t*, 5> devices{
+            L"Pad 1", L"Pad 2", L"Pad 3", L"Pad 4", L"Keyboard/mouse" };
         for (int player = first_missing; player < settings.player_count(); ++player)
         {
             const int index = player - first_missing;
             if (index > 0) { missing += index % 2 == 0 ? L"\n" : L"   "; }
-            missing += settings.player_label(player);
+            const int slot = players.at(static_cast<size_t>(player)).num;
+            const std::wstring device = slot < 0 ? L"Waiting to join" : devices.at(static_cast<size_t>(slot));
+            missing += L"P" + std::to_wstring(player + 1) + L" - " + device;
         }
         const Vector2F missing_size = app.render_resources()->measure_text(detail_font, missing);
         const RectangleF missing_bounds((menu_consts::DESIGN_RESOLUTION.x - missing_size.x) / 2.0f,

@@ -223,8 +223,8 @@ Connected player rows and the existing claim/release gutter stripe use captured
 `focus_ink`; unclaimed rows and reserved missing devices use `disabled_ink`.
 Heading and status use ordinary `ink`. Heading, item and status shadows have
 zero alpha but retain their authored offsets, fonts, anchors and logical
-bounds. Generated device labels, reconnect suffix and status copy remain
-unscaled C++ text under `GAP#8.4`.
+bounds. Device/roster labels, reconnect suffix and status copy remain unscaled;
+their words come from `menu_text.labels` and `menu_text.connection`.
 
 Page checks use the actual generated row labels and captured gutter rectangles,
 plus heading and status bounds, to require containment in the usable paper
@@ -357,8 +357,8 @@ shadows have zero alpha, while the original shadow offsets still participate
 in bounds. The required
 `main_menu.team_select.warning_position`, shipped as `(150, 860)`, places the
 existing warning below the roster. It must be finite, nonnegative and within
-the design area above the footer. The generated player labels and warning
-remain C++ text under `GAP#8.4`.
+the design area above the footer. Generated player labels and the warning use
+the captured `menu_text.labels` and `menu_text.connection` copy.
 
 Team spacing and icon size must be finite and positive. Startup resource checks
 validate actual heading/warning glyphs and retained shadow bounds. Runtime
@@ -1561,9 +1561,10 @@ Title/Home copy, fixed settings save-status messages, shared On/Off/Random
 setting values, Stage Select's shared Random display name, fixed selection
 statuses, fixed briefing copy, fixed mode labels and fixed navigation/hints, fixed Pause confirmation questions and End
 completion headings, Join/Pause connection messages and player-specific Pause titles,
-the Team Select warning, and Pad Sticks connection/raw/response readouts.
+the Team Select warning, Pad Sticks connection/raw/response readouts, and shared
+menu device/roster labels including the packed Pause missing-pad list.
 Other setting values,
-composed stage navigation/count hints, best-of mode and roster copy, generated player/device labels,
+composed stage navigation/count hints, best-of mode and roster summaries,
 session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
@@ -1604,9 +1605,10 @@ Actual glyphs and finite positive measured bounds are required for each role.
 
 Pages retain captured copy and resolved fonts through refreshes; reopening
 adopts edits. Reconnect acknowledgement, readiness, input ownership, centering,
-navigation and RNG are unchanged. Generated player/device names and missing-player
-lists remain C++ copy for later slices. This adds only
-the bounded player-number substitution, with no general formatting language.
+navigation and RNG are unchanged. Shared device/roster labels now come from the
+bounded label fields below; Pause still assembles its missing-player list. This
+adds only the bounded player-number substitution, with no general formatting
+language.
 
 Validation (2026-10-18): Debug and Release builds and all 37 consumer CPU cases
 per preset pass. CPU coverage includes exact defaults, normalized whitespace,
@@ -1686,9 +1688,9 @@ connection line ends before the raw caption, raw and response captions stay
 above their tracks, and the full aim block fits beside the aim box and before
 association help. Caption positions retain the existing measured `Move` probe
 and focus-padding offset. Pages capture their copy and font, refresh values from
-the existing input snapshots, and adopt edits only when reopened. The Pad row's
-generated device label and both deadzone-setting percentage values remain for
-later text slices.
+the existing input snapshots, and adopt edits only when reopened. The Pad row
+and connection readout share the authored device label below. Both deadzone
+setting percentage values remain for later text slices.
 
 Validation (2026-10-19): both game builds and all 37 CPU cases per preset pass.
 The text case checks the six defaults, normalization and malformed/nested tokens,
@@ -1712,21 +1714,88 @@ per-monitor v2 DPI awareness. Corrected fixture failures and final receipts are
 retained under `out/validation/stick-readouts/`; no physical-pad, listening,
 human readability/style or performance acceptance is claimed.
 
+## Shared menu device and roster labels
+
+Four required `menu_text.labels` fields preserve the existing menu wording:
+
+| Key | Shipped text | Required tokens |
+|---|---|---|
+| `pad` | `Pad {pad}` | One `{pad}` |
+| `keyboard_mouse` | `Keyboard/mouse` | None |
+| `waiting` | `Waiting to join` | None |
+| `roster_row` | `{player} - {device}` | One of each |
+
+Loading normalizes supported punctuation and spaces; each field must be
+nonblank and single-line. Directly mutated formatter strings must already be
+printable ASCII with the same text rules. Tokens are scanned once in
+the original template: missing, repeated, nested, unknown or unmatched braces
+are content errors, including direct formatter calls. Authored outer spaces are
+retained. The device formatter accepts unclaimed `-1`, pad slots `0` through
+`3`, and keyboard/mouse `4`; the pad display number is one through four. The
+roster formatter accepts seat indices zero through three and retains the
+canonical `P1` through `P4` badge identity, independently of its assigned device.
+The HUD/world device helper and badge identity grammar are unchanged.
+
+Join, Team Select, Weapon Select, Pause and Results pass their captured text
+explicitly to the roster helper. The settings model stores no presentation
+pointer. Pad Sticks uses the same captured device label in its fitted Pad row
+and unscaled connection readout. Refreshes retain copy/fonts; reopening adopts
+edits. Pause still packs missing rows two per line, separated by three spaces
+and LF. Results still appends the existing team description and truncated
+one-decimal percentage. Claims, readiness, input, numeric formatting and RNG
+are unchanged.
+
+Resource checks use each consumer's actual font, shadow and paper geometry.
+Join checks waiting, all devices and reserved-pad reconnect suffixes. Team and
+Weapon check claimed rows and their badge/icon ordering; Weapon retains its
+implicit `(2, 2)` shadow bounds even when the shadow is transparent. Pause
+checks all 208 reachable ordered missing-pad lists. Results appends all 1,001
+legal percentage strings, from `0.0%` through `100.0%`, in the font's exact
+sequential float order; proportional glyphs can make another value wider than
+`100.0%`. Each full row includes its zero-offset shadow and vertically centered
+badge before the envelope is checked. Pad values retain OptionRow fitting, and both
+connection states fit the existing unscaled readout region.
+
+Validation (2026-10-19): both game builds and all 38 CPU cases per preset pass.
+The text case covers required fields/types, normalized words, original-template
+token guards and direct mutations, six device names and 24 roster outputs,
+unsupported glyphs, complete two-line Pause lists, Weapon's exact two-unit
+shadow edge and an independent 40,040-string Results measurement oracle with
+nonuniform glyph metrics. Older synthetic-layout/font fixtures isolate unrelated
+menu geometry while retaining their target edges and overflow rejections. Team's
+former heading-contact fixture now rejects its impossible complete roster; a
+separate inclusive full-card contact and quarter-unit overflow cover that edge.
+
+`MenuLabelsOnly` passes on both presets at 720p/1080p: 107 independent literal
+raster/bounds comparisons, 58 page updates and eight compact crops each. It
+checks sparse/reordered claims, waiting and explicit joining, reconnects, packed
+Pause lists, unchanged contribution percentages, actual captured fonts/copy
+through assignment, refresh, reopening and reversal, fitted Pad values, and
+frozen pixels/settings/save/RNG. CSVs and crops are byte-identical between
+presets, and the contact sheet was inspected. Both isolated published-bank,
+System-only-PATH startups pass with per-monitor-v2 DPI awareness.
+
+The native captures precede a diagnostic-only follow-up that retains the
+preceding Join envelope's contributing keys in overlap errors. Independent
+review confirms unchanged bounds, comparisons, domains and valid rendering;
+the final builds, CPU suites and startup checks use that follow-up. Original,
+failed, diagnostic and final evidence remains under `out/validation/menu-labels/`.
+These checks establish no physical-pad, listening, human readability/style or
+performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
 bounded increments. Shared On/Off/Random values and the fixed labels described
-above are already implemented. The next slices are:
+above, shared menu device/roster labels and packed missing-pad lists are already
+implemented. The next slices are:
 
-1. **Generated player/device labels:** shared roster/device names and missing-pad
-   lists. Join/Pause fixed connection copy, player-specific Pause titles, the
-   team-required warning and Pad Sticks preview readouts are implemented.
-2. **Composed setup:** Arena navigation and Random availability count, best-of
+1. **Composed setup:** Arena navigation and Random availability count, best-of
    mode and player/team roster lines, retaining their current numbers and order.
-3. **Numeric settings:** duration units and Default notation, resolution and
+2. **Numeric settings:** duration units and Default notation, resolution and
    percentage values, and inherited/default deadzone notation. Preserve current
    numeric precision, rounding, choices and saved identifiers.
-4. **Session and results:** continuation actions, round/results headings and
+3. **Session and results:** continuation actions, round/results headings and
    proceed prompt, contribution/team descriptions and composed match/result
    lines. Retain reveal timing and solo/series distinctions.
 

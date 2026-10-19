@@ -7,6 +7,8 @@
 #include "game/states/menu_player_settings.h"
 #include "engine/render/screen_layout.h"
 
+struct MenuText;
+
 // The roster is empty until a player count is chosen, then contains 1-4 seats.
 // Each seat is unclaimed (-1) or holds a unique valid device slot. Only the
 // claim operations mutate device assignments; snapshots cannot alter the roster.
@@ -46,7 +48,7 @@ public:
 	bool release_input_slot(int slot);
 	bool input_roster_complete() const;
 	int player_index_for_slot(int slot) const;
-	std::wstring player_label(int player_index) const;
+	std::wstring player_label(int player_index, const MenuText& text) const;
 
 private:
 	std::vector<MenuPlayerSettings> player_settings_;

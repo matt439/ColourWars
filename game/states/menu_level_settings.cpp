@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/states/menu_level_settings.h"
 #include "game/input_slots.h"
-#include "game/objects/player_badge.h"
+#include "game/presentation.h"
 #include <array>
 #include <cstdlib>
 using namespace labrador;
@@ -165,12 +165,11 @@ int MenuLevelSettings::player_index_for_slot(int slot) const
 	return -1;
 }
 
-std::wstring MenuLevelSettings::player_label(int player_index) const
+std::wstring MenuLevelSettings::player_label(int player_index, const MenuText& text) const
 {
 	const MenuPlayerSettings& player =
 		this->player_settings_.at(static_cast<size_t>(player_index));
-	return PlayerBadge::label(player_index) + L" - " +
-		input_slots::device_name(player.num);
+	return text.roster_label(player_index, player.num);
 }
 
 int MenuLevelSettings::best_of() const

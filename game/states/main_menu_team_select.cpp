@@ -371,7 +371,7 @@ void MainMenuTeamSelect::init()
 		auto widgets = std::make_unique<PlayerWidgets>(this->menu_style().motion);
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::wstring label_text = this->level_settings()->player_label(i);
+		std::wstring label_text = this->level_settings()->player_label(i, this->text());
 
 		widgets->player = std::make_unique<UiTextDropShadow>(
 			name,

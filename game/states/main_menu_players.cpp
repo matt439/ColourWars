@@ -240,7 +240,7 @@ void MainMenuJoin::init()
 	for (int player = 0; player < this->player_count(); ++player)
 	{
 		this->players_.push_back(std::make_unique<UiTextDropShadow>(
-			"player_" + std::to_string(player), this->level_settings()->player_label(player), style.item_font,
+			"player_" + std::to_string(player), this->level_settings()->player_label(player, this->text()), style.item_font,
 			this->calculate_widget_position(0, player + 2), this->render_resources(),
 			this->setup_art_.ink, clear_shadow, style.item_shadow_offset));
 		this->text_container_->add_child(this->players_.back().get());
@@ -302,7 +302,7 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		motion.slot = players[player].num;
 		motion.connected = connected;
 		ready = ready && connected;
-		std::wstring label = this->level_settings()->player_label(player);
+		std::wstring label = this->level_settings()->player_label(player, this->text());
 		if (!connected && players[player].num >= 0)
 		{
 			label += this->text().connection.join_reconnect_suffix;

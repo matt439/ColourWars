@@ -155,7 +155,10 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     {
         const auto players = settings.player_settings();
         const MenuPlayerSettings& entry = players.at(static_cast<size_t>(player));
-        const std::wstring text = settings.player_label(player) +
+        constexpr std::array<const wchar_t*, 5> devices{
+            L"Pad 1", L"Pad 2", L"Pad 3", L"Pad 4", L"Keyboard/mouse" };
+        const std::wstring device = entry.num < 0 ? L"Waiting to join" : devices.at(static_cast<size_t>(entry.num));
+        const std::wstring text = L"P" + std::to_wstring(player + 1) + L" - " + device +
             (entry.team == PlayerTeam::a ? L" | Team A | " : L" | Team B | ") +
             info.player_percentage_string(paint_owners::index(entry.num, player));
         return RectangleF(look.contribution_position + Vector2F(0.0f,

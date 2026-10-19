@@ -221,7 +221,7 @@ void StickSettingsMenu::set_status(const std::wstring& text, bool warning)
 
 void StickSettingsMenu::refresh_values()
 {
-	this->pad_->set_value(input_slots::device_name(this->slot_));
+	this->pad_->set_value(this->text().device_label(this->slot_));
 	this->movement_->set_value(percent(this->selection_.movement_deadzone(this->slot_,
 		this->data()->tuning()->input().movement_deadzone)));
 	this->aim_->set_value(percent(this->selection_.aim_deadzone(this->slot_)));

@@ -157,7 +157,7 @@ void PauseMenuInitial::refresh_connections()
 			{
 				missing += count % 2 == 0 ? L"\n" : L"   ";
 			}
-			missing += this->level_settings()->player_label(player);
+			missing += this->level_settings()->player_label(player, this->text());
 			++count;
 		}
 	}

@@ -45,6 +45,17 @@ namespace
         require(output.good(), "Cannot write menu presentation fixture");
     }
 
+    void short_weapon_descriptions(rapidjson::Document& document)
+    {
+        // Heading-edge fixtures move the shared origin. Keep unrelated weapon
+        // prose inside its own paper without changing the heading or row geometry.
+        auto& descriptions = document["main_menu"]["weapon_descriptions"];
+        for (auto member = descriptions.MemberBegin(); member != descriptions.MemberEnd(); ++member)
+        {
+            member->value.SetString("Fit");
+        }
+    }
+
     struct World
     {
         RenderResources render;
@@ -368,8 +379,12 @@ namespace
             { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(173.0f); },
             [](rapidjson::Document& d) { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(173.25f); });
         check_edge("menu_text", "solo_practice_hint", [](rapidjson::Document& d)
-            { d["menu_style"]["layout"]["position"]["y"].SetFloat(204.5f); },
-            [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["y"].SetFloat(204.75f); });
+        {
+            // Preserve the hint's exact 926 bottom while keeping the other
+            // pages at a valid shared origin: 169.5 + 7*105 + 20 + 1.5.
+            d["menu_style"]["layout"]["position"]["y"].SetFloat(169.5f);
+            d["main_menu"]["mode_select_spacing"]["y"].SetFloat(105.0f);
+        }, [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["y"].SetFloat(169.75f); });
         // Join shares Count's spacing and adds a status at row seven. Its
         // complete 20-high text plus one-unit shadow reaches the inset bottom
         // at 65 + 7*120 + 21 = 926. A Count Back card at that bottom would
@@ -404,6 +419,7 @@ namespace
         // both widths still fit the old generic design-area/right-margin check.
         check_edge("menu_text.headings", "join_players", [](rapidjson::Document& d)
         {
+            short_weapon_descriptions(d);
             d["main_menu"]["setup_box_size"]["x"].SetFloat(1200.0f);
             d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
             d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
@@ -556,6 +572,7 @@ namespace
         }, &world);
         check_edge("menu_text.headings", "teams", [](rapidjson::Document& d)
         {
+            short_weapon_descriptions(d);
             d["main_menu"]["team_box_size"]["x"].SetFloat(1200.0f);
             d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
             d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
@@ -619,6 +636,7 @@ namespace
         const auto width_edge = [&](rapidjson::Document& d)
         {
             exact(d);
+            short_weapon_descriptions(d);
             d["main_menu"]["weapon_box_size"]["x"].SetFloat(1200.0f);
             d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
             // Moving the shared origin also moves Join's unfitted legend.
@@ -684,6 +702,7 @@ namespace
         const auto width_edge = [&](rapidjson::Document& d)
         {
             exact(d);
+            short_weapon_descriptions(d);
             d["main_menu"]["stage_box_size"]["x"].SetFloat(1200.0f);
             d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
             // The shared origin must not make Join's separate legend the

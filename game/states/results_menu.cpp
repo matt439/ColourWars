@@ -333,7 +333,7 @@ void ResultsMenuInitial::init()
 	for (size_t i = 0; i < players.size(); ++i)
 	{
 		const MenuPlayerSettings& player = players[i];
-		add_detail(this->level_settings()->player_label(static_cast<int>(i)) +
+		add_detail(this->level_settings()->player_label(static_cast<int>(i), this->text()) +
 			(player.team == PlayerTeam::a ? L" | Team A | " : L" | Team B | ") +
 			end_info.player_percentage_string(paint_owners::index(player.num, static_cast<int>(i))),
 			look.contribution_position + Vector2F(0.0f,

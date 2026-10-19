@@ -158,6 +158,12 @@
       "best_coverage": "BEST COVER",
       "played": "PLAYED"
     },
+    "labels": {
+      "pad": "Pad {pad}",
+      "keyboard_mouse": "Keyboard/mouse",
+      "waiting": "Waiting to join",
+      "roster_row": "{player} - {device}"
+    },
     "connection": {
       "join_reconnect_suffix": " - Reconnect",
       "join_ready": "Everyone joined. Player 1 can continue.",

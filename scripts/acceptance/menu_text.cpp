@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/presentation.h"
+#include "game/objects/level_end_info.h"
 #include "game/states/option_row.h"
 #include "game/states/prompt_bar.h"
 #include "engine/assets/sprite_sheet_loader.h"
@@ -102,6 +103,13 @@ namespace
         { "controller_lost", L"Controller lost", &MenuConnectionText::controller_lost },
         { "all_connected", L"All players connected.", &MenuConnectionText::all_connected },
         { "teams_required", L"Both teams need a player", &MenuConnectionText::teams_required }
+    };
+    struct LabelText { const char* key; const wchar_t* text; std::wstring MenuLabelText::* field; };
+    constexpr LabelText label_text[]{
+        { "pad", L"Pad {pad}", &MenuLabelText::pad },
+        { "keyboard_mouse", L"Keyboard/mouse", &MenuLabelText::keyboard_mouse },
+        { "waiting", L"Waiting to join", &MenuLabelText::waiting },
+        { "roster_row", L"{player} - {device}", &MenuLabelText::roster_row }
     };
     struct StickReadoutText
     {
@@ -327,6 +335,10 @@ namespace
             require(text.connection.*entry.field == entry.text,
                 std::string("Connection default changed: ") + entry.key);
         }
+        for (const auto& entry : label_text)
+        {
+            require(text.labels.*entry.field == entry.text, std::string("Device/roster default changed: ") + entry.key);
+        }
         for (const auto& entry : stick_readout_text)
         {
             require(text.stick_readouts.*entry.field == entry.text,
@@ -411,7 +423,7 @@ namespace
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -430,7 +442,7 @@ namespace
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -455,6 +467,7 @@ namespace
         for (const auto& entry : help_text) { required("help", entry.key); }
         for (const auto& entry : status_text) { required("status", entry.key); }
         for (const auto& entry : connection_text) { required("connection", entry.key); }
+        for (const auto& entry : label_text) { required("labels", entry.key); }
         for (const auto& entry : stick_readout_text) { required("stick_readouts", entry.key); }
         for (const auto& entry : value_text) { required("values", entry.key); }
         for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
@@ -926,6 +939,10 @@ namespace
         const auto hint_edge = [&](rapidjson::Document& d)
         {
             exact_setup(d);
+            // Keep unrelated complete Team/Weapon rows inside their paper while
+            // this fixture moves the shared origin to the Mode hint edge.
+            d["main_menu"]["fonts"]["weapon_description"].SetString("menu_text_exact");
+            d["main_menu"]["team_select"]["spacing"]["y"].SetFloat(110.0f);
             d["menu_style"]["layout"]["position"]["y"].SetFloat(204.5f);
             d["main_menu"]["mode_select_spacing"]["y"].SetInt(100);
         };
@@ -1269,6 +1286,262 @@ namespace
         }, &world);
     }
 
+    template<class Action> void rejects_label_format(Action action)
+    {
+        bool rejected = false;
+        try { action(); }
+        catch (const std::invalid_argument&) { rejected = true; }
+        require(rejected, "Invalid device/roster template or argument was formatted silently");
+    }
+
+    void check_label_text(Variants& variants, World& world, const MenuText& defaults)
+    {
+        // Literal expectations retain the original slot identities and roster
+        // numbers independently of either production label formatter.
+        constexpr const wchar_t* devices[]{L"Waiting to join", L"Pad 1", L"Pad 2", L"Pad 3", L"Pad 4", L"Keyboard/mouse"};
+        for (int slot = -1; slot <= 4; ++slot)
+        {
+            const std::wstring device = devices[slot + 1];
+            require(defaults.device_label(slot) == device, "Default device wording or pad slot numbering changed");
+            for (int player = 0; player < 4; ++player)
+            {
+                require(defaults.roster_label(player, slot) == L"P" + std::to_wstring(player + 1) + L" - " + device,
+                    "Default roster label used pad numbering in place of the roster player");
+            }
+        }
+        for (int invalid : {-2, 5, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()})
+        {
+            rejects_label_format([&] { defaults.device_label(invalid); });
+            rejects_label_format([&] { defaults.roster_label(0, invalid); });
+        }
+        for (int invalid : {-1, 4, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()})
+        {
+            rejects_label_format([&] { defaults.roster_label(invalid, 0); });
+        }
+        const auto authored = variants.load([](rapidjson::Document& d)
+        {
+            auto& labels = d["menu_text"]["labels"];
+            labels["pad"].SetString("  Seat\xC2\xA0{pad}  ");
+            labels["keyboard_mouse"].SetString("Keys\xE2\x80\x94mouse");
+            labels["waiting"].SetString("Open\xE2\x80\xA6");
+            labels["roster_row"].SetString("{device} / {player}");
+        });
+        authored.validate_resources(world.render, world.audio);
+        require(authored.menu_text().labels.pad == L"  Seat {pad}  " &&
+            authored.menu_text().labels.keyboard_mouse == L"Keys-mouse" &&
+            authored.menu_text().labels.waiting == L"Open...",
+            "Device labels lost normalized punctuation/NBSP or authored outer spaces");
+        for (int slot = -1; slot <= 4; ++slot)
+        {
+            const std::wstring device = slot == -1 ? L"Open..." : slot == 4 ? L"Keys-mouse" :
+                L"  Seat " + std::to_wstring(slot + 1) + L"  ";
+            require(authored.menu_text().device_label(slot) == device, "Authored device label was replaced by fixed wording");
+            for (int player = 0; player < 4; ++player)
+            {
+                require(authored.menu_text().roster_label(player, slot) == device + L" / P" + std::to_wstring(player + 1),
+                    "Authored roster template lost its original token order or device copy");
+            }
+            if (slot >= 0 && slot < 4)
+            {
+                require(authored.menu_text().stick_connection(slot, true) == device + L" - connected" &&
+                    authored.menu_text().stick_connection(slot, false) == device + L" - disconnected",
+                    "Pad Sticks connection formatter ignored the captured authored device label");
+            }
+        }
+        for (const auto& entry : label_text)
+        {
+            const std::string field = std::string("labels.") + entry.key;
+            for (const char* invalid : {"   ", " \xC2\xA0 ", "first\nsecond", "first\rsecond", "tab\ttext",
+                "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28"})
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                    { d["menu_text"]["labels"][entry.key].SetString(invalid, d.GetAllocator()); });
+            }
+            const bool pad = entry.field == &MenuLabelText::pad;
+            const bool row = entry.field == &MenuLabelText::roster_row;
+            const std::vector<const char*> malformed = pad ? std::vector<const char*>{
+                "Pad", "{Pad}", "{pad }", "{pad}{pad}", "{pad}{device}", "{{pad}}", "{pad", "pad}", "{pa{pad}d}"} :
+                row ? std::vector<const char*>{"{player}", "{device}", "{Player}{device}", "{player }{device}",
+                    "{player}{player}{device}", "{player}{device}{device}", "{player}{device}{pad}",
+                    "{{player}}{device}", "{player}{device", "{de{player}vice}", "{pla{device}yer}"} :
+                std::vector<const char*>{"{pad}", "{player}", "{device}", "Plain {", "Plain }", "{}"};
+            for (const char* invalid : malformed)
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                    { d["menu_text"]["labels"][entry.key].SetString(invalid, d.GetAllocator()); });
+                MenuText mutated = defaults;
+                mutated.labels.*entry.field = std::wstring(invalid, invalid + std::strlen(invalid));
+                rejects_label_format([&] { mutated.roster_label(3, pad ? 2 : row ? 0 :
+                    entry.field == &MenuLabelText::waiting ? -1 : 4); });
+                if (!row)
+                {
+                    rejects_label_format([&] { mutated.device_label(pad ? 2 :
+                        entry.field == &MenuLabelText::waiting ? -1 : 4); });
+                }
+            }
+            for (const wchar_t* invalid : {L"", L"   ", L"first\nsecond", L"first\rsecond", L"tab\ttext", L"bad\x7f"})
+            {
+                MenuText mutated = defaults;
+                mutated.labels.*entry.field = invalid;
+                rejects_label_format([&] { mutated.roster_label(0, pad ? 0 : row ? 0 :
+                    entry.field == &MenuLabelText::waiting ? -1 : 4); });
+            }
+        }
+    }
+
+    void check_label_resources(Variants& variants, World& world)
+    {
+        for (const auto& entry : label_text)
+        {
+            const std::string field = std::string("labels.") + entry.key;
+            const bool pad = entry.field == &MenuLabelText::pad;
+            const bool row = entry.field == &MenuLabelText::roster_row;
+            const std::string token = pad ? "{pad}" : row ? "{player}{device}" : "";
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                const std::string text = std::string(500, 'W') + token;
+                d["menu_text"]["labels"][entry.key].SetString(text.c_str(), d.GetAllocator());
+            }, &world);
+            for (const char* role : {"item", "detail", "results"})
+            {
+                if (entry.field == &MenuLabelText::waiting && std::string(role) != "item") { continue; }
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    if (std::string(role) == "results")
+                    {
+                        d["results_menu"]["contribution_font"].SetString("menu_text_limited");
+                    }
+                    else { d["menu_style"]["fonts"][role].SetString("menu_text_limited"); }
+                    d["menu_text"]["labels"][entry.key].SetString((token + '~').c_str(), d.GetAllocator());
+                }, &world);
+            }
+        }
+        for (const char* role : {"item_font", "help_font"})
+        {
+            variants.rejects("labels.pad", [&](rapidjson::Document& d)
+            {
+                d["controls_settings"][role].SetString("menu_text_limited");
+                d["menu_text"]["labels"]["pad"].SetString("{pad}~");
+            }, &world);
+        }
+        const auto add_font = [&](const char* name, int tilde_width)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                glyphs.push_back({character, mattmath::RectangleI(0, 0, character == U'~' ? tilde_width : 8, 16),
+                    0.0f, 0.0f, 0.0f});
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        };
+        add_font("menu_labels_pause_edge", 489);
+        add_font("menu_labels_pause_over", 490);
+        const auto pause = [](rapidjson::Document& d, const char* font)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString(font, d.GetAllocator());
+            d["menu_text"]["labels"]["pad"].SetString("{pad}");
+            d["menu_text"]["labels"]["keyboard_mouse"].SetString("K");
+            d["menu_text"]["labels"]["waiting"].SetString("W");
+            d["menu_text"]["labels"]["roster_row"].SetString("{player}{device}~");
+            d["main_menu"]["team_select"]["spacing"]["x"].SetFloat(273.0f);
+            d["main_menu"]["weapon_select"]["spacing"]["x"].SetFloat(273.0f);
+        };
+        const auto edge = variants.load([&](rapidjson::Document& d) { pause(d, "menu_labels_pause_edge"); });
+        edge.validate_resources(world.render, world.audio);
+        // Pause is plain UiText. Its three-space separator and LF are part of
+        // the complete measured list; a one-row-only bound misses this edge.
+        UiText missing("missing", L"P11~   P22~\nP33~   P44~", edge.menu().detail_font,
+            mattmath::Vector2F(435.0f, 315.0f), &world.render, Colour::black);
+        require(missing.bounds() == mattmath::RectangleF(435.0f, 315.0f, 1050.0f, 40.0f),
+            "Complete Pause missing-pad list lost its exact full-paper width, separator or second line");
+        variants.rejects("labels.roster_row", [&](rapidjson::Document& d)
+            { pause(d, "menu_labels_pause_over"); }, &world);
+
+        add_font("menu_labels_weapon_edge", 466);
+        const auto weapon = [](rapidjson::Document& d, bool outside)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString("menu_labels_weapon_edge");
+            d["menu_text"]["labels"]["pad"].SetString("{pad}");
+            d["menu_text"]["labels"]["keyboard_mouse"].SetString("K");
+            d["menu_text"]["labels"]["waiting"].SetString("W");
+            d["menu_text"]["labels"]["roster_row"].SetString("{player}{device}~");
+            d["main_menu"]["team_select"]["spacing"]["x"].SetFloat(273.0f);
+            d["main_menu"]["weapon_select"]["spacing"]["x"].SetFloat(outside ? 249.875f : 250.0f);
+        };
+        const auto weapon_edge = variants.load([&](rapidjson::Document& d) { weapon(d, false); });
+        weapon_edge.validate_resources(world.render, world.audio);
+        UiTextDropShadow weapon_label("weapon-label", L"P11~", weapon_edge.menu().detail_font,
+            mattmath::Vector2F(150.0f, 400.0f), &world.render, Colour::black, Colour());
+        UiTextDropShadow authored_shadow("team-label", L"P11~", weapon_edge.menu().detail_font,
+            mattmath::Vector2F(150.0f, 400.0f), &world.render, Colour::black, Colour(), weapon_edge.menu().item_shadow_offset);
+        // The weapon tile starts at 650 minus six units of icon padding and
+        // the two-unit rule. Its implicit shadow differs from Team's 1.5.
+        require(weapon_label.bounds() == mattmath::RectangleF(150.0f, 400.0f, 492.0f, 22.0f) &&
+            authored_shadow.bounds().right() == 641.5f && weapon_label.bounds().right() == 642.0f,
+            "Weapon label lost its retained default two-unit shadow at the exact padded tile boundary");
+        variants.rejects("labels.roster_row", [&](rapidjson::Document& d) { weapon(d, true); }, &world);
+    }
+
+    void check_label_results_extrema(Variants& variants, World& world)
+    {
+        // Nonuniform ink, advances, bearings and heights exercise complete
+        // composed bounds. Tiny bearings also retain sequential float rounding.
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            const bool digit = character >= U'0' && character <= U'9';
+            const int width = character == U'8' ? 80 : digit ? 1 : 16;
+            glyphs.push_back({character, mattmath::RectangleI(0, 0, width, character == U'8' ? 24 : 16),
+                character == U'8' ? 0.00003f : character == U'6' ? -5.0f : 0.0f, 0.0f,
+                character == U'8' ? -80.0f : character == U'1' || character == U'7' ? 19.0f : 0.0f});
+        }
+        world.render.add_font("menu_labels_results_extrema", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        const Font& font = *world.render.font(world.render.resolve_sprite_font("menu_labels_results_extrema"));
+        constexpr const wchar_t* devices[]{L"Pad 1", L"Pad 2", L"Pad 3", L"Pad 4", L"Keyboard/mouse"};
+        float maximum = 0.0f, maximum_at_100 = 0.0f;
+        std::wstring attained;
+        // One font and literal complete strings form an independent oracle for
+        // every legal displayed suffix, rather than copying the glyph walker.
+        for (int player = 1; player <= 4; ++player)
+        {
+            for (const wchar_t* device : devices)
+            {
+                for (const wchar_t* team : {L" | Team A | ", L" | Team B | "})
+                {
+                    const std::wstring prefix = L"P" + std::to_wstring(player) + L" - " + device + team;
+                    maximum_at_100 = std::max(maximum_at_100, font.measure(prefix + L"100.0%").x);
+                    for (int tenths = 0; tenths <= 1000; ++tenths)
+                    {
+                        const std::wstring text = prefix + std::to_wstring(tenths / 10) + L'.' +
+                            std::to_wstring(tenths % 10) + L'%';
+                        const float width = font.measure(text).x;
+                        if (width > maximum) { maximum = width; attained = text; }
+                    }
+                }
+            }
+        }
+        require(maximum > maximum_at_100 && font.measure(attained).y == 24.0f,
+            "Results fixture failed to distinguish 100.0% from the widest legal percentage or variable glyph height");
+        require(percentage_text(68.499f) == L"68.4%" && percentage_text(99.999f) == L"99.9%" &&
+            percentage_text(100.0f) == L"100.0%", "Results numeric formatter changed truncation to rounding");
+        const float x = 1610.0f - maximum;
+        const auto edit = [&](rapidjson::Document& d, bool outside)
+        {
+            d["results_menu"]["contribution_font"].SetString("menu_labels_results_extrema");
+            d["results_menu"]["contribution_position"]["x"].SetFloat(x + (outside ? 0.25f : 0.0f));
+            d["results_menu"]["fill"]["box_size"]["x"].SetFloat(1280.0f);
+            d["menu_text"]["records"]["new_best"].SetString("R");
+            d["menu_text"]["records"]["stage_best"].SetString("R");
+        };
+        const auto fits = variants.load([&](rapidjson::Document& d) { edit(d, false); });
+        fits.validate_resources(world.render, world.audio);
+        UiTextDropShadow row("results-row", attained, fits.results_menu().contribution_font,
+            mattmath::Vector2F(x, 815.0f), &world.render, Colour::black, Colour(), mattmath::Vector2F::ZERO);
+        require(row.bounds().right() == 1610.0f && row.bounds().height == 24.0f,
+            "Complete Results row lost its unscaled zero-shadow bounds or inclusive full suffix width");
+        variants.rejects("labels.roster_row", [&](rapidjson::Document& d) { edit(d, true); }, &world);
+    }
+
     void check_connection_bounds(Variants& variants, World& world)
     {
         const auto add_font = [&](const std::string& name, int width, int height)
@@ -1391,11 +1664,47 @@ namespace
             d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(172.5f);
         };
         const auto touches_heading = variants.load(team_order);
-        touches_heading.validate_resources(world.render, world.audio);
+        UiTextDropShadow team_heading("team-heading", L"Fit", touches_heading.menu().heading_font,
+            mattmath::Vector2F(150.0f, 150.0f), &world.render, Colour::black, Colour(), touches_heading.menu().heading_shadow_offset);
+        UiTextDropShadow heading_warning("heading-warning", L"Fit", touches_heading.menu().detail_font,
+            mattmath::Vector2F(150.0f, 172.5f), &world.render, Colour::black, Colour(), touches_heading.menu().detail_shadow_offset);
+        require(team_heading.bounds().bottom() == 172.5f && heading_warning.bounds().y == team_heading.bounds().bottom(),
+            "Team warning lost its exact heading-contact geometry");
+        // Heading contact leaves no space for the four complete player cards.
+        variants.rejects("labels.roster_row", team_order, &world);
         variants.rejects("connection.teams_required", [&](rapidjson::Document& d)
         {
             team_order(d);
             d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(172.25f);
+        }, &world);
+        const auto full_row_edge = [&](rapidjson::Document& d)
+        {
+            compact_connection_copy(d);
+            d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(832.0f);
+        };
+        const auto touches_final_card = variants.load(full_row_edge);
+        touches_final_card.validate_resources(world.render, world.audio);
+        require(touches_final_card.main_menu().team_select.spacing == mattmath::Vector2F(250.0f, 125.0f) &&
+            touches_final_card.main_menu().team_select.size == mattmath::Vector2F(50.0f, 50.0f) &&
+            touches_final_card.main_menu().setup_focus_padding == mattmath::Vector2F(28.0f, 7.0f) &&
+            touches_final_card.player_identity().ui_size == mattmath::Vector2F(54.0f, 42.0f) &&
+            touches_final_card.player_identity().ui_gap == 12.0f,
+            "Team complete-row boundary fixture no longer matches the authored icons, spacing, focus or badge");
+        UiTextDropShadow final_label("final-label", L"P4 - Pad 4", touches_final_card.menu().detail_font,
+            mattmath::Vector2F(150.0f, 775.0f), &world.render, Colour::black, Colour(), touches_final_card.menu().item_shadow_offset);
+        mattmath::RectangleF final_card = mattmath::RectangleF::union_of(final_label.bounds(),
+            mattmath::RectangleF(84.0f, 764.75f, 54.0f, 42.0f));
+        final_card = mattmath::RectangleF::union_of(final_card, mattmath::RectangleF(650.0f, 775.0f, 150.0f, 50.0f));
+        final_card.inflate(mattmath::Vector2F(28.0f, 7.0f));
+        UiTextDropShadow final_warning("final-warning", L"Fit", touches_final_card.menu().detail_font,
+            mattmath::Vector2F(150.0f, 832.0f), &world.render, Colour::black, Colour(), touches_final_card.menu().detail_shadow_offset);
+        require(final_card.bottom() == 832.0f && final_warning.bounds().y == final_card.bottom() &&
+            final_warning.bounds().bottom() == 853.0f,
+            "Team warning lost exact complete-card contact including the badge, icons and focus padding");
+        variants.rejects("labels.roster_row", [&](rapidjson::Document& d)
+        {
+            full_row_edge(d);
+            d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(831.75f);
         }, &world);
     }
 
@@ -1490,6 +1799,8 @@ namespace
         const auto use_font = [](rapidjson::Document& d, const std::string& name, const char* key)
         {
             d["menu_style"]["fonts"]["detail"].SetString(name.c_str(), d.GetAllocator());
+            // Keep independent Weapon bodies clear of the compact label badges.
+            d["main_menu"]["fonts"]["weapon_description"].SetString("menu_text_exact");
             for (const auto& entry : confirmation_text) { d["menu_text"]["confirmations"][entry.key].SetString("Fit"); }
             d["menu_text"]["confirmations"][key].SetString("~");
         };
@@ -1499,8 +1810,10 @@ namespace
             "Confirmation paper fixtures no longer exercise the shipped full-height Pause paper");
         add_font("menu_confirmation_width_edge", 1050, 20);
         add_font("menu_confirmation_width_overflow", 1051, 20);
-        add_font("menu_confirmation_action_edge", 8, 20);
-        add_font("menu_confirmation_display_action_edge", 8, 40);
+        // The shared font's unrelated two-line missing list must also fit;
+        // retain each target '~' height while compacting only line spacing.
+        add_font("menu_confirmation_action_edge", 8, 20, 0.0f, 0.0f, 1.0f);
+        add_font("menu_confirmation_display_action_edge", 8, 40, 0.0f, 0.0f, 1.0f);
         for (const auto& entry : confirmation_text)
         {
             const std::string field = std::string("confirmations.") + entry.key;
@@ -3208,6 +3521,8 @@ namespace
         const auto use_font = [](rapidjson::Document& d, const std::string& name, const StageBriefingText& entry)
         {
             select_stage_briefing_font(d, entry, name.c_str());
+            // Keep independent Weapon bodies clear of the compact label badges.
+            d["main_menu"]["fonts"]["weapon_description"].SetString("menu_text_exact");
             for (const auto& other : stage_briefing_text) { d["menu_text"]["stage"][other.key].SetString("Fit"); }
             d["menu_text"]["stage"][entry.key].SetString("~");
         };
@@ -3275,6 +3590,8 @@ namespace
         const auto panel_top = [&](rapidjson::Document& d)
         {
             exact(d);
+            // Keep unrelated Team cards clear of the raised warning shadow.
+            d["main_menu"]["team_select"]["spacing"]["y"].SetFloat(120.0f);
             d["menu_style"]["shadow"]["detail_offset"]["y"].SetFloat(-28.0f);
         };
         variants.load(panel_top).validate_resources(world.render, world.audio);
@@ -3713,6 +4030,8 @@ namespace
         const auto use_font = [](rapidjson::Document& d, const std::string& name, const char* key)
         {
             d["menu_style"]["fonts"]["detail"].SetString(name.c_str(), d.GetAllocator());
+            // Keep independent Weapon bodies clear of the compact label badges.
+            d["main_menu"]["fonts"]["weapon_description"].SetString("menu_text_exact");
             for (const auto& entry : stage_text) { d["menu_text"]["stage"][entry.key].SetString("Fit"); }
             d["menu_text"]["stage"][key].SetString("~");
         };
@@ -4552,6 +4871,9 @@ int main(int argc, char** argv)
         check_pause_text(variants, world);
         check_connection_text(variants, world);
         check_connection_bounds(variants, world);
+        check_label_text(variants, world, defaults.menu_text());
+        check_label_resources(variants, world);
+        check_label_results_extrema(variants, world);
         check_confirmation_text(variants, world);
         check_confirmation_bounds(variants, world);
         check_display_trial_text(variants, world);
@@ -4586,6 +4908,7 @@ int main(int argc, char** argv)
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
+            "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "Pad Sticks exact-token/range/201-value/schema guards, multiline boundaries and adversarial pen/ink extrema, "
             "width-only arena hints and actual PromptBar measurement compatibility.\n";
