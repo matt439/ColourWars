@@ -44,11 +44,9 @@ int Session::round() const { return this->round_; }
 int Session::team_a_wins() const { return this->team_a_wins_; }
 int Session::team_b_wins() const { return this->team_b_wins_; }
 
-std::wstring Session::score_string() const
+std::wstring Session::score_string(const MenuResultsText& text) const
 {
-	return L"Wins: A " + std::to_wstring(this->team_a_wins_) + L" - B " +
-		std::to_wstring(this->team_b_wins_) + L"  |  First to " +
-		std::to_wstring(this->best_of_ / 2 + 1);
+	return text.score_line(this->team_a_wins_, this->team_b_wins_, this->best_of_ / 2 + 1);
 }
 
 std::wstring Session::result_string(const MenuResultsText& text) const

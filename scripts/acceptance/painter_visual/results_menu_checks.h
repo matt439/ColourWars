@@ -230,7 +230,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             "Results winner/coverage line escapes the paper or overlaps the series ledger");
         if (fixture.session.is_series())
         {
-            const RectangleF score = centered(detail_font, fixture.session.score_string(), look.session_score_y);
+            const RectangleF score = centered(detail_font, fixture.session.score_string(presentation.menu_text().results), look.session_score_y);
             const RectangleF result = centered(detail_font, fixture.session.result_string(presentation.menu_text().results), look.session_result_y);
             require(panel.contains(score) && panel.contains(result) && score.bottom() < result.y &&
                 result.bottom() < fill_box.y - art.focus_padding.y,

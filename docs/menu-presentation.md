@@ -1566,11 +1566,11 @@ the Team Select warning, Pad Sticks connection/raw/response readouts, and shared
 menu device/roster labels including the packed Pause missing-pad list, Arena
 briefing mode/roster summaries and numbered/count hints, preference percentages,
 duration and resolution values, and Session-selected End continuation labels.
-The three plain Results labels and four fixed Session result messages below
-are also authored. The numbered series heading, score line, winner/coverage
-copy and contribution/team descriptions remain open under that item. Font
-regeneration, wrapping and locale selection remain separate work. The historical
-audit is unchanged.
+The three plain Results labels, four fixed Session result messages and series
+score line described below are also authored. The numbered series heading,
+winner/coverage copy and contribution/team descriptions remain open under that
+item. Font regeneration, wrapping and locale selection remain separate work.
+The historical audit is unchanged.
 
 ## Connection messages and player-specific Pause titles
 
@@ -2225,6 +2225,64 @@ CSV/PPM files, match byte for byte. All eight crops were inspected. Evidence is
 under `out/validation/session-result-text/`. These checks establish no match
 launch, physical-device, listening, human readability or performance acceptance.
 
+## Series score line (`GAP#8.4`)
+
+Required `menu_text.results.series_score` retains the existing composition:
+
+```text
+Wins: A {team_a_wins} - B {team_b_wins}  |  First to {target}
+```
+
+Each of the three declared tokens occurs exactly once in the original
+template. Reordering is allowed; missing, duplicate, nested, unknown or
+unmatched braces are rejected. The existing normalized printable nonblank
+single-line rules apply, with no new character limit. Direct formatter calls
+also validate their template.
+
+`MenuResultsText::score_line` accepts targets one through three and each win
+count from zero through that target, excluding both teams at the target.
+These are exactly the 26 combinations reachable under the existing
+best-of-1/3/5 choices and completion guard. Invalid arguments are rejected
+before formatting. Session still computes its target using the same integer
+division, supplies its unchanged win counts and returns an owned string.
+
+Results passes its captured text and retains the initially hidden, unscaled
+detail-font row centered at `results_menu.session_score_y`, with the same
+zero-offset transparent shadow. Resource checks measure all 26 actual
+compositions in that font against the existing centered Results paper rule;
+they do not assume the greatest numeric values are the widest glyphs. Equality
+is accepted. No fitting, collision, ledger, result, continuation, round,
+reveal or input rule changes. Open widgets retain their constructed copy and
+font; reopening adopts edits.
+
+Validation (2026-10-19): both game builds, focused Debug text and Session checks,
+and all 38 CPU cases per preset passed. The text case preserves every prior
+check and adds strict templates, all 26 independent default compositions,
+all six token orders, direct domain failures, owned widgets, actual glyphs,
+inclusive paper edges and quarter-unit overflow. Unequal digit widths prove
+that a numerically terminal score need not be widest. Session checks construct
+all 26 ledgers through legal rounds and retain independent literal default and
+reordered strings, unchanged results, continuation and counters. Twelve test
+call sites supply their appropriate text snapshots. One Release ammunition
+case returned zero with an empty captured log; the unchanged binary passed a
+separate run with explicit output capture. The original log is retained and
+the capture cause is unestablished. Both isolated published-bank/System-only-PATH
+startups passed with per-monitor v2 DPI awareness.
+
+`-SeriesScoreOnly` passed on both presets: 81 updates, 97 readbacks, 31
+comparisons, fourteen actual page openings and fourteen fresh Enter pops.
+Four real series branches retain independent literal score, outcome and Round
+references; a single match verifies score/outcome absence. Captured templates
+and the detail font survive assignment, reopening and reversal. Four font
+controls change only the custom caret marker. Reveal/proceed timing,
+premature Enter/Escape refusal, zero-update resize, full resource validation,
+Session/setup/private Save/RNG and exactly one successful private seed Save
+per preset are checked. Eight crops contain 710,640 pixels per preset; all
+eleven shared files, including ten raw CSV/PPM artifacts, match byte for byte.
+All eight crops were inspected. Evidence is under
+`out/validation/series-score-text/`. These checks establish no match launch,
+physical-device, listening, human readability or performance acceptance.
+
 ## Remaining text slices (`GAP#8.4`)
 
 **OPEN.** Preserve the existing wording and move it into presentation data in
@@ -2232,13 +2290,13 @@ bounded increments. Shared On/Off/Random values and the fixed labels described
 above, shared menu device/roster labels, packed missing-pad lists and Arena
 briefing mode/roster summaries, Arena numbering and Random availability, and
 preference percentages, duration units/Default notation, resolution values and
-End continuation labels, the three plain Results labels and four fixed Session
-result messages are implemented.
+End continuation labels, the three plain Results labels, four fixed Session
+result messages and the series score line are implemented.
 The next slice is:
 
-1. **Session and results:** the numbered series heading, series score line,
-   winner/solo-coverage copy and contribution/team descriptions. Retain reveal
-   timing and solo/series distinctions.
+1. **Session and results:** the numbered series heading, winner/solo-coverage
+   copy and contribution/team descriptions. Retain reveal timing and solo/series
+   distinctions.
 
 Deadzones already use the shared percentage template, including the inherited
 value; introducing a new inheritance marker is separate work.

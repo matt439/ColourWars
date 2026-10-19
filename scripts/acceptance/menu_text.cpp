@@ -169,6 +169,16 @@ namespace
         { "draw_no_win", L"Draw - no win awarded", &MenuResultsText::draw_no_win },
         { "series_continues", L"Series continues", &MenuResultsText::series_continues }
     };
+    struct SeriesScoreExample { int team_a; int team_b; int target; };
+    constexpr SeriesScoreExample series_score_examples[]{
+        { 0, 0, 1 }, { 0, 1, 1 }, { 1, 0, 1 },
+        { 0, 0, 2 }, { 0, 1, 2 }, { 0, 2, 2 }, { 1, 0, 2 },
+        { 1, 1, 2 }, { 1, 2, 2 }, { 2, 0, 2 }, { 2, 1, 2 },
+        { 0, 0, 3 }, { 0, 1, 3 }, { 0, 2, 3 }, { 0, 3, 3 },
+        { 1, 0, 3 }, { 1, 1, 3 }, { 1, 2, 3 }, { 1, 3, 3 },
+        { 2, 0, 3 }, { 2, 1, 3 }, { 2, 2, 3 }, { 2, 3, 3 },
+        { 3, 0, 3 }, { 3, 1, 3 }, { 3, 2, 3 }
+    };
     struct RecordText { const char* key; const wchar_t* text; std::wstring MenuRecordText::* field; };
     constexpr RecordText record_text[]{
         { "new_best", L"NEW BEST", &MenuRecordText::new_best },
@@ -430,6 +440,8 @@ namespace
         {
             require(text.results.*entry.field == entry.text, std::string("Session result default changed: ") + entry.key);
         }
+        require(text.results.series_score == L"Wins: A {team_a_wins} - B {team_b_wins}  |  First to {target}",
+            "Default series-score template changed its literal labels, token names or double spaces");
         for (const auto& entry : stage_text)
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena status default changed: ") + entry.key);
@@ -6724,6 +6736,222 @@ namespace
             d["menu_text"]["results"]["series_continues"].SetString(std::string(512, 'W').c_str(), d.GetAllocator());
         }, &world);
     }
+    void check_series_score_text(Variants& variants, const MenuText& defaults)
+    {
+        require(std::size(series_score_examples) == 26, "Series-score oracle must cover all 26 legal ledgers");
+        int per_target[3]{};
+        for (size_t index = 0; index < std::size(series_score_examples); ++index)
+        {
+            const auto& example = series_score_examples[index]; ++per_target[example.target - 1];
+            for (size_t prior = 0; prior < index; ++prior)
+                require(example.team_a != series_score_examples[prior].team_a ||
+                    example.team_b != series_score_examples[prior].team_b || example.target != series_score_examples[prior].target,
+                    "Series-score oracle contains a duplicated ledger");
+            const std::wstring expected = L"Wins: A " + std::to_wstring(example.team_a) + L" - B " +
+                std::to_wstring(example.team_b) + L"  |  First to " + std::to_wstring(example.target);
+            require(defaults.results.score_line(example.team_a, example.team_b, example.target) == expected,
+                "Series-score formatter changed the independent original composition for a legal ledger");
+        }
+        require(per_target[0] == 3 && per_target[1] == 8 && per_target[2] == 15,
+            "Series-score oracle lost a target or included an impossible joint completion");
+        const auto refuses = [](auto action)
+        {
+            bool refused = false; try { action(); } catch (const std::invalid_argument&) { refused = true; }
+            require(refused, "Invalid series-score domain or directly mutated template formatted silently");
+        };
+        for (const int target : { -1, 0, 4, (std::numeric_limits<int>::min)(), (std::numeric_limits<int>::max)() })
+            refuses([&] { defaults.results.score_line(0, 0, target); });
+        for (const int target : { 1, 2, 3 })
+        {
+            refuses([&] { defaults.results.score_line(target, target, target); });
+            for (const int wins : { -1, target + 1, (std::numeric_limits<int>::min)(), (std::numeric_limits<int>::max)() })
+            {
+                refuses([&] { defaults.results.score_line(wins, 0, target); });
+                refuses([&] { defaults.results.score_line(0, wins, target); });
+            }
+        }
+        struct OrderedScore { const char* text; const wchar_t* expected; };
+        const OrderedScore orders[]{
+            { "{team_a_wins}/{team_b_wins}/{target}", L"1/0/2" },
+            { "{team_a_wins}/{target}/{team_b_wins}", L"1/2/0" },
+            { "{team_b_wins}/{team_a_wins}/{target}", L"0/1/2" },
+            { "{team_b_wins}/{target}/{team_a_wins}", L"0/2/1" },
+            { "{target}/{team_a_wins}/{team_b_wins}", L"2/1/0" },
+            { "{target}/{team_b_wins}/{team_a_wins}", L"2/0/1" },
+            { "{team_a_wins}%:{team_b_wins}%%:{target}", L"1%:0%%:2" }
+        };
+        for (const auto& order : orders)
+        {
+            const auto authored = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["results"]["series_score"].SetString(order.text, d.GetAllocator()); });
+            require(authored.menu_text().results.score_line(1, 0, 2) == order.expected,
+                "Series-score template depends on token order or interpreted a literal percent sign");
+        }
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["results"]["series_score"].SetString(
+                "  {target}\xC2\xA0{team_b_wins}\xE2\x80\x94{team_a_wins}\xE2\x80\xA6  ");
+        });
+        require(normalized.menu_text().results.series_score == L"  {target} {team_b_wins}-{team_a_wins}...  " &&
+            normalized.menu_text().results.score_line(1, 0, 2) == L"  2 0-1...  ",
+            "Series-score template lost normalized punctuation, outer spaces or authored token order");
+        variants.rejects("results.series_score", [](rapidjson::Document& d) { d["menu_text"]["results"].RemoveMember("series_score"); });
+        for (int type = 0; type < 5; ++type)
+            variants.rejects("results.series_score", [&](rapidjson::Document& d)
+            {
+                auto& value = d["menu_text"]["results"]["series_score"];
+                if (type == 0) { value.SetNull(); } else if (type == 1) { value.SetBool(true); }
+                else if (type == 2) { value.SetInt(3); } else if (type == 3) { value.SetArray(); } else { value.SetObject(); }
+            });
+        for (const char* invalid : { "", "   ", "No tokens", "{team_a_wins}{team_b_wins}", "{team_a_wins}{target}",
+            "{team_b_wins}{target}", "{team_a_wins}{team_a_wins}{team_b_wins}{target}",
+            "{team_a_wins}{team_b_wins}{team_b_wins}{target}", "{team_a_wins}{team_b_wins}{target}{target}",
+            "{team_a_wins}{team_b_wins}{target}{unknown}", "{Team_a_wins}{team_b_wins}{target}",
+            "{team_a_wins }{team_b_wins}{target}", "{{team_a_wins}}{team_b_wins}{target}",
+            "{team_a_wins}{team_b_wins}{target", "{team_a_wins}{team_b_wins}{target}{", "{team_a_wins}{team_b_wins}{target}}",
+            "{team_{team_a_wins}b_wins}{target}", "{team_a_wins}{tar{team_b_wins}get}" })
+        {
+            variants.rejects("results.series_score", [&](rapidjson::Document& d)
+                { d["menu_text"]["results"]["series_score"].SetString(invalid, d.GetAllocator()); });
+            MenuResultsText mutated = defaults.results; mutated.series_score = std::wstring(invalid, invalid + std::strlen(invalid));
+            refuses([&] { mutated.score_line(1, 0, 2); });
+        }
+        const std::string tokens = "{team_a_wins}{team_b_wins}{target}";
+        for (const char* suffix : { "\n", "\r", "\r\n", "\t", "\x01", "\x7f", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28" })
+            variants.rejects("results.series_score", [&](rapidjson::Document& d)
+            { const std::string invalid = tokens + suffix; d["menu_text"]["results"]["series_score"].SetString(invalid.c_str(), d.GetAllocator()); });
+        for (const wchar_t* suffix : { L"\n", L"\r", L"\t", L"\x01", L"\x7f", L"\u00e9", L"\u00a0", L"\u2014" })
+        {
+            MenuResultsText mutated = defaults.results; mutated.series_score += suffix;
+            refuses([&] { mutated.score_line(1, 0, 2); });
+        }
+        variants.rejects("results.series_score", [&](rapidjson::Document& d)
+        {
+            const std::string invalid = tokens + '\0' + "tail";
+            d["menu_text"]["results"]["series_score"].SetString(invalid.data(), static_cast<rapidjson::SizeType>(invalid.size()), d.GetAllocator());
+        });
+        MenuResultsText nul = defaults.results; nul.series_score.push_back(L'\0');
+        refuses([&] { nul.score_line(1, 0, 2); });
+        const auto long_copy = variants.load([&](rapidjson::Document& d)
+        { const std::string text = std::string(512, 'W') + tokens;
+            d["menu_text"]["results"]["series_score"].SetString(text.c_str(), d.GetAllocator()); });
+        require(long_copy.menu_text().results.score_line(1, 0, 1) == std::wstring(512, L'W') + L"101",
+            "Series-score template acquired a character cap or altered a long supported literal prefix");
+    }
+
+    void check_series_score_resources(Variants& variants, World& world, const Presentation& defaults)
+    {
+        const auto add_font = [&](const std::string& name, int marker_width, int marker_height,
+            int one_width = 8, float marker_x = 0.0f, float marker_y = 0.0f, char32_t omitted = U'\0')
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                if (character == omitted) { continue; }
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0,
+                    character == U'~' ? marker_width : character == U'1' ? one_width : 8,
+                    character == U'~' ? marker_height : 16),
+                    character == U'~' ? marker_x : 0.0f, character == U'~' ? marker_y : 0.0f, 0.0f });
+            }
+            auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f);
+            font->set_stand_in(U'?'); world.render.add_font(name, std::move(font));
+        };
+        add_font("menu_score_width", 1276, 16);
+        add_font("menu_score_width_overflow", 1276, 16, 8, 0.25f);
+        add_font("menu_score_bottom", 8, 630);
+        add_font("menu_score_bottom_overflow", 8, 630, 8, 0.0f, 0.25f);
+        add_font("menu_score_proportional", 1212, 16, 40);
+        add_font("menu_score_proportional_overflow", 1212, 16, 40, 0.25f);
+        add_font("menu_score_infinite_width", 8, 16, 8, std::numeric_limits<float>::infinity());
+        add_font("menu_score_nan_width", 8, 16, 8, std::numeric_limits<float>::quiet_NaN());
+        add_font("menu_score_infinite_height", 8, 16, 8, 0.0f, std::numeric_limits<float>::infinity());
+        const auto select = [](rapidjson::Document& d, const char* font_name)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString(font_name, d.GetAllocator());
+            d["menu_text"]["results"]["series_score"].SetString("~{team_a_wins}{team_b_wins}{target}");
+        };
+        const auto edge = variants.load([&](rapidjson::Document& d) { select(d, "menu_score_width"); });
+        edge.validate_resources(world.render, world.audio);
+        require(edge.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) && edge.results_menu().session_score_y == 340.0f,
+            "Series-score boundary fixture changed the full-height Results paper or actual row");
+        std::wstring source = edge.menu_text().results.score_line(1, 0, 1);
+        require(source == L"~101", "Series-score boundary must format the independently expected literal");
+        UiTextDropShadow widget("series-score-edge", source, edge.menu().detail_font, { 310.0f, 340.0f }, &world.render,
+            edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+        source = L"Changed after construction";
+        require(widget.bounds() == mattmath::RectangleF(310.0f, 340.0f, 1300.0f, 20.0f) && widget.text() == L"~101" &&
+            widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+            "Series-score widget lost unscaled centered copy or gained a shadow at the exact left/right paper edges");
+        DrawList no_device; widget.draw(no_device);
+        variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, "menu_score_width_overflow"); }, &world);
+        const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, "menu_score_bottom"); });
+        bottom.validate_resources(world.render, world.audio);
+        UiTextDropShadow tall("series-score-bottom", L"~101", bottom.menu().detail_font, { 944.0f, 340.0f }, &world.render,
+            bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+        require(tall.bounds() == mattmath::RectangleF(944.0f, 340.0f, 32.0f, 630.0f) && tall.bounds().bottom() == 970.0f,
+            "Series-score height must use full paper containment without a new row-fit or overlap restriction");
+        variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, "menu_score_bottom_overflow"); }, &world);
+        const auto proportional = variants.load([&](rapidjson::Document& d) { select(d, "menu_score_proportional"); });
+        proportional.validate_resources(world.render, world.audio);
+        const auto handle = world.render.resolve_sprite_font(proportional.menu().detail_font);
+        float maximum = 0.0f; int widest_count = 0;
+        for (const auto& example : series_score_examples)
+        {
+            const std::wstring literal = L"~" + std::to_wstring(example.team_a) + std::to_wstring(example.team_b) + std::to_wstring(example.target);
+            const int ones = (example.team_a == 1 ? 1 : 0) + (example.team_b == 1 ? 1 : 0) + (example.target == 1 ? 1 : 0);
+            const auto size = world.render.measure_text(handle, literal);
+            require(proportional.menu_text().results.score_line(example.team_a, example.team_b, example.target) == literal &&
+                size == mattmath::Vector2F(1212.0f + 40.0f * static_cast<float>(ones) + 8.0f * static_cast<float>(3 - ones), 20.0f),
+                "All-ledger proportional-font oracle lost a real digit width or composed score");
+            if (size.x > maximum) { maximum = size.x; widest_count = 1; }
+            else if (size.x == maximum) { ++widest_count; }
+        }
+        require(maximum == 1300.0f && widest_count == 4 &&
+            world.render.measure_text(handle, L"~112") == mattmath::Vector2F(1300.0f, 20.0f) &&
+            world.render.measure_text(handle, L"~323") == mattmath::Vector2F(1236.0f, 20.0f),
+            "Series-score resource fixture must require smaller-score ledgers, not assume digit3 or the terminal ledger is widest");
+        variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, "menu_score_proportional_overflow"); }, &world);
+        for (const char* font_name : { "menu_score_infinite_width", "menu_score_nan_width", "menu_score_infinite_height" })
+            variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, font_name); }, &world);
+        variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, "menu_text_limited"); }, &world);
+        for (int digit = 0; digit <= 3; ++digit)
+        {
+            const auto missing = static_cast<char32_t>(U'0' + digit);
+            const std::string name = "menu_score_missing" + std::to_string(digit);
+            add_font(name, 8, 16, 8, 0.0f, 0.0f, missing);
+            const auto font = world.render.font(world.render.resolve_sprite_font(name));
+            const std::wstring literal = defaults.menu_text().results.score_line(0, 0, digit < 2 ? 1 : digit);
+            require(font->contains(U'?') && !font->contains(missing) && literal.find(static_cast<wchar_t>(missing)) != std::wstring::npos &&
+                font->measure(literal).x > 0.0f, "Generated score digit must be genuinely absent despite a functioning stand-in");
+            // The preserved countdown0..15 check already owns these shared-font
+            // missing digits before the new score's exhaustive resource loop.
+            variants.rejects("display_trial_countdown", [&](rapidjson::Document& d)
+                { d["menu_style"]["fonts"]["detail"].SetString(name.c_str(), d.GetAllocator()); }, &world);
+        }
+        variants.rejects("results.series_score", [](rapidjson::Document& d)
+        {
+            const std::string text = std::string(512, 'W') + "{team_a_wins}{team_b_wins}{target}";
+            d["menu_text"]["results"]["series_score"].SetString(text.c_str(), d.GetAllocator());
+        }, &world);
+        variants.rejects("results.series_continues", [](rapidjson::Document& d)
+        {
+            const std::string text = std::string(512, 'W');
+            d["menu_text"]["results"]["series_continues"].SetString(text.c_str(), d.GetAllocator());
+            d["menu_text"]["results"]["series_score"].SetString((text + "{team_a_wins}{team_b_wins}{target}").c_str(), d.GetAllocator());
+        }, &world);
+        variants.rejects("values.on", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited"); d["menu_text"]["values"]["on"].SetString("~");
+            d["menu_text"]["results"]["series_score"].SetString("~{team_a_wins}{team_b_wins}{target}");
+        }, &world);
+        Presentation mutated = defaults;
+        const_cast<MenuText&>(mutated.menu_text()).results.series_score = L"{team_{team_a_wins}b_wins}{target}";
+        bool contextual = false;
+        try { mutated.validate_resources(world.render, world.audio); }
+        catch (const std::runtime_error& error)
+        { contextual = std::string(error.what()).find("menu_text.results.series_score") != std::string::npos; }
+        require(contextual, "Directly manufactured score tokens escaped resource validation or lost the named score role");
+    }
 }
 
 int main(int argc, char** argv)
@@ -6797,6 +7025,8 @@ int main(int argc, char** argv)
         check_results_plain_bounds(variants, world);
         check_session_result_text(variants, world);
         check_session_result_bounds(variants, world);
+        check_series_score_text(variants, defaults.menu_text());
+        check_series_score_resources(variants, world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
@@ -6806,6 +7036,7 @@ int main(int argc, char** argv)
             "four plain End continuation labels with literal braces, actual-font glyphs and unscaled row0 padding boundaries, "
             "three plain Results roles with zero-offset shadows, centered paper bounds and authored record/roster clearance dependencies, "
             "four plain Session result outcomes with owned zero-shadow text and inclusive unscaled Results-paper bounds, "
+            "strict authored series-score tokens, all26 legal ledgers and proportional-font full-paper boundaries, "
             "device/roster labels with original tokens, actual fonts, full Pause lists and exact Results percentage bounds, "
             "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "finite authored series/roster templates and expanded-card boundaries, "

@@ -72,7 +72,7 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         for (size_t index = 0; index < cases.size(); ++index)
         {
             const auto& fixture = cases[index];
-            require(ledger(fixture.session) == ledgers[index] && fixture.session.score_string() == fixture.score &&
+            require(ledger(fixture.session) == ledgers[index] && fixture.session.score_string(original.menu_text().results) == fixture.score &&
                 fixture.session.result_string(original.menu_text().results) == fixture.outcome &&
                 fixture.info.total_area == 100.0f && fixture.info.team_a_played && fixture.info.team_b_played &&
                 fixture.info.player_areas[paint_owners::index(input_slots::keyboard_and_mouse, 0)] == fixture.info.team_a_area &&

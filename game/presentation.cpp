@@ -372,6 +372,15 @@ namespace
 		text.results.series_team_b_wins = read_menu_line(results, "series_team_b_wins");
 		text.results.draw_no_win = read_menu_line(results, "draw_no_win");
 		text.results.series_continues = read_menu_line(results, "series_continues");
+		text.results.series_score = read_menu_line(results, "series_score");
+		try
+		{
+			std::ignore = text.results.score_line(0, 0, 1);
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(results.where() + ": series_score: " + error.what());
+		}
 		const JsonValue stage = json.object("stage");
 		text.stage.browse_status = read_menu_line(stage, "browse_status");
 		text.stage.locked_status = read_menu_line(stage, "locked_status");
@@ -2050,6 +2059,21 @@ std::wstring MenuText::device_label(int slot) const
 		return format_label_template(this->labels.waiting, {});
 	}
 	throw std::invalid_argument("Menu device label requires a slot from -1 to 4.");
+}
+
+std::wstring MenuResultsText::score_line(int team_a_wins, int team_b_wins, int target) const
+{
+	if (target < 1 || target > 3 || team_a_wins < 0 || team_b_wins < 0 ||
+		team_a_wins > target || team_b_wins > target ||
+		(team_a_wins == target && team_b_wins == target))
+	{
+		throw std::invalid_argument("Session score requires a target from 1 to 3, wins from 0 to the target, "
+			"and at most one team at the target.");
+	}
+	return format_label_template(this->series_score,
+		{ { L"{team_a_wins}", std::to_wstring(team_a_wins) },
+		{ L"{team_b_wins}", std::to_wstring(team_b_wins) },
+		{ L"{target}", std::to_wstring(target) } });
 }
 
 std::wstring MenuText::setting_percentage(int value) const
@@ -4139,6 +4163,28 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->menu_.detail_font, results.session_result_y);
 	check_results_centered("series_continues", this->menu_text_.results.series_continues,
 		this->menu_.detail_font, results.session_result_y);
+	// Measure every reachable ledger, including single-match Sessions.
+	// Session completion prevents both teams reaching the target.
+	try
+	{
+		for (int target = 1; target <= 3; ++target)
+		{
+			for (int team_a_wins = 0; team_a_wins <= target; ++team_a_wins)
+			{
+				for (int team_b_wins = 0; team_b_wins <= target; ++team_b_wins)
+				{
+					if (team_a_wins == target && team_b_wins == target) { continue; }
+					check_results_centered("series_score",
+						this->menu_text_.results.score_line(team_a_wins, team_b_wins, target),
+						this->menu_.detail_font, results.session_score_y);
+				}
+			}
+		}
+	}
+	catch (const std::invalid_argument& error)
+	{
+		throw std::runtime_error(this->source_path_ + ": menu_text.results.series_score: " + error.what());
+	}
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const

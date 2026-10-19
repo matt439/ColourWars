@@ -493,13 +493,13 @@ namespace debug_console_acceptance
 		{
 			const bool series = session.is_series(), complete = session.complete();
 			const int round = session.round(), a_wins = session.team_a_wins(), b_wins = session.team_b_wins();
-			const std::wstring score = session.score_string(), result = session.result_string(original_results);
+			const std::wstring score = session.score_string(original_results), result = session.result_string(original_results);
 			std::wstring selected = session.continue_string(custom);
 			require(selected == expected, "Session selects the supplied continuation without formatting literal braces");
 			selected.clear();
 			require(session.continue_string(custom) == expected && session.is_series() == series &&
 				session.complete() == complete && session.round() == round && session.team_a_wins() == a_wins &&
-				session.team_b_wins() == b_wins && session.score_string() == score && session.result_string(original_results) == result,
+				session.team_b_wins() == b_wins && session.score_string(original_results) == score && session.result_string(original_results) == result,
 				"Continuation selection returns an owned copy and leaves the Session ledger unchanged");
 		};
 		for (const bool solo : { false, true })
@@ -550,14 +550,14 @@ namespace debug_console_acceptance
 		{
 			const bool series = session.is_series(), complete = session.complete();
 			const int round = session.round(), a_wins = session.team_a_wins(), b_wins = session.team_b_wins();
-			const std::wstring score = session.score_string(), continuation = session.continue_string(custom);
+			const std::wstring score = session.score_string(original_results), continuation = session.continue_string(custom);
 			std::wstring selected = session.result_string(custom_results);
 			require(selected == expected_custom && session.result_string(original_results) == expected_default,
 				"Session selects the exact default or supplied result while retaining literal braces");
 			selected.clear();
 			require(session.result_string(custom_results) == expected_custom && session.is_series() == series &&
 				session.complete() == complete && session.round() == round && session.team_a_wins() == a_wins &&
-				session.team_b_wins() == b_wins && session.score_string() == score &&
+				session.team_b_wins() == b_wins && session.score_string(original_results) == score &&
 				session.continue_string(custom) == continuation && session.result_string(original_results) == expected_default,
 				"Result selection returns an owned copy without changing the Session ledger, score or continuation");
 		};
@@ -609,6 +609,82 @@ namespace debug_console_acceptance
 			custom_results.series_team_b_wins == L"Beta {series}" && custom_results.draw_no_win == L"Draw {award}" &&
 			custom_results.series_continues == L"Continue {series}",
 			"Session result selection leaves supplied text unchanged, including completed single-round ties");
+		struct ScoreCase
+		{
+			int a_wins, b_wins, target;
+			const wchar_t* original;
+			const wchar_t* reordered;
+		};
+		const std::array<ScoreCase, 26> score_cases{ {
+			{ 0, 0, 1, L"Wins: A 0 - B 0  |  First to 1", L"Goal 1 | B 0, A 0" },
+			{ 0, 1, 1, L"Wins: A 0 - B 1  |  First to 1", L"Goal 1 | B 1, A 0" },
+			{ 1, 0, 1, L"Wins: A 1 - B 0  |  First to 1", L"Goal 1 | B 0, A 1" },
+			{ 0, 0, 2, L"Wins: A 0 - B 0  |  First to 2", L"Goal 2 | B 0, A 0" },
+			{ 0, 1, 2, L"Wins: A 0 - B 1  |  First to 2", L"Goal 2 | B 1, A 0" },
+			{ 0, 2, 2, L"Wins: A 0 - B 2  |  First to 2", L"Goal 2 | B 2, A 0" },
+			{ 1, 0, 2, L"Wins: A 1 - B 0  |  First to 2", L"Goal 2 | B 0, A 1" },
+			{ 1, 1, 2, L"Wins: A 1 - B 1  |  First to 2", L"Goal 2 | B 1, A 1" },
+			{ 1, 2, 2, L"Wins: A 1 - B 2  |  First to 2", L"Goal 2 | B 2, A 1" },
+			{ 2, 0, 2, L"Wins: A 2 - B 0  |  First to 2", L"Goal 2 | B 0, A 2" },
+			{ 2, 1, 2, L"Wins: A 2 - B 1  |  First to 2", L"Goal 2 | B 1, A 2" },
+			{ 0, 0, 3, L"Wins: A 0 - B 0  |  First to 3", L"Goal 3 | B 0, A 0" },
+			{ 0, 1, 3, L"Wins: A 0 - B 1  |  First to 3", L"Goal 3 | B 1, A 0" },
+			{ 0, 2, 3, L"Wins: A 0 - B 2  |  First to 3", L"Goal 3 | B 2, A 0" },
+			{ 0, 3, 3, L"Wins: A 0 - B 3  |  First to 3", L"Goal 3 | B 3, A 0" },
+			{ 1, 0, 3, L"Wins: A 1 - B 0  |  First to 3", L"Goal 3 | B 0, A 1" },
+			{ 1, 1, 3, L"Wins: A 1 - B 1  |  First to 3", L"Goal 3 | B 1, A 1" },
+			{ 1, 2, 3, L"Wins: A 1 - B 2  |  First to 3", L"Goal 3 | B 2, A 1" },
+			{ 1, 3, 3, L"Wins: A 1 - B 3  |  First to 3", L"Goal 3 | B 3, A 1" },
+			{ 2, 0, 3, L"Wins: A 2 - B 0  |  First to 3", L"Goal 3 | B 0, A 2" },
+			{ 2, 1, 3, L"Wins: A 2 - B 1  |  First to 3", L"Goal 3 | B 1, A 2" },
+			{ 2, 2, 3, L"Wins: A 2 - B 2  |  First to 3", L"Goal 3 | B 2, A 2" },
+			{ 2, 3, 3, L"Wins: A 2 - B 3  |  First to 3", L"Goal 3 | B 3, A 2" },
+			{ 3, 0, 3, L"Wins: A 3 - B 0  |  First to 3", L"Goal 3 | B 0, A 3" },
+			{ 3, 1, 3, L"Wins: A 3 - B 1  |  First to 3", L"Goal 3 | B 1, A 3" },
+			{ 3, 2, 3, L"Wins: A 3 - B 2  |  First to 3", L"Goal 3 | B 2, A 3" } } };
+		MenuResultsText custom_score = original_results;
+		custom_score.series_score = L"Goal {target} | B {team_b_wins}, A {team_a_wins}";
+		for (const ScoreCase& fixture : score_cases)
+		{
+			Session scored(fixture.target * 2 - 1);
+			int awarded = 0;
+			const auto add_wins = [&](const LevelEndInfo& result, int count)
+			{
+				for (int index = 0; index < count; ++index)
+				{
+					require(!scored.complete(), "Score fixture must not award a round after completion");
+					if (awarded != 0) { scored.next_round(); }
+					scored.finish_round(result); ++awarded;
+				}
+			};
+			// A completed team's final win must follow every opposing win.
+			if (fixture.a_wins == fixture.target)
+			{
+				add_wins(win_b, fixture.b_wins); add_wins(win, fixture.a_wins);
+			}
+			else
+			{
+				add_wins(win, fixture.a_wins); add_wins(win_b, fixture.b_wins);
+			}
+			require(scored.team_a_wins() == fixture.a_wins && scored.team_b_wins() == fixture.b_wins &&
+				scored.is_series() == (fixture.target > 1) &&
+				scored.complete() == (fixture.a_wins == fixture.target || fixture.b_wins == fixture.target),
+				"Score fixture did not reach its literal ledger through legal Session rounds");
+			const int round = scored.round(); const bool complete = scored.complete(), series = scored.is_series();
+			const std::wstring result = scored.result_string(original_results), continuation = scored.continue_string(custom);
+			std::wstring score = scored.score_string(custom_score);
+			require(scored.score_string(original_results) == fixture.original && score == fixture.reordered,
+				"Session score changed exact legacy composition or reordered authored tokens for a reachable ledger");
+			score.clear();
+			require(scored.score_string(custom_score) == fixture.reordered && scored.round() == round &&
+				scored.complete() == complete && scored.is_series() == series && scored.team_a_wins() == fixture.a_wins &&
+				scored.team_b_wins() == fixture.b_wins && scored.result_string(original_results) == result &&
+				scored.continue_string(custom) == continuation,
+				"Session score returns an owned copy and leaves the ledger, result and continuation unchanged");
+		}
+		require(custom_score.series_score == L"Goal {target} | B {team_b_wins}, A {team_a_wins}" &&
+			original_results.series_score == L"Wins: A {team_a_wins} - B {team_b_wins}  |  First to {target}",
+			"Session scoring changed its supplied or captured source template");
 		// The strip at 1280x720 with a KEYBOARD + MOUSE card at the bottom
 		// right and the paint panel bottom left: lifted clear of both.
 		const Vector2F screen(1280.0f, 720.0f);

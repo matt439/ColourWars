@@ -321,7 +321,7 @@ void ResultsMenuInitial::init()
 		};
 	if (this->session_.is_series())
 	{
-		center_text(*add_detail(this->session_.score_string(), Vector2F::ZERO, style.detail_font),
+		center_text(*add_detail(this->session_.score_string(this->text().results), Vector2F::ZERO, style.detail_font),
 			look.session_score_y);
 		center_text(*add_detail(this->session_.result_string(this->text().results), Vector2F::ZERO, style.detail_font),
 			look.session_result_y);

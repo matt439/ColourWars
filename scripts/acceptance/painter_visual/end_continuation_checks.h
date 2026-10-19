@@ -33,7 +33,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
     for (size_t index = 0; index < cases.size(); ++index)
     {
         ledgers[index] = session_numbers(cases[index].session);
-        scores[index] = cases[index].session.score_string(); results_text[index] = cases[index].session.result_string(original.menu_text().results);
+        scores[index] = cases[index].session.score_string(original.menu_text().results); results_text[index] = cases[index].session.result_string(original.menu_text().results);
     }
     const NestedSaveProfile profile(output / "end-continuation-profile");
     Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
@@ -72,7 +72,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         for (size_t index = 0; index < cases.size(); ++index)
         {
             require(session_numbers(cases[index].session) == ledgers[index] &&
-                cases[index].session.score_string() == scores[index] && cases[index].session.result_string(original.menu_text().results) == results_text[index],
+                cases[index].session.score_string(original.menu_text().results) == scores[index] && cases[index].session.result_string(original.menu_text().results) == results_text[index],
                 "End continuation presentation or actions changed the Session ledger");
         }
         const auto players = settings.player_settings(); const auto& play = preferences.play_settings();

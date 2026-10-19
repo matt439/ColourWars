@@ -19,7 +19,7 @@ public:
 	int round() const;
 	int team_a_wins() const;
 	int team_b_wins() const;
-	std::wstring score_string() const;
+	std::wstring score_string(const MenuResultsText& text) const;
 	std::wstring result_string(const MenuResultsText& text) const;
 	std::wstring continue_string(const MenuEndText& text) const;
 
