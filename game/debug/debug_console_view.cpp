@@ -10,6 +10,7 @@
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/debug_perf.h"
 #include "game/game_data.h"
+#include "game/objects/crude_drawing.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -195,8 +196,8 @@ void DebugConsoleView::draw(Renderer& renderer, const GameData& data,
 		{
 			const std::wstring wide = widen(line);
 			list.draw_text(this->font_, wide, Vector2F(x, y) + look.shadow_offset,
-				look.shadow_colour, look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
-			list.draw_text(this->font_, wide, Vector2F(x, y), colour,
+				CrudeDrawing::premultiplied(look.shadow_colour), look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
+			list.draw_text(this->font_, wide, Vector2F(x, y), CrudeDrawing::premultiplied(colour),
 				look.font_scale, 0.0f, Vector2F::ZERO, 0.0f);
 		};
 
@@ -328,7 +329,7 @@ RectangleF DebugConsoleView::draw_panel(Renderer& renderer, const GameData& data
 	for (std::size_t i = 0; i < wide.size(); ++i)
 	{
 		const Vector2F at = position + Vector2F(0.0f, line_height * static_cast<float>(i));
-		list.draw_text(font, wide[i], at + look.shadow_offset, look.shadow_colour,
+		list.draw_text(font, wide[i], at + look.shadow_offset, CrudeDrawing::premultiplied(look.shadow_colour),
 			look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
 		list.draw_text(font, wide[i], at, strip_colour, look.font_scale, 0.0f,
 			Vector2F::ZERO, 0.0f);
@@ -399,7 +400,7 @@ RectangleF DebugConsoleView::draw_perf(Renderer& renderer, const GameData& data,
 	for (std::size_t i = 0; i < wide.size(); ++i)
 	{
 		const Vector2F at = origin + Vector2F(0.0f, text_top + line_height * static_cast<float>(i));
-		list.draw_text(font, wide[i], at + look.shadow_offset, look.shadow_colour,
+		list.draw_text(font, wide[i], at + look.shadow_offset, CrudeDrawing::premultiplied(look.shadow_colour),
 			look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
 		list.draw_text(font, wide[i], at, strip_colour, look.font_scale, 0.0f,
 			Vector2F::ZERO, 0.0f);

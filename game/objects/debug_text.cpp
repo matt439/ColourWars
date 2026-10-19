@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/debug_text.h"
+#include "game/objects/crude_drawing.h"
 #include <cmath>
 #include <cstdio>
 
@@ -131,10 +132,10 @@ void DebugText::draw_debug_info(DrawList& draw_list,
         const Vector2F shadow_pos = text_pos + look.shadow_offset;
 
         draw_list.draw_text(this->font_, lines[i], shadow_pos,
-            look.shadow_colour, look.shadow_scale, 0.0f, Vector2F::ZERO,
+            CrudeDrawing::premultiplied(look.shadow_colour), look.shadow_scale, 0.0f, Vector2F::ZERO,
             0.0f);
 
-        draw_list.draw_text(this->font_, lines[i], text_pos, look.colour,
+        draw_list.draw_text(this->font_, lines[i], text_pos, CrudeDrawing::premultiplied(look.colour),
             look.font_scale, 0.0f, Vector2F::ZERO, 0.0f);
 
         text_pos.y += look.line_spacing;

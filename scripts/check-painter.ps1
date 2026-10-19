@@ -11,6 +11,7 @@ param(
     [switch] $ParallaxOnly,
     [switch] $TuneColoursOnly,
     [switch] $FeedbackTuneColoursOnly,
+    [switch] $ExposedColourAlphaOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -64,7 +65,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -157,7 +158,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -283,6 +284,9 @@ function Write-ContactSheet {
         $feedbackColours = @($images | Where-Object { $_.name -like 'feedback-colour-*' })
         Write-ContactSheetPages -Images $feedbackColours -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-feedback-colour-contact'
+        $exposedAlpha = @($images | Where-Object { $_.name -like 'alpha-*' })
+        Write-ContactSheetPages -Images $exposedAlpha -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-exposed-alpha-contact'
         $menuMotion = @($images | Where-Object { $_.name -like 'menu-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $menuMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-menu-motion-contact'
@@ -393,7 +397,31 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($FeedbackTuneColoursOnly) {
+if ($ExposedColourAlphaOnly) {
+    $result.scope = 'exposed-colour-alpha-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @()
+    $result.palettes = @('opaque-default', 'literal-rgba128', 'literal-alpha0-nonzero-rgb')
+    $result.weapons = @()
+    $result.resolutions = @('1280x720')
+    $result.actions = @('thirteen-home-background-menu-sites', 'captured-retained-reopened-and-restored-copy', 'movement-feedback-alpha', 'debug-label-alpha', 'independent-straight-channel-references', 'frozen-draw-state-and-rng')
+    $result.input_slots = @()
+    $result.inputs = 'Normal GamepadReader backend with isolated native menu/drawable fixtures; no scripted pad seam, foreground/global input or active match route.'
+    $result.audio = 'No gameplay audio events; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Dedicated exposed-colour alpha leaf. Thirteen actual Home-background menu sites retain captured defaults/RGBA128/alpha0, adopt reopened values and restore defaults; literal channel references cover black/nonblack backgrounds. Home evidence is 235 readbacks, 52 page openings, 130 CSV rows, four 128x96 crops, eight controls and zero StateContext updates. Display confirmation uses the same 1280x720 windowed candidate with a private activation guard and rollback; no Keep action. Movement feedback and debug text compare independent raw-source/literal-channel references, opaque parity, straight-alpha/double-fade controls and retained captured paint; their evidence is 50 readbacks, 12 CSV rows, eight compact crops, ten negative controls and four opaque parity controls. Shared evidence totals 285 readbacks, 142 CSV rows, twelve crops, two successful private seed Saves and zero StateContext/gameplay updates. No broad painter matrix, gameplay, physical-device, listening, human readability or performance acceptance.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('debug-console-alpha', 'validated-private-tune-reset')
+        $result.checks += ' Debug additionally compares frozen/live console text, panel shadows and performance text against independent references through eight real private tune/reset commands: 104 readbacks, 48 CSV rows, four extra crops and zero Save write commands. Debug totals 389 readbacks, 190 CSV rows and sixteen crops.'
+        $result['developer_command_scope'] = 'debug-validated-commands'
+    }
+    else {
+        $result.checks += ' Release remains shared-consumer-only and emits no console command transcript, console summary, console CSV or console scratch tree.'
+        $result['developer_command_scope'] = 'not-run-release-consumer-only'
+    }
+}
+elseif ($FeedbackTuneColoursOnly) {
     $result.scope = 'feedback-tune-colours-only'
     $result.Remove('stage')
     $result.stages = @()
@@ -1091,6 +1119,7 @@ try {
     elseif ($ParallaxOnly) { $probeArguments += 'parallax' }
     elseif ($TuneColoursOnly) { $probeArguments += 'tune-colours' }
     elseif ($FeedbackTuneColoursOnly) { $probeArguments += 'feedback-tune-colours' }
+    elseif ($ExposedColourAlphaOnly) { $probeArguments += 'exposed-colour-alpha' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -1247,6 +1276,147 @@ try {
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
     }
+    if ($ExposedColourAlphaOnly) {
+        $alphaExpectedCsvNames = @('alpha-home.csv', 'alpha-movement.csv')
+        $alphaExpectedSummaryNames = @('alpha-home-summary.json', 'alpha-movement-summary.json')
+        $alphaHomeSummary = Get-Content -LiteralPath (Join-Path $captures 'alpha-home-summary.json') -Raw | ConvertFrom-Json
+        $alphaHomeRows = @(Import-Csv -LiteralPath (Join-Path $captures 'alpha-home.csv'))
+        $alphaHomeSites = @('home', 'mode', 'player-count', 'join', 'credits', 'options', 'exit-confirmation',
+            'display-confirmation', 'team', 'weapon', 'stage', 'controls', 'sticks')
+        $alphaHomeStates = @('default/black', 'default/nonblack', 'rgba128/black', 'rgba128/nonblack',
+            'alpha0/black', 'alpha0/nonblack', 'retained-default/black', 'retained-rgba128/nonblack',
+            'retained-alpha0/black', 'restored-default/black')
+        $alphaHomeExpected = @(foreach ($site in $alphaHomeSites) {
+            foreach ($state in $alphaHomeStates) { "$site/$state" }
+        })
+        $alphaHomeObserved = @($alphaHomeRows | ForEach-Object { "$($_.site)/$($_.state)/$($_.background)" })
+        if ($alphaHomeSummary.scope -ne 'consumer-only' -or $alphaHomeSummary.state_updates -ne 0 -or $alphaHomeSummary.readbacks -ne 235 -or
+            $alphaHomeSummary.page_openings -ne 52 -or $alphaHomeSummary.csv_rows -ne 130 -or
+            $alphaHomeSummary.crops -ne 4 -or $alphaHomeSummary.controls -ne 8 -or
+            $alphaHomeSummary.sites -ne 13 -or $alphaHomeSummary.save_calls -ne 2 -or
+            $alphaHomeRows.Count -ne 130 -or @($alphaHomeRows | Where-Object {
+                $_.expected_corner -ne 'true' -or $_.frozen_state_rng -ne 'true' -or $_.outcome -ne 'passed' -or
+                ($_.state -like 'retained-*' -and ($_.captured_retained -ne 'true' -or $_.reopened -ne 'false')) -or
+                ($_.state -notlike 'retained-*' -and ($_.captured_retained -ne 'false' -or $_.reopened -ne 'true'))
+            }).Count -ne 0 -or
+            (($alphaHomeObserved | Sort-Object) -join '|') -ne (($alphaHomeExpected | Sort-Object) -join '|')) {
+            throw 'The exposed-alpha Home evidence does not match its frozen sites, retention flags and readback/CSV/crop budgets.'
+        }
+        $alphaMovementSummary = Get-Content -LiteralPath (Join-Path $captures 'alpha-movement-summary.json') -Raw | ConvertFrom-Json
+        $alphaMovementRows = @(Import-Csv -LiteralPath (Join-Path $captures 'alpha-movement.csv'))
+        $alphaMovementExpected = @(foreach ($consumer in @('movement', 'debug-text')) {
+            foreach ($palette in @('opaque', 'rgba128', 'alpha0')) {
+                foreach ($background in @('black', 'nonblack')) { "$consumer/$palette/$background" }
+            }
+        })
+        $alphaMovementObserved = @($alphaMovementRows | ForEach-Object { "$($_.consumer)/$($_.palette)/$($_.background)" })
+        if ($alphaMovementSummary.scope -ne 'movement-debug-text-consumer-alpha' -or
+            $alphaMovementSummary.state_updates -ne 0 -or $alphaMovementSummary.fixture_effect_updates -ne 10 -or
+            $alphaMovementSummary.readbacks -ne 50 -or $alphaMovementSummary.csv_rows -ne 12 -or
+            $alphaMovementSummary.movement_cases -ne 6 -or $alphaMovementSummary.debug_text_cases -ne 6 -or
+            $alphaMovementSummary.negative_controls -ne 10 -or $alphaMovementSummary.legacy_parity_controls -ne 4 -or
+            $alphaMovementSummary.crops -ne 8 -or $alphaMovementSummary.captured_paint_variants -ne 3 -or
+            $alphaMovementSummary.crop_pixels -ne 1112640 -or
+            $alphaMovementRows.Count -ne 12 -or @($alphaMovementRows | Where-Object {
+                $_.match -ne 'true' -or $_.frozen_state_bounds_rng -ne 'true' -or
+                ($_.palette -eq 'opaque' -and ($_.legacy_parity -ne 'true' -or $_.straight_alpha_rejected -ne 'not-sampled')) -or
+                ($_.palette -ne 'opaque' -and ($_.legacy_parity -ne 'not-sampled' -or $_.straight_alpha_rejected -ne 'true')) -or
+                ($_.consumer -eq 'movement' -and ($_.captured_paint -ne 'opaque-rgba128-alpha0-retained' -or $_.effect_count -ne '20' -or
+                    ($_.palette -eq 'opaque' -and $_.double_fade_rejected -ne 'true') -or
+                    ($_.palette -ne 'opaque' -and $_.double_fade_rejected -ne 'not-sampled'))) -or
+                ($_.consumer -eq 'debug-text' -and ($_.captured_paint -ne 'not-applicable' -or
+                    $_.effect_count -ne '0' -or $_.double_fade_rejected -ne 'not-applicable'))
+            }).Count -ne 0 -or
+            (($alphaMovementObserved | Sort-Object) -join '|') -ne (($alphaMovementExpected | Sort-Object) -join '|')) {
+            throw 'The exposed-alpha movement/debug-text evidence does not match its frozen literal-oracle, control and readback/CSV budgets.'
+        }
+        $alphaExpectedCrops = [ordered]@{}
+        foreach ($palette in @('rgba128', 'alpha0')) {
+            foreach ($background in @('black', 'nonblack')) {
+                $alphaExpectedCrops["alpha-home-$palette-$background.ppm"] = @(128, 96)
+                $alphaExpectedCrops["alpha-movement-$palette-$background.ppm"] = @(1280, 192)
+                $alphaExpectedCrops["alpha-debug-text-$palette-$background.ppm"] = @(300, 108)
+            }
+        }
+        $alphaSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
+        $alphaSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $alphaObserved = [ordered]@{
+            home = $alphaHomeSummary
+            movement_debug_text = $alphaMovementSummary
+            state_updates = 0
+            readbacks = 285
+            csv_rows = 142
+            crops = 12
+            private_save_calls = $alphaSaveCalls
+            successful_private_saves = $alphaSaveSuccesses
+        }
+        if ($alphaSaveCalls -ne 2 -or $alphaSaveSuccesses -ne 2) {
+            throw 'The exposed-alpha leaf must perform exactly its two successful private Home seed Saves.'
+        }
+        if ($debug) {
+            $alphaConsoleSummary = Get-Content -LiteralPath (Join-Path $captures 'alpha-console-summary.json') -Raw | ConvertFrom-Json
+            $alphaConsoleRows = @(Import-Csv -LiteralPath (Join-Path $captures 'alpha-console.csv'))
+            $alphaConsoleTranscript = Get-Item -LiteralPath (Join-Path $captures 'alpha-console-commands.log')
+            $alphaConsoleExpected = @(foreach ($case in @('baseline', 'foreground-partial', 'foreground-zero', 'shadow-partial', 'shadow-zero', 'reset')) {
+                foreach ($consumer in @('frozen', 'live', 'panels', 'perf')) {
+                    foreach ($background in @('black', 'blue')) { "$case/$consumer/$background" }
+                }
+            })
+            $alphaConsoleObserved = @($alphaConsoleRows | ForEach-Object { "$($_.case)/$($_.consumer)/$($_.background)" })
+            if ($alphaConsoleSummary.outcome -ne 'passed' -or $alphaConsoleSummary.readbacks -ne 104 -or
+                $alphaConsoleSummary.oracle_comparisons -ne 40 -or $alphaConsoleSummary.reset_comparisons -ne 8 -or
+                $alphaConsoleSummary.frozen_repeats -ne 16 -or $alphaConsoleSummary.csv_rows -ne 48 -or
+                $alphaConsoleSummary.commands -ne 8 -or $alphaConsoleSummary.crops -ne 4 -or
+                $alphaConsoleSummary.gameplay_updates -ne 0 -or $alphaConsoleSummary.save_constructions -ne 1 -or
+                $alphaConsoleSummary.save_write_commands -ne 0 -or $alphaConsoleSummary.backgrounds -ne 2 -or
+                $alphaConsoleSummary.consumers -ne 4 -or $alphaConsoleRows.Count -ne 48 -or
+                $alphaConsoleTranscript.Length -le 0 -or @($alphaConsoleRows | Where-Object {
+                    $_.oracle_equal -ne 'true' -or
+                    ($_.case -in @('baseline', 'reset') -and $_.pending_edits -ne '0') -or
+                    ($_.case -notin @('baseline', 'reset') -and $_.pending_edits -ne '1') -or
+                    ($_.case -in @('baseline', 'foreground-partial') -and $_.repeat_checked -ne 'true') -or
+                    ($_.case -notin @('baseline', 'foreground-partial') -and $_.repeat_checked -ne 'false')
+                }).Count -ne 0 -or
+                (($alphaConsoleObserved | Sort-Object) -join '|') -ne (($alphaConsoleExpected | Sort-Object) -join '|')) {
+                throw 'The exposed-alpha Debug console evidence does not match its frozen command, oracle and readback/CSV budgets.'
+            }
+            $alphaExpectedCrops['alpha-console-frozen-partial.ppm'] = @(640, 160)
+            $alphaExpectedCrops['alpha-console-live-partial.ppm'] = @(640, 160)
+            $alphaExpectedCrops['alpha-console-panels-shadow-partial.ppm'] = @(1280, 96)
+            $alphaExpectedCrops['alpha-console-perf-shadow-partial.ppm'] = @(640, 240)
+            $alphaObserved['console'] = $alphaConsoleSummary
+            $alphaExpectedCsvNames += 'alpha-console.csv'
+            $alphaExpectedSummaryNames += 'alpha-console-summary.json'
+            $alphaObserved.readbacks = 389
+            $alphaObserved.csv_rows = 190
+            $alphaObserved.crops = 16
+        }
+        elseif (@(Get-ChildItem -LiteralPath $captures -Filter 'alpha-console-*').Count -ne 0) {
+            throw 'Release exposed-alpha evidence must not contain Debug console artifacts.'
+        }
+        $alphaCsvNames = @(Get-ChildItem -LiteralPath $captures -Filter 'alpha-*.csv' -File | Select-Object -ExpandProperty Name)
+        $alphaSummaryNames = @(Get-ChildItem -LiteralPath $captures -Filter 'alpha-*-summary.json' -File | Select-Object -ExpandProperty Name)
+        if ((($alphaCsvNames | Sort-Object) -join '|') -ne (($alphaExpectedCsvNames | Sort-Object) -join '|') -or
+            (($alphaSummaryNames | Sort-Object) -join '|') -ne (($alphaExpectedSummaryNames | Sort-Object) -join '|')) {
+            throw 'The exposed-alpha leaf emitted unexpected or missing CSV/summary files.'
+        }
+        $alphaCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'alpha-*.ppm' -File)
+        if ($alphaCrops.Count -ne $alphaExpectedCrops.Count -or
+            (($alphaCrops.Name | Sort-Object) -join '|') -ne (($alphaExpectedCrops.Keys | Sort-Object) -join '|')) {
+            throw 'The exposed-alpha leaf emitted unexpected or missing compact crops.'
+        }
+        foreach ($crop in $alphaCrops) {
+            $size = $alphaExpectedCrops[$crop.Name]
+            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
+            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
+            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
+                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
+                throw "Exposed-alpha crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
+            }
+        }
+        $result['observed_counts'] = $alphaObserved
+    }
     if ($FeedbackTuneColoursOnly) {
         $feedbackConsumerSummary = Get-Content -LiteralPath (Join-Path $captures 'feedback-colour-consumer-summary.json') -Raw | ConvertFrom-Json
         $feedbackConsumerRows = @(Import-Csv -LiteralPath (Join-Path $captures 'feedback-colour-consumers.csv'))
@@ -1343,7 +1513,17 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($FeedbackTuneColoursOnly) {
+    if ($ExposedColourAlphaOnly) {
+        $result.diagnostic = 'Exposed-colour alpha passed thirteen actual Home-background menu sites through default/RGBA128/alpha0 capture, retained pages, reopening and restoration over black/nonblack underlays. Independent literal-channel references, frozen state/draw RNG and same-mode private Display confirmation rollback passed. Movement/debug-text consumers passed independent raw-source references, opaque parity, straight-alpha/double-fade negative controls, captured-paint retention and frozen effect state/bounds/RNG. Shared evidence: 285 readbacks, 142 CSV rows, twelve exact compact crops, two successful private seed Saves and zero StateContext/gameplay updates.'
+        if ($debug) {
+            $result.diagnostic += ' Debug also passed frozen/live console text, panel shadows and performance text with eight validated private tune/reset commands, 104 readbacks, 48 CSV rows and four crops; no Save write commands. Debug totals: 389 readbacks, 190 CSV rows, sixteen crops.'
+        }
+        else {
+            $result.diagnostic += ' Release ran shared-consumer-only evidence and emitted no Debug console artifacts.'
+        }
+        $result.diagnostic += ' No active match route, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    }
+    elseif ($FeedbackTuneColoursOnly) {
         $result.diagnostic = 'Feedback colours passed nine isolated empty/recovered/Sprayer muzzle/readiness cells, full/half life, black/nonblack backgrounds, independent raw-source premultiplied channels, opaque-default legacy parity, double-fade/straight-alpha negative controls, static Reduce Effects information, opaque team centres and frozen timers/bounds/RNG. Shared consumer evidence is56 readbacks,eight CSV rows,eight360x280 crops and eight parity/negative controls, with zero StateContext updates.'
         if ($debug) {
             $result.diagnostic += ' Debug also passed15 real validated named/RGB/RGBA/reset/save commands on preconstructed borrowed consumers, exact two-token private source/staged save and ledger rebase, unchanged actual content/tuning/preferences/private bytes and no queued match work. Exactly two successful private Save calls and no controlled save failure. Debug totals:122 readbacks,28 CSV rows,eight crops.'

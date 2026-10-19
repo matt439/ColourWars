@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/objects/crude_drawing.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -22,7 +23,7 @@ void MainMenuExitConfirmation::init()
 
 	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet,
 		style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), this->render_resources(),
-		this->presentation().main_menu().home_background_colour);
+		CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size),
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,

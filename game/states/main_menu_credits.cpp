@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/objects/crude_drawing.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -43,7 +44,7 @@ void MainMenuCredits::init()
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), this->render_resources(),
-		look.home_background_colour);
+		CrudeDrawing::premultiplied(look.home_background_colour));
 	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::credits),
 		style.heading_font, look.credits_heading_position,
 		this->render_resources(), look.art.ink);

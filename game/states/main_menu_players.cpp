@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/objects/crude_drawing.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -67,7 +68,7 @@ void MainMenuPlayerCount::init()
 		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		look.home_background_colour);
+		CrudeDrawing::premultiplied(look.home_background_colour));
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
@@ -221,7 +222,7 @@ void MainMenuJoin::init()
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
-		this->render_resources(), look.home_background_colour);
+		this->render_resources(), CrudeDrawing::premultiplied(look.home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
 			look.setup_box_size),

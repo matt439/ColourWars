@@ -394,7 +394,7 @@ show the quoted JSON token.
 | `presentation.debug_overlay.colour` | live | Player debug text, console input and ordinary log text. |
 | `presentation.debug_overlay.shadow_colour` | live | Player debug text and console/status/perf text shadows. |
 | `presentation.debug_overlay.station_label.colour` | live | Existing station labels, refreshed before the match is drawn. |
-| `presentation.main_menu.backgrounds.home` | next screen | Home and Mode Select copy this tint into their background widgets when opened. |
+| `presentation.main_menu.backgrounds.home` | next screen | Home, setup/preferences pages, Credits and confirmations copy this tint into their background widgets when opened. |
 | `presentation.main_menu.team_select.selected` | live | Ready players' chosen Team Select icons, on the next active, connected visual refresh. |
 | `presentation.main_menu.team_select.unselected` | live | Team Select's other icons, on the next active, connected visual refresh. |
 | `presentation.main_menu.weapon_select.selected` | live | Ready players' Weapon Select tiles, on the next active, connected visual refresh. |
@@ -407,12 +407,15 @@ frozen, the page is inactive or a claimed device is missing. Weapon body artwork
 paint/supply masks, names, descriptions, fonts and page paper keep their captured
 styles; these two Weapon paths tint only the readiness tiles.
 
+Supported colours use ordinary straight RGBA. Their drawing paths premultiply
+base RGB by its alpha before applying any event fade; a zero-alpha colour
+contributes no RGB. Movement and weapon feedback apply the event fade once,
+preserving the existing opaque presentation. Captured menu backgrounds convert
+the base colour when their widgets are constructed.
+
 Weapon-feedback colours are read on every draw, including frozen cues beneath
 a paused console. Their team-paint centres, geometry and event timers stay
-unchanged; sheet/frame bindings retain their constructor capture. Both base
-colours use ordinary straight RGBA: drawing premultiplies base RGB by its alpha
-before applying the event fade. Applying that fade a second time would change
-the existing opaque presentation. A zero-alpha colour contributes no RGB.
+unchanged; sheet/frame bindings retain their constructor capture.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -420,8 +423,10 @@ highlight and keyline still read the live presentation. Console error, warning,
 echo, caret, status and perf foreground inks keep their separate fixed colours.
 Station labels use the new premultiplied tint on the next layout refresh,
 including drawing beneath a paused console; hidden labels stay all-zero tint.
-An already-open Home or Mode page keeps its background until the page is
-reopened. Team Select retains the colours from its last visual refresh while a
+An already-open page keeps its Home background tint until the page is reopened.
+This includes Home, Mode, Players, Join, Team, Weapon, Arena, Options, Controls,
+Pad Sticks, Credits, Exit confirmation and display confirmation. Team Select
+retains the colours from its last visual refresh while a
 draw is frozen or a pad is missing; an active update with every claimed device
 connected adopts both tints without reopening the page. Its atlas, frame names,
 text and fonts keep their existing captured behavior. These colour fields live
@@ -1295,6 +1300,52 @@ corrections sample the readiness bead's interior and read successful command
 replies from the console log. No checks were skipped. These hidden checks
 establish no physical-pad, listening, human readability or uncontended
 performance acceptance. `DBG#1` remains open beyond the thirteen audited paths.
+
+Alpha-consumer audit (2026-10-19): six already-supported fields still submitted
+straight tint RGB to the engine's premultiplied blend: the three movement inks,
+debug foreground/shadow and the captured Home background. Twenty-one drawing
+submissions across fourteen client files now convert the base tint once. All
+six authored defaults are opaque, so their existing channels and movement fades
+are preserved. The presentation records, parser, thirteen-path allowlist and
+save format are unchanged. The earlier seven-field native probe checked opaque
+movement/debug text; its partial/zero-alpha pixel proof covered station labels.
+
+Both builds, all 38 CPU cases per preset and both published-bank/DPI2/system-PATH
+startups pass. `scripts/check-painter.ps1 -Preset <preset> -SkipBuild
+-ExposedColourAlphaOnly` passes in both presets at hidden 1280x720. The shared
+consumer proof uses 285 readbacks, 142 CSV rows and twelve native crops
+(3,485,556 PPM bytes). Seventeen shared CSV/PPM/summary files are byte-identical
+between presets, including all fifteen raw CSV/PPM files.
+
+All thirteen real Home-background capture sites are opened directly: 52 page
+openings check opaque defaults, half-alpha, nonblack zero-alpha, retained pages,
+reopening and exact default restoration over two underlays. Independent raw
+references preserve the existing scrim. Display confirmation uses only the
+probe's guarded hidden window and the same windowed 1280x720 candidate, with
+destructor rollback and no Keep action. Private preferences and save bytes stay
+unchanged after the two successful seed writes.
+
+Twenty preconstructed movement cues cover takeoff, landing, step and skid,
+full/half life, and retained opaque/partial/zero-alpha contacted paint. An
+independent integer puff mask and literal contact geometry check base-alpha
+conversion before fade, opaque parity and deliberate straight/doubled-fade
+negative controls. Actual ordinary DebugText matches nineteen literal rows and
+raw font tints. Ten local effect-age updates prepare half-life fixtures; no
+Player, Level or StateContext update is performed.
+
+Debug adds eight validated private tune/reset commands and independent frozen/
+live console, paint/status-panel and perf text references. Its additional 104
+readbacks, 48 rows and four crops bring the totals to 389/190/16 (4,929,456 PPM
+bytes). Fixed severity/caret/status/perf foregrounds, captured fonts, log/input
+state, synthetic perf samples, private content/preferences and draw RNG are
+preserved. Release excludes this console scope.
+
+Evidence is under `out/validation/exposed-colour-alpha/`. Source review caught
+and corrected the initial probe's one-pixel landing-outline clipping before
+execution; its original source and runner remain archived. Both native presets
+passed on their first execution. These checks establish no active-match route,
+physical-device, listening, human readability or uncontended performance
+acceptance. `DBG#1` remains open; this audit adds no new tunable fields.
 
 ## Foreground checks (`CI#1`)
 

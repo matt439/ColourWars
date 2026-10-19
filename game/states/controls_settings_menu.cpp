@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/stick_settings_menu.h"
+#include "game/objects/crude_drawing.h"
 #include <algorithm>
 
 using namespace labrador;
@@ -26,7 +27,7 @@ void ControlsSettingsMenu::init()
 	this->set_prompts(MenuPrompt::controls);
 	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
-		this->render_resources(), this->presentation().main_menu().home_background_colour);
+		this->render_resources(), CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
 	const RectangleF paper_bounds(
 		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
 		look.box_size);

@@ -4,6 +4,7 @@
 #include "game/drawable_text.h"
 #include "game/save.h"
 #include "game/objects/level_end_info.h"
+#include "game/objects/crude_drawing.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -261,7 +262,7 @@ void MainMenuStageSelect::init()
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), resources,
-		main.home_background_colour);
+		CrudeDrawing::premultiplied(main.home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f,
 			main.stage_box_size), resources, &style, &this->paper_art_, &this->focus_);

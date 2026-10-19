@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/stick_settings_menu.h"
 #include "game/objects/stick_response.h"
+#include "game/objects/crude_drawing.h"
 #include <algorithm>
 #include <cmath>
 
@@ -120,7 +121,7 @@ void StickSettingsMenu::init()
 	this->set_prompts(MenuPrompt::sticks);
 	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), this->render_resources(),
-		this->presentation().main_menu().home_background_colour);
+		CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(RectangleF(
 		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
 		look.box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,

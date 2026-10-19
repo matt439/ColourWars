@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/objects/crude_drawing.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -241,7 +242,7 @@ void MainMenuWeaponSelect::init()
 		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		look.home_background_colour);
+		CrudeDrawing::premultiplied(look.home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.weapon_box_size) / 2.0f,
 			look.weapon_box_size),

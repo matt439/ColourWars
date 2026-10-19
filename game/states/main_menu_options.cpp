@@ -3,6 +3,7 @@
 #include "game/states/display_confirmation.h"
 #include "game/states/main_menu.h"
 #include "game/input_slots.h"
+#include "game/objects/crude_drawing.h"
 
 #include <stdexcept>
 
@@ -224,7 +225,7 @@ void MainMenuOptions::init()
 		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		look.home_background_colour);
+		CrudeDrawing::premultiplied(look.home_background_colour));
 
 	this->heading_ = std::make_unique<UiText>(
 		"heading",

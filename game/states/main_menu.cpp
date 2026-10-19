@@ -2,6 +2,7 @@
 #include "game/states/main_menu.h"
 #include "game/states/match_start.h"
 #include "game/build_info.h"
+#include "game/objects/crude_drawing.h"
 #include <sstream>
 
 using namespace DirectX;
@@ -221,7 +222,7 @@ void MainMenuHome::init()
 
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
-		this->render_resources(), look.home_background_colour);
+		this->render_resources(), CrudeDrawing::premultiplied(look.home_background_colour));
 	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::home),
 		style.heading_font, this->calculate_widget_position(0, 0), this->render_resources(), look.art.ink);
 	this->subtitle_ = std::make_unique<UiText>("subtitle", this->text().home_subtitle,
@@ -393,7 +394,7 @@ void MainMenuModeSelect::init()
 		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		look.home_background_colour);
+		CrudeDrawing::premultiplied(look.home_background_colour));
 
 	// Invisible shadows retain the existing font extents and navigation
 	// geometry while the paper's lettering uses plain, readable ink.
