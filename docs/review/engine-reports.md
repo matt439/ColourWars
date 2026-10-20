@@ -129,7 +129,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 16 | Windowed Apply shows a deliberately hidden window | standalone `hidden_apply_exhibit.cpp` and the client Apply guard | local unfiled bug draft - master checked 2026-10-20; Debug/Release reproduce |
-| 17 | The Win32 window ignores DPI once the client opts in | the `dpiAwareness` block in `game/settings.manifest`; the DPI assertion in `scripts/check-startup.ps1` | draft — checked against published master 2026-10-17 |
+| 17 | DPI-correct client-size conversion for an opted-in application | existing awareness manifest and standalone hidden `window-dpi/` baseline/arithmetic fixture | local unfiled request - master checked 2026-10-20; Debug/Release 96-DPI baselines pass; scaled/transition acceptance remains open |
 | 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `level_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
 | 19 | No public later-show convenience for an Application initialized hidden | exact standalone hidden-creation control and `game/main.cpp` startup order | local unfiled request - master checked 2026-10-20; four hidden Debug/Release cases pass; first present remains open |
 | 20 | Scene drawing gives client objects no view context | `draw_miniature_view`, `Level::draw_miniature_world`, the borrowed scenery mirror and `Structure::draw_miniature` | draft - source audit against the pin only; recheck upstream before filing |
@@ -596,63 +596,51 @@ and performance gates remain open.
 
 ## 17. The Win32 window ignores DPI once the client opts in — **draft with manifest exhibit**
 
-**Exhibit:** the `asmv3:windowsSettings` block in
-[game/settings.manifest](../../game/settings.manifest), which declares
-`PerMonitorV2, PerMonitor` (and `true/pm` for older Windows), and the
-assertion in [check-startup.ps1](../../scripts/check-startup.ps1) that the
-started process reports `PROCESS_PER_MONITOR_DPI_AWARE` and its window the
-per-monitor v2 context. Without the block Windows bitmap-stretches the whole
-point-sampled frame on a 125% or 150% display (gap audit 7.5). A manifest is
-the only place the client can say this before the engine creates its window,
-so the opt-in is correctly the client's. What follows from it is not.
+**Minimal report prepared 2026-10-20.** The
+[DPI-correct sizing request](../engine-reports/window-dpi.md),
+[synthetic source](../../scripts/engine-reports/window-dpi/dpi_window_baseline.cpp)
+and dedicated manifest remain **unfiled**. Fresh upstream master was fetched
+at 19:34:53 UTC as `52e809a5a0229d37db4373faa7853df4c861a310`; the engine
+worktree was checked against that tree. Refresh upstream before filing through
+the [publication gate](#publication-gate-engpublish).
 
-### What happens
+ColourWars already opts into per-monitor-v2 in
+[its executable manifest](../../game/settings.manifest), and
+[startup acceptance](../../scripts/check-startup.ps1) checks its process/window
+awareness. The executable chooses this policy. A manifest is the recommended
+declaration; an API call before window creation is also supported.
 
-Checked against published engine master `52e809a`, which is also the pin, on
-2026-10-17. `engine/app/win32/window.cpp` calls no DPI API:
-`outer_size_for_client` converts a client size to an outer size with
-`AdjustWindowRectEx`, which measures the frame at the system DPI rather than
-the window's, and `window_proc` has no `WM_DPICHANGED` case. For a
-per-monitor-aware process that means:
+At the checked engine revision, `outer_size_for_client` uses the DPI-unaware
+`AdjustWindowRectEx` for creation and windowed resize arithmetic. Window has
+no `WM_DPICHANGED` case or public DPI query/notification. Existing `WM_SIZE`
+handling already adopts actual client dimensions in layout and renderer state.
+The primary API contract establishes a source mismatch for per-monitor-aware
+callers; no exact scaled-monitor pixel error is claimed from this host.
 
-- On a monitor whose scale differs from the primary's, the outer size the
-  window is created and re-sized with (`CreateWindowExW`, the two
-  `SetWindowPos` calls in the windowed paths) is computed for the wrong frame
-  thickness, so the client area is a few pixels off the requested resolution.
-  `WM_SIZE` reports the real client rect, so the resolution manager follows it
-  and nothing breaks; the requested 1280x720 just is not what is delivered.
-- Dragging the window to a monitor at another scale sends `WM_DPICHANGED`,
-  which falls to `DefWindowProc`. The frame is rescaled by the system and the
-  client area shifts by its difference, with no resize back to the requested
-  client size.
-- A windowed resolution is now physical pixels, so 1280x720 on a 150% laptop
-  is smaller on screen than it was. That is the honest consequence of being
-  crisp, and choosing a default size for the display is the client's, but
-  the engine gives it no way to ask the window's DPI.
+Both standalone Debug/Release builds pass under MSVC 19.51.36256.0 `/W4 /WX`,
+exit 0 with empty stderr and share seven identical normalized stdout lines.
+The actual hidden HWND reports per-monitor-v2 context at 96 DPI, an exact
+1280x720 client, and matching layout/back buffer. Independent rectangle queries
+return 1296x759 at 96 DPI, 1298x767 at 120, 1302x776 at 144 and 1306x791 at
+192; those queries do not move the window or change its effective DPI.
+Source/recipe hashes, compile logs and explicit process receipts are retained
+under `out/validation/crossfeed-20261020/dpi-report-final-v1/`.
 
-The engine has already registered the question:
+The request is DPI-correct conversion of an explicit client-pixel request and
+a documented transition policy. Microsoft's suggested-rectangle behavior and
+always keeping a requested physical-pixel size are different choices; the
+latter is not prescribed as the only correct handler. A portable DPI accessor
+is a separate potential request; this Windows client already has a native
+HWND escape hatch.
+
+The source changes no display settings, moves no monitor/window, sends no
+synthetic DPI message, starts no loop and renders no pixels. It is a 100%
+baseline, not mixed-DPI or sharpness acceptance. No client workaround is
+deleted, and the awareness manifest stays. Engine
 [G151](../../external/labrador/docs/product/GAP-REGISTER.md#g151) and
-[OCA-66](../../external/labrador/docs/product/STORIES.md#oca-66), with the
-default left undecided in `BACKLOG.md`. This client is the caller G151 says
-was inferred rather than observed.
-
-### The ask, when it goes
-
-Record OCA-66's decision, and whichever default it picks, make the Win32
-window correct for a client that has opted in: compute the outer size with
-`AdjustWindowRectExForDpi` at `GetDpiForWindow` (or the target monitor's DPI
-before creation), and handle `WM_DPICHANGED` by keeping the requested client
-size — re-applying the outer size for the new DPI — and reporting the result
-through the existing size notification. A read-only DPI or scale accessor on
-`Window` would let a client pick a windowed default that is not tiny on a
-scaled laptop; it is the smaller half and can wait for a caller that needs it.
-
-An answer lets this client delete nothing: the manifest stays, because
-declaring awareness belongs in the executable. It removes the few-pixel client
-drift on mixed-DPI desktops, which nothing here works around today.
-
-**Status:** unfiled draft, checked against published master. Not observed on a
-scaled display: this machine is at 100%, where nothing above is visible.
+[OCA-66](../../external/labrador/docs/product/STORIES.md#oca-66) still own the
+template awareness decision and attended 150% result; this report does not
+close them.
 
 ---
 
