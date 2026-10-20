@@ -3,8 +3,11 @@
 Implemented 2026-10-15 as the gameplay cue portion of `POL#14`. The accepted
 Paint.exe keyline language carries through a small optional marker in the
 owning player's pane. The later [bare-cover contact cue](polish-blocked-shots.md)
-explains shots stopped at an obstruction. The player-identity system remains
-open; human readability review still needs the reference arena.
+explains shots stopped at an obstruction. The shared player-identity system is
+also implemented. The author approved the current identity and shot cues for
+this development stage on 2026-10-20, closing `POL#14`'s current-arena review.
+This working baseline remains open to iteration; Close Quarters composition and
+readability are rechecked with `POL#17`/`POL#24`.
 
 ## Direction and eligibility
 
@@ -96,8 +99,9 @@ From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:
 - Native [four-tool shape crops](images/polish-aim-marker/native-shapes-720p.png)
   and a [mixed four-player frame](images/polish-aim-marker/mixed-720p.png) were
   inspected at 720p. The chevron, bars and cross differ at this scale and remain
-  local to the owning pane. These are quiet-course captures; readability through
-  crowded paint and combat still needs human review.
+  local to the owning pane. These are quiet-course captures; the validation did
+  not establish human readability through crowded paint and combat. The author's
+  later stage approval is recorded above.
 - The 53-file Release ZIP contains the exact presentation source and accepted
   sound bank. Isolated Debug and extracted Release startup pass with the bank,
   a system-only PATH and graceful close. Extracted Release also passes without
@@ -106,7 +110,9 @@ From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:
 
 CPU evidence is in `out/acceptance/<preset>/`; build, native menu, package and
 startup evidence is in `out/validation/aim-marker/`. These checks retain the
-human movement, controller, listening and reference-composition review gates.
+separate movement, physical-controller, listening and reference-composition
+review gates. Stage approval records no particular device, play session or test
+result and does not establish final quality.
 
 Final renderer receipts, CSVs, lossless captures and contact sheets are under
 `out/validation/aim-marker/visual/`:

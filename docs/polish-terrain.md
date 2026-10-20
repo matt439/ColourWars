@@ -1,7 +1,7 @@
 # Tool Props terrain, shadows and backdrop (`POL#9`)
 
 Implemented 2026-10-18. This page owns the terrain kit's rules, its runtime shape and
-what of `POL#9` remains. The art rules it follows are the accepted
+its stage approval and future work. The art rules it follows are the accepted
 [Paint.exe rules](polish-plan.md#1-establish-the-art-and-display-rules) (Tool Props
 terrain, airbrush shadows, Zoom 400%) and the author's Muted Day palette. The picture
 it was built to is the world the author chose that palette in, in the
@@ -108,7 +108,8 @@ and landmark checks live beside it in `scripts/acceptance/terrain/`
 
 ## Decisions made while building it
 
-These are calls the author has not yet seen; each is easy to reverse.
+These implementation choices are included in the author's 2026-10-20 stage
+approval below; each remains easy to reverse.
 
 - **Tool Props over the warehouse brief.** The plan's warehouse direction predates the
   2026-10-09 switch to Paint.exe. The kit follows the accepted Tool Props rule and the
@@ -165,7 +166,7 @@ shows the row with the arena; native-size palette/picker crops are retained for
 [640x480](images/polish-terrain/monitor-palette-640.png).
 Local evidence is under `out/validation/monitor-palette/` and `out/acceptance/`.
 Renderer run IDs are Debug `cab6344d19ea4df6a077b7f879b996e6` and Release
-`40276642ba4c4c4e865b8bbce23d5c95`. Human gameplay/style review remains below.
+`40276642ba4c4c4e865b8bbce23d5c95`. The author's later stage approval is recorded below.
 
 ## Quiet cloud drift (2026-10-18)
 
@@ -223,7 +224,7 @@ Close Quarters [early](images/polish-terrain/cloud-drift-cq-early-720p.png) and
 [4P 1080p sky composition](images/polish-terrain/cloud-drift-cq-4p-sky-1080p.png). The last
 fixture explicitly places the real players above the platforms so the normal
 cameras show clouds; it establishes no route or jump reachability. These are
-art/renderer checks; human motion/readability review remains open.
+art/renderer checks; the author's later stage approval is recorded below.
 
 Local evidence is under `out/validation/cloud-drift/` and `out/acceptance/`.
 Final renderer run IDs are Debug `d47fffce9a4342f3ade57904128a1741` and Release
@@ -271,8 +272,8 @@ still needs publication approval and an upstream-master recheck.
 
 StagePreview uses the same explicit-camera structure methods in its existing
 pane, with its existing camera and decorative object order. Drawing remains
-const and consumes no gameplay randomness. Human readability and style review
-remain part of `POL#9`.
+const and consumes no gameplay randomness. The current treatment is included in
+the author's 2026-10-20 stage approval below.
 
 Retained native-size crops from a 1280x720 window compare the Close Quarters
 Stage Select preview [before](images/polish-terrain/small-view-cq-legacy-720p.png)
@@ -335,8 +336,9 @@ There are no captions, team colours or new runtime types. Both use ordinary
 WHITE-tinted `Visual` entries at their authored atlas size: 256x320 and 256x160.
 They remain stationary under pause and Reduce effects.
 
-The placements are provisional composition choices for review with the painter
-and tools. Each sits behind an existing floor or platform, whose collision and
+The placements form part of the current environment kit approved with the
+painter and tools on 2026-10-20; they remain provisional as layouts evolve. Each
+sits behind an existing floor or platform, whose collision and
 paint cover the decoration. Close Quarters uses the two lower side regions;
 King of the Hill uses the lower castle interior; Turbulence uses the side
 chambers; the Movement Course uses a short-gap landing and the right runway.
@@ -462,7 +464,7 @@ additional hill change; current framing can exclude those layers.
 Visual inspection of all eight sheets finds small decoration/hill-outline
 shifts, with foreground landmarks, terrain and heavy paint staying aligned.
 The comparison establishes no readability improvement. Keep the shipped
-backdrops static and retain the prototype for the existing author style review.
+backdrops static and retain the prototype for possible future iteration.
 These are scripted scenery comparisons, with explicit focus placement, rather
 than active-match traversal, human acceptance or uncontended performance data.
 
@@ -474,25 +476,33 @@ unchanged from the verified Arena-count batch (`c701d76`). Its two game builds,
 38 CPU cases per preset and two isolated accepted-bank/DPI-v2 startups are
 retained baseline evidence, not newly rerun checks for this probe-only change.
 
-## Not done (what `POL#9` still holds)
+## Stage approval and remaining environment work (2026-10-20)
 
-- Human review in play, clean and heavily painted, with all three team pairs, at 1P
-  and 4P (part of locking the style with `POL#7` and `POL#14`).
-- Author review of the reusable brush pot and tape roll in the current arenas;
-  signage and captioned Paint-artefact jokes need the author's wording. Further
-  room life remains a choice after the style review. The retained parallax
-  comparison recommends the current static backdrop.
-- Close Quarters' own backdrop and fitting the kit to its blockout (`POL#17`); a
-  palette and composition per arena (`POL#16`).
+The author has seen and approved the current environment kit for this early
+development stage, including its small-view treatment and reusable static
+landmarks. This closes the current-arena review held by `POL#9` and supplies the
+working art baseline for the next phase. It does not freeze the kit or establish
+final quality, and records no particular device, play session or test result.
+The retained parallax comparison recommends keeping the current static backdrop.
+
+- Close Quarters' own backdrop and fitting the kit to its blockout remain in
+  `POL#17`, with composition/readability rechecked for `POL#24`.
+- Per-arena palette, composition and production remain in `POL#16`/`POL#21`.
+- Signage and captioned Paint-artefact jokes still need the author's wording;
+  further room life remains open to iteration.
+- Physical-controller, audio and performance acceptance retain their separate
+  owners.
 
 ## Ready implementation slices (2026-10-18)
 
 The small-view treatment, reusable static landmarks and current-arena parallax
-comparison above are implemented, with checks and evidence retained. They are
-ready for author review; final human style acceptance remains separate, and no
-slice unlocks the phase-2 blockouts by itself. The comparison supplies no reason
-to change the shipped static backdrop. Runtime parallax would need a separately
+comparison above are implemented, with checks and evidence retained. The shipped
+treatment and landmarks are included in the author's 2026-10-20 approval of the
+current stage. That approval closes the current style gate; these implementation
+checks alone did not do so. The comparison supplies no reason to change the
+shipped static backdrop. Runtime parallax would need a separately
 scoped implementation and the world-traversal review described above.
 Captioned jokes need the author's wording and do not gate non-text landmarks.
 Close Quarters' own composition and fitting the kit to revised geometry stay
-with `POL#17`; final per-arena production stays with `POL#16`/`POL#21`.
+with `POL#17`, with readability rechecked in `POL#24`; further per-arena production
+stays with `POL#16`/`POL#21`.

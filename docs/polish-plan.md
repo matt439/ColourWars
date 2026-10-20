@@ -149,13 +149,15 @@ Relevant implementation references:
 
 ## Development order (2026-10-17)
 
-The author set the order of the remaining work. Each phase starts when the one
-before it is locked; this is the plan's sequence, not a list of soft gates.
+The author set the order of the remaining work. Each phase starts when the author
+accepts the preceding phase for the current development stage. A style lock is a
+working baseline for the next iteration, not a permanent freeze on art or tuning.
 
-1. **Lock the gameplay art style.** The style is the most important thing now:
+1. **Establish the gameplay art style (approved for this stage, 2026-10-20):**
    the painter and tools (`POL#7`), the player and shot cues (`POL#14`) and the
    material, prop and background kit (`POL#9`), judged in the current arenas.
-   It is locked when §1's exit condition holds and the author accepts it.
+   The author has seen and approved the implemented treatment for this early
+   development stage, with the explicit qualification that nothing is final.
 2. **Levels with movement and weapons.** Then the Close Quarters blockout
    (`POL#17`) is built together with movement tuning (`POL#3`) and weapon tuning
    (`POL#27`): the jump, the five tools' range, rate, damage, paint output and
@@ -167,15 +169,20 @@ before it is locked; this is the plan's sequence, not a list of soft gates.
 UI artwork follows the gameplay style, as before. Audio, release and engine
 work are outside this sequence and keep their own rows.
 
-**Readiness audit (2026-10-18).** `POL#7` and `POL#14` now need the author's
-current-arena readability review. `POL#9` still has
-[bounded implementation slices](polish-terrain.md#ready-implementation-slices-2026-10-18)
-for small-view sampling, reusable landmarks and a parallax prototype. `POL#16`
-stays deferred behind the blockouts and the gameplay style lock. Listening/mix
-choices (`POL#23`) and attended performance/hardware acceptance (`POL#25`) are
-author sessions; their implemented tooling does not close those gates. Supporting
-implementation choices in TODO's NOW can proceed while reviews are pending,
-without changing the phase order above.
+**Stage approval (2026-10-20).** The author approved the current painter and five
+tools (`POL#7`), player/shot cues (`POL#14`) and environment kit (`POL#9`) for this
+stage. Their current-arena review rows are complete. The small-view treatment,
+static landmarks and retained parallax comparison are implemented; shipped
+backdrops remain static. This approval opens the Close Quarters blockout,
+movement and weapon work together (`POL#17`, `POL#3`, `POL#27`). Re-check the
+treatment in CQ's new composition during that work and the reference-match
+finish review (`POL#24`); future iteration remains expected. No new test matrix,
+device session or detailed observations are implied by this approval.
+
+`POL#16` stays deferred behind the blockouts. Listening/mix choices (`POL#23`),
+physical-pad sessions and attended performance/hardware acceptance (`POL#25`)
+retain their own gates. Supporting implementation choices in TODO's NOW can
+proceed when they do not compete with the blockout work.
 
 ## 1. Establish the art and display rules
 
@@ -391,10 +398,10 @@ Keep collision silhouettes truthful. Decorative depth, foreground objects and
 surface effects must not conceal landing edges or suggest a route that cannot be
 used. Check the arena both clean and heavily painted with every team palette.
 
-The kit is part of locking the art style, so it comes before the reference
-blockout ([development order](#development-order-2026-10-17)): materials, props
-and background layers follow the art rules, and are fitted to Close Quarters
-once its layout exists.
+The kit is part of the current approved art baseline
+([development order](#development-order-2026-10-17)): materials, props and
+background layers follow the art rules, and are fitted to Close Quarters as
+its layout develops.
 
 **First increment implemented 2026-10-18 (part of `POL#9`).** The
 [Tool Props terrain kit](polish-terrain.md) draws every collision object in the
@@ -406,8 +413,10 @@ trees, a house, clouds, a sun, birds) replaces the dark void. The warehouse and
 industrial directions in the briefs above predate the Paint.exe rules: Tool Props
 governs the terrain everywhere, and each arena's subject (Close Quarters' paint
 workshop and supply warehouse) becomes its own backdrop and landmarks when its
-blockout is fitted. Landmarks, further room life, parallax and the human review
-remain open. The monitor palette now borrows the same kit swatches
+blockout is fitted. Reusable static landmarks and the parallax comparison are
+also implemented; the author approved the current kit for this stage on
+2026-10-20. Further room detail remains optional, and CQ composition is
+rechecked with `POL#17`/`POL#24`. The monitor palette now borrows the same kit swatches
 ([palette coherence](polish-terrain.md#monitor-palette-coherence-2026-10-18)),
 replacing its old grey ramp while keeping the final empty story slot.
 
@@ -415,8 +424,9 @@ replacing its old grey ramp while keeping the final empty story slot.
 [existing backdrop clouds](polish-terrain.md#quiet-cloud-drift-2026-10-18) now
 move slowly in bounded, independently phased cycles on the four-unit grid.
 They freeze with the world, stay stationary under Reduce effects and keep
-their full excursion inside their cull bounds. Landmarks, signage, further
-room life, parallax and human style review remain open.
+their full excursion inside their cull bounds. The current kit is approved for
+this stage; signage wording, further room life and any runtime parallax remain
+separate choices. The retained comparison recommends keeping backdrops static.
 
 ### Characters and distinctive weapons
 
@@ -424,12 +434,13 @@ The [production painter increments](polish-painter.md) implement `POL#7`'s artwo
 the painter (redrawn to the author's 2026-10-18 build), animated team masks,
 team sleeves and continuous tool grips, with
 idle/run/jump/fall and dedicated takeoff/landing/firing/hurt/elimination clips,
-plus a matching respawn redraw. The composition's human review remains open.
+plus a matching respawn redraw. The author approved the current treatment for
+this development stage on 2026-10-20.
 The [five-tool production pass](polish-tools.md) implements `POL#8`: distinct
 Paint.exe designs, aligned paint masks and grips, paid-shot pressure recovery,
 hose motion, supported roller rotation/lift/settle, bucket slosh/handle motion
-and a detached cosmetic mist tail. Judge the gameplay style in the current
-arenas now; Close Quarters is a later composition re-check when `POL#17` lands.
+and a detached cosmetic mist tail. The current-arena style review is complete;
+re-check Close Quarters' composition as `POL#17` develops and during `POL#24`.
 The projectile, contact and quiet-detail increments below extend
 that treatment without changing the match simulation.
 
@@ -517,8 +528,8 @@ than replacing its action clips. Compression keeps the feet baseline, and the
 same posed canvas supplies the shoulders while hands retain
 the actual tool grips. Actions, airborne motion, elimination and story/redraw
 poses suppress inappropriate idle details. All sizes and timings are in
-`presentation.json` (`idle_drip` and `figure.quiet`); they remain subject to the
-reference composition's human review in `POL#7`/`POL#24`.
+`presentation.json` (`idle_drip` and `figure.quiet`). Their current treatment is
+approved for this stage; re-check the reference composition in `POL#17`/`POL#24`.
 
 Validation on 2026-10-15:
 
@@ -595,8 +606,9 @@ distinct liquid shots and impacts for all five tools, outward splash droplets,
 continuous black paint edges, wet settling and immediate repaint tint with
 unchanged coverage and credit. The roller remains a contact effect. Source
 artwork is reproducible; Debug/Release consumer and hardware renderer checks
-cover all palettes and 720p/1080p/QHD four-player views. Reference-arena
-composition and human readability acceptance remain `POL#7` and `POL#24`.
+cover all palettes and 720p/1080p/QHD four-player views. The current treatment is
+approved for this stage; reference-arena composition and human readability are
+re-checked in `POL#17` and `POL#24`.
 
 **Player contact feedback implemented (2026-10-15, part of `POL#10`).** The
 [implementation and evidence](polish-combat-feedback.md) add a short, local
@@ -893,8 +905,8 @@ frame. The "many frames" freeze is not there, so no loading card is needed. Not
 in these numbers is the match's first draw after the build, which `perf` treats as
 an interval start. What remains of `GAP#5.1` is the hard cut itself: a transition
 look in the Paint.exe language (a fade, a wipe, a redraw or a deliberate cut) is UI
-art and follows the gameplay style lock. Separately, the startup window shows a
-blank client area during the asset walk (about 53 ms in Release), which needs an
+art for a later pass using the approved gameplay style. Separately, the startup
+window shows a blank client area during the asset walk (about 53 ms in Release), which needs an
 engine show-after-load: [report 19](review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit)
 (`ENG#19`).
 Re-measure with `perf` when the blockouts (`POL#17`, `POL#21`) add geometry: the
@@ -1205,10 +1217,10 @@ fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
 runtime assets byte for byte and excludes source, debug and private audio.
 
 Accepted-arena artwork and human presentation/readability review remain
-`POL#16`. The [development order](#development-order-2026-10-17) puts `POL#9`'s
-material/prop kit in the art-style phase, before `POL#17`'s reference blockout,
-which is built with movement-feel tuning (`POL#3`). Physical-controller and listening
-acceptance retain their existing gates.
+`POL#16`. The current material/prop kit is approved for this development stage.
+The [development order](#development-order-2026-10-17) now starts `POL#17`'s
+reference blockout with movement (`POL#3`) and weapon tuning (`POL#27`).
+Physical-controller and listening acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
@@ -1388,9 +1400,9 @@ without enlargement. Match timers, controls, shots and scoring are unchanged.
 `presentation.json.player_identity` owns world/UI dimensions and spacing,
 opaque contrasting ink, border, duration and emphasis scale. The shared box
 needs no new atlas. The existing menu layouts carry the identity drawing;
-the full UI artwork pass remains `POL#16`. Human identification/readiness
-review remains `POL#14`, in the current arenas now and re-checked once `POL#17`
-supplies the reference composition.
+the full UI artwork pass remains `POL#16`. The author approved the current
+identification/readiness treatment for this stage on 2026-10-20; re-check it
+once `POL#17` supplies the reference composition, with the finish review in `POL#24`.
 
 Validation on 2026-10-15: Debug and Release build under `/W4 /WX` and each pass
 all 21 consumer acceptance cases. The new case checks 1/2/4-player roster

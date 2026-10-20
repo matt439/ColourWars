@@ -4,8 +4,9 @@ Implemented 2026-10-15, completing the `POL#11` production pass. It joins the
 [painter](polish-painter.md) and
 [tools](polish-tools.md) in the accepted
 [Paint.exe drawing language](polish-plan.md#1-establish-the-art-and-display-rules).
-The reference arena and human composition review remain `POL#17`, `POL#7`
-and `POL#24`.
+The current treatment is part of the author's approved working baseline
+(2026-10-20); reference-arena composition and readability are rechecked in
+`POL#17`/`POL#24` as development continues.
 
 ## Drawing and contact
 
@@ -155,7 +156,8 @@ confirms the restrained moving bead/trail in the retained
 [blue/orange](images/polish-paint-effects/runoff-blue-orange-720p.png) and
 [pink/green](images/polish-paint-effects/runoff-pink-green-720p.png) contact sheets.
 These controlled fixtures do not establish reference-arena composition or human
-readability acceptance; those remain in `POL#7` and `POL#24`.
+readability acceptance. The author's later stage approval is recorded above;
+reference-arena rechecks remain in `POL#17`/`POL#24`.
 
 The 53-file Release ZIP byte-matches all 26 reviewed runtime assets and the
 accepted sound bank, and excludes authoring/probe files. Isolated Debug and

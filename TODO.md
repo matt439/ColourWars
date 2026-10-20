@@ -9,26 +9,27 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim (2026-10-18):** lock the gameplay style in the current arenas, using the accepted
-[Paint.exe art rules](docs/polish-plan.md#1-establish-the-art-and-display-rules). The author's
-order is gameplay style first, UI after.
+**Aim (2026-10-20):** build the Close Quarters reference blockout with movement and weapon
+tuning. The author approved the current gameplay style for this development stage;
+it is a working baseline, open to further iteration, not final art or release acceptance.
+See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 
 **Order** ([development order](docs/polish-plan.md#development-order-2026-10-17)):
-1. **Lock the gameplay art style:** `POL#7` painter and tools, `POL#14` player and shot cues,
-   `POL#9` material/prop/background kit, in the current arenas.
-2. **Then levels with movement and weapons:** the Close Quarters blockout (`POL#17`), jump/movement
-   tuning (`POL#3`) and weapon tuning (`POL#27`) together, the kit fitted to it, then the other
-   arenas (`POL#21`).
+1. **Levels with movement and weapons:** the Close Quarters blockout (`POL#17`), jump/movement
+   tuning (`POL#3`) and weapon tuning (`POL#27`) together. Start with a playable geometry draft,
+   route/spawn/paint-budget notes and the existing jump comparison recipes; fit the approved
+   kit as the layout settles. Re-check the style in the new composition during this work.
+2. **Then the other arenas:** `POL#21`, after CQ is accepted; the reference-match finish review
+   and fresh-player observations (`POL#24`) still gate wider art production.
 
-UI artwork follows the gameplay style. Rows outside this sequence (audio, release, engine,
-tooling) are picked from OPEN when they don't compete with it.
+UI artwork uses the approved gameplay style and remains outside the current blockout aim.
+Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
+when they don't compete with it.
 
-**Ready implementation choices.** `POL#9`'s small-view treatment, reusable
-static landmarks and
-[parallax comparison](docs/polish-terrain.md#parallax-comparison-prototype)
-are implemented and ready for author review. The shipped arenas remain static.
-These use the current arenas; Close Quarters' redesign stays in phase 2.
-When that work is awaiting review, the following supporting work can proceed locally.
+**Supporting implementation choices.** The current environment kit, small-view treatment
+and static landmarks are approved for this stage. The retained parallax comparison
+recommends keeping the shipped arenas static. The following supporting work can proceed locally
+when it does not compete with the blockout work.
 This is a selection guide, not another priority order; each owner defines a bounded first slice.
 
 | id | next implementation slice | owner |
@@ -37,8 +38,6 @@ This is a selection guide, not another priority order; each owner defines a boun
 | `GAP#4.2` | Implement keyboard Jump rebinding through capture, save, gameplay and effective help | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
-- **Gameplay style:** review the implemented painter/tools (`POL#7`) and player/shot cues
-  (`POL#14`) now; review the current environment kit with them (`POL#9`).
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`).
@@ -55,9 +54,7 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#7` | DECISION | HIGH | M | Author review of the implemented painter and five tools in current-arena 1P/4P play; re-check in CQ (`POL#17`). [Painter](docs/polish-painter.md#remaining-character-work), [tools](docs/polish-tools.md). |
-| `POL#9` | DECISION | HIGH | XL | Author review of current-arena materials, small-view strokes, static landmarks and the retained parallax comparison; shipped backdrops remain static. CQ-specific fitting follows `POL#17`. [Comparison](docs/polish-terrain.md#parallax-comparison-prototype). |
-| `POL#16` | DEFERRED | MED | XL | Extend the treatment through accepted arenas after `POL#17`/`POL#21`; remaining UI art follows the gameplay style lock. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#17`/`POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
 
@@ -67,8 +64,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | DEFERRED | MED | M | Movement tuning, done with the blockout (`POL#17`) once the art style is locked; values stay provisional. Keyboard/mouse: jump a bit floaty and high (`jump_*` candidates to try). Pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
-| `POL#14` | DECISION | MED | M | Author review of implemented player badges, aim/readiness and blocked-shot cues in current-arena play; re-check in CQ (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
+| `POL#3` | OPEN | MED | M | Tune movement with the blockout (`POL#17`) and weapons (`POL#27`); values stay provisional. Start with the floaty/high keyboard jump and existing `jump_*` comparisons. Pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -79,8 +75,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | DEFERRED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket), tuned with `POL#3`. After the art style is locked. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
-| `POL#27` | DEFERRED | HIGH | L | Weapon tuning (range, rate, damage, paint output, supply) for all five tools, done with the blockout (`POL#17`) and movement (`POL#3`); values stay provisional. [Order](docs/polish-plan.md#development-order-2026-10-17), [§3](docs/polish-plan.md#design-requirements). |
+| `POL#17` | OPEN | HIGH | XL | Draft the Close Quarters blockout: connected loop, contested centre, bypass, sheltered spawns and paint-budget notes. Tune with `POL#3`/`POL#27`, fit the kit and re-check player/cue readability. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
+| `POL#27` | OPEN | HIGH | L | Compare all five tools' roles in the CQ draft; tune range, rate, damage, paint output and supply with the blockout (`POL#17`) and movement (`POL#3`). Values stay provisional. [Order](docs/polish-plan.md#development-order-2026-10-17), [§3](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
@@ -109,7 +105,7 @@ here.
 | `ROAD#4` | DEFERRED | LOW | M | A pad that returns in a different XInput slot cannot reclaim its player mid-match. Deferred until it proves inconvenient. [First increment](docs/feature-roadmap.md#first-increment-explicit-joining-and-reconnect-pause). |
 | `POL#24` | BLOCKED | MED | M | The finish review and fresh-player observations on the reference match; the gate before production widens. Waits on the reference arena (`POL#17`). |
 | `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
-| `GAP#7.6` | BLOCKED | LOW | S | Release identity: the stock `directx.ico` waits on the gameplay style lock (`POL#7`, `POL#14`, `POL#9`); the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
+| `GAP#7.6` | DEFERRED | LOW | S | Replace the stock `directx.ico` in the later UI/release-art pass using the approved style; the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
 
 ## Game gaps
 
@@ -123,8 +119,8 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
-| `GAP#4.2` | OPEN | MED | L | Implement the scoped keyboard Jump slice: capture, independent saved preference, actual gameplay and effective help. Broader rebinding remains open; UI artwork follows the style lock. `GAP#F2` follows the client exhibit. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
-| `GAP#5.1` | BLOCKED | LOW | M | Screen changes are hard cuts: the transition look is UI art after the gameplay style lock (`POL#7`, `POL#14`, `POL#9`). Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. The blank startup window waits on `ENG#19`. |
+| `GAP#4.2` | OPEN | MED | L | Implement the scoped keyboard Jump slice: capture, independent saved preference, actual gameplay and effective help. Broader rebinding and UI artwork remain later slices. `GAP#F2` follows the client exhibit. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
+| `GAP#5.1` | BLOCKED | LOW | M | The blank startup window waits on `ENG#19`. Hard-cut transitions are a later UI-art slice using the approved style. Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
 

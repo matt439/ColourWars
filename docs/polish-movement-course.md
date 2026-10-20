@@ -221,8 +221,10 @@ The author's first `POL#3` session, on keyboard and mouse: **the jump is a bit t
 floaty, and it goes too high.** Braking, aim and the other initial decisions above
 drew no comment. **Nothing is locked in from this:** jump constants depend on
 level design and art, so they stay provisional and are retuned as those develop.
-They are tuned together with the Close Quarters blockout (`POL#17`), after the
-art style is locked ([development order](polish-plan.md#development-order-2026-10-17)).
+They are tuned together with the Close Quarters blockout (`POL#17`) and weapons
+(`POL#27`). The author approved the current gameplay style for this stage on
+2026-10-20, opening that work; movement values and art remain open to iteration
+([development order](polish-plan.md#development-order-2026-10-17)).
 
 Four scripts in `scripts/debug/` put a candidate on the course live, for
 comparison: `exec jump_baseline`, `jump_mid`, `jump_low` and `jump_snappy`.

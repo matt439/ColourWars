@@ -623,9 +623,9 @@ Apply/Back/Reset, failed-write/retry and unrelated-setting preservation.
 Compact native checks must exercise the real
 Controls child and match-opening/help text, fixed menu and intro aliases, and
 an isolated save/relaunch round trip on both presets. These are implementation
-checks; physical-pad comfort remains `ROAD#2`. Rebinding artwork follows the
-gameplay style lock; this functional slice can reuse existing controls widgets
-without claiming new art acceptance. Broader action/pad rebinding remains open,
+checks; physical-pad comfort remains `ROAD#2`. Rebinding artwork is a later UI
+slice using the approved gameplay style; this functional slice can reuse existing
+controls widgets. Broader action/pad rebinding remains open,
 and neither this contract nor the default evaluator closes `GAP#4.2`.
 
 Use the working client exhibit for `GAP#F2`, checking engine master before

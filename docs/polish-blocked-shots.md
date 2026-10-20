@@ -3,7 +3,11 @@
 Implemented 2026-10-15 as the blocked-shot portion of `POL#14`. Shots stopped
 by bare cover now leave a brief, detached contact cue at the struck face. The
 existing wet splash continues to explain a hit that paints an exposed tile.
-The shared player-identity system and human readability review remain open.
+The shared player-identity system is also implemented. The author approved the
+current identity, readiness and blocked-shot cues for this development stage on
+2026-10-20, closing `POL#14`'s current-arena review. They form a working baseline
+that remains open to iteration; Close Quarters composition and readability are
+rechecked with `POL#17`/`POL#24`.
 
 ## Contact and lifetime
 
@@ -100,4 +104,6 @@ case in `out/validation/blocked-shot/focused-run.log`. Hardware receipts,
 - `out/validation/blocked-shot/visual/x64-release/c42bad5d586e45a0bedf96e3548f83bf/`
 
 Human movement, physical-controller, listening and reference-composition
-acceptance remain separate. The identity portion of `POL#14` remains open.
+acceptance remain separate. The author's 2026-10-20 stage approval records no
+particular device, play session or test result and does not establish final
+quality.

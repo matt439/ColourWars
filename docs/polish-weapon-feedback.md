@@ -103,5 +103,6 @@ CPU evidence is in `out/acceptance/<preset>/`; package/startup evidence is in
 `out/validation/weapon-feedback/`. Earlier runs there retain the initial
 face-overlapping status position and the oversized contact-sheet export failure;
 the final receipts above use the corrected placement and bounded pages. The
-timings and intensity remain tunable, and reference-arena composition acceptance
-stays with `POL#7` and `POL#24`.
+timings and intensity remain tunable. The author approved the current treatment
+for this development stage on 2026-10-20; reference-arena composition is rechecked
+with `POL#17`/`POL#24` as the layout and tuning evolve.

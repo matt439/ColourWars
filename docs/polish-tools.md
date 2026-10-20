@@ -3,8 +3,10 @@
 Implemented 2026-10-15, completing `POL#8`'s five-tool artwork and mechanism pass.
 The tools join the [E painter](polish-painter.md) in the accepted
 [Paint.exe drawing language](polish-plan.md#1-establish-the-art-and-display-rules).
-Human readability review remains `POL#7`, in the current arenas now and
-re-checked once the reference blockout (`POL#17`) exists. These captures retain the existing arena, projectiles and HUD.
+The author approved all five tools with the current painter for this development
+stage on 2026-10-20. This is a working baseline, open to further iteration;
+Close Quarters composition and readability are rechecked in `POL#17`/`POL#24`.
+These captures retain the existing arena, projectiles and HUD.
 
 ## Drawing and attachments
 
@@ -102,8 +104,9 @@ matching impacts and roller contact flecks. The later
 [aim/readiness cue](polish-aim-marker.md) displays actual shot eligibility;
 the [bare-cover contact cue](polish-blocked-shots.md) explains an obstructed
 shot. The [shared player badges](polish-plan.md#help-players-read-the-tool-and-the-fight)
-now carry roster identity across selection, figure, pane and results;
-human review remains `POL#14`.
+now carry roster identity across selection, figure, pane and results. The author
+approved the current identity, readiness and blocked-shot cues for this stage
+on 2026-10-20, closing the current-arena review held by `POL#14`.
 These automated checks and image inspection do not establish
 human movement-feel, controller, listening or final composition acceptance.
 
@@ -166,8 +169,9 @@ affected quiet-detail matrices; the full painter matrix remains its default:
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -QuietOnly
 ```
 
-Reference-arena composition and human readability review remain in `POL#7`
-and `POL#24`; remaining match and UI work stays in `POL#16`.
+The author's 2026-10-20 stage approval covers the current tool presentation.
+Reference-arena composition and readability are rechecked in `POL#17`/`POL#24`;
+remaining match and UI work stays in `POL#16`.
 
 ## Reservoir paint supply
 
@@ -239,5 +243,6 @@ Evidence is under `out/validation/tool-supply/` and
 [native four-player comparison](images/polish-tools/supply-720p.png) shows full,
 half and empty windows for both tools in all five hues without enlargement.
 These checks complete this supply increment, while `POL#16` remains open for
-the remaining presentation work. Human composition, movement, pad, listening
-and frame-pacing acceptance keep their existing TODO rows.
+the remaining presentation work. The current art is the author's approved
+working baseline as of 2026-10-20; reference-match composition, movement, pad,
+listening and frame-pacing acceptance keep their separate TODO owners.

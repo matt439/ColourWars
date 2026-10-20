@@ -3,9 +3,11 @@
 Implemented 2026-10-15, beginning `POL#7`, and redrawn to the author's own
 build on 2026-10-18 ([below](#the-authors-build-2026-10-18)). This carries the accepted
 [figure E and Zoom 400% rules](polish-plan.md#1-establish-the-art-and-display-rules)
-into the game. The follow-up adds dedicated action poses to that foundation;
-the reference arena and the composition's human review remain open. The
-[five-tool production pass](polish-tools.md) subsequently replaces the legacy
+into the game. The follow-up adds dedicated action poses to that foundation.
+The author approved the current painter and all five tools for this development
+stage on 2026-10-20; they are a working baseline that remains open to iteration.
+Close Quarters composition and readability are rechecked with `POL#17`/`POL#24`.
+The [five-tool production pass](polish-tools.md) subsequently replaces the legacy
 weapons and adds their mechanisms while retaining these grip anchors.
 
 ## Figure and attachments
@@ -179,7 +181,8 @@ Review follow-ups in the same change: the story's sweat drop sits just clear of
 the front ear on the wider canvas, and the bucket and mister rear grips move
 back four texels so the larger hands stay separate. The hurt ticks still
 anchor to the hitbox, so on the rear side they briefly cover the brim tip; that
-is left for the `POL#7` review.
+was left for the then-pending `POL#7` review. The current figure is now part
+of the author's approved working baseline (2026-10-20).
 
 Validation on 2026-10-18:
 
@@ -197,12 +200,18 @@ and [native crops, doubled](images/polish-painter/rebuilt-figure-crops.png)
 (aimed sprayer and roller, the respawned figure, the tool-free story pose, fire,
 hurt and landing).
 
-## Remaining character work
+## Stage approval and remaining character work (2026-10-20)
 
-`POL#7` still owns the human review of character/teammate readability in single- and
-four-player gameplay. It runs in the current arenas now; the reference arena
-(`POL#17`) is a re-check when it lands, not a precondition (author, 2026-10-17). The [five-tool artwork and motion](polish-tools.md)
-now use these hand attachments. The [quiet-detail increment](polish-plan.md#tool-personality-and-quiet-detail)
-adds independently phased breathing, blinks, weight shifts and acceleration/turn settling.
-Terrain, paint, effects and UI keep their
-existing owners and order.
+The author has seen and approved the current painter, all five tools and the
+player/shot cues for this early development stage. This closes the current-arena
+style review held by `POL#7`; it does not freeze the artwork or establish final
+quality. No particular device, play session or test result is implied by that
+approval. Close Quarters composition and readability are rechecked with the
+blockout (`POL#17`) and reference-match acceptance (`POL#24`); further production
+work remains in `POL#16`/`POL#21`.
+
+The [five-tool artwork and motion](polish-tools.md) use these hand attachments.
+The [quiet-detail increment](polish-plan.md#tool-personality-and-quiet-detail)
+adds independently phased breathing, blinks, weight shifts and acceleration/turn
+settling. Movement feel, physical-controller, listening and performance
+acceptance retain their separate owners.
