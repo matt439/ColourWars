@@ -73,10 +73,10 @@ namespace debug_console_acceptance
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 36> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 37> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
 			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680",
-			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640" };
+			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
@@ -85,7 +85,7 @@ namespace debug_console_acceptance
 			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 },
 			{ 94, 145, 199, 128 }, { 184, 106, 77, 64 }, { 115, 194, 165, 0 },
 			{ 212, 124, 42, 128 }, { 97, 178, 212, 64 }, { 156, 53, 231, 0 }, { 59, 151, 193, 128 }, { 166, 94, 41, 64 },
-			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 } };
+			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -113,7 +113,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -172,7 +172,7 @@ namespace debug_console_acceptance
 			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
 			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
 			colour_paths[silhouette_shade_colour_index], colour_paths[reveal_ink_colour_index],
-			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index] })
+			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -224,7 +224,9 @@ namespace debug_console_acceptance
 			"presentation.opening.program_colour.r", "presentation.opening.program_colour_extra",
 			"opening.acting.face", "tuning.opening.acting.face", "presentation.opening.acting.face.r",
 			"presentation.opening.acting.face_extra", "opening.acting.sweat", "tuning.opening.acting.sweat",
-			"presentation.opening.acting.sweat.r", "presentation.opening.acting.sweat_extra" })
+			"presentation.opening.acting.sweat.r", "presentation.opening.acting.sweat_extra",
+			"opening.glass_colour", "tuning.opening.glass_colour", "presentation.opening.glass_colour.r",
+			"presentation.opening.glass_colour_extra" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -259,7 +261,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -321,7 +323,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -353,7 +355,7 @@ namespace debug_console_acceptance
 				index == cursor_ink_colour_index ? "E7F809" : index == cursor_fill_colour_index ? "F8091A" :
 				index == silhouette_ink_colour_index ? "0A1B2C" :
 				index == silhouette_rim_colour_index ? "1B2C3D" : index == silhouette_shade_colour_index ? "2C3D4E" :
-				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : "C6D7E8";
+				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : "D7E8F9";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -381,7 +383,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -398,7 +400,7 @@ namespace debug_console_acceptance
 				index == silhouette_rim_colour_index ? L"silhouette-rim-crlf" :
 				index == silhouette_shade_colour_index ? L"silhouette-shade-crlf" :
 				index == reveal_ink_colour_index ? L"reveal-ink-crlf" :
-				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : L"acting-sweat-colour-crlf";
+				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : index == acting_sweat_colour_index ? L"acting-sweat-colour-crlf" : L"glass-colour-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -441,7 +443,7 @@ namespace debug_console_acceptance
 				index == cursor_ink_colour_index ? "091A2B" : index == cursor_fill_colour_index ? "1A2B3C" :
 				index == silhouette_ink_colour_index ? "2B3C4D" :
 				index == silhouette_rim_colour_index ? "3C4D5E" : index == silhouette_shade_colour_index ? "4D5E6F" :
-				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : index == program_colour_index ? "C5D6E7" : index == acting_face_colour_index ? "D6E7F8" : "E7F809";
+				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : index == program_colour_index ? "C5D6E7" : index == acting_face_colour_index ? "D6E7F8" : index == acting_sweat_colour_index ? "E7F809" : "F8091A";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -2314,6 +2316,183 @@ namespace debug_console_acceptance
 			"Program edits, independent resets and valid/refused saves consume no gameplay random draw");
 	}
 
+	void check_glass_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"glass-colour-records");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const OpeningPresentation* const opening = &presentation.opening();
+		const OpeningPresentation original = *opening;
+		const MonitorArtPresentation* const monitor_art = &opening->monitor_art;
+		labrador::RenderResources resources;
+		for (const std::string& sheet_name : { opening->sprite_sheet, opening->palette_sheet })
+		{
+			resources.add_sprite_sheet(sheet_name, labrador::read_sprite_sheet(
+				(game_directory / L"textures" / (sheet_name + ".json")).string().c_str(), labrador::TextureHandle{}));
+		}
+		MonitorPersona persona;
+		persona.mug = true;
+		persona.coffee_ring = mattmath::Vector2F(0.85f, 0.9f);
+		persona.sticky_notes.push_back({ mattmath::Vector2F(0.015f, 0.12f), 0, 0.1f });
+		persona.stickers.push_back({ mattmath::Vector2F(0.2f, 0.9f), 1, 0.0f });
+		persona.crack = { mattmath::Vector2F(0.004f, 0.6f), mattmath::Vector2F(0.02f, 0.62f) };
+		const Monitor monitor(opening, &resources, persona);
+		const MonitorPersona* const captured_persona = &monitor.persona();
+		const mattmath::RectangleF screen(0, 0, 1280, 720);
+		const auto geometry = [&]
+		{
+			return std::vector<float>{ opening->cursor_art.shadow_offset, opening->cursor_art.click_duration,
+				opening->cursor_art.click_reach, opening->silhouette_art.pen_width, opening->silhouette_art.shade_width,
+				opening->palette_height, opening->adult_height, opening->child_height, opening->cursor_size,
+				opening->preview_strength, opening->percent_height, opening->hop, opening->shake, opening->slump,
+				opening->monitor_art.pen_width, opening->monitor_art.corner_step, opening->monitor_art.shadow_width,
+				static_cast<float>(opening->monitor_art.vent_count), opening->reveal_art.keyline_width,
+				opening->reveal_art.padding, opening->reveal_art.shadow_offset,
+				opening->reveal_art.tick_length, opening->reveal_art.beat_duration };
+		};
+		const auto unselected = [&]
+		{
+			return std::vector<labrador::Colour>{ opening->cursor_art.ink, opening->cursor_art.fill,
+				opening->cursor_art.shade, opening->cursor_art.shadow, opening->silhouette,
+				opening->silhouette_art.ink, opening->silhouette_art.rim, opening->silhouette_art.shade,
+				opening->bezel_shadow, opening->monitor_art.ink, opening->monitor_art.highlight,
+				opening->desktop_colour, opening->program_colour, opening->monitor_art.power_light,
+				opening->slot_outline, opening->scribble, opening->coffee, opening->crack,
+				opening->reveal_art.ink, opening->reveal_art.paper, opening->reveal_art.shade,
+				opening->figure_grey, opening->face, opening->sweat };
+		};
+		const auto rectangles = [&]
+		{
+			return std::array<mattmath::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
+				opening->monitor_art.power_button, opening->monitor_art.power_indicator,
+				monitor.glass(screen), monitor.picture(screen), monitor.swatch(screen, 0), monitor.swatch(screen, 1),
+				monitor.empty_slot(screen), monitor.close_button(screen) };
+		};
+		const auto persona_state = [&]
+		{
+			const auto& held = monitor.persona();
+			std::vector<float> values{ static_cast<float>(held.shade), held.child ? 1.0f : 0.0f,
+				held.mug ? 1.0f : 0.0f, held.coffee_ring.x, held.coffee_ring.y };
+			for (const auto& decorations : { held.sticky_notes, held.stickers })
+			{
+				values.push_back(static_cast<float>(decorations.size()));
+				for (const auto& decoration : decorations)
+					{ values.insert(values.end(), { decoration.at.x, decoration.at.y, static_cast<float>(decoration.colour), decoration.tilt }); }
+			}
+			values.push_back(static_cast<float>(held.crack.size()));
+			for (const auto& point : held.crack) { values.insert(values.end(), { point.x, point.y }); }
+			return values;
+		};
+		const auto held_geometry = geometry();
+		const auto held_unselected = unselected();
+		const auto held_rectangles = rectangles();
+		const auto held_persona = persona_state();
+		const auto unchanged = [&]
+		{
+			require(&presentation.opening() == opening && &opening->monitor_art == monitor_art && &monitor.persona() == captured_persona &&
+				geometry() == held_geometry && unselected() == held_unselected && rectangles() == held_rectangles &&
+				persona_state() == held_persona && opening->bezel_shades == original.bezel_shades &&
+				opening->sticky_notes == original.sticky_notes && opening->stickers == original.stickers &&
+				opening->sprite_sheet == original.sprite_sheet && opening->fill_frame == original.fill_frame &&
+				opening->percent_font == original.percent_font && opening->palette_sheet == original.palette_sheet &&
+				opening->palette_frames == original.palette_frames,
+				"Glass adoption retains the borrowed opening/monitor-art addresses, captured persona, public monitor/swatch geometry, all unselected material/numeric records and resource names");
+		};
+		// The real retained Monitor is constructed without GPU resources or RNG.
+		// This CPU check observes records and public geometry, not rendered pixels
+		// or protected captured frame handles. Native acceptance covers the draw.
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const auto initial_colours = colour_values(presentation);
+		std::srand(0x91a137);
+		const int expected_random = std::rand();
+		std::srand(0x91a137);
+		for (const auto& [word, expected] : std::array<std::pair<const char*, labrador::Colour>, 4>{ {
+			{ "RED", { 255, 0, 0 } }, { "3165A7", { 49, 101, 167 } },
+			{ "2060C080", { 32, 96, 192, 128 } }, { "A532D600", { 165, 50, 214, 0 } } } })
+		{
+			auto expected_colours = initial_colours;
+			expected_colours[glass_colour_index] = expected;
+			require(impl.execute(std::string("tune presentation.opening.glass_colour ") + word).ok &&
+				colour_values(presentation) == expected_colours && read_text(scratch.source / L"presentation.json") == baseline &&
+				read_text(scratch.staged / L"presentation.json") == baseline,
+				"Glass accepts straight named/RGB/partial/nonblack-zero-alpha channels while retaining every unrelated colour and both content copies");
+			unchanged();
+		}
+		const TuneDocument* const pending = impl.tune_document("presentation");
+		require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok &&
+			impl.execute("tune.reset presentation.opening.glass_colour").ok && opening->glass_colour == original.glass_colour &&
+			presentation.debug_overlay().colour == labrador::Colour(120, 154, 188) && pending->edits().size() == 1 &&
+			pending->edits().contains("debug_overlay.colour"),
+			"Glass reset restores its original tint while retaining an unrelated live colour edit");
+		unchanged();
+		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && colour_values(presentation) == initial_colours &&
+			pending->edits().empty() && pending->current().text() == baseline,
+			"Independent reset restores the exact initial document after retaining the constructed Monitor");
+		const JsonSpanDocument baseline_document(baseline, "glass-colour-save-reference");
+		const std::string saved = baseline_document.replaced(*baseline_document.find("opening.glass_colour"), "\"2060C080\"");
+		require(impl.execute("tune presentation.opening.glass_colour 2060C080").ok && impl.execute("tune.save presentation").ok &&
+			opening->glass_colour == labrador::Colour(32, 96, 192, 128) && read_text(scratch.source / L"presentation.json") == saved &&
+			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
+			pending->baseline().text() == saved && pending->current().text() == saved,
+			"Glass save changes exactly one quoted token and rebases the retained borrowed record");
+		unchanged();
+		require(impl.execute("tune presentation.opening.glass_colour A532D600").ok,
+			"A fresh nonblack alpha0 glass edit is pending before invalid merged geometry");
+		const char* unrelated_word = initial_colours[3] == labrador::Colour(120, 154, 188) ? "654321" : "789ABC";
+		require(impl.execute(std::string("tune presentation.debug_overlay.colour ") + unrelated_word).ok && pending->edits().size() == 2,
+			"Complete glass merge checks retain an unrelated pending colour edit");
+		const JsonSpanDocument saved_document(saved, "glass-colour-merged-reference");
+		const JsonLeaf* glass_width = saved_document.find("opening.glass.width");
+		require(glass_width != nullptr && original.glass.x == 0.1f && original.glass.x + 0.95f > 1.0f,
+			"Glass merge fixture has the actual cross-field on-screen rectangle constraint");
+		const std::string external = saved_document.replaced(*glass_width, "0.95");
+		write_text(scratch.source / L"presentation.json", external);
+		const std::string pending_text = pending->current().text();
+		const auto pending_colours = colour_values(presentation);
+		const auto ledger = [&]
+		{
+			std::vector<std::string> result;
+			for (const auto& [path, edit] : pending->edits())
+				{ result.push_back(path + "=" + edit.baseline_token + "->" + edit.current_token); }
+			return result;
+		};
+		const auto held_ledger = ledger();
+		for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+		{
+			require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == external &&
+				read_text(scratch.staged / L"presentation.json") == saved && pending->current().text() == pending_text &&
+				pending->baseline().text() == saved && ledger() == held_ledger && pending->edits().size() == 2 &&
+				colour_values(presentation) == pending_colours,
+				"External glass.width 0.95 with x 0.1 refuses the complete merged candidate while retaining exact source/staged/live/current/baseline and every ledger path/baseline/current token even with force");
+			unchanged();
+		}
+		const std::string overlay_only = saved_document.replaced(*saved_document.find("debug_overlay.colour"),
+			std::string("\"") + unrelated_word + '"');
+		auto restored_colours = pending_colours;
+		restored_colours[glass_colour_index] = labrador::Colour(32, 96, 192, 128);
+		require(impl.execute("tune.reset presentation.opening.glass_colour").ok && colour_values(presentation) == restored_colours &&
+			pending->edits().size() == 1 && pending->edits().contains("debug_overlay.colour") &&
+			pending->current().text() == overlay_only && pending->baseline().text() == saved &&
+			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			"Glass resets to its saved partial-alpha token while retaining unrelated pending colour, invalid external source and exact staging without recovery files");
+		unchanged();
+		restored_colours[3] = initial_colours[3];
+		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && colour_values(presentation) == restored_colours &&
+			pending->edits().empty() && pending->current().text() == saved && pending->baseline().text() == saved &&
+			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved,
+			"Resetting the unrelated colour keeps the saved glass baseline and exact external source/staging");
+		unchanged();
+		write_text(scratch.source / L"presentation.json", saved);
+		require(std::rand() == expected_random,
+			"Glass colour commands, independent/saved resets and valid/refused saves consume no gameplay random draw");
+	}
+
 	void check_acting_colour_tunes(const std::filesystem::path& game_directory)
 	{
 		ScratchContent scratch(game_directory, L"acting-colour-records");
@@ -2847,6 +3026,7 @@ namespace debug_console_acceptance
 		check_desktop_colour_tunes(game_directory);
 		check_power_light_colour_tunes(game_directory);
 		check_program_colour_tunes(game_directory);
+		check_glass_colour_tunes(game_directory);
 		check_acting_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 

@@ -94,6 +94,9 @@ namespace
 		// draw; caller pose/time, redraw strokes and captured sheet/fill stay intact.
 		{ "presentation.opening.acting.face", TuneScope::live },
 		{ "presentation.opening.acting.sweat", TuneScope::live },
+		// Monitor reads the same borrowed glass tint for its main glass, palette,
+		// picker and close button; persona and captured resources stay intact.
+		{ "presentation.opening.glass_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

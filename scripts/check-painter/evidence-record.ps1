@@ -214,6 +214,19 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($GlassTuneColourOnly) {
+    $result.scope = 'glass-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-opaque-161616','literal-rgb','literal-rgba128','literal-nonblack-alpha0'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained Monitor.draw/draw_picker/draw_close_button with empty deterministic persona and fixed caller swatches; no Level, input polling, local/Player/Level/State/input/time updates or persona roll.'
+    $result.audio = 'No audio consumer/listening acceptance; private preferences unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('four-selected-writes','five-ordered-main-ROIs','two-standalone-Canvas-backgrounds','per-write-wrong-alpha-controls','retained-consumer-repeat')
+    $result.checks = 'One live opening.glass_colour path covers all four Monitor writes. Independent raw main proof is only five fixed ROIs: opaque beige, four separate quarter-black passes, lip, glass, opaque program then palette; copied complete Monitor frame is adoption only. Literal standalone panel/close references include white frame/caller swatches/24X dabs and guarded ROIs. Main one effective backdrop, picker+close two genuine Canvas backgrounds. Shared100reads/20rows/20lossless native crops55272pixels,12partial and6alpha0 per-write controls; alpha0 retains lip/program/Canvas and unselected white overlays. Borrowed records/resources, complete unselected style, captured persona/geometry, caller inputs and RNG remain fixed; zero all updates/no event fade.'
+    if ($Preset -eq 'x64-debug') { $result.actions += @('9-real-commands9states3methods','108-additional-reads27rows','totals208reads47rows20crops','one-token-private-save-rebase-reset','two-private-PlaySettings-and-JumpJ-seed-Saves'); $result.checks += ' Debug standalone black only; shared owns the second background. Exact one-token private Save/rebase, original+saved full-raster restoration and default display/real content/queued-work retention.' }
+    else { $result.actions += @('literal-consumer-only','no-developer-transcript-scratch-or-Save') }
+    $result.checks += ' Direct methods only: no actual Level visibility, universal geometry/all phases, human/readability/listening/physical-input or performance acceptance.'
+}
 elseif ($ActingTuneColoursOnly) {
     $result.scope = 'acting-tune-colours-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

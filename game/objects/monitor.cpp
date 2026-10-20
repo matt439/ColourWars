@@ -198,11 +198,11 @@ void Monitor::draw(DrawList& draw_list, const RectangleF& screen) const
     this->fill(draw_list, RectangleF(glass.x - lip_width, glass.y - lip_width,
         glass.width + lip_width * 2.0f, glass.height + lip_width * 2.0f),
         premultiplied(look.bezel_shadow));
-    this->fill(draw_list, glass, look.glass_colour);
+    this->fill(draw_list, glass, premultiplied(look.glass_colour));
     this->fill(draw_list, this->program(screen), premultiplied(look.program_colour));
 
     const RectangleF palette = this->palette(screen);
-    this->fill(draw_list, palette, look.glass_colour);
+    this->fill(draw_list, palette, premultiplied(look.glass_colour));
     for (size_t index = 0; index < this->palette_swatches_.size(); ++index)
     {
         this->palette_swatches_[index].draw(draw_list, this->palette_swatch(screen, index));
@@ -366,7 +366,7 @@ void Monitor::draw_picker(DrawList& draw_list, const RectangleF& screen,
     const RectangleF b = this->swatch(screen, 1);
     const float pad = a.width * picker_padding;
     const RectangleF panel(a.x - pad, a.y - pad, b.right() - a.x + pad * 2.0f, a.height + pad * 2.0f);
-    this->fill(draw_list, panel, look.glass_colour);
+    this->fill(draw_list, panel, premultiplied(look.glass_colour));
     this->frame_rectangle(draw_list, panel, std::max(1.0f, pad * 0.25f), look.slot_outline);
     this->fill(draw_list, a, first);
     this->fill(draw_list, b, second);
@@ -386,7 +386,7 @@ void Monitor::draw_close_button(DrawList& draw_list, const RectangleF& screen) c
     const OpeningPresentation& look = *this->look_;
     const RectangleF button = this->close_button(screen);
     const float pen = std::max(1.0f, button.width * 0.1f);
-    this->fill(draw_list, button, look.glass_colour);
+    this->fill(draw_list, button, premultiplied(look.glass_colour));
     this->frame_rectangle(draw_list, button, pen, look.slot_outline);
     const float in = button.width * 0.28f;
     this->line(draw_list, Vector2F(button.x + in, button.y + in),

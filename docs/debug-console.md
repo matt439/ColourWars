@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirty-six audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirty-seven audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -330,7 +330,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-thirty-six audited colour paths below, can be read and changed while the game runs,
+thirty-seven audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These thirty-six existing string fields are supported; numeric path
+**Colours.** These thirty-seven existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -426,6 +426,7 @@ The latest validation is recorded under
 | `presentation.opening.program_colour` | live | Program backing of existing Monitor draws, on the next applicable draw; later composition may cover it. |
 | `presentation.opening.acting.face` | live | Eye paint of existing FigureActing overlays, on the next applicable draw; later BLACK pupils remain. |
 | `presentation.opening.acting.sweat` | live | Sweat of existing FigureActing cheat overlays, on the next applicable draw. |
+| `presentation.opening.glass_colour` | live | Initial glass and palette of existing Monitor draws, plus picker panels and close-button faces, on each applicable draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -543,6 +544,23 @@ two-player Crossfeed full-opening checkpoint at 1280x720. Direct-Monitor alpha
 evidence remains separate; other story phases/rosters and human story acceptance
 remain open.
 
+Monitor borrows `opening.glass_colour` at four writes: initial glass, palette
+repaint, picker panel and close-button face. Each premultiplies base RGBA once,
+without event fade. Opaque `161616`, API/geometry, captured persona/resources,
+caller swatches and white frame/X overlays retain their existing behavior.
+At zero authored alpha, initial glass exposes ordered bezel/lip; palette
+exposes program RGB (44,44,44). Isolated picker/close faces reveal their Canvas
+while their white overlays remain. The entire button does not disappear.
+
+The main-method alpha reference covers five guarded ROIs, with ordered opaque
+beige, four separate quarter-alpha black shadow writes and lip, then glass,
+program and palette. It does not independently reproduce the complete bezel;
+copied-Monitor full rasters prove adoption only. Opaque beige erases the main
+Canvas, leaving one effective backdrop. Standalone picker/close each use two
+genuine Canvas underlays, with independent white frame/caller swatches or
+24 literal white X dabs. Actual-Level glass visibility remains unmeasured;
+source caller traces and direct methods do not establish that composition.
+
 FigureActing borrows both acting colours for each applicable draw. Only its
 face and sweat tints premultiply straight base RGBA once, without event fade;
 authored `WHITE`/`8FD3FF`, stroke geometry, fixed caller inputs and captured
@@ -594,7 +612,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the thirty-six colour strings listed above join numbers and booleans in `tune`.
+only the thirty-seven colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1313,7 +1331,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the thirty-six listed colour fields above are
+  and inserting keys in `tune.save`: the thirty-seven listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1322,13 +1340,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Thirty-six existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Thirty-seven existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette ink/rim/shade and reveal
-ink/paper/shade, plus desktop, monitor power-light, program and acting face/sweat colours.
+ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat and glass colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1353,6 +1371,37 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Glass colour increment (2026-10-20), **verified**:
+path 37, `presentation.opening.glass_colour`, is live at all four Monitor
+initial-glass/palette/picker/close writes. Four once-premultiplied tints preserve
+opaque `161616`, API/geometry/resources and overlays.
+
+Both game/editor builds, four focused CPU cases and both native first
+executions pass. Merged glass width 0.95/x 0.1 rejects ordinary/forced saves,
+retaining source/staged/live/current/baseline and both ledger keys/token pairs.
+One-token save/rebase/reset retains unrelated edits.
+
+Shared evidence has 100 readbacks, 20 rows, 20 crops (55272 pixels),
+18 per-write controls (12 partial straight/squared, six alpha0 straight) and two
+blanks. Four main 80x24 montages use one effective opaque-beige backdrop;
+eight picker 99x53/eight close 27x26 crops use two genuine Canvas underlays.
+Independent main proof covers five ordered ROIs only; standalone proof covers
+guarded picker/close ROIs, retaining white frames/caller swatches/24 X dabs.
+Copied full-Monitor rasters prove adoption only. Alpha0 underlayer/overlay
+checks pass; this does not independently reproduce the full bezel.
+
+Debug's nine commands/nine states across three methods add 108 readbacks/27
+rows: totals 208/47/20, standalone black only. Exact one-Glass-token
+Save/rebase/saved reset and two private PlaySettings/Jump J seed Saves preserve
+default display, real content/private preferences. All updates are zero.
+
+44 shared files, including 20 PPMs, and the supplemental contact PNG match
+between presets. Root inspected all crops; twelve frozen hashes/default JSON
+and fresh Monitor source/object hashes/timestamps reconcile. Receipts:
+`out/validation/crossfeed-20261020/glass-colour-v1/`.
+Actual-Level glass visibility remains **unmeasured**. Human story/readability,
+small-view, balance, hardware/listening and performance remain open.
 
 Acting face/sweat increment (2026-10-20), **verified**:
 paths 35–36 are live on retained FigureActing draws. Two once-premultiplied
