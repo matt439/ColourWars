@@ -354,6 +354,58 @@ namespace debug_console_acceptance
 					"Force cannot insert a cursor colour, replace null/a container or expose literal key aliases: " + cursor_path);
 			}
 		}
+		for (const char* silhouette_field : { "ink", "rim", "shade" })
+		{
+			const std::string silhouette_path = std::string("opening.silhouette_art.") + silhouette_field;
+			const std::string silhouette_baseline = "{\r\n  \"opening\":{\"sprite_sheet\":\"unchanged\",\"fill_frame\":\"solid\","
+				"\"silhouette\":\"0E0E0E\",\"silhouette_art\":{\"ink\":\"\\u0042LACK\",\"rim\":\"343434\",\"shade\":\"080808\"}},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			const JsonSpanDocument silhouette_reference(silhouette_baseline, "silhouette-colour-reference");
+			TuneDocument silhouette_document("presentation", silhouette_baseline);
+			const JsonLeaf* silhouette_leaf = silhouette_document.find(silhouette_path);
+			require(silhouette_leaf != nullptr && silhouette_leaf->kind == JsonLeaf::Kind::string &&
+				silhouette_document.find("opening.sprite_sheet") == nullptr &&
+				silhouette_document.find("opening.fill_frame") == nullptr && silhouette_document.find("opening.silhouette") == nullptr,
+				"Only the three audited silhouette-art colours are eligible; captured texture names and separate body fill stay outside the tree");
+			silhouette_document.commit(silhouette_document.edited(*silhouette_leaf, "\"11223344\""), silhouette_path);
+			for (const char* sibling_field : { "ink", "rim", "shade" })
+			{
+				if (std::string(sibling_field) == silhouette_field) { continue; }
+				const std::string silhouette_sibling = std::string("opening.silhouette_art.") + sibling_field;
+				require(silhouette_document.current().token(*silhouette_document.find(silhouette_sibling)) ==
+					silhouette_reference.token(*silhouette_reference.find(silhouette_sibling)),
+					"Each silhouette-art edit preserves both sibling quoted tokens byte for byte");
+			}
+			require(silhouette_document.reverted(silhouette_path) == silhouette_baseline,
+				"Each silhouette-art reset restores its authored spelling and every original CRLF byte");
+			const std::string silhouette_external_number = silhouette_reference.replaced(*silhouette_reference.find("number"), "25");
+			const JsonSpanDocument silhouette_external_reference(silhouette_external_number, "silhouette-colour-reference");
+			const TuneSplice silhouette_splice = silhouette_document.splice(silhouette_external_number, false);
+			require(silhouette_splice.conflicts.empty() && silhouette_splice.written == 1 && silhouette_splice.text ==
+				silhouette_external_reference.replaced(*silhouette_external_reference.find(silhouette_path), "\"11223344\"") &&
+				count_of(silhouette_splice.text, "\r\n") == count_of(silhouette_baseline, "\r\n"),
+				"A silhouette-art splice preserves both siblings, separate body fill, escape bytes, external number and every CRLF");
+			const std::string silhouette_pending = silhouette_document.current().text();
+			bool silhouette_wrong_type = false;
+			try { silhouette_document.commit(silhouette_document.edited(*silhouette_document.find(silhouette_path), "false"), silhouette_path); }
+			catch (const std::invalid_argument&) { silhouette_wrong_type = true; }
+			require(silhouette_wrong_type && silhouette_document.current().text() == silhouette_pending && silhouette_document.edits().size() == 1,
+				"A wrong-type silhouette-art commit retains both siblings and the pending string edit");
+			for (const std::string& silhouette_invalid : { std::string("{}"),
+				silhouette_reference.replaced(*silhouette_reference.find(silhouette_path), "null"),
+				silhouette_reference.replaced(*silhouette_reference.find(silhouette_path), "{\"value\":\"RED\"}"),
+				"{\"" + silhouette_path + "\":\"RED\"}",
+				std::string("{\"opening\":{\"silhouette_art.") + silhouette_field + "\":\"RED\"}}",
+				std::string("{\"opening.silhouette_art\":{\"") + silhouette_field + "\":\"RED\"}}",
+				std::string("{\"opening\":{\"silhouette_art\":{\"") + silhouette_field + ".r\":\"RED\"}}}" })
+			{
+				const TuneDocument silhouette_unsupported("presentation", silhouette_invalid);
+				const TuneSplice silhouette_refused = silhouette_document.splice(silhouette_invalid, true);
+				require(silhouette_unsupported.find(silhouette_path) == nullptr && silhouette_refused.written == 0 &&
+					silhouette_refused.conflicts.size() == 1 && silhouette_refused.text == silhouette_invalid,
+					"Force cannot insert a silhouette-art colour, replace null/a container or expose literal key aliases");
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -533,10 +585,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited twenty-three colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited twenty-six colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly twenty-three authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly twenty-six authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -584,7 +636,10 @@ namespace debug_console_acceptance
 			"presentation.opening.cursor_art.ink.r", "presentation.opening.cursor_art.fill.r",
 			"presentation.opening.cursor_art.ink_extra", "presentation.opening.cursor_art.fill_extra",
 			"presentation.opening.cursor_art.ink_colour", "presentation.opening.cursor_art.shade",
-			"presentation.opening.cursor_art.shadow", "presentation.opening.cursor_art.click_duration" })
+			"presentation.opening.cursor_art.shadow", "presentation.opening.cursor_art.click_duration",
+			"opening.silhouette_art.ink", "tuning.opening.silhouette_art.ink", "presentation.opening.silhouette",
+			"presentation.opening.silhouette_art.ink.r", "presentation.opening.silhouette_art.rim_extra",
+			"presentation.opening.silhouette_art.shade_colour", "presentation.opening.silhouette_art.pen_width" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -622,6 +677,9 @@ namespace debug_console_acceptance
 			{ "presentation.respawn_redraw.pen_colour", TuneScope::live },
 			{ "presentation.opening.cursor_art.ink", TuneScope::live },
 			{ "presentation.opening.cursor_art.fill", TuneScope::live },
+			{ "presentation.opening.silhouette_art.ink", TuneScope::live },
+			{ "presentation.opening.silhouette_art.rim", TuneScope::live },
+			{ "presentation.opening.silhouette_art.shade", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -732,7 +790,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All twenty-three colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All twenty-six colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

@@ -13,6 +13,7 @@
 #include "game/objects/combat_feedback.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/respawn_redraw.h"
+#include "game/objects/silhouette.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/math/scalar.h"
 #include "engine/render/render_resources.h"
@@ -70,16 +71,17 @@ namespace debug_console_acceptance
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 23> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 26> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
 			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680",
-			"A147B980", "27C4A500" };
+			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
 			{ 53, 188, 225 }, { 34, 102, 204, 128 }, { 18, 52, 86 }, { 221, 238, 255 },
 			{ 115, 161, 194, 128 }, { 25, 184, 112, 0 }, { 194, 109, 58, 128 }, { 42, 128, 213, 0 },
-			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 } };
+			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 },
+			{ 94, 145, 199, 128 }, { 184, 106, 77, 64 }, { 115, 194, 165, 0 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -105,7 +107,8 @@ namespace debug_console_acceptance
 		for (const std::size_t index : { std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
 			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index,
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
-			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index })
+			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
+			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -161,7 +164,9 @@ namespace debug_console_acceptance
 			colour_paths[combat_highlight_colour_index], colour_paths[combat_keyline_colour_index],
 			colour_paths[blocked_highlight_colour_index], colour_paths[blocked_keyline_colour_index],
 			colour_paths[idle_drip_keyline_colour_index], colour_paths[respawn_pen_colour_index],
-			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index] })
+			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
+			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
+			colour_paths[silhouette_shade_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -197,7 +202,9 @@ namespace debug_console_acceptance
 			"presentation.respawn_redraw.strokes[0].part", "presentation.opening.sprite_sheet",
 			"presentation.opening.fill_frame", "presentation.opening.cursor_art.ink.r",
 			"presentation.opening.cursor_art.ink_colour", "presentation.opening.cursor_art.fill_extra",
-			"presentation.opening.cursor_art.shade", "presentation.opening.cursor_art.shadow" })
+			"presentation.opening.cursor_art.shade", "presentation.opening.cursor_art.shadow",
+			"presentation.opening.silhouette", "presentation.opening.silhouette_art.ink.r",
+			"presentation.opening.silhouette_art.rim_extra", "presentation.opening.silhouette_art.shade_colour" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -230,7 +237,8 @@ namespace debug_console_acceptance
 		for (const std::size_t index : { std::size_t(11), std::size_t(12),
 			combat_highlight_colour_index, combat_keyline_colour_index,
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
-			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index })
+			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
+			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -247,6 +255,11 @@ namespace debug_console_acceptance
 					impl.tune_document("presentation")->edits().count("blocked_shot.keyline") == 1) &&
 				(index != cursor_ink_colour_index ||
 					impl.tune_document("presentation")->edits().count("opening.cursor_art.fill") == 1) &&
+				(index != silhouette_ink_colour_index ||
+					(impl.tune_document("presentation")->edits().contains("opening.silhouette_art.rim") &&
+						impl.tune_document("presentation")->edits().contains("opening.silhouette_art.shade"))) &&
+				(index != silhouette_rim_colour_index ||
+					impl.tune_document("presentation")->edits().contains("opening.silhouette_art.shade")) &&
 				&presentation.weapon_feedback() == feedback && feedback->sprite_sheet.data() == feedback_sheet &&
 				feedback->fill_frame.data() == feedback_fill && &presentation.combat_feedback() == combat_look &&
 				combat_look->sprite_sheet.data() == combat_sheet && combat_look->fill_frame.data() == combat_fill &&
@@ -280,7 +293,8 @@ namespace debug_console_acceptance
 		for (const std::size_t index : { std::size_t(5), std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
 			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index,
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
-			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index })
+			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
+			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -309,7 +323,9 @@ namespace debug_console_acceptance
 				index == blocked_highlight_colour_index ? "A3B4C5" :
 				index == blocked_keyline_colour_index ? "B4C5D6" :
 				index == idle_drip_keyline_colour_index ? "C5D6E7" : index == respawn_pen_colour_index ? "D6E7F8" :
-				index == cursor_ink_colour_index ? "E7F809" : "F8091A";
+				index == cursor_ink_colour_index ? "E7F809" : index == cursor_fill_colour_index ? "F8091A" :
+				index == silhouette_ink_colour_index ? "0A1B2C" :
+				index == silhouette_rim_colour_index ? "1B2C3D" : "2C3D4E";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -335,7 +351,8 @@ namespace debug_console_acceptance
 		for (const std::size_t index : { std::size_t(9), std::size_t(10), std::size_t(11), std::size_t(12),
 			combat_highlight_colour_index, combat_keyline_colour_index,
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
-			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index })
+			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
+			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -347,7 +364,9 @@ namespace debug_console_acceptance
 				index == blocked_keyline_colour_index ? L"blocked-keyline-crlf" :
 				index == idle_drip_keyline_colour_index ? L"idle-drip-keyline-crlf" :
 				index == respawn_pen_colour_index ? L"respawn-pen-crlf" :
-				index == cursor_ink_colour_index ? L"cursor-ink-crlf" : L"cursor-fill-crlf";
+				index == cursor_ink_colour_index ? L"cursor-ink-crlf" : index == cursor_fill_colour_index ? L"cursor-fill-crlf" :
+				index == silhouette_ink_colour_index ? L"silhouette-ink-crlf" :
+				index == silhouette_rim_colour_index ? L"silhouette-rim-crlf" : L"silhouette-shade-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -387,7 +406,9 @@ namespace debug_console_acceptance
 				index == blocked_highlight_colour_index ? "C5D6E7" :
 				index == blocked_keyline_colour_index ? "D6E7F8" :
 				index == idle_drip_keyline_colour_index ? "E7F809" : index == respawn_pen_colour_index ? "F8091A" :
-				index == cursor_ink_colour_index ? "091A2B" : "1A2B3C";
+				index == cursor_ink_colour_index ? "091A2B" : index == cursor_fill_colour_index ? "1A2B3C" :
+				index == silhouette_ink_colour_index ? "2B3C4D" :
+				index == silhouette_rim_colour_index ? "3C4D5E" : "4D5E6F";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -1230,6 +1251,206 @@ namespace debug_console_acceptance
 			"Cursor colour edits, independent resets and valid/refused saves consume no gameplay random draw");
 	}
 
+	void check_silhouette_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"silhouette-colour-records");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const OpeningPresentation* const opening = &presentation.opening();
+		const SilhouetteArtPresentation* const art = &opening->silhouette_art;
+		const OpeningPresentation original = *opening;
+		const auto geometry = [&]
+		{
+			return std::vector<float>{ art->pen_width, art->shade_width, opening->palette_height,
+				opening->adult_height, opening->child_height, opening->cursor_size, opening->preview_strength,
+				opening->percent_height, opening->hop, opening->shake, opening->slump,
+				opening->cursor_art.shadow_offset, opening->cursor_art.click_duration, opening->cursor_art.click_reach,
+				opening->monitor_art.pen_width, opening->monitor_art.corner_step, opening->monitor_art.shadow_width,
+				static_cast<float>(opening->monitor_art.vent_count), opening->reveal_art.keyline_width,
+				opening->reveal_art.padding, opening->reveal_art.shadow_offset,
+				opening->reveal_art.tick_length, opening->reveal_art.beat_duration };
+		};
+		const auto unselected_colours = [&]
+		{
+			return std::vector<labrador::Colour>{ opening->silhouette, opening->bezel_shadow,
+				opening->monitor_art.ink, opening->monitor_art.highlight, opening->monitor_art.power_light,
+				opening->glass_colour, opening->program_colour, opening->desktop_colour, opening->slot_outline,
+				opening->scribble, opening->coffee, opening->crack, opening->cursor_art.ink, opening->cursor_art.fill,
+				opening->cursor_art.shade, opening->cursor_art.shadow, opening->reveal_art.ink,
+				opening->reveal_art.paper, opening->reveal_art.shade, opening->figure_grey, opening->face, opening->sweat };
+		};
+		const auto rectangles = [&]
+		{
+			return std::array<mattmath::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
+				opening->monitor_art.power_button, opening->monitor_art.power_indicator };
+		};
+		const auto held_geometry = geometry();
+		const auto held_unselected = unselected_colours();
+		const auto held_rectangles = rectangles();
+		// Silhouette owns no pose or timer. Native acceptance draws a retained
+		// consumer; this CPU check observes the borrowed records and unchanged
+		// caller-owned inputs without claiming pixels or private draw state.
+		const std::array<MonitorPersona, 2> personas = []
+		{
+			std::array<MonitorPersona, 2> result;
+			result[0].mug = true;
+			result[0].coffee_ring = { 0.77f, 0.9f };
+			result[0].sticky_notes = { { { 0.72f, 0.005f }, 1, -0.1f } };
+			result[1].child = true;
+			result[1].stickers = { { { 0.27f, 0.92f }, 0, 0.0f } };
+			return result;
+		}();
+		const std::array<SilhouettePose, 3> poses{ SilhouettePose{},
+			SilhouettePose{ 0.5f, 0.0f, 0.0f }, SilhouettePose{ 0.0f, 1.0f, 0.4f } };
+		const mattmath::RectangleF screen(0.0f, 0.0f, 1280.0f, 720.0f);
+		const auto inputs = [&]
+		{
+			std::vector<float> values{ screen.x, screen.y, screen.width, screen.height };
+			for (const MonitorPersona& persona : personas)
+			{
+				values.insert(values.end(), { static_cast<float>(persona.shade), persona.child ? 1.0f : 0.0f,
+					persona.mug ? 1.0f : 0.0f, persona.coffee_ring.x, persona.coffee_ring.y });
+				for (const auto* decorations : { &persona.sticky_notes, &persona.stickers })
+				{
+					values.push_back(static_cast<float>(decorations->size()));
+					for (const auto& decoration : *decorations)
+					{
+						values.insert(values.end(), { decoration.at.x, decoration.at.y,
+							static_cast<float>(decoration.colour), decoration.tilt });
+					}
+				}
+				values.push_back(static_cast<float>(persona.crack.size()));
+				for (const auto& point : persona.crack) { values.insert(values.end(), { point.x, point.y }); }
+			}
+			for (const SilhouettePose& pose : poses) { values.insert(values.end(), { pose.sigh, pose.stand, pose.leave }); }
+			return values;
+		};
+		const auto held_inputs = inputs();
+		const auto unchanged = [&]
+		{
+			require(&presentation.opening() == opening && &opening->silhouette_art == art &&
+				geometry() == held_geometry && unselected_colours() == held_unselected && rectangles() == held_rectangles &&
+				opening->sprite_sheet == original.sprite_sheet && opening->fill_frame == original.fill_frame &&
+				opening->palette_sheet == original.palette_sheet && opening->palette_frames == original.palette_frames &&
+				opening->percent_font == original.percent_font && opening->bezel_shades == original.bezel_shades &&
+				opening->sticky_notes == original.sticky_notes && opening->stickers == original.stickers && inputs() == held_inputs,
+				"Silhouette colour adoption retains both borrowed records, separate body fill, unselected opening colours/resources/geometry and caller-owned persona/pose inputs");
+		};
+		const std::array<std::size_t, 3> indices{ silhouette_ink_colour_index,
+			silhouette_rim_colour_index, silhouette_shade_colour_index };
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const auto initial_colours = colour_values(presentation);
+		auto expected_colours = initial_colours;
+		std::srand(0x511026);
+		const int expected_random = std::rand();
+		std::srand(0x511026);
+		for (const std::size_t index : indices)
+		{
+			for (const auto& [word, expected] : std::array<std::pair<const char*, labrador::Colour>, 4>{ {
+				{ "RED", { 255, 0, 0 } }, { "3165A7", { 49, 101, 167 } },
+				{ "2060C080", { 32, 96, 192, 128 } }, { "A532D600", { 165, 50, 214, 0 } } } })
+			{
+				expected_colours[index] = expected;
+				require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + word).ok &&
+					colour_values(presentation) == expected_colours && read_text(scratch.source / L"presentation.json") == baseline &&
+					read_text(scratch.staged / L"presentation.json") == baseline,
+					"Each silhouette-art colour accepts straight named/RGB/partial/nonblack-zero-alpha channels while retaining all other colours and both content copies");
+				unchanged();
+			}
+		}
+		const TuneDocument* const pending = impl.tune_document("presentation");
+		const char* unrelated_word = initial_colours[3] == labrador::Colour(120, 154, 188) ? "654321" : "789ABC";
+		expected_colours[3] = labrador::Colour(unrelated_word);
+		require(impl.execute(std::string("tune presentation.debug_overlay.colour ") + unrelated_word).ok && pending->edits().size() == 4,
+			"A fresh unrelated colour edit is pending beside all three silhouette-art edits");
+		for (const std::size_t index : indices)
+		{
+			const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
+			expected_colours[index] = initial_colours[index];
+			require(impl.execute(std::string("tune.reset ") + colour_paths[index]).ok && colour_values(presentation) == expected_colours &&
+				pending->edits().size() == 3 && !pending->edits().contains(local) && pending->edits().contains("debug_overlay.colour"),
+				"Every silhouette-art reset restores only itself while both sibling edits and unrelated colour remain pending");
+			for (const std::size_t sibling : indices)
+			{
+				if (sibling == index) { continue; }
+				require(pending->edits().contains(std::string(colour_paths[sibling]).substr(std::string("presentation.").size())),
+					"Each silhouette-art reset retains both independently pending siblings");
+			}
+			unchanged();
+			expected_colours[index] = labrador::Colour(165, 50, 214, 0);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + " A532D600").ok &&
+				colour_values(presentation) == expected_colours && pending->edits().size() == 4,
+				"Reapplying a reset silhouette-art edit restores the independent three-sibling reset fixture");
+		}
+		require(impl.execute("tune.reset presentation").ok && colour_values(presentation) == initial_colours &&
+			pending->edits().empty() && pending->current().text() == baseline,
+			"Resetting the presentation restores the exact original document and all three silhouette-art defaults");
+		unchanged();
+		expected_colours = initial_colours;
+		const std::array<const char*, 3> saved_words{ "2060C080", "D973A6C0", "8A43C140" };
+		std::string saved = baseline;
+		for (std::size_t position = 0; position < indices.size(); ++position)
+		{
+			const std::size_t index = indices[position];
+			const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
+			const JsonSpanDocument save_reference(saved, "silhouette-colour-save-reference");
+			saved = save_reference.replaced(*save_reference.find(local), std::string("\"") + saved_words[position] + '"');
+			expected_colours[index] = labrador::Colour(saved_words[position]);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + saved_words[position]).ok &&
+				colour_values(presentation) == expected_colours, "Each saved silhouette-art colour is independently validated before the private three-token save");
+		}
+		require(impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
+			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
+			pending->baseline().text() == saved && pending->current().text() == saved,
+			"Saving silhouette art changes exactly three quoted tokens and rebases the retained borrowed records");
+		unchanged();
+		for (const std::size_t index : indices)
+		{
+			expected_colours[index] = labrador::Colour(165, 50, 214, 0);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + " A532D600").ok &&
+				colour_values(presentation) == expected_colours, "All three independent silhouette-art edits are pending before invalid merged-width saves");
+		}
+		const JsonSpanDocument saved_document(saved, "silhouette-colour-merged-reference");
+		const JsonLeaf* shade_width = saved_document.find("opening.silhouette_art.shade_width");
+		require(shade_width != nullptr && original.silhouette_art.pen_width > 0.0f,
+			"The silhouette merged candidate has the actual unrelated pen/shade width constraint");
+		const std::string external = saved_document.replaced(*shade_width,
+			tune_format(original.silhouette_art.pen_width * 0.5f, saved_document.token(*shade_width)));
+		write_text(scratch.source / L"presentation.json", external);
+		const std::string pending_text = pending->current().text();
+		for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+		{
+			require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == external &&
+				read_text(scratch.staged / L"presentation.json") == saved && pending->current().text() == pending_text &&
+				pending->baseline().text() == saved && pending->edits().size() == 3 &&
+				pending->edits().contains("opening.silhouette_art.ink") && pending->edits().contains("opening.silhouette_art.rim") &&
+				pending->edits().contains("opening.silhouette_art.shade") && colour_values(presentation) == expected_colours,
+				"Shade width below unchanged pen width rejects the complete merged candidate and retains source/staged/live/ledger, even with force");
+			unchanged();
+		}
+		for (std::size_t position = 0; position < indices.size(); ++position)
+		{
+			const std::size_t index = indices[position];
+			expected_colours[index] = labrador::Colour(saved_words[position]);
+			require(impl.execute(std::string("tune.reset ") + colour_paths[index]).ok &&
+				colour_values(presentation) == expected_colours && pending->edits().size() == indices.size() - position - 1,
+				"After refused saves every silhouette-art colour resets independently to its saved partial-alpha baseline");
+			unchanged();
+		}
+		require(pending->current().text() == saved && pending->baseline().text() == saved &&
+			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			"Saved silhouette-art resets retain the invalid external source and exact staging without recovery files");
+		write_text(scratch.source / L"presentation.json", saved);
+		require(std::rand() == expected_random,
+			"Silhouette-art colour commands, sibling resets and valid/refused saves consume no gameplay random draw");
+	}
+
 	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
 	{
 		const std::string spread_path = "tuning.projectiles.mist.spread_step";
@@ -1538,6 +1759,7 @@ namespace debug_console_acceptance
 		check_idle_drip_colour_tunes(game_directory);
 		check_respawn_pen_colour_tunes(game_directory);
 		check_cursor_colour_tunes(game_directory);
+		check_silhouette_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.

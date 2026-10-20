@@ -214,6 +214,21 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($SilhouetteTuneColoursOnly) {
+    $result.scope = 'silhouette-tune-colours-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-default','three-distinct-rgb','three-distinct-rgba','three-nonblack-alpha0')
+    $result.resolutions = @('1280x720')
+    $result.inputs = 'Normal reader backend without sampling/events, persona roll or Player/Level/StateContext/input/time updates. Literal adult+mug and child personas, seated pose, screen rectangles and child-panel camera stay fixed around one preconstructed borrowed Silhouette.'
+    $result.audio = 'No audio consumer or listening acceptance; private preferences remain unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Three exact live silhouette_art fields only; separate opaque body fill stays outside allowlist. Independent raw white-frame 3x3 mug patches use two ink writes, one rim write over unchanged body and four shade writes with (R*A/4,G*A/4,B*A/4,A/4), quantized per target write. Actual patch equality/uniformity and nonzero role deltas qualify shipped sample interiors; five negative controls per underlay reject straight/squared alpha and wrong ink/shade pass counts. Alpha0 retains body and restores exterior underlay. Fixed adult/child footprints, caller persona/pose/screen/camera/resources and draw RNG; exact default restoration. Child panel is aggregate colour adoption, without independent full child geometry. Shared38readbacks/10rows/8crops440x240(844800pixels)/10controls.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions = @('13-actual-validated-commands','78-additional-readbacks','26-additional-rows','totals116-readbacks-36-rows-8-crops','three-exact-token-private-save-rebase-reset','sibling-retaining-ink-and-rim-resets','all-three-alpha0-retain-body','named-rim-and-exact-saved-raster-reversal','two-private-PlaySettings-and-JumpJ-seed-Saves','unchanged-default-display-and-real-content','no-queued-match-work')
+    }
+    else { $result.actions = @('literal-consumer-only','no-developer-commands-transcript-scratch-or-Save') }
+    $result.checks += ' Native controlled Save failure absent; CPU owns semantic merged-width rollback. No active story route, physical/global input, OS-focus delivery, human art/readability, listening or performance acceptance.'
+}
 elseif ($CursorTuneColoursOnly) {
     $result.scope = 'cursor-tune-colours-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

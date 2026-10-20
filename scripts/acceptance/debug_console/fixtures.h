@@ -307,7 +307,7 @@ namespace debug_console_acceptance
 	std::size_t log_index(const DebugLog& log, const std::string& text);
 	bool any_line(const DebugLog& log, const std::string& text);
 
-	// The twenty-three audited colour tune paths and their values, in the same order;
+	// The twenty-six audited colour tune paths and their values, in the same order;
 	// shared by tune_checks.cpp, tune_document_checks.cpp and tune_menu_checks.cpp.
 	inline constexpr std::size_t identity_ink_colour_index = 13;
 	inline constexpr std::size_t identity_background_colour_index = 14;
@@ -319,7 +319,10 @@ namespace debug_console_acceptance
 	inline constexpr std::size_t respawn_pen_colour_index = 20;
 	inline constexpr std::size_t cursor_ink_colour_index = 21;
 	inline constexpr std::size_t cursor_fill_colour_index = 22;
-	inline const std::array<const char*, 23> colour_paths{
+	inline constexpr std::size_t silhouette_ink_colour_index = 23;
+	inline constexpr std::size_t silhouette_rim_colour_index = 24;
+	inline constexpr std::size_t silhouette_shade_colour_index = 25;
+	inline const std::array<const char*, 26> colour_paths{
 		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
 		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
 		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
@@ -331,7 +334,8 @@ namespace debug_console_acceptance
 		"presentation.combat_feedback.keyline", "presentation.blocked_shot.highlight",
 		"presentation.blocked_shot.keyline", "presentation.idle_drip.keyline",
 		"presentation.respawn_redraw.pen_colour", "presentation.opening.cursor_art.ink",
-		"presentation.opening.cursor_art.fill" };
+		"presentation.opening.cursor_art.fill", "presentation.opening.silhouette_art.ink",
+		"presentation.opening.silhouette_art.rim", "presentation.opening.silhouette_art.shade" };
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
 
 	// console_checks.cpp

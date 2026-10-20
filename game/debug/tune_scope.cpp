@@ -67,6 +67,11 @@ namespace
 		// reveal click ticks on every draw; sheet/frame and draw inputs stay intact.
 		{ "presentation.opening.cursor_art.ink", TuneScope::live },
 		{ "presentation.opening.cursor_art.fill", TuneScope::live },
+		// Silhouette reads these borrowed inks on every visible story draw;
+		// body fill, persona/pose inputs and captured sheet/frame stay intact.
+		{ "presentation.opening.silhouette_art.ink", TuneScope::live },
+		{ "presentation.opening.silhouette_art.rim", TuneScope::live },
+		{ "presentation.opening.silhouette_art.shade", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

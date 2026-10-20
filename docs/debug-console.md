@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These twenty-three existing string fields are supported; numeric path
+**Colours.** These twenty-six existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -411,6 +411,9 @@ show the quoted JSON token.
 | `presentation.respawn_redraw.pen_colour` | live | Existing partial respawn outlines, on the next draw. |
 | `presentation.opening.cursor_art.ink` | live | Ink of existing cursor arrows and reveal click ticks, on the next draw. |
 | `presentation.opening.cursor_art.fill` | live | Fill of those same existing arrows and click ticks, on the next draw. |
+| `presentation.opening.silhouette_art.ink` | live | Contours of existing visible intro/reveal silhouettes, on the next draw. |
+| `presentation.opening.silhouette_art.rim` | live | Lit edges of those same silhouettes, on the next draw. |
+| `presentation.opening.silhouette_art.shade` | live | Ordered shade passes of those same silhouettes, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -478,6 +481,15 @@ colours to nonblack zero alpha retains those residual arrow materials.
 Reduce effects suppresses the click ticks while retaining the arrow. Editing
 either colour preserves the other, fixed hotspot, geometry, timing, draw inputs
 and captured sheet/frame; no drawing, default colour or artwork changes here.
+
+Silhouette ink, rim and shade are borrowed on every visible intro/reveal draw.
+The separate body fill, persona/pose inputs, geometry and captured sheet/frame
+remain unchanged. Existing base-alpha conversion is retained, with no temporal
+fade. Each of the four ordered shade passes submits
+`(R*A/4, G*A/4, B*A/4, A/4)`; overlapping writes blend and quantize separately.
+Making all three art colours nonblack zero alpha removes their contributions
+while retaining the separate body fill. This increment changes no drawing,
+default colour or artwork.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -1241,7 +1253,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the twenty-three listed colour fields above are
+  and inserting keys in `tune.save`: the twenty-six listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1250,12 +1262,12 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Twenty-three existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Twenty-six existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
-the blocked-shot highlight/keyline pair, the common idle-drip keyline and the
-respawn pen colour and cursor ink/fill.
+the blocked-shot highlight/keyline pair, the common idle-drip keyline,
+respawn pen colour, cursor ink/fill and silhouette ink/rim/shade.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1280,6 +1292,49 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Silhouette ink/rim/shade increment (2026-10-20), **verified**:
+exact paths 24-26 are `presentation.opening.silhouette_art.ink`, `.rim` and
+`.shade`, live on retained visible intro/reveal silhouettes. The production
+change is only the explicit allowlist; existing conversion, drawing, defaults
+and artwork remain unchanged. Ink/rim use ordinary base premultiplication.
+Each shade pass submits `(R*A/4, G*A/4, B*A/4, A/4)` in the existing four-pass
+order, with per-write target quantization and no temporal fade. The separate
+`opening.silhouette` body fill stays outside this colour scope.
+
+Both game/editor builds and four focused CPU cases (console and story audio
+per preset) pass. CPU checks retain both borrowed record addresses, body fill, unselected colours,
+resources, geometry and caller-owned persona/pose inputs. The three fields
+have independent sibling resets, exact LF/CRLF saves, conflicts/force and a
+three-token save/rebase. An external `shade_width < pen_width` rejects the
+complete merged candidate, even with force, preserving source/staged/live/text/
+baseline/ledger state and allowing each colour to reset to its saved baseline.
+
+Both native first executions pass. Shared evidence has 38 readbacks, ten rows, eight 440x240
+montage crops and ten controls. Independent adult mug patches are three 3x3
+interiors centred at ink `(963,690)`, rim `(932,627)` and shade `(959,679)`,
+audited against per-edge truncation. Their ordered raw submissions represent
+two ink writes, one rim write over the opaque body and four quarter-alpha
+shade writes; target quantization occurs after each write. Controls
+reject straight RGB, squared base alpha, a missing ink/shade pass and full
+shade alpha. Uniform patch interiors, all-art zero alpha retaining adult/child
+body, fixed caller inputs/resources/RNG and exact default restoration pass.
+Child coverage is aggregate colour adoption/restoration,
+not an independent full-geometry oracle.
+
+Debug adds thirteen tune/reset/save commands, 78 readbacks and 26 rows:
+totals of 116 readbacks, 36 rows and eight crops. Exact three-token
+private save/rebase, sibling retention, saved-raster resets, actual content,
+private preferences and no queued match work pass. Its two
+seed Saves cover PlaySettings and Jump J while retaining default display.
+All 21 shared artifacts, including eight PPMs, match byte for byte; the root
+contact-sheet inspection and twelve frozen source/support hashes reconcile.
+Receipts live under `out/validation/crossfeed-20261020/silhouette-colour-v1/`.
+The native scope
+has zero local, Player, Level, StateContext, input or time updates. No
+active-match route, physical/global input, human readability, listening or
+uncontended performance acceptance is claimed. Further colour consumers and
+unscoped string/font/missing-key work remain open.
 
 Cursor ink/fill increment (2026-10-20), **verified**:
 the twenty-second/twenty-third exact paths expose
