@@ -6,6 +6,12 @@ $crossfeedRows = @(Import-Csv -LiteralPath (Join-Path $captures 'crossfeed.csv')
 # independently of the CSV. StagePreview fits its fractional menu pane before
 # Viewport::pixel_rect truncates each physical edge.
 $crossfeedPresentation = Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw | ConvertFrom-Json
+$crossfeedMinimumWidth = 0.0
+if ($crossfeedPresentation.camera.PSObject.Properties.Name -contains 'minimum_world_width') {
+    $crossfeedMinimumWidth = [double]$crossfeedPresentation.camera.minimum_world_width
+}
+if ([double]::IsNaN($crossfeedMinimumWidth) -or [double]::IsInfinity($crossfeedMinimumWidth) -or
+    $crossfeedMinimumWidth -lt 0.0) { throw 'Crossfeed staged minimum camera width is invalid.' }
 $crossfeedStage = Get-Content -LiteralPath (Join-Path $gameDirectory 'levels/crossfeed.json') -Raw | ConvertFrom-Json
 $crossfeedWorld = $crossfeedStage.level_bounds.zoom_out_finish_bounds
 $crossfeedLook = $crossfeedPresentation.main_menu.stage_select
@@ -139,7 +145,11 @@ foreach ($row in $crossfeedRows) {
                 else { @(0, 360, 640, 360) }
             }
             else { @((($viewIndex % 2) * 640), ([int][Math]::Floor($viewIndex / 2.0) * 360), 640, 360) }
-        $expectedScale = 720.0 / $crossfeedPresentation.camera.reference_height
+        $expectedScale = [single]([single]720.0 / [single]$crossfeedPresentation.camera.reference_height)
+        if ($crossfeedMinimumWidth -gt 0.0) {
+            $expectedScale = [Math]::Min($expectedScale,
+                [single]([single]$expectedPane[2] / [single]$crossfeedMinimumWidth))
+        }
         if (($pane -join ',') -cne ($expectedPane -join ',') -or
             [Math]::Abs($metrics.camera_scale - $expectedScale) -gt 0.000001) {
             throw "Crossfeed player pane differs from its native 720p layout or authored gameplay camera scale: $key"

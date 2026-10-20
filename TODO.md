@@ -68,7 +68,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | OPEN | MED | M | Correct measured late 3/4P Course landing exposure, then qualify shorter airtime with all five tools: keyboard comfort, camera warning and input margins. Preserve legacy 200-unit climbs; height feedback and pad review remain open. [Native observations](docs/polish-crossfeed.md#landing-and-incoming-shot-observations-2026-10-20), [course](docs/polish-movement-course.md). |
+| `POL#3` | OPEN | MED | M | Qualify selected shorter airtime and C2 framing with all five tools: keyboard comfort, recognition, rear-threat awareness and input margins. Late 3/4P Course landing exposure is corrected geometrically. Preserve legacy 200-unit climbs; height feedback and pad review remain open. [Framing comparison](docs/polish-crossfeed.md#narrow-pane-framing-comparison-2026-10-20), [course](docs/polish-movement-course.md). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 

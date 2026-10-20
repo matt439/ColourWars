@@ -11,7 +11,7 @@ public:
 	labrador::Camera follow(const mattmath::Vector2F& player_center,
 		const labrador::Viewport& viewport, float screen_height,
 		const CameraPresentation& framing, const labrador::Camera& previous,
-		const mattmath::RectangleF& bounds) const;
+		const mattmath::RectangleF& bounds, float horizontal_velocity = 0.0f) const;
 
 	// Returns zero when the cursor is exactly on the player. The caller retains
 	// the last aim direction in that case. All other angles stay continuous.

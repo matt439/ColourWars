@@ -2,6 +2,10 @@
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/player_badge.h"
+#include "game/debug/dev_tools.h"
+#if COLOURWARS_DEV_TOOLS
+#include "game/debug/match_fingerprint.h"
+#endif
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
@@ -331,6 +335,169 @@ namespace
         std::cout << "PASS player identity on/off: real movement, aim, paid shots, ammo, collisions, paint/score, health/death and respawn unchanged with repeated visual emphasis\n";
     }
 
+    void check_camera_integration(World& world, const std::filesystem::path& content)
+    {
+        auto& framing = const_cast<CameraPresentation&>(world.presentation.camera());
+        struct Restore
+        {
+            CameraPresentation& live; CameraPresentation saved;
+            ResolutionManager& resolution; Vector2I size;
+            ~Restore() { this->live = this->saved; this->resolution.set_resolution_exactly(this->size); }
+        } restore{ framing, framing, world.resolution, world.resolution.resolution_ivec() };
+        framing.minimum_world_width = 1280.0f;
+        framing.horizontal_lead_seconds = 0.25f; framing.horizontal_lead_max_distance = 200.0f;
+        world.resolution.set_resolution_exactly({ 1280, 720 });
+        const LevelLoadedInfo source((content / "levels/movement_course.json").string().c_str());
+        const auto rectangle = [&](const char* name)
+        {
+            const JsonValue objects = source.collision_objects_json();
+            for (size_t i = 0; i < objects.size(); ++i)
+            {
+                const JsonValue object = objects.at(i);
+                if (object.string("name") != name) { continue; }
+                const JsonValue r = object.object("rectangle");
+                return RectangleF(r.number("x"), r.number("y"), r.number("width"), r.number("height"));
+            }
+            throw std::runtime_error("Camera integration lost its authored Course station");
+        };
+        const RectangleF runway = rectangle("long_landing_running_takeoff");
+        const RectangleF bounds = source.camera_bounds_rectangle();
+        const Vector2F size = world.tuning.player().size;
+        std::vector<PlayerInputData> neutral(input_slots::count, input()), moving = neutral;
+        auto level = world.build(); activate(*level, neutral);
+        require(level->place_player(0, { runway.left() + size.x, runway.top() - size.y }),
+            "Could not start camera integration on the actual interior runway");
+        for (int tick = 0; tick < 8; ++tick) { level->update(neutral, dt); }
+        moving[static_cast<size_t>(level->player(0).player_num())].x_movement = 1.0f;
+        for (int tick = 0; tick < 90 && level->player(0).velocity().x < world.tuning.player().max_velocity.x; ++tick)
+        { level->update(moving, dt); }
+        const Player& player = level->player(0);
+        const float retained_velocity = player.velocity().x;
+        require(retained_velocity == world.tuning.player().max_velocity.x &&
+            player.rectangle().right() < runway.right() && close_to(player.rectangle().bottom(), runway.top()),
+            "Camera integration did not naturally accelerate on the authored runway");
+        const PlayerCamera camera_policy{};
+        const auto refresh = [&](const Vector2I& resolution, bool zero_lead)
+        {
+            std::array<Camera, 4> expected;
+            world.resolution.set_resolution_exactly(resolution);
+            for (int view = 0; view < 4; ++view)
+            {
+                const Player& p = level->player(view);
+                expected[static_cast<size_t>(view)] = camera_policy.follow(p.camera_focus(),
+                    world.viewports.player_viewport(view), static_cast<float>(resolution.y), framing,
+                    p.camera(), bounds, zero_lead ? 0.0f : p.velocity().x);
+            }
+            level->refresh_layout();
+            for (int view = 0; view < 4; ++view)
+            { require(level->player(view).camera() == expected[static_cast<size_t>(view)],
+                "Level camera refresh disagrees with the public follow policy or expected zero lead"); }
+        };
+        level->suspend();
+        const auto simulation = [&]
+        {
+            const auto seat = [&](int view)
+            {
+                const Player& p = level->player(view);
+                return std::tuple(p.rectangle(), p.velocity(), p.health(), p.weapon_ammo(), p.respawn_timer(),
+                    p.state(), p.move_state(), p.animation_state(), p.primary_weapon().readiness(),
+                    p.primary_weapon().rotation(), p.primary_weapon().nozzle_pos(),
+                    level->player_identity_emphasis(view), level->player_identity_bounds(view));
+            };
+            const auto score = level->level_end_info();
+            return std::tuple(level->state(), level->projectile_count(), level->collision_object_count(),
+                score.player_areas, score.team_a_area, score.team_b_area, score.total_area,
+                std::array{ seat(0), seat(1), seat(2), seat(3) });
+        };
+        const auto frozen = simulation();
+#if COLOURWARS_DEV_TOOLS
+        const auto fingerprint = MatchFingerprint::of(*level, 0);
+#endif
+        for (const Vector2I resolution : { Vector2I(1920, 1080), Vector2I(2560, 1440), Vector2I(1281, 721),
+            Vector2I(1600, 1200), Vector2I(2560, 720), Vector2I(1280, 720) })
+        {
+            refresh(resolution, false);
+            for (int view = 0; view < 4; ++view)
+            {
+                const Player& p = level->player(view);
+                const Viewport pane(world.viewports.player_viewport(view).pixel_rect());
+                const Camera camera = p.camera();
+                const RectangleF visible = camera.visible_rectangle(pane);
+                require(visible.contains(p.rectangle()) && visible.contains(level->player_identity_bounds(view)),
+                    "Suspended C2 resize lost the actual character or its current badge bounds");
+                for (const Vector2F offset : { Vector2F(100, -80), Vector2F(-100, 80) })
+                {
+                    const Vector2F cursor = camera.calculate_view_position(p.center() + offset) + pane.position();
+                    const Vector2F aim = PlayerCamera::mouse_direction(p.center(), cursor, pane, camera);
+                    require(close_to(aim.x, offset.normalized().x) && close_to(aim.y, offset.normalized().y),
+                        "Suspended C2 resize projected mouse aim from the virtual lead focus");
+                }
+                const Vector2F cursor = camera.calculate_view_position(p.center()) + pane.position();
+                require(PlayerCamera::mouse_direction(p.center(), cursor, pane, camera) == Vector2F::ZERO,
+                    "Suspended C2 resize invented aim at the physical player centre");
+                level->refresh_layout();
+                require(p.camera() == camera, "Repeated suspended resize/restore refresh drifted the camera");
+            }
+            require(simulation() == frozen, "Suspended C2 resize advanced public simulation or badge state");
+#if COLOURWARS_DEV_TOOLS
+            require(MatchFingerprint::difference(fingerprint, MatchFingerprint::of(*level, 0)).empty(),
+                "Suspended C2 resize changed the frozen match fingerprint");
+#endif
+        }
+        level->resume();
+        require(level->kill_player(0) && player.state() == PlayerState::alive && player.health() == 0.0f &&
+            player.velocity().x == retained_velocity, "Known fatal health signal did not retain the moving pose");
+        const Vector2F death_centre = player.center();
+        const Camera previous = player.camera();
+        world.resolution.set_resolution_exactly({ 2560, 720 });
+        const Viewport wide = world.viewports.player_viewport(0);
+        const Camera zero = camera_policy.follow(player.camera_focus(), wide, 720.0f, framing, previous, bounds);
+        const Camera stale = camera_policy.follow(player.camera_focus(), wide, 720.0f, framing, previous, bounds, retained_velocity);
+        require(zero != stale, "Fatal camera guard fixture was hidden by the follow deadzone or arena bounds");
+        refresh({ 2560, 720 }, true); // Public resize sees health zero before a Player dead-state tick.
+        bool saw_hold = false, saw_spawn = false, respawned = false;
+        for (int tick = 0; tick < 600; ++tick)
+        {
+            level->update(neutral, dt);
+            if (player.state() == PlayerState::alive)
+            {
+                require(player.health() == world.tuning.player().starting_health && player.velocity() == Vector2F::ZERO &&
+                    player.rectangle() == player.spawn_rectangle(), "Natural camera respawn did not reset the actual player");
+                refresh({ 1920, 1080 }, false); respawned = true; break;
+            }
+            const bool hold = world.tuning.player().respawn_delay - player.respawn_timer() <
+                world.presentation.respawn_redraw().camera_hold;
+            require(player.velocity().x == retained_velocity &&
+                player.camera_focus() == (hold ? death_centre : player.spawn_rectangle().center()),
+                "Dead camera lost its retained velocity control or body-to-spawn focus transition");
+            if ((hold && !saw_hold) || (!hold && !saw_spawn))
+            { refresh(hold ? Vector2I(1281, 721) : Vector2I(1280, 720), true); }
+            saw_hold = saw_hold || hold; saw_spawn = saw_spawn || !hold;
+        }
+        require(saw_hold && saw_spawn && respawned, "Camera lifecycle missed dead hold, spawn focus or natural respawn");
+
+        // A separate station uses the real 60-unit short_step side wall. The
+        // current Level refresh precedes late contacts; only the next public
+        // refresh is compared with resolved zero velocity, not the contact frame.
+        const RectangleF approach = rectangle("running_landing"), wall = rectangle("short_step");
+        require(approach.right() == wall.left() && wall.top() < approach.top() &&
+            level->place_player(0, { approach.left() + size.x, approach.top() - size.y }),
+            "Camera wall trial lost its authored runway/step connection");
+        bool hit_wall = false;
+        for (int tick = 0; tick < 180; ++tick)
+        {
+            const float before = player.velocity().x; level->update(moving, dt);
+            if (before > 0.0f && player.velocity().x == 0.0f && close_to(player.rectangle().right(), wall.left()))
+            { hit_wall = true; break; }
+        }
+        require(hit_wall, "Input-driven camera wall trial did not make an actual authored side contact");
+        refresh({ 1281, 721 }, false);
+        std::cout << "PASS C2 Level camera integration: input-only runway acceleration, resolved authored wall, "
+            "known fatal health-zero/retained-velocity guard, dead hold/spawn focus/natural respawn; suspended 4P "
+            "720p/1080p/QHD/odd/narrow/wide aspect refreshes preserve public state and Debug fingerprint, "
+            "body/badge space and physical-player mouse rays. Late endpoint-fatal contact frames and human comfort remain unqualified\n";
+    }
+
     void check_validation(const std::filesystem::path& content, const std::filesystem::path& scratch)
     {
         std::ifstream input_file(content / "presentation.json");
@@ -419,6 +586,7 @@ int main(int argc, char** argv)
         check_roster_and_bounds(world);
         check_lifecycle(world);
         check_gameplay(world, content);
+        check_camera_integration(world, content);
         check_validation(content, std::filesystem::absolute(argv[0]).parent_path());
         return 0;
     }

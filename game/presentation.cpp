@@ -145,8 +145,16 @@ Presentation::Presentation(const char* path)
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
 	this->player_identity_ = read_player_identity(root);
-	this->camera_.reference_height = read_positive(root.object("camera"), "reference_height");
-	const JsonValue shake = root.object("camera").object("shake");
+	const JsonValue camera = root.object("camera");
+	this->camera_.reference_height = read_positive(camera, "reference_height");
+	const auto camera_option = [&](const char* key)
+	{
+		return camera.has(key) ? read_non_negative(camera, key) : 0.0f;
+	};
+	this->camera_.minimum_world_width = camera_option("minimum_world_width");
+	this->camera_.horizontal_lead_seconds = camera_option("horizontal_lead_seconds");
+	this->camera_.horizontal_lead_max_distance = camera_option("horizontal_lead_max_distance");
+	const JsonValue shake = camera.object("shake");
 	ViewShakePresentation& kick = this->camera_.shake;
 	kick.hurt_amplitude = read_positive(shake, "hurt_amplitude");
 	kick.elimination_amplitude = read_positive(shake, "elimination_amplitude");

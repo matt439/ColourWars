@@ -459,7 +459,119 @@ Protected projectile motion/age and private animation clocks are not separately
 inspected. Selected Crossfeed frames capture lower-route walk entry; upper
 takeoff is numeric evidence, not a claim that its commitment raster was reviewed.
 
+### Narrow-pane framing comparison (2026-10-20)
+
+The follow-up holds P3 movement, weapons and map geometry fixed and compares
+three global camera profiles. All three optional presentation controls default
+to zero when omitted; the zero-option prototype reproduces all 92 baseline
+native frames/crops byte for byte. They change the client's framing policy,
+using the existing engine follow helper.
+
+| Profile | Minimum world width | Horizontal lead | Distance cap | Running strip first full, 1/2P | Running strip first full, 3/4P |
+|---|---:|---:|---:|---:|---:|
+| C0, original framing | 0 | 0 s | 0 | 46 | 74 |
+| C1, lead only | 0 | 0.30 s | 240 | 31 | 56 |
+| C2, selected candidate | 1280 | 0.25 s | 200 | 33 | 50 |
+
+Accepted takeoff remains tick 57, lip crossing 65 and landing 104. Clean/heavy
+pairs agree. C1 exposes the body-width strip only one tick before takeoff in
+3/4P and reduces rear coverage. C2 exposes its near edge at 47 and complete
+strip at 50, ten/seven ticks before takeoff. Its strip remains visible through
+contact without intersecting the conservative HUD envelopes at commitment.
+Crossfeed's sampled compulsory ramp and optional ruler routes, and the Course's
+120/280 gaps, retain their strips before commitment in all player counts.
+
+At the actual running takeoff, the horizontal budgets from the player's centre
+are:
+
+| Profile | 1/2P forward / rear | 3/4P forward / rear | 3/4P body at 720p |
+|---|---:|---:|---:|
+| C0 | 768 / 1152 | 400 / 560 | 34.7 by 80 px |
+| C1 | 1008 / 912 | 640 / 320 | 34.7 by 80 px |
+| C2 | 968 / 952 | 712 / 568 | 26 by 60 px |
+
+C2 keeps roughly the original 3/4P rear budget while adding forward information;
+it reduces world detail by 25 percent. The 1/2P scale stays unchanged, with 200
+world units transferred from rear to forward coverage at full speed. These
+budgets depend on velocity, bounds and follow history. Stopping retains the
+existing deadzone policy rather than forcing a recenter. Recognition, comfort
+and rear-threat awareness still need attended review.
+
+The same four-player pane at accepted takeoff (tick 57), original then selected:
+
+![Original Course takeoff camera](images/polish-crossfeed/course-running-camera-before-720p.png)
+
+![Selected Course takeoff camera](images/polish-crossfeed/course-running-camera-after-720p.png)
+
+In the controlled 3/4P Sniper stations, C2 brings the attacker into the initial
+pane; C0/C1 never show that actor during those trials. All profiles first have
+a geometric projectile candidate at tick 1 and damage at 19 stationary / 22
+retreating. That is useful awareness context, not proof of readable or continuous
+projectile warning. Across all 66 trials, the measured route, paid-shot, contact,
+health-loss and final-projectile outcomes match C0. The comparison does not
+establish competitive balance or a reaction-time margin.
+
+The stored player camera uses horizontal velocity lead capped by both authored
+distance and one quarter of visible width. A minimum width uniformly widens
+narrow panes, preserving aspect and whole-pixel pane boundaries; overview and
+StagePreview still fit their independent bounds. Mouse aim projects the physical
+player through that stored camera. A player already known dead or at zero health
+receives zero velocity lead. Camera refresh still precedes late launch/endpoint
+contacts; this change does not promise that a later fatal contact clears lead
+within the same frame.
+
+Comparison receipts are in
+`out/validation/crossfeed-20261020/camera-comparison-v2/x64-debug/`
+(`comparison.json`, `restoration.json` and each C0/C1/C2 run). Every staged
+override was restored byte for byte and source presentation stayed unchanged
+during the experiment. The selected values are now explicit in
+`game/content/presentation.json`; full consumer and native verification is
+recorded with the completed candidate below.
+
 ## Verification record
+
+### Selected C2 framing and identity ink (2026-10-20)
+
+The receipt root is `out/validation/crossfeed-20261020/camera-final-v1/`.
+Both game/editor builds pass `/W4 /WX` (prototype build logs are in
+`camera-comparison-v1/`); the selected JSON is staged in both configurations.
+All 40 consumer cases have successful receipts in each preset,
+mapped by `consumer-reconciliation.json`. Debug completed the serial run.
+Release stopped while seeding an isolated DisplayTrial remembered save;
+the unchanged binary passed in a fresh private directory, then the three
+unfinished later cases passed separately. The failed attempt is retained;
+these results do not diagnose that transient write failure. Save production
+and DisplayTrial test code were not changed.
+Both hidden normal startups also pass with the accepted bank, isolated save,
+system-only PATH, per-monitor-v2 DPI awareness and graceful shutdown
+(`startup/<preset>/`).
+
+The camera CPU case covers zero-option history and loaded/lead/minimum-width
+profiles, all 1-4P panes at 720p/1080p/QHD/odd/aspect sizes, finite validation,
+bounds, body/badge space, stop/reversal, rear budgets and physical-player mouse
+projection. The actual Level integration additionally covers input-driven
+acceleration and authored wall contact, a discriminating zero-health/retained-
+velocity guard, dead hold/spawn focus/natural respawn, and suspended C2 4P
+resize/state/fingerprint checks. A known fatal signal is not a test of every
+later endpoint-fatal frame.
+
+Both presets pass `RouteWarningOnly`, `CrossfeedOnly` and `IdentityOnly`.
+`native-reconciliation.json` identifies all six runs, confirms the unchanged
+clean engine and compares 311 shared PPM files byte for byte between builds:
+92 landing/warning frames/crops, 72 Crossfeed frames/crops and 147 identity
+frames/crops. The two framing verifiers now derive expected gameplay scale
+from each physical pane and the staged camera controls; the earlier fixed-scale
+failures remain in their original run directories. Preview/overview scale is
+still independently checked. Current Crossfeed approach images and the Course
+comparison panes above come from these native captures without resampling.
+
+Identity-only adds validated ink tuning through preconstructed shared badges
+and actual frozen world/HUD consumers. Its own summaries retain 28 additional
+readbacks, five rows and four crops per preset; Debug adds 40 readbacks, eight
+rows and ten command attempts, including three semantic refusals and a private
+one-token save/rebase. Team/Weapon/Results pages use the source-audited shared
+renderer; this increment does not claim to open those pages directly. Further
+colour work remains `DBG#1`.
 
 ### Selected P3 profile (2026-10-20)
 

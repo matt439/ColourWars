@@ -3,6 +3,10 @@
 Implemented on 2026-10-08 against game revision `96079bc`, using the existing
 Labrador pin. This begins sections 1–2 of [the polish plan](polish-plan.md).
 It does not close either section's visual or playtest exit condition.
+The display and movement baseline below records that first increment. The
+[2026-10-20 camera follow-up](#camera-follow-up-2026-10-20) and
+[coupled P3 comparison](polish-crossfeed.md#coupled-movement-and-five-tool-comparison-2026-10-20)
+own the current candidates.
 
 ## Display baseline
 
@@ -30,6 +34,27 @@ This is a framing baseline, not an integer-pixel rendering policy: fractional
 camera placement, rotation, texel density and the mixed existing artwork still
 need the planned pixel-art composition and motion review. No sprite grid, new
 font, character silhouette or final art treatment is approved by this increment.
+
+## Camera follow-up (2026-10-20)
+
+The selected Crossfeed/Course framing candidate adds optional
+`camera.minimum_world_width = 1280`, `horizontal_lead_seconds = 0.25` and
+`horizontal_lead_max_distance = 200`. Missing or zero values preserve the
+original policy above. The scale begins at display-height/reference-height,
+then decreases uniformly if necessary to show the minimum horizontal world.
+Lead shifts only horizontal follow focus, bounded by the distance cap and a
+quarter of visible width. It is disabled for dead/zero-health players known
+at camera refresh, and mouse projection still uses the physical player.
+
+At 16:9 the current 1/2P extents remain 1920 by 1080 / 1920 by 540; 3/4P panes
+show 1280 by 720. At 720p, their character height changes from 80 to 60 pixels.
+The measured running landing now exposes its body-width strip seven ticks
+before takeoff, compared with seventeen ticks after under the original camera.
+This corrects geometric exposure, while comfort, recognition and human warning
+remain open. The [comparison](polish-crossfeed.md#narrow-pane-framing-comparison-2026-10-20)
+retains the lead-only alternative, rear-view budgets, native observations and
+the late-contact update-order limit. This remains client policy, with no engine
+API or submodule change.
 
 ## Movement baseline
 

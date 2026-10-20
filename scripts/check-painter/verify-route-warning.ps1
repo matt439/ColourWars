@@ -259,7 +259,13 @@ foreach ($panel in $routePanels) {
     $byIndex[[string]$index] = $box
 }
 $routePresentation = Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw | ConvertFrom-Json
-$routeScale = [single](720.0 / [double]$routePresentation.camera.reference_height)
+$routeReferenceHeight = Get-RouteWarningNumber $routePresentation.camera.reference_height 'camera.reference_height'
+$routeMinimumWidth = 0.0
+if ($routePresentation.camera.PSObject.Properties.Name -contains 'minimum_world_width') {
+    $routeMinimumWidth = Get-RouteWarningNumber $routePresentation.camera.minimum_world_width 'camera.minimum_world_width'
+}
+if ($routeReferenceHeight -le 0.0 -or $routeMinimumWidth -lt 0.0) { throw 'Route/warning staged camera framing is invalid.' }
+$routeBaseScale = [single]([single]720.0 / [single]$routeReferenceHeight)
 $routeSeenRows = @{}
 foreach ($row in $routeTicks) {
     if (-not $routeTrialById.ContainsKey($row.trial) -or
@@ -280,13 +286,17 @@ foreach ($row in $routeTicks) {
         'projected_width', 'projected_height', 'clip_width', 'clip_height', 'edge_x')) {
         $null = Get-RouteWarningNumber $row.$field "$field/$key"
     }
+    $pane = @(Get-RouteWarningPane ([int]$row.players) ([int]$row.view))
+    $routeScale = $routeBaseScale
+    if ($routeMinimumWidth -gt 0.0) {
+        $routeScale = [Math]::Min($routeScale, [single]([single]$pane[2] / [single]$routeMinimumWidth))
+    }
     if ([double]$row.world_width -le 0.0 -or [double]$row.world_height -le 0.0 -or
         [double]$row.health -lt 0.0 -or [double]$row.health -gt 1.0 -or
         [double]$row.ammo -lt 0.0 -or [double]$row.ammo -gt 1.0 -or
         [Math]::Abs([double]$row.camera_scale - $routeScale) -gt 0.0000001) {
         throw "Route/warning tick has invalid simulation bounds or gameplay camera scale: $key"
     }
-    $pane = @(Get-RouteWarningPane ([int]$row.players) ([int]$row.view))
     if ((@($row.pane_x, $row.pane_y, $row.pane_width, $row.pane_height) -join ',') -cne ($pane -join ',')) {
         throw "Route/warning tick changed the sparse native pane order: $key"
     }

@@ -524,6 +524,10 @@ void Level::refresh_player_cameras()
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
 		Player* player = this->players_[i];
+		// Fatal contacts can leave state alive until the next Player update.
+		// Dead players retain velocity while camera_focus holds then visits spawn.
+		const float velocity = player->state() == PlayerState::alive && player->health() > 0.0f
+			? player->velocity().x : 0.0f;
 		const Camera camera = this->player_camera_.follow(
 			player->camera_focus(),
 			this->viewport_manager_->player_viewport(
@@ -531,7 +535,7 @@ void Level::refresh_player_cameras()
 			this->resolution_manager_->resolution_vec().y,
 			this->presentation_->camera(),
 			player->camera(),
-			this->camera_bounds_);
+			this->camera_bounds_, velocity);
 		player->set_camera(camera);
 	}
 }

@@ -637,6 +637,9 @@
 
   "camera": {
     "reference_height": 1080.0,
+    "minimum_world_width": 1280.0,
+    "horizontal_lead_seconds": 0.25,
+    "horizontal_lead_max_distance": 200.0,
     "shake": {
       "hurt_amplitude": 3,
       "elimination_amplitude": 5,

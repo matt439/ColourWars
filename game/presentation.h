@@ -181,6 +181,11 @@ struct ViewShakePresentation
 struct CameraPresentation
 {
 	float reference_height = 0.0f;
+	// Optional global framing controls. Zero keeps the original height-based
+	// scale and follow focus; lead is also bounded by a quarter of the pane.
+	float minimum_world_width = 0.0f;
+	float horizontal_lead_seconds = 0.0f;
+	float horizontal_lead_max_distance = 0.0f;
 	ViewShakePresentation shake;
 };
 

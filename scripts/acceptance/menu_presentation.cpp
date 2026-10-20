@@ -167,6 +167,74 @@ namespace
             "Authored team assets changed their A/centre/B order or readiness defaults");
     }
 
+    void check_camera_options(Variants& variants)
+    {
+        struct Field
+        {
+            const char* name;
+            float CameraPresentation::* member;
+            float candidate;
+        };
+        const std::array<Field, 3> fields{{
+            { "minimum_world_width", &CameraPresentation::minimum_world_width, 1280.0f },
+            { "horizontal_lead_seconds", &CameraPresentation::horizontal_lead_seconds, 0.25f },
+            { "horizontal_lead_max_distance", &CameraPresentation::horizontal_lead_max_distance, 200.0f }
+        }};
+        const auto candidate = [&](rapidjson::Document& d)
+        {
+            auto& camera = d["camera"];
+            for (const Field& field : fields)
+            {
+                camera.RemoveMember(field.name);
+                camera.AddMember(rapidjson::StringRef(field.name), field.candidate, d.GetAllocator());
+            }
+        };
+        const auto missing = variants.load([&](rapidjson::Document& d)
+        {
+            for (const Field& field : fields) { d["camera"].RemoveMember(field.name); }
+        });
+        const auto zero = variants.load([&](rapidjson::Document& d)
+        {
+            candidate(d);
+            for (const Field& field : fields) { d["camera"][field.name].SetFloat(0.0f); }
+        });
+        const auto custom = variants.load(candidate);
+        for (const Field& field : fields)
+        {
+            require(missing.camera().*field.member == 0.0f && zero.camera().*field.member == 0.0f,
+                std::string("Optional camera.") + field.name + " did not accept missing or explicit zero");
+            require(custom.camera().*field.member == field.candidate,
+                std::string("Custom camera.") + field.name + " was not loaded exactly");
+            const auto omitted = variants.load([&](rapidjson::Document& d)
+            {
+                candidate(d);
+                d["camera"].RemoveMember(field.name);
+            });
+            for (const Field& other : fields)
+            {
+                const float expected = other.member == field.member ? 0.0f : other.candidate;
+                require(omitted.camera().*other.member == expected,
+                    std::string("Omitting camera.") + field.name + " changed an independent camera option");
+            }
+            for (const double invalid : { -0.01, 1e100 })
+            {
+                variants.rejects("camera", field.name, [&](rapidjson::Document& d)
+                {
+                    candidate(d);
+                    d["camera"][field.name].SetDouble(invalid);
+                });
+            }
+            variants.rejects("camera", field.name, [&](rapidjson::Document& d)
+                { candidate(d); d["camera"][field.name].SetBool(true); });
+            variants.rejects("camera", field.name, [&](rapidjson::Document& d)
+                { candidate(d); d["camera"][field.name].SetString("0.25"); });
+            variants.rejects("camera", field.name, [&](rapidjson::Document& d)
+                { candidate(d); d["camera"][field.name].SetNull(); });
+            variants.rejects("camera", field.name, [&](rapidjson::Document& d)
+                { candidate(d); d["camera"][field.name].SetArray(); });
+        }
+    }
+
     void check_layout(Variants& variants, World& world)
     {
         const auto custom = variants.load([](rapidjson::Document& d)
@@ -873,6 +941,7 @@ int main(int argc, char** argv)
         const Presentation defaults((content / "presentation.json").string().c_str());
         check_defaults(defaults);
         defaults.validate_resources(world.render, world.audio);
+        check_camera_options(variants);
         check_layout(variants, world);
         check_setup_panel(variants, world);
         check_setup_geometry(variants, world);
@@ -881,7 +950,7 @@ int main(int argc, char** argv)
         check_stage_paper(variants, world);
         check_assets(variants, world);
         check_required_primitive(variants, world, content);
-        std::cout << "PASS menu presentation: unchanged defaults, authored base layout/artwork, contextual rejection, "
+        std::cout << "PASS menu presentation: unchanged defaults, optional camera framing, authored base layout/artwork, contextual rejection, "
             "sparse paper construction and retained built-in primitive validation.\n";
         return 0;
     }
