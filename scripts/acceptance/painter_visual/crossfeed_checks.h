@@ -5,6 +5,7 @@
 struct CrossfeedFixture
 {
     std::unique_ptr<Level> level;
+    Scene* scene = nullptr; // Borrowed from Level; useful for post-tick native observations.
     std::vector<CollisionObject*> structures;
     std::vector<StructurePaintable*> paintables;
 };
@@ -50,14 +51,15 @@ std::vector<float> crossfeed_structure_state(const CrossfeedFixture& fixture)
 
 CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info,
     const GameTuning& tuning, const Presentation& presentation, const PlaySettings& preferences,
-    int count, bool heavy, float duration, size_t& heavy_contacts)
+    int count, bool heavy, float duration, size_t& heavy_contacts,
+    const char* stage = "crossfeed", std::optional<WeaponType> attacker_tool = std::nullopt)
 {
     constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player, ScreenLayout::two_player,
         ScreenLayout::three_player, ScreenLayout::four_player };
     constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
     constexpr std::array<WeaponType, 4> tools{ WeaponType::sprayer, WeaponType::sniper,
         WeaponType::roller, WeaponType::bucket };
-    MenuLevelSettings settings; settings.set_stage("crossfeed"); settings.set_player_count(count);
+    MenuLevelSettings settings; settings.set_stage(stage); settings.set_player_count(count);
     settings.set_screen_layout(layouts[static_cast<size_t>(count - 1)]);
     settings.begin_input_claims(slots[0]);
     for (int view = 1; view < count; ++view)
@@ -66,6 +68,7 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
     {
         settings.set_player_team(view, view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
         settings.set_player_weapon(view, count == 2 && view == 1 ? WeaponType::mister : tools[static_cast<size_t>(view)]);
+        if (view == 1 && attacker_tool) { settings.set_player_weapon(view, *attacker_tool); }
     }
     app.viewport_manager()->set_layout(settings.screen_layout());
     const TeamColour colours = TeamColourTools::team_colours(TeamColourPair::blue_orange, presentation.team_palette());
@@ -78,6 +81,7 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
     for (auto& shadow : objects.build_shadows(info.collision_objects_json()))
     { scenery.push_back(scene->add(std::move(shadow))); }
     CrossfeedFixture fixture;
+    fixture.scene = scene.get();
     for (auto& object : objects.build_collision_objects(info.collision_objects_json(), colours))
     {
         if (auto* surface = dynamic_cast<StructurePaintable*>(object.get()))

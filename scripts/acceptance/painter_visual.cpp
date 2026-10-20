@@ -44,6 +44,7 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <string_view>
 #include <thread>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -103,6 +104,7 @@ namespace
 #include "scripts/acceptance/painter_visual/countdown_checks.h"
 #include "scripts/acceptance/painter_visual/cq_blockout_checks.h"
 #include "scripts/acceptance/painter_visual/crossfeed_checks.h"
+#include "scripts/acceptance/painter_visual/route_warning_checks.h"
 #include "scripts/acceptance/painter_visual/landmark_checks.h"
 #include "scripts/acceptance/painter_visual/parallax_checks.h"
 #include "scripts/acceptance/painter_visual/reveal_checks.h"
@@ -184,7 +186,7 @@ int wmain(int argc, wchar_t** argv)
     try
     {
         require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"identity" ||
-            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
+            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"route-warning" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
             std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
             std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
@@ -201,7 +203,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|tune-colours|feedback-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|route-warning|tune-colours|feedback-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -292,7 +294,7 @@ int wmain(int argc, wchar_t** argv)
         options.fullscreen = false;
         options.max_threads = 4;
         if (argc == 4 && (std::wstring(argv[3]) == L"miniature-terrain" ||
-            std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed")) { options.view_capacity = 5; }
+            std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"route-warning")) { options.view_capacity = 5; }
         options.visible = false;
         Application app(options);
         app.initialize();
@@ -417,6 +419,11 @@ int wmain(int argc, wchar_t** argv)
         if (argc == 4 && std::wstring(argv[3]) == L"miniature-terrain")
         {
             miniature_terrain_matrix(app, levels, builder, canvas, tuning, presentation, preferences, output);
+            return 0;
+        }
+        if (argc == 4 && std::wstring(argv[3]) == L"route-warning")
+        {
+            route_warning_matrix(app, levels, tuning, presentation, preferences, output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"crossfeed")

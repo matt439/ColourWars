@@ -409,6 +409,56 @@ shows that the earlier failure depended on the input policy. It does not
 establish an optimal opening, human aim, competitive strength or a reason to
 raise the ammunition cost; that reserve hypothesis remains open.
 
+### Landing and incoming-shot observations (2026-10-20)
+
+The focused native `-RouteWarningOnly` matrix observes completed real Level
+updates at 720p: 44 route trials and 22 single-paid-burst incoming trials across
+38 Levels. Sparse input slots 3/1/2/0 exercise the actual 1-4P panes. Clean and
+controlled-heavy routes retain identical player/camera traces; the heavy incoming
+subset also retains identical public projectile traces. These are geometric
+observations with selected native frames, not continuous sprite visibility or
+human warning acceptance.
+
+The revised Course exposes a concrete framing failure with the unchanged camera:
+
+| Course route | Accepted takeoff | First contact | First full landing strip, 1/2P | First full landing strip, 3/4P |
+|---|---:|---:|---:|---:|
+| Tap 120 | 1 | 31 | 0 | 0 |
+| Held 280 | 1 | 48 | 0 | 0 |
+| Running 440, early press | 57 | 104 | 46 | 74 |
+
+The running route accelerates naturally from rest 580 units before the lip and
+requests Jump when the pre-tick body front reaches lip minus 120. Accepted
+takeoff is recorded after that tick's movement; the label is not an exact
+post-tick distance. Lip crossing follows at tick 65. In 3/4P, the landing's near
+edge first enters at tick 70 and its 52-by-8 body-width strip at tick 74: 13/17
+ticks after takeoff. The whole 980-unit support cannot fit the 960-unit pane,
+so whole-platform containment is separate context. All trials land on the
+intended support, but that does not resolve the late information. Camera
+correction and a paired comparison remain actionable.
+
+The incoming cases separate attacker presence, surviving post-tick collision
+bounds, conservative draw candidates and first health loss. Representative 2P
+stationary shots first have a geometric candidate at tick 1, then damage at
+22/19/39/10 for Sprayer/Sniper/Mister/Bucket. Retreating Sniper/Bucket cases damage
+at 22/12; retreating Sprayer/Mister have no damage within the 96-tick window.
+These are fixed stations and aims, not optimal attacks. Sniper attackers in the
+3/4P cases never enter the target pane, although their projectiles do. Mister's
+earliest candidate aggregates its five pellets and does not identify the later
+damaging pellet. Roller has no projectile draw and is deliberately outside this
+incoming-shot matrix. No-hit cases are censored observations, not safe outcomes.
+
+Both presets pass at
+`out/validation/crossfeed-20261020/warning-openings-v1/native-v2/`: Debug run
+`d8714f9f6524481c8ab51b8cbf2ab3d9`, Release run
+`51c696ecba9746d88b9d8177f31f4666`. Each retains 40 full frames, 52 native pane
+crops, 80 repeated readbacks and 6,802 numeric rows. Independent verification
+reconstructs projected geometry, sparse panes and exact RGB crops; repeated
+drawing preserves the observed state, paint, RNG and Debug match fingerprint.
+Protected projectile motion/age and private animation clocks are not separately
+inspected. Selected Crossfeed frames capture lower-route walk entry; upper
+takeoff is numeric evidence, not a claim that its commitment raster was reviewed.
+
 ## Verification record
 
 ### Selected P3 profile (2026-10-20)

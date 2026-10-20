@@ -421,6 +421,21 @@ elseif ($LandmarkOnly) {
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.checks = 'Exactly48 clean/heavy paired comparisons /96 primary coverage states across4 arenas x3 palettes x1P/4P pane layouts x720/1080. Heavy coverage is actual alternating-team projectile contact on every StructurePaintable, measured above99percent; each prop has positive surviving pixels. Literal native placement/WHITE/Visual/nonpaintable checks and raw atlas-source draws independently replace only the two scenery calls before actual terrain/paint, proving pixels, occlusion order and culling. Frozen drawing preserves geometry/paint attribution/RNG and native resize returns. Supplemental64 native clipped-edge cases compare actual Scene and miniature traversal to unculled raw atlas, with static update/Reduce effects silhouette invariance. Eight actual StagePreview size cases compare independently specified physical panes/cameras;24 actual Level monitor-preview/overview size cases compare identically seeded twins with a private stage copy omitting exactly the two props, preserving gameplay observations and frozen Debug replay fingerprints. Solo bypasses the monitor. All reference/repeat readbacks and paired story ticks are counted separately. Exactly8 compact native clean/heavy crops total,48-row primary CSV and bounded integration CSV; no broad older terrain matrix, full match gameplay route, human readability, listening, physical-device or performance acceptance.'
 }
+  elseif ($RouteWarningOnly) {
+      $result.scope = 'route-warning-only'
+      $result.Remove('stage')
+      $result.stages = @('crossfeed', 'movement_course')
+      $result.player_counts = @(1, 2, 3, 4)
+      $result.palettes = @('blue_orange')
+      $result.weapons = @('sprayer', 'sniper', 'mister', 'bucket')
+      $result.resolutions = @('1280x720')
+      $result.actions = @('continuous-landing-interval-observations', 'actual-moving-approaches', 'single-paid-launch', 'post-tick-projectile-candidates', 'first-damage', 'selected-native-captures', 'frozen-state-rng')
+      $result.input_slots = @(3, 1, 2, 0)
+      $result.inputs = 'Actual Level/Player/Scene fixtures constructed through public builders. Controlled initial stations, fixed launch inputs and direct projectile heavy-paint contacts are labeled; all later movement and launch flight use ordinary per-slot PlayerInputData and the real simulation update order. Simulated 60 Hz ticks establish no physical-input or display-latency claim.'
+      foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+      $result.checks = 'Focused native720p route/warning evidence with continuous post-Level-update observations and selected frozen captures: Crossfeed moving approaches and revised Movement Course tap/held/running landings in sparse 1/2/3/4-player layouts, clean and controlled-heavy states, plus representative single-paid-burst incoming aimed tools. Body-width landing strips and useful near edges are observed relative to actual commitment/contact; actor presence, projectile collision/cull candidates, HUD overlap and first damage are separate clocks. Bounds entering a pane do not establish surviving on-screen projectile pixels or human readability. No-hit cases are censored; launch/contact retirement can leave zero drawable frame opportunities. At most40 full frames,100 native crops,15000 Level updates and25000 observation rows; readbacks equal twice the full-frame count. Frozen drawing preserves pixels, observed state, draw RNG and Debug replay fingerprints. No other painter matrices, attended play, physical pads, listening, display/input latency, reaction-time or competitive-balance acceptance.'
+      $result.checks += ' Mister first-candidate timing is the earliest geometric candidate among five pellets from one paid burst; it does not identify the damaging pellet or prove its warning duration. Native crop RGB bytes must match the corresponding full-frame pane exactly.'
+  }
   elseif ($CrossfeedOnly) {
       $result.scope = 'crossfeed-only'
       $result.stage = 'crossfeed'

@@ -375,6 +375,10 @@ The old movement note is not used as a specification.
 - Compare keyboard/mouse with physical controllers, including partial stick
   input, stopping, reversal, aim retention and moving while firing. There is no
   physical controller on the development machine yet.
+- Correct the measured 3/4P running-landing framing failure: with the unchanged
+  camera its near edge/full body-width strip enter 13/17 ticks after takeoff.
+  [Native observations](polish-crossfeed.md#landing-and-incoming-shot-observations-2026-10-20)
+  retain the accepted input, lip crossing, contact and clean/heavy controls.
 - Review landing visibility and readability during actual camera movement and
   aim sweeps at the captured resolutions and player counts. The feedback on/off
   captures in [the refinement increment](polish-refine.md) are prepared for that
