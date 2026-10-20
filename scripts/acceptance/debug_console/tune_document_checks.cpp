@@ -636,6 +636,56 @@ namespace debug_console_acceptance
 					"Force cannot insert a program colour, replace null/a container or expose literal aliases");
 			}
 		}
+		{
+			const std::string acting_baseline = "{\r\n  \"opening\":{\"acting\":{\"face\":\"\\u0057HITE\","
+				"\"sweat\":\"\\u0038FD3FF\",\"hop\":0.22},\"sprite_sheet\":\"captured\",\"fill_frame\":\"solid\"},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			for (const char* acting_field : { "face", "sweat" })
+			{
+				const std::string acting_path = std::string("opening.acting.") + acting_field;
+				const std::string acting_sibling = std::string("opening.acting.") + (std::string(acting_field) == "face" ? "sweat" : "face");
+				const JsonSpanDocument acting_reference(acting_baseline, "acting-colour-reference");
+				TuneDocument acting_document("presentation", acting_baseline);
+				const JsonLeaf* acting_leaf = acting_document.find(acting_path);
+				require(acting_leaf != nullptr && acting_leaf->kind == JsonLeaf::Kind::string &&
+					acting_document.find(acting_sibling) != nullptr && acting_document.find("opening.sprite_sheet") == nullptr &&
+					acting_document.find("opening.fill_frame") == nullptr,
+					"Both nested acting tints are eligible while captured texture names stay outside the string tree");
+				acting_document.commit(acting_document.edited(*acting_leaf, "\"11223344\""), acting_path);
+				require(acting_document.reverted(acting_path) == acting_baseline,
+					"Each acting reset restores its original escaped token, sibling and every CRLF byte");
+				const std::string acting_external_number = acting_reference.replaced(*acting_reference.find("number"), "25");
+				const JsonSpanDocument acting_external_reference(acting_external_number, "acting-colour-reference");
+				const TuneSplice acting_splice = acting_document.splice(acting_external_number, false);
+				require(acting_splice.conflicts.empty() && acting_splice.written == 1 && acting_splice.text ==
+					acting_external_reference.replaced(*acting_external_reference.find(acting_path), "\"11223344\"") &&
+					count_of(acting_splice.text, "\r\n") == count_of(acting_baseline, "\r\n"),
+					"Each acting splice preserves its sibling, captured strings, unrelated escaped bytes/external number and CRLF");
+				const std::string acting_pending = acting_document.current().text();
+				const TuneEdit acting_held_edit = acting_document.edits().at(acting_path);
+				bool acting_wrong_type = false;
+				try { acting_document.commit(acting_document.edited(*acting_document.find(acting_path), "false"), acting_path); }
+				catch (const std::invalid_argument&) { acting_wrong_type = true; }
+				require(acting_wrong_type && acting_document.current().text() == acting_pending && acting_document.edits().size() == 1 &&
+					acting_document.edits().at(acting_path).baseline_token == acting_held_edit.baseline_token &&
+					acting_document.edits().at(acting_path).current_token == acting_held_edit.current_token,
+					"A wrong-type acting commit retains the exact pending string and both edit tokens");
+				for (const std::string& acting_invalid : { std::string("{}"),
+					acting_reference.replaced(*acting_reference.find(acting_path), "null"),
+					acting_reference.replaced(*acting_reference.find(acting_path), "{\"value\":\"RED\"}"),
+					"{\"" + acting_path + "\":\"RED\"}",
+					std::string("{\"opening\":{\"acting.") + acting_field + "\":\"RED\"}}",
+					std::string("{\"opening.acting\":{\"") + acting_field + "\":\"RED\"}}",
+					std::string("{\"opening\":{\"acting\":{\"") + acting_field + ".r\":\"RED\"}}}" })
+				{
+					const TuneDocument acting_unsupported("presentation", acting_invalid);
+					const TuneSplice acting_refused = acting_document.splice(acting_invalid, true);
+					require(acting_unsupported.find(acting_path) == nullptr && acting_refused.written == 0 &&
+						acting_refused.conflicts.size() == 1 && acting_refused.text == acting_invalid,
+						"Force cannot insert an acting tint, replace null/a container or expose literal parent/member aliases");
+				}
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -815,10 +865,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited thirty-four colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited thirty-six colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly thirty-four authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly thirty-six authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -883,7 +933,10 @@ namespace debug_console_acceptance
 			"tuning.opening.monitor_art.power_light", "presentation.opening.monitor_art.power_light.r",
 			"presentation.opening.monitor_art.power_light_extra", "presentation.opening.monitor_art.ink",
 			"presentation.opening.monitor_art.highlight", "opening.program_colour", "tuning.opening.program_colour",
-			"presentation.opening.program_colour.r", "presentation.opening.program_colour_extra" })
+			"presentation.opening.program_colour.r", "presentation.opening.program_colour_extra",
+			"opening.acting.face", "tuning.opening.acting.face", "presentation.opening.acting.face.r",
+			"presentation.opening.acting.face_extra", "opening.acting.sweat", "tuning.opening.acting.sweat",
+			"presentation.opening.acting.sweat.r", "presentation.opening.acting.sweat_extra" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -930,6 +983,8 @@ namespace debug_console_acceptance
 			{ "presentation.opening.desktop_colour", TuneScope::live },
 			{ "presentation.opening.monitor_art.power_light", TuneScope::live },
 			{ "presentation.opening.program_colour", TuneScope::live },
+			{ "presentation.opening.acting.face", TuneScope::live },
+			{ "presentation.opening.acting.sweat", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -1040,7 +1095,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All thirty-four colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All thirty-six colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

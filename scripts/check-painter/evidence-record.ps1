@@ -214,6 +214,18 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($ActingTuneColoursOnly) {
+    $result.scope = 'acting-tune-colours-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-WHITE-and-8FD3FF','literal-paired-rgb','literal-asymmetric-paired-rgba','literal-paired-nonblack-alpha0'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained FigureActing only: fixed figure100,100,340,600, both facings/glance and sweat time.2 supplied directly; no Level/Player/state/input/time updates or persona roll.'
+    $result.audio = 'No audio consumer/listening acceptance; private preferences unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Two exact live acting.face/sweat fields. Full-frame independent literal2eye masks/opaque pupils+8sweat strips with explicit per-write premultiplication/no fade; separate frozen-record FigureActing proves adoption only. Four paired palettes×2facings×2opaqueCanvas=16cases, repeated draws, all mask/exterior guards and alpha0 retained BLACK pupils.24per-field straight/squared controls must differ only in the faulty field mask; opaque texel calibration/parity. Shared90reads/16rows/16crops320x128(655360pixels),2blank reads. Borrowed opening/redraw addresses, complete unselected style/resources and all stroke parts/point order/numerics retained; RNG unchanged.'
+    if ($Preset -eq 'x64-debug') { $result.actions = @('14-real-statements14-states','right-facing-black-Canvas-only','56-additional-reads14rows0crops','totals146reads30rows16crops','both-path-named-RGB-RGBA-alpha0','Face-reset-retains-partialSweat','Sweat-reset-original-before-one-Face-token-save-rebase','saved-Face-reset-retains-alpha0Sweat','exact-saved-eye-and-final-pair-raster-reversal','two-private-PlaySettings-and-JumpJ-seed-Saves','unchanged-default-display-real-content-private-bytes-queued-work') }
+    else { $result.actions = @('literal-consumer-only','no-developer-commands-transcript-scratch-or-Save') }
+    $result.checks += ' Actual Level/Player/composed-story visibility remains unrun; real callers source-audited only. Native controlled Save failure absent; CPU owns invalid merged acting.hop rollback. No new Reduce Effects behavior or human pose/readability/comfort/timing, physical input/focus, listening or performance acceptance.'
+}
 elseif ($ProgramLevelVisibilityOnly) {
     $result.scope = 'program-level-visibility-only'
     $result.stage = 'crossfeed'; $result.player_counts = @(2); $result.input_slots = @(4,3); $result.weapons = @('roller')

@@ -307,7 +307,7 @@ namespace debug_console_acceptance
 	std::size_t log_index(const DebugLog& log, const std::string& text);
 	bool any_line(const DebugLog& log, const std::string& text);
 
-	// The thirty-four audited colour tune paths and their values, in the same order;
+	// The thirty-six audited colour tune paths and their values, in the same order;
 	// shared by tune_checks.cpp, tune_document_checks.cpp and tune_menu_checks.cpp.
 	inline constexpr std::size_t identity_ink_colour_index = 13;
 	inline constexpr std::size_t identity_background_colour_index = 14;
@@ -330,7 +330,9 @@ namespace debug_console_acceptance
 	inline constexpr std::size_t desktop_colour_index = 31;
 	inline constexpr std::size_t power_light_colour_index = 32;
 	inline constexpr std::size_t program_colour_index = 33;
-	inline const std::array<const char*, 34> colour_paths{
+	inline constexpr std::size_t acting_face_colour_index = 34;
+	inline constexpr std::size_t acting_sweat_colour_index = 35;
+	inline const std::array<const char*, 36> colour_paths{
 		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
 		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
 		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
@@ -347,7 +349,8 @@ namespace debug_console_acceptance
 		"presentation.opening.reveal_art.ink", "presentation.opening.reveal_art.paper",
 		"presentation.opening.reveal_art.shade", "presentation.opening.cursor_art.shade",
 		"presentation.opening.cursor_art.shadow", "presentation.opening.desktop_colour",
-		"presentation.opening.monitor_art.power_light", "presentation.opening.program_colour" };
+		"presentation.opening.monitor_art.power_light", "presentation.opening.program_colour",
+		"presentation.opening.acting.face", "presentation.opening.acting.sweat" };
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
 
 	// console_checks.cpp

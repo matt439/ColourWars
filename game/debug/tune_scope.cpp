@@ -90,6 +90,10 @@ namespace
 		// Monitor reads this borrowed program paper on every draw; callers may
 		// cover it later, while persona and captured resources keep their policy.
 		{ "presentation.opening.program_colour", TuneScope::live },
+		// FigureActing reads the borrowed eye paint and sweat on each applicable
+		// draw; caller pose/time, redraw strokes and captured sheet/fill stay intact.
+		{ "presentation.opening.acting.face", TuneScope::live },
+		{ "presentation.opening.acting.sweat", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

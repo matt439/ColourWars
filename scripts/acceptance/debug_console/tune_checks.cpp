@@ -11,6 +11,7 @@
 #include "game/debug/tune_scope.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/combat_feedback.h"
+#include "game/objects/figure_acting.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/monitor.h"
 #include "game/objects/respawn_redraw.h"
@@ -72,10 +73,10 @@ namespace debug_console_acceptance
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 34> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 36> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
 			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680",
-			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80" };
+			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
@@ -84,7 +85,7 @@ namespace debug_console_acceptance
 			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 },
 			{ 94, 145, 199, 128 }, { 184, 106, 77, 64 }, { 115, 194, 165, 0 },
 			{ 212, 124, 42, 128 }, { 97, 178, 212, 64 }, { 156, 53, 231, 0 }, { 59, 151, 193, 128 }, { 166, 94, 41, 64 },
-			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 } };
+			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -112,7 +113,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -171,7 +172,7 @@ namespace debug_console_acceptance
 			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
 			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
 			colour_paths[silhouette_shade_colour_index], colour_paths[reveal_ink_colour_index],
-			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index] })
+			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -220,7 +221,10 @@ namespace debug_console_acceptance
 			"tuning.opening.monitor_art.power_light", "presentation.opening.monitor_art.power_light.r",
 			"presentation.opening.monitor_art.power_light_extra", "presentation.opening.monitor_art.ink",
 			"presentation.opening.monitor_art.highlight", "opening.program_colour", "tuning.opening.program_colour",
-			"presentation.opening.program_colour.r", "presentation.opening.program_colour_extra" })
+			"presentation.opening.program_colour.r", "presentation.opening.program_colour_extra",
+			"opening.acting.face", "tuning.opening.acting.face", "presentation.opening.acting.face.r",
+			"presentation.opening.acting.face_extra", "opening.acting.sweat", "tuning.opening.acting.sweat",
+			"presentation.opening.acting.sweat.r", "presentation.opening.acting.sweat_extra" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -255,7 +259,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -317,7 +321,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -349,7 +353,7 @@ namespace debug_console_acceptance
 				index == cursor_ink_colour_index ? "E7F809" : index == cursor_fill_colour_index ? "F8091A" :
 				index == silhouette_ink_colour_index ? "0A1B2C" :
 				index == silhouette_rim_colour_index ? "1B2C3D" : index == silhouette_shade_colour_index ? "2C3D4E" :
-				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : "A4B5C6";
+				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : "C6D7E8";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -377,7 +381,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -394,7 +398,7 @@ namespace debug_console_acceptance
 				index == silhouette_rim_colour_index ? L"silhouette-rim-crlf" :
 				index == silhouette_shade_colour_index ? L"silhouette-shade-crlf" :
 				index == reveal_ink_colour_index ? L"reveal-ink-crlf" :
-				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : L"program-colour-crlf";
+				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : L"acting-sweat-colour-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -437,7 +441,7 @@ namespace debug_console_acceptance
 				index == cursor_ink_colour_index ? "091A2B" : index == cursor_fill_colour_index ? "1A2B3C" :
 				index == silhouette_ink_colour_index ? "2B3C4D" :
 				index == silhouette_rim_colour_index ? "3C4D5E" : index == silhouette_shade_colour_index ? "4D5E6F" :
-				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : "C5D6E7";
+				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : index == program_colour_index ? "C5D6E7" : index == acting_face_colour_index ? "D6E7F8" : "E7F809";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -2310,6 +2314,225 @@ namespace debug_console_acceptance
 			"Program edits, independent resets and valid/refused saves consume no gameplay random draw");
 	}
 
+	void check_acting_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"acting-colour-records");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const OpeningPresentation* const opening = &presentation.opening();
+		const RespawnRedrawPresentation* const redraw = &presentation.respawn_redraw();
+		const OpeningPresentation original = *opening;
+		const RespawnRedrawPresentation original_redraw = *redraw;
+		labrador::RenderResources resources;
+		resources.add_sprite_sheet(opening->sprite_sheet, labrador::read_sprite_sheet(
+			(game_directory / L"textures" / (opening->sprite_sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
+		const FigureActing acting(opening, redraw, &resources);
+		static_cast<void>(acting);
+		// Keep the real consumer alive across every adoption. CPU observations
+		// cover its borrowed records and caller inputs; native checks observe
+		// rendered adoption. Protected captured handles and pixels are not read.
+		const auto geometry = [&]
+		{
+			return std::vector<float>{ opening->cursor_art.shadow_offset, opening->cursor_art.click_duration,
+				opening->cursor_art.click_reach, opening->silhouette_art.pen_width, opening->silhouette_art.shade_width,
+				opening->palette_height, opening->adult_height, opening->child_height, opening->cursor_size,
+				opening->preview_strength, opening->percent_height, opening->hop, opening->shake, opening->slump,
+				opening->monitor_art.pen_width, opening->monitor_art.corner_step, opening->monitor_art.shadow_width,
+				static_cast<float>(opening->monitor_art.vent_count), opening->reveal_art.keyline_width,
+				opening->reveal_art.padding, opening->reveal_art.shadow_offset,
+				opening->reveal_art.tick_length, opening->reveal_art.beat_duration };
+		};
+		const auto unselected = [&]
+		{
+			return std::vector<labrador::Colour>{ opening->cursor_art.ink, opening->cursor_art.fill,
+				opening->cursor_art.shade, opening->cursor_art.shadow, opening->silhouette,
+				opening->silhouette_art.ink, opening->silhouette_art.rim, opening->silhouette_art.shade,
+				opening->bezel_shadow, opening->monitor_art.ink, opening->monitor_art.highlight,
+				opening->desktop_colour, opening->glass_colour, opening->program_colour, opening->monitor_art.power_light,
+				opening->slot_outline, opening->scribble, opening->coffee, opening->crack,
+				opening->reveal_art.ink, opening->reveal_art.paper, opening->reveal_art.shade, opening->figure_grey };
+		};
+		const auto rectangles = [&]
+		{
+			return std::array<mattmath::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
+				opening->monitor_art.power_button, opening->monitor_art.power_indicator };
+		};
+		const auto stroke_parts = [&]
+		{
+			std::vector<std::string> result;
+			for (const RespawnStroke& stroke : redraw->strokes) { result.push_back(stroke.part); }
+			return result;
+		};
+		const auto stroke_geometry = [&]
+		{
+			std::vector<float> result{ redraw->canvas_size.x, redraw->canvas_size.y, redraw->pen_width,
+				redraw->draw_from, redraw->fill_at, redraw->camera_hold, static_cast<float>(redraw->strokes.size()) };
+			for (const RespawnStroke& stroke : redraw->strokes)
+			{
+				result.push_back(static_cast<float>(stroke.points.size()));
+				for (const auto& point : stroke.points) { result.insert(result.end(), { point.x, point.y }); }
+			}
+			return result;
+		};
+		const std::array<mattmath::RectangleF, 2> figures{
+			mattmath::RectangleF(100, 100, 340, 600), mattmath::RectangleF(500, 80, 170, 300) };
+		const std::array<mattmath::Vector2F, 2> glances{ mattmath::Vector2F(0.6f, 1.0f), mattmath::Vector2F(-0.6f, 1.0f) };
+		const std::array<float, 2> times{ 0.2f, 0.6f };
+		const std::array<bool, 2> facings{ true, false };
+		const auto inputs = [&]
+		{
+			std::vector<float> result;
+			for (std::size_t index = 0; index < figures.size(); ++index)
+			{
+				const auto& figure = figures[index];
+				result.insert(result.end(), { figure.x, figure.y, figure.width, figure.height,
+					glances[index].x, glances[index].y, times[index], facings[index] ? 1.0f : 0.0f });
+			}
+			return result;
+		};
+		const auto held_geometry = geometry();
+		const auto held_unselected = unselected();
+		const auto held_rectangles = rectangles();
+		const auto held_parts = stroke_parts();
+		const auto held_stroke_geometry = stroke_geometry();
+		const auto held_inputs = inputs();
+		const auto unchanged = [&]
+		{
+			require(&presentation.opening() == opening && &presentation.respawn_redraw() == redraw &&
+				geometry() == held_geometry && unselected() == held_unselected && rectangles() == held_rectangles &&
+				stroke_parts() == held_parts && stroke_geometry() == held_stroke_geometry && inputs() == held_inputs &&
+				redraw->pen_colour == original_redraw.pen_colour && redraw->sprite_sheet == original_redraw.sprite_sheet &&
+				redraw->pen_frame == original_redraw.pen_frame && opening->bezel_shades == original.bezel_shades &&
+				opening->sticky_notes == original.sticky_notes && opening->stickers == original.stickers &&
+				opening->sprite_sheet == original.sprite_sheet && opening->fill_frame == original.fill_frame &&
+				opening->percent_font == original.percent_font && opening->palette_sheet == original.palette_sheet &&
+				opening->palette_frames == original.palette_frames,
+				"Acting colour adoption retains both borrowed record addresses, all ordered stroke parts/points/pen/canvas, unrelated opening style/resources/geometry and caller-owned draw inputs");
+		};
+		const auto ledger = [&]
+		{
+			std::vector<std::string> result;
+			for (const auto& [path, edit] : impl.tune_document("presentation")->edits())
+				{ result.push_back(path + "=" + edit.baseline_token + "->" + edit.current_token); }
+			return result;
+		};
+		const std::array<std::size_t, 2> indices{ acting_face_colour_index, acting_sweat_colour_index };
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const auto initial_colours = colour_values(presentation);
+		auto expected_colours = initial_colours;
+		std::srand(0xac7136);
+		const int expected_random = std::rand();
+		std::srand(0xac7136);
+		for (const std::size_t index : indices)
+		{
+			for (const auto& [word, expected] : std::array<std::pair<const char*, labrador::Colour>, 4>{ {
+				{ "RED", { 255, 0, 0 } }, { "3165A7", { 49, 101, 167 } },
+				{ "2060C080", { 32, 96, 192, 128 } }, { "A532D600", { 165, 50, 214, 0 } } } })
+			{
+				expected_colours[index] = expected;
+				require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + word).ok &&
+					colour_values(presentation) == expected_colours && read_text(scratch.source / L"presentation.json") == baseline &&
+					read_text(scratch.staged / L"presentation.json") == baseline,
+					"Each acting tint accepts straight named/RGB/partial/nonblack-zero-alpha channels without changing its sibling, other colours or content bytes");
+				unchanged();
+			}
+		}
+		const TuneDocument* const pending = impl.tune_document("presentation");
+		const char* unrelated_word = initial_colours[3] == labrador::Colour(120, 154, 188) ? "654321" : "789ABC";
+		expected_colours[3] = labrador::Colour(unrelated_word);
+		require(impl.execute(std::string("tune presentation.debug_overlay.colour ") + unrelated_word).ok && pending->edits().size() == 3,
+			"An unrelated live colour remains pending beside both acting edits");
+		for (const std::size_t index : indices)
+		{
+			const std::size_t sibling = index == acting_face_colour_index ? acting_sweat_colour_index : acting_face_colour_index;
+			const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
+			const std::string sibling_local = std::string(colour_paths[sibling]).substr(std::string("presentation.").size());
+			expected_colours[index] = initial_colours[index];
+			require(impl.execute(std::string("tune.reset ") + colour_paths[index]).ok && colour_values(presentation) == expected_colours &&
+				pending->edits().size() == 2 && !pending->edits().contains(local) && pending->edits().contains(sibling_local) &&
+				pending->edits().contains("debug_overlay.colour"),
+				"Each acting reset restores only itself while its sibling and unrelated colour remain pending");
+			unchanged();
+			expected_colours[index] = labrador::Colour(165, 50, 214, 0);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + " A532D600").ok &&
+				colour_values(presentation) == expected_colours && pending->edits().size() == 3,
+				"Reapplying one acting edit restores the independent sibling reset fixture");
+		}
+		require(impl.execute("tune.reset presentation").ok && colour_values(presentation) == initial_colours &&
+			pending->edits().empty() && pending->current().text() == baseline,
+			"Resetting presentation restores both acting defaults and the exact initial document");
+		unchanged();
+		expected_colours = initial_colours;
+		const std::array<const char*, 2> saved_words{ "2060C080", "D973A6C0" };
+		std::string saved = baseline;
+		for (std::size_t position = 0; position < indices.size(); ++position)
+		{
+			const std::size_t index = indices[position];
+			const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
+			const JsonSpanDocument save_reference(saved, "acting-colour-save-reference");
+			saved = save_reference.replaced(*save_reference.find(local), std::string("\"") + saved_words[position] + '"');
+			expected_colours[index] = labrador::Colour(saved_words[position]);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + saved_words[position]).ok &&
+				pending->edits().size() == 1 && pending->edits().contains(local) && impl.execute("tune.save presentation").ok &&
+				colour_values(presentation) == expected_colours && read_text(scratch.source / L"presentation.json") == saved &&
+				read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
+				pending->baseline().text() == saved && pending->current().text() == saved,
+				"Each acting tint saves exactly one quoted token and rebases while the other saved/default tint remains unchanged");
+			unchanged();
+		}
+		for (const std::size_t index : indices)
+		{
+			expected_colours[index] = labrador::Colour(165, 50, 214, 0);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + " A532D600").ok &&
+				colour_values(presentation) == expected_colours, "Both acting edits are pending before complete merged-candidate refusal");
+		}
+		expected_colours[3] = labrador::Colour(unrelated_word);
+		require(impl.execute(std::string("tune presentation.debug_overlay.colour ") + unrelated_word).ok && pending->edits().size() == 3,
+			"Invalid merged-candidate checks retain an unrelated pending edit as well as both acting edits");
+		const JsonSpanDocument saved_document(saved, "acting-colour-merged-reference");
+		const JsonLeaf* hop = saved_document.find("opening.acting.hop");
+		require(hop != nullptr && original.hop >= 0.0f && original.hop <= 1.0f,
+			"The acting merge fixture starts inside the real unit-range hop constraint");
+		const std::string external = saved_document.replaced(*hop, "1.001");
+		write_text(scratch.source / L"presentation.json", external);
+		const std::string pending_text = pending->current().text();
+		const auto pending_ledger = ledger();
+		for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+		{
+			require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == external &&
+				read_text(scratch.staged / L"presentation.json") == saved && pending->current().text() == pending_text &&
+				pending->baseline().text() == saved && ledger() == pending_ledger && pending->edits().size() == 3 &&
+				colour_values(presentation) == expected_colours,
+				"External acting.hop 1.001 refuses the complete merged candidate, preserving exact source/staged/live/current/baseline and every ledger path/baseline/current token even with force");
+			unchanged();
+		}
+		for (std::size_t position = 0; position < indices.size(); ++position)
+		{
+			const std::size_t index = indices[position];
+			expected_colours[index] = labrador::Colour(saved_words[position]);
+			require(impl.execute(std::string("tune.reset ") + colour_paths[index]).ok &&
+				colour_values(presentation) == expected_colours && pending->edits().size() == indices.size() - position &&
+				pending->edits().contains("debug_overlay.colour"),
+				"After refused saves each acting tint resets to its saved partial-alpha token while sibling/unrelated edits survive");
+			unchanged();
+		}
+		expected_colours[3] = initial_colours[3];
+		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && colour_values(presentation) == expected_colours &&
+			pending->edits().empty() && pending->current().text() == saved && pending->baseline().text() == saved &&
+			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			"Saved acting resets retain the invalid external source and exact staging without losing the unrelated reset or leaving recovery files");
+		unchanged();
+		write_text(scratch.source / L"presentation.json", saved);
+		require(std::rand() == expected_random,
+			"Acting colour commands, independent/saved resets and valid/refused saves consume no gameplay random draw");
+	}
+
 	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
 	{
 		const std::string spread_path = "tuning.projectiles.mist.spread_step";
@@ -2624,6 +2847,7 @@ namespace debug_console_acceptance
 		check_desktop_colour_tunes(game_directory);
 		check_power_light_colour_tunes(game_directory);
 		check_program_colour_tunes(game_directory);
+		check_acting_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.

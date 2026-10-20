@@ -69,7 +69,7 @@ void FigureActing::draw_eyes(DrawList& draw_list, const RectangleF& figure,
         const RectangleF world(figure.x + eye.x * scale.x, figure.y + eye.y * scale.y,
             eye.width * scale.x, eye.height * scale.y);
         // Paint the eye out, then put a narrower one where it is looking.
-        this->fill(draw_list, world, this->look_->face);
+        this->fill(draw_list, world, premultiplied(this->look_->face));
         const Vector2F pupil(world.width * 0.55f, world.height * 0.6f);
         const float x = world.x + (world.width - pupil.x) *
             (0.5f + 0.5f * std::clamp(glance.x, -1.0f, 1.0f));
@@ -89,5 +89,5 @@ void FigureActing::draw_sweat(DrawList& draw_list, const RectangleF& figure,
         figure.y + figure.height * (0.08f + 0.22f * loop));
     const float radius = figure.height * 0.03f;
     this->blob(draw_list, at, Vector2F(radius, radius * 1.3f), std::max(1.0f, radius / 3.0f),
-        this->look_->sweat);
+        premultiplied(this->look_->sweat));
 }
