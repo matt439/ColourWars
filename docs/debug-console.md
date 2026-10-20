@@ -533,10 +533,13 @@ resources, persona, geometry and palette occlusion remain unchanged. Nonblack
 zero alpha reveals the opaque `161616` glass below the visible program mask,
 not the initial Canvas. The native contract uses one effective Canvas.
 
-**Source-only Level visibility addendum:** `Level::draw_intro` submits Monitor
-behind the miniature world, then later intro/reveal/front overlays may cover
-its program. This describes draw order read from source; no actual-Level
-program-colour visibility raster or human story acceptance is established.
+**Actual-Level visibility witness:** `Level::draw_intro` submits Monitor behind
+its miniature world, with later intro/reveal/front layers able to cover the
+program. The separate `ProgramLevelVisibilityOnly` (`program-level-visibility`)
+check below verifies exposed program adoption/restoration in one retained
+two-player Crossfeed full-opening checkpoint at 1280x720. Direct-Monitor alpha
+evidence remains separate; other story phases/rosters and human story acceptance
+remain open.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -1341,6 +1344,34 @@ The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
 
+Program Level visibility witness (2026-10-20), **verified**:
+both presets pass first execution of separate `ProgramLevelVisibilityOnly` /
+`program-level-visibility`: one retained actual two-player Crossfeed full
+opening, 1280x720, seed 9411.
+
+Each builds one Level and makes one explicit positive 0.4-second setup Level
+update, retaining state `opening`. Constructor Scene admission remains source
+provenance, not runtime instrumentation. Observation makes zero
+Level/Player/Scene/StateContext/input/time/layout updates. One RNG bracket spans
+all six draws/assignments/restoration; public state/style/resources stay fixed.
+Private story clocks/camera/persona are not public snapshots.
+
+Each preset records six readbacks, three case plus nine sample rows (12 total),
+two full baseline/changed PPMs, zero crops/Debug commands/Save calls. All 256
+program-patch pixels at (640,100) change RGB (44,44,44) to `35BCE1`, then reset;
+256 paper pixels at (400,250) retain `C9D3D9`, and glass (132,100) retains RGB
+(22,22,22). Native full-RGBA repeat/reset checks pass. Independent saved-PPM
+checks confirm literal patches and 160535 changed pixels, zero outside program
+mask `[136,59,1143,539)`.
+
+Nine shared files, including two PPMs, and the supplemental contact PNG match
+between presets. Root inspected both compositions; 33 source/support and two
+reused game-executable hashes reconcile, with production/defaults unchanged.
+Receipts: `out/validation/crossfeed-20261020/program-level-visibility-v1/`.
+This adds no colour paths; Program34's separate 20/56 raw-alpha/command evidence
+stays unchanged. Other phases/rosters, small views, human story/readability,
+balance, physical input, listening and performance remain open.
+
 Program colour increment (2026-10-20), **verified**:
 path 34, `presentation.opening.program_colour`, is live on retained Monitor
 draws. One local premultiplication preserves opaque `2C2C2C` without event fade
@@ -1367,7 +1398,9 @@ PNG match
 between presets. Root contact inspection, 12 frozen source/support hashes and
 unchanged authored presentation reconcile; both Monitor objects have fresh
 compile timestamps and reconciled source/object hashes. Receipts: `out/validation/crossfeed-20261020/program-colour-v1/`.
-Actual-Level visibility remains **source-only/unexecuted**. Human readability/story,
+At that direct-consumer checkpoint, actual-Level visibility was
+**source-only/unexecuted**; the separate witness above now verifies that one checkpoint.
+Human readability/story,
 small-view, OS/global input, physical pads, listening and performance remain open.
 
 Power-light colour increment (2026-10-20), **verified**:

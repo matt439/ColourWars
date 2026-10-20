@@ -214,6 +214,16 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($ProgramLevelVisibilityOnly) {
+    $result.scope = 'program-level-visibility-only'
+    $result.stage = 'crossfeed'; $result.player_counts = @(2); $result.input_slots = @(4,3); $result.weapons = @('roller')
+    $result.palettes = @('blue_orange'); $result.resolutions = @('1280x720')
+    $result.inputs = 'One actual two-player full-opening Level built with seed9411 and neutral setup input; one explicit positive .4f Level update, then no observation updates or input polling.'
+    $result.audio = 'Quiet fixture music/sfx0; setup starts room tone at zero gain. No listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('baseline-repeat','live-literal-opaque-RGB-repeat','restore-whole-frame-repeat')
+    $result.checks = 'Same retained actual Crossfeed Level.draw composition, with local builder borrowing the same mutable local Presentation. Six readbacks/3cases+9samples/12total rows/2full PPMs/0crops, in both presets, no developer commands or Save. Independent literal exposed-program16x16 patch, shipped opaque paperC9D3D9 patch and glass22 guard, mask-only deltas, whole-frame repeats/restoration, frozen public state/unselected style/resources and one RNG bracket around all observations. Construction Scene admission and private story checkpoint are source-derived, not instrumented snapshots. One roster/resolution/seated frame only; Program34 retains separate alpha/command proof. No all-phase, human/readability/listening/physical-input/performance claim.'
+}
 elseif ($ProgramTuneColourOnly) {
     $result.scope = 'program-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
