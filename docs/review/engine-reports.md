@@ -127,7 +127,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 13 | `Key` has no names | Debug bind names, saved keyboard Jump tokens and the standalone `key_names.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
-| 15 | Runtime packaging and content staging are repeated in the client | `game/CMakeLists.txt`, `cmake/release_package.cmake`, `cmake/runtime_assets.cmake`, `cmake/stage_runtime_assets.cmake` | draft — exhibit present; checked against published master 2026-10-15 |
+| 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 16 | Windowed Apply shows a deliberately hidden window | standalone `hidden_apply_exhibit.cpp` and the client Apply guard | local unfiled bug draft - master checked 2026-10-20; Debug/Release reproduce |
 | 17 | The Win32 window ignores DPI once the client opts in | the `dpiAwareness` block in `game/settings.manifest`; the DPI assertion in `scripts/check-startup.ps1` | draft — checked against published master 2026-10-17 |
 | 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `level_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
@@ -430,6 +430,14 @@ then owns install rules and CPack ZIP generation;
 shared by staging and packaging; [release_assets.cmake](../../cmake/release_assets.cmake)
 checks it against the manifest.
 
+**Development-staging request prepared 2026-10-20.** The sanitized
+[report](../engine-reports/runtime-staging.md) and exact tested
+[synthetic fixture](../../scripts/engine-reports/runtime-staging/CMakeLists.txt)
+are ready for review and remain **unfiled**. This is an optional CMake
+convenience/extraction request, not a packaging bug. A maintained documented
+recipe is a possible answer. The wider runtime-install proposal below has
+no new proof or implementation from this staging fixture.
+
 ### What happens
 
 The game's development mirror and release tree use the same runtime content
@@ -462,6 +470,47 @@ owns the matching build layout. Engine product stories
 filing this demand, deciding it, and conditionally supplying runtime install
 support. Those stories do not close the implementation gap.
 
+Fresh upstream master was fetched on 2026-10-20 at 19:34:53 UTC as
+`52e809a5a0229d37db4373faa7853df4c861a310`; the whole engine worktree was
+confirmed unchanged against that `FETCH_HEAD` at 19:50:08 UTC. The shared
+staging helper is still absent, while executable-relative resolution and the
+minimal sample's always-run copy target already exist.
+
+### Measured staging exhibit
+
+The standalone CMake project links only prebuilt engine/Math libraries and
+CMake's ordinary Win32 system libraries; it builds no engine/backend targets
+and starts no Application or devices. Its console uses the existing public
+content-root/path APIs. Its assets are three synthetic text files, with a
+caller-owned one-required/one-optional allowlist and one deliberately unlisted
+source. It removes only the exact missing declared optional file, never an
+unowned directory or broad output tree.
+
+Both MSVC 19.51.36256.0 `/W4 /WX` Debug and Release runs passed baseline,
+asset-text edit and optional-source removal phases: six process exits 0 with
+empty stderr. Asset-only rebuilds contained no compiler/linker command and
+preserved executable SHA-256 and modification time. The unlisted file stayed
+out, an unrelated output marker survived, and an executable-relative read
+defeated the misleading required file at cwd. Both missing-required builds
+exited 1 before any staged-output hash changed. The final fixture produced no
+CMake warnings; checks remain active in Release.
+
+Retained v1 Debug configure/build passed, but its phase-0 runtime oracle
+correctly failed: `file(WRITE)` generated a CRLF decoy while the binary check
+required LF. V2 explicitly generates UNIX newlines and resolves existing
+ancestors before appending absent path components, avoiding `REAL_PATH` calls
+on files not yet created. No warning was suppressed, and the console oracle,
+LF source assets and engine were unchanged. Fresh v2 runs above pass; the v1
+failure is a fixture error, not an engine staging failure.
+
+Receipts remain under
+`out/validation/crossfeed-20261020/runtime-staging-report-final-v1/` and
+`runtime-staging-report-final-v2/`, including the final `result.json`, verbose
+build/negative logs, process stdout/stderr and source hashes. The tracked
+fixture preserves tested source bytes and uses local Git LF attributes for
+its exact text payloads. These runs do not establish install/ZIP/CRT or
+clean-machine acceptance.
+
 The frozen gap audit's F8 is broader than this evidence now supports. This
 game has a supported shipping mechanism: its own install/CPack rules. Missing
 engine install/export/package-config support also means it supplies no CMake
@@ -469,30 +518,29 @@ package for a `find_package(Labrador)` consumer, but ColourWars uses
 `add_subdirectory` and has no prebuilt-package workaround to delete. That is
 context, not a second demand from this caller.
 
-### The ask, when it goes
+### The bounded ask and remaining runtime-install scope
 
-Give a consuming target a documented CMake helper for the runtime files the
-engine makes it need and for placing a **caller-supplied** content list where
-the loader expects it. On the current Windows build that means following the
-runtime DLL targets, adding the redistributable MSVC runtime and refusing a
-debug CRT. A development-staging helper should run on asset-only builds and
-handle explicitly named generated optional files, including removing their
-stale staged copies. It must work when Labrador is a subdirectory without
-adding sample/test targets or unrelated install entries to the consumer.
-The spelling and whether development and install use one function are open;
-PI-11's narrower runtime-install scope can be answered separately.
+Consider a documented development-staging convenience taking a consuming
+target, source content root and explicit required/optional relative file
+lists. It would replace generic always-run copy/removal mechanics in
+`colourwars_content`/`stage_runtime_assets.cmake`; a documented recipe may be
+sufficient. The caller retains asset selection, manifest/format checks,
+generated-file and fallback rules, and any stricter mirror pruning. The
+synthetic fixture's single-config MSVC constraints are validation conditions,
+not proposed requirements on a generic helper.
 
-An answer would let this game replace the runtime dependency/CRT plumbing in
-`release_package.cmake` and, if staging is supplied, the generic copy mechanics
-in `colourwars_content` and `stage_runtime_assets.cmake`. The game keeps its asset
-allowlist and manifest check, optional-bank fallback and accepted-bank requirement,
-Release/backend restrictions, ZIP name, build stamp, notices selection and
-CI assertions. The helper must preserve those choices; copying the content
-or development output directory wholesale would not answer this report.
+The earlier runtime-install proposal remains separate: following engine
+runtime DLLs, supplying redistributable CRT files and rejecting a debug CRT
+would need its own bounded preparation/validation before claiming an answer.
+PI-11 describes that conditional scope. The game retains Release/backend
+restrictions, its accepted-bank requirement, package name/layout, build stamp,
+notices and CI assertions. No unused `find_package`/export framework or broad
+directory copy is requested by this client.
 
-**Status:** unfiled draft. Recheck engine master before filing; record an
-implemented answer or a decline with its trade-off here, as for the other
-live reports.
+**Status:** local unfiled draft. Review the prepared staging report and refresh
+upstream immediately before authorized filing through the publication gate.
+Record an engine implementation or a decline with its trade-off here; this
+preparation makes neither and changes no engine pin.
 
 ---
 
