@@ -6,6 +6,8 @@
 #include "game/debug/tune_scope.h"
 #include <cstdio>
 #include <stdexcept>
+#include <string_view>
+#include <unordered_map>
 
 namespace
 {
@@ -49,10 +51,20 @@ const JsonLeaf* TuneDocument::find(std::string_view path) const
 
 std::vector<std::string> TuneDocument::prefixed_paths() const
 {
+	// The debug menu asks for this every frame, so it stays linear: calling
+	// find() per leaf scanned the whole document per leaf, and at a thousand
+	// presentation leaves that cost Debug frames long enough to lose a tap.
+	// A path's tunability is its first leaf's, as find() would answer.
 	std::vector<std::string> paths;
+	std::unordered_map<std::string_view, bool> first;
 	for (const JsonLeaf& leaf : this->current_.leaves())
 	{
-		if (this->find(leaf.path) != nullptr)
+		const auto [it, inserted] = first.try_emplace(leaf.path, false);
+		if (inserted)
+		{
+			it->second = tunable(this->name_, leaf);
+		}
+		if (it->second)
 		{
 			paths.push_back(this->name_ + "." + leaf.path);
 		}

@@ -461,14 +461,14 @@ try {
 
     # p6: root rows match, player, view, time, tuning, replay, content,
     # console; tuning opens on tuning, presentation, tune.diff, tune.reset,
-    # tune.save; the tuning file on match, paint, player, weapons,
+    # tune.save; the tuning file on input, match, paint, player, weapons,
     # projectiles; player on size, max_velocity, x_initial_velocity,
     # x_acceleration, ...
     $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
     foreach ($i in 1..4) { $driver::Tap($down, $true) }
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    $driver::Tap($down, $true); $driver::Tap($down, $true)
+    foreach ($i in 1..3) { $driver::Tap($down, $true) }
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
     foreach ($i in 1..3) { $driver::Tap($down, $true) }
     $driver::Tap($right, $true); Start-Sleep -Milliseconds 500
