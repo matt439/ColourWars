@@ -656,69 +656,50 @@ scaled display: this machine is at 100%, where nothing above is visible.
 
 ---
 
-## 18. A `Label` in a `Scene` can be neither hidden nor raised — **draft with station-label exhibit**
+<a id="18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit"></a>
 
-**Exhibit:** `Level::refresh_station_labels` in
-[game/objects/level_dev_tools.cpp](../../game/objects/level_dev_tools.cpp), the Debug overlay
-`overlay.stations` and `labrador::Label`'s first client (gap audit D4). Each
-station's name is a `Label` the level's scene holds and culls by
-`Label::bounds()`. Turning the overlay off sets every label's tint to zero
-in all four channels, and the `station_labels` case in
-[level_checks.cpp](../../scripts/acceptance/debug_console/level_checks.cpp)
-pins that tint and that the labels stay in the scene after that.
+## 18. Independent Label visibility convenience — **draft with station-label exhibit**
 
-### What happens
+**Visibility convenience slice prepared 2026-10-20.** The sanitized
+[request](../engine-reports/label-visibility.md) and standalone
+[synthetic null-renderer exhibit](../../scripts/engine-reports/label-visibility/label_visibility_recording.cpp)
+are ready for review and remain **unfiled**. The checked upstream master was
+freshly fetched at 19:34:53 UTC as
+`52e809a5a0229d37db4373faa7853df4c861a310`. The exact 26-translation-unit
+CMake consumer passed MSVC C++20 `/W4 /WX` Debug and Release builds and runs;
+both exited 0 with empty stderr and thirteen exact expected output lines.
 
-Checked against the pin, `52e809a`, on 2026-10-17. Optional text in the world
-is ordinary: a name tag, a debug label, a sign that shows when a player is
-near. `Label` is the type for it, and two facts take away both of the usual
-ways to make it optional:
+### Supported hiding and the convenience request
 
-- **No off switch.** `Scene` retires only collision objects (`scene.h`, the
-  comment on `add`), so a `Label` lives as long as its scene. `GameObject`
-  says an object "cannot report itself invisible: whether anything is drawn is
-  a property of draw()". `Label` is `final`, though, so a client cannot write
-  the `draw()` that declines. What is left is a tint that contributes
-  nothing, and the scene still culls each hidden label and submits its
-  glyphs, tinted to zero, to every view it overlaps on every frame. The
-  obvious call gives the wrong tint. `Colour::make_transparent()` zeroes
-  alpha and keeps rgb, and the engine blends premultiplied (ONE,
-  INV_SRC_ALPHA) and multiplies the texel by the tint as given, so a
-  yellow made transparent still adds its yellow glyphs over the world. The
-  first version of this exhibit did exactly that and its check passed,
-  because it tested only alpha. Hiding needs all four channels at zero
-  (`Colour(0, 0, 0, 0)`). The other route was making the
-  labels lazily, on the overlay's first use. It needs an out-of-band
-  `end_tick()` between world updates so that a paused match shows them. That
-  is sound only because the client knows nothing else is pending then.
-- **No place in the draw order.** `Scene::draw_views` draws every
-  non-collision object, then every collision object. `renderer.h` says
-  `layer_depth` orders nothing. So a `Label`, which can only join the first
-  list, always draws under every structure, player and projectile. Text that
-  must read over the geometry has to leave the scene for the `ViewOverlay`
-  callback, which neither holds nor culls it: the two things `Label` exists to
-  add to `Text`.
+The station-label client in `Level::refresh_station_labels` keeps scene-owned
+Labels and sets all four tint channels to zero while its overlay is off.
+Showing them restores the presentation colour. That is a supported current
+workaround, and `set_text(L"")` is another working alternative: it emits no
+glyphs, while changing the words and measured box until the client restores
+them. A client-owned GameObject can also contain a Label and choose whether
+to forward draw. The current API can already hide a label.
 
-A smaller third point: `Text` exposes `set_text`, `set_colour`, `set_scale`
-and `set_position` but not `set_font`, so a live font change means making a
-new label, and the scene cannot give the old one back.
+The prepared request is only a Label-level visibility convenience independent
+of text, bounds and colour. The real null recording checks zero-RGBA vertex
+colour, unchanged words/bounds/geometry, alpha-only retained RGB, and tint/text
+restoration. It does not prove pixels, blending, readability or performance.
+The engine remains free to prefer these small client workarounds.
 
-### The ask, when it goes
+### Other portions remain open and separate
 
-Either of two things lets a client switch a held object off. One is a
-visibility flag on `Label` (or on `GameObject`, which the cull loop could test
-before `cull_bounds`). The other is retirement for any scene object, by the
-same `for_deletion` request collision objects already have. For order, the
-smallest step is one sentence in `scene.h` promising that non-collision
-objects draw first, so a client can at least rely on it. The fuller answer is
-a per-object draw layer the cull loop respects. Exposing `set_font` on `Text`
-can go with either.
+Scene category-order documentation, a possible layer mechanism, retirement of
+ordinary objects and public font rebinding remain outside this narrow report.
+The current renderer explicitly documents call order and ignored
+`layer_depth`; that is a contract, not an unproven renderer defect. The null
+fixture calls Label directly and does not test Scene's cull, ownership,
+admission, retirement or traversal. `TextObject::set_font` is protected, not a
+public Label font setter.
 
-An answer lets this repository delete the zero-tint hide and the
-manual `end_tick()`. If a layer arrives, the station names can also sit over
-the low ceiling they label rather than beside it.
-
-**Status:** unfiled draft against the pin. Recheck engine master before filing.
+A visibility flag alone would not delete the client's lazy first-use
+`end_tick()` admission; that depends on when the client creates the pending
+labels. Keep these questions separate when preparing further exhibits.
+Freshly fetch and recheck upstream master before any filing through the
+[publication gate](#publication-gate-engpublish).
 
 ---
 
