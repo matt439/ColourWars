@@ -87,6 +87,9 @@ namespace
 		// Monitor reads this borrowed indicator ink on every front-details draw;
 		// captured persona, sheet/frame and all indicator geometry stay intact.
 		{ "presentation.opening.monitor_art.power_light", TuneScope::live },
+		// Monitor reads this borrowed program paper on every draw; callers may
+		// cover it later, while persona and captured resources keep their policy.
+		{ "presentation.opening.program_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

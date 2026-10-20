@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirty-three audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirty-four audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -330,7 +330,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-thirty-three audited colour paths below, can be read and changed while the game runs,
+thirty-four audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These thirty-three existing string fields are supported; numeric path
+**Colours.** These thirty-four existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -423,6 +423,7 @@ The latest validation is recorded under
 | `presentation.opening.cursor_art.shadow` | live | Shifted shadows of those same arrows, on the next draw. |
 | `presentation.opening.desktop_colour` | live | Desktop fill of the existing closed program in the winner-none reveal, on the next applicable draw. |
 | `presentation.opening.monitor_art.power_light` | live | Power-light inset of existing visible Monitor front details, on the next applicable draw. |
+| `presentation.opening.program_colour` | live | Program backing of existing Monitor draws, on the next applicable draw; later composition may cover it. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -526,6 +527,17 @@ The opaque `C5D6AA` default, captured resources/persona and geometry remain
 unchanged. Nonblack zero alpha reveals the retained opaque indicator ink;
 it does not remove the rest of the monitor. Validation is recorded below.
 
+Program colour is borrowed by each existing Monitor draw. Its one program fill
+premultiplies straight base RGBA once, with no event fade; opaque `2C2C2C`,
+resources, persona, geometry and palette occlusion remain unchanged. Nonblack
+zero alpha reveals the opaque `161616` glass below the visible program mask,
+not the initial Canvas. The native contract uses one effective Canvas.
+
+**Source-only Level visibility addendum:** `Level::draw_intro` submits Monitor
+behind the miniature world, then later intro/reveal/front overlays may cover
+its program. This describes draw order read from source; no actual-Level
+program-colour visibility raster or human story acceptance is established.
+
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
 highlight and keyline still read the live presentation. Console error, warning,
@@ -569,7 +581,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the thirty-three colour strings listed above join numbers and booleans in `tune`.
+only the thirty-four colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1288,7 +1300,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the thirty-three listed colour fields above are
+  and inserting keys in `tune.save`: the thirty-four listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1297,13 +1309,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Thirty-three existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Thirty-four existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette ink/rim/shade and reveal
-ink/paper/shade, plus desktop and monitor power-light colours.
+ink/paper/shade, plus desktop, monitor power-light and program colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1328,6 +1340,35 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Program colour increment (2026-10-20), **verified**:
+path 34, `presentation.opening.program_colour`, is live on retained Monitor
+draws. One local premultiplication preserves opaque `2C2C2C` without event fade
+or geometry/art/font changes.
+
+Both game/editor builds, four focused CPU cases and both native first executions
+pass. CPU rejects external `opening.palette_height=0` in ordinary/forced complete
+merged saves, preserving exact source/staged/live/current/baseline and every
+ledger token. One-token save/rebase/reset retains unrelated edits.
+
+Shared evidence has 20 readbacks, four rows, four native 320x192 corner montages
+and three negative controls, using one effective Canvas. Debug's nine
+statements/nine states add 36 readbacks/nine rows: totals 56/13/4. Independent
+ordered raw writes use opaque `161616` glass then visible mask
+`[136,59,1143,539)` within ROI `[135,58,1144,540)`, with glass/palette guards;
+alpha0 retains glass. Copied-Monitor full raster proves adoption only.
+Two private PlaySettings/Jump J seed Saves retain default display;
+resources/persona/RNG, real content and private preferences remain unchanged,
+with zero
+local/Player/Level/StateContext/input/time updates.
+
+All 12 shared files, including four PPMs, and the separate supplemental contact
+PNG match
+between presets. Root contact inspection, 12 frozen source/support hashes and
+unchanged authored presentation reconcile; both Monitor objects have fresh
+compile timestamps and reconciled source/object hashes. Receipts: `out/validation/crossfeed-20261020/program-colour-v1/`.
+Actual-Level visibility remains **source-only/unexecuted**. Human readability/story,
+small-view, OS/global input, physical pads, listening and performance remain open.
 
 Power-light colour increment (2026-10-20), **verified**:
 path 33, `presentation.opening.monitor_art.power_light`, is live on visible

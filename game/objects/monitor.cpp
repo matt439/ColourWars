@@ -199,7 +199,7 @@ void Monitor::draw(DrawList& draw_list, const RectangleF& screen) const
         glass.width + lip_width * 2.0f, glass.height + lip_width * 2.0f),
         premultiplied(look.bezel_shadow));
     this->fill(draw_list, glass, look.glass_colour);
-    this->fill(draw_list, this->program(screen), look.program_colour);
+    this->fill(draw_list, this->program(screen), premultiplied(look.program_colour));
 
     const RectangleF palette = this->palette(screen);
     this->fill(draw_list, palette, look.glass_colour);

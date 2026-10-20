@@ -139,7 +139,7 @@ namespace debug_console_acceptance
 			presentation.opening().reveal_art.ink, presentation.opening().reveal_art.paper,
 			presentation.opening().reveal_art.shade, presentation.opening().cursor_art.shade,
 			presentation.opening().cursor_art.shadow, presentation.opening().desktop_colour,
-			presentation.opening().monitor_art.power_light };
+			presentation.opening().monitor_art.power_light, presentation.opening().program_colour };
 	}
 #endif
 }

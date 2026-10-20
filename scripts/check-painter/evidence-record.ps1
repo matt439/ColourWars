@@ -214,6 +214,18 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($ProgramTuneColourOnly) {
+    $result.scope = 'program-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-opaque-2C2C2C','literal-rgb','literal-rgba128','literal-nonblack-alpha0'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained public Monitor.draw only with empty deterministic persona; no Player/Level/State/input/time updates or RNG roll.'
+    $result.audio = 'No audio consumer/listening acceptance; private preferences unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'One live opening.program_colour field. Whole-Monitor reference is adoption only. Independent rawROI[135,58,1144,540) writes opaque glassRGB22 then program mask[136,59,1143,539), per-write premultiplication/no fade. EntireROI/glass guards, visible-mask-only delta, opaque parity/calibration, alpha0 retained glass and3straight/squared controls. One effective Canvas backdrop because opaque Monitor/glass erases it. Shared20reads/4rows/4corner crops320x192(245760pixels). Borrowed opening/art, complete unselected style/resources/persona/RNG retained.'
+    if ($Preset -eq 'x64-debug') { $result.actions = @('9-real-commands9-states','36-additional-reads9rows','totals56reads13rows4crops','one-token-private-save-rebase-reset','exact-saved-whole-Monitor-reversal','two-private-PlaySettings-and-JumpJ-seed-Saves','unchanged-default-display-real-content-queued-work') }
+    else { $result.actions = @('literal-consumer-only','no-developer-commands-transcript-scratch-or-Save') }
+    $result.checks += ' Direct draw is not composed story-world visibility evidence. Native controlled Save failure absent; CPU owns invalid merged palette-height rollback. No physical input/focus/human art-readability/listening/performance acceptance.'
+}
 elseif ($PowerLightTuneColourOnly) {
     $result.scope = 'power-light-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
