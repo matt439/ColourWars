@@ -221,34 +221,77 @@ namespace debug_console_acceptance
 			}
 		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
-			"\"background_colour\":\"WHITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
-		const std::string identity_path = "player_identity.ink_colour";
-		TuneDocument identity_document("presentation", identity_baseline);
-		const JsonLeaf* identity_leaf = identity_document.find(identity_path);
-		require(identity_leaf != nullptr && identity_leaf->kind == JsonLeaf::Kind::string &&
-			identity_document.find("player_identity.background_colour") == nullptr,
-			"Only the audited identity ink is eligible; its neighbouring background stays outside the colour tree");
-		identity_document.commit(identity_document.edited(*identity_leaf, "\"112233FF\""), identity_path);
-		require(identity_document.reverted(identity_path) == identity_baseline,
-			"Identity ink reset retains its escaped authored spelling and exact CRLF bytes");
+			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
-		const std::string identity_external = identity_reference.replaced(*identity_reference.find("number"), "25");
-		const JsonSpanDocument identity_external_document(identity_external, "identity-colour-reference");
-		const TuneSplice identity_splice = identity_document.splice(identity_external, false);
-		require(identity_splice.conflicts.empty() && identity_splice.written == 1 && identity_splice.text ==
-			identity_external_document.replaced(*identity_external_document.find(identity_path), "\"112233FF\""),
-			"An identity ink splice preserves the background, unrelated external number, escapes and every CRLF byte");
-		for (const std::string& invalid : { std::string("{}"),
-			identity_reference.replaced(*identity_reference.find(identity_path), "null"),
-			identity_reference.replaced(*identity_reference.find(identity_path), "{\"value\":\"RED\"}"),
-			std::string(R"({"player_identity.ink_colour":"BLACK"})"),
-			std::string(R"({"player_identity":{"ink_colour.r":"BLACK"}})") })
+		for (const char* field : { "ink_colour", "background_colour" })
 		{
-			const TuneDocument unsupported("presentation", invalid);
-			const TuneSplice refused = identity_document.splice(invalid, true);
-			require(unsupported.find(identity_path) == nullptr && refused.written == 0 &&
-				refused.conflicts.size() == 1 && refused.text == invalid,
-				"Force cannot insert identity ink, replace a non-string/container, or splice a literal path alias");
+			const std::string path = std::string("player_identity.") + field;
+			const std::string sibling = std::string("player_identity.") +
+				(std::string(field) == "ink_colour" ? "background_colour" : "ink_colour");
+			const std::string replacement = std::string(field) == "ink_colour" ? "\"112233FF\"" : "\"EECCAAFF\"";
+			const std::string sibling_token(identity_reference.token(*identity_reference.find(sibling)));
+			TuneDocument identity_document("presentation", identity_baseline);
+			const JsonLeaf* leaf = identity_document.find(path);
+			const JsonLeaf* sibling_leaf = identity_document.find(sibling);
+			require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
+				sibling_leaf != nullptr && sibling_leaf->kind == JsonLeaf::Kind::string &&
+				identity_document.current().token(*sibling_leaf) == sibling_token,
+				"Both audited identity colours are eligible and retain their exact escaped tokens: " + path);
+			identity_document.commit(identity_document.edited(*leaf, replacement), path);
+			require(identity_document.edits().size() == 1 && identity_document.edits().contains(path) &&
+				identity_document.current().token(*identity_document.find(sibling)) == sibling_token &&
+				identity_document.reverted(path) == identity_baseline,
+				"Each identity reset preserves its sibling and restores its escaped token and every CRLF byte: " + path);
+			const std::string identity_number_external = identity_reference.replaced(*identity_reference.find("number"), "25");
+			const JsonSpanDocument identity_number_document(identity_number_external, "identity-colour-reference");
+			const TuneSplice identity_number_splice = identity_document.splice(identity_number_external, false);
+			require(identity_number_splice.conflicts.empty() && identity_number_splice.written == 1 && identity_number_splice.text ==
+				identity_number_document.replaced(*identity_number_document.find(path), replacement) &&
+				count_of(identity_number_splice.text, "\r\n") == count_of(identity_baseline, "\r\n"),
+				"Each identity splice preserves its sibling, unrelated external number, escapes and CRLF: " + path);
+			const std::string identity_pending_text = identity_document.current().text();
+			bool wrong_type = false;
+			try { identity_document.commit(identity_document.edited(*identity_document.find(path), "false"), path); }
+			catch (const std::invalid_argument&) { wrong_type = true; }
+			require(wrong_type && identity_document.current().text() == identity_pending_text &&
+				identity_document.edits().size() == 1 && identity_document.edits().contains(path),
+				"A wrong-type identity commit preserves the pending string and its sibling: " + path);
+			for (const std::string& invalid : { std::string("{}"),
+				identity_reference.replaced(*identity_reference.find(path), "null"),
+				identity_reference.replaced(*identity_reference.find(path), "{\"value\":\"RED\"}"),
+				"{\"" + path + "\":\"BLACK\"}",
+				std::string("{\"player_identity\":{\"") + field + ".r\":\"BLACK\"}}" })
+			{
+				const TuneDocument unsupported("presentation", invalid);
+				const TuneSplice refused = identity_document.splice(invalid, true);
+				require(unsupported.find(path) == nullptr && refused.written == 0 &&
+					refused.conflicts.size() == 1 && refused.text == invalid,
+					"Force cannot insert an identity colour, replace a non-string/container, or splice a literal alias: " + path);
+			}
+		}
+		for (const char* reset_field : { "ink_colour", "background_colour" })
+		{
+			TuneDocument paired("presentation", identity_baseline);
+			paired.commit(paired.edited(*paired.find("player_identity.ink_colour"), "\"112233FF\""), "player_identity.ink_colour");
+			paired.commit(paired.edited(*paired.find("player_identity.background_colour"), "\"EECCAAFF\""), "player_identity.background_colour");
+			require(paired.edits().size() == 2, "Both identity colours retain independent pending edits");
+			const std::string path = std::string("player_identity.") + reset_field;
+			const bool reset_ink = std::string(reset_field) == "ink_colour";
+			const std::string sibling = reset_ink ? "player_identity.background_colour" : "player_identity.ink_colour";
+			const std::string sibling_token = reset_ink ? "\"EECCAAFF\"" : "\"112233FF\"";
+			paired.commit(paired.reverted(path), path);
+			require(paired.edits().size() == 1 && !paired.edits().contains(path) && paired.edits().contains(sibling) &&
+				paired.current().text() == identity_reference.replaced(*identity_reference.find(sibling), sibling_token),
+				"Resetting either identity colour restores only its own escaped baseline: " + path);
+			const std::string identity_sibling_external = identity_reference.replaced(*identity_reference.find(path), "\"102030FF\"");
+			const JsonSpanDocument identity_sibling_document(identity_sibling_external, "identity-sibling-external");
+			const TuneSplice identity_sibling_splice = paired.splice(identity_sibling_external, false);
+			require(identity_sibling_splice.conflicts.empty() && identity_sibling_splice.written == 1 &&
+				identity_sibling_splice.text == identity_sibling_document.replaced(*identity_sibling_document.find(sibling), sibling_token),
+				"Saving the remaining identity edit preserves an external sibling edit byte for byte: " + sibling);
+			paired.commit(paired.reverted(sibling), sibling);
+			require(paired.edits().empty() && paired.current().text() == identity_baseline,
+				"Resetting the remaining identity edit restores both escaped tokens and exact CRLF bytes");
 		}
 	}
 	}
@@ -356,10 +399,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited fourteen colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited fifteen colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly fourteen authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly fifteen authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -381,8 +424,10 @@ namespace debug_console_acceptance
 			"presentation.weapon_feedback.fill_frame", "presentation.weapon_feedback.highlight.r",
 			"presentation.weapon_feedback.keyline_extra", "presentation.weapon_feedback.highlight_colour",
 			"presentation.weapon_feedback.muzzle_duration", "presentation.weapon_feedback.enabled",
-			"player_identity.ink_colour", "tuning.player_identity.ink_colour", "presentation.player_identity.background_colour",
-			"presentation.player_identity.ink_colour.r", "presentation.player_identity.ink_colour_extra" })
+			"player_identity.ink_colour", "tuning.player_identity.ink_colour", "player_identity.background_colour",
+			"tuning.player_identity.background_colour", "presentation.player_identity.ink_colour.r",
+			"presentation.player_identity.ink_colour_extra", "presentation.player_identity.background_colour.r",
+			"presentation.player_identity.background_colour_extra" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -520,7 +565,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All fourteen colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All fifteen colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

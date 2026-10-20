@@ -67,7 +67,7 @@ namespace debug_console_acceptance
 			"Colour leaves complete as paths while arbitrary font strings stay outside the tree");
 		const auto colour_choices = registry.complete("tune presentation.movement_feedback.colour ").candidates;
 		for (const char* path : { colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10],
-			colour_paths[11], colour_paths[13] })
+			colour_paths[11], colour_paths[identity_ink_colour_index], colour_paths[identity_background_colour_index] })
 		{
 			require(registry.complete(std::string("tune ") + path).line == std::string("tune ") + path + " " &&
 				registry.complete(std::string("tune ") + path + " ").candidates == colour_choices,
@@ -184,6 +184,30 @@ namespace debug_console_acceptance
 			log_contains(impl.log(), "presentation.movement_feedback.colour = " + colour_token, DebugSeverity::info) &&
 			colour_values(presentation) == before_colours,
 			"Confirm inspects the colour through a read-only tune getter and stays on the same menu node");
+		model.back();
+		model.confirm(paged_row_index(model, "player_identity"));
+		const std::size_t background_row = paged_row_index(model, "background_colour");
+		const std::string background_path = colour_paths[identity_background_colour_index];
+		const std::string background_token = impl.tune_token(background_path);
+		rows = model.rows();
+		require(rows[background_row].kind == DebugMenuRow::Kind::inspect && rows[background_row].enabled &&
+			rows[background_row].value.find(background_token) != std::string::npos &&
+			rows[background_row].value.find("(console)") != std::string::npos,
+			"Identity background has an enabled inspect row with its exact quoted token and console hint");
+		const auto identity_before = colour_values(presentation);
+		const std::string identity_text = impl.tune_document("presentation")->current().text();
+		const std::string identity_title = model.title();
+		impl.log().clear();
+		model.step(background_row, 1); model.step(background_row, -1);
+		require(impl.log().lines().empty() && colour_values(presentation) == identity_before &&
+			impl.tune_document("presentation")->current().text() == identity_text,
+			"Left/Right on identity background cannot invent numeric stepping or alter either badge colour");
+		require(model.confirm(background_row) == DebugMenuModel::Result::stay && model.title() == identity_title &&
+			log_contains(impl.log(), "[menu] tune " + background_path, DebugSeverity::echo) &&
+			log_contains(impl.log(), background_path + " = " + background_token, DebugSeverity::info) &&
+			colour_values(presentation) == identity_before &&
+			impl.tune_document("presentation")->current().text() == identity_text,
+			"Confirm inspects the exact background leaf without changing its sibling, pending edits or menu node");
 	}
 }
 #endif

@@ -59,6 +59,7 @@ function Write-ContactSheet {
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
                 $_.Name -like 'hidden-inspection-cq-*-native.ppm' -or
                 $_.Name -like 'hidden-inspection-crossfeed-*-native.ppm' -or
+                $_.Name -like 'identity-background-*-badges.ppm' -or
                 $_.Name -like 'drift-*-detail.ppm' -or $_.Name -like 'miniature-terrain-*-detail.ppm' -or
                 $_.Name -like 'tune-colours-*-detail.ppm' -or $_.Name -like 'parallax-*.ppm' -or
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
@@ -164,6 +165,18 @@ function Write-ContactSheet {
         })
         Write-ContactSheetPages -Images $identity -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-player-identity-contact'
+        $identityBackground = @($images | Where-Object { $_.name -like 'identity-background-*-badges' })
+        if ($identityBackground.Count -gt 0) {
+            # The four paper-colour crops keep native size and a compact page,
+            # independent of larger world/context cells in the full matrix.
+            $identityBackgroundWidth = [int](($identityBackground | ForEach-Object { $_.bitmap.Width } |
+                Measure-Object -Maximum).Maximum) + 16
+            $identityBackgroundHeight = [int](($identityBackground | ForEach-Object { $_.bitmap.Height } |
+                Measure-Object -Maximum).Maximum) + 48
+            Write-ContactSheetPages -Images $identityBackground -CellWidth $identityBackgroundWidth `
+                -CellHeight $identityBackgroundHeight -CaptureDirectory $CaptureDirectory `
+                -Stem 'painter-identity-background-contact'
+        }
         $monitors = @($images | Where-Object { $_.name -like 'monitor-*' })
         Write-ContactSheetPages -Images $monitors -CellWidth $monitorCellWidth -CellHeight $monitorCellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-monitor-contact'

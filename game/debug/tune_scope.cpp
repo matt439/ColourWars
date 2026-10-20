@@ -46,6 +46,9 @@ namespace
 		// PlayerBadge reads this borrowed ink on every world/HUD/menu draw.
 		// Its existing reader requires opaque ink distinct from the background.
 		{ "presentation.player_identity.ink_colour", TuneScope::live },
+		// The same borrowed badge record supplies opaque paper on every draw;
+		// complete candidate validation keeps it distinct from the current ink.
+		{ "presentation.player_identity.background_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

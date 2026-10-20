@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fourteen audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fifteen audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -330,7 +330,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-fourteen audited colour paths below, can be read and changed while the game runs,
+fifteen audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These fourteen existing string fields are supported; numeric path
+**Colours.** These fifteen existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -402,6 +402,7 @@ show the quoted JSON token.
 | `presentation.weapon_feedback.highlight` | live | Existing dry-fire crosses, recovery rays and all three aim-readiness shapes, on the next draw. |
 | `presentation.weapon_feedback.keyline` | live | Outlines of existing muzzle/status cues and aim-readiness shapes, on the next draw. |
 | `presentation.player_identity.ink_colour` | live | Borders and P1-P4 glyphs of existing world, HUD, Team Select, Weapon Select and Results badges, on the next draw. |
+| `presentation.player_identity.background_colour` | live | Opaque paper behind those same existing identity badges, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -412,16 +413,16 @@ Supported colours use ordinary straight RGBA. Their drawing paths premultiply
 base RGB by its alpha before applying any event fade; a zero-alpha colour
 contributes no RGB. Movement and weapon feedback apply the event fade once,
 preserving the existing opaque presentation. Captured menu backgrounds convert
-the base colour when their widgets are constructed. Identity ink retains its
-existing stricter contract: it must be fully opaque and distinct from the badge
-background. RGB and RGBA ending `FF` are accepted; partial/zero alpha and a
-background-matching ink are rejected before live content or the diff changes.
+the base colour when their widgets are constructed. Identity ink and background
+retain their existing stricter contract: both must be fully opaque and distinct
+from one another. RGB and RGBA ending `FF` are accepted; partial/zero alpha and
+a colour matching the current other field are rejected before live content or
+the diff changes.
 
-Identity badges read the borrowed ink during every draw, including frozen world,
-HUD and menu views. Their background, geometry, roster labels, focus behaviour
-and emphasis timers stay intact; hidden badges remain hidden. Reset recolours
-the same existing badges on their next draw. The background is not another
-tunable colour path.
+Identity badges read both borrowed colours during every draw, including frozen
+world, HUD and menu views. Editing either preserves the other colour, geometry,
+roster labels, focus behaviour and emphasis timers; hidden badges remain hidden.
+Reset recolours the same existing badges on their next draw.
 
 Weapon-feedback colours are read on every draw, including frozen cues beneath
 a paused console. Their team-paint centres, geometry and event timers stay
@@ -470,7 +471,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the fourteen colour strings listed above join numbers and booleans in `tune`.
+only the fifteen colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1189,7 +1190,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the fourteen audited colour fields above are
+  and inserting keys in `tune.save`: the fifteen audited colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1198,11 +1199,12 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Fourteen existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Fifteen existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven and both
 readiness colours on Team Select and Weapon Select, plus weapon-feedback
-highlight/keyline and the opaque player-identity ink. More colour fields remain, along with
-arbitrary string/font edits and insertion of absent keys.
+highlight/keyline and the opaque player-identity ink/background pair. The new
+background increment's runtime validation is pending below. More colour fields
+remain, along with arbitrary string/font edits and insertion of absent keys.
 
 The next bounded colour increment can follow an actual field's consumer,
 add that field explicitly and report when it is adopted: live, new objects,
@@ -1225,6 +1227,29 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Identity-background increment (2026-10-20), **verified**:
+the fifteenth exact path uses the existing opaque/distinct badge validation and
+the shared live world/HUD/menu renderer. Added CPU checks cover independent
+ink/background reset, exact LF/CRLF save/rebase, conflicts/force and both semantic
+merge directions: an independently valid external sibling colour must not make
+the merged pair equal. A rejected merge preserves source bytes and the prior
+live, staged and pending states, even with force. The native companion checks
+paper pixels while retaining ink, geometry, visibility and draw state.
+
+Both game/editor builds and focused Debug/Release console acceptance pass.
+The first CPU compile caught shadowed test-local names under `/W4 /WX`; that
+failed log is retained beside the corrected final receipts. Both native
+Identity-only runs pass, with all 151 shared PPMs matching byte for byte.
+The background companion adds 28 readbacks, five rows and four crops per
+preset, with no simulation updates. Debug adds 40 readbacks, eight rows and
+ten real command attempts (seven accepted, three semantic refusals), private
+one-token save/rebase and reset to the saved baseline. Private play preferences
+and saved Jump J remain unchanged. Team/Weapon/Results are source-audited users
+of the shared renderer; their pages are not newly opened by this increment.
+Evidence is under `out/validation/crossfeed-20261020/background-colour-v1/`,
+including `native-reconciliation.json` and `consumer-final/`. Human
+contrast/readability, physical-pad, listening and performance acceptance remain open.
 
 Identity-ink increment (2026-10-20), **verified**: the fourteenth
 exact path uses the existing opaque/distinct badge-colour validation. Added CPU

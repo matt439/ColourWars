@@ -129,7 +129,8 @@ namespace debug_console_acceptance
 			presentation.main_menu().home_background_colour, presentation.main_menu().team_select.selected,
 			presentation.main_menu().team_select.unselected, presentation.main_menu().weapon_select.selected,
 			presentation.main_menu().weapon_select.unselected, presentation.weapon_feedback().highlight,
-			presentation.weapon_feedback().keyline, presentation.player_identity().ink_colour };
+			presentation.weapon_feedback().keyline, presentation.player_identity().ink_colour,
+			presentation.player_identity().background_colour };
 	}
 #endif
 }
