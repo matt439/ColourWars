@@ -9,20 +9,22 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim (2026-10-20):** improve the Close Quarters reference layout first, then tune movement,
-then iterate with small level and movement adjustments. The author approved the current gameplay style;
+**Aim (clarified 2026-10-20):** research comparable combat levels, create an original new map,
+then tune movement and all five weapons together against it. Preserve the existing arenas and CQ draft.
+The author approved the current gameplay style;
 it is a working baseline, open to further iteration, not final art or release acceptance.
 See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 
-**Order** ([development order](docs/polish-plan.md#development-order-2026-10-17)):
-1. **Improve the level first:** draft the Close Quarters layout (`POL#17`) using the current
-   movement and weapons. Establish routes, spawns, a contested centre, bypass and paint budget.
-2. **Then tune movement:** use the improved playable layout and Movement Course to compare
-   `POL#3`'s jump/movement candidates.
-3. **Iterate in small steps:** adjust the level and movement against play observations;
-   compare all five tools and tune weapons (`POL#27`) as the layout and movement settle.
-   Fit the approved kit and re-check the style in the new composition.
-4. **Then the other arenas:** `POL#21`, after CQ is accepted; the reference-match finish review
+**Order** ([research and design criteria](docs/level-design-research.md)):
+1. **Research before values:** use the recorded primary sources, concrete level examples and
+   ColourWars-specific hypotheses to define required, optional and recovery routes.
+2. **Create a new map (`POL#17`):** author and register an original layout with the current values;
+   measure traversal, exposed paint, spawn approaches, firing breaks and individual camera panes.
+   Refining the preserved CQ draft does not replace this deliverable.
+3. **Tune movement and weapons together (`POL#3`, `POL#27`):** compare the new map and Movement Course,
+   including all five tools' range, cadence, arcs, painting and recovery. Iterate the map when an
+   observation concerns geometry. Fit the approved kit and re-check 1-4P and heavy paint.
+4. **Then the other arenas:** `POL#21`, after reference-arena acceptance; the finish review
    and fresh-player observations (`POL#24`) still gate wider art production.
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
@@ -65,7 +67,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | BLOCKED | MED | M | Waits for `POL#17`'s initial playable level improvement; then tune the floaty/high jump with existing `jump_*` comparisons and iterate with the layout. Values stay provisional; pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
+| `POL#3` | BLOCKED | MED | M | After the original new map (`POL#17`) is playable, compare movement candidates there and on Movement Course together with all five weapons (`POL#27`). Tune the floaty/high jump against intended inputs, camera warning and tool flight. Values stay provisional; pad half with `ROAD#2`. [Research](docs/level-design-research.md), [playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -76,9 +78,9 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Improve CQ first using current movement/weapons: connected loop, contested centre, bypass, sheltered spawns and paint-budget notes. Then tune movement and iterate in small steps; fit the kit and re-check readability. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
-| `POL#27` | DEFERRED | HIGH | L | Exercise all five tools during CQ's level pass; tune range, rate, damage, paint output and supply as the layout and movement settle in iteration. Values stay provisional. [Order](docs/polish-plan.md#development-order-2026-10-17), [§3](docs/polish-plan.md#design-requirements). |
-| `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
+| `POL#17` | OPEN | HIGH | XL | Create an original new map from the [research criteria](docs/level-design-research.md); preserve existing maps and the CQ experiment. Qualify directed routes, paint budget, spawn pressure, return pacing, all five tools and 1-4P/heavy-paint panes. Then iterate with movement/weapon tuning; human reference-arena acceptance remains open. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
+| `POL#27` | BLOCKED | HIGH | L | After the original new map (`POL#17`) is playable, tune all five tools with movement (`POL#3`): measured range, cadence, damage, arcs, paint output, supply and exposure at that map's scale. Values stay provisional. [Research](docs/level-design-research.md), [§3](docs/polish-plan.md#design-requirements). |
+| `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after reference-arena acceptance; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
 ## Audio replacement
