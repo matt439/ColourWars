@@ -330,58 +330,44 @@ it F11 as the debug menu's fallback key.
 
 ## 12. JSON is read-only, path-only and opaque — **draft with live-tuning exhibit**
 
-**Exhibit added by the developer debug system (phase 3).** The Debug `tune`
-command edits numbers and booleans in `tuning.json` and `presentation.json`
-while the game runs, and `tune.save` writes the edits back into the source
-files. The 2026-10-18 client increment also supports seven existing, audited
-presentation colour strings; arbitrary strings, fonts and missing-key insertion
-remain outside that increment.
+**Minimal candidate-parsing slice prepared 2026-10-20.** The sanitized
+[request](../engine-reports/json-candidate-parsing.md) and standalone
+[synthetic exhibit](../../scripts/engine-reports/json-candidate-file-bridge/json_candidate_file_bridge.cpp)
+are ready for review and remain **unfiled**. Fresh upstream master was fetched
+at 19:34:53 UTC as `52e809a5a0229d37db4373faa7853df4c861a310`; the checked
+HEAD and JSON/file-path sources matched that `FETCH_HEAD`. The exact
+three-translation-unit CMake consumer passed MSVC C++20 `/W4 /WX` Debug and
+Release build/run checks. Both runs exited 0 with identical expected output
+and empty stderr, demonstrating three scratch writes, three removals and
+two client diagnostic pathname rewrites.
 
-### What happens
+### Prepared narrow request
 
-`read_json_file(const char* path)` is the engine's only way in
-(`engine/assets/json.h`). There is no parse of text already in memory, a
-`JsonValue` cannot list an object's keys, and nothing says where in the file a
-value came from. Live tuning needs all three, so it does without:
+The Debug live-tuning client already owns the edited JSON bytes, but must
+write a temporary candidate to re-enter its ordinary checked reader
+(`game/debug/tune_commands.cpp`, `tune_validate_and_apply`). The reader's
+errors name that scratch path, so the client replaces it with the logical
+content filename. The prepared request asks only for an in-memory parse
+into the same owning `JsonDocument`, with a caller-supplied diagnostic source
+label. It is an additional read entry point, not a JSON writer. Once the
+client reader accepts that document/root, it could remove the temporary-file
+bridge and pathname replacement while retaining its validation/adoption rules.
 
-- **Every candidate edit goes through a temporary file.** To judge an edit by
-  the game's own rules (ranges, cross-field checks), `tune` splices the new
-  token into the text, writes it to `%TEMP%\ColourWars-tune-<pid>-<file>.json`
-  (until phase 4 a folder, `ColourWars-tune-<pid>\`, whose removal raced the
-  reader's handle and left empty folders behind; the first edit now sweeps
-  those) and constructs `GameTuning` or `Presentation` from that path
-  (`game/debug/tune_commands.cpp`, `tune_validate_and_apply`). The reader's
-  error names the temporary file, so the message is rewritten before the
-  console shows it, and the copied-over live object keeps the temporary path
-  as its source.
-- **The game carries its own scanner to find the values at all.**
-  `game/debug/json_spans.cpp` runs rapidjson's SAX reader with the engine's
-  flags, keeps the key path, and recovers each number's byte span by scanning
-  around the stream position, because the reader writes its position back
-  only after the number callback returns. That is what lets the console list
-  `tuning.player.gravity`, complete it, and replace exactly its bytes. Colour
-  edits also need the raw quoted string span, including its original escapes;
-  scanning a string does not itself make that field tunable.
-- **A dead key cannot be told from a live one** except by experiment: the
-  acceptance case replaces every number and boolean, one at a time, with a
-  string and requires the reader to throw naming it
-  (`check_tune_consumed` in `scripts/acceptance/debug_console/tune_document_checks.cpp`).
-  The colour allowlist has separate reader/consumer checks and explicit adoption
-  scopes; numeric path wildcards cannot establish a string consumer's lifetime.
+### Other JSON asks remain open
 
-### The ask, when it goes
+Object-member/key enumeration and preservation of original source bytes/raw
+token spans remain separate, unresolved portions of this report. The client's
+`JsonSpanDocument` scanner finds tunable scalar paths and raw token spans;
+`TuneDocument` preserves source text and owns splice, save and conflict policy.
+A memory parse alone would not delete those mechanisms.
 
-`parse_json(std::string_view text, std::string name)` returning a
-`JsonDocument`, `JsonValue::keys()`, and optionally `JsonValue::source_span()`
-(byte offsets into the text). Answering the first would delete the temporary
-file and the message rewrite; the second and third would delete
-`json_spans.cpp`, and with `keys()` the consumed-leaf check could become a
-reader-side "unknown key" error at startup instead of a test.
-
-**None of this is a write.** The engine's product documents file this report as
-"JSON write" against the read-only asymmetry `ARCHITECTURE.md` settles. The ask
-is reading: parse from memory, list keys, say where a value came from. Say so
-in the first line when it goes.
+Arrays already support `size()`/`at()`, and filename/key/index diagnostic
+context already exists through `source_path()`/`where()`. Enumeration alone
+would not turn the consumed-leaf acceptance check into an unknown-key error;
+that also requires client knowledge of accepted/consumed fields. Keep these
+asks distinct when preparing further exhibits. Review the narrow report and
+refresh upstream before authorized filing through the
+[publication gate](#publication-gate-engpublish).
 
 ---
 
