@@ -125,7 +125,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 10 | No way to read back the frame that was presented | `capture_stack` in `game/debug/debug_screenshot.cpp` | draft — exhibit present; recheck upstream before filing |
 | 11 | F10 and a lone Alt belong to the system menu, with no opt-out | the `WH_GETMESSAGE` hook in `game/debug/debug_director_impl.cpp`; `alt-probe.txt` from `scripts/check-debug-console.ps1` | draft — low priority; exhibit present |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
-| 13 | `Key` has no names | the key table in `game/debug/debug_keys.cpp` | draft — low priority; exhibit present |
+| 13 | `Key` has no names | Debug bind names, saved keyboard Jump tokens and the standalone `key_names.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
 | 15 | Runtime packaging and content staging are repeated in the client | `game/CMakeLists.txt`, `cmake/release_package.cmake`, `cmake/runtime_assets.cmake`, `cmake/stage_runtime_assets.cmake` | draft — exhibit present; checked against published master 2026-10-15 |
 | 16 | Windowed Apply shows a deliberately hidden window | the offscreen/hide guard in `settings_menu_checks.h` around real Options Apply | draft — checked against the pin; recheck upstream before filing |
@@ -404,22 +404,43 @@ in the first line when it goes.
 ## 13. `Key` has no names — **draft, low priority**
 
 **Exhibit added by the developer debug system (phase 4).** `bind <key> <line>`
-and `binds.cfg` name keys in text.
+and `binds.cfg` name keys in text. The saved keyboard Jump preference now adds
+a Release-safe naming consumer in `game/input_bindings.cpp`.
+
+**Minimal report prepared 2026-10-20.** The sanitized
+[request](../engine-reports/key-names.md) and standalone
+[synthetic exhibit](../../scripts/engine-reports/key_names.cpp) are ready for
+review and remain **unfiled**. Fresh upstream master was fetched at 19:34:53
+UTC as `52e809a5a0229d37db4373faa7853df4c861a310`; the engine worktree was
+confirmed unchanged against that `FETCH_HEAD`. The exact synthetic source
+passed direct MSVC C++20 `/W4 /WX` Debug and Release compile/run checks. Its
+nine-entry subset proves canonical parse/format round trips and strict error
+handling, not a complete key map or physical-input acceptance. Review the
+prepared report and refresh upstream before authorized filing through the
+[publication gate](#publication-gate-engpublish).
 
 ### What happens
 
-`labrador::Key` is an enum and nothing more: no `key_name(Key)`, no
-`key_from_name`. So `game/debug/debug_keys.cpp` carries its own table of about
+`labrador::Key` has no portable canonical `key_name(Key)`/`key_from_name`
+codec. So `game/debug/debug_keys.cpp` carries its own table of about
 eighty names (`a`-`z`, `0`-`9`, `f1`-`f12`, `numpad0`-`9`, `pageup`,
-`lbracket`, ...) built against the enum's order. Every console, bind file or
-rebinding screen a client writes needs the same table, and each will spell the
-keys its own way; a key added to the enum is silently unnamed in all of them.
+`lbracket`, ...) built against the enum's order. The saved keyboard preference
+carries its own explicit A-Z/Space token table and separate UI labels. Clients
+that persist key names must maintain those translations as the enum changes.
+
+The existing web `key_from_code` is acknowledged: it decodes DOM events,
+collapses multiple modifier/Enter codes to the same enum key and supplies no
+reverse formatter. It does not answer the portable token round trip. Typed
+characters, localized labels and hardware identity are separate concerns.
 
 ### The ask, when it goes
 
 `std::string_view key_name(Key)` and `std::optional<Key> key_from_name(std::string_view)`
-next to the enum, with one spelling per key. Answering it would delete the
-table in `debug_keys.cpp` (the `ctrl+`/`shift+` chord grammar stays the game's).
+next to the enum, with one documented canonical spelling per real key and
+defined unknown/sentinel results. Answering it could replace the canonical
+token lookup in both consumers. Existing file aliases may remain if the engine
+chooses different spellings; allowed subsets, UI labels, case normalization
+and `ctrl+`/`shift+` chord grammar stay the game's.
 
 ---
 
