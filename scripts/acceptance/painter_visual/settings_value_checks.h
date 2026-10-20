@@ -3,8 +3,17 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     Presentation& presentation, const std::filesystem::path& output, bool controls)
 {
     using Values = decltype(MenuText{}.values);
-    const Values legacy{ L"On", L"Off", L"Random" };
     const Presentation original = presentation;
+    // Only On/Off/Random vary here. Every other value template (percentage,
+    // durations, resolution) keeps its authored text, because the pages
+    // format those through the same struct and reject a blank template.
+    const auto words_of = [&original](std::wstring on, std::wstring off, std::wstring random)
+    {
+        Values words = original.menu_text().values;
+        words.on = std::move(on); words.off = std::move(off); words.random = std::move(random);
+        return words;
+    };
+    const Values legacy = words_of(L"On", L"Off", L"Random");
     const auto profile = output / (controls ? "values-controls-profile" : "values-options-profile");
     struct ValueProfile
     {
@@ -210,7 +219,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     }
     // Random is also a Stage caption. This short replacement stays inside
     // that independently validated line while exercising the Options value.
-    const Values old_words{ L"On~", L"Off~", L"Random~" }, next_words{ L"Enabled", L"Disabled", L"All colours" };
+    const Values old_words = words_of(L"On~", L"Off~", L"Random~"), next_words = words_of(L"Enabled", L"Disabled", L"All colours");
     Values long_words = old_words;
     for (int repeat = 0; repeat < 36; ++repeat) { long_words.off += L" previous value"; long_words.random += L" previous palette"; }
     const std::string source_name = controls ? original.controls_settings().item_font : original.menu().item_font;
