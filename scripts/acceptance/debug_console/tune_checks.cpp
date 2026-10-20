@@ -7,7 +7,10 @@
 #include "game/debug/json_spans.h"
 #include "game/debug/tune_document.h"
 #include "game/debug/tune_scope.h"
+#include "game/objects/combat_feedback.h"
+#include "engine/assets/sprite_sheet_loader.h"
 #include "engine/math/scalar.h"
+#include "engine/render/render_resources.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -42,18 +45,32 @@ namespace debug_console_acceptance
 		const WeaponFeedbackPresentation* const feedback = &presentation.weapon_feedback();
 		const char* const feedback_sheet = feedback->sprite_sheet.data();
 		const char* const feedback_fill = feedback->fill_frame.data();
+		const CombatFeedbackPresentation* const combat_look = &presentation.combat_feedback();
+		const char* const combat_sheet = combat_look->sprite_sheet.data();
+		const char* const combat_fill = combat_look->fill_frame.data();
+		const auto combat_shape = [&]
+		{
+			return std::array<float, 9>{ combat_look->hurt_duration, combat_look->hurt_repeat_delay,
+				combat_look->hurt_width, combat_look->hurt_reach, combat_look->elimination_duration,
+				combat_look->elimination_spread, combat_look->elimination_lift,
+				combat_look->particle_size, combat_look->keyline_width };
+		};
+		const auto combat_geometry = combat_shape();
+		const bool combat_enabled = combat_look->enabled;
 		const PlayerIdentityPresentation* const identity = &presentation.player_identity();
 		const std::string team_sheet = presentation.main_menu().team_select_sheet;
 		const auto team_frames = presentation.main_menu().team_select_frames;
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 15> words{ "RED", "112233", "a1B2c3", "00000080",
-			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80", "123456FF", "DDEEFF" };
+		std::array<std::string, 17> words{ "RED", "112233", "a1B2c3", "00000080",
+			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
+			"123456FF", "DDEEFF", "73A1C280", "19B87000" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
-			{ 53, 188, 225 }, { 34, 102, 204, 128 }, { 18, 52, 86 }, { 221, 238, 255 } };
+			{ 53, 188, 225 }, { 34, 102, 204, 128 }, { 18, 52, 86 }, { 221, 238, 255 },
+			{ 115, 161, 194, 128 }, { 25, 184, 112, 0 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -77,7 +94,7 @@ namespace debug_console_acceptance
 				"A colour getter prints the exact quoted token: " + path);
 		}
 		for (const std::size_t index : { std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
-			std::size_t(11), std::size_t(12) })
+			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -101,6 +118,9 @@ namespace debug_console_acceptance
 			weapon_art->sheet.data() == weapon_sheet && weapon_art->fill_frame.data() == weapon_fill &&
 			weapon_art->choices.front().frame.data() == weapon_frame && &presentation.weapon_feedback() == feedback &&
 			feedback->sprite_sheet.data() == feedback_sheet && feedback->fill_frame.data() == feedback_fill &&
+			&presentation.combat_feedback() == combat_look && combat_look->sprite_sheet.data() == combat_sheet &&
+			combat_look->fill_frame.data() == combat_fill && combat_shape() == combat_geometry &&
+			combat_look->enabled == combat_enabled &&
 			&presentation.player_identity() == identity && identity->background_colour == expected[identity_background_colour_index],
 			"Colour adoption keeps the borrowed records, unrelated string buffers and live F9 override");
 		require(read_text(scratch.source / L"presentation.json") == source_before &&
@@ -126,7 +146,8 @@ namespace debug_console_acceptance
 				"Rejected colour word/path keeps all live values and pending JSON: " + path + "=" + value);
 		};
 		for (const char* path : { colour_paths.front(), colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10],
-			colour_paths[11], colour_paths[12], colour_paths[identity_ink_colour_index], colour_paths[identity_background_colour_index] })
+			colour_paths[11], colour_paths[12], colour_paths[identity_ink_colour_index], colour_paths[identity_background_colour_index],
+			colour_paths[combat_highlight_colour_index], colour_paths[combat_keyline_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -148,7 +169,9 @@ namespace debug_console_acceptance
 			"presentation.weapon_feedback.highlight.r", "presentation.weapon_feedback.highlight_colour",
 			"presentation.weapon_feedback.keyline_extra", "presentation.player_identity.background_colour.r",
 			"presentation.player_identity.background_colour_extra", "presentation.player_identity.ink_colour.r",
-			"presentation.player_identity.ink_colour_extra" })
+			"presentation.player_identity.ink_colour_extra", "presentation.combat_feedback.sprite_sheet",
+			"presentation.combat_feedback.fill_frame", "presentation.combat_feedback.highlight.r",
+			"presentation.combat_feedback.highlight_colour", "presentation.combat_feedback.keyline_extra" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -178,7 +201,8 @@ namespace debug_console_acceptance
 				(index != 9 || impl.tune_document("presentation")->edits().count("main_menu.weapon_select.unselected") == 1),
 				"Each Weapon tint resets independently while every other pending colour remains intact: " + path);
 		}
-		for (const std::size_t index : { std::size_t(11), std::size_t(12) })
+		for (const std::size_t index : { std::size_t(11), std::size_t(12),
+			combat_highlight_colour_index, combat_keyline_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -189,8 +213,12 @@ namespace debug_console_acceptance
 				impl.tune_document("presentation")->edits().count(local) == 0 &&
 				impl.tune_document("presentation")->edits().count("main_menu.team_select.unselected") == 1 &&
 				(index != 11 || impl.tune_document("presentation")->edits().count("weapon_feedback.keyline") == 1) &&
+				(index != combat_highlight_colour_index ||
+					impl.tune_document("presentation")->edits().count("combat_feedback.keyline") == 1) &&
 				&presentation.weapon_feedback() == feedback && feedback->sprite_sheet.data() == feedback_sheet &&
-				feedback->fill_frame.data() == feedback_fill,
+				feedback->fill_frame.data() == feedback_fill && &presentation.combat_feedback() == combat_look &&
+				combat_look->sprite_sheet.data() == combat_sheet && combat_look->fill_frame.data() == combat_fill &&
+				combat_shape() == combat_geometry && combat_look->enabled == combat_enabled,
 				"Each feedback colour resets independently while other edits and captured bindings remain intact: " + path);
 		}
 		for (const std::size_t index : { identity_ink_colour_index, identity_background_colour_index })
@@ -218,7 +246,7 @@ namespace debug_console_acceptance
 		// The literal save oracle replaces one exact span in otherwise untouched
 		// LF content. A subsequent external edit to another field must survive.
 		for (const std::size_t index : { std::size_t(5), std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
-			std::size_t(11), std::size_t(12) })
+			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -242,7 +270,8 @@ namespace debug_console_acceptance
 			const JsonSpanDocument external_document(external, "colour-save-reference");
 			const char* unrelated_word = index == 5 ? "102030" : index == 7 ? "203040" :
 				index == 8 ? "304050" : index == 9 ? "405060" : index == 10 ? "506070" :
-				index == 11 ? "607080" : "708090";
+				index == 11 ? "607080" : index == 12 ? "708090" :
+				index == combat_highlight_colour_index ? "8192A3" : "92A3B4";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -265,12 +294,15 @@ namespace debug_console_acceptance
 				!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
 				"Colour save leaves no temporary files beside either content copy");
 		}
-		for (const std::size_t index : { std::size_t(9), std::size_t(10), std::size_t(11), std::size_t(12) })
+		for (const std::size_t index : { std::size_t(9), std::size_t(10), std::size_t(11), std::size_t(12),
+			combat_highlight_colour_index, combat_keyline_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
 			const wchar_t* const scratch_name = index == 9 ? L"weapon-selected-crlf" :
-				index == 10 ? L"weapon-unselected-crlf" : index == 11 ? L"feedback-highlight-crlf" : L"feedback-keyline-crlf";
+				index == 10 ? L"weapon-unselected-crlf" : index == 11 ? L"feedback-highlight-crlf" :
+				index == 12 ? L"feedback-keyline-crlf" : index == combat_highlight_colour_index ?
+				L"combat-highlight-crlf" : L"combat-keyline-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -304,7 +336,9 @@ namespace debug_console_acceptance
 			const JsonSpanDocument saved_document(saved, "weapon-crlf-reference");
 			const std::string theirs = saved_document.replaced(*saved_document.find(local), "\"FEDCBA\"");
 			const JsonSpanDocument theirs_document(theirs, "weapon-crlf-reference");
-			const char* unrelated_word = index == 9 ? "607080" : "708090";
+			const char* unrelated_word = index == 9 ? "607080" : index == 10 ? "708090" :
+				index == 11 ? "8192A3" : index == 12 ? "92A3B4" :
+				index == combat_highlight_colour_index ? "A3B4C5" : "B4C5D6";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -505,6 +539,80 @@ namespace debug_console_acceptance
 					"After rejected merged saves, reset still uses the saved baseline without discarding the external source or leaving recovery files: " + path);
 			}
 		}
+	}
+
+	void check_combat_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"combat-colour-cues");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const CombatFeedbackPresentation* const look = &presentation.combat_feedback();
+		labrador::RenderResources resources;
+		resources.add_sprite_sheet(look->sprite_sheet, labrador::read_sprite_sheet(
+			(game_directory / L"textures" / (look->sprite_sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
+		CombatFeedback hurt(look, &resources), burst(look, &resources);
+		const mattmath::RectangleF body(80, 120, 56, 96), detached(240, 120, 56, 96);
+		require(hurt.hurt(), "Combat colour fixture starts an actual hurt cue before editing");
+		hurt.update(look->hurt_duration * 0.5f);
+		burst.eliminate(detached);
+		burst.update(look->elimination_duration * 0.5f);
+		const auto timers = [&]
+		{
+			return std::array<float, 4>{ hurt.hurt_remaining(), hurt.elimination_remaining(),
+				burst.hurt_remaining(), burst.elimination_remaining() };
+		};
+		const auto held_timers = timers();
+		const auto hurt_bounds = hurt.bounds(body), burst_bounds = burst.bounds(body);
+		const auto unchanged = [&]
+		{
+			require(&presentation.combat_feedback() == look && timers() == held_timers &&
+				hurt.death_rectangle() == mattmath::RectangleF::ZERO && burst.death_rectangle() == detached &&
+				hurt.bounds(body) == hurt_bounds && burst.bounds(body) == burst_bounds,
+				"Combat colour adoption retains the borrowed record, active cue timers, detached body and cull bounds");
+		};
+		for (const std::size_t index : { combat_highlight_colour_index, combat_keyline_colour_index })
+		{
+			for (const auto& [word, expected] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
+				{ "RED", { 255, 0, 0 } }, { "2060C080", { 32, 96, 192, 128 } },
+				{ "A532D600", { 165, 50, 214, 0 } } } })
+			{
+				require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + word).ok &&
+					colour_values(presentation)[index] == expected,
+					"A preconstructed combat cue accepts straight named/partial/zero-alpha authored channels");
+				unchanged();
+			}
+		}
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const JsonSpanDocument baseline_document(baseline, "combat-colour-merged-reference");
+		const JsonLeaf* repeat_delay = baseline_document.find("combat_feedback.hurt_repeat_delay");
+		require(repeat_delay != nullptr, "Combat merged candidate has its unrelated timing constraint");
+		const std::string external = baseline_document.replaced(*repeat_delay, "0.001");
+		write_text(scratch.source / L"presentation.json", external);
+		const TuneDocument* const pending = impl.tune_document("presentation");
+		const std::string pending_text = pending->current().text();
+		const auto pending_colours = colour_values(presentation);
+		for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+		{
+			require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == external &&
+				read_text(scratch.staged / L"presentation.json") == baseline && pending->current().text() == pending_text &&
+				pending->baseline().text() == baseline && pending->edits().size() == 2 &&
+				colour_values(presentation) == pending_colours,
+				"An unrelated invalid combat constraint rejects the complete merged candidate and restores disk/staging/live/ledger, even with force");
+			unchanged();
+		}
+		require(impl.execute("tune.reset presentation.combat_feedback.highlight").ok &&
+			look->highlight == labrador::Colour(255, 255, 255) && look->keyline == labrador::Colour(165, 50, 214, 0) &&
+			pending->edits().size() == 1 && pending->edits().contains("combat_feedback.keyline"),
+			"Resetting combat highlight retains the independent nonblack zero-alpha keyline edit");
+		unchanged();
+		require(impl.execute("tune.reset presentation.combat_feedback.keyline").ok &&
+			look->keyline == labrador::Colour(0, 0, 0) && pending->edits().empty() && pending->current().text() == baseline,
+			"Resetting combat keyline restores its original authored token after rejected saves");
+		unchanged();
+		write_text(scratch.source / L"presentation.json", baseline);
 	}
 
 	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
@@ -810,6 +918,7 @@ namespace debug_console_acceptance
 		check_motion_tunes(impl, tuning, scratch);
 		check_menu_layout_tunes(impl, presentation, scratch);
 		check_colour_tunes(game_directory);
+		check_combat_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.

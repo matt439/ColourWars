@@ -49,6 +49,10 @@ namespace
 		// The same borrowed badge record supplies opaque paper on every draw;
 		// complete candidate validation keeps it distinct from the current ink.
 		{ "presentation.player_identity.background_colour", TuneScope::live },
+		// CombatFeedback reads both borrowed tints on each draw of an existing
+		// hurt accent or detached burst; timers and captured fill stay intact.
+		{ "presentation.combat_feedback.highlight", TuneScope::live },
+		{ "presentation.combat_feedback.keyline", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

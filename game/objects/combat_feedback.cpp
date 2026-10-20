@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/combat_feedback.h"
+#include "game/objects/crude_drawing.h"
 
 #include <array>
 #include <cmath>
@@ -88,7 +89,7 @@ const RectangleF& CombatFeedback::death_rectangle() const { return this->death_r
 void CombatFeedback::draw_fill(DrawList& draw_list, const RectangleF& rectangle,
     const Colour& colour, float alpha) const
 {
-    this->draw_with(draw_list, rectangle, this->frame(), colour * alpha,
+    this->draw_with(draw_list, rectangle, this->frame(), CrudeDrawing::premultiplied(colour) * alpha,
         Vector2F::ZERO, SpriteFlip::none, 0.0f);
 }
 

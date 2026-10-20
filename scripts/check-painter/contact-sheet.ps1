@@ -69,7 +69,7 @@ function Write-ContactSheet {
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
                 ($_.Name -like 'keyboard-jump-*.ppm' -and $_.Name -notlike '*-context.ppm') -or
-                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or $_.Name -like 'competitive-winner-*.ppm' -or $_.Name -like 'contribution-team-*.ppm' -or $_.Name -like 'result-percentage-*.ppm' -or
+                $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'combat-colour-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or $_.Name -like 'competitive-winner-*.ppm' -or $_.Name -like 'contribution-team-*.ppm' -or $_.Name -like 'result-percentage-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
@@ -207,6 +207,9 @@ function Write-ContactSheet {
         $feedbackColours = @($images | Where-Object { $_.name -like 'feedback-colour-*' })
         Write-ContactSheetPages -Images $feedbackColours -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-feedback-colour-contact'
+        $combatColours = @($images | Where-Object { $_.name -like 'combat-colour-*' })
+        Write-ContactSheetPages -Images $combatColours -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-combat-colour-contact'
         $exposedAlpha = @($images | Where-Object { $_.name -like 'alpha-*' })
         Write-ContactSheetPages -Images $exposedAlpha -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-exposed-alpha-contact'

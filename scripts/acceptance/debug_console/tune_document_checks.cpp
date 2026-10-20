@@ -173,51 +173,54 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		const std::string feedback_baseline = "{\r\n  \"weapon_feedback\":{\"highlight\":\"\\u0057HITE\","
-			"\"keyline\":\"\\u0042LACK\",\"sprite_sheet\":\"unchanged\",\"fill_frame\":\"solid\"},\r\n"
-			"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
-		for (const char* field : { "highlight", "keyline" })
+		for (const std::string section : { "weapon_feedback", "combat_feedback" })
 		{
-			const std::string path = std::string("weapon_feedback.") + field;
-			TuneDocument feedback_document("presentation", feedback_baseline);
-			const JsonLeaf* leaf = feedback_document.find(path);
-			require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
-				feedback_document.find("weapon_feedback.sprite_sheet") == nullptr &&
-				feedback_document.find("weapon_feedback.fill_frame") == nullptr,
-				"A feedback colour is eligible while both captured texture strings stay outside the tree: " + path);
-			feedback_document.commit(feedback_document.edited(*leaf, "\"11223344\""), path);
-			require(feedback_document.reverted(path) == feedback_baseline,
-				"A feedback reset restores its escaped token and every original CRLF byte: " + path);
-			const JsonSpanDocument baseline_document(feedback_baseline, "feedback-colour-reference");
-			const std::string external_number = baseline_document.replaced(*baseline_document.find("number"), "25");
-			const JsonSpanDocument feedback_external(external_number, "feedback-colour-reference");
-			const TuneSplice feedback_splice = feedback_document.splice(external_number, false);
-			require(feedback_splice.conflicts.empty() && feedback_splice.written == 1 && feedback_splice.text ==
-				feedback_external.replaced(*feedback_external.find(path), "\"11223344\"") &&
-				count_of(feedback_splice.text, "\r\n") == count_of(feedback_baseline, "\r\n"),
-				"A feedback splice preserves unrelated fields, escaped bytes, external edits and CRLF: " + path);
-			const std::string feedback_pending = feedback_document.current().text();
-			bool wrong_type = false;
-			try { feedback_document.commit(feedback_document.edited(*feedback_document.find(path), "false"), path); }
-			catch (const std::invalid_argument&) { wrong_type = true; }
-			require(wrong_type && feedback_document.current().text() == feedback_pending && feedback_document.edits().size() == 1,
-				"A wrong-type feedback commit preserves the pending string edit: " + path);
-			for (const std::string& missing : { std::string("{}"),
-				baseline_document.replaced(*baseline_document.find(path), "null"),
-				baseline_document.replaced(*baseline_document.find(path), "{\"value\":\"RED\"}") })
+			const std::string feedback_baseline = "{\r\n  \"" + section + "\":{\"highlight\":\"\\u0057HITE\","
+				"\"keyline\":\"\\u0042LACK\",\"sprite_sheet\":\"unchanged\",\"fill_frame\":\"solid\"},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			for (const char* field : { "highlight", "keyline" })
 			{
-				const TuneSplice refused = feedback_document.splice(missing, true);
-				require(refused.written == 0 && refused.conflicts.size() == 1 && refused.text == missing,
-					"Force cannot insert a missing feedback colour or replace null/a container: " + path);
-			}
-			for (const std::string& alias : { "{\"" + path + "\":\"RED\"}",
-				std::string("{\"weapon_feedback\":{\"") + field + ".r\":\"RED\"}}" })
-			{
-				const TuneDocument literal("presentation", alias);
-				const TuneSplice refused = feedback_document.splice(alias, true);
-				require(literal.prefixed_paths().empty() && literal.find(path) == nullptr &&
-					refused.written == 0 && refused.conflicts.size() == 1 && refused.text == alias,
-					"A literal alias cannot expose or receive a feedback colour, even with force: " + path);
+				const std::string path = section + '.' + field;
+				TuneDocument feedback_document("presentation", feedback_baseline);
+				const JsonLeaf* leaf = feedback_document.find(path);
+				require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
+					feedback_document.find(section + ".sprite_sheet") == nullptr &&
+					feedback_document.find(section + ".fill_frame") == nullptr,
+					"A feedback colour is eligible while both captured texture strings stay outside the tree: " + path);
+				feedback_document.commit(feedback_document.edited(*leaf, "\"11223344\""), path);
+				require(feedback_document.reverted(path) == feedback_baseline,
+					"A feedback reset restores its escaped token and every original CRLF byte: " + path);
+				const JsonSpanDocument baseline_document(feedback_baseline, "feedback-colour-reference");
+				const std::string external_number = baseline_document.replaced(*baseline_document.find("number"), "25");
+				const JsonSpanDocument feedback_external(external_number, "feedback-colour-reference");
+				const TuneSplice feedback_splice = feedback_document.splice(external_number, false);
+				require(feedback_splice.conflicts.empty() && feedback_splice.written == 1 && feedback_splice.text ==
+					feedback_external.replaced(*feedback_external.find(path), "\"11223344\"") &&
+					count_of(feedback_splice.text, "\r\n") == count_of(feedback_baseline, "\r\n"),
+					"A feedback splice preserves unrelated fields, escaped bytes, external edits and CRLF: " + path);
+				const std::string feedback_pending = feedback_document.current().text();
+				bool wrong_type = false;
+				try { feedback_document.commit(feedback_document.edited(*feedback_document.find(path), "false"), path); }
+				catch (const std::invalid_argument&) { wrong_type = true; }
+				require(wrong_type && feedback_document.current().text() == feedback_pending && feedback_document.edits().size() == 1,
+					"A wrong-type feedback commit preserves the pending string edit: " + path);
+				for (const std::string& missing : { std::string("{}"),
+					baseline_document.replaced(*baseline_document.find(path), "null"),
+					baseline_document.replaced(*baseline_document.find(path), "{\"value\":\"RED\"}") })
+				{
+					const TuneSplice refused = feedback_document.splice(missing, true);
+					require(refused.written == 0 && refused.conflicts.size() == 1 && refused.text == missing,
+						"Force cannot insert a missing feedback colour or replace null/a container: " + path);
+				}
+				for (const std::string& alias : { "{\"" + path + "\":\"RED\"}",
+					"{\"" + section + "\":{\"" + field + ".r\":\"RED\"}}" })
+				{
+					const TuneDocument literal("presentation", alias);
+					const TuneSplice refused = feedback_document.splice(alias, true);
+					require(literal.prefixed_paths().empty() && literal.find(path) == nullptr &&
+						refused.written == 0 && refused.conflicts.size() == 1 && refused.text == alias,
+						"A literal alias cannot expose or receive a feedback colour, even with force: " + path);
+				}
 			}
 		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
@@ -399,10 +402,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited fifteen colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited seventeen colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly fifteen authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly seventeen authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -427,7 +430,11 @@ namespace debug_console_acceptance
 			"player_identity.ink_colour", "tuning.player_identity.ink_colour", "player_identity.background_colour",
 			"tuning.player_identity.background_colour", "presentation.player_identity.ink_colour.r",
 			"presentation.player_identity.ink_colour_extra", "presentation.player_identity.background_colour.r",
-			"presentation.player_identity.background_colour_extra" })
+			"presentation.player_identity.background_colour_extra", "combat_feedback.highlight",
+			"tuning.combat_feedback.highlight", "presentation.combat_feedback.sprite_sheet",
+			"presentation.combat_feedback.fill_frame", "presentation.combat_feedback.highlight.r",
+			"presentation.combat_feedback.keyline_extra", "presentation.combat_feedback.highlight_colour",
+			"presentation.combat_feedback.hurt_duration", "presentation.combat_feedback.enabled" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -455,6 +462,8 @@ namespace debug_console_acceptance
 			{ "presentation.weapon_feedback.enabled", TuneScope::live },
 			{ "presentation.weapon_feedback.highlight", TuneScope::live },
 			{ "presentation.weapon_feedback.keyline", TuneScope::live },
+			{ "presentation.combat_feedback.highlight", TuneScope::live },
+			{ "presentation.combat_feedback.keyline", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -565,7 +574,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All fifteen colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All seventeen colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

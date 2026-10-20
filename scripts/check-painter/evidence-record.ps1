@@ -214,6 +214,31 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($CombatTuneColoursOnly) {
+    $result.scope = 'combat-tune-colours-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @()
+    $result.palettes = @('opaque-default', 'literal-rgb', 'literal-rgba128', 'literal-alpha0-nonzero-rgb')
+    $result.weapons = @()
+    $result.resolutions = @('1280x720')
+    $result.actions = @('four-isolated-full-half-hurt-elimination-cues', 'black-and-nonblack-underlays', 'independent-raw-source-geometry-and-premultiplied-channels', 'opaque-default-legacy-parity', 'double-fade-and-straight-alpha-negative-controls', 'unchanged-opaque-team-interior', 'frozen-public-timers-death-bounds-rng')
+    $result.input_slots = @()
+    $result.inputs = 'Normal GamepadReader backend; no reader sampling, keyboard events, scripted pads, Level/StateContext updates or match objects. Four preconstructed CombatFeedback consumers receive only local cue preparation: hurt/eliminate plus exactly two effect-age update calls per fixture.'
+    $result.audio = 'No gameplay audio events; this renderer probe establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Both presets compare frozen full/half hurt and elimination cues across four literal highlight/keyline palettes and two underlays against independent raw source rectangles and explicit RGBA channels. Opaque defaults retain legacy pixels; controls reject double-fade and straight-alpha tint. Public timers/death rectangles, geometry/bounds, team interior and draw RNG remain unchanged. Consumer evidence is32 readbacks,eight CSV rows,eight420x360 crops(1209600 pixels),eight controls,two local half-age preparations and zero Level/StateContext updates. Retained artifact hashes and counts are checked; no gameplay, physical/global input, OS-focus delivery, listening, human readability or performance acceptance.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('fifteen-real-validated-named-rgb-rgba-reset-save-commands', 'two-token-private-save-and-rebase', 'unchanged-private-preferences-and-content-bytes')
+        $result.inputs += ' Debug adds a private DebugDirector with isolated source/staged/user/profile/TEMP/TMP directories and exactly two successful private preference seed Saves, with no controlled save failure.'
+        $result.checks += ' Debug adds15 commands,60 readbacks,20 CSV rows,zero crops and two local half-age preparations on preconstructed borrowed consumers. Exact private two-token save/rebase and reset-to-saved baseline are checked with actual content/preferences unchanged and no queued match work. Debug totals92 readbacks,28 CSV rows,eight crops,four age preparations,zero Level/StateContext updates.'
+        $result['developer_command_scope'] = 'debug-validated-commands'
+    }
+    else {
+        $result.inputs += ' Release remains consumer-only without a developer director, command transcript, scratch tree or nested Save.'
+        $result['developer_command_scope'] = 'not-run-release-consumer-only'
+    }
+}
 elseif ($FeedbackTuneColoursOnly) {
     $result.scope = 'feedback-tune-colours-only'
     $result.Remove('stage')

@@ -307,11 +307,13 @@ namespace debug_console_acceptance
 	std::size_t log_index(const DebugLog& log, const std::string& text);
 	bool any_line(const DebugLog& log, const std::string& text);
 
-	// The fifteen audited colour tune paths and their values, in the same order;
+	// The seventeen audited colour tune paths and their values, in the same order;
 	// shared by tune_checks.cpp, tune_document_checks.cpp and tune_menu_checks.cpp.
 	inline constexpr std::size_t identity_ink_colour_index = 13;
 	inline constexpr std::size_t identity_background_colour_index = 14;
-	inline const std::array<const char*, 15> colour_paths{
+	inline constexpr std::size_t combat_highlight_colour_index = 15;
+	inline constexpr std::size_t combat_keyline_colour_index = 16;
+	inline const std::array<const char*, 17> colour_paths{
 		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
 		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
 		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
@@ -319,7 +321,8 @@ namespace debug_console_acceptance
 		"presentation.main_menu.team_select.unselected", "presentation.main_menu.weapon_select.selected",
 		"presentation.main_menu.weapon_select.unselected", "presentation.weapon_feedback.highlight",
 		"presentation.weapon_feedback.keyline", "presentation.player_identity.ink_colour",
-		"presentation.player_identity.background_colour" };
+		"presentation.player_identity.background_colour", "presentation.combat_feedback.highlight",
+		"presentation.combat_feedback.keyline" };
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
 
 	// console_checks.cpp
