@@ -629,8 +629,8 @@ controls widgets. Broader action/pad rebinding remains open,
 and neither this contract nor the default evaluator closes `GAP#4.2`.
 
 Use the working client exhibit for `GAP#F2`, checking engine master before
-filing a report. Upstream filing follows the
-[publication decision](review/engine-reports.md#publication-gate-engpublish).
+filing a report. Upstream filing uses the
+[approved minimal-report scope and issue route](review/engine-reports.md#publication-gate-engpublish).
 
 ## Per-player menu focus (`GAP#D1`)
 

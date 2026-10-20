@@ -67,15 +67,27 @@ against `6b5c0bd`, and `6b5c0bd` will not be master for long.
 
 ## Publication gate (`ENG#PUBLISH`)
 
-**Author decision:** choose which details from this private repository's thirteen
-live drafts may be shared, and where, before filing them. Labrador's `PI-09`
-tracks this disclosure choice; its older seven-draft count does not supersede
-the thirteen live entries here.
+**Disclosure scope approved (2026-10-20):** the author approved minimal
+engine-focused reports with reproducible examples. This resolves `ENG#PUBLISH`.
+Use Labrador's established [issue-tracker route](../../external/labrador/CONTRIBUTING.md#asking-a-question-or-requesting-a-change),
+choosing the bug or engine-request form appropriate to the finding. Labrador's
+`PI-09` tracks filing; its older seven-draft count does not supersede the
+thirteen live entries here.
 
-All thirteen remain unfiled drafts. The 2026-10-18 backlog cleanup filed no
-reports and left the engine pin unchanged. Local source checks, exhibit
-maintenance and reproduction work can continue while the publication decision
-is pending.
+Each report should contain only the relevant engine API/behaviour, the checked
+upstream-master commit and necessary build conditions, minimal reproduction
+steps or a small standalone example, actual and expected results, and a short
+description of the client workaround an engine answer would remove. Use
+synthetic content where an example needs assets or data. Keep the full private
+drafts, unrelated game source, game assets and private captures/data out of the
+public report. Requests beyond what the example demonstrates remain proposals
+to scope separately.
+
+All thirteen remain unfiled drafts. Recording this approval posts no reports
+and leaves the engine pin unchanged. The next work is a fresh upstream-master
+check and preparation of the minimal report/reproducer for each surviving gap;
+filing uses the approved scope and established route above. This supporting
+work does not change TODO's level-first priority.
 
 Before authorized filing, refresh engine master from upstream and recheck the
 concrete client exhibit against that revision. Record the checked commit with
@@ -797,8 +809,9 @@ as a substitute for a render traversal. It should also let camera-aware
 terrain stay in its existing position before its paint and later objects.
 
 **Status:** private, unfiled draft with a client exhibit; audited against the
-pin only. Filing requires `ENG#PUBLISH` and a fresh upstream-master check under
-the rule above. No upstream query or publication was performed for this draft.
+pin only. Prepare a minimal engine-focused report/reproducer under the approved
+scope above and perform a fresh upstream-master check before filing. No upstream
+query or publication was performed for this draft.
 
 ---
 

@@ -267,8 +267,9 @@ owns every object. A borrowed scenery list includes shadows, idle drips and
 later debug station labels; live collision objects come from Scene. Its public
 collision span does not promise render order, so parity with the pin is a
 tested dependency. Private [engine draft 20](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit)
-records what an engine answer would let the client delete. It is unfiled and
-still needs publication approval and an upstream-master recheck.
+records what an engine answer would let the client delete. It is unfiled;
+prepare a minimal engine-focused report/reproducer under the approved scope
+and recheck upstream master before filing.
 
 StagePreview uses the same explicit-camera structure methods in its existing
 pane, with its existing camera and decorative object order. Drawing remains

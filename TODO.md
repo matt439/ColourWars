@@ -44,8 +44,6 @@ This is a selection guide, not another priority order; each owner defines a boun
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`).
-- **Upstream publication:** choose which private engine drafts may be shared and where
-  (`ENG#PUBLISH`); the thirteen filing rows wait on that choice.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -142,28 +140,28 @@ These add to the hierarchies, never flatten them (CLAUDE.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The thirteen drafts are unfiled; their filing rows share the publication
-decision below rather than representing upstream fixes already requested.
+`GAP#F*`. The thirteen drafts remain unfiled. Minimal engine-focused reports with
+reproducible examples are approved; recheck upstream and prepare each report for
+Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PUBLISH` | DECISION | MED | S | Author chooses which private draft details may be shared and where before filing. [Publication gate](docs/review/engine-reports.md#publication-gate-engpublish). |
-| `ENG#6` | BLOCKED | MED | S | File the audio bus/master-gain report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#6-no-audio-bus-master-gain-listener-or-voice-cap--draft-with-mixing-exhibit). |
-| `ENG#9` | BLOCKED | MED | S | File the per-frame hook/input-capture report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#9-no-application-level-per-frame-hook-or-input-capture--draft-with-console-exhibit). |
-| `ENG#10` | BLOCKED | LOW | S | File the presented-frame read-back report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#10-no-way-to-read-back-the-frame-that-was-presented--draft-with-screenshot-exhibit). |
-| `ENG#11` | BLOCKED | LOW | S | File the F10/lone-Alt system-menu report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--draft-low-priority). |
-| `ENG#12` | BLOCKED | MED | S | File the JSON reading/source-span report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#12-json-is-read-only-path-only-and-opaque--draft-with-live-tuning-exhibit). |
-| `ENG#13` | BLOCKED | LOW | S | File the unnamed `Key` report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#13-key-has-no-names--draft-low-priority). |
-| `ENG#14` | BLOCKED | LOW | S | File the frame-statistics/GPU-timing report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--draft-with-perf-exhibit). |
+| `ENG#6` | OPEN | MED | S | Recheck upstream; prepare the minimal audio bus/master-gain report and reproducer for filing. [Report](docs/review/engine-reports.md#6-no-audio-bus-master-gain-listener-or-voice-cap--draft-with-mixing-exhibit). |
+| `ENG#9` | OPEN | MED | S | Recheck upstream; prepare the minimal per-frame hook/input-capture report and reproducer for filing. [Report](docs/review/engine-reports.md#9-no-application-level-per-frame-hook-or-input-capture--draft-with-console-exhibit). |
+| `ENG#10` | OPEN | LOW | S | Recheck upstream; prepare the minimal presented-frame read-back report and reproducer for filing. [Report](docs/review/engine-reports.md#10-no-way-to-read-back-the-frame-that-was-presented--draft-with-screenshot-exhibit). |
+| `ENG#11` | OPEN | LOW | S | Recheck upstream; prepare the minimal F10/lone-Alt system-menu report and reproducer for filing. [Report](docs/review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--draft-low-priority). |
+| `ENG#12` | OPEN | MED | S | Recheck upstream; prepare the minimal JSON reading/source-span report and reproducer for filing. [Report](docs/review/engine-reports.md#12-json-is-read-only-path-only-and-opaque--draft-with-live-tuning-exhibit). |
+| `ENG#13` | OPEN | LOW | S | Recheck upstream; prepare the minimal unnamed `Key` report and reproducer for filing. [Report](docs/review/engine-reports.md#13-key-has-no-names--draft-low-priority). |
+| `ENG#14` | OPEN | LOW | S | Recheck upstream; prepare the minimal frame-statistics/GPU-timing report and reproducer for filing. [Report](docs/review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--draft-with-perf-exhibit). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F2` | BLOCKED | LOW | S | The action-map/Gamepads report (per-slot lookup, trigger threshold, "what did this pad press"). Waits on `GAP#4.2`. |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
-| `ENG#15` | BLOCKED | MED | S | File the runtime-packaging/content-staging report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
-| `ENG#16` | BLOCKED | LOW | S | File the hidden-window Apply report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
-| `ENG#17` | BLOCKED | LOW | S | File the Win32 DPI report after `ENG#PUBLISH`; answers OCA-66. [Report](docs/review/engine-reports.md#17-the-win32-window-ignores-dpi-once-the-client-opts-in--draft-with-manifest-exhibit). |
-| `ENG#18` | BLOCKED | LOW | S | File the Label visibility/draw-order report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit). |
-| `ENG#19` | BLOCKED | LOW | S | File the startup window-visibility report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit). |
-| `ENG#20` | BLOCKED | LOW | S | Recheck upstream and file the view-aware object-drawing report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit). |
+| `ENG#15` | OPEN | MED | S | Recheck upstream; prepare the minimal runtime-packaging/content-staging report and reproducer for filing. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
+| `ENG#16` | OPEN | LOW | S | Recheck upstream; prepare the minimal hidden-window Apply report and reproducer for filing. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
+| `ENG#17` | OPEN | LOW | S | Recheck upstream; prepare the minimal Win32 DPI report and reproducer for filing; answers OCA-66. [Report](docs/review/engine-reports.md#17-the-win32-window-ignores-dpi-once-the-client-opts-in--draft-with-manifest-exhibit). |
+| `ENG#18` | OPEN | LOW | S | Recheck upstream; prepare the minimal Label visibility/draw-order report and reproducer for filing. [Report](docs/review/engine-reports.md#18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit). |
+| `ENG#19` | OPEN | LOW | S | Recheck upstream; prepare the minimal startup window-visibility report and reproducer for filing. [Report](docs/review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit). |
+| `ENG#20` | OPEN | LOW | S | Recheck upstream; prepare the minimal view-aware object-drawing report and reproducer for filing. [Report](docs/review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
