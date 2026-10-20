@@ -128,7 +128,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 13 | `Key` has no names | Debug bind names, saved keyboard Jump tokens and the standalone `key_names.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
 | 15 | Runtime packaging and content staging are repeated in the client | `game/CMakeLists.txt`, `cmake/release_package.cmake`, `cmake/runtime_assets.cmake`, `cmake/stage_runtime_assets.cmake` | draft — exhibit present; checked against published master 2026-10-15 |
-| 16 | Windowed Apply shows a deliberately hidden window | the offscreen/hide guard in `settings_menu_checks.h` around real Options Apply | draft — checked against the pin; recheck upstream before filing |
+| 16 | Windowed Apply shows a deliberately hidden window | standalone `hidden_apply_exhibit.cpp` and the client Apply guard | local unfiled bug draft - master checked 2026-10-20; Debug/Release reproduce |
 | 17 | The Win32 window ignores DPI once the client opts in | the `dpiAwareness` block in `game/settings.manifest`; the DPI assertion in `scripts/check-startup.ps1` | draft — checked against published master 2026-10-17 |
 | 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `level_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
 | 19 | The window is shown before the client has loaded anything | `initialize()` before `load_manifest` in `game/main.cpp`, with a startup timing | draft — low priority; checked against the pin |
@@ -498,23 +498,37 @@ live reports.
 
 ## 16. Windowed Apply shows a deliberately hidden window — **draft with probe exhibit**
 
-Observed while driving the actual Options page on 2026-10-15. A probe started
-with `ApplicationOptions::visible = false` still becomes visible when Apply
-calls `set_fullscreen(false)`, including when it was already windowed.
-At the current pin, `Application::set_fullscreen` always calls
-`Window::leave_fullscreen` for false, and the Win32 implementation unconditionally
-calls `ShowWindow(handle, SW_SHOWNORMAL)`.
+Observed in the actual Options page on 2026-10-15 and now reproduced by the
+[minimal engine-only bug report](../engine-reports/hidden-window-apply.md) and
+[standalone Application exhibit](../../scripts/engine-reports/hidden_apply_exhibit.cpp).
+An application initialized with `visible=false` and `fullscreen=false` becomes
+visible according to `IsWindowVisible` after `set_fullscreen(false)`.
 
-**Exhibit:** the `apply` helper in
-[`settings_menu_checks.h`](../../scripts/acceptance/painter_visual/settings_menu_checks.h)
-moves its own window offscreen before the real Apply, hides it immediately
-afterward and restores the probe's input activation. It applies only Off;
-fullscreen metadata separately exercises the disabled resolution row.
+Fresh upstream master was checked on 2026-10-20 at 19:34:53 UTC:
+`52e809a5a0229d37db4373faa7853df4c861a310`. Application still calls
+`Window::leave_fullscreen` unconditionally for false, and the Win32 method
+still calls `ShowWindow(handle, SW_SHOWNORMAL)`.
 
-**Ask:** preserve deliberate hidden visibility when applying a windowed setting,
-including an already-windowed Apply. The client should not need Win32 calls
-around an ordinary application setting to retain its hidden fixture.
-This is a draft against the pin; recheck engine master before filing.
+Both MSVC 19.51.36256.0 `/W4 /WX` Debug/Release runs reproduce the same
+hidden -> visible -> hidden flag sequence, exit 0 and have empty stderr.
+The actual D3D11/XAudio2 Application initializes one worker/view but loads no
+manifest, game objects, assets or state and plays no sound. Its owned HWND is
+placed outside the virtual desktop, a current-thread CBT guard vetoes only its
+activation, and the program samples then immediately hides it. Its before/after
+foreground/bounds checks pass; this is not a continuous OS-focus trace.
+
+The client workaround remains the `apply` helper in
+[`settings_menu_checks.h`](../../scripts/acceptance/painter_visual/settings_menu_checks.h):
+move the owned window offscreen, guard activation, Apply, hide and rearm local
+input. The request is to preserve deliberate hidden visibility, including an
+already-windowed Apply, so that guard can go.
+
+Receipts are under
+`out/validation/crossfeed-20261020/hidden-apply-report-final-v1/`, including
+`result.json`, both compile argument/log sets and process stdout/stderr. No
+engine change or public issue was made. Refresh upstream immediately before
+filing the unfiled bug draft. Fullscreen, DPI/monitor, human, pad, listening
+and performance gates remain open.
 
 ---
 
