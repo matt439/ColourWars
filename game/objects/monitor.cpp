@@ -299,7 +299,7 @@ void Monitor::draw_front_details(DrawList& draw_list, const RectangleF& screen) 
     const RectangleF indicator = on_screen(screen, art.power_indicator);
     this->fill(draw_list, indicator, art.ink);
     this->fill(draw_list, RectangleF(indicator.x + pen, indicator.y + pen,
-        indicator.width - pen * 2.0f, indicator.height - pen * 2.0f), art.power_light);
+        indicator.width - pen * 2.0f, indicator.height - pen * 2.0f), premultiplied(art.power_light));
 
     this->draw_decorations(draw_list, screen);
 }

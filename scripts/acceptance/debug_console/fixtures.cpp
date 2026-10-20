@@ -138,7 +138,8 @@ namespace debug_console_acceptance
 			presentation.opening().silhouette_art.rim, presentation.opening().silhouette_art.shade,
 			presentation.opening().reveal_art.ink, presentation.opening().reveal_art.paper,
 			presentation.opening().reveal_art.shade, presentation.opening().cursor_art.shade,
-			presentation.opening().cursor_art.shadow, presentation.opening().desktop_colour };
+			presentation.opening().cursor_art.shadow, presentation.opening().desktop_colour,
+			presentation.opening().monitor_art.power_light };
 	}
 #endif
 }

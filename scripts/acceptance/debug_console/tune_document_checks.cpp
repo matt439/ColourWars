@@ -549,6 +549,49 @@ namespace debug_console_acceptance
 					"Force cannot insert a desktop colour, replace null/a container or expose literal aliases");
 			}
 		}
+		{
+			const std::string power_light_path = "opening.monitor_art.power_light";
+			const std::string power_light_baseline = "{\r\n  \"opening\":{\"monitor_art\":{\"power_light\":\"\\u00435D6AA\","
+				"\"ink\":\"BLACK\",\"highlight\":\"WHITE\"},\"sprite_sheet\":\"captured\",\"fill_frame\":\"solid\",\"palette_sheet\":\"unchanged\"},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			const JsonSpanDocument power_light_reference(power_light_baseline, "power-light-colour-reference");
+			TuneDocument power_light_document("presentation", power_light_baseline);
+			const JsonLeaf* power_light_leaf = power_light_document.find(power_light_path);
+			require(power_light_leaf != nullptr && power_light_leaf->kind == JsonLeaf::Kind::string &&
+				power_light_document.find("opening.sprite_sheet") == nullptr && power_light_document.find("opening.fill_frame") == nullptr &&
+				power_light_document.find("opening.palette_sheet") == nullptr &&
+				power_light_document.find("opening.monitor_art.ink") == nullptr &&
+				power_light_document.find("opening.monitor_art.highlight") == nullptr,
+				"Power-light colour is eligible while captured texture/palette names remain outside the tree");
+			power_light_document.commit(power_light_document.edited(*power_light_leaf, "\"11223344\""), power_light_path);
+			require(power_light_document.reverted(power_light_path) == power_light_baseline,
+				"Power-light reset restores its original escaped tint token and every CRLF byte");
+			const std::string power_light_external_number = power_light_reference.replaced(*power_light_reference.find("number"), "25");
+			const JsonSpanDocument power_light_external_reference(power_light_external_number, "power-light-colour-reference");
+			const TuneSplice power_light_splice = power_light_document.splice(power_light_external_number, false);
+			require(power_light_splice.conflicts.empty() && power_light_splice.written == 1 && power_light_splice.text ==
+				power_light_external_reference.replaced(*power_light_external_reference.find(power_light_path), "\"11223344\"") &&
+				count_of(power_light_splice.text, "\r\n") == count_of(power_light_baseline, "\r\n"),
+				"Power-light splice preserves every unrelated escaped byte, captured string, external number and CRLF");
+			const std::string power_light_pending = power_light_document.current().text();
+			bool power_light_wrong_type = false;
+			try { power_light_document.commit(power_light_document.edited(*power_light_document.find(power_light_path), "false"), power_light_path); }
+			catch (const std::invalid_argument&) { power_light_wrong_type = true; }
+			require(power_light_wrong_type && power_light_document.current().text() == power_light_pending && power_light_document.edits().size() == 1,
+				"A wrong-type power-light commit retains the pending string edit");
+			for (const std::string& power_light_invalid : { std::string("{}"),
+				power_light_reference.replaced(*power_light_reference.find(power_light_path), "null"),
+				power_light_reference.replaced(*power_light_reference.find(power_light_path), "{\"value\":\"RED\"}"),
+				std::string("{\"opening.monitor_art.power_light\":\"RED\"}"),
+				std::string("{\"opening\":{\"monitor_art\":{\"power_light.r\":\"RED\"}}}") })
+			{
+				const TuneDocument power_light_unsupported("presentation", power_light_invalid);
+				const TuneSplice power_light_refused = power_light_document.splice(power_light_invalid, true);
+				require(power_light_unsupported.find(power_light_path) == nullptr && power_light_refused.written == 0 &&
+					power_light_refused.conflicts.size() == 1 && power_light_refused.text == power_light_invalid,
+					"Force cannot insert a power-light colour, replace null/a container or expose literal aliases");
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -728,10 +771,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited thirty-two colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited thirty-three colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly thirty-two authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly thirty-three authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -792,7 +835,10 @@ namespace debug_console_acceptance
 			"presentation.opening.reveal_art.paper_extra", "presentation.opening.reveal_art.shade_colour",
 			"presentation.opening.reveal_art.padding", "presentation.opening.reveal_art.beat_duration",
 			"opening.desktop_colour", "tuning.opening.desktop_colour", "presentation.opening.desktop_colour.r",
-			"presentation.opening.desktop_colour_extra" })
+			"presentation.opening.desktop_colour_extra", "opening.monitor_art.power_light",
+			"tuning.opening.monitor_art.power_light", "presentation.opening.monitor_art.power_light.r",
+			"presentation.opening.monitor_art.power_light_extra", "presentation.opening.monitor_art.ink",
+			"presentation.opening.monitor_art.highlight" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -837,6 +883,7 @@ namespace debug_console_acceptance
 			{ "presentation.opening.reveal_art.paper", TuneScope::live },
 			{ "presentation.opening.reveal_art.shade", TuneScope::live },
 			{ "presentation.opening.desktop_colour", TuneScope::live },
+			{ "presentation.opening.monitor_art.power_light", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -947,7 +994,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All thirty-two colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All thirty-three colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

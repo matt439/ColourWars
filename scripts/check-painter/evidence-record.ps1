@@ -214,6 +214,18 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($PowerLightTuneColourOnly) {
+    $result.scope = 'power-light-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-opaque-C5D6AA','literal-rgb','literal-rgba128','literal-nonblack-alpha0'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained Monitor with empty deterministic captured persona; public draw_front_details only at screen(0,0,1280,720). No persona roll, reader sampling/events or local/Player/Level/StateContext/input/time updates.'
+    $result.audio = 'No audio consumer/listening acceptance; private preferences unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'One exact live monitor_art.power_light field. Full-front copied Monitor reference is adoption only. Independent32x32 raw ROI at1237,642 submits opaque BLACK10x10 at1246,652 followed by premult5x4 light at1249,655, preserving ordered target writes/no fade. AllROI, five explicit sites, opaque calibration/parity, six straight/squared controls and alpha0 retained ink; all palette deltas confined to inner5x4. Shared40readbacks/8rows/8crops32x32(8192pixels). Borrowed opening/art addresses, complete unselected Opening style/resources including desktop, persona/RNG frozen.'
+    if ($Preset -eq 'x64-debug') { $result.actions = @('9-real-commands9-raster-states','72-additional-reads18rows','totals112-reads26rows8crops','one-token-private-save-rebase-reset','exact-saved-full-front-reversal','two-private-PlaySettings-and-JumpJ-seed-Saves','unchanged-default-display-real-content-queued-work') }
+    else { $result.actions = @('literal-consumer-only','no-developer-commands-transcript-scratch-or-Save') }
+    $result.checks += ' Native controlled Save failure absent; CPU owns invalid merged shadow-width rollback. No full story visibility route, physical/global input, OS-focus, human small-view/contrast/readability, listening or performance acceptance.'
+}
 elseif ($DesktopTuneColourOnly) {
     $result.scope = 'desktop-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

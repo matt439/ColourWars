@@ -84,6 +84,9 @@ namespace
 		// Monitor reads this borrowed tint each time the closed program shows
 		// the desktop; persona, swatches and captured sheet/frame stay intact.
 		{ "presentation.opening.desktop_colour", TuneScope::live },
+		// Monitor reads this borrowed indicator ink on every front-details draw;
+		// captured persona, sheet/frame and all indicator geometry stay intact.
+		{ "presentation.opening.monitor_art.power_light", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a
