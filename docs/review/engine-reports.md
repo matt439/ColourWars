@@ -123,7 +123,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 6 | Shared Music/SFX attenuation remains emitter work | per-emitter saved gains and standalone `audio_gain_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 9 | Per-frame overlay orchestration and separately scoped input routing | client debug forwarding and reader gates; standalone `input_observer.cpp` | local unfiled observer draft - master checked 2026-10-20; synthetic Debug/Release runs pass; capture/routing remains separately scoped |
 | 10 | No way to read back the frame that was presented | `capture_stack` in `game/debug/debug_screenshot.cpp` | draft — exhibit present; recheck upstream before filing |
-| 11 | F10 and a lone Alt belong to the system menu, with no opt-out | the `WH_GETMESSAGE` hook in `game/debug/debug_director_impl.cpp`; `alt-probe.txt` from `scripts/check-debug-console.ps1` | draft — low priority; exhibit present |
+| 11 | Optional opt-out for bare system-menu keys | native F10 queue hook and standalone `system_keys_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release requests reproduce |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 13 | `Key` has no names | Debug bind names, saved keyboard Jump tokens and the standalone `key_names.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
@@ -268,33 +268,47 @@ Answering it would delete `capture_stack` and its out-of-band frame.
 
 ## 11. F10 and a lone Alt belong to the system menu, with no opt-out — **draft, low priority**
 
-**Exhibit added by the developer debug system (phase 2).** The debug menu
-wanted F10.
+The [minimal optional-mechanism report](../engine-reports/system-menu-keys.md)
+and [standalone Application exhibit](../../scripts/engine-reports/system_keys_exhibit.cpp)
+make the existing Debug F10 workaround concrete. Key messages do reach the
+engine's void callbacks before the Win32 procedure continues to
+`DefWindowProc`; the gap is a caller option to suppress the resulting bare
+system-menu request. F10 is not untranslated or inherently unbindable.
 
-### What happens
+Fresh engine master `52e809a5a0229d37db4373faa7853df4c861a310` was checked on
+2026-10-20 at 19:34:53 UTC, with the complete engine worktree matched to that
+tree. No bare-system-menu option is present. The client still uses its
+Debug-only `WH_GETMESSAGE` hook in `debug_director_impl.cpp` to consume bare
+F10 before dispatch and count the press itself.
 
-The window procedure forwards `WM_SYSKEYDOWN`/`WM_SYSKEYUP` to the keyboard
-and then, deliberately, to `DefWindowProc` ("Alt+F4 and F10 are the system's",
-`engine/app/win32/window.cpp`). On a `WS_OVERLAPPEDWINDOW`, `DefWindowProc` turns an F10 or a
-lone Alt release into `SC_KEYMENU` and enters the system menu's modal loop:
-`Application`'s pump stops ticking until another key or a click ends menu mode,
-and that key is eaten. `scripts/check-debug-console.ps1` records it for Alt
-(`alt-probe.txt`: "A lone Alt tap entered the system menu loop"). A game cannot
-bind F10, and a player who taps Alt freezes the game for a key press.
+Both MSVC 19.51.36256.0 `/W4 /WX` Debug/Release runs exit 0 with empty stderr.
+The real hidden Application receives only synthetic messages directed to its
+owned HWND. Each A/F10/Alt pair reaches raw engine down/up snapshots once;
+A produces no menu request, while F10 and bare Alt each produce one
+zero-character `SC_KEYMENU`. An owned WndProc barrier consumes that command
+before default handling, after a direct command self-test. No menu loop is
+entered. Repeated native hidden/offscreen/nonforeground checks pass, and the
+initial engine logical keyboard-focus value of 1 remains unchanged at all
+sample points; this logical value is not an OS-focus trace.
 
-The game's way round it is a thread message hook (`SetWindowsHookExW`,
-`WH_GETMESSAGE`), installed by the Debug director only, that rewrites F10
-key messages to `WM_NULL` before the window procedure sees them and counts the
-press itself. It works, and it is the kind of thing a client should not have
-to write: a hook over the engine's own message pump, to undo a policy the
-engine chose for it.
+The normal D3D11/XAudio2 services initialize with one worker/view, but no
+manifest, assets, state or game objects are loaded and no sound is played.
+Only the owned HWND is moved offscreen, a current-thread CBT guard vetoes only
+its activation, and its original WndProc is restored. No global input or
+foreground manipulation is used.
 
-### The ask, when it goes
+The request is an optional bare-menu suppression mechanism that preserves
+key delivery and leaves native defaults available. Alt+F4 and other command/
+mnemonic contracts remain required follow-up acceptance, not tested facts.
+An answer could remove the native F10 queue hook and manual counter; F11
+retention is client UI policy. The fixture does not measure physical input
+delivery, an actual modal pause or human/hardware acceptance.
 
-An `ApplicationOptions` flag that swallows keyboard-initiated `SC_KEYMENU`
-(`WM_SYSCOMMAND` with `lParam` 0) while leaving Alt+F4 alone, so F10 and Alt
-reach the game as ordinary keys. Answering it would delete the hook, and with
-it F11 as the debug menu's fallback key.
+Receipts are under
+`out/validation/crossfeed-20261020/system-keys-report-final-v2/`. The earlier
+fixture's invalid false-logical-focus assumption and incomplete wrapper
+receipt remain private. The engine is unchanged, the draft remains unfiled,
+and upstream must be refreshed immediately before filing.
 
 ---
 
