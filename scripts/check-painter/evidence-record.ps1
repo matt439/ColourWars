@@ -214,6 +214,22 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($CursorMaterialTuneColoursOnly) {
+    $result.scope = 'cursor-material-tune-colours-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('unchanged-default','distinct-opaque-pair','distinct-partial-rgba-pair','nonblack-zero-alpha-pair')
+    $result.resolutions = @('1280x720')
+    $result.inputs = 'Synthetic ScreenCursor tip(640,240), draw screen_height720, click_age.09 and1280x720 viewport; no local/Level/State/input updates or retained timers.'
+    $result.audio = 'No gameplay audio events; no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('retained-rest-click-material-consumer','copied-dependency-full-shape-adoption-only','ordered-shadow-then-shade-raw-writes','separate-shadow-only-write','per-field-straight-squared-controls','zero-selected-alpha-keeps-ink-fill-ticks','reduced-click-retains-rest-arrow','fixed-resources-ink-fill-geometry-global-rng')
+    $result.checks = 'Exactly two live cursor shade/shadow fields, no drawing/font/art/default changes. Two independently ordered raw sample patches preserve per-write UNORM quantization: one shifted shadow then foreground S at649,262; one shifted shadow-only run at656,273. Correct base alpha once with no event fade. Four literal pairs/two underlays retain defaults, reject16 targeted wrong-channel comparisons (including shadow under partial shade), and retain ink/fill body/ticks at zero selected alpha. Shared68 readbacks/24CSVrows/8crops72x80(46080pixels),ten wrong-reference frames,two blanks; zero local/Level/State/input updates. Old Cursor23 helper and evidence counts stay unchanged. Full-shape production reference is adoption only; hashes/counts retained.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('15-real-named-rgb-rgba-reset-save-statements','independent-leaf-resets-retain-siblings','exact-two-token-private-save-and-rebase','two-private-playsettings-jumpj-saves-default-display-retained')
+        $result.checks += ' Debug12 states add144 readbacks/72rows, totals212/96/8. Private source/staged two-token save/rebase/reset and unchanged preferences/JumpJ/default display are checked. Release remains literal consumers without developer commands or Save.'
+    }
+    $result.checks += ' No physical/global input, OS-focus delivery, human readability, small-view, performance or listening acceptance.'
+}
 elseif ($RevealTuneColoursOnly) {
     $result.scope = 'reveal-tune-colours-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

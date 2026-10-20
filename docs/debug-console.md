@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These twenty-nine existing string fields are supported; numeric path
+**Colours.** These thirty-one existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -419,6 +419,8 @@ The latest validation is recorded under
 | `presentation.opening.reveal_art.ink` | live | Contours, text outlines and click-tick ink of existing visible percentage cards, on the next draw. |
 | `presentation.opening.reveal_art.paper` | live | Stepped paper interiors of those same cards, on the next draw. |
 | `presentation.opening.reveal_art.shade` | live | Displaced shadows and ordered inner airbrush passes of those same cards, on the next draw. |
+| `presentation.opening.cursor_art.shade` | live | Shaded cells of existing cursor arrows, on the next draw. |
+| `presentation.opening.cursor_art.shadow` | live | Shifted shadows of those same arrows, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -481,8 +483,10 @@ figures bypass the pen; Reduce effects leaves this essential outline visible.
 Cursor ink and fill are borrowed on every draw of the resting arrow and reveal
 click ticks. Their existing base-alpha premultiplication is unchanged; click
 age changes tick placement/length rather than opacity, with no event fade.
-Shade and shadow remain separate authored materials: setting both supported
-colours to nonblack zero alpha retains those residual arrow materials.
+Shade and shadow are separate live materials, also borrowed on each arrow draw.
+Setting ink/fill to nonblack zero alpha retains shade/shadow. Setting shade/shadow
+to nonblack zero alpha retains ink/fill and click ticks. A partial shade reveals
+the shifted shadow below it; each ordered material is premultiplied once.
 Reduce effects suppresses the click ticks while retaining the arrow. Editing
 either colour preserves the other, fixed hotspot, geometry, timing, draw inputs
 and captured sheet/frame; no drawing, default colour or artwork changes here.
@@ -1268,7 +1272,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the twenty-nine listed colour fields above are
+  and inserting keys in `tune.save`: the thirty-one listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1277,12 +1281,12 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Twenty-nine existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Thirty-one existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
-respawn pen colour, cursor ink/fill, silhouette ink/rim/shade and reveal
+respawn pen colour, cursor ink/fill/shade/shadow, silhouette ink/rim/shade and reveal
 ink/paper/shade.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
@@ -1308,6 +1312,39 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Cursor shade/shadow increment (2026-10-20), **verified**:
+exact paths 30-31 are `presentation.opening.cursor_art.shade` and `.shadow`,
+live on retained story arrows. Production adds only their allowlist entries;
+existing drawing, authored defaults and geometry remain unchanged. Both already
+premultiply base alpha once, without an event fade. Click ticks keep ink/fill.
+
+Both game/editor builds and four focused CPU cases (console and story audio
+per preset) pass. CPU checks cover both sibling resets, unrelated edits, exact two-token
+save/rebase and saved-baseline resets. Invalid external `shadow_offset=0.201`
+rejects ordinary and forced merged saves, retaining exact source/staged/
+live/current/baseline/ledger state and all unselected opening fields/resources.
+Build and CPU receipts reconcile.
+
+Both native first executions pass. Shared evidence is 68 readbacks, 24 rows (eight cases and sixteen
+sample rows) and eight 72x80 crops. Independent raw samples account for one
+shifted shadow write followed by one S-cell shade write at `(649,262)`, and
+one shadow-only write at `(656,273)`, including per-write target quantization.
+Sixteen targeted comparisons reject straight/squared alpha, including the
+shadow contribution beneath translucent shade. Full-cursor copied-dependency raster comparisons
+prove adoption; the two raw sites supply independent alpha/layer evidence.
+Reduce Effects restores rest, and click ticks retain the fixed arrow.
+The existing Cursor23 helper and historical receipts remain unchanged.
+
+Debug's fifteen commands and twelve states add 144 readbacks and 72
+rows, for totals of 212/96/8. Two private PlaySettings/Jump J seed Saves, default
+display, content, captured resources, caller inputs and RNG remain intact.
+There are zero local, Player, Level, StateContext, input or time updates.
+All 22 shared artifacts, including eight PPMs, match byte for byte. Root
+contact-sheet inspection and twelve frozen source/support hashes reconcile.
+Receipts live under `out/validation/crossfeed-20261020/cursor-material-colour-v1/`.
+No active-story interaction, physical/global input, human readability, listening
+or performance acceptance is claimed. Further colour work remains open.
 
 Reveal ink/paper/shade increment (2026-10-20), **verified**:
 exact paths 27-29 are `presentation.opening.reveal_art.ink`, `.paper` and

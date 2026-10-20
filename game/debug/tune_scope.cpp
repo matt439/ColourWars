@@ -77,6 +77,10 @@ namespace
 		{ "presentation.opening.reveal_art.ink", TuneScope::live },
 		{ "presentation.opening.reveal_art.paper", TuneScope::live },
 		{ "presentation.opening.reveal_art.shade", TuneScope::live },
+		// ScreenCursor reads the remaining borrowed arrow materials on every
+		// draw; ink/fill, click inputs and captured sheet/frame stay intact.
+		{ "presentation.opening.cursor_art.shade", TuneScope::live },
+		{ "presentation.opening.cursor_art.shadow", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a
