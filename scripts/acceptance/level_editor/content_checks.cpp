@@ -92,7 +92,7 @@ namespace level_editor_acceptance
             catalog.sound_effects.at("paint_exe")->contains("music.end_sting.close_quarters"),
             "Catalog lacks paint_exe music effects");
 
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course" })
+        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed" })
         {
             LevelDocument document;
             document.load(content / "levels" / (std::string(name) + ".json"));

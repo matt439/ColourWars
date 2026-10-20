@@ -149,8 +149,10 @@ Relevant implementation references:
 
 ## Development order (2026-10-17)
 
-The author set the order of the remaining work. Each phase starts when the author
-accepts the preceding phase for the current development stage. A style lock is a
+The author set the order of the remaining work and clarified the map / tuning
+sequence on 2026-10-20. The completed art-stage approval remains in force; the
+research, new-map implementation and tuning can proceed without another
+approval gate. A style lock is a
 working baseline for the next iteration, not a permanent freeze on art or tuning.
 
 1. **Establish the gameplay art style (approved for this stage, 2026-10-20):**
@@ -158,18 +160,18 @@ working baseline for the next iteration, not a permanent freeze on art or tuning
    material, prop and background kit (`POL#9`), judged in the current arenas.
    The author has seen and approved the implemented treatment for this early
    development stage, with the explicit qualification that nothing is final.
-2. **Improve the level, then tune movement, then iterate (clarified 2026-10-20).**
-   First improve the Close Quarters layout (`POL#17`) using the current movement
-   and weapon values: routes, spawns, contested space, bypass and paint budget.
-   Once that initial pass is playable, tune movement (`POL#3`) against the
-   improved arena and the Movement Course. Then make small level and movement
-   adjustments in response to play observations. A playable first level pass
-   opens movement tuning; reference-arena acceptance follows the iterative work.
-   Exercise all five tools during blockout and tune their range, rate, damage,
-   paint output and supply (`POL#27`) as the layout and movement settle, against
-   §3's weapon-role and fairness requirements. Fit the kit as the layout settles,
-   then apply the process to the other arenas (`POL#21`). All values remain
-   provisional throughout development.
+2. **Research, create a new map, then tune movement and weapons together.**
+   Record primary-source comparisons, concrete level examples and transfer
+   limits before choosing values ([research](level-design-research.md)). Create
+   an original new map (`POL#17`) with the current movement and weapon baseline;
+   refining the preserved CQ draft does not replace this deliverable. Measure
+   intended routes, score geography, spawn approaches, firing breaks and panes.
+   Once it is playable, tune movement (`POL#3`) and all five tools (`POL#27`)
+   together against that map and Movement Course: scale, exposure, projectile
+   speeds/ranges/arcs, cadence, painting and recovery. Iterate geometry when
+   observations identify a layout issue. Fit the approved kit and inspect
+   1-4P/heavy-paint composition. Reference-arena acceptance follows actual play;
+   then apply the process to the other arenas (`POL#21`). Values remain provisional.
 
 UI artwork follows the gameplay style, as before. Audio, release and engine
 work are outside this sequence and keep their own rows.
@@ -178,10 +180,9 @@ work are outside this sequence and keep their own rows.
 tools (`POL#7`), player/shot cues (`POL#14`) and environment kit (`POL#9`) for this
 stage. Their current-arena review rows are complete. The small-view treatment,
 static landmarks and retained parallax comparison are implemented; shipped
-backdrops remain static. This approval opens the Close Quarters level pass
-(`POL#17`), followed by movement tuning and small iterative level/movement
-adjustments; weapon tuning joins that iteration as needed (`POL#3`, `POL#27`). Re-check the
-treatment in CQ's new composition during that work and the reference-match
+backdrops remain static. The latest sequence opens the researched new-map pass
+(`POL#17`), followed by coupled movement / weapon tuning (`POL#3`, `POL#27`). Re-check the
+treatment in the new composition during that work and the reference-match
 finish review (`POL#24`); future iteration remains expected. No new test matrix,
 device session or detailed observations are implied by this approval.
 
@@ -347,6 +348,13 @@ the distribution of paintable surface before producing finished arena artwork.
 Use simple geometry in the [existing editor](level-editor.md), save experimental
 copies, rebuild, and judge them in the game. The editor does not simulate play.
 
+The [Close Quarters first playable increment](polish-close-quarters.md) is a
+preserved earlier experiment with driven-route and exposed-paint evidence.
+The author's clarified deliverable is an original **new map** informed by
+[research](level-design-research.md), followed by coupled movement / weapon
+tuning. Passing CQ routes do not establish suitable spacing, density, inputs
+or weapon scale. Attended matches and reference-arena acceptance remain open.
+
 ### Design requirements
 
 | Area | Requirement and how to judge it |
@@ -377,17 +385,16 @@ maps already provide them. All three retain the painted-surface match rules.
 | King of the Hill | A central elevated structure approached from both sides and more than one height. High-ground control trades off against lower paint routes and flank exposure. The name does not introduce a hill-scoring mode. | A printworks or workshop tower: supports, gantries, stairs represented by supported geometry, hanging signs, skylights and distant roof structures. |
 | Turbulence | Offset platforms and crossing routes that reward movement and repositioning. Mix short engagements with exposed crossings and recoverable lower routes. | An industrial loading yard: ducts, vents, stacked supplies, overhead structures, distant machinery and layered sky. Decorative machinery does not imply new wind or hazard mechanics. |
 
-Begin with one Close Quarters blockout. Iterate it until actual two- and
-four-player matches support its route and pacing goals, then establish blockouts
-for the other two identities. Use supported structures, platforms, ramps and
+These briefs predate the author's research-first / new-map clarification.
+Preserve the existing maps and CQ draft; establish the original new map first.
+Iterate until actual two- and four-player matches support the reference arena's
+route and pacing goals, then revisit these other identities. Use supported structures, platforms, ramps and
 visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 
-The first pass improves the layout using current movement and weapon values:
-connected rooms, a central contest, useful bypass, sheltered spawn approaches
-and an exposed-paint budget by region. Check the routes against the measured
-current movement envelope. Then tune movement on the improved layout and make
-small adjustments to geometry and movement as play exposes specific issues.
-Exercise weapon roles throughout and tune them as the layout and movement settle.
+The first new-map pass uses current movement and weapon values. Define required,
+optional and recovery routes independently from their input families. Reconcile
+paint by region and face direction, and measure real firing / escape windows.
+Then tune movement and all five weapons together as play exposes specific issues.
 
 **Exit condition:** the reference blockout has reachable intended routes, usable
 spawns, contestable paint distribution and useful roles for all five weapons.

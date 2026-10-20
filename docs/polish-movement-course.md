@@ -221,10 +221,11 @@ The author's first `POL#3` session, on keyboard and mouse: **the jump is a bit t
 floaty, and it goes too high.** Braking, aim and the other initial decisions above
 drew no comment. **Nothing is locked in from this:** jump constants depend on
 level design and art, so they stay provisional and are retuned as those develop.
-The author clarified the order on 2026-10-20: improve the Close Quarters layout
-(`POL#17`) using the current movement first, then tune movement against the
-improved level and this course, then make small adjustments to level and movement.
-Weapon tuning (`POL#27`) follows as that iteration exposes needs. The current
+The author clarified the order on 2026-10-20: research comparable combat levels,
+create an original new map (`POL#17`) using the current values, then tune movement
+and all five weapons together (`POL#3`, `POL#27`) against that map and this course.
+The [research criteria](level-design-research.md) and [Crossfeed brief](polish-crossfeed.md)
+own that comparison. The CQ experiment is preserved. The current
 gameplay style is approved for this stage; movement values and art remain open to iteration
 ([development order](polish-plan.md#development-order-2026-10-17)).
 

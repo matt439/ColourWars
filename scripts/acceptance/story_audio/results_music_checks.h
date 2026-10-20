@@ -452,17 +452,31 @@ namespace
 	{
 		const int original_music = world.preferences.music_volume;
 		const int original_sfx = world.preferences.sfx_volume;
-		for (const char* stage_name : { "close_quarters", "king_of_the_hill", "turbulence" })
+		struct ArenaSounds
 		{
-			const LevelLoadedInfo* stage = world.levels.get(stage_name);
-			const std::string expected = std::string("music.end_sting.") + stage_name;
+			const char* stage;
+			const char* music;
+			const char* ending_sting;
+		};
+		const ArenaSounds arenas[]{
+			{ "close_quarters", "music.close_quarters", "music.end_sting.close_quarters" },
+			{ "king_of_the_hill", "music.king_of_the_hill", "music.end_sting.king_of_the_hill" },
+			{ "turbulence", "music.turbulence", "music.end_sting.turbulence" },
+			{ "crossfeed", "music.close_quarters", "music.end_sting.close_quarters" }
+		};
+		for (const ArenaSounds& arena : arenas)
+		{
+			const LevelLoadedInfo* stage = world.levels.get(arena.stage);
+			const std::string expected = arena.ending_sting;
+			require(stage->has_music() && stage->music_name() == arena.music,
+				"Arena music does not match its accepted cue binding");
 			require(stage->has_end_sting() && stage->end_sting_name() == expected,
-				"Arena ending sting does not match its accepted stage cadence");
+				"Arena ending sting does not match its accepted cue binding");
 			for (const int players : { 1, 2, 4 })
 			{
 				world.preferences.music_volume = players == 1 ? 0 : 40;
 				world.preferences.sfx_volume = 0;
-				world.build(OpeningMode::off, players, 0.25f, stage_name);
+				world.build(OpeningMode::off, players, 0.25f, arena.stage);
 				world.level->update(world.idle, 0.0f);
 				world.level->update(world.idle, -1.0f);
 				require(world.plays(expected) == 0, "Construction or frozen countdown played an ending sting");
@@ -472,10 +486,10 @@ namespace
 				require(world.plays(expected) == 1 && world.state(expected) == SoundState::playing,
 					"Time up missed the ending sting or duplicated it per player");
 				world.volume_is(expected, stage->end_sting_volume() * world.preferences.music_gain());
-				for (const char* other : { "close_quarters", "king_of_the_hill", "turbulence" })
+				for (const ArenaSounds& other : arenas)
 				{
-					if (stage_name == std::string(other)) { continue; }
-					require(world.plays(std::string("music.end_sting.") + other) == 0,
+					if (expected == other.ending_sting) { continue; }
+					require(world.plays(other.ending_sting) == 0,
 						"Time up played a different arena's ending sting");
 				}
 				world.level->update(world.idle, 0.0f);
@@ -498,7 +512,7 @@ namespace
 				world.level.reset();
 				require(world.state(expected) == SoundState::stopped, "Level teardown left an ending sting alive");
 			}
-			world.build(OpeningMode::off, 2, 0.25f, stage_name);
+			world.build(OpeningMode::off, 2, 0.25f, arena.stage);
 			world.until([&] { return world.level->state() == LevelState::zoom_out; });
 			world.level.reset();
 			require(world.state(expected) == SoundState::stopped,
@@ -509,9 +523,9 @@ namespace
 			"The deliberately silent Movement Course acquired music or an ending sting");
 		world.build(OpeningMode::off, 4, 0.25f, "movement_course");
 		world.until([&] { return world.level->state() == LevelState::finished; });
-		for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence" })
+		for (const ArenaSounds& arena : arenas)
 		{
-			require(world.plays(std::string("music.end_sting.") + stage) == 0,
+			require(world.plays(arena.ending_sting) == 0,
 				"The silent Movement Course emitted an arena ending sting");
 		}
 		world.level.reset();

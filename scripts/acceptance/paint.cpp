@@ -190,7 +190,7 @@ int main(int argc, char** argv)
         // exposed 200-unit top segments and two 50-unit sides, independent of
         // the 1,800-unit band buried beneath the next mountain block.
         const LevelObjectBuilder builder(&render, &audio, &preferences, &tuning.paint());
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course" })
+        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed" })
         {
             const JsonDocument level = read_json_file(
                 (content / "levels" / (std::string(name) + ".json")).string().c_str());

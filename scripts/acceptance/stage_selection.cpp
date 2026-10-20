@@ -56,6 +56,7 @@ namespace
 		const labrador::JsonValue assets = manifest.root().array("assets");
 		StageList stages;
 		bool course_found = false;
+		bool crossfeed_found = false;
 		size_t defaulted_arenas = 0;
 		for (size_t group = 0; group < assets.size(); ++group)
 		{
@@ -74,6 +75,11 @@ namespace
 					course_found = true;
 					require(!info.include_in_random(), "Movement Course must require an explicit stage choice");
 				}
+				if (name == "crossfeed")
+				{
+					crossfeed_found = true;
+					require(!info.include_in_random(), "Crossfeed must require an explicit stage choice while provisional");
+				}
 				const labrador::JsonDocument source = labrador::read_json_file(path.c_str());
 				if (!source.root().has("include_in_random"))
 				{
@@ -82,15 +88,16 @@ namespace
 				}
 			}
 		}
-		require(course_found && defaulted_arenas >= 3,
-			"Acceptance needs the explicit course and the three unchanged existing arenas");
+		require(course_found && crossfeed_found && defaulted_arenas >= 3,
+			"Acceptance needs the explicit course and Crossfeed plus the three unchanged existing arenas");
 		const std::vector<size_t> candidates = random_stage_indices(stages);
 		require(!candidates.empty(), "Shipped content needs eligible match arenas");
 		for (size_t draw = 0; draw < candidates.size(); ++draw)
 		{
 			const size_t index = random_stage_index(stages, draw);
 			require(index == candidates[draw] && stages[index].include_in_random &&
-				stages[index].name != "movement_course", "Shipped Random selection admitted the course");
+				stages[index].name != "movement_course" && stages[index].name != "crossfeed",
+				"Shipped Random selection admitted an explicit-only stage");
 		}
 		std::cout << "Shipped stage selection: " << stages.size() << " explicit stages; "
 			<< candidates.size() << " Random candidates.\n";
@@ -134,7 +141,7 @@ int main(int argc, char** argv)
 		check_mapping();
 		check_shipped_stages(argv[1]);
 		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
-		std::cout << "PASS stage selection: explicit course, eligible Random mapping, defaults and rejection guards.\n";
+		std::cout << "PASS stage selection: explicit course and Crossfeed, eligible Random mapping, defaults and rejection guards.\n";
 		return 0;
 	}
 	catch (const std::exception& error)

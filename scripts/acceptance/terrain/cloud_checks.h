@@ -24,10 +24,23 @@ namespace
 	void check_shipped_clouds(World& world, const LevelObjectBuilder& builder,
 		const JsonValue& decorations, const std::string& stage)
 	{
+		// Crossfeed deliberately uses a small static backdrop while its combat
+		// geometry is evaluated. The other arenas retain their drift contract.
+		const bool static_backdrop = stage == "crossfeed";
+		int expected_random = 0;
+		if (static_backdrop)
+		{
+			std::srand(8357);
+			expected_random = std::rand();
+			std::srand(8357);
+		}
 		world.preferences.reduce_effects = false;
 		const auto first = builder.build_non_collision_objects(decorations);
+		if (static_backdrop) { world.preferences.reduce_effects = true; }
 		const auto restarted = builder.build_non_collision_objects(decorations);
-		require(first.size() == decorations.size(), stage + ": decoration count changed");
+		if (static_backdrop) { world.preferences.reduce_effects = false; }
+		require(first.size() == decorations.size() && restarted.size() == decorations.size(),
+			stage + ": decoration count changed");
 		size_t clouds = 0;
 		bool varied_phase = false;
 		float first_phase = 0.0f;
@@ -36,6 +49,35 @@ namespace
 			const JsonValue json = decorations.at(index);
 			const bool is_cloud = json.string("frame_name").starts_with("cloud_");
 			auto* cloud = dynamic_cast<DriftingVisual*>(first[index].get());
+			if (static_backdrop)
+			{
+				const std::string where = stage + " " + json.string("name");
+				auto* visual = dynamic_cast<Visual*>(first[index].get());
+				auto* again = dynamic_cast<Visual*>(restarted[index].get());
+				require(json.string("type") == "Visual" && !json.has("drift") && cloud == nullptr &&
+					visual != nullptr && again != nullptr &&
+					dynamic_cast<DriftingVisual*>(restarted[index].get()) == nullptr,
+					where + ": static backdrop gained drift or another object type");
+				const RectangleF anchor = authored_rectangle(json);
+				same_rectangle(visual->bounds(), anchor, where + ": initial static bounds differ from authoring");
+				same_rectangle(again->bounds(), anchor, where + ": restart changed static bounds");
+				const RectangleF cull = visual->cull_bounds(1.0f);
+				for (const bool reduced : { false, true, false })
+				{
+					world.preferences.reduce_effects = reduced;
+					for (const float dt : { 0.0f, 1.0f / 60.0f, 1.0f, 60.0f, 3600.0f })
+					{
+						visual->update(dt);
+						again->update(dt * 2.0f);
+						require(visual->bounds() == anchor && again->bounds() == anchor &&
+							visual->cull_bounds(0.0f) == anchor && again->cull_bounds(0.0f) == anchor &&
+							visual->cull_bounds(1.0f) == cull && again->cull_bounds(1.0f) == cull,
+							where + ": time or Reduce effects changed exact static bounds/culling");
+					}
+				}
+				clouds += is_cloud ? 1 : 0;
+				continue;
+			}
 			if (!is_cloud)
 			{
 				require(cloud == nullptr && !json.has("drift"),
@@ -76,7 +118,17 @@ namespace
 				where + ": reduced cloud escaped its bounds");
 			world.preferences.reduce_effects = false;
 		}
-		require(clouds >= 4 && varied_phase, stage + ": needs several clouds with staggered phases");
+		if (static_backdrop)
+		{
+			require(clouds == 2, stage + ": static backdrop needs exactly two cloud Visuals");
+			require(std::rand() == expected_random,
+				stage + ": static backdrop construction/update consumed gameplay randomness");
+			world.preferences.reduce_effects = false;
+		}
+		else
+		{
+			require(clouds >= 4 && varied_phase, stage + ": needs several clouds with staggered phases");
+		}
 	}
 
 	void check_cloud_clock(World& world)

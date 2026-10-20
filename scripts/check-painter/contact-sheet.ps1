@@ -57,6 +57,8 @@ function Write-ContactSheet {
         $monitorCellHeight = 160
         foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File |
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
+                $_.Name -like 'hidden-inspection-cq-*-native.ppm' -or
+                $_.Name -like 'hidden-inspection-crossfeed-*-native.ppm' -or
                 $_.Name -like 'drift-*-detail.ppm' -or $_.Name -like 'miniature-terrain-*-detail.ppm' -or
                 $_.Name -like 'tune-colours-*-detail.ppm' -or $_.Name -like 'parallax-*.ppm' -or
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or

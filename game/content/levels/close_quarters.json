@@ -15,39 +15,39 @@
         "team_a":
         [
             {
-                "x": 10.0,
-                "y": 4870.0
+                "x": 30.0,
+                "y": 4880.0
             },
             {
-                "x": 72.0,
-                "y": 4870.0
+                "x": 120.0,
+                "y": 4880.0
             },
             {
-                "x": 134.0,
-                "y": 4870.0
+                "x": 210.0,
+                "y": 4880.0
             },
             {
-                "x": 196.0,
-                "y": 4800.0
+                "x": 300.0,
+                "y": 4880.0
             }
         ],
         "team_b":
         [
             {
-                "x": 5752.0,
-                "y": 4870.0
+                "x": 5918.0,
+                "y": 4880.0
             },
             {
-                "x": 5814.0,
-                "y": 4870.0
+                "x": 5828.0,
+                "y": 4880.0
             },
             {
-                "x": 5876.0,
-                "y": 4870.0
+                "x": 5738.0,
+                "y": 4880.0
             },
             {
-                "x": 5938.0,
-                "y": 4870.0
+                "x": 5648.0,
+                "y": 4880.0
             }
         ]
     },
@@ -63,23 +63,23 @@
         "camera_bounds":
         {
             "x": -50.0,
-            "y": -50.0,
+            "y": 4300.0,
             "width": 6100.0,
-            "height": 5350.0
+            "height": 1050.0
         },
         "zoom_out_start_bounds":
         {
             "x": 0.0,
-            "y": 4000.0,
+            "y": 4300.0,
             "width": 1920.0,
             "height": 1080.0
         },
         "zoom_out_finish_bounds":
         {
-            "x": 1300.0,
-            "y": 4400.0,
-            "width": 3400.0,
-            "height": 800.0
+            "x": 0.0,
+            "y": 4300.0,
+            "width": 6000.0,
+            "height": 1050.0
         }
     },
     "collision_objects":
@@ -132,112 +132,8 @@
             "collision_type": "STRUCTURE",
             "colour": "808080"
         },
-
-
-
-
-
         {
-            "name": "spawn_a_floor",
-            "type": "Structure",
-            "material": "ground",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle":
-            {
-                "x": 0.0,
-                "y": 5000.0,
-                "width": 300.0,
-                "height": 50.0
-            },
-            "collision_type": "STRUCTURE",
-            "colour": "808080"
-        },
-        {
-            "name": "spawn_a_wall",
-            "type": "Structure",
-            "material": "ground",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle":
-            {
-                "x": 300.0,
-                "y": 4855.0,
-                "width": 50.0,
-                "height": 195.0
-            },
-            "collision_type": "STRUCTURE",
-            "colour": "808080"
-        },
-        {
-            "name": "spawn_a_ceiling",
-            "type": "Structure",
-            "material": "ruler",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle":
-            {
-                "x": 0.0,
-                "y": 4855.0,
-                "width": 300.0,
-                "height": 10.0
-            },
-            "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "A0A0A0"
-        },
-        {
-            "name": "spawn_b_floor",
-            "type": "Structure",
-            "material": "ground",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle":
-            {
-                "x": 5700.0,
-                "y": 5000.0,
-                "width": 300.0,
-                "height": 50.0
-            },
-            "collision_type": "STRUCTURE",
-            "colour": "808080"
-        },
-        {
-            "name": "spawn_b_wall",
-            "type": "Structure",
-            "material": "ground",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle":
-            {
-                "x": 5650.0,
-                "y": 4855.0,
-                "width": 50.0,
-                "height": 195.0
-            },
-            "collision_type": "STRUCTURE",
-            "colour": "808080"
-        },
-        {
-            "name": "spawn_a_ceiling",
-            "type": "Structure",
-            "material": "ruler",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle":
-            {
-                "x": 5700.0,
-                "y": 4855.0,
-                "width": 300.0,
-                "height": 10.0
-            },
-            "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "A0A0A0"
-        },
-
-
-
-        {
-            "name": "boundary_floor",
+            "name": "boundary_floor_left",
             "type": "Structure",
             "material": "ground",
             "sheet_name": "sprite_sheet_1",
@@ -246,16 +142,275 @@
             {
                 "x": 0.0,
                 "y": 5250.0,
-                "width": 6000.0,
+                "width": 1500.0,
                 "height": 1000.0
             },
             "collision_type": "STRUCTURE",
             "colour": "808080"
         },
-
-
-
-
+        {
+            "name": "boundary_floor",
+            "type": "StructurePaintable",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 1500.0,
+                "y": 5250.0,
+                "width": 3000.0,
+                "height": 1000.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces":
+            {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            }
+        },
+        {
+            "name": "boundary_floor_right",
+            "type": "Structure",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 4500.0,
+                "y": 5250.0,
+                "width": 1500.0,
+                "height": 1000.0
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "808080"
+        },
+        {
+            "name": "spawn_a_floor",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 0.0,
+                "y": 5000.0,
+                "width": 850.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "spawn_b_floor",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 5150.0,
+                "y": 5000.0,
+                "width": 850.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "spawn_a_roof",
+            "type": "Structure",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 0.0,
+                "y": 4700.0,
+                "width": 400.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "808080"
+        },
+        {
+            "name": "spawn_b_roof",
+            "type": "Structure",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 5600.0,
+                "y": 4700.0,
+                "width": 400.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "808080"
+        },
+        {
+            "name": "spawn_a_baffle",
+            "type": "Structure",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 850.0,
+                "y": 4740.0,
+                "width": 100.0,
+                "height": 300.0
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "808080"
+        },
+        {
+            "name": "spawn_b_baffle",
+            "type": "Structure",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 5050.0,
+                "y": 4740.0,
+                "width": 100.0,
+                "height": 300.0
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "808080"
+        },
+        {
+            "name": "spawn_a_inner_step",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 650.0,
+                "y": 4860.0,
+                "width": 200.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "spawn_b_inner_step",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 5150.0,
+                "y": 4860.0,
+                "width": 200.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "spawn_a_outer_step",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 950.0,
+                "y": 4860.0,
+                "width": 200.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "spawn_b_outer_step",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 4850.0,
+                "y": 4860.0,
+                "width": 200.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "spawn_a_recovery",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 350.0,
+                "y": 5140.0,
+                "width": 300.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "spawn_b_recovery",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 5350.0,
+                "y": 5140.0,
+                "width": 300.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "approach_a_bridge",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 1150.0,
+                "y": 4930.0,
+                "width": 350.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
+        {
+            "name": "approach_b_bridge",
+            "type": "Structure",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 4500.0,
+                "y": 4930.0,
+                "width": 350.0,
+                "height": 10.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "A0A0A0"
+        },
         {
             "name": "lower_paint",
             "type": "StructurePaintable",
@@ -265,19 +420,19 @@
             "rectangle":
             {
                 "x": 1500.0,
-                "y": 4950.0,
+                "y": 4970.0,
                 "width": 3000.0,
                 "height": 50.0
             },
             "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
             "paintable_faces":
             {
-                "left": false,
+                "left": true,
                 "top": true,
-                "right": false,
+                "right": true,
                 "bottom": true
-            },
-            "colour": "GAINSBORO"
+            }
         },
         {
             "name": "upper_paint",
@@ -287,20 +442,43 @@
             "frame_name": "square_white_4",
             "rectangle":
             {
-                "x": 2625.0,
-                "y": 4600.0,
-                "width": 750.0,
+                "x": 2500.0,
+                "y": 4690.0,
+                "width": 1000.0,
                 "height": 50.0
             },
             "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
             "paintable_faces":
             {
                 "left": true,
                 "top": true,
                 "right": true,
                 "bottom": true
+            }
+        },
+        {
+            "name": "centre_cover",
+            "type": "StructurePaintable",
+            "material": "eraser",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2880.0,
+                "y": 4890.0,
+                "width": 240.0,
+                "height": 80.0
             },
-            "colour": "GAINSBORO"
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
         },
         {
             "name": "lower_left_platform",
@@ -310,10 +488,10 @@
             "frame_name": "square_white_4",
             "rectangle":
             {
-                "x": 1225.0,
-                "y": 5050.0,
-                "width": 150.0,
-                "height": 25.0
+                "x": 1200.0,
+                "y": 5110.0,
+                "width": 300.0,
+                "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
             "colour": "A0A0A0"
@@ -326,10 +504,10 @@
             "frame_name": "square_white_4",
             "rectangle":
             {
-                "x": 4625.0,
-                "y": 5050.0,
-                "width": 150.0,
-                "height": 25.0
+                "x": 4500.0,
+                "y": 5110.0,
+                "width": 300.0,
+                "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
             "colour": "A0A0A0"
@@ -342,10 +520,10 @@
             "frame_name": "square_white_4",
             "rectangle":
             {
-                "x": 2300.0,
-                "y": 4750.0,
-                "width": 200.0,
-                "height": 25.0
+                "x": 2200.0,
+                "y": 4830.0,
+                "width": 300.0,
+                "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
             "colour": "A0A0A0"
@@ -359,54 +537,41 @@
             "rectangle":
             {
                 "x": 3500.0,
-                "y": 4750.0,
-                "width": 200.0,
-                "height": 25.0
-            },
-            "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "A0A0A0"
-        },
-
-
-
-        {
-            "name": "left_fence",
-            "type": "Structure",
-            "material": "ruler",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle":
-            {
-                "x": 1485.0,
-                "y": 4350.0,
-                "width": 15.0,
-                "height": 900.0
-            },
-            "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "A0A0A0"
-        },
-        {
-            "name": "right_fence",
-            "type": "Structure",
-            "material": "ruler",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle":
-            {
-                "x": 4500.0,
-                "y": 4350.0,
-                "width": 15.0,
-                "height": 900.0
+                "y": 4830.0,
+                "width": 300.0,
+                "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
             "colour": "A0A0A0"
         }
-
-
-
-
-
-
+    ],
+    "stations":
+    [
+        {
+            "name": "main_contest",
+            "x": 2694.0,
+            "y": 4850.0
+        },
+        {
+            "name": "lower_bypass",
+            "x": 2974.0,
+            "y": 5130.0
+        },
+        {
+            "name": "upper_crossing",
+            "x": 2974.0,
+            "y": 4570.0
+        },
+        {
+            "name": "home_a_exit",
+            "x": 974.0,
+            "y": 4740.0
+        },
+        {
+            "name": "home_b_exit",
+            "x": 4974.0,
+            "y": 4740.0
+        }
     ],
     "non_collision_objects":
     [
@@ -662,7 +827,7 @@
             "rectangle":
             {
                 "x": 1792.0,
-                "y": 4632.0,
+                "y": 4652.0,
                 "width": 256.0,
                 "height": 320.0
             },
@@ -676,7 +841,7 @@
             "rectangle":
             {
                 "x": 3952.0,
-                "y": 4792.0,
+                "y": 4812.0,
                 "width": 256.0,
                 "height": 160.0
             },

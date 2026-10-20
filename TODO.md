@@ -18,9 +18,9 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 **Order** ([research and design criteria](docs/level-design-research.md)):
 1. **Research before values:** use the recorded primary sources, concrete level examples and
    ColourWars-specific hypotheses to define required, optional and recovery routes.
-2. **Create a new map (`POL#17`):** author and register an original layout with the current values;
-   measure traversal, exposed paint, spawn approaches, firing breaks and individual camera panes.
-   Refining the preserved CQ draft does not replace this deliverable.
+2. **Qualify the new map (`POL#17`):** use the original [Crossfeed baseline](docs/polish-crossfeed.md)
+   and its measured routes, paint budget, spawn approaches, firing breaks and individual panes
+   to direct the coupled pass. Preserve the earlier CQ experiment as a comparison.
 3. **Tune movement and weapons together (`POL#3`, `POL#27`):** compare the new map and Movement Course,
    including all five tools' range, cadence, arcs, painting and recovery. Iterate the map when an
    observation concerns geometry. Fit the approved kit and re-check 1-4P and heavy paint.
@@ -67,7 +67,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | BLOCKED | MED | M | After the original new map (`POL#17`) is playable, compare movement candidates there and on Movement Course together with all five weapons (`POL#27`). Tune the floaty/high jump against intended inputs, camera warning and tool flight. Values stay provisional; pad half with `ROAD#2`. [Research](docs/level-design-research.md), [playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
+| `POL#3` | OPEN | MED | M | Compare movement candidates on the playable Crossfeed baseline and Movement Course together with all five weapons (`POL#27`). Tune the floaty/high jump against intended inputs, camera warning and tool flight. Values stay provisional; pad half with `ROAD#2`. [Research](docs/level-design-research.md), [playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -78,8 +78,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Create an original new map from the [research criteria](docs/level-design-research.md); preserve existing maps and the CQ experiment. Qualify directed routes, paint budget, spawn pressure, return pacing, all five tools and 1-4P/heavy-paint panes. Then iterate with movement/weapon tuning; human reference-arena acceptance remains open. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
-| `POL#27` | BLOCKED | HIGH | L | After the original new map (`POL#17`) is playable, tune all five tools with movement (`POL#3`): measured range, cadence, damage, arcs, paint output, supply and exposure at that map's scale. Values stay provisional. [Research](docs/level-design-research.md), [§3](docs/polish-plan.md#design-requirements). |
+| `POL#17` | OPEN | HIGH | XL | Qualify the original [Crossfeed map](docs/polish-crossfeed.md) against the [research criteria](docs/level-design-research.md); preserve existing maps and the CQ experiment. Iterate directed routes, spawn pressure, return pacing, all five tools and 1-4P/heavy-paint panes with the coupled tuning pass. Human reference-arena acceptance remains open. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
+| `POL#27` | OPEN | HIGH | L | Tune all five tools with movement (`POL#3`) on the playable Crossfeed baseline: measured range, cadence, damage, arcs, paint output, supply and exposure at that map's scale. Values stay provisional. [Research](docs/level-design-research.md), [§3](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after reference-arena acceptance; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 

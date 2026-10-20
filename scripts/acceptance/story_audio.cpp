@@ -159,7 +159,7 @@ namespace
 				&this->device, bank, std::move(effects)));
 			this->tuning.validate_resources(this->render, this->audio);
 			this->tuning.validate_match_sounds(this->render, this->audio, "paint_exe");
-			for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course" })
+			for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed" })
 			{
 				auto info = std::make_unique<LevelLoadedInfo>(
 					(content / "levels" / (std::string(stage) + ".json")).string().c_str());

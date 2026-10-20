@@ -421,6 +421,32 @@ elseif ($LandmarkOnly) {
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.checks = 'Exactly48 clean/heavy paired comparisons /96 primary coverage states across4 arenas x3 palettes x1P/4P pane layouts x720/1080. Heavy coverage is actual alternating-team projectile contact on every StructurePaintable, measured above99percent; each prop has positive surviving pixels. Literal native placement/WHITE/Visual/nonpaintable checks and raw atlas-source draws independently replace only the two scenery calls before actual terrain/paint, proving pixels, occlusion order and culling. Frozen drawing preserves geometry/paint attribution/RNG and native resize returns. Supplemental64 native clipped-edge cases compare actual Scene and miniature traversal to unculled raw atlas, with static update/Reduce effects silhouette invariance. Eight actual StagePreview size cases compare independently specified physical panes/cameras;24 actual Level monitor-preview/overview size cases compare identically seeded twins with a private stage copy omitting exactly the two props, preserving gameplay observations and frozen Debug replay fingerprints. Solo bypasses the monitor. All reference/repeat readbacks and paired story ticks are counted separately. Exactly8 compact native clean/heavy crops total,48-row primary CSV and bounded integration CSV; no broad older terrain matrix, full match gameplay route, human readability, listening, physical-device or performance acceptance.'
 }
+  elseif ($CrossfeedOnly) {
+      $result.scope = 'crossfeed-only'
+      $result.stage = 'crossfeed'
+      $result.player_counts = @(1, 2, 3, 4)
+      $result.palettes = @('blue_orange')
+      $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket')
+      $result.resolutions = @('1280x720')
+      $result.actions = @('clean-heavy-approach', 'moving-camera-context', 'home-exits', 'runtime-overview', 'actual-stage-preview', 'frozen-state-rng')
+      $result.input_slots = @(3, 1, 2, 0)
+      $result.inputs = 'Actual Level/Player fixtures constructed through public builders; controlled initial stations and direct projectile heavy-paint contacts are labeled separately from real scripted movement. Ordinary per-slot PlayerInputData; no physical-input claim.'
+      foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+      $result.checks = 'Twenty-one full native720p frames, 51 pane crops/CSV rows and 43 readbacks: clean/heavy 1/2/3/4-player approaches before/after movement, clean/heavy four-player home exits, actual solo runtime overviews and actual StagePreview. Measured heavy ownership exceeds99percent initially. Frozen pixels/public state/RNG and Debug replay fingerprint remain unchanged by drawing. Target visibility is recorded as an observation, not asserted human readability. Route traversal and weapon flight are separately qualified by CPU acceptance; attended matches, balance, physical pads and listening remain open.'
+  }
+  elseif ($CqBlockoutOnly) {
+    $result.scope = 'cq-blockout-only'
+    $result.stage = 'close_quarters'
+    $result.player_counts = @(1, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('main-contest', 'lower-bypass', 'distributed-four-pane', 'runtime-overview', 'actual-stage-preview', 'frozen-state-rng')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result.inputs = 'Actual builder-owned CQ Levels with players deliberately placed on authored route surfaces for composition inspection; neutral scripted per-slot input and ordinary GamepadReader. Route traversal is checked separately by cq_blockout CPU acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Five bounded native720p frames: solo main and lower routes, four mixed-tool players distributed across the loop and home, actual short-match runtime overview, and actual StagePreview miniature. Full frames and unscaled native crops accompany camera/position CSV receipts. Repeated frozen rendering preserves pixels, public simulation, draw RNG and Debug replay fingerprint. This establishes no attended play, human readability, physical-pad, listening or competitive balance acceptance.'
+}
 elseif ($MiniatureTerrainOnly) {
     $result.scope = 'miniature-terrain-only'
     $result.Remove('stage')

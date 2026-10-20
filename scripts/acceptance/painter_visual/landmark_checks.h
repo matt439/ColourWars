@@ -8,7 +8,7 @@ struct LandmarkStage
 };
 
 const std::array<LandmarkStage, 4> landmark_stages{{
-    { "close_quarters", { RectangleF(1792, 4632, 256, 320), RectangleF(3952, 4792, 256, 160) } },
+    { "close_quarters", { RectangleF(1792, 4652, 256, 320), RectangleF(3952, 4812, 256, 160) } },
     { "king_of_the_hill", { RectangleF(2376, 4356, 256, 320), RectangleF(3368, 4516, 256, 160) } },
     { "turbulence", { RectangleF(1488, 5016, 256, 320), RectangleF(4256, 5176, 256, 160) } },
     { "movement_course", { RectangleF(1088, 680, 256, 320), RectangleF(5040, 840, 256, 160) } }
