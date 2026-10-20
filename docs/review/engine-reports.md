@@ -130,9 +130,9 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 16 | Windowed Apply shows a deliberately hidden window | standalone `hidden_apply_exhibit.cpp` and the client Apply guard | local unfiled bug draft - master checked 2026-10-20; Debug/Release reproduce |
 | 17 | DPI-correct client-size conversion for an opted-in application | existing awareness manifest and standalone hidden `window-dpi/` baseline/arithmetic fixture | local unfiled request - master checked 2026-10-20; Debug/Release 96-DPI baselines pass; scaled/transition acceptance remains open |
-| 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `level_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
+| 18 | Independent Label visibility convenience | supported zero-tint/empty-text alternatives and standalone `label-visibility/` null recording | local unfiled draft - master checked 2026-10-20; null Debug/Release verified; order/retirement/font questions stay separate |
 | 19 | No public later-show convenience for an Application initialized hidden | exact standalone hidden-creation control and `game/main.cpp` startup order | local unfiled request - master checked 2026-10-20; four hidden Debug/Release cases pass; first present remains open |
-| 20 | Scene drawing gives client objects no view context | `draw_miniature_view`, `Level::draw_miniature_world`, the borrowed scenery mirror and `Structure::draw_miniature` | draft - source audit against the pin only; recheck upstream before filing |
+| 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
 | 21 | Digital action evaluation remains client code | runtime saved Jump mapping and the standalone `action_evaluation.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 
 Nothing else is outstanding, on either side, beyond reports 6 and 9-21 below. The fullscreen workaround the
@@ -771,69 +771,51 @@ gate. No engine change, first-frame closure or public issue was made.
 
 ## 20. Scene drawing gives client objects no view context - **draft with miniature-terrain exhibit**
 
-**Exhibit:** [draw_miniature_view](../../game/objects/miniature_view.cpp),
-`Level::draw_miniature_world` and its borrowed scenery mirror in
-[level_draw.cpp](../../game/objects/level_draw.cpp), with the admissions in
-[LevelBuilder](../../game/objects/level_builder.cpp) and the explicit-camera
-`draw_miniature` methods in [Structure](../../game/objects/structure.cpp) and
-[StructurePaintable](../../game/objects/structure_paintable.cpp).
-[StagePreview](../../game/states/stage_preview.cpp) uses the same object seam
-for its separately owned preview objects.
+**View-context request prepared 2026-10-20.** The sanitized
+[request](../engine-reports/view-context.md) and standalone
+[synthetic null-renderer illustration](../../scripts/engine-reports/view-context/view_context_recording.cpp)
+are ready for review and remain **unfiled**. Fresh upstream master was fetched
+at 19:34:53 UTC as `52e809a5a0229d37db4373faa7853df4c861a310`; the checked
+worktree matched it. The exact 21-translation-unit CMake consumer passed MSVC
+C++20 `/W4 /WX` Debug and Release builds/runs, both exit0 with empty stderr
+and ten exact expected output lines.
 
-### What happens
+### Source evidence and client workaround
 
-**Source audit against the pinned `52e809a` only, 2026-10-18.** This is not a
-fresh check of upstream master, a filed report or a claim about an unexamined
-engine revision.
+`GameObject::draw(DrawList&)` has no active view index or context parameter.
+DrawList exposes camera/viewport setters but no current-value readers. A
+caller can already query `Scene::view(index)`, and `cull_bounds` already gets
+inverse zoom for pure conservative extent. Neither gives the normal draw its
+active range context; culling must not become a mutable handoff between views.
 
-The game wants its small monitor picture and arena preview to retain readable
-terrain edges and ruler marks. Those are client art choices. Their drawing
-needs the current view's camera to project authored geometry into view pixels;
-ordinary gameplay keeps its existing terrain drawing.
+The client miniature path in `draw_miniature_view` and
+`Level::draw_miniature_world` retains explicit camera/viewport values, borrowed
+scenery admissions and a repeated cull/draw walk. Structure material stays
+before its paint and later actors. Its projected strokes and ruler-detail
+selection are client art policy. ViewOverlay runs after the world, so it is
+not an equivalent dispatch slot for replacing terrain before later objects.
 
-`GameObject::draw(DrawList&)` receives no camera or viewport. `DrawList` has
-`set_camera` and `set_viewport`, but no corresponding read access. `Scene`
-knows both values while it culls and draws each object; its only client draw
-callback, `ViewOverlay`, runs after the entire world. That callback cannot
-replace a structure's terrain drawing before that structure's paint and the
-later players and projectiles. Drawing corrected terrain over the completed
-world would change which object covers which.
+The fixture demonstrates an existing explicit caller-owned context helper:
+an ordinary world rectangle records 16x1 and 4x0 at the selected views; a
+client minimum-height policy records 16x1 and 4x1. Local coordinates, viewport
+origin, caller-state restoration, unchanged object bounds and existing cull
+allowance are checked. The helper is client code, not an invented engine API.
+Missing read access is public-source evidence, not a runtime API-absence test.
 
-The client therefore repeats the miniature world's draw walk. It mirrors every
-non-collision admission into a borrowed list, including shadows, idle drips and
-later debug labels, while Scene remains their owner. It repeats Scene's cull,
-scenery-before-collision order and renderer-view append arithmetic, dispatches
-structures through a separate camera-taking virtual, then draws the acting
-overlay. Paint stays immediately after its own structure's material. Normal
-gameplay still uses `Scene::draw` and its render workers.
+### Narrow ask and limits
 
-The collision half also relies on a fact weaker than an API contract.
-`Scene::collision_objects()` promises objects in "no particular order". At
-this pin, `end_tick()` rebuilds that span in the same order `draw_views()`
-walks. Retirement uses swap-and-pop, so this is the current render order, not
-stable insertion order. Matching the current implementation preserves the
-picture today, but the public span does not promise equivalence to Scene's
-future render traversal. A pin change requires checking that dependency along
-with the duplicated cull and append behavior.
+Let normal world drawing read or receive its current camera and viewport,
+while the client retains art policy. The exact accessor/context/dispatch
+shape is upstream's decision. The null fixture does not instantiate Scene or
+test ownership, culling, ordering, admission, retirement or render-worker
+fan-out. It records geometry, not pixels, readability or performance.
 
-### The ask, when it goes
-
-Provide a way for a client object's view-dependent drawing to receive or read
-its active camera and viewport while Scene retains ownership, culling, the
-ordered world walk and view fan-out. An equivalent client draw-dispatch seam
-inside that traversal would serve the same need. The terrain projection,
-minimum stroke size and choice of miniature views remain game policy; this
-does not ask the engine to implement the art or change a render backend.
-
-An answer should let this client delete its borrowed scenery mirror and
-repeated Scene draw walk, and remove the dependence on collision-span order
-as a substitute for a render traversal. It should also let camera-aware
-terrain stay in its existing position before its paint and later objects.
-
-**Status:** private, unfiled draft with a client exhibit; audited against the
-pin only. Prepare a minimal engine-focused report/reproducer under the approved
-scope above and perform a fresh upstream-master check before filing. No upstream
-query or publication was performed for this draft.
+Scene category order and the collision span's unspecified order remain
+separate contract concerns. A context API could enable this client's normal
+world-slot projection, but deleting every borrowed list or repeated traversal
+would need a separate integration check. Freshly fetch and recheck upstream
+master before any filing through the
+[publication gate](#publication-gate-engpublish).
 
 ---
 
