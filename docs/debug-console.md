@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These nineteen existing string fields are supported; numeric path
+**Colours.** These twenty existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -407,6 +407,7 @@ show the quoted JSON token.
 | `presentation.combat_feedback.keyline` | live | Outlines of existing hurt ticks and detached elimination fragments, on the next draw. |
 | `presentation.blocked_shot.highlight` | live | Stop ticks of existing blocked-shot cues, on the next draw. |
 | `presentation.blocked_shot.keyline` | live | Outlines of existing blocked-shot stop ticks and rebound beads, on the next draw. |
+| `presentation.idle_drip.keyline` | live | Outlines of existing attached beads and falling drops for Sprayer, Sniper and Bucket, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -448,6 +449,15 @@ their ticks/outlines while retaining the stored team-colour beads under the
 same fade. Sheet/frame capture, cue admission and geometry are unchanged.
 The pair's validation is recorded under
 [remaining live-tuning work](#remaining-live-tuning-work-dbg1).
+
+Idle-drip keyline is borrowed on every attached-bead and falling-drop draw.
+The common colour propagates into all five fixed tool records while only
+Sprayer, Sniper and Bucket remain enabled and receive Level drip objects.
+Editing it preserves those record addresses, tool geometry, bead/drop state,
+captured opaque team-paint interiors and captured sheet/frame bindings.
+Only the keyline is premultiplied; these drips have no event fade. Nonblack
+zero alpha removes the outline while retaining the paint interior. The common
+enabled flag and live Reduce effects preference still suppress drawing.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -1211,7 +1221,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the nineteen listed colour fields above are
+  and inserting keys in `tune.save`: the twenty listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1220,11 +1230,12 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Nineteen existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Twenty existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
-the blocked-shot highlight/keyline pair.
+the blocked-shot highlight/keyline pair and the common idle-drip keyline.
+Validation of the twentieth path is pending below.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1249,6 +1260,53 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Idle-drip keyline increment (2026-10-20), **verified**:
+the twentieth exact path, `presentation.idle_drip.keyline`, is live for existing
+attached beads and falling drops. The common colour reaches all five stable
+profile records; only Sprayer, Sniper and Bucket remain enabled and receive
+Level drips. Only the outline tint gains base-alpha premultiplication. There
+is no event fade, and captured opaque paint, sheet/frame, geometry and timing
+are unchanged.
+
+Both game/editor builds and all six focused `debug_console`, `idle_drip` and
+`menu_presentation` CPU cases pass across Debug/Release. Shared token/refusal,
+reset, exact LF/CRLF save/rebase, conflict/force and unrelated external-edit
+checks include the new field. Six preconstructed aged attached/falling effects
+retain public state and all five borrowed profile records across commands;
+an unrelated invalid Sniper interval rejects the complete merged candidate,
+including with force, without changing source/staged/live/ledger state.
+The initial Debug console test compilation found three shadowing locals under
+`/WX`. Only those test names/references changed; the original Debug game/editor
+build and idle-drip pass were retained, then failed/unfinished checks passed.
+The original failure and both source freezes remain alongside the recovery.
+
+`scripts/check-painter.ps1 -Preset <preset> -SkipBuild -IdleDripTuneColoursOnly`
+passes on its first execution in both presets. Shared evidence uses 46
+readbacks, ten CSV rows, eight 380x260 crops and fifteen local cosmetic advance
+calls. Independent raw rectangles/channels check six retained consumers across
+all three tools, opaque-default parity, straight-RGB and squared-base-alpha
+negative references, and nonblack zero alpha with all six opaque paint
+interiors retained. Enabled/Reduce Effects draws are blank; restoration returns
+the exact pixels, profile flags and public state. Frozen rendering preserves
+public timers/drops/bounds and global RNG. Private cosmetic-stream invariance
+is source-audited constness only, not an executed future-sequence proof.
+
+Debug adds nine actual tune/reset/save commands, 60 readbacks, twenty rows
+and fifteen local advances: totals of 106 readbacks, thirty rows, eight crops
+and thirty local advances. Exact one-token private save/rebase, saved-baseline
+reset and unchanged actual content/preferences/queued work pass; both private
+preference seed Saves succeed. Release remains consumer-only. Neither native
+scope updates a Level or StateContext.
+
+All 22 shared artifacts, including eight PPM crops and the guard CSV, match
+byte for byte between presets. The contact sheet was visually inspected and
+twelve frozen source hashes still match. Evidence is under
+`out/validation/crossfeed-20261020/idle-drip-colour-v1/`, especially
+`build-consumer-reconciliation.json`, `native/reconciliation.json` and
+`final-source-reconciliation.json`. No active-match route, physical/global
+input, listening, human readability or performance acceptance is claimed.
+`DBG#1` remains open beyond twenty audited fields.
 
 Blocked-shot colour increment (2026-10-20), **verified**:
 the eighteenth/nineteenth exact paths expose the existing highlight/keyline

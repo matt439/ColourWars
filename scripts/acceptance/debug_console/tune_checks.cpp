@@ -9,6 +9,7 @@
 #include "game/debug/tune_scope.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/combat_feedback.h"
+#include "game/objects/idle_drip.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/math/scalar.h"
 #include "engine/render/render_resources.h"
@@ -16,6 +17,7 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <memory>
 #include <process.h>
 
 // Live tuning commands: tune, tune.diff, tune.reset and tune.save on scratch
@@ -65,14 +67,14 @@ namespace debug_console_acceptance
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 19> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 20> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
-			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500" };
+			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
 			{ 53, 188, 225 }, { 34, 102, 204, 128 }, { 18, 52, 86 }, { 221, 238, 255 },
-			{ 115, 161, 194, 128 }, { 25, 184, 112, 0 }, { 194, 109, 58, 128 }, { 42, 128, 213, 0 } };
+			{ 115, 161, 194, 128 }, { 25, 184, 112, 0 }, { 194, 109, 58, 128 }, { 42, 128, 213, 0 }, { 147, 199, 77, 128 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -97,7 +99,7 @@ namespace debug_console_acceptance
 		}
 		for (const std::size_t index : { std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
 			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index,
-			blocked_highlight_colour_index, blocked_keyline_colour_index })
+			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -151,7 +153,8 @@ namespace debug_console_acceptance
 		for (const char* path : { colour_paths.front(), colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10],
 			colour_paths[11], colour_paths[12], colour_paths[identity_ink_colour_index], colour_paths[identity_background_colour_index],
 			colour_paths[combat_highlight_colour_index], colour_paths[combat_keyline_colour_index],
-			colour_paths[blocked_highlight_colour_index], colour_paths[blocked_keyline_colour_index] })
+			colour_paths[blocked_highlight_colour_index], colour_paths[blocked_keyline_colour_index],
+			colour_paths[idle_drip_keyline_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -178,7 +181,10 @@ namespace debug_console_acceptance
 			"presentation.combat_feedback.highlight_colour", "presentation.combat_feedback.keyline_extra",
 			"presentation.blocked_shot.sprite_sheet", "presentation.blocked_shot.fill_frame",
 			"presentation.blocked_shot.highlight.r", "presentation.blocked_shot.highlight_colour",
-			"presentation.blocked_shot.keyline_extra" })
+			"presentation.blocked_shot.keyline_extra", "presentation.idle_drip.sprite_sheet",
+			"presentation.idle_drip.fill_frame", "presentation.idle_drip.keyline.r",
+			"presentation.idle_drip.keyline_extra", "presentation.idle_drip.tools.sprayer.keyline",
+			"presentation.idle_drip.tools.sniper.keyline", "presentation.idle_drip.tools.bucket.keyline" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -210,7 +216,7 @@ namespace debug_console_acceptance
 		}
 		for (const std::size_t index : { std::size_t(11), std::size_t(12),
 			combat_highlight_colour_index, combat_keyline_colour_index,
-			blocked_highlight_colour_index, blocked_keyline_colour_index })
+			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -257,7 +263,7 @@ namespace debug_console_acceptance
 		// LF content. A subsequent external edit to another field must survive.
 		for (const std::size_t index : { std::size_t(5), std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
 			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index,
-			blocked_highlight_colour_index, blocked_keyline_colour_index })
+			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -283,7 +289,8 @@ namespace debug_console_acceptance
 				index == 8 ? "304050" : index == 9 ? "405060" : index == 10 ? "506070" :
 				index == 11 ? "607080" : index == 12 ? "708090" :
 				index == combat_highlight_colour_index ? "8192A3" : index == combat_keyline_colour_index ? "92A3B4" :
-				index == blocked_highlight_colour_index ? "A3B4C5" : "B4C5D6";
+				index == blocked_highlight_colour_index ? "A3B4C5" :
+				index == blocked_keyline_colour_index ? "B4C5D6" : "C5D6E7";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -308,7 +315,7 @@ namespace debug_console_acceptance
 		}
 		for (const std::size_t index : { std::size_t(9), std::size_t(10), std::size_t(11), std::size_t(12),
 			combat_highlight_colour_index, combat_keyline_colour_index,
-			blocked_highlight_colour_index, blocked_keyline_colour_index })
+			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -316,7 +323,8 @@ namespace debug_console_acceptance
 				index == 10 ? L"weapon-unselected-crlf" : index == 11 ? L"feedback-highlight-crlf" :
 				index == 12 ? L"feedback-keyline-crlf" : index == combat_highlight_colour_index ?
 				L"combat-highlight-crlf" : index == combat_keyline_colour_index ? L"combat-keyline-crlf" :
-				index == blocked_highlight_colour_index ? L"blocked-highlight-crlf" : L"blocked-keyline-crlf";
+				index == blocked_highlight_colour_index ? L"blocked-highlight-crlf" :
+				index == blocked_keyline_colour_index ? L"blocked-keyline-crlf" : L"idle-drip-keyline-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -353,7 +361,8 @@ namespace debug_console_acceptance
 			const char* unrelated_word = index == 9 ? "607080" : index == 10 ? "708090" :
 				index == 11 ? "8192A3" : index == 12 ? "92A3B4" :
 				index == combat_highlight_colour_index ? "A3B4C5" : index == combat_keyline_colour_index ? "B4C5D6" :
-				index == blocked_highlight_colour_index ? "C5D6E7" : "D6E7F8";
+				index == blocked_highlight_colour_index ? "C5D6E7" :
+				index == blocked_keyline_colour_index ? "D6E7F8" : "E7F809";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -761,6 +770,152 @@ namespace debug_console_acceptance
 			"Blocked colour edits, resets and valid/refused saves consume no gameplay random draw");
 	}
 
+	void check_idle_drip_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"idle-drip-colour-cues");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const std::array<WeaponType, 5> types{ WeaponType::sprayer, WeaponType::sniper,
+			WeaponType::roller, WeaponType::mister, WeaponType::bucket };
+		std::array<const IdleDripPresentation*, 5> looks{};
+		std::array<IdleDripPresentation, 5> original{};
+		for (std::size_t index = 0; index < types.size(); ++index)
+		{
+			looks[index] = &presentation.idle_drip(types[index]);
+			original[index] = *looks[index];
+			require(looks[index]->enabled == (index == 0 || index == 1 || index == 4),
+				"Idle-drip colour fixtures retain the three eligible tools and disabled Roller/Mister profiles");
+		}
+		const auto geometry = [](const IdleDripPresentation& look)
+		{
+			return std::array<float, 11>{ look.interval_min, look.interval_max, look.grow_time,
+				look.stretch_time, look.lifetime, look.gravity, look.size, look.stretch,
+				look.nozzle_inset, look.nozzle_underside, look.keyline_width };
+		};
+		labrador::RenderResources resources;
+		resources.add_sprite_sheet(original.front().sprite_sheet, labrador::read_sprite_sheet(
+			(game_directory / L"textures" / (original.front().sprite_sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
+		// Separate consumers are necessary: the next quiet interval exceeds a
+		// falling drop's lifetime. Do not pretend both states coexist by default.
+		std::array<std::unique_ptr<IdleDrip>, 6> cues;
+		const std::array<WeaponType, 3> eligible{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket };
+		for (std::size_t index = 0; index < cues.size(); ++index)
+		{
+			const IdleDripPresentation& look = presentation.idle_drip(eligible[index / 2]);
+			cues[index] = std::make_unique<IdleDrip>(&look, &resources,
+				index % 2 == 0 ? labrador::Colour(224, 48, 80) : labrador::Colour(48, 160, 224),
+				static_cast<uint32_t>(index));
+			IdleDrip& cue = *cues[index];
+			const mattmath::Vector2F nozzle(160.0f + static_cast<float>(index) * 48.0f, 160.0f);
+			cue.advance(true, nozzle, 0.0f, cue.interval_remaining() + 0.001f, {});
+			cue.advance(true, nozzle, 0.0f, look.grow_time + look.stretch_time *
+				(index % 2 == 0 ? 0.5f : 1.1f), {});
+			if (index % 2 != 0) { cue.advance(false, nozzle, 0.0f, look.lifetime * 0.5f, {}); }
+			require(cue.bounds() != mattmath::RectangleF::ZERO &&
+				(index % 2 == 0 ? cue.attached() && cue.bead_age() > 0.0f && cue.drops().empty() :
+					!cue.attached() && cue.drops().size() == 1 && cue.drops().front().age > 0.0f &&
+					cue.drops().front().age < look.lifetime),
+				"Each eligible tool has a real aged attached bead and a separate aged falling drop before colour adoption");
+		}
+		const auto state = [&]
+		{
+			std::vector<float> values;
+			const auto append_rectangle = [&](const mattmath::RectangleF& rectangle)
+				{ values.insert(values.end(), { rectangle.x, rectangle.y, rectangle.width, rectangle.height }); };
+			for (const auto& cue : cues)
+			{
+				values.insert(values.end(), { cue->attached() ? 1.0f : 0.0f, cue->bead_age(),
+					cue->interval_remaining(), static_cast<float>(cue->drops().size()) });
+				append_rectangle(cue->bead_rectangle());
+				append_rectangle(cue->bounds());
+				for (const IdleDrip::Drop& drop : cue->drops())
+					{ values.insert(values.end(), { drop.position.x, drop.position.y, drop.age }); }
+			}
+			return values;
+		};
+		const auto held_state = state();
+		const auto unchanged = [&](const labrador::Colour& keyline)
+		{
+			for (std::size_t index = 0; index < types.size(); ++index)
+			{
+				const auto& look = presentation.idle_drip(types[index]);
+				require(&look == looks[index] && look.keyline == keyline && look.enabled == original[index].enabled &&
+					look.sprite_sheet == original[index].sprite_sheet && look.fill_frame == original[index].fill_frame &&
+					geometry(look) == geometry(original[index]),
+					"The one common keyline reaches all five stable borrowed records without changing eligibility, assets or tool geometry");
+			}
+			require(state() == held_state,
+				"Idle-drip colour adoption retains every attached/falling age, interval, position, bead rectangle and cull bound");
+		};
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const auto initial_colours = colour_values(presentation);
+		std::srand(0x1d1e17);
+		const int expected_random = std::rand();
+		std::srand(0x1d1e17);
+		for (const auto& [word, keyline] : std::array<std::pair<const char*, labrador::Colour>, 4>{ {
+			{ "RED", { 255, 0, 0 } }, { "3165A7", { 49, 101, 167 } },
+			{ "2060C080", { 32, 96, 192, 128 } }, { "A532D600", { 165, 50, 214, 0 } } } })
+		{
+			auto expected = initial_colours;
+			expected[idle_drip_keyline_colour_index] = keyline;
+			require(impl.execute(std::string("tune presentation.idle_drip.keyline ") + word).ok &&
+				colour_values(presentation) == expected && read_text(scratch.source / L"presentation.json") == baseline &&
+				read_text(scratch.staged / L"presentation.json") == baseline,
+				"A preconstructed idle drip adopts straight named/RGB/partial/nonblack-zero-alpha keyline channels without writing content");
+			unchanged(keyline);
+		}
+		const TuneDocument* const pending = impl.tune_document("presentation");
+		require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok &&
+			impl.execute("tune.reset presentation.idle_drip.keyline").ok && pending->edits().size() == 1 &&
+			pending->edits().contains("debug_overlay.colour") && presentation.debug_overlay().colour == labrador::Colour(120, 154, 188),
+			"The common idle-drip reset preserves an unrelated live colour edit");
+		unchanged(original.front().keyline);
+		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && pending->edits().empty() &&
+			pending->current().text() == baseline && colour_values(presentation) == initial_colours,
+			"Independent reset restores the exact original idle-drip document after retaining its active cues");
+		const JsonSpanDocument baseline_document(baseline, "idle-drip-colour-save-reference");
+		const std::string saved = baseline_document.replaced(*baseline_document.find("idle_drip.keyline"), "\"2060C080\"");
+		require(impl.execute("tune presentation.idle_drip.keyline 2060C080").ok &&
+			impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
+			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
+			pending->baseline().text() == saved && pending->current().text() == saved,
+			"Saving the common keyline changes one authored token and rebases all five retained tool profiles");
+		unchanged(labrador::Colour(32, 96, 192, 128));
+		require(impl.execute("tune presentation.idle_drip.keyline A532D600").ok,
+			"An independent nonblack zero-alpha keyline is pending before invalid merged candidate saves");
+		const JsonSpanDocument saved_document(saved, "idle-drip-colour-merged-reference");
+		const JsonLeaf* interval_max = saved_document.find("idle_drip.tools.sniper.interval_max");
+		require(interval_max != nullptr && original[1].interval_min > 0.001f,
+			"The merged candidate has an unrelated real Sniper interval ordering constraint");
+		const std::string external = saved_document.replaced(*interval_max, "0.001");
+		write_text(scratch.source / L"presentation.json", external);
+		const std::string pending_text = pending->current().text();
+		const auto pending_colours = colour_values(presentation);
+		for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+		{
+			require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == external &&
+				read_text(scratch.staged / L"presentation.json") == saved && pending->current().text() == pending_text &&
+				pending->baseline().text() == saved && pending->edits().size() == 1 &&
+				pending->edits().contains("idle_drip.keyline") && colour_values(presentation) == pending_colours,
+				"An invalid unrelated tool interval rejects the complete merged candidate and retains disk/staging/live/ledger, even with force");
+			unchanged(labrador::Colour(165, 50, 214, 0));
+		}
+		require(impl.execute("tune.reset presentation.idle_drip.keyline").ok && pending->edits().empty() &&
+			pending->current().text() == saved && pending->baseline().text() == saved &&
+			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			"After rejected saves the common keyline resets to the saved baseline without discarding the external source or leaving recovery files");
+		unchanged(labrador::Colour(32, 96, 192, 128));
+		write_text(scratch.source / L"presentation.json", saved);
+		require(std::rand() == expected_random,
+			"Idle-drip colour edits, resets and valid/refused saves consume no gameplay random draw");
+	}
+
 	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
 	{
 		const std::string spread_path = "tuning.projectiles.mist.spread_step";
@@ -1066,6 +1221,7 @@ namespace debug_console_acceptance
 		check_colour_tunes(game_directory);
 		check_combat_colour_tunes(game_directory);
 		check_blocked_colour_tunes(game_directory);
+		check_idle_drip_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.

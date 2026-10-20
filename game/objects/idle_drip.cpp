@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/collision_object_type.h"
+#include "game/objects/crude_drawing.h"
 #include "game/play_settings.h"
 #include "engine/collision/narrow_phase.h"
 
@@ -162,7 +163,7 @@ void IdleDrip::draw_bead(DrawList& list, const RectangleF& rectangle) const
     outer.inflate(this->presentation_->keyline_width);
     // Coarse keylined liquid from the existing neutral fill texel.
     // No new atlas or collision silhouette is required.
-    this->draw_with(list, outer, this->frame(), this->presentation_->keyline,
+    this->draw_with(list, outer, this->frame(), CrudeDrawing::premultiplied(this->presentation_->keyline),
         Vector2F::ZERO, SpriteFlip::none, 0.0f);
     this->draw_with(list, rectangle, this->frame(), this->paint_,
         Vector2F::ZERO, SpriteFlip::none, 0.0f);

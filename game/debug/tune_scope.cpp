@@ -57,6 +57,9 @@ namespace
 		// contacts, owner repeat budgets and the captured sheet/fill stay intact.
 		{ "presentation.blocked_shot.highlight", TuneScope::live },
 		{ "presentation.blocked_shot.keyline", TuneScope::live },
+		// IdleDrip reads the common keyline through its borrowed tool record on
+		// every attached/falling draw; captured paint and sheet/fill stay intact.
+		{ "presentation.idle_drip.keyline", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

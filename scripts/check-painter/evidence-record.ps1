@@ -214,6 +214,31 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($IdleDripTuneColoursOnly) {
+    $result.scope = 'idle-drip-tune-colours-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @()
+    $result.palettes = @('opaque-default', 'literal-rgb', 'literal-rgba128', 'literal-alpha0-nonzero-rgb')
+    $result.weapons = @('isolated-sprayer-idle-drip', 'isolated-sniper-idle-drip', 'isolated-bucket-idle-drip')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('six-preconstructed-attached-and-falling-consumers', 'five-stable-profile-records', 'black-and-nonblack-underlays', 'independent-raw-geometry-and-base-alpha-channels', 'opaque-default-parity', 'straight-and-squared-base-alpha-controls', 'captured-opaque-paint-without-event-fade', 'enabled-and-reduce-effects-blank-restore-guards', 'frozen-public-state-bounds-global-rng')
+    $result.input_slots = @()
+    $result.inputs = 'Normal GamepadReader backend with no reader sampling, input events, scripted pads, Level/StateContext updates or match route. Six isolated IdleDrip objects borrow Sprayer/Sniper/Bucket profile records and a local Reduce Effects fixture; fifteen local advance calls prepare separate attached/falling states. All five profile addresses, original enabled flags and tool geometry remain stable.'
+    $result.audio = 'No gameplay audio events; this renderer proof establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'One common idle-drip keyline reaches all five profile records and all six retained consumers. Literal raw-source rectangles and explicit channels verify source alpha exactly once, with no event fade and no captured-paint conversion. Four palettes/two underlays retain opaque-default legacy parity, reject straight/squared-base-alpha RGB and leave all six opaque paint interiors present at nonblack alpha0. Disabled and Reduce Effects draws remain blank and restore identical pixels without advancing public bead/interval/drop/bounds state. Shared evidence is46 readbacks,ten CSV rows,eight380x260 crops(790400 pixels),eight alpha/parity controls,six guard comparisons,fifteen local advance preparations and zero Level/StateContext updates. Global RNG/public-state checks execute; private cosmetic sequence invariance is source constness only, without an executed future-stream claim. Counts and artifact hashes retained. No Level gameplay, physical/global input, OS-focus delivery, listening, human readability or performance acceptance.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('nine-real-named-rgb-rgba-reset-save-commands', 'exact-one-token-private-save-and-rebase', 'unchanged-private-preferences-and-content-bytes')
+        $result.inputs += ' Debug adds a private DebugDirector with isolated source/staged/user/profile/TEMP/TMP paths. Two successful private preference seed Saves retain unrelated active/saved preferences; no controlled save failure. These saved preferences are separate from the local renderer Reduce Effects guard.'
+        $result.checks += ' Debug adds nine commands,60 readbacks,twenty rows and fifteen local preparation advances. Exact one-token private save/rebase and reset-to-saved are checked alongside all active play/deadzone/display/palette/Jump preferences, saved preference bytes, actual content and no queued match work. Debug totals106 readbacks,thirty CSV rows,eight crops,thirty local preparations,zero Level/StateContext updates.'
+        $result['developer_command_scope'] = 'debug-validated-commands'
+    }
+    else {
+        $result.inputs += ' Release remains consumer-only without a developer director, command transcript, scratch tree or nested Save.'
+        $result['developer_command_scope'] = 'not-run-release-consumer-only'
+    }
+}
 elseif ($BlockedShotTuneColoursOnly) {
     $result.scope = 'blocked-shot-tune-colours-only'
     $result.Remove('stage')

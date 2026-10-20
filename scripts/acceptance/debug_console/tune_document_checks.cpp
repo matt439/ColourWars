@@ -223,6 +223,47 @@ namespace debug_console_acceptance
 				}
 			}
 		}
+		{
+			const std::string path = "idle_drip.keyline";
+			const std::string drip_baseline = "{\r\n  \"idle_drip\":{\"keyline\":\"\\u0042LACK\","
+				"\"sprite_sheet\":\"unchanged\",\"fill_frame\":\"solid\"},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			TuneDocument drip_document("presentation", drip_baseline);
+			const JsonLeaf* leaf = drip_document.find(path);
+			require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
+				drip_document.find("idle_drip.sprite_sheet") == nullptr && drip_document.find("idle_drip.fill_frame") == nullptr,
+				"Only the common idle-drip keyline is eligible while captured texture strings remain outside the tree");
+			drip_document.commit(drip_document.edited(*leaf, "\"11223344\""), path);
+			require(drip_document.reverted(path) == drip_baseline,
+				"An idle-drip keyline reset restores its escaped token and every original CRLF byte");
+			const JsonSpanDocument baseline_document(drip_baseline, "idle-drip-colour-reference");
+			const std::string external_number = baseline_document.replaced(*baseline_document.find("number"), "25");
+			const JsonSpanDocument idle_external_document(external_number, "idle-drip-colour-reference");
+			const TuneSplice idle_splice = drip_document.splice(external_number, false);
+			require(idle_splice.conflicts.empty() && idle_splice.written == 1 && idle_splice.text ==
+				idle_external_document.replaced(*idle_external_document.find(path), "\"11223344\"") &&
+				count_of(idle_splice.text, "\r\n") == count_of(drip_baseline, "\r\n"),
+				"An idle-drip splice preserves unrelated fields, escaped bytes, an external number and every CRLF");
+			const std::string idle_pending = drip_document.current().text();
+			bool wrong_type = false;
+			try { drip_document.commit(drip_document.edited(*drip_document.find(path), "false"), path); }
+			catch (const std::invalid_argument&) { wrong_type = true; }
+			require(wrong_type && drip_document.current().text() == idle_pending && drip_document.edits().size() == 1,
+				"A wrong-type idle-drip commit preserves the pending keyline edit");
+			for (const std::string& invalid : { std::string("{}"),
+				baseline_document.replaced(*baseline_document.find(path), "null"),
+				baseline_document.replaced(*baseline_document.find(path), "{\"value\":\"RED\"}"),
+				std::string("{\"idle_drip.keyline\":\"RED\"}"),
+				std::string("{\"idle_drip\":{\"keyline.r\":\"RED\"}}"),
+				std::string("{\"idle_drip\":{\"tools\":{\"sprayer\":{\"keyline\":\"RED\"}}}}") })
+			{
+				const TuneDocument unsupported("presentation", invalid);
+				const TuneSplice refused = drip_document.splice(invalid, true);
+				require(unsupported.find(path) == nullptr &&
+					refused.written == 0 && refused.conflicts.size() == 1 && refused.text == invalid,
+					"Force cannot insert an idle-drip keyline, replace null/a container, or expose literal/per-tool aliases");
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -402,10 +443,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited nineteen colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited twenty colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly nineteen authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly twenty authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -438,7 +479,12 @@ namespace debug_console_acceptance
 			"blocked_shot.highlight", "tuning.blocked_shot.highlight", "presentation.blocked_shot.sprite_sheet",
 			"presentation.blocked_shot.fill_frame", "presentation.blocked_shot.highlight.r",
 			"presentation.blocked_shot.keyline_extra", "presentation.blocked_shot.highlight_colour",
-			"presentation.blocked_shot.duration", "presentation.blocked_shot.enabled" })
+			"presentation.blocked_shot.duration", "presentation.blocked_shot.enabled",
+			"idle_drip.keyline", "tuning.idle_drip.keyline", "presentation.idle_drip.sprite_sheet",
+			"presentation.idle_drip.fill_frame", "presentation.idle_drip.keyline.r",
+			"presentation.idle_drip.keyline_extra", "presentation.idle_drip.tools.sprayer.keyline",
+			"presentation.idle_drip.tools.sniper.keyline", "presentation.idle_drip.tools.bucket.keyline",
+			"presentation.idle_drip.grow_time", "presentation.idle_drip.enabled" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -471,6 +517,8 @@ namespace debug_console_acceptance
 			{ "presentation.blocked_shot.highlight", TuneScope::live },
 			{ "presentation.blocked_shot.keyline", TuneScope::live },
 			{ "presentation.blocked_shot.duration", TuneScope::next_screen },
+			{ "presentation.idle_drip.keyline", TuneScope::live },
+			{ "presentation.idle_drip.grow_time", TuneScope::next_screen },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -581,7 +629,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All nineteen colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All twenty colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;
