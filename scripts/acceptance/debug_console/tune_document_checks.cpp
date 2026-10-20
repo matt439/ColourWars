@@ -508,6 +508,47 @@ namespace debug_console_acceptance
 					"Force cannot insert a reveal colour, replace null/a container or expose literal key aliases: " + reveal_path);
 			}
 		}
+		{
+			const std::string desktop_path = "opening.desktop_colour";
+			const std::string desktop_baseline = "{\r\n  \"opening\":{\"desktop_colour\":\"\\u0030\\u00308080\","
+				"\"sprite_sheet\":\"captured\",\"fill_frame\":\"solid\",\"palette_sheet\":\"unchanged\"},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			const JsonSpanDocument desktop_reference(desktop_baseline, "desktop-colour-reference");
+			TuneDocument desktop_document("presentation", desktop_baseline);
+			const JsonLeaf* desktop_leaf = desktop_document.find(desktop_path);
+			require(desktop_leaf != nullptr && desktop_leaf->kind == JsonLeaf::Kind::string &&
+				desktop_document.find("opening.sprite_sheet") == nullptr && desktop_document.find("opening.fill_frame") == nullptr &&
+				desktop_document.find("opening.palette_sheet") == nullptr,
+				"Desktop colour is eligible while captured texture/palette names remain outside the tree");
+			desktop_document.commit(desktop_document.edited(*desktop_leaf, "\"11223344\""), desktop_path);
+			require(desktop_document.reverted(desktop_path) == desktop_baseline,
+				"Desktop reset restores its original escaped tint token and every CRLF byte");
+			const std::string desktop_external_number = desktop_reference.replaced(*desktop_reference.find("number"), "25");
+			const JsonSpanDocument desktop_external_reference(desktop_external_number, "desktop-colour-reference");
+			const TuneSplice desktop_splice = desktop_document.splice(desktop_external_number, false);
+			require(desktop_splice.conflicts.empty() && desktop_splice.written == 1 && desktop_splice.text ==
+				desktop_external_reference.replaced(*desktop_external_reference.find(desktop_path), "\"11223344\"") &&
+				count_of(desktop_splice.text, "\r\n") == count_of(desktop_baseline, "\r\n"),
+				"Desktop splice preserves every unrelated escaped byte, captured string, external number and CRLF");
+			const std::string desktop_pending = desktop_document.current().text();
+			bool desktop_wrong_type = false;
+			try { desktop_document.commit(desktop_document.edited(*desktop_document.find(desktop_path), "false"), desktop_path); }
+			catch (const std::invalid_argument&) { desktop_wrong_type = true; }
+			require(desktop_wrong_type && desktop_document.current().text() == desktop_pending && desktop_document.edits().size() == 1,
+				"A wrong-type desktop commit retains the pending string edit");
+			for (const std::string& desktop_invalid : { std::string("{}"),
+				desktop_reference.replaced(*desktop_reference.find(desktop_path), "null"),
+				desktop_reference.replaced(*desktop_reference.find(desktop_path), "{\"value\":\"RED\"}"),
+				std::string("{\"opening.desktop_colour\":\"RED\"}"),
+				std::string("{\"opening\":{\"desktop_colour.r\":\"RED\"}}") })
+			{
+				const TuneDocument desktop_unsupported("presentation", desktop_invalid);
+				const TuneSplice desktop_refused = desktop_document.splice(desktop_invalid, true);
+				require(desktop_unsupported.find(desktop_path) == nullptr && desktop_refused.written == 0 &&
+					desktop_refused.conflicts.size() == 1 && desktop_refused.text == desktop_invalid,
+					"Force cannot insert a desktop colour, replace null/a container or expose literal aliases");
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -687,10 +728,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited thirty-one colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited thirty-two colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly thirty-one authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly thirty-two authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -749,7 +790,9 @@ namespace debug_console_acceptance
 			"tuning.opening.reveal_art.paper", "opening.reveal_art.shade", "tuning.opening.reveal_art.shade",
 			"presentation.opening.percent_font", "presentation.opening.reveal_art.ink.r",
 			"presentation.opening.reveal_art.paper_extra", "presentation.opening.reveal_art.shade_colour",
-			"presentation.opening.reveal_art.padding", "presentation.opening.reveal_art.beat_duration" })
+			"presentation.opening.reveal_art.padding", "presentation.opening.reveal_art.beat_duration",
+			"opening.desktop_colour", "tuning.opening.desktop_colour", "presentation.opening.desktop_colour.r",
+			"presentation.opening.desktop_colour_extra" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -793,6 +836,7 @@ namespace debug_console_acceptance
 			{ "presentation.opening.reveal_art.ink", TuneScope::live },
 			{ "presentation.opening.reveal_art.paper", TuneScope::live },
 			{ "presentation.opening.reveal_art.shade", TuneScope::live },
+			{ "presentation.opening.desktop_colour", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -903,7 +947,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All thirty-one colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All thirty-two colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

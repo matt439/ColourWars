@@ -214,6 +214,18 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($DesktopTuneColourOnly) {
+    $result.scope = 'desktop-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-opaque-teal','literal-rgb','literal-rgba128','literal-nonblack-alpha0'); $result.resolutions = @('1280x720')
+    $result.inputs = 'One retained actual Monitor with deterministic captured persona; only public draw_closed called on literal screen(0,0,1280,720). No persona roll, reader sampling/events or local/Player/Level/StateContext/input/time updates.'
+    $result.audio = 'No audio consumer or listening acceptance; private saved preferences stay unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'One exact live desktop colour. Full actual RGBA raster equals independent raw white-frame rectangle [136,59,1143,588), width1007 and height529 from per-edge truncation. Manual RGB*alpha once, no event fade. Copied-dependency Monitor comparison proves adoption only. Five explicit centre/boundary sites, all exterior pixels, opaque raw calibration/parity and alpha0 whole-backdrop restoration; six straight/squared controls. Shared40readbacks/8rows/8corner montage crops320x192(491520pixels). Full unrelated Opening style/resources and captured persona/RNG frozen; no production getters.'
+    if ($Preset -eq 'x64-debug') { $result.actions = @('9-real-commands-and9-raster-states','72-additional-readbacks-18rows','totals112-readbacks26-rows8-crops','exact-one-token-private-save-rebase-reset','exact-saved-raster-reversal','two-private-PlaySettings-and-JumpJ-seed-Saves','unchanged-default-display-real-content-and-queued-work') }
+    else { $result.actions = @('literal-consumer-only','no-developer-command-transcript-scratch-or-Save') }
+    $result.checks += ' Native controlled Save failure absent; CPU owns invalid merged glass-width rollback. Isolated closed-desktop consumer, not full story visibility qualification. No physical/global input, OS-focus delivery, human art/readability, listening or performance acceptance.'
+}
 elseif ($CursorMaterialTuneColoursOnly) {
     $result.scope = 'cursor-material-tune-colours-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

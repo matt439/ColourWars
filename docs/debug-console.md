@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These thirty-one existing string fields are supported; numeric path
+**Colours.** These thirty-two existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -421,6 +421,7 @@ The latest validation is recorded under
 | `presentation.opening.reveal_art.shade` | live | Displaced shadows and ordered inner airbrush passes of those same cards, on the next draw. |
 | `presentation.opening.cursor_art.shade` | live | Shaded cells of existing cursor arrows, on the next draw. |
 | `presentation.opening.cursor_art.shadow` | live | Shifted shadows of those same arrows, on the next draw. |
+| `presentation.opening.desktop_colour` | live | Desktop fill of the existing closed program in the winner-none reveal, on the next applicable draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -509,6 +510,14 @@ conversion; half-age gives beat 0.25. Ordered paper, airbrush and outline writes
 blend separately. Zero alpha reveals the appropriate underlayers rather than
 removing the whole card. No drawing, default, font or artwork change is included;
 validation is recorded below.
+
+Desktop colour is borrowed whenever an existing Monitor draws the closed program
+in the winner-none reveal branch. Its one rectangle premultiplies straight base
+RGBA once, with no event fade. The opaque `008080` default, geometry, captured
+sheet/frame and palette swatches, and captured persona remain unchanged.
+Nonblack zero alpha reveals underlying content; physical monitor details and
+other foreground draws remain. Edits have no visible effect while this story
+route is hidden. Validation is recorded below.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -1272,7 +1281,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the thirty-one listed colour fields above are
+  and inserting keys in `tune.save`: the thirty-two listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1281,13 +1290,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Thirty-one existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Thirty-two existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette ink/rim/shade and reveal
-ink/paper/shade.
+ink/paper/shade, plus the desktop colour.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1312,6 +1321,31 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Desktop colour increment (2026-10-20), **verified**:
+path 32, `presentation.opening.desktop_colour`, is live on the retained closed
+program. One local tint conversion preserves the opaque `008080` default;
+there is no event fade or geometry/art/font change.
+
+Both game/editor builds, four focused CPU cases (console and story audio per
+preset), independent review and both native first executions pass. CPU coverage includes unrelated-edit retention,
+one-token save/rebase/saved reset and invalid external `glass.width=0.95` with
+`x=0.1`: ordinary and forced merged saves reject the candidate and preserve exact source/staged/live/
+current/baseline/ledger state.
+
+Shared native evidence has 40 readbacks, eight rows, eight 320x192 crops
+and six controls. Debug's nine commands add 72 readbacks and eighteen rows:
+totals 112/26/8. The independent full-frame literal raw rectangle
+`[136,59,1143,588)` is 1007x529, including edge/exterior and alpha0 checks;
+a second Monitor supplies adoption comparison rather than the independent
+alpha oracle. Two private PlaySettings/Jump J seed Saves, default display and
+zero local/Player/Level/StateContext/input/time updates pass.
+
+All 21 shared artifacts, including eight PPMs, match byte for byte; root
+contact-sheet inspection and twelve frozen source/support hashes reconcile.
+Receipts live under `out/validation/crossfeed-20261020/desktop-colour-v1/`.
+Actual story/art comfort, OS/global input, physical pads, listening and performance
+acceptance remain open. This proof isolates public `draw_closed`, without a full story route.
 
 Cursor shade/shadow increment (2026-10-20), **verified**:
 exact paths 30-31 are `presentation.opening.cursor_art.shade` and `.shadow`,

@@ -81,6 +81,9 @@ namespace
 		// draw; ink/fill, click inputs and captured sheet/frame stay intact.
 		{ "presentation.opening.cursor_art.shade", TuneScope::live },
 		{ "presentation.opening.cursor_art.shadow", TuneScope::live },
+		// Monitor reads this borrowed tint each time the closed program shows
+		// the desktop; persona, swatches and captured sheet/frame stay intact.
+		{ "presentation.opening.desktop_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

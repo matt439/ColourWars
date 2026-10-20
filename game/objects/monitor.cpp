@@ -397,7 +397,7 @@ void Monitor::draw_close_button(DrawList& draw_list, const RectangleF& screen) c
 
 void Monitor::draw_closed(DrawList& draw_list, const RectangleF& screen) const
 {
-    this->fill(draw_list, this->program(screen), this->look_->desktop_colour);
+    this->fill(draw_list, this->program(screen), premultiplied(this->look_->desktop_colour));
 }
 
 void Monitor::draw_preview(DrawList& draw_list, const RectangleF& area,
