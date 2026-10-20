@@ -664,14 +664,17 @@ using the approved gameplay style. Physical-pad comfort remains `ROAD#2`, and
 human readability, comfort, balance and hardware acceptance stay open. This
 keyboard slice does not close `GAP#4.2`.
 
-The working action evaluator and saved Jump consumer now justify preparing a
-narrow `GAP#F2` request for snapshot-driven source evaluation and independent
-alias edges. Game action names/defaults, save/UI conflicts, menu ownership and
-roster policy remain client concerns. Pinned Gamepads already has checked
-per-slot state/edges and caller-owned trigger thresholds; neither is a missing
-API. A pad-capture request still needs a real pad-rebinding caller. Check fresh
-engine master and record that commit before preparing the minimal synthetic
-exhibit. No issue has been filed. Upstream filing uses the
+The working action evaluator and saved Jump consumer now support the local
+[ENG#21 action-evaluation draft](engine-reports/action-evaluation.md), carrying
+the former `GAP#F2` request. Fresh upstream master was checked on 2026-10-20 at
+`52e809a5a0229d37db4373faa7853df4c861a310`; the standalone synthetic exhibit
+passes Debug and Release against its prebuilt engine libraries. The request is
+limited to source evaluation and independent alias edges under T1. Game action
+names/defaults, save/UI conflicts, menu ownership and roster policy remain
+client concerns. Gamepads already has checked per-slot state/edges and
+caller-owned trigger thresholds; neither is a missing API. A pad-capture
+request still needs a real pad-rebinding caller. No issue has been filed;
+refresh upstream before later publication. Filing uses the
 [approved minimal-report scope and issue route](review/engine-reports.md#publication-gate-engpublish).
 
 ## Per-player menu focus (`GAP#D1`)

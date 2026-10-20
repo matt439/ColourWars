@@ -142,7 +142,7 @@ These add to the hierarchies, never flatten them (CLAUDE.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The thirteen drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The fourteen drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
@@ -156,7 +156,6 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#13` | OPEN | LOW | S | Recheck upstream; prepare the minimal unnamed `Key` report and reproducer for filing. [Report](docs/review/engine-reports.md#13-key-has-no-names--draft-low-priority). |
 | `ENG#14` | OPEN | LOW | S | Recheck upstream; prepare the minimal frame-statistics/GPU-timing report and reproducer for filing. [Report](docs/review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--draft-with-perf-exhibit). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `GAP#F2` | OPEN | LOW | S | Recheck upstream and prepare a minimal action-source evaluation request from the working bindings exhibit; pad capture remains future scope. [Boundary](docs/feature-roadmap.md#action-bindings-gap42). |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
 | `ENG#15` | OPEN | MED | S | Recheck upstream; prepare the minimal runtime-packaging/content-staging report and reproducer for filing. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
 | `ENG#16` | OPEN | LOW | S | Recheck upstream; prepare the minimal hidden-window Apply report and reproducer for filing. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
@@ -164,6 +163,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#18` | OPEN | LOW | S | Recheck upstream; prepare the minimal Label visibility/draw-order report and reproducer for filing. [Report](docs/review/engine-reports.md#18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit). |
 | `ENG#19` | OPEN | LOW | S | Recheck upstream; prepare the minimal startup window-visibility report and reproducer for filing. [Report](docs/review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit). |
 | `ENG#20` | OPEN | LOW | S | Recheck upstream; prepare the minimal view-aware object-drawing report and reproducer for filing. [Report](docs/review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit). |
+| `ENG#21` | OPEN | LOW | S | Review the prepared action-evaluation request (formerly `GAP#F2`) and refresh upstream before filing; its synthetic Debug/Release exhibit passes. [Report](docs/engine-reports/action-evaluation.md). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

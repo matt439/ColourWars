@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Thirteen are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20). Seven are closed** and kept below as one paragraph
+> **Fourteen are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -72,7 +72,7 @@ engine-focused reports with reproducible examples. This resolves `ENG#PUBLISH`.
 Use Labrador's established [issue-tracker route](../../external/labrador/CONTRIBUTING.md#asking-a-question-or-requesting-a-change),
 choosing the bug or engine-request form appropriate to the finding. Labrador's
 `PI-09` tracks filing; its older seven-draft count does not supersede the
-thirteen live entries here.
+live ledger below.
 
 Each report should contain only the relevant engine API/behaviour, the checked
 upstream-master commit and necessary build conditions, minimal reproduction
@@ -83,8 +83,9 @@ drafts, unrelated game source, game assets and private captures/data out of the
 public report. Requests beyond what the example demonstrates remain proposals
 to scope separately.
 
-All thirteen remain unfiled drafts. Recording this approval posts no reports
-and leaves the engine pin unchanged. The next work is a fresh upstream-master
+The thirteen drafts present at approval remain unfiled. Report 21 now adds a
+fourteenth unfiled draft. Recording this approval posts no reports and leaves
+the engine pin unchanged. The next work is a fresh upstream-master
 check and preparation of the minimal report/reproducer for each surviving gap;
 filing uses the approved scope and established route above. This supporting
 work does not change TODO's level-first priority.
@@ -132,8 +133,9 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `level_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
 | 19 | The window is shown before the client has loaded anything | `initialize()` before `load_manifest` in `game/main.cpp`, with a startup timing | draft — low priority; checked against the pin |
 | 20 | Scene drawing gives client objects no view context | `draw_miniature_view`, `Level::draw_miniature_world`, the borrowed scenery mirror and `Structure::draw_miniature` | draft - source audit against the pin only; recheck upstream before filing |
+| 21 | Digital action evaluation remains client code | runtime saved Jump mapping and the standalone `action_evaluation.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 
-Nothing else is outstanding, on either side, beyond reports 6 and 9-20 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 6 and 9-21 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -812,6 +814,43 @@ terrain stay in its existing position before its paint and later objects.
 pin only. Prepare a minimal engine-focused report/reproducer under the approved
 scope above and perform a fresh upstream-master check before filing. No upstream
 query or publication was performed for this draft.
+
+---
+
+## 21. Digital action evaluation remains client code - **local unfiled draft**
+
+The former `GAP#F2` request is now **ENG#21**. The working
+[action evaluator](../../game/action_bindings.cpp) and
+[saved Jump mapping](../../game/input_bindings.cpp), consumed by the actual
+[PlayerInput](../../game/objects/player_input.cpp), provide the client exhibit.
+The proposed extraction is limited to generic physical-source evaluation and
+independent source-edge combination; action names/defaults, threshold choices,
+save/UI conflicts, menu ownership and roster policy stay in the client.
+
+The [sanitized request](../engine-reports/action-evaluation.md) accompanies a
+[standalone synthetic example](../../scripts/engine-reports/action_evaluation.cpp).
+It demonstrates changing the binding to an already-held key without inventing
+a press, and overlapping button/trigger sources whose edges remain independent.
+It asks for no new slot lookup, trigger threshold or pad-capture API.
+
+**Checked and exercised 2026-10-20.** A fresh upstream fetch at 19:34:53 UTC
+confirmed master `52e809a5a0229d37db4373faa7853df4c861a310`; the relevant source
+matches that `FETCH_HEAD`. The engine still explicitly defers action mapping
+above its existing device primitives. The synthetic example passed with MSVC
+19.51.36256.0 under `/W4 /WX` in Debug and Release, linked only to the prebuilt
+`LabradorEngine.lib` and `MattMath.lib`, without game objects, window or
+graphics/audio/physical-input devices.
+The report records the exact flags, reproduction commands and observed output.
+T1 supports considering extraction from this newly exercised consumer; the
+engine's API shape and decision remain upstream's.
+
+Local receipts are under
+`out/validation/crossfeed-20261020/action-evaluation-repro/`, with the fresh-fetch
+and source checks alongside it in `action-report-upstream.txt` and
+`action-report-source-recheck.txt`. These are synthetic implementation checks,
+not hardware, physical-input, human or performance acceptance. No issue has
+been filed, the engine is unchanged, and the approved intake route above still
+governs any later publication. Refresh upstream immediately before filing.
 
 ---
 
