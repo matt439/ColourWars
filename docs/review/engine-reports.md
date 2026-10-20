@@ -126,7 +126,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 11 | Optional opt-out for bare system-menu keys | native F10 queue hook and standalone `system_keys_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release requests reproduce |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 13 | `Key` has no names | Debug bind names, saved keyboard Jump tokens and the standalone `key_names.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
-| 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
+| 14 | No frame statistics or GPU timing | client perf hooks and standalone `frame_phase_boundaries.cpp` | local unfiled CPU-phase request - master checked 2026-10-20; manual public-call example passes Debug/Release |
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 16 | Windowed Apply shows a deliberately hidden window | standalone `hidden_apply_exhibit.cpp` and the client Apply guard | local unfiled bug draft - master checked 2026-10-20; Debug/Release reproduce |
 | 17 | DPI-correct client-size conversion for an opted-in application | existing awareness manifest and standalone hidden `window-dpi/` baseline/arithmetic fixture | local unfiled request - master checked 2026-10-20; Debug/Release 96-DPI baselines pass; scaled/transition acceptance remains open |
@@ -400,32 +400,47 @@ and `ctrl+`/`shift+` chord grammar stay the game's.
 
 ## 14. No frame statistics or GPU timing — **draft with perf exhibit**
 
-**Exhibit added by the developer debug system (phase 4).** The Debug perf
-overlay (`overlay perf`) shows frame, update and draw time.
+The [CPU frame-statistics request](../engine-reports/cpu-frame-statistics.md)
+now has an exact tested [standalone manual public-call example](../../scripts/engine-reports/frame_phase_boundaries.cpp).
+It remains **unfiled**. Source inspection of fresh upstream master
+`52e809a5a0229d37db4373faa7853df4c861a310` (checked 2026-10-20) confirms no
+Application completed-frame timing accessor and no Renderer timestamp-query
+service. This first request is CPU elapsed phase data, not GPU execution.
 
-### What happens
+The client already times Level updates and match draws with QPC. Its
+draw-to-draw intervals include intervening submit/Present wall time indirectly;
+their separate durations and whole-Application phases remain unavailable.
+Target simulation dt is not an elapsed rendered-frame interval.
 
-`Application` exposes no per-frame statistics (frame interval, time in update,
-render and present) and `Renderer` no timestamp queries. So the overlay times
-only what the game itself calls, with `QueryPerformanceCounter`: each
-`Level::update` inside the debug clock's run loop, and the match draw from a
-new hook at the top of `GameLevel::draw` to the director's `draw_status`; the
-frame interval is the time between two match draws. The render submit, present
-(and so vsync), the GPU and everything the engine does between states are
-invisible, and the panel has to say "CPU". A screenshot's out-of-band redraw
-(report 10) re-enters the same hooks, so the game suppresses its samples by
-hand.
+The synthetic source initializes the actual hidden D3D11/XAudio2 Application
+but owns a separate real StateContext/manual Renderer loop. Both MSVC
+19.51.36256.0 `/W4 /WX` Debug/Release runs pass three empty-view iterations,
+exit 0 and have empty stderr. Each output has the exact scope/header, three
+finite nonnegative CPU wall rows and final PASS line. No Application phase or
+frame interval, GPU, timing threshold or performance qualification is measured.
+Raw transient durations are evidence, not a benchmark.
 
-### The ask, when it goes
+The first useful request is a stable read-only completed-engine-frame sequence
+with validity and documented elapsed interval, aggregate Application-update
+duration/count, prepare/record duration, submit-call duration and end-frame-call
+duration. This is the current client for the observability half of engine
+`REV#10`; it does not ask for its whole engine-drawn overlay.
 
-`Application::frame_stats()` (the last frame's update, render-record, submit
-and present times) and, later, GPU timestamp queries on `Renderer`. Answering
-the first would delete the draw hook and the screenshot suppression, and let the
-overlay show the whole frame.
+An answer could replace client stopwatch pairs, with an explicit change from
+match-only to engine phase semantics. Match eligibility, frame deduplication,
+capture/export, object counts and level-build timing remain client code.
+The draw ingestion hook may remain, and screenshot-gap policy remains because
+capture work inside an Application update can affect its elapsed duration.
+The old blanket deletion claim for the draw hook/screenshot suppression is
+therefore narrowed.
 
-The engine defers a frame-time overlay of its own (its `TODO.md` REV#10, "waits
-for a client that needs it"). This exhibit is that client; cite REV#10 when
-filing, and ask for the accessor rather than an engine-drawn overlay.
+Retained receipts are under
+`out/validation/crossfeed-20261020/frame-stats-report-final-v1/`. The example
+and recipe hashes match both executed configurations. No engine change or
+public issue was made. Refresh upstream unconditionally before filing.
+GPU timestamps, scan-out, broader counters/overlay and visible uncontended
+hardware qualification remain outside this prepared CPU slice; the broader
+`ENG#14`/`DBG#5` wishes remain open.
 
 ---
 
