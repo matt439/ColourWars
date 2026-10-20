@@ -120,7 +120,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 6 | No audio bus, master gain, listener or voice cap | `PlaySettings` gains applied at each emitter | draft — exhibit present; recheck upstream before filing |
+| 6 | Shared Music/SFX attenuation remains emitter work | per-emitter saved gains and standalone `audio_gain_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 9 | No application-level per-frame hook or input capture | `MenuPage::update`/`update_page`, `DebugDirector::before_page_update`/`before_match_update`, the frozen-world console; phase 2: `filter_match_inputs` and `DebugPageTarget::debug_reset_input` for the pad chord; phase 4: the live console's keyboard-seat and closing-frame blanks and its own draw path | draft — exhibit present; recheck upstream before filing |
 | 10 | No way to read back the frame that was presented | `capture_stack` in `game/debug/debug_screenshot.cpp` | draft — exhibit present; recheck upstream before filing |
 | 11 | F10 and a lone Alt belong to the system menu, with no opt-out | the `WH_GETMESSAGE` hook in `game/debug/debug_director_impl.cpp`; `alt-probe.txt` from `scripts/check-debug-console.ps1` | draft — low priority; exhibit present |
@@ -144,64 +144,48 @@ reachable on a machine with no pad.
 
 ## 6. No audio bus, master gain, listener or voice cap — **draft with mixing exhibit**
 
-**Exhibit added by the controls/audio increment.** `game/play_settings.h`
-holds the saved music and SFX gains; `game/states/menu_page.cpp`,
-`game/objects/level.cpp`, `level_audio.cpp`, `player.cpp`, `weapon.cpp`, `weapon_bucket.cpp`,
-`weapon_sniper.cpp`, `structure_paintable.cpp`, `level_intro.cpp` (the
-reveal's hover and click) and `controls_settings_menu.cpp` (the music preview)
-apply them at individual emitters. Resuming a match or weapon also reapplies the gain. The client now
-demonstrates the duplicated mixing work that was previously hypothetical.
+**Fileable slice prepared 2026-10-20: shared Music/SFX attenuation.** The
+client's saved gains in `game/play_settings.h` are multiplied into per-emitter
+calls in `game/states/menu_page.cpp`, `game/objects/weapon.cpp`,
+`game/objects/level_audio.cpp` and `game/states/screen_music.cpp`. Music also
+keeps authored level, fade and pause ducking; resume paths reapply the user
+gain to individual retained effects. This is the concrete repeated work.
 
-On 2026-10-14, Labrador master at `52e809a` still had no bus/master-gain
-interface: the audio headers changed only in comments, and the new `webaudio`
-backend declares nothing above the seam. The engine's own product documents now
-take a provisional position (its `STORIES.md` OCA-51: "no volume bus without a
-demand argument"), so the filing has to make that argument: every client
-otherwise multiplies a gain into every emitter, as this one does. The report remains unfiled; recheck upstream before
-filing. The exhibit supports shared music/SFX gain. Listener and voice-budget
-requests below remain separate proposals, not implemented requirements.
+The [sanitized request](../engine-reports/audio-attenuation.md) and
+[standalone synthetic exhibit](../../scripts/engine-reports/audio_gain_exhibit.cpp)
+reduce it to two loops and two independent one-shot emitters in one bank.
+The ordinary per-call API works as documented: each emitter supplies its own
+volume, and an emitter that omits user-gain multiplication retains its local
+level. The request is for extracting shared attenuation, with authored
+levels/group assignment/fades/ducking remaining client policy.
 
-### What happens
+**Checked and exercised 2026-10-20.** A fresh upstream fetch at 19:34:53 UTC
+confirmed master `52e809a5a0229d37db4373faa7853df4c861a310`; a whole-engine
+comparison against that `FETCH_HEAD` passed at 19:50:08 UTC.
+`AudioDevice`, `SoundBank` and `AudioResources` still expose no master/group
+gain setter. Application's AudioDevice is private, and exposing it alone would
+not create a missing operation. `play_wave` returns void; effect setters
+address individual retained voices.
 
-`SoundBank::play_wave` and `play_effect` take a volume **per call**
-(`sound_bank.h:125,131`, and `set_effect_volume` at `:136`) and the class carries no gain. `AudioResources` is a
-bank registry with no gain either. The one object that could do it globally is
-a private member of `Application` (`application.h:282`) with no accessor among
-its services. So a client can only multiply a gain into every emitter, cannot
-touch a fire-and-forget wave it holds no handle to, and cannot reach the object
-that could do it globally.
+The exact synthetic source passed MSVC 19.51.36256.0 under `/W4 /WX` in Debug
+(`/MDd /Od /D_DEBUG`) and Release (`/MD /O2 /DNDEBUG`). It compiled directly
+with SoundBank, AudioResources, the existing null AudioDevice implementation
+and math/scalar.cpp, without an engine static library or CMake configure.
+Both runs exited 0 with empty stderr and the same nine asserted recorded
+requests/volumes. The report includes the full source list, flags,
+reproduction commands, observed output and source SHA-256.
 
-**And that object is the engine's own now, which changes what the ask is.**
-Until `94076f1` it was DirectXTK's `AudioEngine`, and `SetMasterVolume` was a
-method the engine happened to be sitting on — so the report could be read as
-"expose the library you already have". The audio seam replaced it with
-`labrador::AudioDevice` (`engine/audio/audio_device.h`), whose whole surface is
-`open_wave_bank`, `wave_index`, `create_voice`, `play_wave`, nine per-voice
-verbs and the shell's `update`/`suspend`/`resume`. No master gain among them,
-and nothing left to expose. A master gain is now something the engine would
-have to *decide*, on both backends, which is a stronger reason to bring an
-exhibit and not a weaker one.
+The null backend records requests, not physical mixing or time. This proves
+the client's per-emitter arithmetic/refresh and the raw-site negative control;
+it establishes no loudness, duration, completion, latency or listening result.
+The earlier broad listener/voice-budget asks remain separate unfiled proposals
+requiring their own concrete exhibits; they are not bundled into this slice.
 
-Two further halves only this client can raise:
-
-- **No listener concept.** Four split-screen views, and every call passes pan 0.
-  The API models one global mix in a game that is four people on a sofa.
-- **No voice budget.** The sprayer's `shoot_interval` is **0.0** and the
-  roller's is 0.0001, so four players can trigger the same splash wave hundreds
-  of times a second over four looping weapon voices. The only thing anywhere
-  that rate-limits a *sound* is a hand-written `damage_sound_delay` of 0.25 on
-  one wave.
-
-### The ask, when it goes
-
-`AudioResources::set_master_volume`, or better a `SoundCategory` bus table;
-plus a listener concept and a per-bus voice cap. The bus half is already on the
-engine's own review list; the multi-listener and voice-budget halves are not,
-and are the two only a split-screen client would ever report.
-
-The shared Controls / audio page now supplies the volume rows, and the
-per-emitter gain calls above supply the exhibit. No missing client UI or
-unwritten mix remains as a reason to hold this draft.
+Local validation receipts are under
+`out/validation/crossfeed-20261020/audio-report-final-v1/`; the master comparison
+is in `key-audio-source-recheck.json` beside them. No audio hardware was
+opened, and no game/window/assets or engine changes were involved. No issue
+has been filed and the engine pin is unchanged. Refresh master before filing.
 
 ---
 
