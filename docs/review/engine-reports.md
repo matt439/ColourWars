@@ -121,7 +121,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 6 | Shared Music/SFX attenuation remains emitter work | per-emitter saved gains and standalone `audio_gain_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
-| 9 | No application-level per-frame hook or input capture | `MenuPage::update`/`update_page`, `DebugDirector::before_page_update`/`before_match_update`, the frozen-world console; phase 2: `filter_match_inputs` and `DebugPageTarget::debug_reset_input` for the pad chord; phase 4: the live console's keyboard-seat and closing-frame blanks and its own draw path | draft — exhibit present; recheck upstream before filing |
+| 9 | Per-frame overlay orchestration and separately scoped input routing | client debug forwarding and reader gates; standalone `input_observer.cpp` | local unfiled observer draft - master checked 2026-10-20; synthetic Debug/Release runs pass; capture/routing remains separately scoped |
 | 10 | No way to read back the frame that was presented | `capture_stack` in `game/debug/debug_screenshot.cpp` | draft — exhibit present; recheck upstream before filing |
 | 11 | F10 and a lone Alt belong to the system menu, with no opt-out | the `WH_GETMESSAGE` hook in `game/debug/debug_director_impl.cpp`; `alt-probe.txt` from `scripts/check-debug-console.ps1` | draft — low priority; exhibit present |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
@@ -191,78 +191,48 @@ has been filed and the engine pin is unchanged. Refresh master before filing.
 
 ## 9. No application-level per-frame hook or input capture — **draft with console exhibit**
 
-**Exhibit added by the developer debug system (phase 1).** A client-wide
-developer console (Debug only; `game/debug/`, `docs/debug-console.md`) needs
-two things the engine does not offer: somewhere to look at the keyboard every
-frame whatever state is on top, and a way to say "this key press is mine".
+**Observer slice prepared 2026-10-20.** The minimal
+[request](../engine-reports/input-observer.md) and
+[standalone example](../../scripts/engine-reports/input_observer.cpp) cover an
+optional observer between Application's device polls and the top-state update.
+Upstream master was freshly checked at 19:34:53 UTC, and the reviewed engine
+worktree matched FETCH_HEAD at 19:50:08 UTC:
+`52e809a5a0229d37db4373faa7853df4c861a310`. Direct MSVC 19.51.36256.0 Debug and
+Release runs against prebuilt engine/math libraries passed all four synthetic
+checks with exit 0 and empty stderr. The original Debug receipt required CRLF/LF
+normalization of retained logs; Debug was not rerun and its process ID was not
+retained.
 
-### What happens
+Application has no built-in observer at that point, and StateContext updates
+only its top state. These are source observations, not edge-function defects.
+A pushed transparent console therefore suspends the underlying update by
+design. A permanent root State containing a nested StateContext is a valid
+existing-API alternative; the example also demonstrates that composition.
+The request is a convenience that could remove or relocate global forwarding,
+not an unavoidable engine limitation. The full menu-update template and
+`before_*` hooks also serve motion, music, scripts, rebuild and timing work.
 
-`Application::update` polls the devices and then updates the top state only
-(`application.cpp`, `StateContext::update`). There is no hook before or after
-the stack, and `Keyboard` has no notion of a consumed key. So the console:
+**Capture/routing remains a separately scoped proposal.** Raw device snapshots
+correctly remain readable by multiple consumers. The client's live console
+uses explicit keyboard-seat and closing-frame filters; mouse aim reads Mouse
+directly and is not hidden by those PlayerInputData filters. Its pad chord
+clears selected per-slot match flags and resets only that pad's menu arming;
+the older claim about losing another pad's A press no longer applies.
 
-- turned `MenuPage::update` into a non-virtual template method (`update` calls
-  `DebugDirector::before_page_update`, then the page's `update_page`, across 15
-  overrides, the Debug menu's among them) and added a hook at the top of `GameLevel::update`, purely so the
-  toggle key is seen on every screen;
-- is a pushed, non-covering state — the only way to keep `PlayerInput` and
-  `MenuInput` off the keyboard while someone types. The cost is the real one:
-  **the world must freeze while the console is open.** A see-through console
-  that tunes a live match while it runs was built by gating by hand (phase 4,
-  below), and this is the bill;
-- implements its own repeat for Backspace, Delete and the arrows
-  (`DebugKeyRepeat`), because only typed text repeats.
+The physical-key capture page now guards raw ownership before ordinary debug
+hooks, resets its readers on entry/exit, and drains its gesture under client
+neutral/focus/release rules. It also chooses how to handle queued developer
+work. An observer alone would not replace these policies or hide raw reads.
+A capture/filtered-view extraction would require its own precise contract and
+reader adoption. It cannot distinguish typing a movement key from intending
+that same key for gameplay, so simultaneous play/type and deletion of the
+whole-seat filter are not promised.
 
-### The ask, when it goes
-
-A pre-stack (or overlay-layer) update hook that runs every frame, and a
-`Keyboard` capture or consume scope, so an overlay can own the keyboard while
-the states under it keep updating. Answering it would let this repository
-delete the `update_page` template method, the two `before_*_update` hooks and
-the frozen-world limitation. Control-key repeat is a smaller, separate ask.
-
-**Exhibit added by phase 2 (the debug menu's pad chord).** Holding pad
-Back+Start opens the debug menu, and the two releases that follow must reach
-neither the per-player F1 overlay (Back) nor the pause menu (Start). `Gamepads`
-has no consume scope any more than `Keyboard` does, so the game removes the
-edges by hand in two places: `DebugDirector::filter_match_inputs` clears
-`toggle_debug` and `toggle_pause_menu` from the `PlayerInputData` that
-`GameLevel::update` just read, and every page's `MenuInput` arming is reset
-(`DebugPageTarget::debug_reset_input`) on every frame of the chord, which also
-costs any other player's A press held across those frames. A consume scope on
-`Gamepads`, as asked above for `Keyboard`, would delete both.
-
-**Exhibit added by phase 4 (the live console).** `console.live 1` opens the
-console over a match that keeps running. With no consume scope, the game gates
-the readers itself, and pays for it:
-
-- **The whole keyboard seat stands still while it is open**, not only the keys
-  being typed: `filter_match_inputs` replaces the keyboard/mouse slot's
-  `PlayerInputData` with a connected, idle one, because the game cannot tell a
-  typed `d` from a held move-right. A keyboard player cannot play and type.
-- **Mouse aim still follows the cursor**, because `Level::resolve_mouse_aim`
-  reads the `Mouse` directly; only the shot (a `PlayerInputData` field) is
-  blanked.
-- **Every in-match keyboard reader is gated by hand.** The director skips its
-  own binds while the live console is open; F1 and Escape are covered only
-  because they arrive through the blanked slot; F10 is not (it is read by the
-  director's hook before the console), so it still opens the debug menu, which
-  closes the live console.
-- **The closing frame needs its own blank.** The console closes on the Escape
-  release so the edge is over before anyone else reads it - but the match
-  is not frozen any more, and that same release is the keyboard player's
-  `toggle_pause_menu`. A one-shot flag blanks the seat on the frame it closes.
-- **It has its own draw path**: the director draws the extracted
-  `DebugConsoleView` from `draw_status`, the match's last draw, because there is
-  no overlay layer above the stack.
-- **It exists only over a match.** Over a menu page the console is still the
-  frozen pushed state.
-
-On the plus side it causes no `Level::suspend` (no state is pushed), so typing
-during a recording no longer desynchronises the replay. The ask is unchanged;
-answering it would also let this repository delete the keyboard-slot blank, the
-closing-frame blank and the live view's separate draw path.
+Existing polling, edges, thresholds, focus/connection notifications and mouse
+capture-cancellation epochs are not missing. System-key interception remains
+ENG#11; key labels, control-key repeat, post-stack drawing and pad identity are
+outside the prepared observer slice. Both halves remain unfiled, the engine
+is unchanged, and upstream must be refreshed immediately before filing.
 
 ---
 
