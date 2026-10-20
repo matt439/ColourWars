@@ -53,6 +53,10 @@ namespace
 		// hurt accent or detached burst; timers and captured fill stay intact.
 		{ "presentation.combat_feedback.highlight", TuneScope::live },
 		{ "presentation.combat_feedback.keyline", TuneScope::live },
+		// BlockedShotFeedback reads both borrowed tints on each draw. Existing
+		// contacts, owner repeat budgets and the captured sheet/fill stay intact.
+		{ "presentation.blocked_shot.highlight", TuneScope::live },
+		{ "presentation.blocked_shot.keyline", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

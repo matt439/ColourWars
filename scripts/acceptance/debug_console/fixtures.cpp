@@ -131,7 +131,8 @@ namespace debug_console_acceptance
 			presentation.main_menu().weapon_select.unselected, presentation.weapon_feedback().highlight,
 			presentation.weapon_feedback().keyline, presentation.player_identity().ink_colour,
 			presentation.player_identity().background_colour, presentation.combat_feedback().highlight,
-			presentation.combat_feedback().keyline };
+			presentation.combat_feedback().keyline, presentation.blocked_shot().highlight,
+			presentation.blocked_shot().keyline };
 	}
 #endif
 }

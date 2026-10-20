@@ -7,6 +7,7 @@
 #include "game/debug/json_spans.h"
 #include "game/debug/tune_document.h"
 #include "game/debug/tune_scope.h"
+#include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/combat_feedback.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/math/scalar.h"
@@ -14,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <process.h>
 
 // Live tuning commands: tune, tune.diff, tune.reset and tune.save on scratch
@@ -63,14 +65,14 @@ namespace debug_console_acceptance
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 17> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 19> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
-			"123456FF", "DDEEFF", "73A1C280", "19B87000" };
+			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
 			{ 53, 188, 225 }, { 34, 102, 204, 128 }, { 18, 52, 86 }, { 221, 238, 255 },
-			{ 115, 161, 194, 128 }, { 25, 184, 112, 0 } };
+			{ 115, 161, 194, 128 }, { 25, 184, 112, 0 }, { 194, 109, 58, 128 }, { 42, 128, 213, 0 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -94,7 +96,8 @@ namespace debug_console_acceptance
 				"A colour getter prints the exact quoted token: " + path);
 		}
 		for (const std::size_t index : { std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
-			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index })
+			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index,
+			blocked_highlight_colour_index, blocked_keyline_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -147,7 +150,8 @@ namespace debug_console_acceptance
 		};
 		for (const char* path : { colour_paths.front(), colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10],
 			colour_paths[11], colour_paths[12], colour_paths[identity_ink_colour_index], colour_paths[identity_background_colour_index],
-			colour_paths[combat_highlight_colour_index], colour_paths[combat_keyline_colour_index] })
+			colour_paths[combat_highlight_colour_index], colour_paths[combat_keyline_colour_index],
+			colour_paths[blocked_highlight_colour_index], colour_paths[blocked_keyline_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -171,7 +175,10 @@ namespace debug_console_acceptance
 			"presentation.player_identity.background_colour_extra", "presentation.player_identity.ink_colour.r",
 			"presentation.player_identity.ink_colour_extra", "presentation.combat_feedback.sprite_sheet",
 			"presentation.combat_feedback.fill_frame", "presentation.combat_feedback.highlight.r",
-			"presentation.combat_feedback.highlight_colour", "presentation.combat_feedback.keyline_extra" })
+			"presentation.combat_feedback.highlight_colour", "presentation.combat_feedback.keyline_extra",
+			"presentation.blocked_shot.sprite_sheet", "presentation.blocked_shot.fill_frame",
+			"presentation.blocked_shot.highlight.r", "presentation.blocked_shot.highlight_colour",
+			"presentation.blocked_shot.keyline_extra" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -202,7 +209,8 @@ namespace debug_console_acceptance
 				"Each Weapon tint resets independently while every other pending colour remains intact: " + path);
 		}
 		for (const std::size_t index : { std::size_t(11), std::size_t(12),
-			combat_highlight_colour_index, combat_keyline_colour_index })
+			combat_highlight_colour_index, combat_keyline_colour_index,
+			blocked_highlight_colour_index, blocked_keyline_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -215,6 +223,8 @@ namespace debug_console_acceptance
 				(index != 11 || impl.tune_document("presentation")->edits().count("weapon_feedback.keyline") == 1) &&
 				(index != combat_highlight_colour_index ||
 					impl.tune_document("presentation")->edits().count("combat_feedback.keyline") == 1) &&
+				(index != blocked_highlight_colour_index ||
+					impl.tune_document("presentation")->edits().count("blocked_shot.keyline") == 1) &&
 				&presentation.weapon_feedback() == feedback && feedback->sprite_sheet.data() == feedback_sheet &&
 				feedback->fill_frame.data() == feedback_fill && &presentation.combat_feedback() == combat_look &&
 				combat_look->sprite_sheet.data() == combat_sheet && combat_look->fill_frame.data() == combat_fill &&
@@ -246,7 +256,8 @@ namespace debug_console_acceptance
 		// The literal save oracle replaces one exact span in otherwise untouched
 		// LF content. A subsequent external edit to another field must survive.
 		for (const std::size_t index : { std::size_t(5), std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
-			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index })
+			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index,
+			blocked_highlight_colour_index, blocked_keyline_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -271,7 +282,8 @@ namespace debug_console_acceptance
 			const char* unrelated_word = index == 5 ? "102030" : index == 7 ? "203040" :
 				index == 8 ? "304050" : index == 9 ? "405060" : index == 10 ? "506070" :
 				index == 11 ? "607080" : index == 12 ? "708090" :
-				index == combat_highlight_colour_index ? "8192A3" : "92A3B4";
+				index == combat_highlight_colour_index ? "8192A3" : index == combat_keyline_colour_index ? "92A3B4" :
+				index == blocked_highlight_colour_index ? "A3B4C5" : "B4C5D6";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -295,14 +307,16 @@ namespace debug_console_acceptance
 				"Colour save leaves no temporary files beside either content copy");
 		}
 		for (const std::size_t index : { std::size_t(9), std::size_t(10), std::size_t(11), std::size_t(12),
-			combat_highlight_colour_index, combat_keyline_colour_index })
+			combat_highlight_colour_index, combat_keyline_colour_index,
+			blocked_highlight_colour_index, blocked_keyline_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
 			const wchar_t* const scratch_name = index == 9 ? L"weapon-selected-crlf" :
 				index == 10 ? L"weapon-unselected-crlf" : index == 11 ? L"feedback-highlight-crlf" :
 				index == 12 ? L"feedback-keyline-crlf" : index == combat_highlight_colour_index ?
-				L"combat-highlight-crlf" : L"combat-keyline-crlf";
+				L"combat-highlight-crlf" : index == combat_keyline_colour_index ? L"combat-keyline-crlf" :
+				index == blocked_highlight_colour_index ? L"blocked-highlight-crlf" : L"blocked-keyline-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -338,7 +352,8 @@ namespace debug_console_acceptance
 			const JsonSpanDocument theirs_document(theirs, "weapon-crlf-reference");
 			const char* unrelated_word = index == 9 ? "607080" : index == 10 ? "708090" :
 				index == 11 ? "8192A3" : index == 12 ? "92A3B4" :
-				index == combat_highlight_colour_index ? "A3B4C5" : "B4C5D6";
+				index == combat_highlight_colour_index ? "A3B4C5" : index == combat_keyline_colour_index ? "B4C5D6" :
+				index == blocked_highlight_colour_index ? "C5D6E7" : "D6E7F8";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -613,6 +628,137 @@ namespace debug_console_acceptance
 			"Resetting combat keyline restores its original authored token after rejected saves");
 		unchanged();
 		write_text(scratch.source / L"presentation.json", baseline);
+	}
+
+	void check_blocked_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"blocked-colour-cues");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const BlockedShotPresentation* const look = &presentation.blocked_shot();
+		const std::string sheet = look->sprite_sheet, fill = look->fill_frame;
+		const auto initial_colours = colour_values(presentation);
+		const bool enabled = look->enabled;
+		const auto shape = [&]
+		{
+			return std::array<float, 7>{ look->duration, look->repeat_delay, look->width,
+				look->reach, look->bead_size, look->stroke_width, look->keyline_width };
+		};
+		const auto held_shape = shape();
+		labrador::RenderResources resources;
+		resources.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
+			(game_directory / L"textures" / (sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
+		BlockedShotFeedback feedback(look, &resources);
+		const std::array<mattmath::Vector2F, 4> normals{ mattmath::Vector2F(2.0f, 0.0f),
+			mattmath::Vector2F(0.0f, -2.0f), mattmath::Vector2F(-2.0f, 0.0f), mattmath::Vector2F(0.0f, 2.0f) };
+		for (int index = 0; index <= paint_owners::count; ++index)
+		{
+			feedback.emit({ mattmath::Vector2F(120.0f + static_cast<float>(index) * 40.0f, 200.0f),
+				normals[static_cast<std::size_t>(index) % normals.size()],
+				labrador::Colour(32 + index * 12, 192 - index * 9, 80 + index * 7, 160),
+				index == paint_owners::count ? -1 : index });
+		}
+		// Keep every repeat budget positive as well as every cue age nonzero;
+		// a reset to zero must not pass this retained-state check vacuously.
+		feedback.update(std::min(look->duration, look->repeat_delay) * 0.5f);
+		require(feedback.cues().size() == static_cast<std::size_t>(paint_owners::count + 1) &&
+			feedback.bounds() != mattmath::RectangleF::ZERO &&
+			std::all_of(feedback.cues().begin(), feedback.cues().end(), [&](const BlockedShotFeedback::Cue& cue)
+				{ return cue.age > 0.0f && cue.age < look->duration; }),
+			"Blocked colour fixture retains an actual aged cue for every paint owner and the invalid-owner bucket");
+		for (int owner = -1; owner < paint_owners::count; ++owner)
+		{
+			require(feedback.repeat_remaining(owner) > 0.0f,
+				"Every blocked-colour fixture owner starts with an active repeat budget");
+		}
+		const auto state = [&]
+		{
+			std::vector<float> values;
+			for (const BlockedShotFeedback::Cue& cue : feedback.cues())
+			{
+				const auto& contact = cue.contact;
+				const auto bounds = feedback.cue_bounds(cue);
+				values.insert(values.end(), { contact.position.x, contact.position.y,
+					contact.normal.x, contact.normal.y, contact.team_colour.r, contact.team_colour.g,
+					contact.team_colour.b, contact.team_colour.a, static_cast<float>(contact.player_num),
+					cue.age, bounds.x, bounds.y, bounds.width, bounds.height });
+			}
+			for (int owner = -1; owner < paint_owners::count; ++owner)
+				{ values.push_back(feedback.repeat_remaining(owner)); }
+			values.push_back(feedback.repeat_remaining(paint_owners::count));
+			return values;
+		};
+		const auto held_state = state();
+		const auto held_bounds = feedback.bounds();
+		const auto unchanged = [&]
+		{
+			require(&presentation.blocked_shot() == look && look->sprite_sheet == sheet &&
+				look->fill_frame == fill && look->enabled == enabled && shape() == held_shape &&
+				state() == held_state && feedback.bounds() == held_bounds &&
+				feedback.repeat_remaining(-1) == feedback.repeat_remaining(paint_owners::count),
+				"Blocked colour adoption retains the borrowed look, assets, geometry, stored contacts/team tints, ages, bounds and every owner repeat budget");
+		};
+		std::srand(0x6b117);
+		const int expected_random = std::rand();
+		std::srand(0x6b117);
+		for (const std::size_t index : { blocked_highlight_colour_index, blocked_keyline_colour_index })
+		{
+			for (const auto& [word, expected] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
+				{ "RED", { 255, 0, 0 } }, { "2060C080", { 32, 96, 192, 128 } },
+				{ "A532D600", { 165, 50, 214, 0 } } } })
+			{
+				require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + word).ok &&
+					colour_values(presentation)[index] == expected,
+					"A preconstructed blocked cue accepts straight named/partial/zero-alpha authored channels");
+				unchanged();
+			}
+		}
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const JsonSpanDocument baseline_document(baseline, "blocked-colour-merged-reference");
+		const JsonLeaf* repeat_delay = baseline_document.find("blocked_shot.repeat_delay");
+		require(repeat_delay != nullptr, "Blocked merged candidate has its unrelated timing constraint");
+		const std::string external = baseline_document.replaced(*repeat_delay, "0.001");
+		write_text(scratch.source / L"presentation.json", external);
+		const TuneDocument* const pending = impl.tune_document("presentation");
+		const std::string pending_text = pending->current().text();
+		const auto pending_colours = colour_values(presentation);
+		for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+		{
+			require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == external &&
+				read_text(scratch.staged / L"presentation.json") == baseline && pending->current().text() == pending_text &&
+				pending->baseline().text() == baseline && pending->edits().size() == 2 &&
+				pending->edits().contains("blocked_shot.highlight") && pending->edits().contains("blocked_shot.keyline") &&
+				colour_values(presentation) == pending_colours,
+				"An invalid blocked timing constraint rejects the complete merged candidate without changing disk/staging/live/ledger, even with force");
+			unchanged();
+		}
+		require(impl.execute("tune.reset presentation.blocked_shot.highlight").ok &&
+			look->highlight == initial_colours[blocked_highlight_colour_index] &&
+			look->keyline == labrador::Colour(165, 50, 214, 0) && pending->edits().size() == 1 &&
+			pending->edits().contains("blocked_shot.keyline"),
+			"Resetting blocked highlight retains the independent nonblack zero-alpha keyline edit");
+		unchanged();
+		require(impl.execute("tune.reset presentation.blocked_shot.keyline").ok &&
+			colour_values(presentation) == initial_colours && pending->edits().empty() && pending->current().text() == baseline,
+			"Resetting blocked keyline restores both original authored tokens after rejected saves");
+		unchanged();
+		write_text(scratch.source / L"presentation.json", baseline);
+		const JsonSpanDocument saved_highlight(baseline_document.replaced(
+			*baseline_document.find("blocked_shot.highlight"), "\"2060C080\""), "blocked-colour-save-reference");
+		const std::string saved = saved_highlight.replaced(*saved_highlight.find("blocked_shot.keyline"), "\"A532D600\"");
+		require(impl.execute("tune presentation.blocked_shot.highlight 2060C080").ok &&
+			impl.execute("tune presentation.blocked_shot.keyline A532D600").ok &&
+			impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
+			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
+			pending->baseline().text() == saved && pending->current().text() == saved &&
+			look->highlight == labrador::Colour(32, 96, 192, 128) && look->keyline == labrador::Colour(165, 50, 214, 0),
+			"Saving both blocked colours changes only the two authored tokens and rebases the retained cue's borrowed look");
+		unchanged();
+		require(std::rand() == expected_random,
+			"Blocked colour edits, resets and valid/refused saves consume no gameplay random draw");
 	}
 
 	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
@@ -919,6 +1065,7 @@ namespace debug_console_acceptance
 		check_menu_layout_tunes(impl, presentation, scratch);
 		check_colour_tunes(game_directory);
 		check_combat_colour_tunes(game_directory);
+		check_blocked_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.

@@ -173,7 +173,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		for (const std::string section : { "weapon_feedback", "combat_feedback" })
+		for (const std::string section : { "weapon_feedback", "combat_feedback", "blocked_shot" })
 		{
 			const std::string feedback_baseline = "{\r\n  \"" + section + "\":{\"highlight\":\"\\u0057HITE\","
 				"\"keyline\":\"\\u0042LACK\",\"sprite_sheet\":\"unchanged\",\"fill_frame\":\"solid\"},\r\n"
@@ -402,10 +402,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited seventeen colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited nineteen colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly seventeen authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly nineteen authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -434,7 +434,11 @@ namespace debug_console_acceptance
 			"tuning.combat_feedback.highlight", "presentation.combat_feedback.sprite_sheet",
 			"presentation.combat_feedback.fill_frame", "presentation.combat_feedback.highlight.r",
 			"presentation.combat_feedback.keyline_extra", "presentation.combat_feedback.highlight_colour",
-			"presentation.combat_feedback.hurt_duration", "presentation.combat_feedback.enabled" })
+			"presentation.combat_feedback.hurt_duration", "presentation.combat_feedback.enabled",
+			"blocked_shot.highlight", "tuning.blocked_shot.highlight", "presentation.blocked_shot.sprite_sheet",
+			"presentation.blocked_shot.fill_frame", "presentation.blocked_shot.highlight.r",
+			"presentation.blocked_shot.keyline_extra", "presentation.blocked_shot.highlight_colour",
+			"presentation.blocked_shot.duration", "presentation.blocked_shot.enabled" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -464,6 +468,9 @@ namespace debug_console_acceptance
 			{ "presentation.weapon_feedback.keyline", TuneScope::live },
 			{ "presentation.combat_feedback.highlight", TuneScope::live },
 			{ "presentation.combat_feedback.keyline", TuneScope::live },
+			{ "presentation.blocked_shot.highlight", TuneScope::live },
+			{ "presentation.blocked_shot.keyline", TuneScope::live },
+			{ "presentation.blocked_shot.duration", TuneScope::next_screen },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -574,7 +581,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All seventeen colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All nineteen colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

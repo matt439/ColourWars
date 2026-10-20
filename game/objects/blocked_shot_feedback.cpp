@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/blocked_shot_feedback.h"
+#include "game/objects/crude_drawing.h"
 
 #include <algorithm>
 #include <cmath>
@@ -96,10 +97,12 @@ void BlockedShotFeedback::draw_block(DrawList& draw_list, const Vector2F& center
     const Vector2F origin(static_cast<float>(source.width) * 0.5f,
         static_cast<float>(source.height) * 0.5f);
     const float edge = this->presentation_->keyline_width * 2.0f;
+    // Authored RGBA is straight; premultiply once before the lifetime fade.
     this->draw_with(draw_list, RectangleF(center, size + Vector2F(edge, edge)),
-        this->frame(), this->presentation_->keyline * alpha, origin, SpriteFlip::none, angle);
+        this->frame(), CrudeDrawing::premultiplied(this->presentation_->keyline) * alpha,
+        origin, SpriteFlip::none, angle);
     this->draw_with(draw_list, RectangleF(center, size), this->frame(),
-        colour * alpha, origin, SpriteFlip::none, angle);
+        CrudeDrawing::premultiplied(colour) * alpha, origin, SpriteFlip::none, angle);
 }
 
 void BlockedShotFeedback::draw(DrawList& draw_list) const

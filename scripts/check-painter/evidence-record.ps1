@@ -214,6 +214,31 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($BlockedShotTuneColoursOnly) {
+    $result.scope = 'blocked-shot-tune-colours-only'
+    $result.Remove('stage')
+    $result.stages = @()
+    $result.player_counts = @()
+    $result.palettes = @('opaque-default', 'literal-rgb', 'literal-rgba128', 'literal-alpha0-nonzero-rgb')
+    $result.weapons = @()
+    $result.resolutions = @('1280x720')
+    $result.actions = @('eight-retained-four-normal-full-half-age-contacts', 'quadratic-half-age-fade-0.75', 'black-and-nonblack-underlays', 'independent-raw-source-geometry-and-premultiplied-channels', 'opaque-default-legacy-parity', 'double-fade-and-straight-alpha-controls', 'stored-team-beads-retained-at-zero-authored-alpha', 'complete-paint-owner-plus-invalid-budgets-and-cue-bounds')
+    $result.input_slots = @()
+    $result.inputs = 'Normal GamepadReader backend; no reader sampling, keyboard events, scripted pads, Level/StateContext updates or match objects. Two preconstructed BlockedShotFeedback instances retain four synthetic cardinal contacts each; only the second receives one local half-age preparation update.'
+    $result.audio = 'No gameplay audio events; this renderer proof establishes no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Both presets compare retained full/half-age contacts against independent raw geometry, literal stored team colours and explicit source-alpha channels. Half age keeps the existing quadratic0.75 fade; no linear0.5 substitution. Four literal highlight/keyline palettes on two underlays include opaque legacy parity, wrong double-fade and straight-alpha controls, and nonblack RGB with both authored alpha values zero while stored team beads remain. Frozen snapshots include every contact tint/position/normal/owner/age, all paint-owner repeat budgets plus the shared invalid bucket, per-cue/aggregate bounds, assets/geometry and draw RNG. Shared evidence:32 readbacks,eight CSV rows,eight440x240 crops(844800 pixels),eight controls,one local age preparation,zero Level/StateContext updates. Artifact counts and hashes retained. No shot-launch classification, Level route, gameplay, physical/global input, OS-focus delivery, listening, human readability or performance acceptance.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('fifteen-real-named-rgb-rgba-reset-save-commands', 'exact-two-token-private-save-and-rebase', 'unchanged-private-preferences-and-source-staged-bytes')
+        $result.inputs += ' Debug adds a private DebugDirector with isolated source/staged/user/profile/TEMP/TMP paths and exactly two successful private preference seed Saves; no controlled save failure.'
+        $result.checks += ' Debug adds15 commands,60 readbacks,20 CSV rows,zero crops and one local age preparation on retained borrowed consumers. Exact two-token private save/rebase and reset-to-saved baseline are checked with actual content, all active play/deadzone/display/palette/Jump preferences and saved preference bytes unchanged, with no queued match work. Debug totals92 readbacks,28 CSV rows,eight crops,two local age preparations,zero Level/StateContext updates.'
+        $result['developer_command_scope'] = 'debug-validated-commands'
+    }
+    else {
+        $result.inputs += ' Release remains consumer-only without a developer director, command transcript, scratch tree or nested Save.'
+        $result['developer_command_scope'] = 'not-run-release-consumer-only'
+    }
+}
 elseif ($CombatTuneColoursOnly) {
     $result.scope = 'combat-tune-colours-only'
     $result.Remove('stage')
