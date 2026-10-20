@@ -131,7 +131,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 16 | Windowed Apply shows a deliberately hidden window | standalone `hidden_apply_exhibit.cpp` and the client Apply guard | local unfiled bug draft - master checked 2026-10-20; Debug/Release reproduce |
 | 17 | The Win32 window ignores DPI once the client opts in | the `dpiAwareness` block in `game/settings.manifest`; the DPI assertion in `scripts/check-startup.ps1` | draft — checked against published master 2026-10-17 |
 | 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `level_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
-| 19 | The window is shown before the client has loaded anything | `initialize()` before `load_manifest` in `game/main.cpp`, with a startup timing | draft — low priority; checked against the pin |
+| 19 | No public later-show convenience for an Application initialized hidden | exact standalone hidden-creation control and `game/main.cpp` startup order | local unfiled request - master checked 2026-10-20; four hidden Debug/Release cases pass; first present remains open |
 | 20 | Scene drawing gives client objects no view context | `draw_miniature_view`, `Level::draw_miniature_world`, the borrowed scenery mirror and `Structure::draw_miniature` | draft - source audit against the pin only; recheck upstream before filing |
 | 21 | Digital action evaluation remains client code | runtime saved Jump mapping and the standalone `action_evaluation.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 
@@ -708,67 +708,81 @@ the low ceiling they label rather than beside it.
 
 ---
 
-## 19. The window is shown before the client has loaded anything — **draft with startup timing exhibit**
+<a id="19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit"></a>
 
-**Exhibit:** the order in [game/main.cpp](../../game/main.cpp), and a timing of
-it. `app.initialize()` shows the window. The client then registers its level
-kind, calls `app.load_manifest` and `validate_game_content`, and only
-`app.run` presents a first frame. Until then the window shows nothing the game
-drew (gap audit 5.1). There is no workaround in this tree, and the reasons are
-below.
+## 19. No public later-show convenience for a hidden Application - **draft with hidden-creation exhibit**
 
-### What happens
+The sanitized [request](../engine-reports/startup-visibility.md),
+[exact tested source](../../scripts/engine-reports/startup-visibility/startup_hidden_creation.cpp)
+and [public build recipe](../../scripts/engine-reports/startup-visibility/build-startup-hidden.ps1)
+are prepared and remain **unfiled**. The stable old section anchor is retained
+above; its former unretained timing is not current supporting evidence.
 
-Checked against the pin, `52e809a`, on 2026-10-17. `Application::initialize`
-builds the window first (`create_window`), then the audio device and the
-render device. The Win32 `Window` constructor ends with
-`ShowWindow(SW_SHOWDEFAULT)`, or `SW_SHOWMAXIMIZED` in fullscreen
-(`engine/app/win32/window.cpp`, the end of `Window::Impl::Impl`). Its class
-brush is `COLOR_WINDOW + 1`. The window is visible before the call returns.
-`ApplicationOptions::visible` is the only visibility control, and it is read
-once, at creation. `Application` has no later `show()`.
+### Existing capability and bounded gap
 
-A one-off instrumentation, not kept, timed the wait on this machine (Ryzen 9
-9950X3D, warm file cache, 5 launches of each build). The clock ran from the
-return of `initialize()` to the top of `app.run`:
+`ApplicationOptions::visible=false` already creates a hidden window, including
+its device/services. `Application` and `Window` expose native handles but no
+public later-show convenience. A Windows client can use `ShowWindow` through
+`Application::window()`; that alternative is available and is not proven
+broken. It requires the caller to choose platform show-command, sizing and
+focus policy. This client has no production later-show workaround to delete.
 
-| build | `load_manifest` done | top of `app.run` |
-|---|---|---|
-| Release | 44-46 ms | 52-53 ms |
-| Debug | 56-59 ms | 120-124 ms |
+Fresh upstream master was fetched on 2026-10-20 at 19:34:53 UTC as
+`52e809a5a0229d37db4373faa7853df4c861a310`, with the whole engine worktree
+confirmed unchanged against that `FETCH_HEAD`. Win32 chooses `SW_HIDE` for
+hidden creation; its default-visible branch requests `SW_SHOWDEFAULT` or
+`SW_SHOWMAXIMIZED`. Actual windowed visibility also follows launcher policy.
+A hidden smoke launch does not establish normal first-visible startup pixels.
 
-That is about three 60 Hz frames in Release. It leaves out the device
-creation inside `initialize()` after the show, and the first menu's
-construction and present inside `run`, so the real wait is longer. A cold
-cache or a slower disk adds more, and the manifest grows with every stage and
-sound bank. This is small today. It is a shown, unpainted window on every
-launch, and the engine owns its whole cause.
+The order in [game/main.cpp](../../game/main.cpp) still matters: initialize,
+register kinds, load/validate content, construct the first state and run. The
+initial default-visible request precedes device/content setup, but neither the
+historical unretained timing nor hidden controls measure an actual first
+present. The old claim that one `app.show()` after validation closes startup
+is withdrawn: first-state construction and first rendering still follow.
 
-A client-side fix exists, and it is the wrong one. The client could pass
-`visible = false` and call `ShowWindow` on `Application::window()` after
-validation. That puts Win32 in a client of a portable shell. It copies the
-engine's choice of show command out of `window.cpp`. In fullscreen it moves
-the `WM_SIZE` that `window.cpp`'s comment says `create_device` relies on to a
-point after the device exists. [Report 16](#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit)
-shows the same seam from the other side: visibility is decided once at
-creation, and nothing after creation keeps to it.
+### Measured positive control
 
-### The ask, when it goes
+Two direct MSVC 19.51.36256.0 `/W4 /WX` builds link the existing D3D11,
+XAudio2 and XInput shell/dependencies. Four sequential Debug/Release
+windowed/fullscreen-option runs all exited 0 with empty stderr. Each observed
+an owned hidden HWND, 1280x720 client/layout/back-buffer sizes and Direct3D 11,
+then verified destruction during scope teardown. The fullscreen-option data
+is a hidden-creation observation, not monitor-sized geometry or a transition
+guarantee.
 
-Either an `Application::show()` (with `ApplicationOptions::visible = false`
-meaning "not yet") that applies the same show command the constructor would
-have, or `initialize()` clearing and presenting one frame before it returns, so
-the shown window is at least the renderer's clear colour and not a system
-brush. The first lets a client show a window whose first frame is its own. The
-second needs nothing from any client. Report 16's fix (keeping deliberate
-hidden visibility) goes with either.
+The source loads no assets or save, starts no state loop, and performs no
+drawing, presentation, showing, input injection or foreground request. It initializes
+real devices; asset-free does not mean device-free. Runtime checks remain
+active in Release. Header inspection establishes the absent public method;
+the runtime control establishes only the already-supported hidden half.
 
-An answer lets this client delete nothing, because nothing works around this
-today. The client would add one `app.show()` after `validate_game_content` in
-`main.cpp`, and `GAP#5.1`'s startup half would close.
+Receipts are retained under
+`out/validation/crossfeed-20261020/startup-visibility-report-final-v1/`, with
+two compile argument/log sets, four stdout/stderr pairs and `result.json`.
+The exact source SHA-256 is
+`E4CE532B903884BC2B6A06D3CF228554E042251D1FDCD93E7F2BBB9C48DC6A1E`.
+The source/build recipe preserve prepared bytes; local Git attributes retain
+LF so the recipe's source-hash guard survives Windows checkout.
 
-**Status:** unfiled draft against the pin, low priority. Recheck engine master
-before filing.
+### The request and remaining startup gate
+
+Consider an explicit public later-show operation or a documented supported
+sequence, with launcher show-command, fullscreen sizing and focus/input
+effects specified. Intentionally hidden tools must remain hidden unless they
+explicitly request otherwise. Documenting native-handle use is a possible
+answer; no failing direct-Win32 sequence is claimed. The fullscreen-Apply
+visibility issue remains separate report 16.
+
+First-visible game content and `GAP#5.1` remain open. Showing after validation
+alone, automatic clear/present, loading-card/transition design, startup timing
+and hardware/human acceptance are outside this control's evidence. A retained
+rendered/visibility check at the actual first-frame boundary is still needed
+before the client's startup half can close.
+
+**Status:** local unfiled request, low priority. Review the prepared report and
+refresh upstream immediately before authorized filing through the publication
+gate. No engine change, first-frame closure or public issue was made.
 
 ---
 
