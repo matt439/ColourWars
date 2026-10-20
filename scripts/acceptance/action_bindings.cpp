@@ -335,10 +335,11 @@ namespace
 	struct Harness
 	{
 		GamepadReader reader; Gamepads pads{ &reader }; Keyboard keyboard; Mouse mouse;
-		GameTuning tuning; PlaySettings preferences; PlayerInput players; MenuInput menu; LegacyMenu legacy;
+		GameTuning tuning; PlaySettings preferences; InputBindings input_bindings;
+		PlayerInput players; MenuInput menu; LegacyMenu legacy;
 		std::vector<PlayerInputData> gameplay; std::vector<ProcessedMenuInput> menus;
 		explicit Harness(const char* directory) : tuning((std::filesystem::path(directory) / "tuning.json").string().c_str()),
-			players(&pads, &keyboard, &mouse, &tuning, &preferences), menu(&pads, &keyboard, &tuning)
+			players(&pads, &keyboard, &mouse, &tuning, &preferences, &input_bindings), menu(&pads, &keyboard, &tuning)
 		{
 			action_test_pads::states = {}; keyboard.set_focused(true); mouse.set_focused(true);
 		}

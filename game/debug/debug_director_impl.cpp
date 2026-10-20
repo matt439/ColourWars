@@ -34,6 +34,7 @@ namespace
 	// F10 out of the queue before the window sees it and counts the press.
 	// Engine report 11 asks for a way to do this without a hook.
 	int f10_presses = 0;
+	bool f10_down = false;
 
 	LRESULT CALLBACK f10_message_hook(int code, WPARAM remove, LPARAM message_pointer)
 	{
@@ -44,16 +45,19 @@ namespace
 				message->message == WM_KEYDOWN || message->message == WM_KEYUP;
 			// Bit 29 is Alt: Alt+F10 stays the system's.
 			const bool alt = (message->lParam & (1 << 29)) != 0;
-			if (key && message->wParam == VK_F10 && !alt)
+			if (key && message->wParam == VK_F10)
 			{
 				const bool down = message->message == WM_SYSKEYDOWN || message->message == WM_KEYDOWN;
 				// Bit 30: the key was already down (auto-repeat).
 				const bool repeat = (message->lParam & (1 << 30)) != 0;
-				if (remove == PM_REMOVE && down && !repeat)
+				if (remove == PM_REMOVE)
 				{
-					++f10_presses;
+					// Track repeats and Alt transitions too: capture must not
+					// mistake F10+A for a single neutral-to-A gesture.
+					f10_down = down;
+					if (!alt && down && !repeat) { ++f10_presses; }
 				}
-				message->message = WM_NULL;
+				if (!alt) { message->message = WM_NULL; }
 			}
 		}
 		return CallNextHookEx(nullptr, code, remove, message_pointer);
@@ -98,6 +102,8 @@ DebugDirectorImpl::~DebugDirectorImpl()
 	if (this->f10_hook_ != nullptr)
 	{
 		UnhookWindowsHookEx(static_cast<HHOOK>(this->f10_hook_));
+		f10_presses = 0;
+		f10_down = false;
 	}
 }
 
@@ -120,6 +126,8 @@ void DebugDirectorImpl::attach(Application* application, GameData* data)
 	}
 	if (application != nullptr && this->f10_hook_ == nullptr)
 	{
+		f10_presses = 0;
+		f10_down = false;
 		this->f10_hook_ = SetWindowsHookExW(WH_GETMESSAGE, f10_message_hook, nullptr,
 			GetCurrentThreadId());
 		if (this->f10_hook_ == nullptr)
@@ -338,13 +346,13 @@ bool DebugDirectorImpl::open_console_if_requested(bool match_hook)
 	return true;
 }
 
-bool DebugDirectorImpl::poll_debug_menu_toggle(float dt)
+DebugChord::Pads DebugDirectorImpl::debug_pads() const
 {
+	DebugChord::Pads pads{};
 	if (this->data_ == nullptr || this->application_ == nullptr)
 	{
-		return false;
+		return pads;
 	}
-	DebugChord::Pads pads{};
 	const Gamepads& gamepads = *this->data_->gamepads();
 	for (int slot = 0; slot < static_cast<int>(pads.size()); ++slot)
 	{
@@ -356,6 +364,33 @@ bool DebugDirectorImpl::poll_debug_menu_toggle(float dt)
 			pad.start = gamepads.state(slot).is_down(GamepadButton::start);
 		}
 	}
+	return pads;
+}
+
+void DebugDirectorImpl::reset_menu_key_if_unfocused() const
+{
+	if (this->f10_hook_ != nullptr && this->application_ != nullptr &&
+		(this->application_->keyboard() == nullptr || !this->application_->keyboard()->focused()))
+	{
+		f10_presses = 0;
+		f10_down = false;
+	}
+}
+
+bool DebugDirectorImpl::capture_blocked_key_down() const
+{
+	this->reset_menu_key_if_unfocused();
+	return this->f10_hook_ != nullptr && f10_down;
+}
+
+bool DebugDirectorImpl::poll_debug_menu_toggle(float dt)
+{
+	if (this->data_ == nullptr || this->application_ == nullptr)
+	{
+		return false;
+	}
+	this->reset_menu_key_if_unfocused();
+	const DebugChord::Pads pads = this->debug_pads();
 	const bool chord = this->chord_.update(pads, dt);
 	const bool f10 = take_f10_press();
 	const bool f11 = this->data_->keyboard()->pressed(Key::f11);
@@ -376,6 +411,7 @@ bool DebugDirectorImpl::poll_debug_menu_toggle(float dt)
 
 void DebugDirectorImpl::forget_menu_key()
 {
+	this->reset_menu_key_if_unfocused();
 	take_f10_press();
 }
 

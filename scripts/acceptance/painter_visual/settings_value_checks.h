@@ -114,7 +114,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         const Vector2F limit(controls_page ? control.controls_position.x - art.focus_padding.x * 2.0f -
             art.shadow_offset - value_position.x : panel.right() - art.shadow_offset - art.focus_padding.x - value_position.x,
             spacing.y - art.focus_padding.y * 2.0f);
-        const wchar_t* label = controls_page ? (row == 3 ? L"View shake" : row == 4 ? L"Aim marker" : L"Reduce effects") :
+        const wchar_t* label = controls_page ? (row == 4 ? L"View shake" : row == 5 ? L"Aim marker" : L"Reduce effects") :
             (row == 1 ? L"Fullscreen" : L"Team palette");
         UiText label_text("reference-value-label", label, font, label_position, app.render_resources(),
             focused ? art.focus_ink : art.ink);
@@ -169,16 +169,16 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         const int on_fit = !custom ? 0 : short_values ? 3 : 2, off_fit = !custom ? 0 : short_values ? 3 : 1;
         if (controls)
         {
-            tap(Key::down); tap(Key::down); tap(Key::down);
-            for (int row = 3; row <= 5; ++row)
+            tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::down);
+            for (int row = 4; row <= 6; ++row)
             {
-                const bool initial = row != 5;
+                const bool initial = row != 6;
                 compare(name + "-initial", true, row, initial ? words.on : words.off, snapshot, true, initial ? on_fit : off_fit);
                 tap(Key::left);
                 compare(name + "-left", true, row, words.off, snapshot, true, off_fit);
                 tap(Key::right);
                 compare(name + "-right", true, row, words.on, snapshot, true, on_fit);
-                if (row != 5) { tap(Key::left); }
+                if (row != 6) { tap(Key::left); }
                 tap(Key::down);
             }
         }
@@ -201,8 +201,8 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     {
         if (controls)
         {
-            compare(name, true, 3, words.off, snapshot, false); compare(name, true, 4, words.off, snapshot, false);
-            compare(name, true, 5, words.on, snapshot, false);
+            compare(name, true, 4, words.off, snapshot, false); compare(name, true, 5, words.off, snapshot, false);
+            compare(name, true, 6, words.on, snapshot, false);
         }
         else
         {
@@ -291,13 +291,13 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     presentation = old; reset(); open(); exercise("parent-before-child", old, long_words, true, false);
     if (controls)
     {
-        for (int row = 0; row < 6; ++row) { tap(Key::up); }
+        for (int row = 0; row < 7; ++row) { tap(Key::up); }
         presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Value parent failed to open Pad sticks");
         tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::down); tap(Key::enter);
         const int cutoff = preferences.play_settings().sticks[0].movement_deadzone;
         tap(Key::down); tap(Key::enter); tick(); require(stack.depth() == 2, "Value child Back lost the Controls parent");
         compare_pending("old-parent-after-child", old, long_words);
-        for (int row = 0; row < 6; ++row) { tap(Key::down); } apply();
+        for (int row = 0; row < 7; ++row) { tap(Key::down); } apply();
         Save reloaded; reloaded.load_save_file();
         require(!reloaded.play_settings().view_shake && !reloaded.play_settings().aim_marker && reloaded.play_settings().reduce_effects &&
             reloaded.play_settings().sticks[0].movement_deadzone == cutoff, "Value parent Apply lost a newer child's committed cutoff");
@@ -305,9 +305,9 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     else
     {
         tap(Key::up); tap(Key::up); presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Options value parent failed to open Controls");
-        tap(Key::down); tap(Key::down); tap(Key::down);
-        compare("new-child-on", true, 3, next_words.on, next, true); tap(Key::left);
-        compare("new-child-off", true, 3, next_words.off, next, true); tap(Key::escape); tick();
+        tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::down);
+        compare("new-child-on", true, 4, next_words.on, next, true); tap(Key::left);
+        compare("new-child-off", true, 4, next_words.off, next, true); tap(Key::escape); tick();
         require(stack.depth() == 2, "Controls child Back lost its Options value parent");
         compare_pending("old-parent-after-child", old, long_words); tap(Key::down); tap(Key::down); apply();
         Save reloaded; reloaded.load_save_file(); require(!reloaded.fullscreen() && reloaded.team_palette() == TeamColourPair::random,

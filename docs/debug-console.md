@@ -848,9 +848,13 @@ The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
   pageup pagedown left right up down minus equals lbracket rbracket backslash
   semicolon apostrophe comma period slash pause escape`, case-insensitive. No
   `alt+`: Alt+F4, Alt+Space and Alt+Tab belong to the system whatever a bind
-  says. **`grave`, `f10` and `f11` are reserved** (console, debug menu). A key the
-  keyboard player uses (A, D, S, Space, Down, Escape, F1) binds with a warning:
-  it does both.
+  says. **`grave`, `f10` and `f11` are reserved** (console, debug menu). Bare
+  binds on A, D, S, Space, Down, Escape and F1 keep their existing warning;
+  Space still skips the opening after Jump is rebound, and Enter retains its
+  existing omission. A bare bind on the effective saved Jump key also warns:
+  it does both. The Keyboard Jump page warns about an existing bare bind on
+  its pending key. These are warnings, so the bind and gameplay source both
+  remain available. See the [keyboard Jump slice](feature-roadmap.md#action-bindings-gap42).
 - Modifiers match exactly: Shift+F5 does not run F5's bind. (Before phase 4,
   Shift+F5 restarted like F5.)
 - Binds run only in a match, and not while the live console is open. The echo
@@ -864,6 +868,15 @@ The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
 
 There is no free F-key for the perf overlay: F12 is the Windows debugger hotkey
 (it breaks into an attached debugger). `bind shift+f2 "overlay perf"` gives it one.
+
+While the Keyboard Jump page captures a physical key, it owns input before
+developer page hooks run. Grave/F10/F11 presses and the pad Back+Start chord
+cannot open developer UI or leak into it afterward. Capture discards queued
+scripts, match/leave requests, goto, screenshots, reload content and armed
+record/replay work, with one cancellation notice. It retains active
+recording/replay, binds and current settings. A consumed pad chord must release
+both buttons before it can start another session. The developer hooks and
+collision query are inert in Release; keyboard Jump rebinding is available there.
 
 ## History
 
@@ -1099,8 +1112,9 @@ as the game. In Release:
     and cheats, applies a goto stored before the match, and resets the clock's
     partial step.
   - Every `MenuPage` runs `before_page_update(page, dt)` before its
-    `update_page`; the page is a `DebugPageTarget`, which is how the director
-    starts a match, dismisses a page or resets its input. It also ticks
+    `update_page`, except that raw keyboard capture calls `capture_input_frame`
+    first and bypasses ordinary developer work. The page is a `DebugPageTarget`,
+    which is how the director starts a match, dismisses a page or resets its input. It also ticks
     scripts there (not under the debug menu) and closes a live console.
   - `update_match` passes `Level::update` the seat filter in force (a replay,
     else a recorder wrapping the bots, else the bots, else none) and counts

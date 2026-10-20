@@ -85,6 +85,11 @@ public:
 	void update_match(DebugMatchTarget& match,
 		const std::vector<PlayerInputData>& inputs, float dt);
 	bool before_page_update(DebugPageTarget& page, float dt);
+	void begin_keyboard_capture();
+	void capture_input_frame(DebugPageTarget& page);
+	bool capture_blocked_key_down() const;
+	void end_keyboard_capture();
+	bool keyboard_jump_collision(labrador::Key key) const;
 
 	// The console and the debug menu report their own lifetimes, so only one
 	// of each is ever open.
@@ -239,6 +244,7 @@ private:
 	// The thread message hook that turns F10 into a debug-menu toggle
 	// instead of the system menu (see engine-reports.md, report 11).
 	void* f10_hook_ = nullptr;
+	bool keyboard_capture_ = false;
 
 	// `intro`: empty for the game's own choice, else full, quick or off.
 	std::string intro_;
@@ -277,6 +283,9 @@ private:
 	void register_player_commands();
 	bool open_console_if_requested(bool match_hook);
 	bool poll_debug_menu_toggle(float dt);
+	DebugChord::Pads debug_pads() const;
+	void reset_menu_key_if_unfocused() const;
+	void cancel_capture_work();
 	void open_debug_menu();
 	void run_binds(DebugMatchTarget& match);
 	MatchPlanner planner() const;

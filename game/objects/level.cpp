@@ -30,7 +30,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	// Disambiguate from DirectX::Mouse.
 	const labrador::Mouse* mouse,
 	std::vector<LevelStation> stations,
-	OpeningMode opening, std::optional<float> duration) :
+	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings) :
 	scene_(std::move(scene)),
 	scenery_(std::move(scenery)),
 	players_(std::move(players)),
@@ -48,6 +48,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	zoom_out_finish_bounds_(zoom_out_finish_bounds)
 {
 	this->preferences_ = preferences;
+	this->input_bindings_ = input_bindings;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
 	const MenuStyle& menu = presentation->menu();
@@ -548,6 +549,7 @@ void Level::set_debug_frame_time(double frame_ms)
 void Level::refresh_layout()
 {
 	this->refresh_station_labels();
+	this->refresh_keyboard_controls();
 	const Vector2F size = this->resolution_manager_->resolution_vec();
 	if (size == this->layout_size_)
 	{

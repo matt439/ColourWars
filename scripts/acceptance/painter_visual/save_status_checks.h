@@ -123,7 +123,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     const auto stage = [&](int page)
     {
         tap(Key::down);
-        if (page == 0) { tap(Key::down); }
+        if (page == 0 || page == 1) { tap(Key::down); }
         tap(Key::right);
         const int remaining = page == 0 ? 3 : page == 1 ? 5 : 2;
         for (int row = 0; row < remaining; ++row) { tap(Key::down); }
@@ -271,7 +271,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         for (Presentation* snapshot : { &old, &next })
         {
             auto& help = const_cast<MenuText&>(snapshot->menu_text()).help;
-            help.controls = L"Controls: move, aim and paint.";
+            help.controls = L"Controls: move, aim and paint. Jump: {jump}.";
             help.pad_association = L"Profiles follow pad slots.";
         }
     }
@@ -320,14 +320,14 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     if (controls_pages)
     {
         reset(); presentation = old; open(1); stage(1);
-        for (int row = 0; row < 6; ++row) { tap(Key::up); }
+        for (int row = 0; row < 7; ++row) { tap(Key::up); }
         presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Status parent failed to open a newer child");
         stage(2); compare("new-child-pending", 2, 0, next, next_words, true); apply(2);
         compare("new-child-saved", 2, 1, next, next_words);
         const int cutoff = preferences.play_settings().sticks[0].movement_deadzone;
         tap(Key::down); tap(Key::enter); tick(); require(stack.depth() == 2, "Status child Back lost its suspended parent");
         compare("old-parent-after-child", 1, 0, old, old_words, true);
-        for (int row = 0; row < 6; ++row) { tap(Key::down); }
+        for (int row = 0; row < 7; ++row) { tap(Key::down); }
         apply(1); compare("old-parent-saved-after-child", 1, 1, old, old_words);
         Save reloaded; reloaded.load_save_file();
         require(reloaded.play_settings().music_volume == 10 && reloaded.play_settings().sticks[0].movement_deadzone == cutoff,

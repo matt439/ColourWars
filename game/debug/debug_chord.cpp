@@ -46,6 +46,15 @@ bool DebugChord::update(const Pads& pads, float dt)
 	return fire;
 }
 
+void DebugChord::consume(const Pads& pads)
+{
+	this->update(pads, 0.0f);
+	for (Session& session : this->sessions_)
+	{
+		if (session.active) { session.fired = true; }
+	}
+}
+
 bool DebugChord::suppressing(int slot) const
 {
 	if (slot < 0 || slot >= static_cast<int>(this->sessions_.size()))

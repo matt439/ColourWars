@@ -3,6 +3,7 @@
 #include "game/debug/dev_tools.h"
 #include "game/debug/debug_targets.h"
 #include "game/objects/opening_mode.h"
+#include "engine/input/keyboard.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -106,6 +107,15 @@ public:
 	// for. True: the page should not run its own logic this frame.
 	bool before_page_update(DebugPageTarget& page, float dt);
 
+	// A page owns raw keyboard input through its capture/release gate. Cancel
+	// queued developer work on entry; drain reserved keys/chords each frame.
+	void begin_keyboard_capture();
+	void capture_input_frame(DebugPageTarget& page);
+	bool capture_blocked_key_down() const;
+	void end_keyboard_capture();
+	// A bare developer bind on a capturable Jump key is a warning, not a conflict.
+	bool keyboard_jump_collision(labrador::Key key) const;
+
 	// GameLevel::draw, last: the paint coverage overlay, and a small strip
 	// naming non-default debug state (timescale, pause, feedback,
 	// overlays, cheats) while the console is closed.
@@ -142,6 +152,11 @@ inline void DebugDirector::match_suspended(DebugMatchTarget&) {}
 inline bool DebugDirector::drives_slot(int) const { return false; }
 inline OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const { return chosen; }
 inline bool DebugDirector::before_page_update(DebugPageTarget&, float) { return false; }
+inline void DebugDirector::begin_keyboard_capture() {}
+inline void DebugDirector::capture_input_frame(DebugPageTarget&) {}
+inline bool DebugDirector::capture_blocked_key_down() const { return false; }
+inline void DebugDirector::end_keyboard_capture() {}
+inline bool DebugDirector::keyboard_jump_collision(labrador::Key) const { return false; }
 inline void DebugDirector::draw_status(labrador::Renderer&) const {}
 inline void DebugDirector::begin_match_draw() const {}
 inline double DebugDirector::frame_time_ms() const { return 0.0; }

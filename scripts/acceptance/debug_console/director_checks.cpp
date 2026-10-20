@@ -177,6 +177,35 @@ namespace debug_console_acceptance
 		require(impl.clock().timescale() == 2.0f && !presentation.movement_feedback().enabled,
 			"Launch arguments run as console statements");
 		presentation.set_movement_feedback_enabled(before);
+
+		require(impl.execute("bind ctrl+j feedback toggle").ok &&
+			!director.keyboard_jump_collision(labrador::Key::j),
+			"A modified developer bind does not collide with a bare Jump key");
+		require(impl.execute("bind j feedback toggle").ok &&
+			director.keyboard_jump_collision(labrador::Key::j) &&
+			!director.keyboard_jump_collision(labrador::Key::f10),
+			"A bare canonical Jump candidate reports its developer collision without admitting reserved keys");
+		require(impl.execute("unbind j").ok && !director.keyboard_jump_collision(labrador::Key::j),
+			"Removing the bare bind clears the Jump collision while its modified bind remains");
+
+		DebugChord consumed;
+		DebugChord::Pads pads{};
+		pads[1] = { true, true, true };
+		require(!consumed.update(pads, 0.2f), "A partial debug chord has not fired");
+		consumed.consume(pads);
+		require(!consumed.update(pads, 2.0f) && consumed.suppressing(1),
+			"Capture consumes a held debug chord rather than deferring its toggle");
+		pads[1].back = false;
+		require(!consumed.update(pads, 1.0f) && consumed.suppressing(1),
+			"A consumed chord stays suppressed until both buttons release");
+		pads[1].start = false;
+		require(!consumed.update(pads, 0.01f) && consumed.suppressing(1),
+			"The consumed chord's final release still belongs to it");
+		require(!consumed.update(pads, 0.01f) && !consumed.suppressing(1),
+			"A fully released consumed chord rearms on the next neutral frame");
+		pads[1].back = pads[1].start = true;
+		require(consumed.update(pads, DebugChord::hold_seconds),
+			"A fresh chord still opens the developer menu after capture");
 	}
 
 	void check_unwinding(GameTuning& tuning, Presentation& presentation)
@@ -252,6 +281,36 @@ namespace debug_console_acceptance
 		require(log_contains(impl.log(), "match: starting x", DebugSeverity::info),
 			"The start is logged");
 		director.attach_match(match);
+		director.detach_match(match);
+
+		// Raw capture cancels queued work rather than replaying it on release.
+		director.attach_match(match);
+		require(impl.execute("players 4").ok && impl.execute("menu").ok &&
+			impl.execute("screenshot capture-cancelled").ok && impl.execute("goto high_step").ok,
+			"Capture cancellation fixture queues a rebuild, leave, screenshot and goto");
+		DebugScriptRunner::Frame script;
+		script.name = "capture-cancelled.cfg";
+		script.statements.push_back({ script.name, 1, "stage x" });
+		require(impl.scripts().push(std::move(script)).ok, "Capture cancellation fixture queues a future script");
+		const float speed = impl.clock().timescale();
+		const auto binds = impl.binds();
+		const int prior_leaves = match.leaves, prior_rebuilds = match.rebuilds;
+		impl.log().clear();
+		director.begin_keyboard_capture();
+		require(impl.request().empty() && !impl.scripts().running() && !impl.pending_screenshot() &&
+			impl.clock().timescale() == speed && impl.binds() == binds &&
+			impl.log().lines().size() == 1 &&
+			log_contains(impl.log(), "discarded queued developer work", DebugSeverity::warning),
+			"Capture atomically cancels queued developer work with one notice while preserving settings");
+		FakePage capturing;
+		director.capture_input_frame(capturing);
+		require(!director.before_page_update(capturing, dt) && capturing.starts == 0 && capturing.dismissals == 0 &&
+			impl.log().lines().size() == 1 && !director.capture_blocked_key_down(),
+			"Repeated capture frames run no developer page work or duplicate cancellation notice");
+		director.end_keyboard_capture();
+		require(!director.before_page_update(capturing, dt) &&
+			!director.before_match_update(match, dt) && match.leaves == prior_leaves && match.rebuilds == prior_rebuilds,
+			"Capture release does not replay the discarded page, leave or rebuild requests");
 		director.detach_match(match);
 	}
 

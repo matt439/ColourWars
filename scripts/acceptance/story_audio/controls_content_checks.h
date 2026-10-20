@@ -1,6 +1,6 @@
 #pragma once
 
-// Controls/audio keeps eight rows, a separate status and a measured help column.
+// Controls/audio keeps nine rows, a separate status and a measured help column.
 // Shared paper-colour and card-shape limits are covered by the end-menu cases.
 namespace
 {
@@ -117,7 +117,7 @@ namespace
 		rejected("status_position", [&](rapidjson::Document& json)
 		{
 			json["controls_settings"]["status_position"]["y"].SetFloat(menu.layout.position.y +
-				menu.layout.spacing.y * 7.0f + menu.layout.size.y + menu.art.focus_padding.y + menu.art.shadow_offset);
+				menu.layout.spacing.y * 8.0f + menu.layout.size.y + menu.art.focus_padding.y + menu.art.shadow_offset);
 		});
 		rejected("status_position", [&](rapidjson::Document& json)
 			{ json["controls_settings"]["status_position"]["x"].SetFloat(menu.controls_position.x); });
@@ -148,7 +148,7 @@ namespace
 		rejected("layout.spacing", [&](rapidjson::Document& json)
 		{
 			json["controls_settings"]["layout"]["spacing"]["y"].SetFloat(
-				((content_height + menu.box_size.y) / 2.0f - menu.layout.position.y) / 7.0f);
+				((content_height + menu.box_size.y) / 2.0f - menu.layout.position.y) / 8.0f);
 		});
 
 		// The stick preview shares this page's authored right column. Reject
@@ -258,10 +258,10 @@ namespace
 			widest_preview.controls_settings().stick_preview.line_width == 8.0f,
 			"Valid maximum stick-preview marker and line widths were rejected");
 
-		// The maximum paper size preserves the menu margins; row seven and its
+		// The maximum paper size preserves the menu margins; row eight and its
 		// focus card still end above the status. Text fitting uses real fonts.
 		require(menu.box_size == mattmath::Vector2F(1760.0f, content_height - 40.0f) &&
-			menu.layout.position.y + menu.layout.spacing.y * 7.0f + menu.layout.size.y +
+			menu.layout.position.y + menu.layout.spacing.y * 8.0f + menu.layout.size.y +
 				menu.art.focus_padding.y + menu.art.shadow_offset < menu.status_position.y &&
 			menu.controls_position.x + menu.controls_size.x < (1920.0f + menu.box_size.x) / 2.0f &&
 			menu.controls_position.y + menu.controls_size.y < (content_height + menu.box_size.y) / 2.0f,

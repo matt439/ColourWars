@@ -31,7 +31,12 @@ MenuPage::MenuPage(MenuContext* context) :
 
 void MenuPage::update(float dt)
 {
-	if (this->data()->debug().before_page_update(*this, dt))
+	const bool raw_keyboard_owned = this->owns_raw_keyboard_input();
+	if (raw_keyboard_owned)
+	{
+		this->data()->debug().capture_input_frame(*this);
+	}
+	else if (this->data()->debug().before_page_update(*this, dt))
 	{
 		this->menu_context()->suspend_music();
 		this->reset_menu_motion();
@@ -48,8 +53,12 @@ void MenuPage::update(float dt)
 	if (!this->context()->active()) { this->reset_menu_motion(); }
 	const bool leaving = this->menu_context()->music_exit_pending();
 	const MenuStyle& style = this->menu_style();
-	this->input()->update_directions(dt, style.repeat_delay, style.repeat_interval,
-		this->accepts_stick_navigation());
+	if (raw_keyboard_owned) { this->input()->reset_directions(); }
+	else
+	{
+		this->input()->update_directions(dt, style.repeat_delay, style.repeat_interval,
+			this->accepts_stick_navigation());
+	}
 	if (dt > 0.0f && this->context()->active())
 	{
 		this->menu_context()->update_connection_audio();

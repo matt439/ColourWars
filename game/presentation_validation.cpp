@@ -10,6 +10,7 @@
 #include "game/input_slots.h"
 #include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
+#include "game/controls_text.h"
 #include "game/states/ui_player_badge.h"
 #include "game/text_wrap.h"
 #include "engine/render/sprite_geometry.h"
@@ -277,7 +278,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	}
 	const auto check_menu_item = [&](MenuItem item, const std::string& font, const Vector2F& position,
 		const Vector2F& paper_size, float row_spacing, const std::optional<float>& label_width,
-		const MenuPaperArtPresentation& art, float content_height)
+		const MenuPaperArtPresentation& art, float content_height, bool uniform_fit = false)
 	{
 		const std::string where = this->source_path_ + ": menu_text.items." +
 			menu_item_keys[static_cast<size_t>(item)];
@@ -291,17 +292,20 @@ void Presentation::validate_resources(const RenderResources& render,
 		const Vector2F padding = art.focus_padding;
 		if (label_width.has_value())
 		{
-			// Match OptionRow's existing width-then-height fit. Long supported
-			// labels remain valid; the display column, not a character limit, fits them.
+			// Match the action's uniform fit or OptionRow's width-then-height
+			// fit; both retain all text within the available column and row.
 			const float width = *label_width;
 			const float height = row_spacing - padding.y * 2.0f;
 			if (!std::isfinite(width) || !std::isfinite(height) || width <= 0.0f || height <= 0.0f)
 			{
 				throw std::runtime_error(where + " must leave a positive finite fitted label column and row height.");
 			}
-			float scale = 1.0f;
-			if (size.x > width) { scale = width / size.x; }
-			if (size.y * scale > height) { scale = height / size.y; }
+			float scale = uniform_fit ? std::min({ 1.0f, width / size.x, height / size.y }) : 1.0f;
+			if (!uniform_fit)
+			{
+				if (size.x > width) { scale = width / size.x; }
+				if (size.y * scale > height) { scale = height / size.y; }
+			}
 			if (!std::isfinite(scale) || scale <= 0.0f)
 			{
 				throw std::runtime_error(where + " must leave a positive fitted label column and row height.");
@@ -393,10 +397,12 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		const Vector2F position = controls.layout.position +
 			Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(row));
-		const std::optional<float> label_width = fitted_label ?
-			std::optional<float>(controls.layout.spacing.x - controls.art.focus_padding.x) : std::nullopt;
+		const bool fitted_action = item == MenuItem::keyboard_jump || item == MenuItem::apply;
+		const std::optional<float> label_width = fitted_action ?
+			std::optional<float>(controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset - position.x) :
+			(fitted_label ? std::optional<float>(controls.layout.spacing.x - controls.art.focus_padding.x) : std::nullopt);
 		const Vector2F size = check_menu_item(item, controls.item_font, position,
-			controls.box_size, controls.layout.spacing.y, label_width, controls.art, this->menu_.footer_y);
+			controls.box_size, controls.layout.spacing.y, label_width, controls.art, this->menu_.footer_y, fitted_action);
 		if (position.x + size.x + controls.art.focus_padding.x > controls.controls_position.x)
 		{
 			throw std::runtime_error(this->source_path_ + ": menu_text.items." +
@@ -408,11 +414,11 @@ void Presentation::validate_resources(const RenderResources& render,
 				menu_item_keys[static_cast<size_t>(item)] + " must fit above the controls status line including focus padding.");
 		}
 	};
-	const MenuItem controls_items[]{ MenuItem::pad_sticks, MenuItem::music_volume, MenuItem::sfx_volume,
-		MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::apply, MenuItem::back };
+	const MenuItem controls_items[]{ MenuItem::pad_sticks, MenuItem::keyboard_jump, MenuItem::music_volume,
+		MenuItem::sfx_volume, MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(controls_items); ++index)
 	{
-		check_controls_item(controls_items[index], static_cast<int>(index), index >= 1 && index <= 5);
+		check_controls_item(controls_items[index], static_cast<int>(index), index >= 2 && index <= 6);
 	}
 	const MenuItem sticks_items[]{ MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone,
 		MenuItem::apply, MenuItem::back };
@@ -950,8 +956,60 @@ void Presentation::validate_resources(const RenderResources& render,
 		}
 		return RectangleF(position, fitted);
 	};
-	const RectangleF controls_help = check_help_fit("menu_text.help.controls", this->menu_text_.help.controls,
-		controls.controls_position, controls.controls_size);
+	RectangleF controls_help;
+	bool first_help = true;
+	for (const Key key : controls_text::jump_keys())
+	{
+		const RectangleF fitted = check_help_fit("menu_text.help.controls",
+			controls_text::controls_help(this->menu_text_.help.controls, key), controls.controls_position, controls.controls_size);
+		controls_help = first_help ? fitted : RectangleF::union_of(controls_help, fitted);
+		first_help = false;
+	}
+	const KeyboardJumpMenuText& jump = this->menu_text_.keyboard_jump;
+	const auto jump_text = [&](const char* key, const std::wstring& words, const std::string& font, const Vector2F& position, bool row)
+	{
+		const std::string where = std::string("menu_text.keyboard_jump.") + key;
+		Vector2F size = fixed_menu_size(where, words, font);
+		if (row)
+		{
+			// KeyboardJumpMenu fits its action labels uniformly in both axes.
+			const Vector2F available(controls.controls_position.x - controls.art.focus_padding.x * 2.0f -
+				controls.art.shadow_offset - position.x, controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
+			const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
+			if (!std::isfinite(scale) || scale <= 0.0f)
+			{ throw std::runtime_error(this->source_path_ + ": " + where + " must retain finite positive fitted action bounds."); }
+			size *= scale;
+		}
+		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::ZERO);
+		if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
+			(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
+		{ throw std::runtime_error(this->source_path_ + ": " + where + " must fit its controls column and row."); }
+		return RectangleF(position, size);
+	};
+	const RectangleF jump_heading = jump_text("heading", jump.heading, this->menu_.heading_font, controls.heading_position, false);
+	if (jump_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
+	{ throw std::runtime_error(this->source_path_ + ": menu_text.keyboard_jump.heading must end before its first focus card."); }
+	jump_text("capture", jump.capture, controls.item_font, controls.layout.position, true);
+	jump_text("reset", jump.reset, controls.item_font, controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y), true);
+	std::ignore = fixed_menu_size("menu_text.keyboard_jump.help", jump.help, controls.help_font);
+	std::ignore = fixed_menu_size("menu_text.keyboard_jump.debug_collision", jump.debug_collision, controls.help_font);
+	for (const Key current : controls_text::jump_keys())
+	{
+		std::ignore = fixed_menu_size("menu_text.keyboard_jump.current", jump.current_key(input_key_label(current)), controls.help_font);
+		std::ignore = fixed_menu_size("menu_text.keyboard_jump.pending", jump.pending_key(input_key_label(current)), controls.help_font);
+	}
+	for (const Key current : controls_text::jump_keys())
+	{
+		for (const Key pending : controls_text::jump_keys())
+		{
+			const std::wstring block = jump.help_block(input_key_label(current), input_key_label(pending));
+			for (const bool collision : { false, true })
+			{
+				std::ignore = check_help_fit("menu_text.keyboard_jump.help", collision ? block + L'\n' + jump.debug_collision : block,
+					controls.controls_position, controls.controls_size);
+			}
+		}
+	}
 	const StickPreviewPresentation& preview = controls.stick_preview;
 	const RectangleF pad_association = check_help_fit("menu_text.help.pad_association", this->menu_text_.help.pad_association,
 		preview.association_position, help_area.bottom_right() - preview.association_position);
@@ -980,7 +1038,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 6.0f),
 		this->menu_.item_font, options_art);
-	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 7.0f),
+	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 8.0f),
 		controls.item_font, controls.art);
 	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 4.0f),
 		controls.item_font, controls.art);
@@ -989,7 +1047,7 @@ void Presentation::validate_resources(const RenderResources& render,
 		const Vector2F& position, const Vector2F& paper_size, const MenuPaperArtPresentation& art,
 		std::initializer_list<RectangleF> obstacles)
 	{
-		const std::string key = std::string("menu_text.status.") + message.key;
+		const std::string key = std::string(std::string_view(message.key).starts_with("keyboard_jump.") ? "menu_text." : "menu_text.status.") + message.key;
 		const Vector2F raw = fixed_menu_size(key, message.text, font);
 		const float available = (1920.0f + paper_size.x) / 2.0f - art.shadow_offset -
 			art.focus_padding.x - position.x;
@@ -1035,6 +1093,20 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		check_status(message, controls.help_font, controls.status_position, controls.box_size,
 			controls.art, { controls_back, controls_help });
+	}
+	const RectangleF jump_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 3.0f),
+		controls.item_font, controls.art);
+	const StatusMessage jump_statuses[]{ { "keyboard_jump.pending_status", jump.pending_status }, { "keyboard_jump.saved_status", jump.saved_status },
+		{ "keyboard_jump.capture_wait_neutral", jump.capture_wait_neutral }, { "keyboard_jump.capture_ready", jump.capture_ready },
+		{ "keyboard_jump.capture_rejected", jump.capture_rejected }, { "keyboard_jump.capture_conflict", jump.capture_conflict },
+		{ "keyboard_jump.capture_cancelled", jump.capture_cancelled }, { "keyboard_jump.debug_collision", jump.debug_collision } };
+	for (const StatusMessage& message : jump_statuses)
+	{ check_status(message, controls.help_font, controls.status_position, controls.box_size, controls.art, { jump_back, help_area }); }
+	for (const Key key : controls_text::jump_keys())
+	{
+		const std::wstring words = jump.release_key(std::wstring(input_key_label(key)));
+		check_status({ "keyboard_jump.capture_release", words }, controls.help_font, controls.status_position,
+			controls.box_size, controls.art, { jump_back, help_area });
 	}
 	const StatusMessage sticks_statuses[]{ { "sticks_pending", status_text.sticks_pending },
 		{ "sticks_saved", status_text.sticks_saved }, { "active_save_failed", status_text.active_save_failed } };
@@ -1822,13 +1894,13 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->menu_text_.stage_navigation(1, 1) + L"0123456789", this->menu_.detail_font);
 	std::ignore = fixed_menu_size("menu_text.stage.random_hint",
 		this->menu_text_.stage_random_hint(1) + L"0123456789", this->menu_.brand_font);
-	// Controls volumes and Sticks effective deadzones share the same captured
-	// item font and OptionRow value columns at rows one and two. Validate every
+	// Controls volumes occupy rows two and three; Sticks effective deadzones
+	// occupy rows one and two in the same captured font/value column. Validate every
 	// integer output, including saved non-step volumes and inherited 100%.
 	for (int value = 0; value <= 100; ++value)
 	{
 		const std::wstring text = this->menu_text_.setting_percentage(value);
-		for (const int row : { 1, 2 })
+		for (const int row : { 1, 2, 3 })
 		{
 			const Vector2F position = controls.layout.position +
 				Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * static_cast<float>(row));

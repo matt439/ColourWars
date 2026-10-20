@@ -70,6 +70,9 @@ protected:
 	virtual bool animates_focus_backing() const { return false; }
 	// Calibration pages reserve analogue sticks for their live response preview.
 	virtual bool accepts_stick_navigation() const { return true; }
+	// A physical-key capture owns input before developer shortcuts or queued
+	// page work can inspect it. Its page samples raw input instead of MenuInput.
+	virtual bool owns_raw_keyboard_input() const { return false; }
 
 	mattmath::Vector2F widget_position() const;
 	mattmath::Vector2F widget_size() const;

@@ -7,9 +7,24 @@ using namespace mattmath;
 using namespace labrador;
 
 PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
-	const Mouse* mouse, const GameTuning* tuning, const PlaySettings* preferences) :
-	gamepads_(gamepads), keyboard_(keyboard), mouse_(mouse), tuning_(tuning), preferences_(preferences)
+	const Mouse* mouse, const GameTuning* tuning, const PlaySettings* preferences,
+	const InputBindings* input_bindings) :
+	gamepads_(gamepads), keyboard_(keyboard), mouse_(mouse), tuning_(tuning), preferences_(preferences),
+	input_bindings_(input_bindings)
 {
+	if (this->input_bindings_ == nullptr) { throw std::invalid_argument("PlayerInput requires input bindings"); }
+	this->keyboard_bindings_ = effective_action_bindings(*this->input_bindings_);
+	this->keyboard_jump_ = this->input_bindings_->keyboard_jump;
+}
+
+const ActionBindings& PlayerInput::effective_bindings() const
+{
+	if (this->keyboard_jump_ != this->input_bindings_->keyboard_jump)
+	{
+		this->keyboard_bindings_ = effective_action_bindings(*this->input_bindings_);
+		this->keyboard_jump_ = this->input_bindings_->keyboard_jump;
+	}
+	return this->keyboard_bindings_;
 }
 
 PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
@@ -65,9 +80,9 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 }
 
 PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
-	const Mouse& mouse)
+	const Mouse& mouse) const
 {
-	const ActionBindings& bindings = default_action_bindings();
+	const ActionBindings& bindings = this->effective_bindings();
 	const auto action = [&](GameAction name)
 	{
 		return game_action(bindings, name, keyboard.state(), keyboard.previous_state(),
@@ -116,7 +131,7 @@ std::vector<PlayerInputData> PlayerInput::player_inputs() const
 
 	// Always expose the keyboard/mouse slot, independent of recent activity.
 	result[input_slots::keyboard_and_mouse] =
-		keyboard_and_mouse_input(*this->keyboard_, *this->mouse_);
+		this->keyboard_and_mouse_input(*this->keyboard_, *this->mouse_);
 
 	return result;
 }

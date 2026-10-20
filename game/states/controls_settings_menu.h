@@ -13,6 +13,7 @@ public:
 	explicit ControlsSettingsMenu(MenuContext* context, int player = -1);
 	void init() override;
 	void update_page(float dt) override;
+	void on_resume() override;
 	bool covers_screen() const override { return true; }
 	// Closes like Back. Not PauseMenuPage's way out: this page is pushed with
 	// no result, and pop(PauseMenuAction) on its frame would throw.
@@ -21,6 +22,7 @@ protected:
 	bool shows_focus_backing() const override { return false; }
 private:
 	void refresh_values();
+	void refresh_help();
 	void set_status(const std::wstring& text, const labrador::Colour& colour);
 	void apply_settings();
 	void close();
@@ -35,4 +37,6 @@ private:
 	std::unique_ptr<OptionRow> aim_marker_;
 	std::unique_ptr<OptionRow> reduce_effects_;
 	labrador::UiText* status_ = nullptr;
+	labrador::UiText* controls_ = nullptr;
+	mattmath::RectangleF controls_limit_;
 };

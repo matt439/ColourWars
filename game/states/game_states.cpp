@@ -165,7 +165,8 @@ void GameLevel::init()
 		this->data()->gamepads(),
 		this->data()->keyboard(),
 		this->data()->mouse(),
-		this->data()->tuning(), &this->data()->save()->play_settings());
+		this->data()->tuning(), &this->data()->save()->play_settings(),
+		&this->data()->save()->input_bindings());
 
 	this->menu_input_ = std::make_unique<MenuInput>(
 		this->data()->gamepads(),
@@ -189,7 +190,7 @@ void GameLevel::init()
 		this->data()->resolution_manager(),
 		this->data()->thread_pool(),
 		this->data()->partitioner(),
-		this->data()->mouse());
+		this->data()->mouse(), &this->data()->save()->input_bindings());
 
 	// Content reloaded from the menus is swapped in by the first build.
 	this->data()->debug().attach_match(*this);

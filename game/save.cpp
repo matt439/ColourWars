@@ -238,14 +238,15 @@ namespace
 
     // Every section, in the order the file is written. Sections hold no state,
     // so one shared list serves every Save and Save stays copyable.
-    const std::array<const SaveSection*, 4>& save_sections()
+    const std::array<const SaveSection*, 5>& save_sections()
     {
         static const DisplaySection display;
         static const PlaySection play;
         static const MatchRecordsSection records;
         static const LastMatchSetupSection last_match;
-        static const std::array<const SaveSection*, 4> sections{
-            &display, &play, &records, &last_match };
+        static const InputBindingsSection input_bindings;
+        static const std::array<const SaveSection*, 5> sections{
+            &display, &play, &records, &last_match, &input_bindings };
         return sections;
     }
 
@@ -504,6 +505,18 @@ bool Save::set_play_settings_and_save(const PlaySettings& settings)
         profile.aim_deadzone = StickSettings::normalized_deadzone(profile.aim_deadzone);
     }
     this->save_data_.play = normalized;
+    return this->save_to_file();
+}
+
+const InputBindings& Save::input_bindings() const
+{
+    return this->save_data_.input_bindings;
+}
+
+bool Save::set_input_bindings_and_save(const InputBindings& bindings)
+{
+    bindings.validate();
+    this->save_data_.input_bindings = bindings;
     return this->save_to_file();
 }
 

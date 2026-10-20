@@ -179,8 +179,13 @@ void StickSettingsMenu::init()
 		this->text_container_->add_child(option);
 		this->focus_.add(option);
 	}
-	this->focus_.add(add_text("apply", this->text().item(MenuItem::apply), style.item_font,
-		this->calculate_widget_position(0, 3)), [this] { this->apply_settings(); });
+	UiText* apply = add_text("apply", this->text().item(MenuItem::apply), style.item_font,
+		this->calculate_widget_position(0, 3));
+	const RectangleF apply_bounds = apply->bounds();
+	apply->set_scale(std::min({ 1.0f,
+		(look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - apply_bounds.x) / apply_bounds.width,
+		(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / apply_bounds.height }));
+	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(add_text("back", this->text().item(MenuItem::back), style.item_font,
 		this->calculate_widget_position(0, 4)), [this] { this->close(); });
 	this->status_ = add_text("status", L"", look.help_font, look.status_position);

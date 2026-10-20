@@ -41,7 +41,6 @@ This is a selection guide, not another priority order; each owner defines a boun
 | id | next implementation slice | owner |
 |---|---|---|
 | `DBG#1` | Audit further colour consumers; fourteen existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
-| `GAP#4.2` | Implement keyboard Jump rebinding through capture, save, gameplay and effective help | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
@@ -123,7 +122,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
-| `GAP#4.2` | OPEN | MED | L | Implement the scoped keyboard Jump slice: capture, independent saved preference, actual gameplay and effective help. Broader rebinding and UI artwork remain later slices. `GAP#F2` follows the client exhibit. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
+| `GAP#4.2` | UNSCOPED | MED | L | Define the next bounded action/pad rebinding slice; keyboard Jump is implemented and validated. Rebinding artwork remains a later UI pass. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
 | `GAP#5.1` | BLOCKED | LOW | M | The blank startup window waits on `ENG#19`. Hard-cut transitions are a later UI-art slice using the approved style. Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
@@ -157,7 +156,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#13` | OPEN | LOW | S | Recheck upstream; prepare the minimal unnamed `Key` report and reproducer for filing. [Report](docs/review/engine-reports.md#13-key-has-no-names--draft-low-priority). |
 | `ENG#14` | OPEN | LOW | S | Recheck upstream; prepare the minimal frame-statistics/GPU-timing report and reproducer for filing. [Report](docs/review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--draft-with-perf-exhibit). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `GAP#F2` | BLOCKED | LOW | S | The action-map/Gamepads report (per-slot lookup, trigger threshold, "what did this pad press"). Waits on `GAP#4.2`. |
+| `GAP#F2` | OPEN | LOW | S | Recheck upstream and prepare a minimal action-source evaluation request from the working bindings exhibit; pad capture remains future scope. [Boundary](docs/feature-roadmap.md#action-bindings-gap42). |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
 | `ENG#15` | OPEN | MED | S | Recheck upstream; prepare the minimal runtime-packaging/content-staging report and reproducer for filing. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
 | `ENG#16` | OPEN | LOW | S | Recheck upstream; prepare the minimal hidden-window Apply report and reproducer for filing. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |

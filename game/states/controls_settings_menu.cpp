@@ -1,7 +1,9 @@
 #include "game/pch.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/stick_settings_menu.h"
+#include "game/states/keyboard_jump_menu.h"
 #include "game/objects/crude_drawing.h"
+#include "game/controls_text.h"
 #include <algorithm>
 
 using namespace labrador;
@@ -50,6 +52,13 @@ void ControlsSettingsMenu::init()
 		this->text_container_->add_child(widget);
 		return widget;
 	};
+	const auto fit_action = [&look](UiText* widget)
+	{
+		const RectangleF bounds = widget->bounds();
+		widget->set_scale(std::min({ 1.0f,
+			(look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - bounds.x) / bounds.width,
+			(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / bounds.height }));
+	};
 	add_text("heading", this->text().heading(MenuHeading::controls_audio), style.heading_font,
 		look.heading_position, look.art.ink);
 	const auto make_row = [this, &style, &look, &value_limit](const char* name, const std::wstring& label,
@@ -75,12 +84,21 @@ void ControlsSettingsMenu::init()
 		this->input()->reset_actions();
 		this->context()->push(std::make_unique<StickSettingsMenu>(this->menu_context(), this->pausing_player()));
 	});
+	UiText* keyboard = add_text("keyboard_jump", this->text().item(MenuItem::keyboard_jump), style.item_font,
+		this->calculate_widget_position(0, 1), look.art.ink);
+	fit_action(keyboard);
+	this->focus_.add(keyboard, [this]
+	{
+		this->play_wave(this->confirm_sound_);
+		this->input()->reset_actions();
+		this->context()->push(std::make_unique<KeyboardJumpMenu>(this->menu_context(), this->pausing_player()));
+	});
 	this->music_ = make_row("music", this->text().item(MenuItem::music_volume),
-		1, this->selection_.music_volume, 0, 100, 10);
+		2, this->selection_.music_volume, 0, 100, 10);
 	this->sfx_ = make_row("sfx", this->text().item(MenuItem::sfx_volume),
-		2, this->selection_.sfx_volume, 0, 100, 10);
+		3, this->selection_.sfx_volume, 0, 100, 10);
 	this->view_shake_ = std::make_unique<OptionRow>("view_shake", this->text().item(MenuItem::view_shake),
-		this->calculate_widget_position(0, 3), this->calculate_widget_position(1, 3),
+		this->calculate_widget_position(0, 4), this->calculate_widget_position(1, 4),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -90,7 +108,7 @@ void ControlsSettingsMenu::init()
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->aim_marker_ = std::make_unique<OptionRow>("aim_marker", this->text().item(MenuItem::aim_marker),
-		this->calculate_widget_position(0, 4), this->calculate_widget_position(1, 4),
+		this->calculate_widget_position(0, 5), this->calculate_widget_position(1, 5),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -100,7 +118,7 @@ void ControlsSettingsMenu::init()
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", this->text().item(MenuItem::reduce_effects),
-		this->calculate_widget_position(0, 5), this->calculate_widget_position(1, 5),
+		this->calculate_widget_position(0, 6), this->calculate_widget_position(1, 6),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -117,18 +135,37 @@ void ControlsSettingsMenu::init()
 	}
 	this->refresh_values();
 	UiText* apply = add_text("apply", this->text().item(MenuItem::apply), style.item_font,
-		this->calculate_widget_position(0, 6), look.art.ink);
-	UiText* back = add_text("back", this->text().item(MenuItem::back), style.item_font,
 		this->calculate_widget_position(0, 7), look.art.ink);
+	fit_action(apply);
+	UiText* back = add_text("back", this->text().item(MenuItem::back), style.item_font,
+		this->calculate_widget_position(0, 8), look.art.ink);
 	this->status_ = add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
 	this->set_status(this->text().status.controls_pending, look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(back, [this] { this->close(); });
-	UiText* controls = add_text("controls", this->text().help.controls,
+	this->controls_ = add_text("controls", L"",
 		look.help_font, look.controls_position, look.art.ink);
-	const RectangleF help = controls->bounds();
-	controls->set_scale(std::min({ 1.0f, look.controls_size.x / help.width,
-		look.controls_size.y / help.height }));
+	this->controls_limit_ = RectangleF(look.controls_position, look.controls_size);
+	this->refresh_help();
+}
+
+void ControlsSettingsMenu::refresh_help()
+{
+	// MenuPage captured this copy when it was constructed. Refresh only the
+	// effective key, retaining the page's authored template, font and geometry.
+	this->controls_->set_text(controls_text::controls_help(this->text().help.controls,
+		this->save()->input_bindings().keyboard_jump));
+	this->controls_->set_scale(1.0f);
+	const RectangleF bounds = this->controls_->bounds();
+	this->controls_->set_scale(std::min({ 1.0f, this->controls_limit_.width / bounds.width,
+		this->controls_limit_.height / bounds.height }));
+}
+
+void ControlsSettingsMenu::on_resume()
+{
+	PauseMenuPage::on_resume();
+	this->input()->reset_actions();
+	this->refresh_help();
 }
 
 void ControlsSettingsMenu::set_status(const std::wstring& text, const Colour& colour)

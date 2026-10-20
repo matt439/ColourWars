@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
 #include "game/input_slots.h"
+#include "game/controls_text.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -40,6 +41,9 @@ void Level::build_opening_frame(RenderResources* render_resources)
 
 	// Use the configured countdown for the opening beat.
 	const MatchTuning& match = this->tuning_->match();
+	const MatchPresentation& controls = this->presentation_->match();
+	this->controls_look_ = { controls.reference_size, controls.controls_margin, controls.controls_padding,
+		this->presentation_->menu().detail_shadow_offset, match.controls_shadow_offset, controls.controls_gap, match.controls_y };
 	this->countdown_label_ = match.countdown > 0.0f ?
 		std::to_wstring(static_cast<int>(std::ceil(match.countdown))) : L"GO!";
 	this->countdown_art_ = std::make_unique<CountdownArt>(
@@ -95,14 +99,48 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	}
 	if (anyone_on_keyboard)
 	{
-		add_reminder(L"KEYBOARD + MOUSE",
-			L"A / D  Move    |    S  Drop through\n"
-			L"Space  Jump    |    Left click  Shoot\n"
-			L"Mouse  Aim    |    Esc  Pause");
+		const Key key = this->input_bindings_ ? this->input_bindings_->keyboard_jump : Key::space;
+		add_reminder(L"KEYBOARD + MOUSE", controls_text::keyboard_controls_reminder(key));
+		this->keyboard_controls_ = this->controls_reminders_.back().text.get();
+		this->keyboard_jump_label_ = input_key_label(key);
 	}
 	this->centre_controls_text();
 
 	this->refresh_layout();
+}
+
+void Level::refresh_keyboard_controls()
+{
+	if (!this->keyboard_controls_) { return; }
+	const Key key = this->input_bindings_ ? this->input_bindings_->keyboard_jump : Key::space;
+	const std::wstring_view label = input_key_label(key);
+	if (this->keyboard_jump_label_ == label) { return; }
+	this->keyboard_controls_->set_text(controls_text::keyboard_controls_reminder(key));
+	this->keyboard_jump_label_ = label;
+	this->centre_controls_text();
+}
+
+std::wstring_view Level::keyboard_controls_text() const
+{ return this->keyboard_controls_ ? std::wstring_view(this->keyboard_controls_->text()) : std::wstring_view{}; }
+
+RectangleF Level::keyboard_controls_text_bounds() const
+{
+	if (this->state_ == LevelState::start_countdown)
+	{
+		for (const ControlsReminder& reminder : this->controls_reminders_)
+		{ if (reminder.text.get() == this->keyboard_controls_) { return reminder.text_bounds; } }
+	}
+	return RectangleF::ZERO;
+}
+
+RectangleF Level::keyboard_controls_card_bounds() const
+{
+	if (this->state_ == LevelState::start_countdown)
+	{
+		for (const ControlsReminder& reminder : this->controls_reminders_)
+		{ if (reminder.text.get() == this->keyboard_controls_) { return reminder.card; } }
+	}
+	return RectangleF::ZERO;
 }
 
 void Level::set_countdown_text(const std::wstring& text)
@@ -209,13 +247,11 @@ void Level::centre_controls_text()
 	// Fit a pair of equally sized cards from authored measurements on every resize.
 	// All positions stay in fullscreen pixel space, independent of split-screen panes.
 	const Vector2F resolution = this->resolution_manager_->resolution_vec();
-	const MatchTuning& match = this->tuning_->match();
-	const MatchPresentation& look = this->presentation_->match();
-	const MenuStyle& menu = this->presentation_->menu();
-	const float scale = this->opening_scale();
-	const Vector2F margin = look.controls_margin * scale;
-	const Vector2F padding = look.controls_padding * scale;
-	const float gap = look.controls_gap * scale;
+	const ControlsReminderLook& look = this->controls_look_;
+	const float scale = std::min(resolution.x / look.reference_size.x, resolution.y / look.reference_size.y);
+	const Vector2F margin = look.margin * scale;
+	const Vector2F padding = look.padding * scale;
+	const float gap = look.gap * scale;
 	const float count = static_cast<float>(this->controls_reminders_.size());
 	float content_width = 0.0f;
 	float heading_height = 0.0f;
@@ -224,10 +260,10 @@ void Level::centre_controls_text()
 	{
 		const RectangleF heading = RectangleF::union_of(
 			reminder.heading->text_bounds_at(Vector2F::ZERO, 1.0f),
-			reminder.heading->text_bounds_at(menu.detail_shadow_offset, 1.0f));
+			reminder.heading->text_bounds_at(look.heading_shadow, 1.0f));
 		const RectangleF text = RectangleF::union_of(
 			reminder.text->text_bounds_at(Vector2F::ZERO, 1.0f),
-			reminder.text->text_bounds_at(match.controls_shadow_offset, 1.0f));
+			reminder.text->text_bounds_at(look.text_shadow, 1.0f));
 		content_width = std::max({ content_width, heading.width, text.width });
 		heading_height = std::max(heading_height, heading.height);
 		text_height = std::max(text_height, text.height);
@@ -242,25 +278,28 @@ void Level::centre_controls_text()
 	for (ControlsReminder& reminder : this->controls_reminders_)
 	{
 		reminder.card = RectangleF(Vector2F(x,
-			std::min(resolution.y * match.controls_y,
+			std::min(resolution.y * look.y,
 				resolution.y - margin.y - card_size.y)), card_size);
 		const RectangleF heading = RectangleF::union_of(
 			reminder.heading->text_bounds_at(Vector2F::ZERO, 1.0f),
-			reminder.heading->text_bounds_at(menu.detail_shadow_offset, 1.0f));
+			reminder.heading->text_bounds_at(look.heading_shadow, 1.0f));
 		const RectangleF text = RectangleF::union_of(
 			reminder.text->text_bounds_at(Vector2F::ZERO, 1.0f),
-			reminder.text->text_bounds_at(match.controls_shadow_offset, 1.0f));
+			reminder.text->text_bounds_at(look.text_shadow, 1.0f));
 		reminder.heading->set_scale(text_scale);
 		reminder.heading->set_shadow_scale(text_scale);
-		reminder.heading->set_shadow_offset(menu.detail_shadow_offset * text_scale);
+		reminder.heading->set_shadow_offset(look.heading_shadow * text_scale);
 		reminder.heading->set_position(reminder.card.position() + padding -
 			heading.position() * text_scale);
 		reminder.text->set_scale(text_scale);
 		reminder.text->set_shadow_scale(text_scale);
-		reminder.text->set_shadow_offset(match.controls_shadow_offset * text_scale);
-		reminder.text->set_position(reminder.card.position() +
+		reminder.text->set_shadow_offset(look.text_shadow * text_scale);
+		const Vector2F text_position = reminder.card.position() +
 			Vector2F(padding.x, padding.y * 2.0f + heading_height * text_scale) -
-			text.position() * text_scale);
+			text.position() * text_scale;
+		reminder.text->set_position(text_position);
+		reminder.text_bounds = RectangleF::union_of(reminder.text->text_bounds_at(text_position, text_scale),
+			reminder.text->text_bounds_at(text_position + look.text_shadow * text_scale, text_scale));
 		x += card_size.x + gap;
 	}
 }

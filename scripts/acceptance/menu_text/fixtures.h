@@ -19,6 +19,7 @@
 // bounds) and menu_controls_row_overflow (controls text -> controls option
 // rows). A new check that needs a font from another file must run after it.
 #include "game/presentation.h"
+#include "game/controls_text.h"
 #include "game/content_validation.h"
 #include "game/play_settings.h"
 #include "game/objects/level_end_info.h"
@@ -90,7 +91,7 @@ namespace menu_text_acceptance
         { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\n"
             L"Jump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\n"
             L"Move: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\n"
-            L"Jump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\n"
+            L"Jump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\n"
             L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
             L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
             L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
@@ -98,6 +99,29 @@ namespace menu_text_acceptance
         { "pad_association", L"Profiles follow Pad 1-4 slots,\nnot the player number or device.\n"
             L"After reconnecting, check the slot.\nKeyboard/mouse is unchanged.", &MenuHelpText::pad_association, true },
         { "aim_cutoff", L"Right stick: radial cutoff", &MenuHelpText::aim_cutoff, false }
+    };
+    struct KeyboardJumpText {
+        const char* key; const wchar_t* text; std::wstring KeyboardJumpMenuText::* field;
+        bool multiline = false; bool key_template = false;
+    };
+    constexpr KeyboardJumpText keyboard_jump_text[]{
+        { "heading", L"Keyboard Jump", &KeyboardJumpMenuText::heading },
+        { "capture", L"Choose Jump key", &KeyboardJumpMenuText::capture },
+        { "reset", L"Reset to Space", &KeyboardJumpMenuText::reset },
+        { "current", L"Current: {key}", &KeyboardJumpMenuText::current, false, true },
+        { "pending", L"Pending: {key}", &KeyboardJumpMenuText::pending, false, true },
+        { "help", L"Choose one A-Z key or Space.\nA / D / S already control movement or drop.\n"
+            L"Apply activates and saves your choice.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
+            &KeyboardJumpMenuText::help, true },
+        { "pending_status", L"Apply to activate this Jump key.", &KeyboardJumpMenuText::pending_status },
+        { "saved_status", L"Jump key applied and saved.", &KeyboardJumpMenuText::saved_status },
+        { "capture_wait_neutral", L"Release all keys before choosing.", &KeyboardJumpMenuText::capture_wait_neutral },
+        { "capture_ready", L"Press one key. Esc / pad Back cancels.", &KeyboardJumpMenuText::capture_ready },
+        { "capture_release", L"Release {key} to keep this choice.", &KeyboardJumpMenuText::capture_release, false, true },
+        { "capture_rejected", L"Use one A-Z key or Space. Try again.", &KeyboardJumpMenuText::capture_rejected },
+        { "capture_conflict", L"Key already used for movement or drop.", &KeyboardJumpMenuText::capture_conflict },
+        { "capture_cancelled", L"Gesture cancelled; pending key unchanged.", &KeyboardJumpMenuText::capture_cancelled },
+        { "debug_collision", L"Jump key also has a developer bind.", &KeyboardJumpMenuText::debug_collision }
     };
     struct StatusText { const char* key; const wchar_t* text; std::wstring MenuStatusText::* field; bool options; };
     constexpr StatusText status_text[]{
@@ -292,7 +316,8 @@ namespace menu_text_acceptance
         { "pad_sticks", L"Pad sticks" }, { "music_volume", L"Music volume" }, { "sfx_volume", L"SFX volume" },
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
-        { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" }
+        { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
+        { "keyboard_jump", L"Keyboard Jump" }
     };
 
     struct World

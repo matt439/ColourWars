@@ -1,4 +1,4 @@
-// Static help has three different placement contracts. The existing production
+// Help has three different placement contracts. The existing production
 // matrices pin the complete historical text at their supported sizes; this
 // fixture independently exercises authored copy and retained/reopened fonts.
 void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
@@ -8,7 +8,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     const Help legacy{
         L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\n"
         L"Pause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\n"
-        L"Aim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\n"
+        L"Aim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\n"
         L"MENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
         L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
         L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
@@ -23,6 +23,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         PlaySettings fresh;
         fresh.music_volume = fresh.sfx_volume = 0;
         require(preferences.set_play_settings_and_save(fresh), "Cannot reset the isolated static-help save");
+        require(preferences.set_input_bindings_and_save(InputBindings{}), "Cannot reset the isolated help Jump preference");
     };
     const auto saved_bytes = [&]
     {
@@ -31,6 +32,18 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
     reset_preferences();
+    const auto expected_help = [&](const std::wstring& authored)
+    {
+        // Independent literal labels for the actual choices driven below.
+        // Do not use the formatter under test to construct the raster oracle.
+        const Key key = preferences.input_bindings().keyboard_jump;
+        require(key == Key::space || key == Key::j, "Help fixture encountered an undeclared effective Jump key");
+        const std::wstring label = key == Key::space ? L"Space" : L"J";
+        const size_t token = authored.find(L"{jump}");
+        require(token != std::wstring::npos && authored.find(L"{jump}", token + 6) == std::wstring::npos,
+            "Independent help fixture lost its single authored Jump token");
+        return authored.substr(0, token) + label + authored.substr(token + 6);
+    };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
@@ -69,7 +82,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         require(stack.depth() == (sticks ? 3 : 2), "Static-help fixture failed to open its production page");
     };
     std::ofstream records(output / "controls-menu-help.csv");
-    records << "case,page,help,font,lines,raw_width,raw_height,scale,fitted_width,fitted_height,fixture_matches\n";
+    records << "case,page,help,font,lines,raw_width,raw_height,scale,fitted_width,fitted_height,fixture_matches,jump_key\n";
     const auto compare = [&](const std::string& name, bool sticks, const Presentation& snapshot,
         const Help& words, bool require_controls_height = false, bool require_association_width = false,
         bool require_controls_width = false, bool require_association_height = false)
@@ -124,7 +137,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         }
         else
         {
-            add("controls", words.controls, look.controls_position, look.controls_size,
+            add("controls", expected_help(words.controls), look.controls_position, look.controls_size,
                 true, require_controls_width, require_controls_height);
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
@@ -150,11 +163,12 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
                 throw std::runtime_error("Actual Controls/Sticks static help differs from its full-region linear fixture");
             }
             save(observed, output / (stem + "-detail.ppm"));
-            const std::wstring& copy = index == 0 ? (sticks ? words.aim_cutoff : words.controls) : words.pad_association;
+            const std::wstring& copy = text[index]->text();
             records << name << ',' << (sticks ? "sticks" : "controls") << ',' << roles[index] << ',' <<
                 look.help_font << ',' << std::count(copy.begin(), copy.end(), L'\n') + 1 << ',' <<
                 raw_sizes[index].x << ',' << raw_sizes[index].y << ',' << scales[index] << ',' <<
-                text[index]->bounds().width << ',' << text[index]->bounds().height << ",true\n";
+                text[index]->bounds().width << ',' << text[index]->bounds().height << ",true," <<
+                input_key_name(preferences.input_bindings().keyboard_jump) << '\n';
         }
         std::srand(6151); const int next_random = std::rand(); std::srand(6151);
         require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
@@ -174,13 +188,13 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     for (int line = 0; line < 40; ++line)
     {
         if (line != 0) { old_words.controls += L'\n'; }
-        old_words.controls += L"Controller~ movement and paint";
+        old_words.controls += line == 0 ? L"Controller~ jump {jump} movement and paint" : L"Controller~ movement and paint";
     }
     old_words.pad_association = L"Profiles~ follow every controller slot and keep the movement cutoff for that slot; check the association after reconnecting.\n"
         L"Keyboard and mouse keep their current controls.\nPad slots remain independent.\nApply saves the chosen cutoff.";
     old_words.aim_cutoff = L"Right stick~: radial cutoff";
     new_words.controls = L"CONTROLS: movement, aiming, paint and pause remain available with every current input device; use the menu to change shared options.\n"
-        L"Apply saves shared preferences. Back discards pending changes.";
+        L"Jump: {jump}. Apply saves shared preferences. Back discards pending changes.";
     new_words.pad_association = L"Profiles follow slots.\nCheck the pad slot.\nMove cutoff is saved.\nAim cutoff is saved.\n"
         L"Apply commits edits.\nBack discards edits.\nReconnect then check.\nMouse is unchanged.";
     new_words.aim_cutoff = L"Aim stick: circular cutoff";
@@ -201,10 +215,11 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         "Replacement static-help font still contains the retained page's old glyph");
     Presentation next = original; const_cast<MenuText&>(next.menu_text()).help = new_words;
     const_cast<ControlsSettingsPresentation&>(next.controls_settings()).help_font = font_name;
+    const_cast<ControlsSettingsPresentation&>(next.controls_settings()).controls_size += Vector2F(10.0f, 10.0f);
     next.validate_resources(*app.render_resources(), *app.audio_resources());
 
     reset_preferences(); presentation = old; open(false);
-    tap(Key::down); tap(Key::right); tap(Key::up);
+    tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::up); tap(Key::up);
     const Frame old_parent = compare("custom-old-parent", false, old, old_words, true);
     presentation = next; tick();
     require(old_parent.pixels == main_menu_frame(app).pixels, "Static-help reload changed the suspended Controls snapshot");
@@ -243,31 +258,66 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
             "Child return changed the old Controls help/font, pending choice or focus");
         compare("old-parent-after-child-" + std::to_string(repeat), false, old, old_words, true);
     }
+    // A real sibling child applies a new effective key while the old Controls
+    // page retains its original authored template, font and fitting bounds.
+    tap(Key::down);
+    const Frame old_before_jump = compare("old-parent-before-jump", false, old, old_words, true);
+    tap(Key::enter); tick(); require(stack.depth() == 3, "Old Controls did not open its actual Keyboard Jump child");
+    tap(Key::enter); tick(); // Capture observes a fresh neutral frame after entry.
+    tap(Key::j); tick();
+    require(preferences.input_bindings().keyboard_jump == Key::space,
+        "Capturing a pending Jump key applied it without confirmation");
+    tap(Key::down); tap(Key::down); tap(Key::enter); tick();
+    require(preferences.input_bindings().keyboard_jump == Key::j,
+        "Actual Keyboard Jump child did not apply its captured key");
+    tap(Key::escape); tick(); require(stack.depth() == 2, "Keyboard Jump did not return to its retained Controls parent");
+    const Frame old_after_jump = compare("old-parent-refreshed-jump", false, old, old_words, true);
+    const Camera help_camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        app.viewport_manager()->fullscreen_viewport());
+    const RectangleF retained_help(old.controls_settings().controls_position, old.controls_settings().controls_size);
+    const RectangleI permitted_delta = countdown_crop_bounds(help_camera.calculate_view_rectangle(retained_help));
+    const RectangleI help_delta = foreground_delta_bounds(old_before_jump, old_after_jump);
+    require(help_delta.width > 0 && help_delta.height > 0 && permitted_delta.contains(help_delta),
+        "Returning with a new Jump key changed pixels outside the old parent's captured help bounds");
+    presentation = old; tick();
+    require(old_after_jump.pixels == main_menu_frame(app).pixels,
+        "Source reversal changed the retained parent after its effective Jump refresh");
+    presentation = next; tick();
+    require(old_after_jump.pixels == main_menu_frame(app).pixels,
+        "Live replacement changed the retained parent's refreshed template, font or fitting bounds");
+
     const int applied_cutoff = preferences.play_settings().sticks[0].movement_deadzone;
-    for (int row = 0; row < 6; ++row) { tap(Key::down); }
+    for (int row = 1; row < 7; ++row) { tap(Key::down); }
     tap(Key::enter);
     Save reloaded; reloaded.load_save_file();
     require(reloaded.play_settings().music_volume == 10 &&
         reloaded.play_settings().sticks[0].movement_deadzone == applied_cutoff,
         "Old Controls Apply lost its pending choice or its newer child's applied cutoff");
+    require(reloaded.input_bindings().keyboard_jump == Key::j,
+        "Old Controls Apply overwrote its child's independent applied Jump preference");
     compare("old-parent-applied-after-child", false, old, old_words, true);
 
     for (const bool sticks : { false, true })
     {
         reset_preferences(); presentation = old; open(sticks);
         const Frame retained = compare("custom-old", sticks, old, old_words, !sticks, sticks);
-        presentation = next; tick(); tap(Key::down); tap(Key::right); tap(Key::left); tap(Key::up);
+        presentation = next; tick();
+        tap(Key::down); if (!sticks) { tap(Key::down); }
+        tap(Key::right); tap(Key::left); tap(Key::up); if (!sticks) { tap(Key::up); }
         require(retained.pixels == main_menu_frame(app).pixels,
             "Dynamic settings refresh rebased an old page's static help or font");
         compare("retained-old-after-refresh", sticks, old, old_words, !sticks, sticks);
         presentation = next; open(sticks);
         const Frame adopted = compare("reopened-new", sticks, next, new_words, false, false, !sticks, sticks);
         require(adopted.pixels != retained.pixels, "Reopened settings did not adopt new static help and help font");
-        presentation = old; tick(); tap(Key::down); tap(Key::right); tap(Key::left); tap(Key::up);
+        presentation = old; tick();
+        tap(Key::down); if (!sticks) { tap(Key::down); }
+        tap(Key::right); tap(Key::left); tap(Key::up); if (!sticks) { tap(Key::up); }
         require(adopted.pixels == main_menu_frame(app).pixels,
             "Source reversal or dynamic settings refresh rebased the reopened static-help snapshot");
         compare("retained-new-after-reversal", sticks, next, new_words, false, false, !sticks, sticks);
-        const std::string before_discard = saved_bytes(); tap(Key::down); tap(Key::right); tap(Key::escape); tick();
+        const std::string before_discard = saved_bytes(); tap(Key::down); if (!sticks) { tap(Key::down); }
+        tap(Key::right); tap(Key::escape); tick();
         require(stack.depth() == (sticks ? 2 : 1) && saved_bytes() == before_discard,
             "Static-help reload changed Escape discard or closed the wrong page");
         reset_preferences(); presentation = original; open(sticks);
@@ -278,5 +328,6 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     std::cout << "PASS actual Controls/Sticks static help: independent complete historical copy; fitted Controls and "
         "association blocks exercise both width and multiline height limits, unscaled aim caption uses Move-based "
         "placement and the full help column; replacement help font lacks an old glyph, retained/reopened/reversed "
-        "snapshots survive value/preview refresh, repeated child return/Apply, interrupted Enter and save/discard; frozen draw RNG\n";
+        "snapshots survive value/preview refresh, repeated child return/Apply, interrupted Enter and save/discard; "
+        "actual Keyboard Jump return refreshes only the effective key in captured help/font/bounds and parent Apply preserves it; frozen draw RNG\n";
 }

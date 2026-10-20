@@ -126,6 +126,31 @@ bool DebugDirector::before_page_update(DebugPageTarget& page, float dt)
 	return this->impl_ != nullptr && this->impl_->before_page_update(page, dt);
 }
 
+void DebugDirector::begin_keyboard_capture()
+{
+	if (this->impl_ != nullptr) { this->impl_->begin_keyboard_capture(); }
+}
+
+void DebugDirector::capture_input_frame(DebugPageTarget& page)
+{
+	if (this->impl_ != nullptr) { this->impl_->capture_input_frame(page); }
+}
+
+bool DebugDirector::capture_blocked_key_down() const
+{
+	return this->impl_ != nullptr && this->impl_->capture_blocked_key_down();
+}
+
+void DebugDirector::end_keyboard_capture()
+{
+	if (this->impl_ != nullptr) { this->impl_->end_keyboard_capture(); }
+}
+
+bool DebugDirector::keyboard_jump_collision(Key key) const
+{
+	return this->impl_ != nullptr && this->impl_->keyboard_jump_collision(key);
+}
+
 void DebugDirector::draw_status(Renderer& renderer) const
 {
 	if (this->impl_ != nullptr && this->impl_->data() != nullptr)

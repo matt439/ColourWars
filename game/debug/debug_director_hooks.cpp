@@ -587,8 +587,70 @@ void DebugDirectorImpl::update_match(DebugMatchTarget& match,
 	}
 }
 
+void DebugDirectorImpl::cancel_capture_work()
+{
+	const bool pending = this->scripts_.running() || !this->request_.empty() || this->leave_requested_ ||
+		this->pending_goto_.has_value() || this->pending_screenshot_.has_value() ||
+		this->pending_tuning_ != nullptr || this->pending_presentation_ != nullptr ||
+		this->record_armed_.has_value() || this->play_armed_ != nullptr;
+	if (!pending) { return; }
+	// Capture starts from page input, after the script tick has returned. Keep
+	// one cancellation notice rather than a separate warning for every queue.
+	DebugLog quiet;
+	quiet.set_mirror_to_debugger(false);
+	this->scripts_.stop("raw keyboard capture", quiet);
+	this->request_ = MatchRequest();
+	this->leave_requested_ = false;
+	this->pending_goto_.reset();
+	this->pending_screenshot_.reset();
+	this->pending_tuning_.reset();
+	this->pending_presentation_.reset();
+	this->pending_tuning_text_.clear();
+	this->pending_presentation_text_.clear();
+	this->record_armed_.reset();
+	this->play_armed_.reset();
+	this->waiting_notice_shown_ = false;
+	this->log_.warning("keyboard capture: discarded queued developer work; active recording/replay and settings retained");
+}
+
+void DebugDirectorImpl::begin_keyboard_capture()
+{
+	this->keyboard_capture_ = true;
+	this->cancel_capture_work();
+	this->forget_menu_key();
+	this->chord_.consume(this->debug_pads());
+}
+
+void DebugDirectorImpl::capture_input_frame(DebugPageTarget& page)
+{
+	++this->hook_frames_;
+	this->keyboard_capture_ = true;
+	this->close_live_console("raw keyboard capture");
+	this->perf_.break_interval();
+	this->cancel_capture_work();
+	this->forget_menu_key();
+	this->chord_.consume(this->debug_pads());
+	for (int slot = 0; slot < input_slots::pad_count; ++slot)
+	{
+		if (this->chord_.suppressing(slot)) { page.debug_reset_input(slot); }
+	}
+}
+
+void DebugDirectorImpl::end_keyboard_capture()
+{
+	this->cancel_capture_work();
+	this->forget_menu_key();
+	this->chord_.consume(this->debug_pads());
+	this->keyboard_capture_ = false;
+}
+
 bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 {
+	if (this->keyboard_capture_)
+	{
+		this->capture_input_frame(page);
+		return false;
+	}
 	++this->hook_frames_;
 	// A page is on top: the live console exists only over a running match,
 	// and perf times only frames with the match on top (a page may cover it).

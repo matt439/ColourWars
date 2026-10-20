@@ -4,12 +4,12 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     Presentation& presentation, const std::filesystem::path& output, const std::filesystem::path& save_path)
 {
     using Labels = std::array<std::wstring, static_cast<size_t>(MenuItem::count)>;
-    constexpr std::array<MenuItem, 8> controls_roles{ MenuItem::pad_sticks, MenuItem::music_volume,
+    constexpr std::array<MenuItem, 9> controls_roles{ MenuItem::pad_sticks, MenuItem::keyboard_jump, MenuItem::music_volume,
         MenuItem::sfx_volume, MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects,
         MenuItem::apply, MenuItem::back };
     constexpr std::array<MenuItem, 5> stick_roles{ MenuItem::pad, MenuItem::move_deadzone,
         MenuItem::aim_deadzone, MenuItem::apply, MenuItem::back };
-    const std::array<const wchar_t*, 8> controls_legacy{ L"Pad sticks", L"Music volume", L"SFX volume",
+    const std::array<const wchar_t*, 9> controls_legacy{ L"Pad sticks", L"Keyboard Jump", L"Music volume", L"SFX volume",
         L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
     const std::array<const wchar_t*, 5> stick_legacy{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Apply", L"Back" };
     const Presentation original = presentation;
@@ -77,7 +77,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     {
         if (sticks) { return { L"Pad 1", percent(play.movement_deadzone(0, tuning.input().movement_deadzone)),
             percent(play.aim_deadzone(0)), L"", L"" }; }
-        return { L"", std::to_wstring(play.music_volume) + L"%", std::to_wstring(play.sfx_volume) + L"%",
+        return { L"", L"", std::to_wstring(play.music_volume) + L"%", std::to_wstring(play.sfx_volume) + L"%",
             play.view_shake ? L"On" : L"Off", play.aim_marker ? L"On" : L"Off",
             play.reduce_effects ? L"On" : L"Off", L"", L"" };
     };
@@ -109,15 +109,18 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
             auto label = std::make_unique<UiText>("reference-settings-item", labels[static_cast<size_t>(role)],
                 look.item_font, position, app.render_resources(), row == focused ? art.focus_ink : art.ink);
             float scale = 1.0f;
-            if (!values[row].empty())
+            const bool fitted_action = role == MenuItem::keyboard_jump || role == MenuItem::apply;
+            if (!values[row].empty() || fitted_action)
             {
                 const RectangleF raw = label->bounds();
-                scale = std::min({ 1.0f, label_width / raw.width, row_height / raw.height });
+                const float available_width = fitted_action ? look.controls_position.x -
+                    art.focus_padding.x * 2.0f - art.shadow_offset - position.x : label_width;
+                scale = std::min({ 1.0f, available_width / raw.width, row_height / raw.height });
                 label->set_scale(scale);
-                require(label->bounds().right() <= position.x + label_width + 0.01f &&
+                require(label->bounds().right() <= position.x + available_width + 0.01f &&
                     label->bounds().height <= row_height + 0.01f,
                     "Independent Controls/Sticks fitted label crosses its value column or row height");
-                require(!require_fitting || scale < 1.0f,
+                require(!require_fitting || fitted_action || scale < 1.0f,
                     "Long Controls/Sticks option label did not exercise production column fitting");
             }
             scales.push_back(scale); label_bounds.push_back(label->bounds()); row_bounds.push_back(label->bounds());
@@ -203,7 +206,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     for (const MenuItem role : { MenuItem::music_volume, MenuItem::sfx_volume, MenuItem::view_shake,
         MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone })
         { old_labels[static_cast<size_t>(role)] = L"Detailed~ shared setting for this paint session and every connected controller"; }
-    const std::array<const wchar_t*, 8> next_controls{ L"Sticks", L"Music gain", L"Effects gain", L"Camera shake",
+    const std::array<const wchar_t*, 9> next_controls{ L"Sticks", L"Jump key", L"Music gain", L"Effects gain", L"Camera shake",
         L"Aim cue", L"Less motion", L"Commit", L"Return" };
     const std::array<const wchar_t*, 5> next_sticks{ L"Slot", L"Movement cutoff", L"Aim cutoff", L"Commit", L"Return" };
     for (size_t row = 0; row < controls_roles.size(); ++row)
@@ -255,12 +258,14 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
                     "Custom Sticks discard/return changed the old Controls labels, font, focus or save");
             }
         }
+        const size_t edited_row = sticks ? 1 : 2;
+        if (!sticks) { tap(Key::down); }
         const std::string unapplied = saved_bytes();
         tap(Key::down); tap(Key::right);
-        values[1] = sticks ? percent(std::min(0.9f, play.movement_deadzone(0, tuning.input().movement_deadzone) + 0.05f)) : L"10%";
-        compare("pending-old-font", sticks, 1, old, old_labels, values, true);
-        const size_t apply_row = sticks ? 3 : 6;
-        for (size_t row = 1; row < apply_row; ++row) { tap(Key::down); }
+        values[edited_row] = sticks ? percent(std::min(0.9f, play.movement_deadzone(0, tuning.input().movement_deadzone) + 0.05f)) : L"10%";
+        compare("pending-old-font", sticks, edited_row, old, old_labels, values, true);
+        const size_t apply_row = sticks ? 3 : 7;
+        for (size_t row = edited_row; row < apply_row; ++row) { tap(Key::down); }
         const Frame before_apply = compare("old-apply-before-focus-loss", sticks, apply_row, old, old_labels, values, true);
         app.keyboard()->on_key_down(Key::enter); tick();
         static_cast<WindowNotify&>(app).on_deactivated(); tick();
@@ -283,7 +288,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         if (sticks)
         {
             compare("old-parent-after-child-apply", false, 0, old, old_labels, initial_values(false), true);
-            for (size_t row = 0; row < 6; ++row) { tap(Key::down); }
+            for (size_t row = 0; row < 7; ++row) { tap(Key::down); }
             tap(Key::enter);
             require(play.sticks[0].movement_deadzone == std::stoi(values[1]),
                 "Old Controls Apply replaced independently applied custom Sticks settings");
@@ -296,9 +301,11 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         require(adopted.pixels == main_menu_frame(app).pixels,
             "Controls/Sticks font reversal or focus movement changed the reopened text snapshot");
         compare("retained-new-after-reversal", sticks, 0, next, new_labels, values);
-        const std::string before_discard = saved_bytes(); tap(Key::down); tap(Key::right);
-        values[1] = sticks ? percent(std::min(0.9f, play.movement_deadzone(0, tuning.input().movement_deadzone) + 0.05f)) : L"20%";
-        compare("pending-new-after-reversal", sticks, 1, next, new_labels, values);
+        const std::string before_discard = saved_bytes();
+        if (!sticks) { tap(Key::down); }
+        tap(Key::down); tap(Key::right);
+        values[edited_row] = sticks ? percent(std::min(0.9f, play.movement_deadzone(0, tuning.input().movement_deadzone) + 0.05f)) : L"20%";
+        compare("pending-new-after-reversal", sticks, edited_row, next, new_labels, values);
         tap(Key::escape); tick();
         require(stack.depth() == (sticks ? 2 : 1) && saved_bytes() == before_discard,
             "Custom Controls/Sticks Escape persisted an unapplied edit or closed the wrong frame");
@@ -307,7 +314,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
             "Controls/Sticks source reversal and reopen did not restore the exact default raster");
     }
     require(records.good(), "Controls/Sticks authored item evidence write failed");
-    std::cout << "PASS actual Controls/Sticks labels: 13 independent historical substitutions at six sizes/aspects; "
+    std::cout << "PASS actual Controls/Sticks labels: 14 independent historical substitutions at six sizes/aspects; "
         "long OptionRow fitting, complete label/value focus cards and linear sampling; separate controls item font, "
         "retained/reopened/reversed snapshots, repeated child return/Apply, interrupted Enter, save reload, "
         "Back/Escape discard and parent Apply preserving child profiles; frozen draw RNG\n";

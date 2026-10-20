@@ -5,8 +5,10 @@ find_package(directxtk CONFIG REQUIRED)
 
 add_executable(ColourWars WIN32
     action_bindings.cpp
+    input_bindings.cpp
     content_validation.cpp
     content_value.cpp
+    controls_text.cpp
     directory_consts.cpp
     drawable_text.cpp
     fatal_report.cpp
@@ -134,6 +136,8 @@ add_executable(ColourWars WIN32
     states/results_audio.cpp
     states/resume_countdown.cpp
     states/controls_settings_menu.cpp
+    states/keyboard_jump_capture.cpp
+    states/keyboard_jump_menu.cpp
     states/stick_settings_menu.cpp
     states/end_menu.cpp
     states/game_states.cpp

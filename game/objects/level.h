@@ -57,6 +57,8 @@ enum class LevelState
 // One paint match: countdown, clock, cameras, HUDs and music.
 // Scene owns and steps the objects; Level keeps borrowed player pointers
 // and supplies the views and game-specific overlays.
+struct InputBindings;
+
 class Level
 {
 public:
@@ -83,7 +85,8 @@ public:
 		const PlaySettings* preferences,
 		const labrador::Mouse* mouse,
 		std::vector<LevelStation> stations,
-		OpeningMode opening, std::optional<float> duration = std::nullopt);
+		OpeningMode opening, std::optional<float> duration = std::nullopt,
+		const InputBindings* input_bindings = nullptr);
 
 	// Stop the level's voices and player weapon/redraw loops.
 	~Level();
@@ -175,6 +178,9 @@ public:
 	std::wstring_view stage_entry_name() const;
 	mattmath::RectangleF stage_entry_bounds() const;
 	mattmath::RectangleF stage_entry_text_bounds() const;
+	std::wstring_view keyboard_controls_text() const;
+	mattmath::RectangleF keyboard_controls_text_bounds() const;
+	mattmath::RectangleF keyboard_controls_card_bounds() const;
 	// overlay.stations as the scene holds it: one Label per station, in
 	// LevelLoadedInfo::stations() order, made the first time the overlay is
 	// turned on and only hidden after that. None until then, so none in Release.
@@ -258,8 +264,20 @@ private:
 		std::unique_ptr<labrador::TextDropShadow> heading;
 		std::unique_ptr<labrador::TextDropShadow> text;
 		mattmath::RectangleF card;
+		mattmath::RectangleF text_bounds;
 	};
 	std::vector<ControlsReminder> controls_reminders_;
+	// Save owns the effective binding; a paused draw refreshes only its cached
+	// words and fitting, retaining the text widget's original font and copy.
+	const InputBindings* input_bindings_ = nullptr;
+	labrador::TextDropShadow* keyboard_controls_ = nullptr;
+	std::wstring keyboard_jump_label_;
+	struct ControlsReminderLook
+	{
+		mattmath::Vector2F reference_size, margin, padding, heading_shadow, text_shadow;
+		float gap = 0.0f, y = 0.0f;
+	} controls_look_;
+	void refresh_keyboard_controls();
 	const Presentation* presentation_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
 	labrador::RenderResources::SpriteSheetHandle overlay_sheet_;

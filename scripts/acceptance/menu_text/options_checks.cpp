@@ -253,7 +253,7 @@ namespace menu_text_acceptance
         {
             // The original tall help/association blocks share the status band
             // at its far right. Compact blocks leave that wider message legal.
-            d["menu_text"]["help"]["controls"].SetString("Fit");
+            d["menu_text"]["help"]["controls"].SetString("Fit {jump}");
             d["menu_text"]["help"]["pad_association"].SetString("Fit");
             for (const auto& entry : status_text)
             {
@@ -280,7 +280,8 @@ namespace menu_text_acceptance
         {
             variants.rejects("status.active_save_failed", [&](rapidjson::Document& d)
             {
-                d["menu_text"]["help"][compact_help].SetString("Fit");
+                d["menu_text"]["help"][compact_help].SetString(std::string(compact_help) == "controls" ? "Fit {jump}" : "Fit",
+                    d.GetAllocator());
                 d["menu_text"]["status"]["active_save_failed"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
             }, &world);
         }
@@ -354,7 +355,7 @@ namespace menu_text_acceptance
             for (const auto& entry : headings) { d["menu_text"]["headings"][entry.key].SetString("Fit"); }
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
             for (const auto& entry : status_text) { d["menu_text"]["status"][entry.key].SetString("Fit"); }
-            d["menu_text"]["help"]["controls"].SetString("Fit");
+            d["menu_text"]["help"]["controls"].SetString("Fit {jump}");
             d["controls_settings"]["heading_position"]["y"].SetFloat(40.0f);
             d["controls_settings"]["layout"]["position"]["y"].SetFloat(70.0f);
             d["controls_settings"]["layout"]["size"]["y"].SetFloat(1.0f);

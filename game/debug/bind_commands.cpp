@@ -8,6 +8,9 @@
 #include "game/debug/debug_keys.h"
 #include "game/debug/debug_script.h"
 #include "game/debug/debug_tokenizer.h"
+#include "game/game_data.h"
+#include "game/input_bindings.h"
+#include "game/save.h"
 #include <cctype>
 
 // Phase 4 binds: bind, unbind, binds and binds.reset, and binds.cfg in the
@@ -122,6 +125,13 @@ void DebugDirectorImpl::save_binds()
 // ---------------------------------------------------------------------------
 // Commands
 
+bool DebugDirectorImpl::keyboard_jump_collision(labrador::Key key) const
+{
+	if (!keyboard_jump_key_supported(key)) { return false; }
+	const auto chord = debug_keys::parse(input_key_name(key));
+	return chord.has_value() && this->binds_.find(*chord) != nullptr;
+}
+
 void DebugDirectorImpl::register_bind_commands()
 {
 	using Args = const DebugArgs&;
@@ -212,7 +222,10 @@ void DebugDirectorImpl::register_bind_commands()
 					return DebugStatus::failure("bind: " + tokens.error);
 				}
 			}
-			if (debug_keys::player_key(*chord) && !this->binds_loading_)
+			const labrador::Key jump = this->data_ != nullptr && this->data_->save() != nullptr ?
+				this->data_->save()->input_bindings().keyboard_jump : labrador::Key::space;
+			const bool effective_jump = !chord->ctrl && !chord->shift && chord->key == jump;
+			if ((debug_keys::player_key(*chord) || effective_jump) && !this->binds_loading_)
 			{
 				log.warning("bind: " + name + " also moves the keyboard player in a match");
 			}

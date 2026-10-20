@@ -98,6 +98,7 @@ namespace menu_text_acceptance
         add_font("menu_percentage_width", 1000, 16);
         add_font("menu_percentage_height", 8, 200);
         add_font("menu_percentage_both", 2000, 2000);
+        add_font("menu_percentage_exact", 308, 58);
         add_font("menu_percentage_missing8", 8, 16, U'8');
         add_font("menu_percentage_missing1", 8, 16, U'1');
         add_font("menu_percentage_zero", 8, 16, U'\0', true);
@@ -111,9 +112,9 @@ namespace menu_text_acceptance
             const mattmath::Vector2F limit(controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset -
                 controls.layout.position.x - controls.layout.spacing.x,
                 controls.layout.spacing.y - art.focus_padding.y * 2.0f);
-            require(limit == mattmath::Vector2F(332.0f, 68.0f), "Percentage rows lost the actual Controls/Sticks value limits");
+            require(limit == mattmath::Vector2F(332.0f, 58.0f), "Percentage rows lost the actual Controls/Sticks value limits");
             struct Use { int row; MenuItem label; };
-            constexpr Use uses[]{{1, MenuItem::music_volume}, {2, MenuItem::sfx_volume},
+            constexpr Use uses[]{{2, MenuItem::music_volume}, {3, MenuItem::sfx_volume},
                 {1, MenuItem::move_deadzone}, {2, MenuItem::aim_deadzone}};
             for (const auto& use : uses)
             {
@@ -133,7 +134,7 @@ namespace menu_text_acceptance
                 copy = L"Changed after set_value";
                 const auto bounds = value->bounds();
                 require(value->text() == retained && bounds.position() == value_position && label->bounds() == label_bounds &&
-                    bounds.width > 0.0f && bounds.height > 0.0f && bounds.width <= 332.01f && bounds.height <= 68.01f,
+                    bounds.width > 0.0f && bounds.height > 0.0f && bounds.width <= 332.01f && bounds.height <= 58.01f,
                     "Percentage OptionRow lost its copied text, fixed position/label or fitted dimensions");
                 if (fit == 1)
                 {
@@ -143,10 +144,15 @@ namespace menu_text_acceptance
                 }
                 else if (fit == 2 || fit == 3)
                 {
-                    const float expected_width = fit == 2 ? 10.88f : 68.816f;
+                    const float expected_width = fit == 2 ? 9.28f : 58.696f;
                     require(raw == (fit == 2 ? mattmath::Vector2F(32.0f, 200.0f) : mattmath::Vector2F(2024.0f, 2000.0f)) &&
-                        std::abs(bounds.height - 68.0f) <= 0.01f && std::abs(bounds.width - expected_width) <= 0.01f,
+                        std::abs(bounds.height - 58.0f) <= 0.01f && std::abs(bounds.width - expected_width) <= 0.01f,
                         "Percentage copy did not fit height after its independent width decision");
+                }
+                else if (fit == 4)
+                {
+                    require(raw == mattmath::Vector2F(332.0f, 58.0f) && bounds == mattmath::RectangleF(value_position, raw),
+                        "Exact percentage copy lost inclusive contact with its unscaled column and row limits");
                 }
                 else { require(bounds == mattmath::RectangleF(value_position, raw), "Default percentage was enlarged or unnecessarily shrunk"); }
                 auto padded = bounds;
@@ -167,8 +173,8 @@ namespace menu_text_acceptance
         const auto defaults = variants.load([](rapidjson::Document&) {});
         defaults.validate_resources(world.render, world.audio);
         check_rows(defaults, 0);
-        const char* fonts[]{"menu_percentage_width", "menu_percentage_height", "menu_percentage_both"};
-        for (int fit = 1; fit <= 3; ++fit)
+        const char* fonts[]{"menu_percentage_width", "menu_percentage_height", "menu_percentage_both", "menu_percentage_exact"};
+        for (int fit = 1; fit <= 4; ++fit)
         {
             const auto fitted = variants.load([&](rapidjson::Document& d)
             {
@@ -283,12 +289,12 @@ namespace menu_text_acceptance
             { true, 1, MenuItem::fullscreen, &MenuValueText::on },
             { true, 1, MenuItem::fullscreen, &MenuValueText::off },
             { true, 2, MenuItem::team_palette, &MenuValueText::random },
-            { false, 3, MenuItem::view_shake, &MenuValueText::on },
-            { false, 3, MenuItem::view_shake, &MenuValueText::off },
-            { false, 4, MenuItem::aim_marker, &MenuValueText::on },
-            { false, 4, MenuItem::aim_marker, &MenuValueText::off },
-            { false, 5, MenuItem::reduce_effects, &MenuValueText::on },
-            { false, 5, MenuItem::reduce_effects, &MenuValueText::off }
+            { false, 4, MenuItem::view_shake, &MenuValueText::on },
+            { false, 4, MenuItem::view_shake, &MenuValueText::off },
+            { false, 5, MenuItem::aim_marker, &MenuValueText::on },
+            { false, 5, MenuItem::aim_marker, &MenuValueText::off },
+            { false, 6, MenuItem::reduce_effects, &MenuValueText::on },
+            { false, 6, MenuItem::reduce_effects, &MenuValueText::off }
         };
         const auto check_rows = [&](const Presentation& look, bool width_limited, bool height_limited)
         {
@@ -310,7 +316,7 @@ namespace menu_text_acceptance
                     paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x :
                     controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset - value_position.x,
                     spacing.y - art.focus_padding.y * 2.0f);
-                require(limit == (use.options ? mattmath::Vector2F(930.0f, 86.0f) : mattmath::Vector2F(332.0f, 68.0f)),
+                require(limit == (use.options ? mattmath::Vector2F(930.0f, 86.0f) : mattmath::Vector2F(332.0f, 58.0f)),
                     "Authored value fixture no longer exercises the shipped Options/Controls fitting limits");
                 const auto font = world.render.resolve_sprite_font(style.item_font);
                 std::wstring authored = look.menu_text().values.*use.field;

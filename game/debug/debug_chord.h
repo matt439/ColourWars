@@ -33,6 +33,9 @@ public:
 	// One call per frame, before anything reads pad edges. True on the frame
 	// a session's hold reaches hold_seconds.
 	bool update(const Pads& pads, float dt);
+	// Raw input capture consumes a held chord until both buttons release.
+	// Unlike reset(), this cannot restart the same held gesture afterward.
+	void consume(const Pads& pads);
 
 	bool suppressing(int slot) const;
 	bool any_suppressing() const;

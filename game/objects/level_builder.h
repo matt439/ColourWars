@@ -29,7 +29,7 @@ public:
 		labrador::ResolutionManager* resolution_manager,
 		labrador::ThreadPool* thread_pool,
 		const labrador::Partitioner* partitioner,
-		const labrador::Mouse* mouse);
+		const labrador::Mouse* mouse, const InputBindings* input_bindings = nullptr);
 
 	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings,
 		TeamColourPair palette, OpeningMode opening);
@@ -51,4 +51,5 @@ private:
 
 	// Borrowed mouse state passed to Level for camera-dependent aiming.
 	const labrador::Mouse* mouse_ = nullptr;
+	const InputBindings* input_bindings_ = nullptr;
 };

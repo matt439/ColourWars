@@ -202,7 +202,7 @@ namespace
 
     void check_round_trips(const IsolatedSaveDirectory& directory)
     {
-        require(Save::version == 2, "Remembered setup did not introduce save format version 2");
+        require(Save::version >= 2, "Current saves no longer support the remembered setup schema");
         for (int count = 1; count <= 4; ++count)
         {
             for (size_t variant = 0; variant < weapons.size(); ++variant)
@@ -223,7 +223,7 @@ namespace
                 const auto root = document.root();
                 const auto section = root.object("last_match");
                 const auto players = section.array("players");
-                require(root.integer("save_version") == 2 && players.size() == static_cast<size_t>(count) &&
+                require(root.integer("save_version") == Save::version && players.size() == static_cast<size_t>(count) &&
                     section.string("stage") == original.stage() && section.string("layout") ==
                     layout_keys[static_cast<size_t>(count - 1)] && section.integer("best_of") == original.best_of() &&
                     section.has("duration") == original.duration().has_value(), "Saved setup schema or enum keys drifted");
@@ -282,7 +282,7 @@ namespace
             require(!legacy.last_match_setup(), "Save without remembered section gained a remembered match");
             require_other_sections(legacy);
             require(legacy.save_to_file(), "Cannot rewrite legacy save");
-            require(directory.contents().rfind("{\"save_version\":2,", 0) == 0 &&
+            require(directory.contents().rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0 &&
                 directory.contents().find("\"last_match\"") == std::string::npos,
                 "Rewriting absent remembered setup invented choices or wrote an old version");
             Save known = load(directory, valid_section, version);

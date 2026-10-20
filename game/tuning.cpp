@@ -2,6 +2,8 @@
 #include "game/tuning.h"
 #include "game/content_value.h"
 #include "game/resource_validation.h"
+#include "game/controls_text.h"
+#include "game/drawable_text.h"
 
 #include "engine/assets/json.h"
 
@@ -629,6 +631,15 @@ void GameTuning::validate_resources(const RenderResources& render,
 {
 	const ResourceValidation check(this->source_path_, render, audio);
 	check.font("match.controls_text.font", this->match_.controls_font);
+	for (const Key key : controls_text::jump_keys())
+	{
+		const std::wstring words = controls_text::keyboard_controls_reminder(key);
+		const std::string where = this->source_path_ + ": match.controls_text.font";
+		drawable_text::check_font_can_draw(&render, this->match_.controls_font, words, where);
+		const Vector2F size = render.measure_text(render.resolve_sprite_font(this->match_.controls_font), words);
+		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
+		{ throw std::runtime_error(where + " requires finite positive effective keyboard reminder bounds."); }
+	}
 	check.frame("paint.frame", this->paint_.sheet, this->paint_.frame);
 	const auto splash = [&](ProjectileType type, const char* key)
 	{

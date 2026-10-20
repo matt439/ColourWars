@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <string>
+#include <string_view>
 
 enum class MenuHeading
 {
@@ -28,7 +29,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, count
 };
 
 struct MenuTitleText
@@ -44,6 +45,17 @@ struct MenuHelpText
 	std::wstring controls;
 	std::wstring pad_association;
 	std::wstring aim_cutoff;
+};
+
+struct KeyboardJumpMenuText
+{
+	std::wstring heading, capture, reset, current, pending, help;
+	std::wstring pending_status, saved_status, capture_wait_neutral, capture_ready, capture_release;
+	std::wstring capture_rejected, capture_conflict, capture_cancelled, debug_collision;
+	std::wstring current_key(std::wstring_view label) const;
+	std::wstring pending_key(std::wstring_view label) const;
+	std::wstring release_key(std::wstring_view label) const;
+	std::wstring help_block(std::wstring_view current_label, std::wstring_view pending_label) const;
 };
 
 struct MenuStatusText
@@ -201,6 +213,7 @@ struct MenuText
 	std::wstring display_trial_countdown;
 	std::wstring options_palette_timing;
 	MenuHelpText help;
+	KeyboardJumpMenuText keyboard_jump;
 	MenuStatusText status;
 	MenuValueText values;
 	MenuConfirmationText confirmations;

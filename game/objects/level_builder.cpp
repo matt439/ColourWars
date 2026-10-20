@@ -17,7 +17,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner,
 	// Disambiguate from DirectX::Mouse.
-	const labrador::Mouse* mouse) :
+	const labrador::Mouse* mouse, const InputBindings* input_bindings) :
 	render_resources_(render_resources),
 	audio_resources_(audio_resources),
 	level_infos_(level_infos),
@@ -27,7 +27,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	resolution_manager_(resolution_manager),
 	thread_pool_(thread_pool),
 	partitioner_(partitioner),
-	mouse_(mouse)
+	mouse_(mouse), input_bindings_(input_bindings)
 {
 	this->preferences_ = preferences;
 	this->team_colour_ = std::make_unique<TeamColourTools>();
@@ -110,5 +110,5 @@ std::unique_ptr<Level>
 		this->preferences_,
 		this->mouse_,
 		load_info->stations(),
-		opening, settings.duration());
+		opening, settings.duration(), this->input_bindings_);
 }

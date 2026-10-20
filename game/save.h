@@ -9,6 +9,7 @@
 #include "game/play_settings.h"
 #include "game/match_records.h"
 #include "game/last_match_setup.h"
+#include "game/input_bindings.h"
 
 struct SaveData
 {
@@ -17,6 +18,7 @@ struct SaveData
 	bool fullscreen = false;
 	TeamColourPair team_palette = TeamColourPair::random;
 	PlaySettings play;
+	InputBindings input_bindings;
 	MatchRecords records;
 	std::optional<LastMatchSetup> last_match;
 };
@@ -29,7 +31,8 @@ public:
 	// 0 is the original flat file with no version key. 1 adds the version key
 	// and nested sections ("records") beside the same flat preference keys.
 	// 2 adds the independent nested "last_match" setup; older saves omit it.
-	static constexpr int version = 2;
+	// 3 adds independent keyboard Jump preferences under "input_bindings".
+	static constexpr int version = 3;
 
 	Save() = default;
 	void load_save_file();
@@ -44,6 +47,10 @@ public:
 	TeamColourPair team_palette() const;
 	const PlaySettings& play_settings() const;
 	bool set_play_settings_and_save(const PlaySettings& settings);
+	const InputBindings& input_bindings() const;
+	// Like play preferences, a valid choice becomes active before the write;
+	// failure keeps it active and leaves the previous disk file intact.
+	bool set_input_bindings_and_save(const InputBindings& bindings);
 	const MatchRecords& records() const;
 	// Counts one finished match on `stage` and writes the save. A failed
 	// write keeps the record for this run and reports it on stderr only.

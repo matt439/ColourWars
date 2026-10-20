@@ -3,6 +3,7 @@
 #include "game/presentation_read.h"
 #include "game/build_info.h"
 #include "game/content_value.h"
+#include "game/controls_text.h"
 
 #include "engine/assets/json.h"
 #include "engine/render/text_encoding.h"
@@ -226,8 +227,30 @@ namespace presentation_read
 		text.home_subtitle = read_menu_line(json, "home_subtitle");
 		const JsonValue help = json.object("help");
 		text.help.controls = read_menu_block(help, "controls");
+		try { std::ignore = controls_text::controls_help(text.help.controls, Key::space); }
+		catch (const std::invalid_argument& error)
+		{ throw std::runtime_error(help.where() + ": controls: " + error.what()); }
 		text.help.pad_association = read_menu_block(help, "pad_association");
 		text.help.aim_cutoff = read_menu_line(help, "aim_cutoff");
+		const JsonValue jump = json.object("keyboard_jump");
+		KeyboardJumpMenuText& keys = text.keyboard_jump;
+		for (const auto& field : { std::pair{ "heading", &KeyboardJumpMenuText::heading },
+			std::pair{ "capture", &KeyboardJumpMenuText::capture }, std::pair{ "reset", &KeyboardJumpMenuText::reset },
+			std::pair{ "current", &KeyboardJumpMenuText::current }, std::pair{ "pending", &KeyboardJumpMenuText::pending },
+			std::pair{ "pending_status", &KeyboardJumpMenuText::pending_status }, std::pair{ "saved_status", &KeyboardJumpMenuText::saved_status },
+			std::pair{ "capture_wait_neutral", &KeyboardJumpMenuText::capture_wait_neutral }, std::pair{ "capture_ready", &KeyboardJumpMenuText::capture_ready },
+			std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release }, std::pair{ "capture_rejected", &KeyboardJumpMenuText::capture_rejected },
+			std::pair{ "capture_conflict", &KeyboardJumpMenuText::capture_conflict }, std::pair{ "capture_cancelled", &KeyboardJumpMenuText::capture_cancelled },
+			std::pair{ "debug_collision", &KeyboardJumpMenuText::debug_collision } })
+		{ keys.*field.second = read_menu_line(jump, field.first); }
+		keys.help = read_menu_block(jump, "help");
+		for (const auto& field : { std::pair{ "current", &KeyboardJumpMenuText::current },
+			std::pair{ "pending", &KeyboardJumpMenuText::pending }, std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release } })
+		{
+			try { std::ignore = controls_text::key_line(keys.*field.second, L"Space"); }
+			catch (const std::invalid_argument& error)
+			{ throw std::runtime_error(jump.where() + ": " + field.first + ": " + error.what()); }
+		}
 		const JsonValue status = json.object("status");
 		text.status.options_pending = read_menu_line(status, "options_pending");
 		text.status.options_saved = read_menu_line(status, "options_saved");
@@ -467,6 +490,18 @@ namespace presentation_read
 		return text;
 	}
 }
+
+std::wstring KeyboardJumpMenuText::current_key(std::wstring_view label) const
+{ return controls_text::key_line(this->current, label); }
+
+std::wstring KeyboardJumpMenuText::pending_key(std::wstring_view label) const
+{ return controls_text::key_line(this->pending, label); }
+
+std::wstring KeyboardJumpMenuText::release_key(std::wstring_view label) const
+{ return controls_text::key_line(this->capture_release, label); }
+
+std::wstring KeyboardJumpMenuText::help_block(std::wstring_view current_label, std::wstring_view pending_label) const
+{ return this->current_key(current_label) + L'\n' + this->pending_key(pending_label) + L'\n' + this->help; }
 
 const std::wstring& MenuText::heading(MenuHeading heading) const
 {

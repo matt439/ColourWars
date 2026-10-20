@@ -357,12 +357,13 @@ save that holds it is built from sections and carries a version key.
 on its own, so a malformed section falls back to its defaults and leaves the
 others intact. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
-`"save_version": 2` is written first (version 1 introduced records; version 2
-adds remembered setup). A missing key is version 0, the same flat layout.
+`"save_version": 3` is written first (version 1 introduced records, version 2
+remembered setup, and version 3 independent input bindings). A missing key is
+version 0, the same flat layout.
 A higher version still loads every key this build knows and prints one
 stderr line; the next write drops what it does not know. That is accepted for a
-local save. New sections use nested keys: `"records"` and the last-match
-setup's `"last_match"` (`GAP#6.1`).
+local save. New sections use nested keys: `"records"`, the last-match
+setup's `"last_match"` (`GAP#6.1`), and `"input_bindings"` (`GAP#4.2`).
 
 **Records** (`game/match_records.h`) are an array of `{ "stage": ... }`
 objects, keyed by the manifest name, because the engine's JSON reader has no
@@ -494,7 +495,9 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 
 ## Action bindings (`GAP#4.2`)
 
-**OPEN; the default-evaluator slice is implemented.**
+**OPEN; default evaluators and keyboard Jump rebinding are implemented.**
+The keyboard Jump slice awaits the validation recorded below; broader action
+and pad rebinding remain open.
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
@@ -543,93 +546,132 @@ DPI awareness. Production and oracle reviews found no remaining issue. Evidence
 is under `out/validation/default-actions/`; these hidden checks establish no
 physical-pad comfort, attended readability or performance acceptance.
 
-**Next implementation contract (2026-10-19; not implemented).** The first
-complete slice rebinds the keyboard player's Jump key. It includes a capture
-child of Controls / audio, independent saved preferences, the actual
-`PlayerInput` consumer and every effective Jump instruction. Saving an unused
-mapping table alone is not a slice. The broader direction is one shared
-keyboard/mouse profile and future profiles for Pad 1-4 XInput slots, matching
-the existing stick preferences rather than player numbers or physical-device
-identity. The first slice stores only its keyboard Jump preference. Pad
-movement, aim and drop remain analog reader behavior; do not expose unused
-pad movement/drop binding entries.
+**Keyboard Jump slice implemented and validated (2026-10-20).** Controls /
+audio has a Keyboard Jump child, independent saved preferences and an effective
+mapping consumed by the actual `PlayerInput`. The child reuses the existing
+controls widgets; Controls / audio now has nine rows.
 
-The first key domain is the physical `labrador::Key` positions A-Z and Space,
-with stable save names `a`-`z` and `space`, independent of enum ordinals and
-typed characters. There are no modifier chords, mouse sources or pad sources
-in this slice. Space is the shipped/default Jump key; choosing J replaces
-only that gameplay source. Menu bindings and introductory skip bindings stay
-fixed: Space/Enter still mean Proceed in menus, and Space/Escape/Enter still
-skip the opening. Cross-context aliases are allowed, so a menu binding is not
-by itself a conflict. Reject a candidate already used by another gameplay
-action, excluding the deliberately contextual intro-skip action. With the
-current defaults that rules out A/D/S; Down is also a drop source, outside
-this first domain. Escape remains gameplay Pause and F1 remains the gameplay
-debug control; grave/F10/F11 remain reserved developer keys. None is capturable.
-Other keys outside the finite domain leave the pending choice unchanged.
+The nine-row layout uses 74-pixel spacing. Keyboard Jump and the Controls/Sticks
+Apply labels fit uniformly within the padded row and action column; the child
+fits its four actions the same way. Resource validation measures those fitted
+bounds with the actual glyphs, including the shipped font's taller capitals.
 
-Capture owns raw keyboard input while it is active. Wait for all keyboard
-keys, including the opening control, to return to neutral before accepting a
-fresh press. Accept exactly one eligible key gesture and wait for its release;
-multiple keys pressed together, or another key pressed before that release,
-are ambiguous and leave the choice unchanged until a new neutral gesture.
-Escape or the existing owner-aware pad Back action cancels capture. Focus
-loss cancels the current gesture without applying it; returning requires fresh
-neutral input. Capture must not also navigate, confirm or close its page.
-Clear menu action ownership and direction repeat when entering or leaving
-capture and when closing the child, so opening/release gestures cannot leak
-into the next context. Repeated reads of one frame must not accept twice.
-Require a fresh confirmation after capture; capturing Space must not also Apply.
+The finite key domain is the physical `labrador::Key` positions A-Z and Space,
+with stable lowercase save names `a`-`z` and `space`, independent of enum
+ordinals and typed characters. A/D/S conflict with other gameplay actions and
+are refused, leaving 24 choices. W/R remain valid despite their menu aliases.
+Space is the default; choosing J replaces only gameplay Jump. Menu Proceed
+keeps Space/Enter, and opening skip keeps Space/Escape/Enter. Escape remains
+gameplay Pause and F1 remains the gameplay debug control. Modifier chords,
+mouse and pad sources are outside this slice; other unsupported keys leave the
+pending choice unchanged. Grave/F10/F11 remain reserved developer keys.
 
-The child edits a pending choice. Apply activates it; Back discards unapplied
-edits, and Reset restores pending Space without applying it. Use a separate
-`input_bindings` member of `SaveData` and `SaveSection`, with a targeted setter,
-and write save version 3. This keeps the existing Controls parent's copied
-`PlaySettings` from overwriting a child's binding change. Missing legacy data
-uses Space. Unknown key names, wrong types, out-of-domain keys or conflicting
-keys restore only this section's default and preserve display, play, records
-and remembered setup. The read boundary must translate validation exceptions or
-default locally: generic Save section recovery catches `std::runtime_error`,
-not `std::invalid_argument`. Apply follows the existing play-preference policy:
-the choice remains active for this run if writing fails, the previous disk
-file is preserved, and the page reports the failure and allows retry. Back
-after Apply does not undo an active choice.
+Capture owns raw keyboard input before menu navigation or developer shortcuts
+run. It waits for every named keyboard key, including the opening control, to
+return to neutral, then accepts one eligible press and its release. Simultaneous
+keys or another key before that release reject the gesture until a new neutral
+input. Escape or the existing owner-aware pad Back cancels capture after keys
+drain; disconnected-owner fallback retains the existing menu rules. Focus loss
+cancels the gesture without applying it, and return requires fresh neutral
+input. Menu action ownership and direction repeat reset on capture entry/exit
+and child closure. A captured Space cannot also Apply; confirmation requires a
+fresh gesture, and terminal capture samples cannot accept a second time.
 
-The same change must feed the effective binding into `PlayerInput`, using
-existing Save ownership rather than adding a service or global context.
-Release-safe canonical key names must support both storage and labels. Update
-the Controls help in `menu_text.help.controls` and the match-opening keyboard
-reminder in `game/objects/level_opening.cpp`; both must show the effective Jump
-key instead of hardcoded Space. Refresh already-created help/reminder widgets
-after Apply or on return/resume before they become visible; a paused opening
-must not retain its cached Space label. New matches construct them from the
-effective preference. Reformat each page's captured authored help with that key,
-without adopting unrelated live presentation edits; validate the finite key
-labels with the actual help/reminder fonts and bounds. Developer collision
-warnings must work in both directions:
-binding a command to the effective Jump key warns, and capturing/applying J
-warns visibly if a bare-J debug bind already exists. Keep the existing seven
-default-key warnings, including Space's fixed intro alias and the existing
-omission of Enter. Nonreserved custom debug-bind collisions remain warnings;
-their check is inert in Release. Replay stores post-mapping `PlayerInputData`,
-so this slice does not change its format or reinterpret recorded inputs.
+In Debug, capture drains reserved-key presses and the Back+Start chord before
+the director can open a console/menu or execute queued page work. Queued
+scripts, match requests, goto, screenshots, reload content and armed
+record/replay requests are discarded with one notice. Active recording/replay,
+binds and current settings remain intact. A held chord stays consumed until
+both buttons release.
 
-Completion of this first slice needs headless checks for default Space parity,
-custom-key gameplay, save migration and section isolation, actual reader
-integration, conflicts, ambiguity, held entry, cancellation, focus/reset and
-same-frame repeated reads. Prove the actual reader and paused-match resume gate
-handle an already-held new Jump key without inventing a press. Include
-Apply/Back/Reset, failed-write/retry and unrelated-setting preservation.
-Compact native checks must exercise the real
-Controls child and match-opening/help text, fixed menu and intro aliases, and
-an isolated save/relaunch round trip on both presets. These are implementation
-checks; physical-pad comfort remains `ROAD#2`. Rebinding artwork is a later UI
-slice using the approved gameplay style; this functional slice can reuse existing
-controls widgets. Broader action/pad rebinding remains open,
-and neither this contract nor the default evaluator closes `GAP#4.2`.
+The child edits a pending choice. Apply activates and saves it; Reset restores
+pending Space, and Back discards unapplied edits. Save version 3 stores a
+separate `input_bindings` member and section, so applying the Controls parent's
+copied `PlaySettings` cannot overwrite it. Missing legacy data uses Space.
+Unknown names, wrong types, out-of-domain keys and conflicts reset only this
+section, preserving display, play, records and remembered setup. Its read
+boundary translates validation exceptions into the section recovery path.
+If writing fails, the choice remains active, the previous disk file survives,
+and the page reports the failure and allows retry. Back after Apply retains
+the active choice.
 
-Use the working client exhibit for `GAP#F2`, checking engine master before
-filing a report. Upstream filing uses the
+`PlayerInput` borrows the saved preference and rebuilds its effective mapping
+only when the key changes. Press edges still come from the engine's continuous
+snapshots, so changing to an already-held key does not manufacture a press.
+The existing paused-match resume gate also consumes held actions. Replay
+continues to store post-mapping `PlayerInputData`; its format is unchanged.
+
+Controls help substitutes the effective key into its captured
+`menu_text.help.controls` template. Returning from the child refreshes that
+widget before it is shown. The match-opening keyboard reminder also refreshes
+before a paused opening becomes visible, while retaining its captured copy,
+fonts and geometry rather than adopting unrelated presentation edits. Resource
+validation covers all 27 physical-key labels in the actual help/reminder fonts
+and fitting areas, including child current/pending/release copy and the optional
+developer warning.
+
+Developer collision warnings work in both directions: a bare command bind on
+the effective Jump key warns, and a pending/applied key shows a warning when a
+bare debug bind already exists. The existing seven default-key warnings remain,
+including Space's fixed opening alias and the deliberate omission of Enter.
+These collisions remain warnings, and the query is inert in Release.
+
+**Validation (2026-10-20).** Both game/editor presets build under `/W4 /WX`.
+All 42 consumer cases per preset have successful final receipts, reconciled as
+84 cases. The new CPU checks cover all 27 key names/labels, 24 allowed choices,
+fixed menu/opening/pad aliases, actual saved-preference readers, migration and
+malformed-section isolation, gesture ownership, held input, focus, repeated
+reads, failed-write/retry and unrelated settings. The actual reader and resume
+gate retain an already-held new Jump key without manufacturing a press.
+Menu-text checks include actual shipped glyph metrics and exact synthetic
+boundaries for the uniformly fitted Keyboard Jump/Apply labels.
+
+`KeyboardJumpOnly` passes in both presets at hidden 720p/1080p: Debug checks
+44 independently fitted help/status pairs over 406 locally fed menu updates;
+Release checks 42 over 402. Each checks ten fresh Save reloads and two actual
+paused GameLevel opening reminders. The real Controls child exercises
+Apply/Back/Reset, failed-write/retry, independent pending parent audio, effective
+help and paused-opening refresh with captured text/layout and frozen simulation,
+RNG and available Debug fingerprints. All 88 shared PPMs match across presets.
+The ownership leaf checks eleven common observations per preset and eleven
+additional Debug observations for queued work, reserved shortcuts, the pad chord
+and private posted F10 hook messages. Actual OS focus delivery is outside that
+probe. All ten affected legacy UI runs pass: Controls (including Pad Sticks),
+percentages, paused options, menu motion and Settings in both presets.
+
+Separate writer and reader OS processes pass in both presets using a retained
+private profile: J saves through the targeted setter and loads through actual
+Save/PlayerInput, preserving unrelated preferences and save bytes. These are
+acceptance-executable process round trips, not game-window relaunches. Both
+isolated game startups pass with the published bank, per-monitor-v2 DPI,
+system-only PATH and graceful shutdown.
+
+An earlier restricted Release CPU `settings` run failed saving recovered stick
+preferences. The unchanged executable passed in a fresh private directory with
+explicit filesystem access; the original failure is retained and its cause
+remains undiagnosed. Earlier font-fit/test-fixture failures are retained too.
+Evidence is under `out/validation/crossfeed-20261020/keyboard-jump-v1/`, including
+`consumer-reconciliation.json`, `native-reconciliation.json`,
+`ui-reconciliation.json`, `settings-retry/` and `relaunch-final/`. These hidden
+implementation checks establish no human comfort/readability, physical-pad,
+listening, balance, hardware-baseline or performance acceptance.
+
+**Remaining scope.** Broader action and Pad 1-4 rebinding still need their own
+bounded slices. Future profiles follow the existing XInput-slot preferences,
+not player numbers or physical-device identity. Pad movement, aim and drop
+remain analog reader behavior. Rebinding artwork belongs to the later UI pass
+using the approved gameplay style. Physical-pad comfort remains `ROAD#2`, and
+human readability, comfort, balance and hardware acceptance stay open. This
+keyboard slice does not close `GAP#4.2`.
+
+The working action evaluator and saved Jump consumer now justify preparing a
+narrow `GAP#F2` request for snapshot-driven source evaluation and independent
+alias edges. Game action names/defaults, save/UI conflicts, menu ownership and
+roster policy remain client concerns. Pinned Gamepads already has checked
+per-slot state/edges and caller-owned trigger thresholds; neither is a missing
+API. A pad-capture request still needs a real pad-rebinding caller. Check fresh
+engine master and record that commit before preparing the minimal synthetic
+exhibit. No issue has been filed. Upstream filing uses the
 [approved minimal-report scope and issue route](review/engine-reports.md#publication-gate-engpublish).
 
 ## Per-player menu focus (`GAP#D1`)
