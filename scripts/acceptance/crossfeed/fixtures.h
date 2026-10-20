@@ -148,4 +148,5 @@ namespace crossfeed_acceptance
     void trajectory_checks(Services& s);
     void supply_checks(Services& s);
     void painting_checks(Services& s);
+    void opening_checks(Services& s);
 }

@@ -365,6 +365,50 @@ Focused CPU receipts are under `out/validation/crossfeed-20261020/`:
 Final P3 build, consumer, native, editor, startup and package checks passed.
 Their receipts follow; the historical baseline remains a separate checkpoint.
 
+### Aimed and delayed Sniper openings (2026-10-20)
+
+The follow-up compares four fixed input policies on all eight actual spawn
+bodies with selected P3 tuning. Each trial starts cold and lasts 180 live ticks:
+drop until actual lower-floor contact, then walk toward the centre.
+Immediate input requests fire from tick one; delayed input waits until the Player's
+centre crosses the outer edge of its own scored floor (X=920 / 2680).
+Aim is either the original forward/down angle or a ray from the actual weapon
+attachment pivot toward that floor's fixed top midpoint. Neither the gate nor
+target searches for visibility or reacts to a shot's outcome.
+
+| Policy | Spawns painting by tick 180 | First paint tick | Paid shots | Unique area at 180 | Ammunition at 180 |
+|---|---:|---:|---:|---:|---:|
+| No-fire walking control | 0/8 | Unobserved | 0 | 0 | 1.0 |
+| Immediate, forward/down | 2/8 | 123 | 2 | 0-288 | 0.78 |
+| Immediate, aimed floor | 8/8 | 69-79 | 2 | 576 | 0.78 |
+| Delayed, forward/down | 8/8 | 79-106 | 2 | 576 | 0.60-0.666666 |
+| Delayed, aimed floor | 8/8 | 81-108 | 2 | 288-576 | 0.60-0.666666 |
+
+The immediate aimed policy still first pays on tick 62, then reaches paint by
+ordinary swept flight on ticks 69-79. Two later close shots put the target
+inside the barrel-to-nozzle segment: both pay and paint through the real
+launch-obstruction path, with no surviving projectile. Their paid records
+distinguish these launch contacts from swept flight. This is not a claim that
+every nozzle ray travels through the target point.
+
+All firing policies pay twice. The delayed policies leave less time for
+post-shot regeneration before the common deadline, explaining their lower
+final reserve; their authored shot cost is unchanged. The snapshot credits
+only paint observed by tick 180 and separately counts remaining flight.
+It does not add the later settling/recovery window used by the earlier assay.
+The delayed aimed policy still has one live projectile at tick 180 from spawn
+zero on each team. Their 288-area snapshots do not establish that the second
+shot missed; later flight is deliberately uncredited.
+
+Both presets pass the complete Crossfeed case and produce byte-identical logs,
+including 40 new snapshots, 64 paid-launch records and five policy summaries.
+Receipts and the input/measurement comparison are under
+`out/validation/crossfeed-20261020/warning-openings-v1/` (`cpu/<preset>/run.log`
+and `comparison/`). This establishes useful scripted Sniper openings and
+shows that the earlier failure depended on the input policy. It does not
+establish an optimal opening, human aim, competitive strength or a reason to
+raise the ammunition cost; that reserve hypothesis remains open.
+
 ## Verification record
 
 ### Selected P3 profile (2026-10-20)

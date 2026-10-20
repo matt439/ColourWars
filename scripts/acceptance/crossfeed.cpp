@@ -19,6 +19,7 @@ int main(int argc, char** argv)
         trajectory_checks(services);
         supply_checks(services);
         painting_checks(services);
+        opening_checks(services);
         std::cout << "PASS Crossfeed baseline feasibility and measured score/tool access. "
             "Human pressure, camera warning, weapon balance and physical-pad acceptance remain open\n";
         return 0;
