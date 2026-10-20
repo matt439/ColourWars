@@ -259,10 +259,10 @@ void Player::end_contacts(std::span<const Contact> contacts)
                 this->paint_supports_.push_back(paintable);
             }
         }
-        // At a low toe the initial manifold can be horizontal before a floor
-        // response removes downward movement. Recognize the resulting exact
-        // endpoint contact from the final grounded pose, regardless of which
-        // pair dispatched first. The next tick can then follow this ramp.
+        // At either endpoint the initial manifold can be horizontal before
+        // adjacent ground removes downward movement: entering uphill at the
+        // toe, or downhill at the high crest. Recognize that exact endpoint
+        // from the final grounded pose, regardless of pair dispatch order.
         if (other != nullptr && this->supported_this_tick_ &&
             this->move_state() == PlayerMoveState::on_ground &&
             !this->hit_ceiling_this_tick_ && this->state_ == PlayerState::alive && this->health_ > 0.0f)
@@ -276,13 +276,21 @@ void Player::end_contacts(std::span<const Contact> contacts)
                 const float corner = rises_right ? this->rectangle_.right() : this->rectangle_.left();
                 const bool uphill = rises_right ? this->movement_requested_x_ > 0.0f :
                     this->movement_requested_x_ < 0.0f;
-                if (uphill && feet_at(this->rectangle_, ramp.bottom()) &&
-                    coordinate_at(corner, toe, this->rectangle_.width))
+                const bool at_toe = uphill && feet_at(this->rectangle_, ramp.bottom()) &&
+                    coordinate_at(corner, toe, this->rectangle_.width);
+                const float crest = rises_right ? ramp.right() : ramp.left();
+                const float crest_corner = rises_right ? this->rectangle_.left() : this->rectangle_.right();
+                const bool downhill = rises_right ? this->movement_requested_x_ < 0.0f :
+                    this->movement_requested_x_ > 0.0f;
+                const bool at_crest = downhill && feet_at(this->rectangle_, ramp.top()) &&
+                    coordinate_at(crest_corner, crest, this->rectangle_.width);
+                if (at_toe || at_crest)
                 {
                     this->ramp_support_ = RampSupport{ ramp, type };
                     this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right :
                         PlayerMoveState::on_ramp_left);
-                    this->support_position_ = { toe, ramp.bottom() };
+                    this->support_position_ = at_toe ? Vector2F(toe, ramp.bottom()) :
+                        Vector2F(crest, ramp.top());
                 }
             }
         }

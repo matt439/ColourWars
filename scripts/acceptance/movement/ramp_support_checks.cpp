@@ -251,6 +251,30 @@ namespace movement_acceptance
                         walking_routes += 2;
                     }
 
+                    // Begin exactly at the deck's downhill endpoint, with no
+                    // momentum to make the ramp's high face disappear by luck.
+                    // A small horizontal step can otherwise lose to gravity's
+                    // vertical overlap and repeatedly resolve as a wall.
+                    const std::string crest_label = context(right, solid_first, strength) +
+                        " deck-crest rest start";
+                    auto crest = bump(suite, solid_first);
+                    const float crest_x = right ? crest_right - suite.tuning.player().size.x : crest_left;
+                    crest->player->place_at({ crest_x, crest_y - suite.tuning.player().size.y });
+                    for (int tick = 0; tick < 8; ++tick) { crest->tick(); clear(*crest, crest_label); }
+                    check(crest->player->move_state() == PlayerMoveState::on_ground &&
+                        crest->player->velocity() == Vector2F::ZERO &&
+                        crest->player->rectangle().x == crest_x &&
+                        std::fabs(crest->player->rectangle().bottom() - crest_y) <= tolerance,
+                        crest_label + " did not settle at rest on the deck endpoint");
+                    Travel crest_travel;
+                    walk_across(*crest, right, strength, crest_travel, crest_label);
+                    walk_across(*crest, !right, strength, crest_travel, crest_label + " return");
+                    check(crest_travel.left_slope && crest_travel.right_slope && crest_travel.deck &&
+                        crest->feedback_count(MovementFeedbackKind::takeoff) == 0,
+                        crest_label + " missed a slope or deck, or required a takeoff");
+                    downhill_airborne_ticks += crest_travel.airborne_ticks;
+                    walking_routes += 2;
+
                     // The ramp cache is support, not permission to step onto a
                     // taller wall or into a doorway smaller than the body.
                     for (const bool ceiling : { false, true })
@@ -342,7 +366,7 @@ namespace movement_acceptance
         }
         std::cout << "PASS ramp support: " << walking_routes <<
             " real-input crossings/returns, mirrored slopes, both solid/ramp orders, quarter/half/full input, "
-            "toe and mid-ramp restarts, quarter-input Down held; taller walls/low doorways, jump-off and placement/death/respawn resets; "
+            "toe, mid-ramp and deck-crest restarts, quarter-input Down held; taller walls/low doorways, jump-off and placement/death/respawn resets; "
             "flat-to-downhill airborne ticks=" << downhill_airborne_ticks << '\n';
     }
 }
