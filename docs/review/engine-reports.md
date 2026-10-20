@@ -122,7 +122,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 |---|---|---|---|
 | 6 | Shared Music/SFX attenuation remains emitter work | per-emitter saved gains and standalone `audio_gain_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 9 | Per-frame overlay orchestration and separately scoped input routing | client debug forwarding and reader gates; standalone `input_observer.cpp` | local unfiled observer draft - master checked 2026-10-20; synthetic Debug/Release runs pass; capture/routing remains separately scoped |
-| 10 | No way to read back the frame that was presented | `capture_stack` in `game/debug/debug_screenshot.cpp` | draft — exhibit present; recheck upstream before filing |
+| 10 | Optional host capture convenience without State lifecycle changes | `capture_stack` plus the tested public-API final-State alternative | local unfiled request - master checked 2026-10-20; Debug/Release controls pass; unavoidable-redraw claim withdrawn |
 | 11 | Optional opt-out for bare system-menu keys | native F10 queue hook and standalone `system_keys_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release requests reproduce |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 13 | `Key` has no names | Debug bind names, saved keyboard Jump tokens and the standalone `key_names.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
@@ -236,33 +236,94 @@ is unchanged, and upstream must be refreshed immediately before filing.
 
 ---
 
-## 10. No way to read back the frame that was presented — **draft with screenshot exhibit**
+<a id="10-no-way-to-read-back-the-frame-that-was-presented--draft-with-screenshot-exhibit"></a>
 
-**Exhibit added by the developer debug system (phase 2).** The Debug
-`screenshot` command saves the window as a PNG.
+## 10. Optional host capture convenience - **draft with existing final-State alternative**
 
-### What happens
+The sanitized [request](../engine-reports/frame-readback.md),
+[exact tested control](../../scripts/engine-reports/frame-readback/frame_readback.cpp)
+and [corrected build recipe](../../scripts/engine-reports/frame-readback/build-frame-readback.ps1)
+are prepared and remain **unfiled**. The old anchor is retained, but its broad
+claim is withdrawn: a second world draw is not unavoidable. The remaining
+question is an optional host convenience versus existing public composition.
 
-`Renderer::read_back_buffer` is legal only between `submit()` and
-`end_frame()` (`renderer.h`), and `Application::render` runs those two back to
-back with no client hook between them (`application.cpp`). So the game cannot
-read the frame it is about to present. `capture_stack` instead renders the
-whole stack a second time, out of band, from the top state's update:
-`begin_frame`, `Application::draw`, `submit`, `read_back_buffer`, and never
-`end_frame`, which is the sequence the render probes under `scripts/acceptance/`
-already rely on. The next `Application::render` begins a fresh frame.
+### Current workaround and existing alternative
 
-It works on the one backend this repository builds (`d3d11`, checked by
-`scripts/check-debug-console.ps1`), at the cost of a second full draw, and it
-depends on `begin_frame` being callable outside `render()` with a frame left
-unpresented, which the seam does say a frame may be ("contributes nothing")
-but which only the probes' backends exercise.
+The Debug `screenshot` command still uses
+[`capture_stack`](../../game/debug/debug_screenshot.cpp): `begin_frame`,
+public complete stack `draw`, `submit` and `read_back_buffer`, without
+`end_frame`. It performs an extra draw. `capturing_` excludes that redraw from
+normal perf/pacing samples and also controls screenshot-specific display
+policy; an engine hook would not automatically delete all those policies.
 
-### The ask, when it goes
+Private `Application::render` has no host callback between ordinary stack
+submission and end-frame. However public submit is idempotent. A non-covering
+final State can run after underlying drawing, submit/read there, and leave
+the outer submit a no-op. A client-owned truly final draw path can also put
+equivalent code directly there. Neither requires another world draw.
 
-`Application::request_capture(callback)`: read back the next presented frame
-between its own `submit` and `end_frame` and hand the pixels to the callback.
-Answering it would delete `capture_stack` and its out-of-band frame.
+The State observer is visually non-covering but changes lifecycle: push
+suspends the underlying State; its next update queues removal and consumes
+that update, then resumes the world after observer destruction. It must not
+pop during draw, which lacks update's deferral. These costs describe this
+observer pattern, not every possible final-draw integration.
+
+### Checked source and measured control
+
+Fresh upstream master was fetched on 2026-10-20 at 19:34:53 UTC as
+`52e809a5a0229d37db4373faa7853df4c861a310`, with the whole engine worktree
+confirmed unchanged against that `FETCH_HEAD`. StateContext walks the visible
+stack bottom to top, Scene drawing joins its pooled tasks before returning,
+and D3D11 end-marker is an advisory immediate-context PIX operation with no
+later view draw. The fixture itself records one view on the calling thread;
+it does not qualify pooled workers or arbitrary unfinished client tasks.
+
+Both MSVC 19.51.36256.0 `/W4 /WX` Debug/Release builds and hidden runs passed,
+exit 0 with empty stderr. The control makes three world draws and four
+readbacks: two out-of-band red/blue captures, then one world draw captured by
+the final State and compared after outer submit/end-marker. Full-buffer RGBA
+checks and the saved first CPU copy pass. Pop remains pending at depth 2 until
+the observer's update returns, then destruction/resume leave depth 1. One
+observer update is consumed; underlying world updates remain zero.
+
+There is no Application loop, end-frame/present, visible window, file asset,
+save, global input/focus operation or game implementation change. The actual
+D3D11/XAudio2/XInput shell initializes real devices. This validates the public
+composition model on this build, not normal-loop game integration, repeated
+observer draws before an update, other-backend abandonment or display timing.
+The exact source and recipe hashes are recorded in the report.
+
+The initial v1 recipe accidentally splatted an undefined argument array into
+CL. It printed usage, compiled no C++, produced no executable and
+was caught before any process launch. V2 corrects the splat and enables strict
+mode. That retained failure is a fixture-recipe error, not a compiler or
+engine bug. Receipts remain in
+`out/validation/crossfeed-20261020/frame-readback-report-final-v1/` and
+`frame-readback-report-final-v2/`; the latter contains both successful compile
+and process logs plus `result.json`. Local LF attributes preserve tested bytes
+and the recipe's source-hash guard after checkout.
+
+### Submitted composition and remaining request
+
+`read_back_buffer` is a synchronous GPU-stalling copy of top-row-first RGBA
+between submit and end-frame. Null records draws but cannot rasterize/read
+pixels. A submitted buffer is not a previously displayed image: D3D11 present
+can queue/synchronize and discard contents, and no CPU return or readback
+proves compositor acceptance or scan-out. Readback after present is outside
+the portable contract. No asynchronous-copy or presented/displayed outcome
+was tested.
+
+If avoiding observer lifecycle/update ownership justifies a host one-shot
+capture point, document its post-submit/pre-end-frame timing and delivery
+semantics. Otherwise document the existing final-State/final-draw pattern.
+This is an optional convenience, not a proven missing rendering capability.
+PNG encoding/names/paths, screenshot display policy and when to incur a stall
+stay client-owned. A callback alone would not remove the synchronous GPU
+stall or supply asynchronous copy/frame lifetimes.
+
+**Status:** local unfiled request. Review this narrowed scope and refresh
+upstream immediately before authorized filing through the publication gate.
+No host hook, game integration or public issue was made.
 
 ---
 
