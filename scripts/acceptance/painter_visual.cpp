@@ -135,6 +135,7 @@ namespace
 #include "scripts/acceptance/painter_visual/respawn_pen_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/cursor_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/silhouette_tune_colour_checks.h"
+#include "scripts/acceptance/painter_visual/reveal_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_checks.h"
 #include "scripts/acceptance/painter_visual/setup_paper_checks.h"
 #include "scripts/acceptance/painter_visual/weapon_catalog_checks.h"
@@ -207,7 +208,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
             std::wstring(argv[3]) == L"keyboard-jump" ||
-            std::wstring(argv[3]) == L"percentage-text" || std::wstring(argv[3]) == L"feedback-tune-colours" || std::wstring(argv[3]) == L"combat-tune-colours" || std::wstring(argv[3]) == L"blocked-shot-tune-colours" || std::wstring(argv[3]) == L"idle-drip-tune-colours" || std::wstring(argv[3]) == L"respawn-pen-tune-colours" || std::wstring(argv[3]) == L"cursor-tune-colours" || std::wstring(argv[3]) == L"silhouette-tune-colours" ||
+            std::wstring(argv[3]) == L"percentage-text" || std::wstring(argv[3]) == L"feedback-tune-colours" || std::wstring(argv[3]) == L"combat-tune-colours" || std::wstring(argv[3]) == L"blocked-shot-tune-colours" || std::wstring(argv[3]) == L"idle-drip-tune-colours" || std::wstring(argv[3]) == L"respawn-pen-tune-colours" || std::wstring(argv[3]) == L"cursor-tune-colours" || std::wstring(argv[3]) == L"silhouette-tune-colours" || std::wstring(argv[3]) == L"reveal-tune-colours" ||
             std::wstring(argv[3]) == L"exposed-colour-alpha" || std::wstring(argv[3]) == L"duration-text" ||
             std::wstring(argv[3]) == L"resolution-text" || std::wstring(argv[3]) == L"end-continuation" || std::wstring(argv[3]) == L"results-text" || std::wstring(argv[3]) == L"session-result" || std::wstring(argv[3]) == L"series-score" || std::wstring(argv[3]) == L"round-heading" || std::wstring(argv[3]) == L"competitive-winner" || std::wstring(argv[3]) == L"contribution-team" || std::wstring(argv[3]) == L"result-percentage" ||
             std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"remembered-setup" ||
@@ -217,7 +218,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -251,6 +252,7 @@ int wmain(int argc, wchar_t** argv)
         const bool respawn_pen_tune_colours_only = argc == 4 && std::wstring(argv[3]) == L"respawn-pen-tune-colours";
         const bool cursor_tune_colours_only = argc == 4 && std::wstring(argv[3]) == L"cursor-tune-colours";
         const bool silhouette_tune_colours_only = argc == 4 && std::wstring(argv[3]) == L"silhouette-tune-colours";
+        const bool reveal_tune_colours_only = argc == 4 && std::wstring(argv[3]) == L"reveal-tune-colours";
         const bool exposed_colour_alpha_only = argc == 4 && std::wstring(argv[3]) == L"exposed-colour-alpha";
         const bool duration_text_only = argc == 4 && std::wstring(argv[3]) == L"duration-text";
         const bool resolution_text_only = argc == 4 && std::wstring(argv[3]) == L"resolution-text";
@@ -288,6 +290,7 @@ int wmain(int argc, wchar_t** argv)
         require(!respawn_pen_tune_colours_only, "RespawnPenTuneColoursOnly requires the normal gamepad reader");
         require(!cursor_tune_colours_only, "CursorTuneColoursOnly requires the normal gamepad reader");
         require(!silhouette_tune_colours_only, "SilhouetteTuneColoursOnly requires the normal gamepad reader");
+        require(!reveal_tune_colours_only, "RevealTuneColoursOnly requires the normal gamepad reader");
 
         require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || menu_labels_only || menu_text_only || keyboard_jump_only ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options")),
@@ -404,6 +407,16 @@ int wmain(int argc, wchar_t** argv)
             movement_debug_alpha_checks(app, levels, tuning, presentation, output);
 #if COLOURWARS_DEV_TOOLS
             debug_console_alpha_checks(app, levels, tuning, presentation, content, output);
+#endif
+            return 0;
+        }
+        if (reveal_tune_colours_only)
+        {
+            reveal_colour_consumer_checks(app, presentation, output);
+#if COLOURWARS_DEV_TOOLS
+            reveal_tune_colour_checks(app, levels, tuning, presentation, content, output);
+#else
+            std::cout << "PASS reveal-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
             return 0;
         }

@@ -72,6 +72,11 @@ namespace
 		{ "presentation.opening.silhouette_art.ink", TuneScope::live },
 		{ "presentation.opening.silhouette_art.rim", TuneScope::live },
 		{ "presentation.opening.silhouette_art.shade", TuneScope::live },
+		// RevealArt reads these borrowed card tints on every draw; team text,
+		// caller inputs and captured font/sheet/frame keep their existing policy.
+		{ "presentation.opening.reveal_art.ink", TuneScope::live },
+		{ "presentation.opening.reveal_art.paper", TuneScope::live },
+		{ "presentation.opening.reveal_art.shade", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

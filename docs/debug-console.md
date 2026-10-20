@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These twenty-six existing string fields are supported; numeric path
+**Colours.** These twenty-nine existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -385,6 +385,8 @@ digits accept either case. Tab suggests `WHITE` and `BLACK`; those suggestions
 do not restrict the other names accepted by the normal presentation reader.
 Colour readouts and diffs
 show the quoted JSON token.
+The latest validation is recorded under
+[remaining live-tuning work](#remaining-live-tuning-work-dbg1).
 
 | Colour path | Scope | Consumer |
 |---|---|---|
@@ -414,6 +416,9 @@ show the quoted JSON token.
 | `presentation.opening.silhouette_art.ink` | live | Contours of existing visible intro/reveal silhouettes, on the next draw. |
 | `presentation.opening.silhouette_art.rim` | live | Lit edges of those same silhouettes, on the next draw. |
 | `presentation.opening.silhouette_art.shade` | live | Ordered shade passes of those same silhouettes, on the next draw. |
+| `presentation.opening.reveal_art.ink` | live | Contours, text outlines and click-tick ink of existing visible percentage cards, on the next draw. |
+| `presentation.opening.reveal_art.paper` | live | Stepped paper interiors of those same cards, on the next draw. |
+| `presentation.opening.reveal_art.shade` | live | Displaced shadows and ordered inner airbrush passes of those same cards, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -490,6 +495,16 @@ fade. Each of the four ordered shade passes submits
 Making all three art colours nonblack zero alpha removes their contributions
 while retaining the separate body fill. This increment changes no drawing,
 default colour or artwork.
+
+Reveal card ink, paper and shade are borrowed on each visible percentage-card
+draw. Captured sheet/fill/font bindings and the existing captured percentage-text
+policy stay unchanged, as do caller team colours, geometry and timing. Each
+inner airbrush pass multiplies shade alpha by 0.12 before premultiplying once.
+Click ink and team-paint alpha use the existing quadratic beat before that
+conversion; half-age gives beat 0.25. Ordered paper, airbrush and outline writes
+blend separately. Zero alpha reveals the appropriate underlayers rather than
+removing the whole card. No drawing, default, font or artwork change is included;
+validation is recorded below.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -1253,7 +1268,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the twenty-six listed colour fields above are
+  and inserting keys in `tune.save`: the twenty-nine listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1262,12 +1277,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Twenty-six existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Twenty-nine existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
-respawn pen colour, cursor ink/fill and silhouette ink/rim/shade.
+respawn pen colour, cursor ink/fill, silhouette ink/rim/shade and reveal
+ink/paper/shade.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1292,6 +1308,40 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Reveal ink/paper/shade increment (2026-10-20), **verified**:
+exact paths 27-29 are `presentation.opening.reveal_art.ink`, `.paper` and
+`.shade`, live on retained visible percentage cards. Only the explicit colour
+allowlist changes; drawing, defaults, captured font/sheet/fill bindings and
+percentage-text policy stay unchanged. Existing ordered premultiplication,
+0.12-alpha airbrush layers and quadratic click beat are retained.
+
+Both game/editor builds and four focused CPU cases (console and story audio
+per preset) pass. CPU checks cover all three sibling resets, source-preserving saves,
+conflicts/force and exact three-token save/rebase. Invalid external padding
+0.181 refuses both ordinary and forced merged saves without changing
+source/staged/live/text/baseline/ledger state.
+
+Both native first executions pass. Shared evidence is 228 readbacks and 264 rows (22 cases plus
+242 sample rows), with ten crops: six 400x120 material panels and four 800x120
+label pairs, 672000 pixels total. Seven material sites and four two-team
+half-age tick sites use independent ordered raw-channel references and negative
+alpha/overlap/beat controls; actual sample footprints match in both presets.
+The material-only route measures actual captured-font `L" "` as exactly
+`Vector2F::ZERO`; empty text is not a substitute. A second production consumer
+compares complete-card/text adoption only, not independent geometry or glyph
+coverage. Expired/Reduce Effects draws retain the settled card.
+
+Debug's 21 commands and fourteen states add 196 readbacks and 336 rows
+(28 cases plus 308 samples), for totals of 424/600/10. Three-token private
+save/rebase/reset preserves siblings, real content, preferences, Jump J
+and default display; two preference seed Saves and zero local/Level/StateContext/
+input updates pass. All 26 shared artifacts, including ten PPMs, match byte
+for byte; root contact-sheet inspection and twelve frozen source/support
+hashes reconcile. Receipts live under
+`out/validation/crossfeed-20261020/reveal-colour-v1/`. No active-story route,
+physical/global input, human art/readability, listening or performance
+acceptance is claimed. `DBG#1` remains open beyond these twenty-nine paths.
 
 Silhouette ink/rim/shade increment (2026-10-20), **verified**:
 exact paths 24-26 are `presentation.opening.silhouette_art.ink`, `.rim` and

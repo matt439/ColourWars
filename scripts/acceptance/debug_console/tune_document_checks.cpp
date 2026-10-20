@@ -406,6 +406,59 @@ namespace debug_console_acceptance
 					"Force cannot insert a silhouette-art colour, replace null/a container or expose literal key aliases");
 			}
 		}
+		for (const char* reveal_field : { "ink", "paper", "shade" })
+		{
+			const std::string reveal_path = std::string("opening.reveal_art.") + reveal_field;
+			const std::string reveal_baseline = "{\r\n  \"opening\":{\"sprite_sheet\":\"unchanged\",\"fill_frame\":\"solid\","
+				"\"percent_font\":\"captured\",\"reveal_art\":{\"ink\":\"\\u0042LACK\",\"paper\":\"\\u0057HITE\","
+				"\"shade\":\"\\u0030\\u0030000055\"}},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			const JsonSpanDocument reveal_reference(reveal_baseline, "reveal-colour-reference");
+			TuneDocument reveal_document("presentation", reveal_baseline);
+			const JsonLeaf* reveal_leaf = reveal_document.find(reveal_path);
+			require(reveal_leaf != nullptr && reveal_leaf->kind == JsonLeaf::Kind::string &&
+				reveal_document.find("opening.sprite_sheet") == nullptr && reveal_document.find("opening.fill_frame") == nullptr &&
+				reveal_document.find("opening.percent_font") == nullptr,
+				"Each audited reveal colour is eligible while the captured font and texture names stay outside the tree: " + reveal_path);
+			reveal_document.commit(reveal_document.edited(*reveal_leaf, "\"11223344\""), reveal_path);
+			for (const char* reveal_sibling_field : { "ink", "paper", "shade" })
+			{
+				const std::string reveal_sibling = std::string("opening.reveal_art.") + reveal_sibling_field;
+				if (reveal_sibling == reveal_path) { continue; }
+				require(reveal_document.find(reveal_sibling) != nullptr &&
+					reveal_document.current().token(*reveal_document.find(reveal_sibling)) ==
+						reveal_reference.token(*reveal_reference.find(reveal_sibling)),
+					"Editing one reveal colour retains both siblings' exact escaped token spellings: " + reveal_path);
+			}
+			require(reveal_document.reverted(reveal_path) == reveal_baseline,
+				"Each reveal reset restores its escaped token, both siblings and every original CRLF byte: " + reveal_path);
+			const std::string reveal_external_number = reveal_reference.replaced(*reveal_reference.find("number"), "25");
+			const JsonSpanDocument reveal_external_reference(reveal_external_number, "reveal-colour-reference");
+			const TuneSplice reveal_splice = reveal_document.splice(reveal_external_number, false);
+			require(reveal_splice.conflicts.empty() && reveal_splice.written == 1 && reveal_splice.text ==
+				reveal_external_reference.replaced(*reveal_external_reference.find(reveal_path), "\"11223344\"") &&
+				count_of(reveal_splice.text, "\r\n") == count_of(reveal_baseline, "\r\n"),
+				"Each reveal splice preserves both siblings, captured strings, unrelated escapes, external numbers and every CRLF: " + reveal_path);
+			const std::string reveal_pending = reveal_document.current().text();
+			bool reveal_wrong_type = false;
+			try { reveal_document.commit(reveal_document.edited(*reveal_document.find(reveal_path), "false"), reveal_path); }
+			catch (const std::invalid_argument&) { reveal_wrong_type = true; }
+			require(reveal_wrong_type && reveal_document.current().text() == reveal_pending && reveal_document.edits().size() == 1,
+				"A wrong-type reveal commit retains its pending string and both siblings: " + reveal_path);
+			for (const std::string& reveal_invalid : { std::string("{}"),
+				reveal_reference.replaced(*reveal_reference.find(reveal_path), "null"),
+				reveal_reference.replaced(*reveal_reference.find(reveal_path), "{\"value\":\"RED\"}"),
+				"{\"" + reveal_path + "\":\"RED\"}",
+				std::string("{\"opening\":{\"reveal_art.") + reveal_field + "\":\"RED\"}}",
+				std::string("{\"opening.reveal_art\":{\"") + reveal_field + "\":\"RED\"}}",
+				std::string("{\"opening\":{\"reveal_art\":{\"") + reveal_field + ".r\":\"RED\"}}}" })
+			{
+				const TuneDocument reveal_unsupported("presentation", reveal_invalid);
+				const TuneSplice reveal_refused = reveal_document.splice(reveal_invalid, true);
+				require(reveal_unsupported.find(reveal_path) == nullptr && reveal_refused.written == 0 &&
+					reveal_refused.conflicts.size() == 1 && reveal_refused.text == reveal_invalid,
+					"Force cannot insert a reveal colour, replace null/a container or expose literal key aliases: " + reveal_path);
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -585,10 +638,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited twenty-six colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited twenty-nine colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly twenty-six authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly twenty-nine authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -639,7 +692,12 @@ namespace debug_console_acceptance
 			"presentation.opening.cursor_art.shadow", "presentation.opening.cursor_art.click_duration",
 			"opening.silhouette_art.ink", "tuning.opening.silhouette_art.ink", "presentation.opening.silhouette",
 			"presentation.opening.silhouette_art.ink.r", "presentation.opening.silhouette_art.rim_extra",
-			"presentation.opening.silhouette_art.shade_colour", "presentation.opening.silhouette_art.pen_width" })
+			"presentation.opening.silhouette_art.shade_colour", "presentation.opening.silhouette_art.pen_width",
+			"opening.reveal_art.ink", "tuning.opening.reveal_art.ink", "opening.reveal_art.paper",
+			"tuning.opening.reveal_art.paper", "opening.reveal_art.shade", "tuning.opening.reveal_art.shade",
+			"presentation.opening.percent_font", "presentation.opening.reveal_art.ink.r",
+			"presentation.opening.reveal_art.paper_extra", "presentation.opening.reveal_art.shade_colour",
+			"presentation.opening.reveal_art.padding", "presentation.opening.reveal_art.beat_duration" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -680,6 +738,9 @@ namespace debug_console_acceptance
 			{ "presentation.opening.silhouette_art.ink", TuneScope::live },
 			{ "presentation.opening.silhouette_art.rim", TuneScope::live },
 			{ "presentation.opening.silhouette_art.shade", TuneScope::live },
+			{ "presentation.opening.reveal_art.ink", TuneScope::live },
+			{ "presentation.opening.reveal_art.paper", TuneScope::live },
+			{ "presentation.opening.reveal_art.shade", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -790,7 +851,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All twenty-six colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All twenty-nine colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

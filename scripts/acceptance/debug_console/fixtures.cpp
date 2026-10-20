@@ -135,7 +135,9 @@ namespace debug_console_acceptance
 			presentation.blocked_shot().keyline, presentation.idle_drip().keyline,
 			presentation.respawn_redraw().pen_colour, presentation.opening().cursor_art.ink,
 			presentation.opening().cursor_art.fill, presentation.opening().silhouette_art.ink,
-			presentation.opening().silhouette_art.rim, presentation.opening().silhouette_art.shade };
+			presentation.opening().silhouette_art.rim, presentation.opening().silhouette_art.shade,
+			presentation.opening().reveal_art.ink, presentation.opening().reveal_art.paper,
+			presentation.opening().reveal_art.shade };
 	}
 #endif
 }

@@ -214,6 +214,22 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($RevealTuneColoursOnly) {
+    $result.scope = 'reveal-tune-colours-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('unchanged-default','independent-ink-paper-shade-rgb','independent-ink-paper-shade-rgba128','independent-nonblack-alpha0','combined-rgba')
+    $result.resolutions = @('1280x720')
+    $result.inputs = 'Fixed synthetic RevealArt bounds(80,80,360,100), two numeric cards at y240, rest/half-age .09; no local/Level/State/input updates. SPACE must measure exactly ZERO in the actual captured font.'
+    $result.audio = 'No gameplay audio events; no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('retained-space-material-card-and-two-wrapped-team-labels','immutable-copied-dependency-adoption-reference','independent-eleven-site-ordered-raw-alpha-reference','stepped-single-double-material-overlaps','one-three-airbrush-passes-at-point12','half-age-quadratic-point25','straight-squared-base-and-fade-controls','per-field-alpha0-underlayer-retention','reduced-expired-settled-parity','fixed-resources-wrappers-bounds-teams-global-rng')
+    $result.checks = 'Exactly three live RevealArt colour leaves; no drawing/font/art/default change. Production-derived full-card/text reference establishes adoption only. Seven independent material sites include each ordered lower layer and repeated overlap; four raw tick sites retain both caller team colours. SPACE is nonempty and measured ZERO before use; glyph pixels are never a solid-channel oracle. Eleven palettes/two backgrounds, 28 wrong-reference frames and96 rejected sample controls. Shared228 readbacks/264 CSVrows/10 crops (six400x120 material crops plus four800x120 label crops,672000 pixels). Zero local/Level/State/input updates; hashes/counts retained.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('21-real-named-rgb-rgba-reset-save-statements','independent-leaf-resets-retain-siblings','exact-three-token-private-save-and-rebase','two-private-playsettings-jumpj-saves-default-display-retained')
+        $result.checks += ' Debug14 command states add196 readbacks/336 rows, totals424/600/10. Private source/staged/token-only save, rebase/reset and unchanged preferences/JumpJ/default display are checked. Release runs literal consumers without developer commands or Save.'
+    }
+    $result.checks += ' No physical/global input, OS-focus delivery, human readability, small-view, performance or listening acceptance.'
+}
 elseif ($SilhouetteTuneColoursOnly) {
     $result.scope = 'silhouette-tune-colours-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
