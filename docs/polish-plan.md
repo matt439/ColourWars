@@ -158,13 +158,18 @@ working baseline for the next iteration, not a permanent freeze on art or tuning
    material, prop and background kit (`POL#9`), judged in the current arenas.
    The author has seen and approved the implemented treatment for this early
    development stage, with the explicit qualification that nothing is final.
-2. **Levels with movement and weapons.** Then the Close Quarters blockout
-   (`POL#17`) is built together with movement tuning (`POL#3`) and weapon tuning
-   (`POL#27`): the jump, the five tools' range, rate, damage, paint output and
-   supply, and the layout are each tuned against the other two, with none frozen
-   first. The §3 weapon-roles and fairness requirements are where the weapon
-   half is judged. The kit is fitted to the layout as it settles, and the other
-   arenas (`POL#21`) follow.
+2. **Improve the level, then tune movement, then iterate (clarified 2026-10-20).**
+   First improve the Close Quarters layout (`POL#17`) using the current movement
+   and weapon values: routes, spawns, contested space, bypass and paint budget.
+   Once that initial pass is playable, tune movement (`POL#3`) against the
+   improved arena and the Movement Course. Then make small level and movement
+   adjustments in response to play observations. A playable first level pass
+   opens movement tuning; reference-arena acceptance follows the iterative work.
+   Exercise all five tools during blockout and tune their range, rate, damage,
+   paint output and supply (`POL#27`) as the layout and movement settle, against
+   §3's weapon-role and fairness requirements. Fit the kit as the layout settles,
+   then apply the process to the other arenas (`POL#21`). All values remain
+   provisional throughout development.
 
 UI artwork follows the gameplay style, as before. Audio, release and engine
 work are outside this sequence and keep their own rows.
@@ -173,8 +178,9 @@ work are outside this sequence and keep their own rows.
 tools (`POL#7`), player/shot cues (`POL#14`) and environment kit (`POL#9`) for this
 stage. Their current-arena review rows are complete. The small-view treatment,
 static landmarks and retained parallax comparison are implemented; shipped
-backdrops remain static. This approval opens the Close Quarters blockout,
-movement and weapon work together (`POL#17`, `POL#3`, `POL#27`). Re-check the
+backdrops remain static. This approval opens the Close Quarters level pass
+(`POL#17`), followed by movement tuning and small iterative level/movement
+adjustments; weapon tuning joins that iteration as needed (`POL#3`, `POL#27`). Re-check the
 treatment in CQ's new composition during that work and the reference-match
 finish review (`POL#24`); future iteration remains expected. No new test matrix,
 device session or detailed observations are implied by this approval.
@@ -318,6 +324,12 @@ Use a small movement course to compare the baseline with candidate changes:
 - Prototype takeoff and landing effects on the actual movement events, so their
   timing can be judged alongside input response before final artwork and audio.
 
+**Current sequence (author, 2026-10-20):** improve the Close Quarters layout with
+the existing camera framing and measured movement baseline first. Once the initial level pass is
+playable, tune movement on that layout and the course, then make small level and
+movement adjustments from play observations. The course supplies measurements
+and comparisons for that process.
+
 Measure the resulting jump envelope and travel speed. Use those measurements
 when placing platforms; the old movement note is not a level-design specification.
 Tune values through keyboard/mouse and controller playtests. They stay
@@ -344,7 +356,7 @@ copies, rebuild, and judge them in the game. The editor does not simulate play.
 | Verticality | Use height for route choice and tradeoffs. Important high ground needs a practical counter-route and escape options; it should not safely cover every route and spawn. |
 | Spawns | Keep four valid spawn positions per team with full character clearance. Give players room to orient and routes into play that an opponent cannot lock down from one firing position. Test repeated respawns under pressure. |
 | Painting | Budget exposed, reachable paintable surface by region, including walls and ceilings. Large safe home areas or awkward perimeter strips must not decide the result without meaningful contest. |
-| Weapon roles | Give short-range and roller play useful connected surfaces, and ranged weapons useful but contestable sightlines. Test all five existing weapons during blockout, even before their art is replaced, and retune their numbers with the layout and movement (`POL#27`) rather than only moving geometry around them. |
+| Weapon roles | Give short-range and roller play useful connected surfaces, and ranged weapons useful but contestable sightlines. Test all five tools at current values during the first layout pass and record role issues; tune their numbers (`POL#27`) as layout and movement settle in iteration. |
 | Pacing | Measure time to first contest, time back from spawn, unopposed painting stretches and recurring choke points. Adjust routes and dimensions using observed matches. |
 | Fairness | Swap teams and spawn sides with comparable loadouts. Investigate repeatable side or weapon advantages; a small set of wins alone does not establish balance. |
 | Readability | Players should recognise solid cover, jump-through platforms, ramps, paintable surfaces and decoration at speed. Camera framing must expose enough information to choose the next move. |
@@ -369,6 +381,13 @@ Begin with one Close Quarters blockout. Iterate it until actual two- and
 four-player matches support its route and pacing goals, then establish blockouts
 for the other two identities. Use supported structures, platforms, ramps and
 visuals; evaluate any new gameplay object as a separate, evidenced requirement.
+
+The first pass improves the layout using current movement and weapon values:
+connected rooms, a central contest, useful bypass, sheltered spawn approaches
+and an exposed-paint budget by region. Check the routes against the measured
+current movement envelope. Then tune movement on the improved layout and make
+small adjustments to geometry and movement as play exposes specific issues.
+Exercise weapon roles throughout and tune them as the layout and movement settle.
 
 **Exit condition:** the reference blockout has reachable intended routes, usable
 spawns, contestable paint distribution and useful roles for all five weapons.
@@ -1218,8 +1237,9 @@ runtime assets byte for byte and excludes source, debug and private audio.
 
 Accepted-arena artwork and human presentation/readability review remain
 `POL#16`. The current material/prop kit is approved for this development stage.
-The [development order](#development-order-2026-10-17) now starts `POL#17`'s
-reference blockout with movement (`POL#3`) and weapon tuning (`POL#27`).
+The [development order](#development-order-2026-10-17) starts with `POL#17`'s
+level improvement, then movement tuning (`POL#3`), then small iterative changes
+to both, with weapon tuning (`POL#27`) as the layout and movement settle.
 Physical-controller and listening acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character

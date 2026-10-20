@@ -9,17 +9,20 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim (2026-10-20):** build the Close Quarters reference blockout with movement and weapon
-tuning. The author approved the current gameplay style for this development stage;
+**Aim (2026-10-20):** improve the Close Quarters reference layout first, then tune movement,
+then iterate with small level and movement adjustments. The author approved the current gameplay style;
 it is a working baseline, open to further iteration, not final art or release acceptance.
 See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 
 **Order** ([development order](docs/polish-plan.md#development-order-2026-10-17)):
-1. **Levels with movement and weapons:** the Close Quarters blockout (`POL#17`), jump/movement
-   tuning (`POL#3`) and weapon tuning (`POL#27`) together. Start with a playable geometry draft,
-   route/spawn/paint-budget notes and the existing jump comparison recipes; fit the approved
-   kit as the layout settles. Re-check the style in the new composition during this work.
-2. **Then the other arenas:** `POL#21`, after CQ is accepted; the reference-match finish review
+1. **Improve the level first:** draft the Close Quarters layout (`POL#17`) using the current
+   movement and weapons. Establish routes, spawns, a contested centre, bypass and paint budget.
+2. **Then tune movement:** use the improved playable layout and Movement Course to compare
+   `POL#3`'s jump/movement candidates.
+3. **Iterate in small steps:** adjust the level and movement against play observations;
+   compare all five tools and tune weapons (`POL#27`) as the layout and movement settle.
+   Fit the approved kit and re-check the style in the new composition.
+4. **Then the other arenas:** `POL#21`, after CQ is accepted; the reference-match finish review
    and fresh-player observations (`POL#24`) still gate wider art production.
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
@@ -64,7 +67,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | OPEN | MED | M | Tune movement with the blockout (`POL#17`) and weapons (`POL#27`); values stay provisional. Start with the floaty/high keyboard jump and existing `jump_*` comparisons. Pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
+| `POL#3` | BLOCKED | MED | M | Waits for `POL#17`'s initial playable level improvement; then tune the floaty/high jump with existing `jump_*` comparisons and iterate with the layout. Values stay provisional; pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -75,8 +78,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Draft the Close Quarters blockout: connected loop, contested centre, bypass, sheltered spawns and paint-budget notes. Tune with `POL#3`/`POL#27`, fit the kit and re-check player/cue readability. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
-| `POL#27` | OPEN | HIGH | L | Compare all five tools' roles in the CQ draft; tune range, rate, damage, paint output and supply with the blockout (`POL#17`) and movement (`POL#3`). Values stay provisional. [Order](docs/polish-plan.md#development-order-2026-10-17), [§3](docs/polish-plan.md#design-requirements). |
+| `POL#17` | OPEN | HIGH | XL | Improve CQ first using current movement/weapons: connected loop, contested centre, bypass, sheltered spawns and paint-budget notes. Then tune movement and iterate in small steps; fit the kit and re-check readability. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
+| `POL#27` | DEFERRED | HIGH | L | Exercise all five tools during CQ's level pass; tune range, rate, damage, paint output and supply as the layout and movement settle in iteration. Values stay provisional. [Order](docs/polish-plan.md#development-order-2026-10-17), [§3](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 

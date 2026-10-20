@@ -801,7 +801,8 @@ the [locked arena](images/polish-main-menu/stage-locked-720p.png) and
 [solo Random with the complete objective](images/polish-main-menu/stage-solo-random-720p.png).
 
 Accepted-arena artwork and human presentation/readability review remain
-`POL#16`. The arena material/prop kit (`POL#9`) belongs to the art-style phase;
-the reference blockout (`POL#17`) and movement-feel (`POL#3`) follow it together
+`POL#16`. The current arena material/prop kit is approved for this stage.
+Improve the reference layout (`POL#17`) first, then tune movement (`POL#3`),
+then iterate with small level and movement adjustments
 ([development order](polish-plan.md#development-order-2026-10-17)). Physical-pad and listening
 acceptance remain open; menu-motion review (`POL#10`) was accepted 2026-10-17.
