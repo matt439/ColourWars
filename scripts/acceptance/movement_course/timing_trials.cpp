@@ -241,7 +241,8 @@ namespace movement_course_acceptance
             run.tick(input(false, false, 1.0f));
             if (run.player->move_state() == PlayerMoveState::in_air) { return run.tick_count; }
         }
-        fail("the player never walked off the 2480 lip");
+        fail("the player never walked off the running takeoff lip at " +
+            fixed(run.services.course.named("long_landing_running_takeoff").rectangle.right(), 0));
     }
     }
 
@@ -249,6 +250,7 @@ namespace movement_course_acceptance
     {
         const float grace = s.tuning.player().ledge_grace_time;
         const float buffer = s.tuning.player().jump_buffer_time;
+        const float lip = s.course.named("long_landing_running_takeoff").rectangle.right();
         for (const Transition transition : { Transition::none, Transition::pause, Transition::death })
         {
             std::string table;
@@ -294,11 +296,12 @@ namespace movement_course_acceptance
                     "a falling press did not launch exactly on the landing contact tick");
                 buffered += " -" + std::to_string(landing - press) + (launched >= 0 ? ":launch" : ":none");
             }
-            std::cout << "MEASURE lip-2480 after " << transition_name(transition)
+            std::cout << "MEASURE lip-" << fixed(lip, 0) << " after " << transition_name(transition)
                 << ": press ticks after leaving" << table << " | fall lands on " << surface
                 << ", press ticks before landing" << buffered << '\n';
         }
-        std::cout << "PASS ledge grace, late press and buffered landing on the authored 2480 lip after none/pause/death\n";
+        std::cout << "PASS ledge grace, late press and buffered landing on the authored " << fixed(lip, 0)
+            << " lip after none/pause/death\n";
     }
 
     void spawns(const Services& s)

@@ -52,9 +52,9 @@
     },
     "stations": [
         { "name": "drop_through", "x": 559.0, "y": 715.0 },
-        { "name": "short_gap", "x": 708.0, "y": 875.0 },
-        { "name": "long_gap", "x": 1288.0, "y": 875.0 },
-        { "name": "running_gap", "x": 1800.0, "y": 875.0 },
+        { "name": "short_gap", "x": 738.0, "y": 875.0 },
+        { "name": "long_gap", "x": 1348.0, "y": 875.0 },
+        { "name": "running_gap", "x": 1740.0, "y": 875.0 },
         { "name": "low_ceiling", "x": 3300.0, "y": 875.0 },
         { "name": "steps", "x": 3900.0, "y": 875.0 },
         { "name": "high_step", "x": 4404.0, "y": 535.0 },
@@ -162,7 +162,7 @@
             "rectangle": {
                 "x": 0.0,
                 "y": 1000.0,
-                "width": 800.0,
+                "width": 830.0,
                 "height": 40.0
             },
             "collision_type": "STRUCTURE_PAINTABLE",
@@ -181,9 +181,9 @@
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle": {
-                "x": 980.0,
+                "x": 950.0,
                 "y": 1000.0,
-                "width": 400.0,
+                "width": 490.0,
                 "height": 40.0
             },
             "collision_type": "STRUCTURE_PAINTABLE",
@@ -202,9 +202,9 @@
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle": {
-                "x": 1780.0,
+                "x": 1720.0,
                 "y": 1000.0,
-                "width": 700.0,
+                "width": 840.0,
                 "height": 40.0
             },
             "collision_type": "STRUCTURE_PAINTABLE",
@@ -223,9 +223,9 @@
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle": {
-                "x": 3040.0,
+                "x": 3000.0,
                 "y": 1000.0,
-                "width": 940.0,
+                "width": 980.0,
                 "height": 40.0
             },
             "collision_type": "STRUCTURE_PAINTABLE",

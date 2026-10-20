@@ -239,7 +239,7 @@ int main(int argc, char** argv)
             {
                 // Recorded from the authored course; an intended course edit
                 // updates it. Its blocks touch, so the full perimeter is more.
-                area_is(total, 194880);
+                area_is(total, 202080);
                 require(total < perimeter, "Buried course surface still contributes to coverage");
             }
             std::cout << name << " exposed paint area=" << total << " of perimeter " << perimeter << '\n';

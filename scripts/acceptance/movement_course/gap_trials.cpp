@@ -88,6 +88,7 @@ namespace movement_course_acceptance
             { Takeoff::running, 120.0f, "run800-lip-120" }, { Takeoff::running, 70.0f, "run800-lip-70" },
             { Takeoff::running, 18.0f, "run800-lip-18" }, { Takeoff::grace, 1.0f, "run800-grace+1" } };
         const std::vector<int> holds{ 1, 6, 12, 21, 30, 0 };
+        bool short_upper_landing = false;
         std::cout << "TABLE gap outcomes (a landing back on the takeoff platform fails): F far platform, H/L recovery step "
             "high/low, G lower floor (Y=1400), D drop-through platform. Columns are jump-held ticks; 'held' holds to landing.\n";
         for (const Gap& gap : routes)
@@ -102,29 +103,48 @@ namespace movement_course_acceptance
                     for (const int hold : holds)
                     {
                         const GapResult result = jump_gap(s, gap, d, start, hold);
+                        const std::string detail = " [gap=" + std::string(gap.label) +
+                            " width=" + fixed(gap.width(), 0) + " dir=" + (d > 0.0f ? "right" : "left") +
+                            " start=" + start.label + " hold=" + (hold == 0 ? "held" : std::to_string(hold)) +
+                            " first=" + result.first + " last=" + result.last +
+                            " takeoffs=" + std::to_string(result.takeoffs) + "]";
                         std::string code;
                         if (result.first == to.name) { code = "F"; }
                         else if (result.first == from.name)
                         {
-                            fail(std::string("a ") + gap.label + " jump fell back onto its takeoff platform");
+                            fail(std::string("a ") + gap.label + " jump fell back onto its takeoff platform" + detail);
                         }
                         else if (result.first == gap.high->name) { code = "H"; }
                         else if (result.first == gap.low->name) { code = "L"; }
                         else if (result.first == "recovery_floor") { code = "G"; }
                         else if (result.first == "drop_through_platform") { code = "D"; }
-                        else { fail(std::string("a missed ") + gap.label + " jump landed on '" + result.first + "'"); }
-                        require(result.takeoffs == 1, "a gap trial did not take off exactly once");
+                        else { fail(std::string("a missed ") + gap.label + " jump landed on '" + result.first + "'" + detail); }
+                        require(result.takeoffs == 1, ("a gap trial did not take off exactly once" + detail).c_str());
                         if (gap.left->name == "spawn_a_runway")
                         {
-                            // Holding a leftward jump reaches the platform above
-                            // the runway; shorter presses choose the runway itself.
-                            const bool upper_landing = d < 0.0f && (hold == 0 || hold >= 21);
-                            require(result.first == (upper_landing ? "drop_through_platform" : to.name),
-                                "a short-gap jump did not reach its chosen runway or drop-through landing");
+                            // Every short jump reaches the far side. A moving
+                            // leftward hold can select the upper drop platform;
+                            // its precise hold threshold depends on the takeoff.
+                            const bool upper_landing = d < 0.0f && result.first == "drop_through_platform";
+                            require(result.first == to.name || upper_landing,
+                                ("a short-gap jump did not reach a far-side landing" + detail).c_str());
+                            if (start.kind == Takeoff::rest || hold == 1)
+                            {
+                                require(result.first == to.name,
+                                    ("a short jump from rest or a tap did not select the main runway" + detail).c_str());
+                            }
+                            short_upper_landing = short_upper_landing || upper_landing;
                         }
                         else
                         {
-                            require(code != "D", "a different gap reached the short-gap drop-through platform");
+                            require(code != "D", ("a different gap reached the short-gap drop-through platform" + detail).c_str());
+                        }
+                        if (start.kind == Takeoff::rest && (hold == 1 || hold == 0) &&
+                            gap.left->name != "spawn_a_runway")
+                        {
+                            const bool held_long_jump = gap.left->name == "short_landing_long_takeoff" && hold == 0;
+                            require((code == "F") == held_long_jump,
+                                ("the rest-start long/running gaps lost their tap/held/run-up distinction" + detail).c_str());
                         }
                         row += " h" + (hold == 0 ? std::string("eld") : std::to_string(hold)) + "=" + code;
                         if (hold == 0 && start.kind == Takeoff::running)
@@ -149,7 +169,7 @@ namespace movement_course_acceptance
                                 const RectangleF& landing = s.course.named(name).rectangle;
                                 require((d > 0.0f ? landing.left() >= far_lip : landing.right() <= far_lip) &&
                                     landing.top() <= to.rectangle.top(),
-                                    "a held full-speed jump did not land and brake beyond the far lip");
+                                    ("a held full-speed jump did not land and brake beyond the far lip" + detail).c_str());
                             }
                         }
                     }
@@ -159,6 +179,7 @@ namespace movement_course_acceptance
                 }
             }
         }
+        require(short_upper_landing, "the moving leftward short-gap trials lost their optional upper landing");
         std::cout << "PASS gaps: every trial takes off exactly once; held full-speed jumps from every "
             "running lip land and brake beyond the far lip both ways; none falls back onto its takeoff "
             "platform, and every other landing is a recovery step, the lower floor or the drop-through platform\n";
@@ -201,19 +222,24 @@ namespace movement_course_acceptance
                 {
                     const auto path = climb_pair(s, gap, centre - approach * offset, exit);
                     const std::string& platform = exit > 0.0f ? gap.right->name : gap.left->name;
+                    const std::string detail = " [gap=" + std::string(gap.label) +
+                        " width=" + fixed(gap.width(), 0) + " approach=" +
+                        (approach > 0.0f ? "from-left" : "from-right") + " exit=" +
+                        (exit > 0.0f ? "right" : "left") + " hold=held]";
                     if (path[0] != gap.low->name || path[1] != gap.high->name ||
                         path[2] != platform || path[3] != platform)
                     {
                         fail(std::string("the ") + gap.label + " recovery pair climbed " + path[0] + " -> " +
-                            path[1] + " -> " + path[2] + " -> " + path[3] + ", not low, high, " + platform);
+                            path[1] + " -> " + path[2] + " -> " + path[3] + ", not low, high, " + platform + detail);
                     }
-                    // Continuous steering can carry through the short right
-                    // landing. Releasing early above still makes every exit safe.
+                    // The shorter airtime and wider landing now stop on the
+                    // target even when steering through the entire exit jump.
                     const auto steered = climb_pair(s, gap, centre - approach * offset, exit, true);
-                    const bool short_slide = gap.left->name == "spawn_a_runway" && exit > 0.0f;
                     require(steered[0] == gap.low->name && steered[1] == gap.high->name &&
-                        steered[2] == platform && steered[3] == (short_slide ? "recovery_floor" : platform),
-                        "a continuously steered recovery exit did not reach its accepted landing and support");
+                        steered[2] == platform && steered[3] == platform,
+                        ("a continuously steered recovery exit did not reach its accepted landing and support" +
+                            detail + " first=" + steered[2] + " last=" + steered[3] +
+                            " path=" + steered[0] + " -> " + steered[1] + " -> " + steered[2] + " -> " + steered[3]).c_str());
                     std::cout << "MEASURE recovery " << gap.label << " approach="
                         << (approach > 0.0f ? "from-left" : "from-right") << " exit="
                         << (exit > 0.0f ? "right" : "left") << ": " << path[0] << " -> " << path[1]

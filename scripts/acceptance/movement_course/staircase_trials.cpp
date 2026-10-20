@@ -19,8 +19,14 @@ namespace movement_course_acceptance
         }
     };
 
+    struct RiseResult
+    {
+        std::string first;
+        std::string last;
+    };
+
     // Press within 30 units of the face, holding direction until landing.
-    std::string climb_rise(const Services& s, const Rise& rise, bool running, bool held)
+    RiseResult climb_rise(const Services& s, const Rise& rise, bool running, bool held)
     {
         const float d = rise.direction;
         const float speed = s.tuning.player().max_velocity.x;
@@ -39,7 +45,7 @@ namespace movement_course_acceptance
             if (!run.landings.empty() && supported(*run.player) && run.player->velocity().x == 0.0f) { break; }
         }
         require(press >= 0 && !run.landings.empty(), "a staircase jump never landed");
-        return run.landings.front().surface;
+        return { run.landings.front().surface, run.support() };
     }
 
     // Hold direction throughout and jump with a held press within 30 units of
@@ -107,23 +113,32 @@ namespace movement_course_acceptance
             const bool tap_station = rise.upper == &short_step || rise.upper == &short_return;
             for (const bool moving : { false, true })
             {
-                const std::string held = climb_rise(s, rise, moving, true);
-                const std::string tap = climb_rise(s, rise, moving, false);
+                const RiseResult held = climb_rise(s, rise, moving, true);
+                const RiseResult tap = climb_rise(s, rise, moving, false);
+                const std::string detail = " [rise=" + fixed(rise.height(), 0) + " lower=" +
+                    rise.lower->name + " upper=" + rise.upper->name + " dir=" +
+                    (rise.direction > 0.0f ? "right" : "left") + " start=" + (moving ? "run800" : "rest") +
+                    " held:first=" + held.first + ",last=" + held.last +
+                    " tap:first=" + tap.first + ",last=" + tap.last + "]";
                 std::cout << "MEASURE stair rise=" << fixed(rise.height(), 0) << ' ' << rise.lower->name
                     << " -> " << rise.upper->name << " dir=" << (rise.direction > 0.0f ? "right" : "left")
-                    << " start=" << (moving ? "run800" : "rest") << ": held=" << held << " tap=" << tap << '\n';
+                    << " start=" << (moving ? "run800" : "rest") << ": held=" << held.first
+                    << " stopped=" << held.last << " tap=" << tap.first << " stopped=" << tap.last << '\n';
                 // Clearing means landing at or above the upper step; a held jump
                 // may carry on to a higher one.
                 const auto clears = [&](const std::string& name)
                     { return c.named(name).rectangle.top() <= rise.upper->rectangle.top(); };
-                require(clears(held), "a held jump did not clear a staircase rise");
-                require(clears(tap) == tap_station,
-                    "a tap cleared a held-jump rise or failed the short step");
+                require(clears(held.first), ("a held jump did not clear a staircase rise" + detail).c_str());
+                require(clears(tap.first) == tap_station,
+                    ("a tap cleared a held-jump rise or failed the short step" + detail).c_str());
                 if (tap_station)
                 {
-                    const std::string& next = rise.direction > 0.0f ? held_step.name : high_return.name;
-                    require(tap == rise.upper->name && held == next,
-                        "tap and held jumps did not select the short rise and the next higher step");
+                    // The shorter airtime lands on this tread before reaching
+                    // the next one, despite retaining the 200-unit rise reach
+                    // needed by existing arenas. No automatic shortening is used.
+                    require(tap.first == rise.upper->name && tap.last == rise.upper->name &&
+                        held.first == rise.upper->name && held.last == rise.upper->name,
+                        ("tap and held jumps did not land and stop on the short rise" + detail).c_str());
                 }
             }
         }
@@ -157,7 +172,9 @@ namespace movement_course_acceptance
             if (from == &high_return || from == &held_step)
             {
                 require(below.name == (d > 0.0f ? runway_b.name : running.name),
-                    "walking off the middle step did not carry over the narrow lower step to the runway");
+                    ("walking off the middle step did not carry over the narrow lower step to the runway [from=" +
+                        from->name + " dir=" + (d > 0.0f ? "right" : "left") +
+                        " first=" + below.name + " last=" + run.support() + "]").c_str());
             }
             brake(run);
             std::cout << "MEASURE stair-descent-from-rest " << from->name << " dir="

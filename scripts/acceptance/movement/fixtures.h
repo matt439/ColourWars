@@ -270,5 +270,6 @@ namespace movement_acceptance
     void check_ceiling_and_windows(const Suite& suite);
     void check_ramp_support(const Suite& suite);
     void check_ramp_roof_clearance(const Suite& suite);
+    void check_legacy_routes(const Suite& suite);
     void check_movement_feedback(const Suite& suite);
 }

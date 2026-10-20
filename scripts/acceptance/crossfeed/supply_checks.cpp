@@ -54,10 +54,21 @@ namespace crossfeed_acceptance
             int raw_below_cost = -1, empty_tick = -1, first_post_paid_empty = -1, held_ticks = 0;
             int first_missed_opportunity = -1, paid_at_first_empty = 0, empty_state_ticks = 0;
             float missed_before_ammo = -1.0f, missed_after_ammo = -1.0f, missed_cooldown = -1.0f;
+            int paid_before_first_miss = -1, last_paid_before_first_miss = -1;
+            int pre_miss_minimum_cadence = -1, pre_miss_maximum_cadence = -1;
+            float recovered_at_first_miss = 0.0f;
+            constexpr int continued_held_ticks = 300;
+            int tail_ticks = 0, tail_paid = 0, first_resumed_tick = -1, last_tail_paid_tick = -1;
+            int first_recovery_gap = -1, tail_minimum_cadence = std::numeric_limits<int>::max();
+            int tail_maximum_cadence = 0, tail_unaffordable_eligible_ticks = 0;
+            float first_resumed_before_ammo = -1.0f, first_resumed_after_ammo = -1.0f;
+            float tail_minimum_ammo = -1.0f, tail_maximum_ammo = -1.0f;
+            std::ostringstream tail_paid_ticks;
             float recovered_while_held = 0.0f;
             float minimum_ammo = initial;
-            for (int tick = 1; tick <= 1800; ++tick)
+            for (int tick = 1; tick <= 1800 + continued_held_ticks; ++tick)
             {
+                const bool in_tail = first_missed_opportunity >= 0;
                 PlayerInputData actions = aimed(0.0f);
                 actions.primary_shoot = true;
                 const float before = weapon->ammo();
@@ -88,6 +99,25 @@ namespace crossfeed_acceptance
                     }
                     last_paid = tick;
                     ++paid;
+                    if (in_tail)
+                    {
+                        if (first_resumed_tick < 0)
+                        {
+                            first_resumed_tick = tick;
+                            first_recovery_gap = tick - last_paid_before_first_miss;
+                            first_resumed_before_ammo = before;
+                            first_resumed_after_ammo = after;
+                        }
+                        if (last_tail_paid_tick >= 0)
+                        {
+                            tail_minimum_cadence = std::min(tail_minimum_cadence, tick - last_tail_paid_tick);
+                            tail_maximum_cadence = std::max(tail_maximum_cadence, tick - last_tail_paid_tick);
+                        }
+                        if (tail_paid > 0) { tail_paid_ticks << ','; }
+                        tail_paid_ticks << tick - first_missed_opportunity;
+                        last_tail_paid_tick = tick;
+                        ++tail_paid;
+                    }
                 }
                 else { recovered_while_held += after - before; }
                 minimum_ammo = std::min(minimum_ammo, after);
@@ -105,16 +135,34 @@ namespace crossfeed_acceptance
                 // yet recover enough paint before the next eligible shot.
                 const bool missed = cooldown_eligible && readiness_before == WeaponReadiness::empty &&
                     !paid_this_tick;
-                if (missed)
+                if (missed && first_missed_opportunity < 0)
                 {
                     first_missed_opportunity = tick;
                     missed_before_ammo = before;
                     missed_after_ammo = after;
                     missed_cooldown = observed_cooldown;
+                    paid_before_first_miss = paid;
+                    last_paid_before_first_miss = last_paid;
+                    pre_miss_minimum_cadence = paid > 1 ? minimum_cadence : 0;
+                    pre_miss_maximum_cadence = maximum_cadence;
+                    recovered_at_first_miss = recovered_while_held;
+                    tail_minimum_ammo = tail_maximum_ammo = after;
+                }
+                if (in_tail)
+                {
+                    ++tail_ticks;
+                    tail_unaffordable_eligible_ticks += missed ? 1 : 0;
+                    tail_minimum_ammo = std::min(tail_minimum_ammo, after);
+                    tail_maximum_ammo = std::max(tail_maximum_ammo, after);
                 }
                 if (paid_this_tick) { observed_cooldown = 0.0f; }
                 observed_cooldown += dt;
-                if (missed)
+                // Holding the trigger can resume without a manual release.
+                // Keep five more seconds after the first missed opportunity;
+                // one quantized missed tick alone is not an enforced pause or
+                // the tool's eventual sustained firing cadence.
+                if ((first_missed_opportunity >= 0 && tail_ticks >= continued_held_ticks) ||
+                    (first_missed_opportunity < 0 && tick >= 1800))
                 {
                     break;
                 }
@@ -155,10 +203,31 @@ namespace crossfeed_acceptance
                 " empty_state_ticks_while_held=" << empty_state_ticks <<
                 " paid_events_after_first_empty_state=" << (empty_tick < 0 ? 0 : paid - paid_at_first_empty) <<
                 " first_missed_cooldown_eligible_tick=" << first_missed_opportunity <<
+                " paid_events_before_first_missed_opportunity=" << paid_before_first_miss <<
+                " last_paid_before_first_missed_opportunity_tick=" << last_paid_before_first_miss <<
+                " pre_miss_cadence_min_ticks=" << pre_miss_minimum_cadence <<
+                " pre_miss_cadence_max_ticks=" << pre_miss_maximum_cadence <<
                 " missed_before_ammo=" << fixed(missed_before_ammo, 6) <<
                 " missed_after_regen_ammo=" << fixed(missed_after_ammo, 6) <<
                 " missed_observed_cooldown=" << fixed(missed_cooldown, 6) <<
-                " observation_end=" << (first_missed_opportunity >= 0 ? "first-missed-cooldown-eligible-shot" :
+                " continued_held_tail_ticks=" << tail_ticks <<
+                " continued_held_tail_seconds=" << fixed(static_cast<float>(tail_ticks) * dt, 4) <<
+                " tail_paid_events=" << tail_paid <<
+                " tail_paid_ticks_after_first_miss=" << (tail_paid > 0 ? tail_paid_ticks.str() : "none") <<
+                " first_resumed_paid_tick=" << first_resumed_tick <<
+                " first_resume_delay_after_miss_ticks=" << (first_resumed_tick < 0 ? -1 :
+                    first_resumed_tick - first_missed_opportunity) <<
+                " first_gap_from_pre_miss_paid_to_resumed_paid_ticks=" << first_recovery_gap <<
+                " first_resumed_before_ammo=" << fixed(first_resumed_before_ammo, 6) <<
+                " first_resumed_after_ammo=" << fixed(first_resumed_after_ammo, 6) <<
+                " tail_cadence_min_ticks=" << (tail_paid > 1 ? tail_minimum_cadence : 0) <<
+                " tail_cadence_max_ticks=" << tail_maximum_cadence <<
+                " tail_unaffordable_eligible_ticks=" << tail_unaffordable_eligible_ticks <<
+                " tail_minimum_ammo=" << fixed(tail_minimum_ammo, 6) <<
+                " tail_maximum_ammo=" << fixed(tail_maximum_ammo, 6) <<
+                " tail_regained_ammo=" << fixed(tail_ticks > 0 ? recovered_while_held - recovered_at_first_miss : 0.0f, 6) <<
+                " tail_end_ammo=" << fixed(tail_ticks > 0 ? release_ammo : -1.0f, 6) <<
+                " observation_end=" << (first_missed_opportunity >= 0 ? "five-more-seconds-of-held-fire-after-first-miss" :
                     "30-second-bound-without-missed-eligible-shot") <<
                 " minimum_ammo=" << fixed(minimum_ammo, 6) <<
                 " regained_while_held=" << fixed(recovered_while_held, 6) <<
@@ -181,8 +250,11 @@ namespace crossfeed_acceptance
             "sniper trades slower paid shots for straight lane reach; roller paints by close contact and travel; "
             "mister distributes growing pellets into nearby approaches; bucket trades cadence for a broad ballistic contact. "
             "These roles need actual map, target and face tests. This assay measures trigger supply only, including "
-            "recovery between held shots. It retains the first empty readiness state but continues until an actual "
-            "cooldown-eligible held firing opportunity misses for lack of paint, or thirty seconds. Empty readiness "
+            "recovery between held shots. It retains the first empty readiness state and first cooldown-eligible "
+            "held firing opportunity that misses for lack of paint, then continues holding fire for five more seconds. "
+            "The first miss is a burst boundary observation, not a forced manual pause: paint can recover on that "
+            "same update and permit a shot on the next tick. Subsequent paid ticks, the first resumed gap and the "
+            "later held cadence are measured separately. Without a miss, observation ends at thirty seconds. Empty readiness "
             "just after a paid shot can recover before the next firing opportunity. The observed float cooldown "
             "clock starts at construction, follows actual paid resets and is checked against public affordable "
             "readiness. No private state is read; no four-sniper/250-roller budget is assumed\n";

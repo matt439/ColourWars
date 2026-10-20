@@ -99,6 +99,7 @@ int main(int argc, char** argv)
         check_action_events(suite);
         check_ceiling_and_windows(suite);
         check_ramp_support(suite);
+        check_legacy_routes(suite);
         check_movement_feedback(suite);
 
         for (const bool held : { false, true })

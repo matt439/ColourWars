@@ -6,6 +6,10 @@ combat map, then tuning against that map; refining the earlier Close Quarters
 draft does not replace it. Existing maps and the preserved CQ experiment remain
 available for comparison.
 
+The numeric baseline below records the state before tuning. The resulting
+[Crossfeed comparison](polish-crossfeed.md#coupled-movement-and-five-tool-comparison-2026-10-20)
+owns the selected provisional values and their measured limits.
+
 ## What the comparison must account for
 
 ColourWars is a local, one-to-four-player platform shooter with individual
@@ -20,7 +24,7 @@ without firing. Health recovers after five damage-free seconds; respawn takes
 three seconds. There is no ammunition pickup, ink swimming, wall climb, dodge,
 projectile parry, Super Jump or active secondary-weapon system to assume in a map.
 
-The current player body is 52 by 120 world units, with an 800-unit/s horizontal
+The baseline player body is 52 by 120 world units, with an 800-unit/s horizontal
 cap, acceleration and braking. The measured tap / held apex is approximately
 95 / 207.472 units. The same-height full-speed held jump travels about 813 units;
 that does not establish reach at another height or from rest. Full-speed release
@@ -39,7 +43,7 @@ Baseline data, before this experiment's tuning:
 | Mister | 300 | 0.1 s | Spreading, growing mist / 5 s | Horizontal player-velocity inheritance changes moving reach. |
 | Bucket | 800 | 0.5 s | Broad ballistic ball / 5 s | Gravity, drag and horizontal player-velocity inheritance. |
 
-These are authored inputs from [tuning.json](../game/content/tuning.json), not
+These are the pre-tuning authored inputs from [tuning.json](../game/content/tuning.json), not
 measured effective ranges. The game's fixed-step cadence, muzzle offset,
 projectile extent, diffusion, terrain contact and retirement all matter.
 Changing movement can change three tools' flight envelopes as well as exposure.
