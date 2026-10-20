@@ -272,6 +272,18 @@ private:
     float support_impact_speed_ = 0.0f;
     const MovementFeedbackPresentation* movement_feedback_look_ = nullptr;
     mattmath::Vector2F support_position_;
+    // The last resolved upright ramp, copied rather than borrowed from Scene.
+    // Grounded travel follows this surface before contacts so a continuous
+    // crest cannot become a wall merely because gravity was applied first.
+    struct RampSupport
+    {
+        mattmath::RectangleF bounds;
+        CollisionObjectType type;
+    };
+    std::optional<RampSupport> ramp_support_;
+    bool projected_ramp_support_ = false;
+    std::optional<mattmath::Vector2F> ramp_support_at(
+        const mattmath::RectangleF& body) const;
     // Borrowed only for this contact phase; query after every paint callback.
     std::vector<const StructurePaintable*> paint_supports_;
     struct PaintedSupport

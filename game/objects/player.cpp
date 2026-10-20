@@ -16,6 +16,18 @@ namespace
 {
     // The authored body is neutral; its matching clothing clip carries team colour.
     const Colour player_tint = Colour::white;
+
+    bool coordinate_at(float actual, float expected, float extent)
+    {
+        const float tolerance = 4.0f * std::numeric_limits<float>::epsilon() *
+            std::max({ 1.0f, std::abs(actual), std::abs(expected), extent });
+        return std::abs(actual - expected) <= tolerance;
+    }
+
+    bool feet_at(const RectangleF& body, float height)
+    {
+        return coordinate_at(body.bottom(), height, body.height);
+    }
 }
 
 Player::Player(const RectangleF& rectangle,
@@ -201,6 +213,28 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
 }
 void Player::end_contacts(std::span<const Contact> contacts)
 {
+    // A projected slope can touch without penetrating, so dispatch may have
+    // no manifold to resolve. Retain that support only if later wall/ceiling
+    // responses left the body on the same surface. Real contacts take priority.
+    if (this->projected_ramp_support_ && !this->supported_this_tick_ &&
+        !this->hit_ceiling_this_tick_ && this->is_on_ramp())
+    {
+        if (const auto support = this->ramp_support_at(this->rectangle_);
+            support && feet_at(this->rectangle_, support->y))
+        {
+            this->supported_this_tick_ = true;
+            this->support_position_ = *support;
+        }
+    }
+    const auto ramp_position = this->ramp_support_at(this->rectangle_);
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
+        !this->supported_this_tick_ || !this->is_on_ramp() ||
+        !ramp_position || !feet_at(this->rectangle_, ramp_position->y))
+    {
+        this->ramp_support_.reset();
+    }
+    this->projected_ramp_support_ = false;
+
     // Dispatch remeasures each pair and can skip an adjacent floor once the
     // first has separated the feet. Retain the measured top candidates too;
     // painted_support checks that they still touch the final footprint.
@@ -223,6 +257,33 @@ void Player::end_contacts(std::span<const Contact> contacts)
             if (const auto* paintable = dynamic_cast<const StructurePaintable*>(other))
             {
                 this->paint_supports_.push_back(paintable);
+            }
+        }
+        // At a low toe the initial manifold can be horizontal before a floor
+        // response removes downward movement. Recognize the resulting exact
+        // endpoint contact from the final grounded pose, regardless of which
+        // pair dispatched first. The next tick can then follow this ramp.
+        if (other != nullptr && this->supported_this_tick_ &&
+            this->move_state() == PlayerMoveState::on_ground &&
+            !this->hit_ceiling_this_tick_ && this->state_ == PlayerState::alive && this->health_ > 0.0f)
+        {
+            const CollisionObjectType type = to_collision_type(other->tag());
+            if (is_structure_ramp(type))
+            {
+                const RectangleF ramp = other->shape()->bounding_box();
+                const bool rises_right = type == CollisionObjectType::structure_ramp_right;
+                const float toe = rises_right ? ramp.left() : ramp.right();
+                const float corner = rises_right ? this->rectangle_.right() : this->rectangle_.left();
+                const bool uphill = rises_right ? this->movement_requested_x_ > 0.0f :
+                    this->movement_requested_x_ < 0.0f;
+                if (uphill && feet_at(this->rectangle_, ramp.bottom()) &&
+                    coordinate_at(corner, toe, this->rectangle_.width))
+                {
+                    this->ramp_support_ = RampSupport{ ramp, type };
+                    this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right :
+                        PlayerMoveState::on_ramp_left);
+                    this->support_position_ = { toe, ramp.bottom() };
+                }
             }
         }
     }
@@ -378,6 +439,28 @@ std::optional<Player::PaintedSupport> Player::painted_support() const
 void Player::on_structure_contact(const CollisionObject& other,
     const Vector2F& normal, float penetration)
 {
+    // A grounded slope step rises with the ramp. If that rise meets a
+    // ceiling, separating downward would put the feet inside the same ramp.
+    // Reject the attempted step at its previous supported pose instead. A
+    // jump has already cleared projection, so its ordinary head bonk remains.
+    if (this->projected_ramp_support_ && normal.y < 0.0f &&
+        std::abs(normal.y) >= std::abs(normal.x))
+    {
+        if (const auto support = this->ramp_support_at(this->prev_rectangle_);
+            support && feet_at(this->prev_rectangle_, support->y))
+        {
+            this->rectangle_ = this->prev_rectangle_;
+            MovingObject::set_velocity_x(0.0f);
+            MovingObject::set_velocity_y(0.0f);
+            this->support_position_ = *support;
+            this->supported_this_tick_ = true;
+            this->hit_ceiling_this_tick_ = true;
+            this->set_move_state(this->ramp_support_->type ==
+                CollisionObjectType::structure_ramp_right ?
+                PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
+            return;
+        }
+    }
     this->rectangle_.offset(separation(normal, penetration));
 
     // Classify the contact by its dominant normal component.
@@ -438,6 +521,7 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
     // On a slope the lower supporting corner touches the surface; the centre
     // of the player's bottom edge floats above it.
     const RectangleF surface = other.shape()->bounding_box();
+    this->ramp_support_ = RampSupport{ surface, other_type };
     const float support_x = other_type == CollisionObjectType::structure_ramp_right ?
         this->rectangle_.right() : this->rectangle_.left();
     this->support_position_ = { std::clamp(support_x, surface.left(), surface.right()),
@@ -445,6 +529,23 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
 
     MovingObject::set_velocity_y(0.0f);
 }
+
+std::optional<Vector2F> Player::ramp_support_at(const RectangleF& body) const
+{
+    if (!this->ramp_support_) { return std::nullopt; }
+    const RampSupport& ramp = *this->ramp_support_;
+    if (body.right() < ramp.bounds.left() || body.left() > ramp.bounds.right())
+    {
+        return std::nullopt;
+    }
+    const bool rises_right = ramp.type == CollisionObjectType::structure_ramp_right;
+    const float x = std::clamp(rises_right ? body.right() : body.left(),
+        ramp.bounds.left(), ramp.bounds.right());
+    const float along = (x - ramp.bounds.left()) / ramp.bounds.width;
+    return Vector2F(x, rises_right ? ramp.bounds.bottom() - along * ramp.bounds.height :
+        ramp.bounds.top() + along * ramp.bounds.height);
+}
+
 void Player::on_jump_through_contact(const CollisionObject& other)
 {
     // Land only while moving down (+y) from above the platform on the previous tick.
@@ -502,6 +603,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
 
 void Player::update(float dt)
 {
+    this->projected_ramp_support_ = false;
     this->paint_supports_.clear();
     this->movement_audio_dt_ = dt;
     this->movement_start_x_ = this->rectangle_.x;
@@ -523,6 +625,7 @@ void Player::update(float dt)
         this->movement_feedback_.clear();
         this->had_ground_support_ = false;
         this->landing_feedback_ready_ = false;
+        this->ramp_support_.reset();
         this->reset_jump_input();
         this->set_move_state(PlayerMoveState::in_air);
         this->start_action(PlayerAnimationState::elimination);
@@ -657,6 +760,9 @@ void Player::update_prev_rectangle()
 
 void Player::update_movement(float dt)
 {
+    const auto previous_ramp_position = this->ramp_support_at(this->rectangle_);
+    const bool on_previous_ramp = this->is_on_ramp() && previous_ramp_position &&
+        feet_at(this->rectangle_, previous_ramp_position->y);
     this->jump_buffer_remaining_ = std::max(0.0f, this->jump_buffer_remaining_ - dt);
     this->ledge_grace_remaining_ = std::max(0.0f, this->ledge_grace_remaining_ - dt);
     if (this->jump_waiting_for_release_)
@@ -772,6 +878,23 @@ void Player::update_movement(float dt)
     this->movement_requested_x_ = displacement.x;
     this->rectangle_.offset(displacement.x, displacement.y);
 
+    // Gravity keeps ordinary contacts supplied with downward movement, but
+    // must not sink a supported slope walker below an adjoining flat crest.
+    // Follow only the ramp already under the body, including its endpoint
+    // while the footprint still overlaps it. This cannot climb a new step.
+    // do_jump and the one-way drop transition have already changed the move
+    // state when support is intentionally left. Down alone does not leave a
+    // solid ramp, so it must not disable its grounded surface constraint.
+    if (dt > 0.0f && on_previous_ramp && this->is_on_ramp())
+    {
+        if (const auto support = this->ramp_support_at(this->rectangle_))
+        {
+            this->rectangle_.set_position_y_from_bottom(support->y);
+            MovingObject::set_velocity_y(0.0f);
+            this->projected_ramp_support_ = true;
+        }
+    }
+
     if (x_input > 0.0f)
     {
         this->set_facing_right(true);
@@ -830,6 +953,8 @@ void Player::do_jump(float dt)
 
 void Player::start_jump()
 {
+    this->ramp_support_.reset();
+    this->projected_ramp_support_ = false;
     this->start_action(PlayerAnimationState::taking_off);
     // A grace jump occurs at the current airborne feet; it does not invent a
     // ground contact at the ledge. Buffered jumps use the resolved support.
@@ -960,6 +1085,8 @@ void Player::place_at(const Vector2F& top_left)
     this->had_ground_support_ = false;
     this->landing_feedback_ready_ = false;
     this->support_impact_speed_ = 0.0f;
+    this->ramp_support_.reset();
+    this->projected_ramp_support_ = false;
     this->rectangle_.set_position(top_left);
     this->prev_rectangle_ = this->rectangle_;
     this->reset_jump_input();

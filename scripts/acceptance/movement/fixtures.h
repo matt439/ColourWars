@@ -268,5 +268,7 @@ namespace movement_acceptance
     void check_jump_input(const Suite& suite);
     void check_action_events(const Suite& suite);
     void check_ceiling_and_windows(const Suite& suite);
+    void check_ramp_support(const Suite& suite);
+    void check_ramp_roof_clearance(const Suite& suite);
     void check_movement_feedback(const Suite& suite);
 }
