@@ -220,6 +220,36 @@ namespace debug_console_acceptance
 					"A literal alias cannot expose or receive a feedback colour, even with force: " + path);
 			}
 		}
+		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
+			"\"background_colour\":\"WHITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+		const std::string identity_path = "player_identity.ink_colour";
+		TuneDocument identity_document("presentation", identity_baseline);
+		const JsonLeaf* identity_leaf = identity_document.find(identity_path);
+		require(identity_leaf != nullptr && identity_leaf->kind == JsonLeaf::Kind::string &&
+			identity_document.find("player_identity.background_colour") == nullptr,
+			"Only the audited identity ink is eligible; its neighbouring background stays outside the colour tree");
+		identity_document.commit(identity_document.edited(*identity_leaf, "\"112233FF\""), identity_path);
+		require(identity_document.reverted(identity_path) == identity_baseline,
+			"Identity ink reset retains its escaped authored spelling and exact CRLF bytes");
+		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
+		const std::string identity_external = identity_reference.replaced(*identity_reference.find("number"), "25");
+		const JsonSpanDocument identity_external_document(identity_external, "identity-colour-reference");
+		const TuneSplice identity_splice = identity_document.splice(identity_external, false);
+		require(identity_splice.conflicts.empty() && identity_splice.written == 1 && identity_splice.text ==
+			identity_external_document.replaced(*identity_external_document.find(identity_path), "\"112233FF\""),
+			"An identity ink splice preserves the background, unrelated external number, escapes and every CRLF byte");
+		for (const std::string& invalid : { std::string("{}"),
+			identity_reference.replaced(*identity_reference.find(identity_path), "null"),
+			identity_reference.replaced(*identity_reference.find(identity_path), "{\"value\":\"RED\"}"),
+			std::string(R"({"player_identity.ink_colour":"BLACK"})"),
+			std::string(R"({"player_identity":{"ink_colour.r":"BLACK"}})") })
+		{
+			const TuneDocument unsupported("presentation", invalid);
+			const TuneSplice refused = identity_document.splice(invalid, true);
+			require(unsupported.find(identity_path) == nullptr && refused.written == 0 &&
+				refused.conflicts.size() == 1 && refused.text == invalid,
+				"Force cannot insert identity ink, replace a non-string/container, or splice a literal path alias");
+		}
 	}
 	}
 
@@ -326,10 +356,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited thirteen colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited fourteen colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly thirteen authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly fourteen authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -350,7 +380,9 @@ namespace debug_console_acceptance
 			"weapon_feedback.highlight", "tuning.weapon_feedback.highlight", "presentation.weapon_feedback.sprite_sheet",
 			"presentation.weapon_feedback.fill_frame", "presentation.weapon_feedback.highlight.r",
 			"presentation.weapon_feedback.keyline_extra", "presentation.weapon_feedback.highlight_colour",
-			"presentation.weapon_feedback.muzzle_duration", "presentation.weapon_feedback.enabled" })
+			"presentation.weapon_feedback.muzzle_duration", "presentation.weapon_feedback.enabled",
+			"player_identity.ink_colour", "tuning.player_identity.ink_colour", "presentation.player_identity.background_colour",
+			"presentation.player_identity.ink_colour.r", "presentation.player_identity.ink_colour_extra" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -488,7 +520,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All thirteen colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All fourteen colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

@@ -42,25 +42,28 @@ namespace debug_console_acceptance
 		const WeaponFeedbackPresentation* const feedback = &presentation.weapon_feedback();
 		const char* const feedback_sheet = feedback->sprite_sheet.data();
 		const char* const feedback_fill = feedback->fill_frame.data();
+		const PlayerIdentityPresentation* const identity = &presentation.player_identity();
+		const labrador::Colour identity_background = identity->background_colour;
 		const std::string team_sheet = presentation.main_menu().team_select_sheet;
 		const auto team_frames = presentation.main_menu().team_select_frames;
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 13> words{ "RED", "112233", "a1B2c3", "00000080",
-			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80" };
+		std::array<std::string, 14> words{ "RED", "112233", "a1B2c3", "00000080",
+			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80", "123456FF" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
-			{ 53, 188, 225 }, { 34, 102, 204, 128 } };
+			{ 53, 188, 225 }, { 34, 102, 204, 128 }, { 18, 52, 86 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
 			if (impl.tune_token(path) == "\"" + words[index] + "\"")
 			{
-				words[index] = index == 0 ? "BLUE" : "FEDCBA98";
-				expected[index] = index == 0 ? labrador::Colour(0, 0, 255) : labrador::Colour(254, 220, 186, 152);
+				words[index] = index == 0 ? "BLUE" : index == 13 ? "FEDCBAFF" : "FEDCBA98";
+				expected[index] = index == 0 ? labrador::Colour(0, 0, 255) :
+					index == 13 ? labrador::Colour(254, 220, 186) : labrador::Colour(254, 220, 186, 152);
 			}
 			const std::string token = "\"" + words[index] + "\"";
 			require(impl.execute("tune " + path + " " + words[index]).ok &&
@@ -94,7 +97,8 @@ namespace debug_console_acceptance
 			&presentation.main_menu().weapon_select == weapon && &presentation.main_menu().weapon_select_art == weapon_art &&
 			weapon_art->sheet.data() == weapon_sheet && weapon_art->fill_frame.data() == weapon_fill &&
 			weapon_art->choices.front().frame.data() == weapon_frame && &presentation.weapon_feedback() == feedback &&
-			feedback->sprite_sheet.data() == feedback_sheet && feedback->fill_frame.data() == feedback_fill,
+			feedback->sprite_sheet.data() == feedback_sheet && feedback->fill_frame.data() == feedback_fill &&
+			&presentation.player_identity() == identity && identity->background_colour == identity_background,
 			"Colour adoption keeps the borrowed records, unrelated string buffers and live F9 override");
 		require(read_text(scratch.source / L"presentation.json") == source_before &&
 			read_text(scratch.staged / L"presentation.json") == staged_before,
@@ -119,7 +123,7 @@ namespace debug_console_acceptance
 				"Rejected colour word/path keeps all live values and pending JSON: " + path + "=" + value);
 		};
 		for (const char* path : { colour_paths.front(), colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10],
-			colour_paths[11], colour_paths[12] })
+			colour_paths[11], colour_paths[12], colour_paths[13] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -139,7 +143,8 @@ namespace debug_console_acceptance
 			"presentation.main_menu.weapon_select.selected_colour", "presentation.main_menu.weapon_select.unselected_extra",
 			"presentation.weapon_feedback.sprite_sheet", "presentation.weapon_feedback.fill_frame",
 			"presentation.weapon_feedback.highlight.r", "presentation.weapon_feedback.highlight_colour",
-			"presentation.weapon_feedback.keyline_extra" })
+			"presentation.weapon_feedback.keyline_extra", "presentation.player_identity.background_colour",
+			"presentation.player_identity.ink_colour.r", "presentation.player_identity.ink_colour_extra" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -182,6 +187,14 @@ namespace debug_console_acceptance
 				feedback->fill_frame.data() == feedback_fill,
 				"Each feedback colour resets independently while other edits and captured bindings remain intact: " + path);
 		}
+		auto identity_restored = colour_values(presentation);
+		identity_restored.back() = initial.back();
+		require(impl.tune_document("presentation")->edits().count("player_identity.ink_colour") == 1 &&
+			impl.execute(std::string("tune.reset ") + colour_paths.back()).ok && colour_values(presentation) == identity_restored &&
+			impl.tune_document("presentation")->edits().count("player_identity.ink_colour") == 0 &&
+			impl.tune_document("presentation")->edits().count("main_menu.team_select.unselected") == 1 &&
+			&presentation.player_identity() == identity && identity->background_colour == identity_background,
+			"Identity ink resets independently while the borrowed badge record, background and unrelated pending tints stay intact");
 		require(impl.execute("tune.reset presentation").ok && colour_values(presentation) == initial &&
 			impl.tune_document("presentation")->edits().empty(), "A presentation reset restores every colour token");
 
@@ -304,6 +317,136 @@ namespace debug_console_acceptance
 				!std::filesystem::exists(crlf_scratch.source / L"presentation.json.tmp") &&
 				!std::filesystem::exists(crlf_scratch.staged / L"presentation.json.tmp"),
 				"A selection/feedback CRLF reset uses the saved baseline and leaves no temporary files: " + path);
+		}
+	}
+
+	void check_identity_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		const std::string path = "presentation.player_identity.ink_colour";
+		const std::string local = "player_identity.ink_colour";
+		for (const bool crlf : { false, true })
+		{
+			ScratchContent scratch(game_directory, crlf ? L"identity-ink-crlf" : L"identity-ink-lf");
+			const auto source = scratch.source / L"presentation.json";
+			const auto staged = scratch.staged / L"presentation.json";
+			std::string baseline = read_text(source);
+			if (crlf)
+			{
+				std::string converted;
+				for (const char character : baseline)
+					{ converted += character == '\n' ? std::string("\r\n") : std::string(1, character); }
+				baseline = std::move(converted);
+				write_text(source, baseline);
+				write_text(staged, baseline);
+			}
+			GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+			Presentation presentation(staged.string().c_str());
+			TestDirector test(tuning, presentation);
+			DebugDirectorImpl& impl = test.impl;
+			impl.set_content_directories(scratch.source, scratch.staged);
+			const PlayerIdentityPresentation* const identity = &presentation.player_identity();
+			const auto initial = colour_values(presentation);
+			const auto state = [&]
+			{
+				auto values = colour_values(presentation);
+				values.push_back(identity->background_colour);
+				return values;
+			};
+			const auto edits = [&]
+			{
+				std::vector<std::string> values;
+				for (const auto& [key, edit] : impl.tune_document("presentation")->edits())
+					{ values.push_back(key + "=" + edit.baseline_token + "->" + edit.current_token); }
+				return values;
+			};
+			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
+				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "102030FF", { 16, 32, 48 } } } })
+			{
+				auto expected = initial;
+				expected.back() = colour;
+				require(impl.execute("tune " + path + " " + word).ok && colour_values(presentation) == expected &&
+					&presentation.player_identity() == identity && impl.tune_token(path) == std::string("\"") + word + '"',
+					"Identity ink accepts named/RGB/opaque RGBA on its borrowed record without changing other colours");
+			}
+			const JsonSpanDocument authored(baseline, "identity-ink-reference");
+			const std::string background_token(authored.token(*authored.find("player_identity.background_colour")));
+			for (const std::string& word : { std::string("11223380"), std::string("11223300"),
+				background_token.substr(1, background_token.size() - 2) })
+			{
+				const auto before_state = state();
+				const auto before_edits = edits();
+				const std::string before_text = impl.tune_document("presentation")->current().text();
+				require(!impl.execute("tune " + path + " " + word).ok && state() == before_state && edits() == before_edits &&
+					impl.tune_document("presentation")->current().text() == before_text &&
+					read_text(source) == baseline && read_text(staged) == baseline,
+					"Translucent, invisible or background-matching identity ink preserves live values, pending tokens and both files");
+			}
+			require(impl.execute("tune.reset " + path).ok && colour_values(presentation) == initial &&
+				impl.tune_document("presentation")->current().text() == baseline && edits().empty(),
+				"Identity ink resets exactly to its authored token without a rebuild or file write");
+
+			// Saving merges a fresh unrelated disk edit, splices only our ink,
+			// then adopts and rebases the full validated file.
+			const std::string external = authored.replaced(*authored.find("debug_overlay.colour"), "\"203040\"");
+			require(initial[3] != labrador::Colour(32, 48, 64), "The identity save introduces a fresh unrelated external colour");
+			write_text(source, external);
+			const JsonSpanDocument external_document(external, "identity-ink-reference");
+			const std::string saved = external_document.replaced(*external_document.find(local), "\"123456FF\"");
+			auto saved_values = initial;
+			saved_values[3] = labrador::Colour(32, 48, 64);
+			saved_values.back() = labrador::Colour(18, 52, 86);
+			require(impl.execute("tune " + path + " 123456FF").ok && impl.execute("tune.save presentation").ok &&
+				read_text(source) == saved && read_text(staged) == saved && colour_values(presentation) == saved_values &&
+				impl.tune_document("presentation")->baseline().text() == saved && edits().empty() &&
+				colour_values(Presentation(source.string().c_str())) == saved_values &&
+				count_of(saved, "\r\n") == count_of(baseline, "\r\n") && count_of(saved, "\n") == count_of(baseline, "\n"),
+				"Identity save changes only its quoted LF/CRLF token, preserves the external edit, loads and rebases both copies");
+			require(impl.execute("tune " + path + " a1B2c3").ok && impl.execute("tune.reset " + path).ok &&
+				colour_values(presentation) == saved_values && impl.tune_document("presentation")->current().text() == saved && edits().empty(),
+				"Identity reset after save restores the saved opaque spelling and adopted external baseline");
+
+			const JsonSpanDocument saved_document(saved, "identity-ink-conflict");
+			const std::string conflicting = saved_document.replaced(*saved_document.find(local), "\"FEDCBA\"");
+			write_text(source, conflicting);
+			require(impl.execute("tune " + path + " ABCDEF").ok, "Identity ink is pending before an on-disk token conflict");
+			const auto conflict_state = state();
+			const auto conflict_edits = edits();
+			const std::string conflict_text = impl.tune_document("presentation")->current().text();
+			require(!impl.execute("tune.save presentation").ok && read_text(source) == conflicting && read_text(staged) == saved &&
+				state() == conflict_state && edits() == conflict_edits && impl.tune_document("presentation")->current().text() == conflict_text,
+				"An identity ink token conflict preserves source, staging, live colours and the complete pending edit");
+			const JsonSpanDocument conflicting_document(conflicting, "identity-ink-conflict");
+			const std::string forced = conflicting_document.replaced(*conflicting_document.find(local), "\"ABCDEF\"");
+			require(impl.execute("tune.save presentation force").ok && read_text(source) == forced && read_text(staged) == forced &&
+				identity->ink_colour == labrador::Colour(171, 205, 239) && impl.tune_document("presentation")->baseline().text() == forced && edits().empty(),
+				"Force resolves only the identity token conflict and rebases the validated opaque ink");
+
+			// The external file is valid by itself, but merging our RED ink into
+			// its RED background is invalid. Force cannot bypass full validation.
+			require(impl.execute("tune " + path + " RED").ok, "A distinct red identity ink is pending before the coupled disk conflict");
+			const JsonSpanDocument forced_document(forced, "identity-ink-merged-conflict");
+			const std::string coupled = forced_document.replaced(*forced_document.find("player_identity.background_colour"), "\"RED\"");
+			write_text(source, coupled);
+			require(Presentation(source.string().c_str()).player_identity().background_colour == labrador::Colour::red &&
+				identity->background_colour != labrador::Colour::red, "The external red background is valid before merging and is not yet live");
+			const auto coupled_state = state();
+			const auto coupled_edits = edits();
+			const std::string coupled_text = impl.tune_document("presentation")->current().text();
+			for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+			{
+				impl.log().clear();
+				require(!impl.execute(command).ok && read_text(source) == coupled && read_text(staged) == forced &&
+					state() == coupled_state && edits() == coupled_edits && impl.tune_document("presentation")->current().text() == coupled_text &&
+					impl.tune_document("presentation")->baseline().text() == forced &&
+					log_contains(impl.log(), "the written file did not load", DebugSeverity::error) &&
+					log_contains(impl.log(), "; the old bytes are back", DebugSeverity::error),
+					"Invalid merged identity colours restore the exact external LF/CRLF source and preserve staged/live/ledger state, even with force");
+			}
+			require(impl.execute("tune.reset " + path).ok && identity->ink_colour == labrador::Colour(171, 205, 239) &&
+				read_text(source) == coupled && read_text(staged) == forced && edits().empty() &&
+				!std::filesystem::exists(source.string() + ".tmp") && !std::filesystem::exists(source.string() + ".bak") &&
+				!std::filesystem::exists(staged.string() + ".tmp"),
+				"After rejected merged saves, reset still uses the saved baseline without discarding the external source or leaving recovery files");
 		}
 	}
 
@@ -610,6 +753,7 @@ namespace debug_console_acceptance
 		check_motion_tunes(impl, tuning, scratch);
 		check_menu_layout_tunes(impl, presentation, scratch);
 		check_colour_tunes(game_directory);
+		check_identity_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.
 		const std::string tuning_before = read_text(scratch.source / L"tuning.json");

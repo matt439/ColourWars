@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirteen audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fourteen audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -330,7 +330,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-thirteen audited colour paths below, can be read and changed while the game runs,
+fourteen audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These thirteen existing string fields are supported; numeric path
+**Colours.** These fourteen existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -401,6 +401,7 @@ show the quoted JSON token.
 | `presentation.main_menu.weapon_select.unselected` | live | Unready players' Weapon Select tiles, on the next active, connected visual refresh. |
 | `presentation.weapon_feedback.highlight` | live | Existing dry-fire crosses, recovery rays and all three aim-readiness shapes, on the next draw. |
 | `presentation.weapon_feedback.keyline` | live | Outlines of existing muzzle/status cues and aim-readiness shapes, on the next draw. |
+| `presentation.player_identity.ink_colour` | live | Borders and P1-P4 glyphs of existing world, HUD, Team Select, Weapon Select and Results badges, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -411,7 +412,16 @@ Supported colours use ordinary straight RGBA. Their drawing paths premultiply
 base RGB by its alpha before applying any event fade; a zero-alpha colour
 contributes no RGB. Movement and weapon feedback apply the event fade once,
 preserving the existing opaque presentation. Captured menu backgrounds convert
-the base colour when their widgets are constructed.
+the base colour when their widgets are constructed. Identity ink retains its
+existing stricter contract: it must be fully opaque and distinct from the badge
+background. RGB and RGBA ending `FF` are accepted; partial/zero alpha and a
+background-matching ink are rejected before live content or the diff changes.
+
+Identity badges read the borrowed ink during every draw, including frozen world,
+HUD and menu views. Their background, geometry, roster labels, focus behaviour
+and emphasis timers stay intact; hidden badges remain hidden. Reset recolours
+the same existing badges on their next draw. The background is not another
+tunable colour path.
 
 Weapon-feedback colours are read on every draw, including frozen cues beneath
 a paused console. Their team-paint centres, geometry and event timers stay
@@ -460,7 +470,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the thirteen colour strings listed above join numbers and booleans in `tune`.
+only the fourteen colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1165,7 +1175,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the thirteen audited colour fields above are
+  and inserting keys in `tune.save`: the fourteen audited colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1174,10 +1184,10 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Thirteen existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Fourteen existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven and both
 readiness colours on Team Select and Weapon Select, plus weapon-feedback
-highlight/keyline. More colour fields remain, along with
+highlight/keyline and the opaque player-identity ink. More colour fields remain, along with
 arbitrary string/font edits and insertion of absent keys.
 
 The next bounded colour increment can follow an actual field's consumer,
@@ -1201,6 +1211,30 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Identity-ink increment (2026-10-20), **verified**: the fourteenth
+exact path uses the existing opaque/distinct badge-colour validation. Added CPU
+checks cover atomic semantic refusals, independent reset, exact LF/CRLF save and
+rebase, token conflicts/force and unrelated external edits. A valid external
+background edit that makes the merged ink invalid must restore the exact source
+bytes and retain the previous live, staged and pending states, even with force.
+Both builds pass and all 40 consumer cases have successful receipts per preset
+in `out/validation/crossfeed-20261020/camera-final-v1/consumer-reconciliation.json`.
+The retained Release DisplayTrial isolated-save seed failure passed with the
+unchanged binary in a fresh private directory; later unfinished cases passed
+separately. No save code changed and the transient failure is not diagnosed.
+
+Both native Identity-only runs pass with 147 shared PPM frames/crops matching
+byte for byte. The new ink scope uses 28 additional readbacks, five rows and
+four crops per preset; Debug adds 40 readbacks, eight rows and ten real command
+attempts (seven accepted, three semantic refusals), exact private one-token
+save/rebase and saved-baseline reset. Preconstructed PlayerBadge/UiPlayerBadge
+roster cells and actual frozen world/HUD badges pass literal opaque pixel
+substitution, captured geometry/state, hidden/focus policy and RNG/fingerprint
+checks. Team Select, Weapon Select and Results wiring is source-audited through
+that shared renderer; those pages are not directly opened by this increment.
+Run paths and counts are in `camera-final-v1/native-reconciliation.json`.
+No physical-pad, listening, human readability or performance acceptance is claimed.
 
 Validation of the seven-colour increment (2026-10-18): Debug and Release build
 under `/W4 /WX` and pass all 36 consumer cases each. The Debug console case

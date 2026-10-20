@@ -40,7 +40,7 @@ This is a selection guide, not another priority order; each owner defines a boun
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `DBG#1` | Audit further colour consumers; thirteen existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
+| `DBG#1` | Audit further colour consumers; fourteen existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 | `GAP#4.2` | Implement keyboard Jump rebinding through capture, save, gameplay and effective help | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -174,7 +174,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#1` | OPEN | LOW | M | Extend colour tuning beyond the thirteen audited fields; general string/font edits and missing-key insertion remain separate slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
+| `DBG#1` | OPEN | LOW | M | Extend colour tuning beyond fourteen audited fields; general string/font edits and missing-key insertion remain separate slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | BLOCKED | LOW | S | Typing in the live console blanks the whole keyboard seat. Waits on `ENG#9`. |
 | `DBG#5` | BLOCKED | LOW | S | The perf overlay has no GPU, present or submit time. Waits on `ENG#14`. |

@@ -43,6 +43,9 @@ namespace
 		// marker draw. Cue state, team tint and captured sheet/fill stay intact.
 		{ "presentation.weapon_feedback.highlight", TuneScope::live },
 		{ "presentation.weapon_feedback.keyline", TuneScope::live },
+		// PlayerBadge reads this borrowed ink on every world/HUD/menu draw.
+		// Its existing reader requires opaque ink distinct from the background.
+		{ "presentation.player_identity.ink_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

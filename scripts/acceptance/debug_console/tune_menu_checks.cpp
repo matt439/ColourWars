@@ -67,11 +67,11 @@ namespace debug_console_acceptance
 			"Colour leaves complete as paths while arbitrary font strings stay outside the tree");
 		const auto colour_choices = registry.complete("tune presentation.movement_feedback.colour ").candidates;
 		for (const char* path : { colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10],
-			colour_paths[11] })
+			colour_paths[11], colour_paths[13] })
 		{
 			require(registry.complete(std::string("tune ") + path).line == std::string("tune ") + path + " " &&
 				registry.complete(std::string("tune ") + path + " ").candidates == colour_choices,
-				std::string("The selection/feedback colour completes as an exact leaf with literal colour choices: ") + path);
+				std::string("The selection/feedback/identity colour completes as an exact leaf with literal colour choices: ") + path);
 		}
 		// The colour leaf shares its prefix with the existing numeric width.
 		// Keep both path choices until a space explicitly selects the colour.

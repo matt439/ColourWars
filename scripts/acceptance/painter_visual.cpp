@@ -97,7 +97,6 @@ namespace
 #include "scripts/acceptance/painter_visual/reduced_effects_checks.h"
 #include "scripts/acceptance/painter_visual/view_shake_checks.h"
 #include "scripts/acceptance/painter_visual/aim_marker_checks.h"
-#include "scripts/acceptance/painter_visual/player_identity_checks.h"
 #include "scripts/acceptance/painter_visual/drift_checks.h"
 #include "scripts/acceptance/painter_visual/monitor_checks.h"
 #include "scripts/acceptance/painter_visual/miniature_terrain_checks.h"
@@ -125,6 +124,7 @@ namespace
 #include "scripts/acceptance/painter_visual/tune_colour_checks.h"
 #endif
 #include "scripts/acceptance/painter_visual/feedback_tune_colour_checks.h"
+#include "scripts/acceptance/painter_visual/player_identity_checks.h"
 #include "scripts/acceptance/painter_visual/setup_paper_checks.h"
 #include "scripts/acceptance/painter_visual/weapon_catalog_checks.h"
 #include "scripts/acceptance/painter_visual/menu_item_page_checks.h"
@@ -666,7 +666,7 @@ int wmain(int argc, wchar_t** argv)
         }
         if (identity_only)
         {
-            identity_matrix(app, builder, presentation, preferences, output);
+            identity_matrix(app, builder, levels, tuning, presentation, preferences, content, output);
             require(records.good(), "Capture record write failed");
             std::cout << "PASS identity-only visual check; other painter matrices were not run\n";
             return 0;
@@ -721,7 +721,7 @@ int wmain(int argc, wchar_t** argv)
         wet_tool_matrix(app, builder, canvas, presentation, preferences, output, records);
         reduced_effects_matrix(app, builder, canvas, presentation, preferences, output, records);
         shake_matrix(app, builder, tuning, presentation, preferences, output);
-        identity_matrix(app, builder, presentation, preferences, output);
+        identity_matrix(app, builder, levels, tuning, presentation, preferences, content, output);
         monitor_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
         countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         closing_matrix(app, builder, canvas, tuning, presentation, preferences, output);
