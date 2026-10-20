@@ -305,6 +305,55 @@ namespace debug_console_acceptance
 					"Force cannot insert a respawn pen colour, replace null/a container, or expose literal aliases");
 			}
 		}
+		for (const char* cursor_field : { "ink", "fill" })
+		{
+			const std::string cursor_path = std::string("opening.cursor_art.") + cursor_field;
+			const std::string cursor_sibling = std::string("opening.cursor_art.") +
+				(std::string(cursor_field) == "ink" ? "fill" : "ink");
+			const std::string cursor_baseline = "{\r\n  \"opening\":{\"sprite_sheet\":\"unchanged\",\"fill_frame\":\"solid\","
+				"\"cursor_art\":{\"ink\":\"\\u0042LACK\",\"fill\":\"\\u0057HITE\",\"shade\":\"B4B4B4\",\"shadow\":\"00000066\"}},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			const JsonSpanDocument cursor_reference(cursor_baseline, "cursor-colour-reference");
+			const std::string cursor_sibling_token(cursor_reference.token(*cursor_reference.find(cursor_sibling)));
+			TuneDocument cursor_document("presentation", cursor_baseline);
+			const JsonLeaf* cursor_leaf = cursor_document.find(cursor_path);
+			require(cursor_leaf != nullptr && cursor_leaf->kind == JsonLeaf::Kind::string &&
+				cursor_document.find(cursor_sibling) != nullptr && cursor_document.find("opening.sprite_sheet") == nullptr &&
+				cursor_document.find("opening.fill_frame") == nullptr && cursor_document.find("opening.cursor_art.shade") == nullptr &&
+				cursor_document.find("opening.cursor_art.shadow") == nullptr,
+				"Only the two audited cursor colours are eligible; captured texture names and unselected materials remain outside the tree: " + cursor_path);
+			cursor_document.commit(cursor_document.edited(*cursor_leaf, "\"11223344\""), cursor_path);
+			require(cursor_document.current().token(*cursor_document.find(cursor_sibling)) == cursor_sibling_token &&
+				cursor_document.reverted(cursor_path) == cursor_baseline,
+				"Each cursor colour reset preserves its sibling and restores its escaped token and every CRLF byte: " + cursor_path);
+			const std::string cursor_external_number = cursor_reference.replaced(*cursor_reference.find("number"), "25");
+			const JsonSpanDocument cursor_external_reference(cursor_external_number, "cursor-colour-reference");
+			const TuneSplice cursor_splice = cursor_document.splice(cursor_external_number, false);
+			require(cursor_splice.conflicts.empty() && cursor_splice.written == 1 && cursor_splice.text ==
+				cursor_external_reference.replaced(*cursor_external_reference.find(cursor_path), "\"11223344\"") &&
+				count_of(cursor_splice.text, "\r\n") == count_of(cursor_baseline, "\r\n"),
+				"Each cursor splice preserves its sibling, unselected materials, escaped bytes, an external number and every CRLF: " + cursor_path);
+			const std::string cursor_pending = cursor_document.current().text();
+			bool cursor_wrong_type = false;
+			try { cursor_document.commit(cursor_document.edited(*cursor_document.find(cursor_path), "false"), cursor_path); }
+			catch (const std::invalid_argument&) { cursor_wrong_type = true; }
+			require(cursor_wrong_type && cursor_document.current().text() == cursor_pending && cursor_document.edits().size() == 1,
+				"A wrong-type cursor commit retains its sibling and the pending string edit: " + cursor_path);
+			for (const std::string& cursor_invalid : { std::string("{}"),
+				cursor_reference.replaced(*cursor_reference.find(cursor_path), "null"),
+				cursor_reference.replaced(*cursor_reference.find(cursor_path), "{\"value\":\"RED\"}"),
+				"{\"" + cursor_path + "\":\"RED\"}",
+				std::string("{\"opening\":{\"cursor_art.") + cursor_field + "\":\"RED\"}}",
+				std::string("{\"opening.cursor_art\":{\"") + cursor_field + "\":\"RED\"}}",
+				std::string("{\"opening\":{\"cursor_art\":{\"") + cursor_field + ".r\":\"RED\"}}}" })
+			{
+				const TuneDocument cursor_unsupported("presentation", cursor_invalid);
+				const TuneSplice cursor_refused = cursor_document.splice(cursor_invalid, true);
+				require(cursor_unsupported.find(cursor_path) == nullptr && cursor_refused.written == 0 &&
+					cursor_refused.conflicts.size() == 1 && cursor_refused.text == cursor_invalid,
+					"Force cannot insert a cursor colour, replace null/a container or expose literal key aliases: " + cursor_path);
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -484,10 +533,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited twenty-one colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited twenty-three colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly twenty-one authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly twenty-three authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -529,7 +578,13 @@ namespace debug_console_acceptance
 			"respawn_redraw.pen_colour", "tuning.respawn_redraw.pen_colour",
 			"presentation.respawn_redraw.sprite_sheet", "presentation.respawn_redraw.pen_frame",
 			"presentation.respawn_redraw.pen_colour.r", "presentation.respawn_redraw.pen_colour_extra",
-			"presentation.respawn_redraw.strokes[0].part", "presentation.respawn_redraw.pen_width" })
+			"presentation.respawn_redraw.strokes[0].part", "presentation.respawn_redraw.pen_width",
+			"opening.cursor_art.ink", "tuning.opening.cursor_art.ink", "opening.cursor_art.fill",
+			"tuning.opening.cursor_art.fill", "presentation.opening.sprite_sheet", "presentation.opening.fill_frame",
+			"presentation.opening.cursor_art.ink.r", "presentation.opening.cursor_art.fill.r",
+			"presentation.opening.cursor_art.ink_extra", "presentation.opening.cursor_art.fill_extra",
+			"presentation.opening.cursor_art.ink_colour", "presentation.opening.cursor_art.shade",
+			"presentation.opening.cursor_art.shadow", "presentation.opening.cursor_art.click_duration" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -565,6 +620,8 @@ namespace debug_console_acceptance
 			{ "presentation.idle_drip.keyline", TuneScope::live },
 			{ "presentation.idle_drip.grow_time", TuneScope::next_screen },
 			{ "presentation.respawn_redraw.pen_colour", TuneScope::live },
+			{ "presentation.opening.cursor_art.ink", TuneScope::live },
+			{ "presentation.opening.cursor_art.fill", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -675,7 +732,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All twenty-one colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All twenty-three colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

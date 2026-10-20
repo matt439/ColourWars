@@ -214,6 +214,22 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($CursorTuneColoursOnly) {
+    $result.scope = 'cursor-tune-colours-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('opaque-default','ink-only-rgb','fill-only-rgb','ink-only-rgba128','fill-only-rgba128','paired-rgba128','paired-alpha0-nonzero-rgb')
+    $result.resolutions = @('1280x720')
+    $result.inputs = 'Normal reader backend with no sampling/events. Synthetic ScreenCursor inputs: tip(640,240),draw screen_height720,click_age.09. No cursor/Level/State updates or retained age.'
+    $result.audio = 'No gameplay audio events; no listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('preconstructed-resting-and-clicking-consumers','independent-ink-fill-adoption','copied-baseline-full-shape-parity','raw-seven-site-base-alpha-and-layer-samples','straight-and-squared-base-alpha-controls','alpha0-shade-shadow-residuals','reduce-effects-keeps-arrow','unchanged-borrowed-record-geometry-and-global-rng')
+    $result.checks = 'Two exact live cursor fields. Full-shape reference is a production cursor with immutable copied dependencies, proving adoption/default parity only. Independent raw patches cover tip,contour,interior,shade,shadow and two isolated click sites, including wide ink beneath narrow fill. Base alpha is already premultiplied once; no production draw change or event fade. Seven authored pairs/two underlays retain shade/shadow and reject wrong straight/squared alpha. Shared124readbacks/112CSVrows/12crops72x80(69120pixels),ten wrong-reference frames,two blank frames; zero local/Level/State updates. Fixed720 draw height is explicit synthetic input,not small-view acceptance. Hashes/counts retained.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('fifteen-real-named-rgb-rgba-reset-save-commands','independent-leaf-reset-with-sibling-edit-retained','exact-two-token-private-save-rebase','unchanged-private-preferences-and-content-bytes')
+        $result.checks += ' Debug adds168readbacks/192rows across twelve command states,totals292/304/12. Two successful private preference seed Saves; source/staged token-only save and reset retain unrelated values. Release remains literal-consumer-only.'
+    }
+    $result.checks += ' No physical/global input,OS-focus delivery,human readability,small-view,performance or listening acceptance.'
+}
 elseif ($RespawnPenTuneColoursOnly) {
     $result.scope = 'respawn-pen-tune-colours-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @()

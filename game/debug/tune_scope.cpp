@@ -63,6 +63,10 @@ namespace
 		// RespawnRedraw reads the borrowed pen tint on each partial-path draw;
 		// player progress, ordered strokes and captured sheet/frame stay intact.
 		{ "presentation.respawn_redraw.pen_colour", TuneScope::live },
+		// ScreenCursor reads these borrowed tints for the resting arrow and
+		// reveal click ticks on every draw; sheet/frame and draw inputs stay intact.
+		{ "presentation.opening.cursor_art.ink", TuneScope::live },
+		{ "presentation.opening.cursor_art.fill", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

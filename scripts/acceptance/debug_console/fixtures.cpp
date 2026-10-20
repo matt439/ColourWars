@@ -133,7 +133,8 @@ namespace debug_console_acceptance
 			presentation.player_identity().background_colour, presentation.combat_feedback().highlight,
 			presentation.combat_feedback().keyline, presentation.blocked_shot().highlight,
 			presentation.blocked_shot().keyline, presentation.idle_drip().keyline,
-			presentation.respawn_redraw().pen_colour };
+			presentation.respawn_redraw().pen_colour, presentation.opening().cursor_art.ink,
+			presentation.opening().cursor_art.fill };
 	}
 #endif
 }

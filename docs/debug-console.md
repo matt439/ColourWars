@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These twenty-one existing string fields are supported; numeric path
+**Colours.** These twenty-three existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -409,6 +409,8 @@ show the quoted JSON token.
 | `presentation.blocked_shot.keyline` | live | Outlines of existing blocked-shot stop ticks and rebound beads, on the next draw. |
 | `presentation.idle_drip.keyline` | live | Outlines of existing attached beads and falling drops for Sprayer, Sniper and Bucket, on the next draw. |
 | `presentation.respawn_redraw.pen_colour` | live | Existing partial respawn outlines, on the next draw. |
+| `presentation.opening.cursor_art.ink` | live | Ink of existing cursor arrows and reveal click ticks, on the next draw. |
+| `presentation.opening.cursor_art.fill` | live | Fill of those same existing arrows and click ticks, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -467,6 +469,15 @@ are preserved, and the opaque BLACK default is unchanged. Editing the colour
 does not advance the player's respawn timer or change strokes, geometry,
 thresholds or captured sheet/frame bindings. Whole dead-story poses and filled
 figures bypass the pen; Reduce effects leaves this essential outline visible.
+
+Cursor ink and fill are borrowed on every draw of the resting arrow and reveal
+click ticks. Their existing base-alpha premultiplication is unchanged; click
+age changes tick placement/length rather than opacity, with no event fade.
+Shade and shadow remain separate authored materials: setting both supported
+colours to nonblack zero alpha retains those residual arrow materials.
+Reduce effects suppresses the click ticks while retaining the arrow. Editing
+either colour preserves the other, fixed hotspot, geometry, timing, draw inputs
+and captured sheet/frame; no drawing, default colour or artwork changes here.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -1230,7 +1241,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the twenty-one listed colour fields above are
+  and inserting keys in `tune.save`: the twenty-three listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1239,12 +1250,12 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Twenty-one existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Twenty-three existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline and the
-respawn pen colour.
+respawn pen colour and cursor ink/fill.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1269,6 +1280,57 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Cursor ink/fill increment (2026-10-20), **verified**:
+the twenty-second/twenty-third exact paths expose
+`presentation.opening.cursor_art.ink` and `.fill` on retained resting arrows
+and reveal click ticks. Both already had correct base-alpha conversion; this
+increment changes only the production allowlist. No drawing, authored value,
+geometry or timing changes are made. Shade/shadow remain independent residual
+materials when both selected colours have alpha0. Reduce Effects removes only
+the detached click ticks, retaining the arrow; there is no event opacity fade.
+
+Both game/editor builds and the focused `debug_console` and `story_audio` CPU
+cases pass in both presets. Shared tokens/refusals, independent sibling resets,
+exact LF/CRLF save/rebase, conflicts/force and structural aliases include both
+fields. Borrowed opening/cursor records and unselected geometry/resources are
+retained. External click_duration0.501 rejects ordinary and forced complete
+merged saves without changing source/staged/live/text/baseline/ledger state.
+The first Debug run caught a stale object: private promotion preserved a source
+timestamp older than the previous `tune_scope.cpp.obj`, so Ninja skipped the
+new allowlist. Source bytes and assertions stayed unchanged. Refreshing source
+timestamps rebuilt the object with both paths; fresh Debug/Release checks pass.
+The original failure, build log and `stale-object-diagnosis.json` are retained.
+
+`scripts/check-painter.ps1 -Preset <preset> -SkipBuild -CursorTuneColoursOnly`
+passes on its first native execution in both presets. Shared evidence is
+124 readbacks, 112 CSV rows and twelve 72x80 crops. Seven literal colour states
+over black/nonblack underlays exercise independent ink/fill changes, partial
+alpha and pair alpha0 on the same existing cursor. Immutable baseline-derived
+second-consumer rasters prove full-shape adoption/default parity; seven raw
+sample sites with targeted straight/squared-base-alpha controls provide the
+independent alpha proof. They are not an independent full cursor geometry
+oracle. Samples account for actual per-edge sprite truncation and ordered
+click-ink/fill overlap. Unselected shade/shadow and Reduce Effects restoration
+remain checked. The fixed synthetic draw input is screen_height720.
+
+Debug adds fifteen actual commands, 168 readbacks and 192 rows: totals of
+292 readbacks, 304 rows and twelve crops. Independent reset keeps the sibling
+pending; exact two-token private save/rebase and saved-baseline reset pass.
+Actual content, private preferences, current saved keyboard binding, queued
+work and global RNG remain unchanged. Both private PlaySettings/display seed
+Saves succeed; this scope does not seed a nondefault Jump key. Release remains
+consumer-only. No local preparation, Level or StateContext update is performed.
+
+All 30 shared artifacts, including twelve PPM crops and the raw-sample CSV,
+match byte for byte between presets. The contact sheet was visually inspected;
+twelve frozen source/support hashes still match, including the unchanged
+ScreenCursor consumer. Evidence is under
+`out/validation/crossfeed-20261020/cursor-colour-v1/`, including
+`build-consumer-reconciliation.json`, `native/reconciliation.json` and
+`final-source-reconciliation.json`. Native small-view/human readability,
+physical/global input, listening, performance and active-match route acceptance
+remain open. `DBG#1` remains open beyond twenty-three audited fields.
 
 Respawn pen colour increment (2026-10-20), **verified**:
 the twenty-first exact path, `presentation.respawn_redraw.pen_colour`, is live

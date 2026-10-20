@@ -23,6 +23,7 @@ param(
     [switch] $BlockedShotTuneColoursOnly,
     [switch] $IdleDripTuneColoursOnly,
     [switch] $RespawnPenTuneColoursOnly,
+    [switch] $CursorTuneColoursOnly,
     [switch] $ExposedColourAlphaOnly,
     [switch] $DurationTextOnly,
     [switch] $ResolutionTextOnly,
@@ -88,7 +89,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$CursorTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -259,6 +260,7 @@ try {
     elseif ($BlockedShotTuneColoursOnly) { $probeArguments += 'blocked-shot-tune-colours' }
     elseif ($IdleDripTuneColoursOnly) { $probeArguments += 'idle-drip-tune-colours' }
     elseif ($RespawnPenTuneColoursOnly) { $probeArguments += 'respawn-pen-tune-colours' }
+    elseif ($CursorTuneColoursOnly) { $probeArguments += 'cursor-tune-colours' }
     elseif ($ExposedColourAlphaOnly) { $probeArguments += 'exposed-colour-alpha' }
     elseif ($DurationTextOnly) { $probeArguments += 'duration-text' }
     elseif ($ResolutionTextOnly) { $probeArguments += 'resolution-text' }
@@ -450,6 +452,7 @@ try {
     if ($BlockedShotTuneColoursOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-blocked-shot-tune-colours.ps1') }
     if ($IdleDripTuneColoursOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-idle-drip-tune-colours.ps1') }
     if ($RespawnPenTuneColoursOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-respawn-pen-tune-colours.ps1') }
+    if ($CursorTuneColoursOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-cursor-tune-colours.ps1') }
     if ($PercentageTextOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-percentage-text.ps1') }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
@@ -505,6 +508,10 @@ try {
             $result.diagnostic += ' Release ran shared-consumer-only evidence and emitted no Debug console artifacts.'
         }
         $result.diagnostic += ' No active match route, foreground/global input, physical-device, listening, human readability or performance acceptance.'
+    }
+    elseif ($CursorTuneColoursOnly) {
+        $result.diagnostic = 'Cursor ink/fill passed retained resting/clicking consumers at synthetic tip(640,240),draw screen_height720 and1280x720 viewport. Full-shape comparison uses an immutable copied-dependency production consumer for adoption/default parity only. Independent raw contour/interior/click patches account for actual shade/shadow underlayers and ink beneath fill, rejecting straight/squared-base-alpha controls. Zero selected alpha leaves unselected shade/shadow; Reduce Effects removes ticks while preserving the arrow. Shared124readbacks/112rows/12crops72x80(69120pixels); zero local/Level/State updates. No physical input,OS-focus,human readability,small-view or listening acceptance.'
+        if ($debug) { $result.diagnostic += ' Debug15real commands add168readbacks/192rows,totals292/304/12; exact two-token private Save/rebase/reset preserves preferences and real content.' }
     }
     elseif ($RespawnPenTuneColoursOnly) {
         $result.diagnostic = 'Respawn pen passed four preconstructed direct outlines(two facings/two partial path budgets) and one actual frozen dead Player over black/nonblack underlays. Independent ordered raw nib/channel submissions preserve repeated overlap blending with base alpha exactly once and no event fade. Opaque-default parity, straight/squared-base-alpha controls, nonblack alpha0, blank below/at draw_from, Reduce Effects essential outline and actual whole/filled Player pen bypass are checked. Shared62readbacks/18rows/8crops440x160(563200pixels)/10controls/3local Player preparations; zero Level/StateContext/input updates.'
