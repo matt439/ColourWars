@@ -307,7 +307,7 @@ namespace debug_console_acceptance
 	std::size_t log_index(const DebugLog& log, const std::string& text);
 	bool any_line(const DebugLog& log, const std::string& text);
 
-	// The twenty audited colour tune paths and their values, in the same order;
+	// The twenty-one audited colour tune paths and their values, in the same order;
 	// shared by tune_checks.cpp, tune_document_checks.cpp and tune_menu_checks.cpp.
 	inline constexpr std::size_t identity_ink_colour_index = 13;
 	inline constexpr std::size_t identity_background_colour_index = 14;
@@ -316,7 +316,8 @@ namespace debug_console_acceptance
 	inline constexpr std::size_t blocked_highlight_colour_index = 17;
 	inline constexpr std::size_t blocked_keyline_colour_index = 18;
 	inline constexpr std::size_t idle_drip_keyline_colour_index = 19;
-	inline const std::array<const char*, 20> colour_paths{
+	inline constexpr std::size_t respawn_pen_colour_index = 20;
+	inline const std::array<const char*, 21> colour_paths{
 		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
 		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
 		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
@@ -326,7 +327,8 @@ namespace debug_console_acceptance
 		"presentation.weapon_feedback.keyline", "presentation.player_identity.ink_colour",
 		"presentation.player_identity.background_colour", "presentation.combat_feedback.highlight",
 		"presentation.combat_feedback.keyline", "presentation.blocked_shot.highlight",
-		"presentation.blocked_shot.keyline", "presentation.idle_drip.keyline" };
+		"presentation.blocked_shot.keyline", "presentation.idle_drip.keyline",
+		"presentation.respawn_redraw.pen_colour" };
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
 
 	// console_checks.cpp

@@ -214,6 +214,22 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($RespawnPenTuneColoursOnly) {
+    $result.scope = 'respawn-pen-tune-colours-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @()
+    $result.palettes = @('opaque-default','literal-rgb','literal-rgba128','literal-alpha0-nonzero-rgb')
+    $result.weapons = @('sprayer-builder-fixture-only-no-weapon-activity')
+    $result.resolutions = @('1280x720')
+    $result.inputs = 'Normal reader backend, no sampling/events/Level/StateContext/input updates. Actual PlayerBuilder prepares one dead sparse-slot Player through3local Player calls(shared) and2more Debug calls; snapshots freeze before captures/commands. Direct outline progress is an argument, with no simulation clock.'
+    $result.audio = 'Local Player fixture preferences mute gameplay cues; private saved preferences remain unchanged. No listening acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'One exact live pen field; four direct outlines(two facings/two partial path budgets) plus actual dead Player. Independent ordered nib/channel oracle preserves overlap blending, source alpha once/no fade, opaque parity, straight/squared-alpha controls and alpha0 underlay restoration. Below/at boundary blank, Reduce Effects essential outline and actual whole/filled Player bypass. Shared62readbacks/18rows/8crops440x160(563200pixels)/10controls/3Player preparations; public Player timer/progress/health/pose/geometry/cull/camera and draw RNG remain frozen. No production getters or gameplay route.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions = '9actual tune/reset/save commands and54readbacks/18rows/2Player preparations; totals116/36/8/prep5. One-token private source/staged save/rebase/reset;2successful private PlaySettings+InputBindings seed Saves preserve JumpJ and default display. No controlled Save failure or queued match work.'
+    }
+    else { $result.actions = 'Literal consumer-only; no developer director/commands/transcript/scratch or Save.' }
+    $result.checks += ' No physical/global input, OS-focus, listening, human readability or performance acceptance.'
+}
 elseif ($IdleDripTuneColoursOnly) {
     $result.scope = 'idle-drip-tune-colours-only'
     $result.Remove('stage')

@@ -2,14 +2,17 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
+#include "scripts/acceptance/debug_console/cpu_level.h"
 #include "game/debug/debug_menu_model.h"
 #include "game/debug/debug_tokenizer.h"
 #include "game/debug/json_spans.h"
+#include "game/debug/match_fingerprint.h"
 #include "game/debug/tune_document.h"
 #include "game/debug/tune_scope.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/combat_feedback.h"
 #include "game/objects/idle_drip.h"
+#include "game/objects/respawn_redraw.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/math/scalar.h"
 #include "engine/render/render_resources.h"
@@ -67,14 +70,15 @@ namespace debug_console_acceptance
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 20> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 21> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
-			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80" };
+			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
 			{ 53, 188, 225 }, { 34, 102, 204, 128 }, { 18, 52, 86 }, { 221, 238, 255 },
-			{ 115, 161, 194, 128 }, { 25, 184, 112, 0 }, { 194, 109, 58, 128 }, { 42, 128, 213, 0 }, { 147, 199, 77, 128 } };
+			{ 115, 161, 194, 128 }, { 25, 184, 112, 0 }, { 194, 109, 58, 128 }, { 42, 128, 213, 0 },
+			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -99,7 +103,8 @@ namespace debug_console_acceptance
 		}
 		for (const std::size_t index : { std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
 			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index,
-			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index })
+			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
+			respawn_pen_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -154,7 +159,7 @@ namespace debug_console_acceptance
 			colour_paths[11], colour_paths[12], colour_paths[identity_ink_colour_index], colour_paths[identity_background_colour_index],
 			colour_paths[combat_highlight_colour_index], colour_paths[combat_keyline_colour_index],
 			colour_paths[blocked_highlight_colour_index], colour_paths[blocked_keyline_colour_index],
-			colour_paths[idle_drip_keyline_colour_index] })
+			colour_paths[idle_drip_keyline_colour_index], colour_paths[respawn_pen_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -184,7 +189,10 @@ namespace debug_console_acceptance
 			"presentation.blocked_shot.keyline_extra", "presentation.idle_drip.sprite_sheet",
 			"presentation.idle_drip.fill_frame", "presentation.idle_drip.keyline.r",
 			"presentation.idle_drip.keyline_extra", "presentation.idle_drip.tools.sprayer.keyline",
-			"presentation.idle_drip.tools.sniper.keyline", "presentation.idle_drip.tools.bucket.keyline" })
+			"presentation.idle_drip.tools.sniper.keyline", "presentation.idle_drip.tools.bucket.keyline",
+			"presentation.respawn_redraw.sprite_sheet", "presentation.respawn_redraw.pen_frame",
+			"presentation.respawn_redraw.pen_colour.r", "presentation.respawn_redraw.pen_colour_extra",
+			"presentation.respawn_redraw.strokes[0].part" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -216,7 +224,8 @@ namespace debug_console_acceptance
 		}
 		for (const std::size_t index : { std::size_t(11), std::size_t(12),
 			combat_highlight_colour_index, combat_keyline_colour_index,
-			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index })
+			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
+			respawn_pen_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -263,7 +272,8 @@ namespace debug_console_acceptance
 		// LF content. A subsequent external edit to another field must survive.
 		for (const std::size_t index : { std::size_t(5), std::size_t(7), std::size_t(8), std::size_t(9), std::size_t(10),
 			std::size_t(11), std::size_t(12), combat_highlight_colour_index, combat_keyline_colour_index,
-			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index })
+			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
+			respawn_pen_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -290,7 +300,8 @@ namespace debug_console_acceptance
 				index == 11 ? "607080" : index == 12 ? "708090" :
 				index == combat_highlight_colour_index ? "8192A3" : index == combat_keyline_colour_index ? "92A3B4" :
 				index == blocked_highlight_colour_index ? "A3B4C5" :
-				index == blocked_keyline_colour_index ? "B4C5D6" : "C5D6E7";
+				index == blocked_keyline_colour_index ? "B4C5D6" :
+				index == idle_drip_keyline_colour_index ? "C5D6E7" : "D6E7F8";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -315,7 +326,8 @@ namespace debug_console_acceptance
 		}
 		for (const std::size_t index : { std::size_t(9), std::size_t(10), std::size_t(11), std::size_t(12),
 			combat_highlight_colour_index, combat_keyline_colour_index,
-			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index })
+			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
+			respawn_pen_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -324,7 +336,8 @@ namespace debug_console_acceptance
 				index == 12 ? L"feedback-keyline-crlf" : index == combat_highlight_colour_index ?
 				L"combat-highlight-crlf" : index == combat_keyline_colour_index ? L"combat-keyline-crlf" :
 				index == blocked_highlight_colour_index ? L"blocked-highlight-crlf" :
-				index == blocked_keyline_colour_index ? L"blocked-keyline-crlf" : L"idle-drip-keyline-crlf";
+				index == blocked_keyline_colour_index ? L"blocked-keyline-crlf" :
+				index == idle_drip_keyline_colour_index ? L"idle-drip-keyline-crlf" : L"respawn-pen-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -362,7 +375,8 @@ namespace debug_console_acceptance
 				index == 11 ? "8192A3" : index == 12 ? "92A3B4" :
 				index == combat_highlight_colour_index ? "A3B4C5" : index == combat_keyline_colour_index ? "B4C5D6" :
 				index == blocked_highlight_colour_index ? "C5D6E7" :
-				index == blocked_keyline_colour_index ? "D6E7F8" : "E7F809";
+				index == blocked_keyline_colour_index ? "D6E7F8" :
+				index == idle_drip_keyline_colour_index ? "E7F809" : "F8091A";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -916,6 +930,175 @@ namespace debug_console_acceptance
 			"Idle-drip colour edits, resets and valid/refused saves consume no gameplay random draw");
 	}
 
+	void check_respawn_pen_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"respawn-pen-colour");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		CpuWorld world(game_directory, tuning, presentation);
+		TestDirector test(tuning, presentation);
+		test.data.set_stages(&world.stages);
+		test.data.set_level_infos(&world.levels);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const RespawnRedrawPresentation* const look = &presentation.respawn_redraw();
+		const RespawnRedrawPresentation original = *look;
+		RespawnRedraw pen(look, &world.render);
+		const float middle = (look->draw_from + look->fill_at) * 0.5f;
+		const std::array<float, 6> progress{ std::nextafter(look->draw_from, -1.0f),
+			look->draw_from, middle, std::nextafter(look->fill_at, -1.0f),
+			look->fill_at, std::nextafter(look->fill_at, 2.0f) };
+		const auto queries = [&]
+		{
+			std::vector<bool> values;
+			for (const float at : progress)
+				{ values.push_back(pen.filled(at)); values.push_back(pen.drawing(at)); }
+			return values;
+		};
+		const std::vector<bool> held_queries{ false, false, false, true, false, true,
+			false, true, true, false, true, false };
+		require(queries() == held_queries && pen.camera_hold() == original.camera_hold,
+			"The preconstructed respawn pen pins drawing/fill queries immediately around both authored boundaries");
+		// Reuse the existing real CPU Level fixture: prepare an actual dead
+		// player once, then never tick it during colour commands or saves.
+		MatchRequest roster;
+		roster.stage = "close_quarters";
+		roster.players = 2;
+		const MatchPlan plan = MatchPlanner(&world.stages).resolve(nullptr, roster,
+			MatchPlanner::ConnectedPads{}, [] { return 0u; });
+		require(plan.ok, "The respawn pen's real CPU roster resolves");
+		CpuMatch match(world, test.director);
+		match.settings = plan.settings;
+		match.settings.set_duration(60.0f);
+		test.director.attach_match(match);
+		match.build();
+		const std::vector<PlayerInputData> idle(input_slots::count);
+		const float dt = 1.0f / 60.0f;
+		int preparation_updates = 0;
+		while (preparation_updates < 1200 && match.level->state() != LevelState::active)
+		{
+			match.level->update(idle, dt);
+			++preparation_updates;
+		}
+		require(match.level->state() == LevelState::active && match.level->kill_player(0),
+			"Respawn pen fixture enters active play and requests an actual elimination");
+		const Player& player = match.level->player(0);
+		while (preparation_updates < 2400 &&
+			(player.state() != PlayerState::dead || player.respawn_progress() < middle))
+		{
+			match.level->update(idle, dt);
+			++preparation_updates;
+		}
+		require(player.state() == PlayerState::dead && player.respawn_timer() > 0.0f &&
+			player.respawn_progress() >= middle && player.respawn_progress() < look->fill_at &&
+			player.animation_state() != PlayerAnimationState::elimination && pen.drawing(player.respawn_progress()),
+			"Respawn pen fixture freezes a real dead player in the outline phase after elimination");
+		const auto player_state = [&]
+		{
+			std::vector<float> values{ player.health(), player.weapon_ammo(), player.respawn_timer(),
+				player.respawn_progress(), player.velocity().x, player.velocity().y,
+				static_cast<float>(player.state()), static_cast<float>(player.move_state()),
+				static_cast<float>(player.animation_state()), player.action_age(),
+				static_cast<float>(player.action_frame()), player.facing_right() ? 1.0f : 0.0f,
+				player.drawn_whole() ? 1.0f : 0.0f, player.camera_focus().x, player.camera_focus().y };
+			for (const auto& rectangle : { player.rectangle(), player.spawn_rectangle(),
+				player.posed_rectangle(), player.bounds(), player.cull_bounds(1.0f) })
+			{
+				values.insert(values.end(), { rectangle.x, rectangle.y, rectangle.width, rectangle.height });
+			}
+			return values;
+		};
+		const auto held_player = player_state();
+		const auto held_camera = player.camera();
+		const MatchFingerprint held_match = MatchFingerprint::of(*match.level, preparation_updates);
+		const auto unchanged = [&](const labrador::Colour& colour)
+		{
+			require(&presentation.respawn_redraw() == look && look->pen_colour == colour &&
+				look->sprite_sheet == original.sprite_sheet && look->pen_frame == original.pen_frame &&
+				look->canvas_size == original.canvas_size && look->pen_width == original.pen_width &&
+				look->draw_from == original.draw_from && look->fill_at == original.fill_at &&
+				look->camera_hold == original.camera_hold && look->strokes.size() == original.strokes.size() &&
+				queries() == held_queries && pen.camera_hold() == original.camera_hold,
+				"Respawn pen colour adoption retains the stable borrowed record, captured assets, geometry and boundary queries");
+			for (std::size_t index = 0; index < original.strokes.size(); ++index)
+			{
+				require(look->strokes[index].part == original.strokes[index].part &&
+					look->strokes[index].points == original.strokes[index].points,
+					"Respawn pen colour adoption preserves every ordered stroke part and point value");
+			}
+			require(player_state() == held_player && player.camera() == held_camera && match.builds == 1 &&
+				!impl.can_apply() && MatchFingerprint::difference(held_match,
+					MatchFingerprint::of(*match.level, preparation_updates)).empty(),
+				"Respawn pen commands preserve the frozen real player's timers, state, camera, figure/cull bounds and match fingerprint without queueing a rebuild");
+		};
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const auto initial_colours = colour_values(presentation);
+		std::srand(0x2e7a21);
+		const int expected_random = std::rand();
+		std::srand(0x2e7a21);
+		for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 4>{ {
+			{ "RED", { 255, 0, 0 } }, { "3165A7", { 49, 101, 167 } },
+			{ "2060C080", { 32, 96, 192, 128 } }, { "A532D600", { 165, 50, 214, 0 } } } })
+		{
+			auto expected = initial_colours;
+			expected[respawn_pen_colour_index] = colour;
+			require(impl.execute(std::string("tune presentation.respawn_redraw.pen_colour ") + word).ok &&
+				colour_values(presentation) == expected && read_text(scratch.source / L"presentation.json") == baseline &&
+				read_text(scratch.staged / L"presentation.json") == baseline,
+				"A retained respawn pen accepts straight named/RGB/partial/nonblack-zero-alpha channels without writing content");
+			unchanged(colour);
+		}
+		const TuneDocument* const pending = impl.tune_document("presentation");
+		require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok &&
+			impl.execute("tune.reset presentation.respawn_redraw.pen_colour").ok && pending->edits().size() == 1 &&
+			pending->edits().contains("debug_overlay.colour") && presentation.debug_overlay().colour == labrador::Colour(120, 154, 188),
+			"Resetting respawn pen colour retains an unrelated live colour edit");
+		unchanged(original.pen_colour);
+		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && pending->edits().empty() &&
+			pending->current().text() == baseline && colour_values(presentation) == initial_colours,
+			"Independent reset restores the exact original pen document while its actual dead player remains frozen");
+		const JsonSpanDocument baseline_document(baseline, "respawn-pen-colour-save-reference");
+		const std::string saved = baseline_document.replaced(*baseline_document.find("respawn_redraw.pen_colour"), "\"2060C080\"");
+		require(impl.execute("tune presentation.respawn_redraw.pen_colour 2060C080").ok &&
+			impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
+			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
+			pending->baseline().text() == saved && pending->current().text() == saved,
+			"Respawn pen save changes only its one authored token and rebases the retained consumer");
+		unchanged(labrador::Colour(32, 96, 192, 128));
+		require(impl.execute("tune presentation.respawn_redraw.pen_colour A532D600").ok,
+			"A nonblack zero-alpha pen edit is pending before complete merged candidate refusal");
+		const JsonSpanDocument saved_document(saved, "respawn-pen-colour-merged-reference");
+		const JsonLeaf* draw_from = saved_document.find("respawn_redraw.draw_from");
+		const JsonLeaf* fill_at = saved_document.find("respawn_redraw.fill_at");
+		require(draw_from != nullptr && fill_at != nullptr && original.draw_from < original.fill_at,
+			"The pen merged candidate has the actual unrelated draw/fill ordering constraint");
+		const std::string external = saved_document.replaced(*draw_from, saved_document.token(*fill_at));
+		write_text(scratch.source / L"presentation.json", external);
+		const std::string pending_text = pending->current().text();
+		const auto pending_colours = colour_values(presentation);
+		for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+		{
+			require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == external &&
+				read_text(scratch.staged / L"presentation.json") == saved && pending->current().text() == pending_text &&
+				pending->baseline().text() == saved && pending->edits().size() == 1 &&
+				pending->edits().contains("respawn_redraw.pen_colour") && colour_values(presentation) == pending_colours,
+				"draw_from equal to fill_at rejects the complete merged pen save and retains disk/staging/live/ledger even with force");
+			unchanged(labrador::Colour(165, 50, 214, 0));
+		}
+		require(impl.execute("tune.reset presentation.respawn_redraw.pen_colour").ok && pending->edits().empty() &&
+			pending->current().text() == saved && pending->baseline().text() == saved &&
+			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			"After refused saves the pen resets to its saved baseline without overwriting external source or leaving recovery files");
+		unchanged(labrador::Colour(32, 96, 192, 128));
+		write_text(scratch.source / L"presentation.json", saved);
+		require(std::rand() == expected_random,
+			"Respawn pen commands, resets and valid/refused saves consume no gameplay random draw");
+		test.director.detach_match(match);
+	}
+
 	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
 	{
 		const std::string spread_path = "tuning.projectiles.mist.spread_step";
@@ -1222,6 +1405,7 @@ namespace debug_console_acceptance
 		check_combat_colour_tunes(game_directory);
 		check_blocked_colour_tunes(game_directory);
 		check_idle_drip_colour_tunes(game_directory);
+		check_respawn_pen_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.

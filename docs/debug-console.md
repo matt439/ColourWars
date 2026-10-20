@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These twenty existing string fields are supported; numeric path
+**Colours.** These twenty-one existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -408,6 +408,7 @@ show the quoted JSON token.
 | `presentation.blocked_shot.highlight` | live | Stop ticks of existing blocked-shot cues, on the next draw. |
 | `presentation.blocked_shot.keyline` | live | Outlines of existing blocked-shot stop ticks and rebound beads, on the next draw. |
 | `presentation.idle_drip.keyline` | live | Outlines of existing attached beads and falling drops for Sprayer, Sniper and Bucket, on the next draw. |
+| `presentation.respawn_redraw.pen_colour` | live | Existing partial respawn outlines, on the next draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -458,6 +459,14 @@ captured opaque team-paint interiors and captured sheet/frame bindings.
 Only the keyline is premultiplied; these drips have no event fade. Nonblack
 zero alpha removes the outline while retaining the paint interior. The common
 enabled flag and live Reduce effects preference still suppress drawing.
+
+Respawn pen colour is borrowed on every partial-path rectangle submission.
+The base RGBA is premultiplied once; progress controls ordered path length,
+with no event fade. Existing segment order and repeated blending at overlaps
+are preserved, and the opaque BLACK default is unchanged. Editing the colour
+does not advance the player's respawn timer or change strokes, geometry,
+thresholds or captured sheet/frame bindings. Whole dead-story poses and filled
+figures bypass the pen; Reduce effects leaves this essential outline visible.
 
 Step/skid effects that captured a contacted surface's paint colour retain that
 tint; changing the fallback does not recolour those stored flecks. Their
@@ -1221,7 +1230,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the twenty listed colour fields above are
+  and inserting keys in `tune.save`: the twenty-one listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1230,12 +1239,12 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Twenty existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Twenty-one existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
-the blocked-shot highlight/keyline pair and the common idle-drip keyline.
-Validation of the twentieth path is pending below.
+the blocked-shot highlight/keyline pair, the common idle-drip keyline and the
+respawn pen colour.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1260,6 +1269,51 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Respawn pen colour increment (2026-10-20), **verified**:
+the twenty-first exact path, `presentation.respawn_redraw.pen_colour`, is live
+for existing partial outlines. Its one-site base-alpha conversion preserves
+the opaque BLACK default, captured resources and ordered stroke overlaps.
+Progress changes path length rather than opacity; no event fade is introduced.
+
+Both game/editor builds and the focused `debug_console`, `movement` and
+`story_audio` CPU cases pass in both presets. Movement still measures the P3
+95-unit tap and 207.375-unit held rise. Shared strict-token/reset/LF+CRLF
+save/rebase/conflict/force checks include this field. A real dead Player is
+prepared once through bounded Level updates, then timers/state/camera,
+figure/cull bounds, match fingerprint, all stroke values and boundary queries
+stay frozen across thirteen commands. Ordinary and forced merged saves reject
+external `draw_from == fill_at`, preserving source/staged/live/text/baseline/
+ledger state; reset still returns to the saved baseline.
+
+`scripts/check-painter.ps1 -Preset <preset> -SkipBuild -RespawnPenTuneColoursOnly`
+passes on its first execution in both presets. Shared evidence uses 62
+readbacks, eighteen CSV rows, eight 440x160 crops and three local Player
+preparations. Four retained direct outlines cover both facings and two partial
+path lengths alongside an actual frozen dead Player. An independent ordered
+Manhattan-prefix/raw-nib reference, explicit overlap channel samples, opaque
+parity and straight/squared-base-alpha controls pass. Nonblack zero alpha and
+below/at-start boundaries are blank. Actual whole/filled figures remain
+nonblank and colour-independent; Reduce Effects retains the same essential
+outline. Snapshot and repeat-raster checks preserve the Player, geometry,
+ordered strokes and global RNG between the counted preparations.
+
+Debug adds nine actual tune/reset/save commands, 54 readbacks, eighteen rows
+and two local Player preparations: totals of 116 readbacks, 36 rows, eight
+crops and five preparations. Exact one-token private save/rebase, reset to
+saved, unchanged actual content and preferences, and no queued match work pass.
+Its two successful private seed Saves cover PlaySettings and Jump J; default
+display settings remain unchanged. Release runs the consumer proof alone.
+Neither native scope advances a Level, StateContext or input frame.
+
+All 21 shared artifacts, including eight PPM crops, match byte for byte between
+presets. The contact sheet was visually inspected; twelve frozen source hashes
+still match. Evidence is under
+`out/validation/crossfeed-20261020/respawn-pen-colour-v1/`, including
+`build-consumer-result.json`, `native/reconciliation.json` and
+`final-source-reconciliation.json`. No physical/global input, active-match
+route, human readability, listening or performance acceptance is claimed.
+`DBG#1` remains open beyond twenty-one audited fields.
 
 Idle-drip keyline increment (2026-10-20), **verified**:
 the twentieth exact path, `presentation.idle_drip.keyline`, is live for existing

@@ -264,6 +264,47 @@ namespace debug_console_acceptance
 					"Force cannot insert an idle-drip keyline, replace null/a container, or expose literal/per-tool aliases");
 			}
 		}
+		{
+			const std::string path = "respawn_redraw.pen_colour";
+			const std::string pen_baseline = "{\r\n  \"respawn_redraw\":{\"pen_colour\":\"\\u0042LACK\","
+				"\"sprite_sheet\":\"unchanged\",\"pen_frame\":\"solid\"},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			TuneDocument pen_document("presentation", pen_baseline);
+			const JsonLeaf* leaf = pen_document.find(path);
+			require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
+				pen_document.find("respawn_redraw.sprite_sheet") == nullptr &&
+				pen_document.find("respawn_redraw.pen_frame") == nullptr,
+				"Only the respawn pen colour is eligible while its captured texture strings remain outside the tree");
+			pen_document.commit(pen_document.edited(*leaf, "\"11223344\""), path);
+			require(pen_document.reverted(path) == pen_baseline,
+				"A respawn pen reset restores its escaped token and every original CRLF byte");
+			const JsonSpanDocument pen_reference(pen_baseline, "respawn-pen-colour-reference");
+			const std::string pen_external_number = pen_reference.replaced(*pen_reference.find("number"), "25");
+			const JsonSpanDocument pen_external_document(pen_external_number, "respawn-pen-colour-reference");
+			const TuneSplice pen_splice = pen_document.splice(pen_external_number, false);
+			require(pen_splice.conflicts.empty() && pen_splice.written == 1 && pen_splice.text ==
+				pen_external_document.replaced(*pen_external_document.find(path), "\"11223344\"") &&
+				count_of(pen_splice.text, "\r\n") == count_of(pen_baseline, "\r\n"),
+				"A respawn pen splice preserves unrelated fields, escape bytes, an external number and every CRLF");
+			const std::string pen_pending = pen_document.current().text();
+			bool wrong_type = false;
+			try { pen_document.commit(pen_document.edited(*pen_document.find(path), "false"), path); }
+			catch (const std::invalid_argument&) { wrong_type = true; }
+			require(wrong_type && pen_document.current().text() == pen_pending && pen_document.edits().size() == 1,
+				"A wrong-type respawn pen commit preserves the pending colour edit");
+			for (const std::string& invalid : { std::string("{}"),
+				pen_reference.replaced(*pen_reference.find(path), "null"),
+				pen_reference.replaced(*pen_reference.find(path), "{\"value\":\"RED\"}"),
+				std::string("{\"respawn_redraw.pen_colour\":\"RED\"}"),
+				std::string("{\"respawn_redraw\":{\"pen_colour.r\":\"RED\"}}") })
+			{
+				const TuneDocument unsupported("presentation", invalid);
+				const TuneSplice refused = pen_document.splice(invalid, true);
+				require(unsupported.find(path) == nullptr &&
+					refused.written == 0 && refused.conflicts.size() == 1 && refused.text == invalid,
+					"Force cannot insert a respawn pen colour, replace null/a container, or expose literal aliases");
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -443,10 +484,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited twenty colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited twenty-one colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly twenty authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly twenty-one authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -484,7 +525,11 @@ namespace debug_console_acceptance
 			"presentation.idle_drip.fill_frame", "presentation.idle_drip.keyline.r",
 			"presentation.idle_drip.keyline_extra", "presentation.idle_drip.tools.sprayer.keyline",
 			"presentation.idle_drip.tools.sniper.keyline", "presentation.idle_drip.tools.bucket.keyline",
-			"presentation.idle_drip.grow_time", "presentation.idle_drip.enabled" })
+			"presentation.idle_drip.grow_time", "presentation.idle_drip.enabled",
+			"respawn_redraw.pen_colour", "tuning.respawn_redraw.pen_colour",
+			"presentation.respawn_redraw.sprite_sheet", "presentation.respawn_redraw.pen_frame",
+			"presentation.respawn_redraw.pen_colour.r", "presentation.respawn_redraw.pen_colour_extra",
+			"presentation.respawn_redraw.strokes[0].part", "presentation.respawn_redraw.pen_width" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -519,6 +564,7 @@ namespace debug_console_acceptance
 			{ "presentation.blocked_shot.duration", TuneScope::next_screen },
 			{ "presentation.idle_drip.keyline", TuneScope::live },
 			{ "presentation.idle_drip.grow_time", TuneScope::next_screen },
+			{ "presentation.respawn_redraw.pen_colour", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -629,7 +675,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All twenty colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All twenty-one colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

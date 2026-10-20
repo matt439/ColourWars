@@ -60,6 +60,9 @@ namespace
 		// IdleDrip reads the common keyline through its borrowed tool record on
 		// every attached/falling draw; captured paint and sheet/fill stay intact.
 		{ "presentation.idle_drip.keyline", TuneScope::live },
+		// RespawnRedraw reads the borrowed pen tint on each partial-path draw;
+		// player progress, ordered strokes and captured sheet/frame stay intact.
+		{ "presentation.respawn_redraw.pen_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a
