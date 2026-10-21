@@ -90,6 +90,16 @@ check and preparation of the minimal report/reproducer for each surviving gap;
 filing uses the approved scope and established route above. This supporting
 work does not change TODO's level-first priority.
 
+**Provenance re-checked 2026-10-21:** a [fresh live-master read](../../out/validation/crossfeed-20261020/engine-reports-refresh-20261021/live-master-check.json)
+at 02:33:22 UTC still reported upstream `52e809a5a0229d37db4373faa7853df4c861a310`.
+The [source recheck](../../out/validation/crossfeed-20261020/engine-reports-refresh-20261021/source-reconciliation-v1/freeze-v1.json)
+matches all fourteen already-tested exhibit sources and 55 retained engine-file
+pins; two known build-recipe edits change comments only. No builds or exhibits
+were rerun, and no new runtime failure is recorded; the 2026-10-20 execution
+records remain historical. All fourteen drafts remain unfiled under the approved
+minimal-report scope and established issue route above. No public filing or
+engine pin change occurred.
+
 Before authorized filing, refresh engine master from upstream and recheck the
 concrete client exhibit against that revision. Record the checked commit with
 the report. A cached `origin/master` ref or local branch is not evidence of
