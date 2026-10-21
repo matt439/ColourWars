@@ -50,7 +50,7 @@ public:
         if (look_ == nullptr || !look_->quiet.enabled) { return; }
         for (const auto& eye : look_->quiet.eyes)
         {
-            // Leave a short black lid at the middle of the authored eye.
+            // Leave a short ink lid at the middle of the authored eye.
             // The eye paint-out follows the same posed canvas as the face.
             auto local = eye;
             if (!facing_right) { local.x = look_->canvas_size.x - local.right(); }
@@ -61,7 +61,7 @@ public:
             this->fill(list, target, look_->quiet.face_colour);
             const float lid = look_->quiet.eyelid_height * scale.y;
             this->fill(list, mattmath::RectangleF(target.x,
-                target.y + (target.height - lid) / 2.0f, target.width, lid), look_->arm_colour);
+                target.y + (target.height - lid) / 2.0f, target.width, lid), premultiplied(look_->arm_colour));
         }
     }
 
@@ -75,8 +75,8 @@ public:
         for (size_t arm = 0; arm < hands.size(); ++arm)
         {
             const auto elbow = this->elbow(shoulders[arm], hands[arm], figure);
-            this->line(list, shoulders[arm], elbow, width, look_->arm_colour);
-            this->line(list, elbow, hands[arm], width, look_->arm_colour);
+            this->line(list, shoulders[arm], elbow, width, premultiplied(look_->arm_colour));
+            this->line(list, elbow, hands[arm], width, premultiplied(look_->arm_colour));
         }
     }
 
@@ -92,9 +92,9 @@ public:
         for (const auto& hand : this->hands(weapon))
         {
             this->fill(list, mattmath::RectangleF(hand - mattmath::Vector2F(size / 2.0f),
-                mattmath::Vector2F(size)), look_->arm_colour);
+                mattmath::Vector2F(size)), premultiplied(look_->arm_colour));
             this->fill(list, mattmath::RectangleF(hand - mattmath::Vector2F(size / 2.0f - edge),
-                mattmath::Vector2F(size - edge * 2.0f)), look_->hand_colour);
+                mattmath::Vector2F(size - edge * 2.0f)), premultiplied(look_->hand_colour));
         }
     }
 

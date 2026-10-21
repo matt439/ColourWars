@@ -112,6 +112,10 @@ namespace
 		// Existing Monitors read the borrowed thin crack tint per segment;
 		// captured paths, broad ink order, geometry and resources remain fixed.
 		{ "presentation.opening.crack", TuneScope::live },
+		// FigureAttachments reads these borrowed tints for live arms, lids and
+		// hands; captured rest/sleeve layers, geometry and resources stay fixed.
+		{ "presentation.figure.arm_colour", TuneScope::live },
+		{ "presentation.figure.hand_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

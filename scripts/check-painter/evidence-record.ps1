@@ -214,6 +214,19 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($LimbTuneColoursOnly) {
+    $result.scope = 'limb-tune-colours-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-arm000000-handFFFFFF','arm35BCE1-handE17C35','arm2060C080-handC0406080','armA532D600-handD65A3200'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained direct FigureAttachments with ten actual builder tools/facings, two active and two disabled blink panels, four separate captured rest/sleeve guards. Ten zero-delta preparation Weapon calls per entrypoint; no observation Weapon update, Player/Level/Scene/State/input/time update or input poll.'
+    $result.audio = 'No audio/listening acceptance; isolated private preference seed Saves only.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('two-live-figure-limb-colours','ten-tool-facing-panels','two-active-and-two-disabled-blink-panels','four-captured-art-guards','12-independent-procedural-ROIs','396-ordered-literal-rectangles','21142-raw-RGBA-pixels-per-case','six-role-specific-controls252witnesses','observed-control-counts-not-precision-oracle','four-native1280x480-fixture-crops','post-contact-fullRGB-PNG-parity')
+    $result.checks = 'Shared22readbacks/4rows/4native1280x480 crops. Independent proof covers only12 procedural ROIs/21142RGBA per case using engine-only frozen rectangles; copied full-fixture equality proves adoption only. Six controls require 248 discriminating witness differences and 4 mandatory exact opaque-WHITE RGBA equalities at saturated eyelid sites (actual/correct/wrong), preserving exact full-frame exterior outside frozen supports. Diagnostic changed counts remain observed. Every read renders/checks32 WHITE/BLACK RGBA calibration pixels with no mask exemption or extra read. Record/resource/tool/input/RNG guards and all nine zero observation/update/poll fields remain exact, separately from10 zero-dt preparation Weapon calls per entrypoint. Four lossless PNGs complete after contact creation with strict IHDR/native dimensions/fullRGB-to-PPM/opaquealpha and flat Depth5-safe metadata.'
+    if ($Preset -eq 'x64-debug') { $result.actions += @('9commands9states','one-two-token-private-save-rebase','named-RED-token','saved-arm-reset-retains-hand-pending','two-private-preference-seed-Saves'); $result.checks += ' Debug58reads/13rows/4crops,20 combined preparatory Weapon calls,1856 calibration comparisons; exact two-token Save and sibling-preserving saved resets are native-owned.' }
+    else { $result.actions += @('22reads4rows4crops','no-Debug-or-private-Save-artifacts') }
+    $result.checks += ' No independent full character/body/weapon/sleeve art, actual Player/Level integration, natural blink scheduling, human art/readability/contrast, hardware/listening, balance, GPU precision or performance acceptance; aggregate save refusal is CPU-owned.'
+}
 elseif ($CrackTuneColourOnly) {
     $result.scope = 'crack-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

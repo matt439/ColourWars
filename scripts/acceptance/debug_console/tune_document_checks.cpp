@@ -958,6 +958,41 @@ namespace debug_console_acceptance
 				}
 			}
 		}
+		{
+			// Reuse44-path generic LF/CRLF saves, conflicts, force and reader
+			// consumption; this block covers only the pair's escaped/type/alias gap.
+			const std::string limb_baseline = "{\r\n\"figure\":{\"arm_colour\":\"\\u0042LACK\",\"hand_colour\":\"\\u0057HITE\","
+				"\"sprite_sheet\":\"captured\",\"rest_arms_frame\":\"rest\",\"sleeves_frame\":\"sleeves\",\"quiet\":{\"face_colour\":\"WHITE\"}},\r\n\"number\":1\r\n}\r\n";
+			for (const char* limb_field : { "arm_colour", "hand_colour" })
+			{
+				const std::string limb_path = std::string("figure.") + limb_field;
+				const std::string limb_sibling = std::string("figure.") + (std::string(limb_field) == "arm_colour" ? "hand_colour" : "arm_colour");
+				const JsonSpanDocument limb_reference(limb_baseline, "limb-document-reference");
+				TuneDocument limb_document("presentation", limb_baseline);
+				const auto* limb_leaf = limb_document.find(limb_path);
+				require(limb_leaf != nullptr && limb_leaf->kind == JsonLeaf::Kind::string && limb_document.find(limb_sibling) != nullptr &&
+					limb_document.find("figure.sprite_sheet") == nullptr && limb_document.find("figure.rest_arms_frame") == nullptr &&
+					limb_document.find("figure.sleeves_frame") == nullptr && limb_document.find("figure.quiet.face_colour") == nullptr,
+					"Only the exact limb pair is string-editable; captured names and quiet face keep their existing policy");
+				limb_document.commit(limb_document.edited(*limb_leaf, "\"2060C080\""), limb_path);
+				const auto limb_edit = limb_document.edits().at(limb_path);const auto limb_pending = limb_document.current().text();
+				bool limb_bad_type = false;
+				try { limb_document.commit(limb_document.edited(*limb_document.find(limb_path), "false"), limb_path); }
+				catch (const std::invalid_argument&) { limb_bad_type = true; }
+				require(limb_bad_type && limb_document.current().text() == limb_pending && limb_document.baseline().text() == limb_baseline &&
+					limb_document.edits().size() == 1 && limb_document.edits().at(limb_path).baseline_token == limb_edit.baseline_token &&
+					limb_document.edits().at(limb_path).current_token == limb_edit.current_token && limb_document.reverted(limb_path) == limb_baseline,
+					"Each wrong-type limb commit preserves current/baseline, both ledger tokens, its sibling and escaped CRLF reset bytes");
+				for (const std::string& limb_missing : { std::string("{}"), limb_reference.replaced(*limb_reference.find(limb_path), "null"),
+					limb_reference.replaced(*limb_reference.find(limb_path), "{\"value\":\"RED\"}"),
+					std::string("{\"") + limb_path + "\":\"RED\"}", std::string("{\"figure\":{\"") + limb_field + ".r\":\"RED\"}}" })
+				{
+					const TuneDocument limb_unsupported("presentation", limb_missing);const TuneSplice limb_refused = limb_document.splice(limb_missing, true);
+					require(limb_unsupported.find(limb_path) == nullptr && limb_refused.written == 0 && limb_refused.conflicts.size() == 1 && limb_refused.text == limb_missing,
+						"Even force cannot insert a limb key, replace null/container or expose literal/channel aliases");
+				}
+			}
+		}
 		const std::string identity_baseline = "{\r\n  \"player_identity\":{\"ink_colour\":\"\\u0042LACK\","
 			"\"background_colour\":\"\\u0057HITE\"},\r\n  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 		const JsonSpanDocument identity_reference(identity_baseline, "identity-colour-reference");
@@ -1137,10 +1172,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited forty-two colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited forty-four colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly forty-two authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly forty-four authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -1214,6 +1249,10 @@ namespace debug_console_acceptance
 			"presentation.opening.silhouette.r", "opening.scribble", "tuning.opening.scribble",
 			"presentation.opening.scribble.r", "presentation.opening.scribble_extra",
 			"opening.crack", "tuning.opening.crack", "presentation.opening.crack.r", "presentation.opening.crack_extra",
+            "figure.arm_colour", "tuning.figure.arm_colour", "presentation.figure.arm_colour.r", "presentation.figure.arm_colour_extra",
+            "figure.hand_colour", "tuning.figure.hand_colour", "presentation.figure.hand_colour.r", "presentation.figure.hand_colour_extra",
+            "presentation.figure.sprite_sheet", "presentation.figure.rest_arms_frame", "presentation.figure.rest_arms_paint_frame",
+            "presentation.figure.sleeves_frame", "presentation.figure.sleeves_paint_frame", "presentation.figure.quiet.face_colour",
 			"presentation.opening.sticky_notes[0]", "presentation.opening.stickers[0]",
 			"hud.health_colour", "tuning.hud.health_colour", "presentation.hud.health_colour.r",
 			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
@@ -1384,7 +1423,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All forty-two colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All forty-four colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

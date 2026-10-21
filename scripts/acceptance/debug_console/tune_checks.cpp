@@ -12,6 +12,7 @@
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/combat_feedback.h"
 #include "game/objects/figure_acting.h"
+#include "game/objects/figure_attachments.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/interface_gameplay.h"
 #include "game/objects/monitor.h"
@@ -75,10 +76,10 @@ namespace debug_console_acceptance
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 42> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 44> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
 			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680",
-			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980", "0161C180", "4B8CD180" };
+			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980", "0161C180", "4B8CD180", "5167B980", "C6A25D40" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
@@ -87,7 +88,7 @@ namespace debug_console_acceptance
 			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 },
 			{ 94, 145, 199, 128 }, { 184, 106, 77, 64 }, { 115, 194, 165, 0 },
 			{ 212, 124, 42, 128 }, { 97, 178, 212, 64 }, { 156, 53, 231, 0 }, { 59, 151, 193, 128 }, { 166, 94, 41, 64 },
-			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 }, { 1, 97, 193, 128 }, { 75, 140, 209, 128 } };
+			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 }, { 1, 97, 193, 128 }, { 75, 140, 209, 128 }, { 81, 103, 185, 128 }, { 198, 162, 93, 64 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -115,7 +116,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -174,7 +175,7 @@ namespace debug_console_acceptance
 			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
 			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
 			colour_paths[silhouette_shade_colour_index], colour_paths[reveal_ink_colour_index],
-			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index] })
+			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index], colour_paths[limb_arm_colour_index], colour_paths[limb_hand_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -232,6 +233,10 @@ namespace debug_console_acceptance
 			"presentation.opening.silhouette.r", "opening.scribble", "tuning.opening.scribble",
 			"presentation.opening.scribble.r", "presentation.opening.scribble_extra",
 			"opening.crack", "tuning.opening.crack", "presentation.opening.crack.r", "presentation.opening.crack_extra",
+            "figure.arm_colour", "tuning.figure.arm_colour", "presentation.figure.arm_colour.r", "presentation.figure.arm_colour_extra",
+            "figure.hand_colour", "tuning.figure.hand_colour", "presentation.figure.hand_colour.r", "presentation.figure.hand_colour_extra",
+            "presentation.figure.sprite_sheet", "presentation.figure.rest_arms_frame", "presentation.figure.rest_arms_paint_frame",
+            "presentation.figure.sleeves_frame", "presentation.figure.sleeves_paint_frame", "presentation.figure.quiet.face_colour",
 			"presentation.opening.sticky_notes[0]", "presentation.opening.stickers[0]",
 			"hud.health_colour", "tuning.hud.health_colour", "presentation.hud.health_colour.r",
 			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
@@ -272,7 +277,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -334,7 +339,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -366,7 +371,7 @@ namespace debug_console_acceptance
 				index == cursor_ink_colour_index ? "E7F809" : index == cursor_fill_colour_index ? "F8091A" :
 				index == silhouette_ink_colour_index ? "0A1B2C" :
 				index == silhouette_rim_colour_index ? "1B2C3D" : index == silhouette_shade_colour_index ? "2C3D4E" :
-				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : index == hud_health_colour_index ? "0A1B2C" : index == hud_track_colour_index ? "1B2C3D" : "2C3D4E";
+				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : index == hud_health_colour_index ? "0A1B2C" : index == hud_track_colour_index ? "1B2C3D" : index == limb_arm_colour_index ? "3D4E5F" : index == limb_hand_colour_index ? "4E5F60" : "2C3D4E";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -394,7 +399,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -3497,6 +3502,185 @@ namespace debug_console_acceptance
 			"Crack commands/refused saves retain RNG and leave no recovery files");
 	}
 
+	void check_limb_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		// Generic named/RGB/RGBA/strict words, exact LF/CRLF saves/conflicts,
+		// force and actual reader consumption already cover all44 paths.
+		ScratchContent scratch(game_directory, L"limb-colour-records");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);auto& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const FigurePresentation* const look = &presentation.figure();
+		const FigurePresentation original = *look;
+		const auto* const quiet = &look->quiet;
+		const MovementFeedbackPresentation* const fill = &presentation.movement_feedback();
+		const std::string fill_sheet_name = fill->sprite_sheet, fill_frame_name = fill->fill_frame;
+		labrador::RenderResources resources;
+		for (const auto& sheet_name : { fill_sheet_name, original.sprite_sheet })
+			{ resources.add_sprite_sheet(sheet_name, labrador::read_sprite_sheet((game_directory / L"textures" / (sheet_name + ".json")).string().c_str(), labrador::TextureHandle{})); }
+		const FigureAttachments attachments(fill, look, &resources);
+		const auto* const fill_sheet = resources.sprite_sheet(fill_sheet_name);
+		const auto* const art_sheet = resources.sprite_sheet(original.sprite_sheet);
+		const auto fill_handle = fill_sheet->resolve_sprite_frame(fill_frame_name);
+		const auto fill_source = fill_sheet->sprite_frame(fill_handle).source_rectangle();
+		const auto fill_origin = fill_sheet->sprite_frame(fill_handle).origin();
+		const std::array<std::string, 4> art_names{ original.rest_arms_frame, original.rest_arms_paint_frame,
+			original.sleeves_frame, original.sleeves_paint_frame };
+		const auto art_handles = [&]
+		{
+			std::vector<labrador::SpriteSheet::frame_handle> result;
+			for (const auto& frame_name : art_names) { result.push_back(art_sheet->resolve_sprite_frame(frame_name)); }
+			return result;
+		};
+		const auto art_metadata = [&]
+		{
+			std::vector<float> result;
+			for (const auto& handle : art_handles())
+			{
+				const auto& frame = art_sheet->sprite_frame(handle);const auto& box = frame.source_rectangle();const auto& origin = frame.origin();
+				result.insert(result.end(), { static_cast<float>(box.x), static_cast<float>(box.y), static_cast<float>(box.width), static_cast<float>(box.height), origin.x, origin.y });
+			}
+			return result;
+		};
+		const auto geometry = [&]
+		{
+			std::vector<float> result{ look->canvas_size.x, look->canvas_size.y, look->body_inset,
+				look->rear_shoulder.x, look->rear_shoulder.y, look->front_shoulder.x, look->front_shoulder.y,
+				look->arm_width, look->elbow_drop, look->hand_size, look->hand_edge,
+				quiet->settle_time, quiet->breath_period, quiet->breath_height, quiet->shift_period, quiet->shift_distance,
+				quiet->blink_min_interval, quiet->blink_max_interval, quiet->blink_duration, quiet->lean_distance,
+				quiet->lean_acceleration, quiet->lean_settle_time, quiet->eyelid_height };
+			for (const auto& eye : quiet->eyes) { result.insert(result.end(), { eye.x, eye.y, eye.width, eye.height }); }
+			for (const auto& grip : look->grips) { result.insert(result.end(), { grip.rear.x, grip.rear.y, grip.front.x, grip.front.y }); }
+			return result;
+		};
+		const mattmath::RectangleF body(100, 120, 104, 240);
+		const auto public_geometry = [&]
+		{
+			const auto canvas = look->canvas_rectangle(body);
+			return std::array<mattmath::RectangleF, 3>{ canvas, attachments.bounds(canvas, true, nullptr), attachments.bounds(canvas, false, nullptr) };
+		};
+		const auto held_geometry = geometry(), held_art_metadata = art_metadata();
+		const auto held_handles = art_handles();const auto held_public_geometry = public_geometry();
+		const auto initial_colours = colour_values(presentation);auto expected_colours = initial_colours;
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const std::string tuning_bytes = read_text(scratch.source / L"tuning.json");
+		const auto unchanged = [&]
+		{
+			require(&presentation.figure() == look && &look->quiet == quiet && &presentation.movement_feedback() == fill &&
+				geometry() == held_geometry && public_geometry() == held_public_geometry &&
+				look->sprite_sheet == original.sprite_sheet && look->rest_arms_frame == original.rest_arms_frame &&
+				look->rest_arms_paint_frame == original.rest_arms_paint_frame && look->sleeves_frame == original.sleeves_frame &&
+				look->sleeves_paint_frame == original.sleeves_paint_frame && quiet->enabled == original.quiet.enabled &&
+				quiet->face_colour == original.quiet.face_colour && fill->sprite_sheet == fill_sheet_name && fill->fill_frame == fill_frame_name &&
+				resources.sprite_sheet(fill_sheet_name) == fill_sheet && resources.sprite_sheet(original.sprite_sheet) == art_sheet &&
+				fill_sheet->resolve_sprite_frame(fill_frame_name) == fill_handle && fill_sheet->sprite_frame(fill_handle).source_rectangle() == fill_source &&
+				fill_sheet->sprite_frame(fill_handle).origin() == fill_origin && art_handles() == held_handles && art_metadata() == held_art_metadata &&
+				colour_values(presentation) == expected_colours && read_text(scratch.source / L"tuning.json") == tuning_bytes &&
+				read_text(scratch.staged / L"tuning.json") == tuning_bytes && !impl.in_match() && !impl.can_apply() && impl.request().empty(),
+				"Limb commands retain actual FigureAttachments and borrowed Figure/quiet records, every unselected geometry/grip/quiet/name value, public null-tool bounds, external atlas/frame metadata and unrelated colours/queues");
+		};
+		// Retained real consumer plus null-texture public metadata only. Private
+		// captured handles, held-tool bounds, draw/alpha/blink pixels and Level
+		// behavior are deliberately not asserted by this CPU fixture.
+		require(original.arm_colour == labrador::Colour::black && original.hand_colour == labrador::Colour::white &&
+			held_handles.size() == 4 && quiet->eyes.size() == 2 && look->grips.size() == 5,
+			"Limb CPU fixture uses authored BLACK/WHITE and all four rest/sleeve frames, two eyes and five tool grips");
+		std::srand(0x4c494d42);const int next_random = std::rand();std::srand(0x4c494d42);
+		const std::array<std::size_t, 2> indices{ limb_arm_colour_index, limb_hand_colour_index };
+		const std::array<const char*, 2> words{ "2060C080", "A532D600" };
+		const auto* const pending = impl.tune_document("presentation");
+		require(pending != nullptr, "The limb fixture loads its valid presentation document");
+		const char* const unrelated_word = initial_colours[3] == labrador::Colour(120, 154, 188) ? "654321" : "789ABC";
+		for (std::size_t position = 0; position < indices.size(); ++position)
+		{
+			const auto index = indices[position];expected_colours[index] = labrador::Colour(words[position]);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + words[position]).ok,
+				"Both selected limb edits are pending independently");unchanged();
+		}
+		expected_colours[3] = labrador::Colour(unrelated_word);
+		require(impl.execute(std::string("tune presentation.debug_overlay.colour ") + unrelated_word).ok && pending->edits().size() == 3,
+			"Both limb edits coexist with an unrelated pending colour");unchanged();
+		for (std::size_t position = 0; position < indices.size(); ++position)
+		{
+			const auto index = indices[position], sibling = indices[1 - position];
+			const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
+			const std::string sibling_local = std::string(colour_paths[sibling]).substr(std::string("presentation.").size());
+			expected_colours[index] = initial_colours[index];
+			require(impl.execute(std::string("tune.reset ") + colour_paths[index]).ok && pending->edits().size() == 2 &&
+				!pending->edits().contains(local) && pending->edits().contains(sibling_local) && pending->edits().contains("debug_overlay.colour") &&
+				read_text(scratch.source / L"presentation.json") == baseline && read_text(scratch.staged / L"presentation.json") == baseline,
+				"Each original limb reset retains its sibling and unrelated edit without writing source/staging");unchanged();
+			expected_colours[index] = labrador::Colour(words[position]);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + words[position]).ok && pending->edits().size() == 3,
+				"Independent limb reset fixture is restored");unchanged();
+		}
+		expected_colours = initial_colours;
+		require(impl.execute("tune.reset presentation").ok && pending->edits().empty(), "Limb reset-all restores original tokens before exact one-token saves");unchanged();
+		std::string saved = baseline;
+		const std::array<const char*, 2> saved_words{ "3165A780", "2060C080" };
+		for (std::size_t position = 0; position < indices.size(); ++position)
+		{
+			const auto index = indices[position];const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
+			const JsonSpanDocument save_reference(saved, "limb-one-token-reference");
+			saved = save_reference.replaced(*save_reference.find(local), std::string("\"") + saved_words[position] + '"');
+			expected_colours[index] = labrador::Colour(saved_words[position]);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + saved_words[position]).ok && pending->edits().size() == 1 &&
+				pending->edits().contains(local) && impl.execute("tune.save presentation").ok && pending->edits().empty() &&
+				pending->baseline().text() == saved && pending->current().text() == saved &&
+				read_text(scratch.source / L"presentation.json") == saved && read_text(scratch.staged / L"presentation.json") == saved,
+				"Each limb Save changes exactly its quoted token, retains its sibling, and rebases exact source/staged/current/baseline bytes");unchanged();
+		}
+		for (const auto index : indices)
+		{
+			expected_colours[index] = labrador::Colour(165, 50, 214, 0);
+			require(impl.execute(std::string("tune ") + colour_paths[index] + " A532D600").ok, "Both saved limb baselines now have independent pending edits");unchanged();
+		}
+		expected_colours[3] = labrador::Colour(unrelated_word);
+		require(impl.execute(std::string("tune presentation.debug_overlay.colour ") + unrelated_word).ok && pending->edits().size() == 3,
+			"Both selected fields and unrelated colour are retained across complete-reader failures");unchanged();
+		const std::string current = pending->current().text();
+		const auto ledger = [&]
+		{
+			std::vector<std::array<std::string, 3>> values;
+			for (const auto& [key, edit] : pending->edits()) { values.push_back({ key, edit.baseline_token, edit.current_token }); }
+			return values;
+		};
+		const auto held_ledger = ledger();const JsonSpanDocument merged_reference(saved, "limb-invalid-merge-reference");
+		std::string last_external;
+		for (const auto& [field, token] : std::array<std::pair<const char*, std::string>, 2>{ {
+			{ "figure.hand_edge", std::string(merged_reference.token(*merged_reference.find("figure.hand_size"))) },
+			{ "figure.quiet.eyelid_height", std::string(merged_reference.token(*merged_reference.find("figure.quiet.eyes[0].height"))) } } })
+		{
+			last_external = merged_reference.replaced(*merged_reference.find(field), token);
+			write_text(scratch.source / L"presentation.json", last_external);
+			for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+			{
+				require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == last_external &&
+					read_text(scratch.staged / L"presentation.json") == saved && pending->current().text() == current && pending->baseline().text() == saved &&
+					ledger() == held_ledger && pending->edits().size() == 3 && pending->edits().contains("figure.arm_colour") &&
+					pending->edits().contains("figure.hand_colour") && pending->edits().contains("debug_overlay.colour"),
+					"Each positive scalar but invalid hand-interior/eye-lid relationship rejects ordinary and forced full-reader merges, retaining source/staging/live/current/baseline and every selected/sibling/unrelated ledger key plus both token strings");unchanged();
+			}
+		}
+		for (std::size_t position = 0; position < indices.size(); ++position)
+		{
+			const auto index = indices[position];expected_colours[index] = labrador::Colour(saved_words[position]);
+			require(impl.execute(std::string("tune.reset ") + colour_paths[index]).ok && pending->edits().size() == indices.size() - position &&
+				pending->edits().contains("debug_overlay.colour") && pending->baseline().text() == saved &&
+				read_text(scratch.source / L"presentation.json") == last_external && read_text(scratch.staged / L"presentation.json") == saved,
+				"Each limb resets to its own saved partial-alpha token while sibling/unrelated edits and invalid external source remain");unchanged();
+		}
+		expected_colours[3] = initial_colours[3];
+		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && pending->edits().empty() &&
+			pending->current().text() == saved && pending->baseline().text() == saved,
+			"Final unrelated reset retains both independently saved limb baselines");unchanged();
+		require(!std::filesystem::exists(scratch.source / L"presentation.json.tmp") && !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp") && std::rand() == next_random,
+			"Limb command/save/reset/refusal sequence leaves no recovery files or gameplay RNG consumption");
+	}
+
 	void check_acting_colour_tunes(const std::filesystem::path& game_directory)
 	{
 		ScratchContent scratch(game_directory, L"acting-colour-records");
@@ -4036,6 +4220,7 @@ namespace debug_console_acceptance
 		check_hud_health_colour_tunes(game_directory);
 		check_hud_track_colour_tunes(game_directory);
 		check_crack_colour_tunes(game_directory);
+		check_limb_colour_tunes(game_directory);
 		check_acting_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
