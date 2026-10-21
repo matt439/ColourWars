@@ -100,6 +100,9 @@ namespace
 		// Silhouette reads its borrowed body tint for every ordered mass fill;
 		// persona, pose inputs and captured resources stay intact.
 		{ "presentation.opening.silhouette", TuneScope::live },
+		// Monitor reads this borrowed note ink for every ordered scribble dab;
+		// captured note positions, colours, tilts and resources stay intact.
+		{ "presentation.opening.scribble", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

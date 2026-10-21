@@ -214,6 +214,19 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($ScribbleTuneColourOnly) {
+    $result.scope = 'scribble-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-opaque-3050C0','literal-35BCE1','literal-2060C080','literal-A532D600'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained direct Monitor.draw_front_details only, with supplied captured paired notes: A yellow-flat colour0/tilt0 and B blue-tilted colour2/tilt0.1 at(.015,.47); no persona roll, Level, polling or local/Player/Level/State/input/time updates.'
+    $result.audio = 'No audio consumer/listening acceptance; private preferences unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('one-live-scribble-field','two-paired-opaque-paper-contexts','full67x67-note-ROI-only','five-fixed-layers-74-ordered-dabs','eight-controls24-row-discriminations','retained-consumer-repeat','35912-independent-retained-RGB-pixels')
+    $result.checks = 'One live presentation.opening.scribble field reaches the existing retained note consumer. Shared40 reads/8 rows/8 native67x67 crops35912pixels107840P6bytes. Independent raw geometry/alpha is limited to ROI [18,337,85,404): five ordered static rectangles then74 literal selected dabs with per-write quantization. Eight wrong references qualify24 row discriminations, exact selected/unselected masks and collapsed single/double membership. Retained PPMs independently check all35912 RGB pixels; native C++ owns RGBA. Alpha0 retains both authored papers and fixed shadow/ink/header/underline. Two paired contexts are not a full colour-by-tilt matrix, and the one Canvas adds no selected-material underlayer. Whole copied-front frames prove adoption only. Borrowed records/resources, captured/caller persona values, unselected style/arrays, public geometry and RNG remain fixed; zero all updates/no event fade.'
+    if ($Preset -eq 'x64-debug') { $result.actions += @('9-real-commands9states-contextA-only','36-additional-reads9rows','totals76reads17rows8crops','one-token-private-save-rebase-reset','two-private-PlaySettings-and-JumpJ-seed-Saves'); $result.checks += ' Debug Context A only; original/saved whole-frame resets, exact one-Scribble-token private Save/rebase and unchanged default display/real content/private preferences/queued work.' }
+    else { $result.actions += @('literal-consumer-only','no-developer-transcript-scratch-or-Save') }
+    $result.checks += ' No independent full Monitor geometry, universal note/persona/matrix coverage, actual Level/story visibility, human/readability/listening/physical-input or performance acceptance.'
+}
 elseif ($SilhouetteBodyTuneColourOnly) {
     $result.scope = 'silhouette-body-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

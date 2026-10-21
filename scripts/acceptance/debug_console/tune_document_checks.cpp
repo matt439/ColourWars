@@ -738,6 +738,53 @@ namespace debug_console_acceptance
 			}
 		}
 		{
+			const std::string scribble_path = "opening.scribble";
+			const std::string scribble_baseline = "{\r\n  \"opening\":{\"scribble\":\"\\u0033050C0\","
+				"\"sticky_notes\":[\"FFF27A\",\"FFB6D5\",\"AEEBFF\",\"C8F59A\"],\"stickers\":[\"FF5A5A\"],"
+				"\"sprite_sheet\":\"captured\",\"fill_frame\":\"solid\",\"palette_sheet\":\"unchanged\"},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			const JsonSpanDocument scribble_reference(scribble_baseline, "scribble-colour-reference");
+			TuneDocument scribble_document("presentation", scribble_baseline);
+			const JsonLeaf* scribble_leaf = scribble_document.find(scribble_path);
+			require(scribble_leaf != nullptr && scribble_leaf->kind == JsonLeaf::Kind::string &&
+				scribble_document.find("opening.sprite_sheet") == nullptr && scribble_document.find("opening.fill_frame") == nullptr &&
+				scribble_document.find("opening.palette_sheet") == nullptr &&
+				scribble_document.find("opening.sticky_notes[0]") == nullptr &&
+				scribble_document.find("opening.stickers[0]") == nullptr,
+				"Scribble is eligible while captured texture/palette names and authored note/sticker array colours remain outside the string tree");
+			scribble_document.commit(scribble_document.edited(*scribble_leaf, "\"11223344\""), scribble_path);
+			require(scribble_document.reverted(scribble_path) == scribble_baseline,
+				"Scribble reset restores its original escaped tint token and every CRLF byte");
+			const std::string scribble_external_number = scribble_reference.replaced(*scribble_reference.find("number"), "25");
+			const JsonSpanDocument scribble_external_reference(scribble_external_number, "scribble-colour-reference");
+			const TuneSplice scribble_splice = scribble_document.splice(scribble_external_number, false);
+			require(scribble_splice.conflicts.empty() && scribble_splice.written == 1 && scribble_splice.text ==
+				scribble_external_reference.replaced(*scribble_external_reference.find(scribble_path), "\"11223344\"") &&
+				count_of(scribble_splice.text, "\r\n") == count_of(scribble_baseline, "\r\n"),
+				"Scribble splice preserves both note/sticker arrays, every unrelated escaped byte, captured string, external number and CRLF");
+			const std::string scribble_pending = scribble_document.current().text();
+			const TuneEdit scribble_held_edit = scribble_document.edits().at(scribble_path);
+			bool scribble_wrong_type = false;
+			try { scribble_document.commit(scribble_document.edited(*scribble_document.find(scribble_path), "false"), scribble_path); }
+			catch (const std::invalid_argument&) { scribble_wrong_type = true; }
+			require(scribble_wrong_type && scribble_document.current().text() == scribble_pending && scribble_document.edits().size() == 1 &&
+				scribble_document.edits().at(scribble_path).baseline_token == scribble_held_edit.baseline_token &&
+				scribble_document.edits().at(scribble_path).current_token == scribble_held_edit.current_token,
+				"A wrong-type scribble commit retains the pending string edit");
+			for (const std::string& scribble_invalid : { std::string("{}"),
+				scribble_reference.replaced(*scribble_reference.find(scribble_path), "null"),
+				scribble_reference.replaced(*scribble_reference.find(scribble_path), "{\"value\":\"RED\"}"),
+				std::string("{\"opening.scribble\":\"RED\"}"),
+				std::string("{\"opening\":{\"scribble.r\":\"RED\"}}") })
+			{
+				const TuneDocument scribble_unsupported("presentation", scribble_invalid);
+				const TuneSplice scribble_refused = scribble_document.splice(scribble_invalid, true);
+				require(scribble_unsupported.find(scribble_path) == nullptr && scribble_refused.written == 0 &&
+					scribble_refused.conflicts.size() == 1 && scribble_refused.text == scribble_invalid,
+					"Force cannot insert a scribble colour, replace null/a container or expose literal aliases");
+			}
+		}
+		{
 			const std::string acting_baseline = "{\r\n  \"opening\":{\"acting\":{\"face\":\"\\u0057HITE\","
 				"\"sweat\":\"\\u0038FD3FF\",\"hop\":0.22},\"sprite_sheet\":\"captured\",\"fill_frame\":\"solid\"},\r\n"
 				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
@@ -966,10 +1013,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited thirty-eight colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited thirty-nine colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly thirty-eight authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly thirty-nine authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -1040,7 +1087,9 @@ namespace debug_console_acceptance
 			"presentation.opening.acting.sweat.r", "presentation.opening.acting.sweat_extra",
 			"opening.glass_colour", "tuning.opening.glass_colour", "presentation.opening.glass_colour.r",
 			"presentation.opening.glass_colour_extra", "opening.silhouette", "tuning.opening.silhouette",
-			"presentation.opening.silhouette.r" })
+			"presentation.opening.silhouette.r", "opening.scribble", "tuning.opening.scribble",
+			"presentation.opening.scribble.r", "presentation.opening.scribble_extra",
+			"presentation.opening.sticky_notes[0]", "presentation.opening.stickers[0]" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -1091,6 +1140,7 @@ namespace debug_console_acceptance
 			{ "presentation.opening.acting.sweat", TuneScope::live },
 			{ "presentation.opening.glass_colour", TuneScope::live },
 			{ "presentation.opening.silhouette", TuneScope::live },
+			{ "presentation.opening.scribble", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -1201,7 +1251,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All thirty-eight colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All thirty-nine colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

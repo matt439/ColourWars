@@ -353,7 +353,7 @@ void Monitor::draw_decorations(DrawList& draw_list, const RectangleF& screen) co
             const float length = size * (row == 2 ? 0.45f : 0.72f);
             this->line(draw_list, Vector2F(paper.x + size * 0.13f, y),
                 Vector2F(paper.x + size * 0.13f + length, y + length * note.tilt),
-                std::max(1.0f, size * 0.045f), look.scribble);
+                std::max(1.0f, size * 0.045f), premultiplied(look.scribble));
         }
     }
 }

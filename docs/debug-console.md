@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirty-eight audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirty-nine audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -330,7 +330,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-thirty-eight audited colour paths below, can be read and changed while the game runs,
+thirty-nine audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These thirty-eight existing string fields are supported; numeric path
+**Colours.** These thirty-nine existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -428,6 +428,7 @@ The latest validation is recorded under
 | `presentation.opening.acting.sweat` | live | Sweat of existing FigureActing cheat overlays, on the next applicable draw. |
 | `presentation.opening.glass_colour` | live | Initial glass and palette of existing Monitor draws, plus picker panels and close-button faces, on each applicable draw. |
 | `presentation.opening.silhouette` | live | Body mass of existing Silhouette story draws, on the next applicable draw. |
+| `presentation.opening.scribble` | live | Three scribble rows per captured sticky note, on the next applicable Monitor front-details draw; absent notes produce no pixels. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -575,6 +576,21 @@ genuine Canvas underlays, with independent white frame/caller swatches or
 24 literal white X dabs. Actual-Level glass visibility remains unmeasured;
 source caller traces and direct methods do not establish that composition.
 
+Monitor reads borrowed `opening.scribble` during applicable front-details note
+draws. Tint edits neither add notes nor roll a persona; no captured notes means
+no scribble pixels. One existing line expression premultiplies base RGBA once,
+retaining three rows, all repeated dabs/order, opaque `3050C0`, authored art,
+arrays, geometry, resources and API. No event fade is added.
+
+The independent reference covers only note ROI `[18,337,85,404)`: five
+static rectangles then 74 literal selected dabs per context. Context A pairs
+note colour0 (`FFF27A`) with tilt0; B pairs colour2 (`AEEBFF`) with tilt0.1.
+These are two genuine opaque-paper underlays, not a colour-by-tilt matrix;
+one Canvas does not add another scribble underlayer. Alpha0 returns rows to
+paper and retains shadow/header/border/underline, rather than erasing the note.
+Copied whole front-details rasters prove adoption only. Actual-Level scribble
+visibility remains unmeasured, with source callers only.
+
 FigureActing borrows both acting colours for each applicable draw. Only its
 face and sweat tints premultiply straight base RGBA once, without event fade;
 authored `WHITE`/`8FD3FF`, stroke geometry, fixed caller inputs and captured
@@ -626,7 +642,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the thirty-eight colour strings listed above join numbers and booleans in `tune`.
+only the thirty-nine colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1345,7 +1361,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the thirty-eight listed colour fields above are
+  and inserting keys in `tune.save`: the thirty-nine listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1354,13 +1370,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Thirty-eight existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Thirty-nine existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette body/ink/rim/shade and reveal
-ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat and glass colours.
+ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass and scribble colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1385,6 +1401,40 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Scribble colour increment (2026-10-21), **native v2 verified**:
+path 39, `presentation.opening.scribble`, reads live on applicable captured-note
+draws. One premultiplication preserves opaque `3050C0`, art/order/resources;
+no notes are created or rerolled.
+
+Both game/editor builds and four focused [CPU cases](../out/validation/crossfeed-20261020/scribble-colour-v1/build-consumer-result.json)
+pass. Ordinary/forced merged corner_step 0.002 below pen_width 0.004 is rejected,
+retaining source/staged/live/current/baseline and both ledger keys/token pairs;
+one-token save/reset retains unrelated edits.
+
+[Native v2](../out/validation/crossfeed-20261020/scribble-colour-v2/native/runner-result.json)
+passes both presets: shared 40 readbacks/eight rows/eight native 67x67 crops
+(35912 pixels, 107840 P6 bytes), Debug 76/17/8. Two paired notes, colour0/tilt0
+and colour2/tilt0.1, provide different opaque papers, not a complete matrix.
+Five static rectangles plus 74 ordered literal dabs/context match all 4489
+raw RGBA pixels; eight wrong controls discriminate 24 rows. All 35912 retained
+RGB pixels match one complete representative source model per crop, with no
+per-pixel mixing, blanket tolerance or universal GPU claim. Eight PPMs are
+byte-identical across presets; all eight crops were inspected. Alpha0 retains
+paper/static note. Copied whole front details prove adoption only.
+
+The [first native failure](../out/validation/crossfeed-20261020/scribble-colour-v1/first-native-failure-investigation.json)
+retains a supplementary precision-oracle mismatch (175 versus 174).
+Four predictive source models represent precision choices;
+[D3D11 spec 17.5](https://microsoft.github.io/DirectX-Specs/d3d/archive/D3D11_3_FunctionalSpec.htm)
+allows blending at output precision or higher. Model constants were not fitted
+to captures; the precision correction changes no production code.
+
+Debug executes nine commands/states in Context A only: one-token Save/rebase/
+saved reset, two private PlaySettings/Jump J seed Saves/default display;
+all updates remain zero. [Metadata revalidation](../out/validation/crossfeed-20261020/scribble-colour-v2/native/metadata-revalidation-v3.json) passes on saved captures, without a GPU rerun.
+Actual-Level visibility and human/readability/small-view/balance/hardware/
+listening/performance acceptance remain open.
 
 Silhouette body increment (2026-10-20), **verified**:
 path 38, `presentation.opening.silhouette`, reads live on applicable story draws.
