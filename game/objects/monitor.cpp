@@ -321,7 +321,7 @@ void Monitor::draw_decorations(DrawList& draw_list, const RectangleF& screen) co
         this->line(draw_list, on_screen(screen, this->persona_.crack[index - 1]),
             on_screen(screen, this->persona_.crack[index]), pen, look.monitor_art.ink);
         this->line(draw_list, on_screen(screen, this->persona_.crack[index - 1]),
-            on_screen(screen, this->persona_.crack[index]), pen * 0.45f, look.crack);
+            on_screen(screen, this->persona_.crack[index]), pen * 0.45f, premultiplied(look.crack));
     }
     for (const MonitorPersona::Decoration& sticker : this->persona_.stickers)
     {

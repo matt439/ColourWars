@@ -109,6 +109,9 @@ namespace
 		// Both HUD meters borrow the track tint on each draw; their ordered
 		// health/team fill prefixes and captured sheet/fonts remain unchanged.
 		{ "presentation.hud.meter_track_colour", TuneScope::live },
+		// Existing Monitors read the borrowed thin crack tint per segment;
+		// captured paths, broad ink order, geometry and resources remain fixed.
+		{ "presentation.opening.crack", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

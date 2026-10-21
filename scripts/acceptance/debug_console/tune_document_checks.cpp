@@ -881,6 +881,34 @@ namespace debug_console_acceptance
 			}
 		}
 		{
+			// Save/conflict/force and LF/CRLF consumption reuse the42-path loops;
+			// retain only the new field's escaped-token/type/no-insertion checks here.
+			const std::string crack_path = "opening.crack";
+			const std::string crack_baseline = "{\r\n\"opening\":{\"crack\":\"\\u0033A3A3A\",\"coffee\":\"keep\"},\r\n\"number\":1\r\n}\r\n";
+			TuneDocument crack_document("presentation", crack_baseline);
+			const JsonSpanDocument crack_reference(crack_baseline, "crack-document-reference");
+			const auto* crack_leaf = crack_document.find(crack_path);
+			require(crack_leaf != nullptr && crack_leaf->kind == JsonLeaf::Kind::string && crack_document.find("opening.coffee") == nullptr,
+				"The crack string is eligible while the unselected coffee policy stays unsupported");
+			crack_document.commit(crack_document.edited(*crack_leaf, "\"2060C080\""), crack_path);
+			const auto crack_held = crack_document.edits().at(crack_path);const auto crack_pending = crack_document.current().text();
+			bool crack_bad_type = false;
+			try { crack_document.commit(crack_document.edited(*crack_document.find(crack_path), "false"), crack_path); }
+			catch (const std::invalid_argument&) { crack_bad_type = true; }
+			require(crack_bad_type && crack_document.current().text() == crack_pending && crack_document.edits().size() == 1 &&
+				crack_document.edits().at(crack_path).baseline_token == crack_held.baseline_token &&
+				crack_document.edits().at(crack_path).current_token == crack_held.current_token && crack_document.reverted(crack_path) == crack_baseline,
+				"Crack wrong-type commit retains both exact tokens/current text and escaped CRLF reset bytes");
+			for (const std::string& missing : { std::string("{}"), crack_reference.replaced(*crack_reference.find(crack_path), "null"),
+				crack_reference.replaced(*crack_reference.find(crack_path), "{\"value\":\"RED\"}"),
+				std::string("{\"opening.crack\":\"RED\"}"), std::string("{\"opening\":{\"crack.r\":\"RED\"}}") })
+			{
+				const TuneDocument unsupported("presentation", missing);const TuneSplice refused = crack_document.splice(missing, true);
+				require(unsupported.find(crack_path) == nullptr && refused.written == 0 && refused.conflicts.size() == 1 && refused.text == missing,
+					"Even force cannot insert crack, replace null/container or expose literal/channel aliases");
+			}
+		}
+		{
 			const std::string acting_baseline = "{\r\n  \"opening\":{\"acting\":{\"face\":\"\\u0057HITE\","
 				"\"sweat\":\"\\u0038FD3FF\",\"hop\":0.22},\"sprite_sheet\":\"captured\",\"fill_frame\":\"solid\"},\r\n"
 				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
@@ -1109,10 +1137,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited forty-one colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited forty-two colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly forty-one authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly forty-two authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -1185,6 +1213,7 @@ namespace debug_console_acceptance
 			"presentation.opening.glass_colour_extra", "opening.silhouette", "tuning.opening.silhouette",
 			"presentation.opening.silhouette.r", "opening.scribble", "tuning.opening.scribble",
 			"presentation.opening.scribble.r", "presentation.opening.scribble_extra",
+			"opening.crack", "tuning.opening.crack", "presentation.opening.crack.r", "presentation.opening.crack_extra",
 			"presentation.opening.sticky_notes[0]", "presentation.opening.stickers[0]",
 			"hud.health_colour", "tuning.hud.health_colour", "presentation.hud.health_colour.r",
 			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
@@ -1244,6 +1273,7 @@ namespace debug_console_acceptance
 			{ "presentation.opening.scribble", TuneScope::live },
 			{ "presentation.hud.health_colour", TuneScope::live },
 			{ "presentation.hud.meter_track_colour", TuneScope::live },
+			{ "presentation.opening.crack", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -1354,7 +1384,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All forty-one colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All forty-two colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

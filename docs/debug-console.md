@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of forty-one audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of forty-two audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -330,7 +330,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-forty-one audited colour paths below, can be read and changed while the game runs,
+forty-two audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These forty-one existing string fields are supported; numeric path
+**Colours.** These forty-two existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -431,6 +431,7 @@ The latest validation is recorded under
 | `presentation.opening.scribble` | live | Three scribble rows per captured sticky note, on the next applicable Monitor front-details draw; absent notes produce no pixels. |
 | `presentation.hud.health_colour` | live | Fill of existing HUD HEALTH meters, on the next applicable draw; zero health draws no fill. |
 | `presentation.hud.meter_track_colour` | live | Backing tracks of existing HUD HEALTH and PAINT meters, read on every applicable shared meter draw; later opaque fills cover their owned prefixes. |
+| `presentation.opening.crack` | live | Thin crack dabs on the next applicable Monitor front-details draw; tint edits preserve captured persona points and do not create or reroll cracks. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -593,6 +594,16 @@ paper and retains shadow/header/border/underline, rather than erasing the note.
 Copied whole front-details rasters prove adoption only. Actual-Level scribble
 visibility remains unmeasured, with source callers only.
 
+Monitor reads borrowed `opening.crack` for every thin crack line on an applicable
+front-details draw. One base premultiplication preserves authored opaque
+`3A3A3A`, captured persona points/order, pen widths, repeated dabs, resources
+and API. Each segment draws broad BLACK ink before its selected thin dabs;
+later segments can erase earlier tint. No event fade, persona roll or update
+is added. Alpha0 retains the existing BLACK crack skeleton and unselected
+highlight/Canvas in the declared direct fixture. Copied front-details parity
+proves adoption only; independent native ROI and actual-Level visibility
+claims remain separate.
+
 InterfaceGameplay reads borrowed `hud.health_colour` when drawing the HEALTH
 meter. One base premultiplication feeds its existing fill, preserving opaque
 `76E8B5`, geometry and captured sheet/fill/fonts. The supplied normalized
@@ -662,7 +673,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the forty-one colour strings listed above join numbers and booleans in `tune`.
+only the forty-two colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1381,7 +1392,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the forty-one listed colour fields above are
+  and inserting keys in `tune.save`: the forty-two listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1390,13 +1401,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Forty-one existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Forty-two existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette body/ink/rim/shade and reveal
-ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble and HUD health/track colours.
+ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack and HUD health/track colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1421,6 +1432,38 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Monitor crack colour increment (2026-10-21), **verified**:
+path 42, `presentation.opening.crack`, reads live; one premultiplication preserves
+opaque `3A3A3A`, broad-ink/thin-dab order, captured paths and resources.
+
+Both game/editor builds and four focused [CPU cases](../out/validation/crossfeed-20261020/crack-colour-v1/build-consumer-result.json)
+pass. Ordinary/forced merged saves reject the invalid document
+(corner_step 0.002 below pen_width 0.004), preserving exact state and both
+ledger keys/token pairs; selected reset retains unrelated edits.
+
+`scripts/check-painter.ps1 -Preset <preset> -SkipBuild -CrackTuneColourOnly`
+passes first execution in [both presets](../out/validation/crossfeed-20261020/crack-colour-v1/native/runner-result.json):
+Release 42 readbacks/8 rows, Debug 78/17; eight native contiguous 115x34 crops,
+31280 pixels/93952 P6 bytes, left/right paths across four palettes.
+
+Independent proof uses direct front-details, Canvas and calibration only.
+All 3910 actual/raw RGBA pixels/case precede whole-ROI source checks; four
+models are byte-equivalent, without GPU precision inference. Ten controls
+check 1274 changed/37826 unchanged comparisons; alpha0 retains BLACK ink.
+Calibration checks 32 WHITE/BLACK RGBA pixels/read without extra reads.
+Copied complete front-details parity proves adoption only.
+
+[Parity](../out/validation/crossfeed-20261020/crack-colour-v1/native/reconciliation.json)
+retains 20 identical shared files, including eight PPMs. Eight PNGs pass post-contact
+IHDR, dimensions and decoded RGB parity, with 13 flat metadata fields each.
+[Inspection](../out/validation/crossfeed-20261020/crack-colour-v1/root-view-v1.json) and
+[source reconciliation](../out/validation/crossfeed-20261020/crack-colour-v1/root-native-evidence-gate-v1.json) pass.
+
+Debug: nine left-only commands/states, one `"2060C080"` crack-token Save/rebase/reset,
+two private PlaySettings/Jump J seed Saves/default display; all eight update/poll
+fields zero. Actual-Level, arbitrary paths/transforms, human contrast/readability/comfort,
+hardware/input/listening, balance and performance gates remain open.
 
 HUD meter-track colour increment (2026-10-21), **verified**:
 path 41, `presentation.hud.meter_track_colour`, reads live on both borrowed
