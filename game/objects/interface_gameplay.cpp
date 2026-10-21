@@ -131,7 +131,7 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 		RectangleF(Vector2F(x_pos, panel_top) - padding,
 			Vector2F(resolution.x * look.box_size.x,
 				panel_bottom - panel_top) + padding * 2.0f), scale);
-	this->draw_meter(draw_list, resolution, health, look.health_colour,
+	this->draw_meter(draw_list, resolution, health, CrudeDrawing::premultiplied(look.health_colour),
 		health_pos, L"HEALTH", scale);
 	this->draw_meter(draw_list, resolution, ammo, team_colour,
 		ammo_pos, L"PAINT", scale);

@@ -214,6 +214,19 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($HudHealthTuneColourOnly) {
+    $result.scope = 'hud-health-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-opaque-76E8B5','literal-35BCE1','literal-2060C080','literal-A532D600'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained direct InterfaceGameplay only: supplied remaining health0/.5/1, TeamA blue_orange, keyboard-and-mouse slot, ammo.5, timer123.25, ordinary effects and running clock; no Player/Level/Scene, polling or local/Player/Level/State/input/time updates.'
+    $result.audio = 'No audio consumer/listening acceptance; private preferences unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('one-live-hud-health-field','three-supplied-health-contexts','single-opaque-track-underlay','full192x16-health-ROI-only','zero-or-one-selected-prefix-write','six-exact-mask-controls','empty-health-four-palette-invariance','unchanged-separate-PAINT-bytes','36864-independent-retained-RGB-pixels')
+    $result.checks = 'One live presentation.hud.health_colour field reaches the retained actual HUD consumer. Shared54 reads/12 rows/12 direct192x16 crops36864pixels110760P6bytes. Independent raw geometry/alpha is limited to health ROI [1036,64,1228,80): opaqueB8 track then zero or one selected prefix, widths0/96/192. Six wrong references discriminate13824selected control pixels and preserve4608complement pixels. Retained PPMs independently check all36864 RGB pixels; native C++ owns RGBA. Empty health is byte-identical across all four palettes; alpha0 retains track184. The opaque track erases earlier underlays, and one Canvas adds no selected-material backdrop. Whole copied-HUD frames prove adoption only. Separate PAINT bytes, borrowed HUD/identity records, complete unselected style, resources, caller inputs, viewport and RNG remain fixed; zero all updates/no event fade.'
+    if ($Preset -eq 'x64-debug') { $result.actions += @('9-real-commands9states-full-health-only','36-additional-reads9rows','totals90reads21rows12crops','one-token-private-save-rebase-reset','two-private-PlaySettings-and-JumpJ-seed-Saves'); $result.checks += ' Debug full health only; original/saved whole-HUD resets, exact one-health-token private Save/rebase and unchanged default display/real content/private preferences/queued work.' }
+    else { $result.actions += @('literal-consumer-only','no-developer-transcript-scratch-or-Save') }
+    $result.checks += ' Supplied fractions do not prove gameplay damage/regeneration or an actual Level sequence. No independent full HUD/text/border/art reconstruction, extra layout/roster/aspect/clamp matrix, human/readability/listening/physical-input or performance acceptance.'
+}
 elseif ($ScribbleTuneColourOnly) {
     $result.scope = 'scribble-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

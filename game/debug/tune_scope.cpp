@@ -103,6 +103,9 @@ namespace
 		// Monitor reads this borrowed note ink for every ordered scribble dab;
 		// captured note positions, colours, tilts and resources stay intact.
 		{ "presentation.opening.scribble", TuneScope::live },
+		// InterfaceGameplay reads the borrowed health tint on every meter draw;
+		// caller health/ammo, the track and captured sheet/fonts stay intact.
+		{ "presentation.hud.health_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

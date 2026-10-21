@@ -13,12 +13,14 @@
 #include "game/objects/combat_feedback.h"
 #include "game/objects/figure_acting.h"
 #include "game/objects/idle_drip.h"
+#include "game/objects/interface_gameplay.h"
 #include "game/objects/monitor.h"
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/silhouette.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/math/scalar.h"
 #include "engine/render/render_resources.h"
+#include "engine/render/sprite_font_file.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -73,10 +75,10 @@ namespace debug_console_acceptance
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 39> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 40> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
 			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680",
-			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80" };
+			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
@@ -85,7 +87,7 @@ namespace debug_console_acceptance
 			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 },
 			{ 94, 145, 199, 128 }, { 184, 106, 77, 64 }, { 115, 194, 165, 0 },
 			{ 212, 124, 42, 128 }, { 97, 178, 212, 64 }, { 156, 53, 231, 0 }, { 59, 151, 193, 128 }, { 166, 94, 41, 64 },
-			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 } };
+			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -113,7 +115,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -172,7 +174,7 @@ namespace debug_console_acceptance
 			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
 			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
 			colour_paths[silhouette_shade_colour_index], colour_paths[reveal_ink_colour_index],
-			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index] })
+			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -229,7 +231,11 @@ namespace debug_console_acceptance
 			"presentation.opening.glass_colour_extra", "opening.silhouette", "tuning.opening.silhouette",
 			"presentation.opening.silhouette.r", "opening.scribble", "tuning.opening.scribble",
 			"presentation.opening.scribble.r", "presentation.opening.scribble_extra",
-			"presentation.opening.sticky_notes[0]", "presentation.opening.stickers[0]" })
+			"presentation.opening.sticky_notes[0]", "presentation.opening.stickers[0]",
+			"hud.health_colour", "tuning.hud.health_colour", "presentation.hud.health_colour.r",
+			"presentation.hud.health_colour_extra", "presentation.hud.meter_track_colour",
+			"presentation.hud.sprite_sheet", "presentation.hud.fill_frame", "presentation.hud.meter_label_font",
+			"presentation.hud.timer.font", "presentation.hud.player_identity.font" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -264,7 +270,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -326,7 +332,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -358,7 +364,7 @@ namespace debug_console_acceptance
 				index == cursor_ink_colour_index ? "E7F809" : index == cursor_fill_colour_index ? "F8091A" :
 				index == silhouette_ink_colour_index ? "0A1B2C" :
 				index == silhouette_rim_colour_index ? "1B2C3D" : index == silhouette_shade_colour_index ? "2C3D4E" :
-				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : "F90A1B";
+				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : "0A1B2C";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -386,7 +392,7 @@ namespace debug_console_acceptance
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -403,7 +409,7 @@ namespace debug_console_acceptance
 				index == silhouette_rim_colour_index ? L"silhouette-rim-crlf" :
 				index == silhouette_shade_colour_index ? L"silhouette-shade-crlf" :
 				index == reveal_ink_colour_index ? L"reveal-ink-crlf" :
-				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : index == acting_sweat_colour_index ? L"acting-sweat-colour-crlf" : index == glass_colour_index ? L"glass-colour-crlf" : index == silhouette_body_colour_index ? L"silhouette-body-colour-crlf" : L"scribble-colour-crlf";
+				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : index == acting_sweat_colour_index ? L"acting-sweat-colour-crlf" : index == glass_colour_index ? L"glass-colour-crlf" : index == silhouette_body_colour_index ? L"silhouette-body-colour-crlf" : index == scribble_colour_index ? L"scribble-colour-crlf" : L"hud-health-colour-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -446,7 +452,7 @@ namespace debug_console_acceptance
 				index == cursor_ink_colour_index ? "091A2B" : index == cursor_fill_colour_index ? "1A2B3C" :
 				index == silhouette_ink_colour_index ? "2B3C4D" :
 				index == silhouette_rim_colour_index ? "3C4D5E" : index == silhouette_shade_colour_index ? "4D5E6F" :
-				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : index == program_colour_index ? "C5D6E7" : index == acting_face_colour_index ? "D6E7F8" : index == acting_sweat_colour_index ? "E7F809" : index == glass_colour_index ? "F8091A" : index == silhouette_body_colour_index ? "091A2B" : "1A2B3C";
+				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : index == program_colour_index ? "C5D6E7" : index == acting_face_colour_index ? "D6E7F8" : index == acting_sweat_colour_index ? "E7F809" : index == glass_colour_index ? "F8091A" : index == silhouette_body_colour_index ? "091A2B" : index == scribble_colour_index ? "1A2B3C" : "2B3C4D";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -2905,6 +2911,223 @@ namespace debug_console_acceptance
 			"Scribble colour commands, independent/saved resets and valid/refused saves consume no gameplay random draw");
 	}
 
+	void check_hud_health_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"hud-health-colour-records");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const HudPresentation* const look = &presentation.hud();
+		const HudPaperPresentation* const paper = &look->paper;
+		const ClosingClockPresentation* const clock = &look->closing_clock;
+		const PlayerIdentityPresentation* const identity = &presentation.player_identity();
+		const HudPresentation original = *look;
+		const PlayerIdentityPresentation original_identity = *identity;
+		labrador::RenderResources resources;
+		std::vector<std::string> sheets{ original.sprite_sheet };
+		if (original.sprite_sheet != "sprite_sheet_1") { sheets.push_back("sprite_sheet_1"); }
+		for (const std::string& sheet : sheets)
+		{
+			resources.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
+				(game_directory / L"textures" / (sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
+		}
+		const std::array<std::string, 3> fonts{ original.meter_label_font,
+			original.timer_font, original.player_identity_font };
+		for (const std::string& font : fonts)
+		{
+			const labrador::SpriteFontFile file = labrador::read_sprite_font_file(
+				(game_directory / L"fonts" / (font + ".spritefont")).string());
+			auto loaded = std::make_unique<labrador::Font>(labrador::TextureHandle{}, file.glyphs, file.line_spacing);
+			if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
+			resources.add_font(font, std::move(loaded));
+		}
+		const InterfaceGameplay hud(&resources, look, identity);
+		const InterfaceGameplay* const retained_hud = &hud;
+		const auto* const sheet = resources.sprite_sheet(original.sprite_sheet);
+		const auto fill = sheet->resolve_sprite_frame(original.fill_frame);
+		const auto fill_source = sheet->sprite_frame(fill).source_rectangle();
+		const auto fill_origin = sheet->sprite_frame(fill).origin();
+		const auto font_handles = [&]
+		{
+			std::vector<labrador::FontHandle> result;
+			for (const auto& font : fonts) { result.push_back(resources.resolve_sprite_font(font)); }
+			return result;
+		};
+		const auto font_measurements = [&]
+		{
+			return std::vector<mattmath::Vector2F>{
+				resources.measure_text(resources.resolve_sprite_font(original.meter_label_font), L"HEALTH"),
+				resources.measure_text(resources.resolve_sprite_font(original.timer_font), L"02:04"),
+				resources.measure_text(resources.resolve_sprite_font(original.player_identity_font), L"P1  /  TEAM A\nKeyboard + mouse") };
+		};
+		const auto geometry = [&]
+		{
+			return std::vector<float>{ look->paper.keyline_width, look->paper.shadow_offset,
+				look->meter_label_gap, look->reference_height, look->right_margin,
+				look->ammo_top_margin, look->health_top_margin, look->box_size.x, look->box_size.y,
+				look->box_fill_border, look->timer_offset.x, look->timer_offset.y,
+				look->timer_shadow_offset.x, look->timer_shadow_offset.y, look->timer_reference_width,
+				look->closing_clock.keyline_width, look->closing_clock.shadow_offset,
+				look->closing_clock.tick_reach, look->closing_clock.beat_duration,
+				look->player_identity_offset.x, look->player_identity_offset.y,
+				look->player_identity_shadow_offset.x, look->player_identity_shadow_offset.y,
+				look->player_identity_padding.x, look->player_identity_padding.y,
+				look->player_identity_reference_width };
+		};
+		const auto unselected = [&]
+		{
+			return std::vector<labrador::Colour>{ look->paper.ink, look->paper.paper,
+				look->paper.shade, look->meter_track_colour, look->timer_colour, look->timer_shadow_colour,
+				look->closing_clock.ink, look->closing_clock.paper, look->closing_clock.shade,
+				look->closing_clock.text, look->closing_clock.accent, look->player_identity_colour,
+				look->player_identity_shadow_colour, look->player_identity_background_colour,
+				identity->ink_colour, identity->background_colour };
+		};
+		const auto resource_names = [&]
+		{
+			return std::vector<std::string>{ look->sprite_sheet, look->fill_frame,
+				look->meter_label_font, look->timer_font, look->player_identity_font };
+		};
+		const auto identity_geometry = [&]
+		{
+			return std::vector<float>{ identity->enabled ? 1.0f : 0.0f,
+				identity->world_size.x, identity->world_size.y, identity->world_offset.x, identity->world_offset.y,
+				identity->emphasis_duration, identity->emphasis_scale, identity->ui_size.x,
+				identity->ui_size.y, identity->ui_gap, identity->border };
+		};
+		const auto held_geometry = geometry();
+		const auto held_unselected = unselected();
+		const auto held_names = resource_names();
+		const auto held_identity = identity_geometry();
+		const auto held_fonts = font_handles();
+		const auto held_measurements = font_measurements();
+		require(original.health_colour == labrador::Colour(118, 232, 181) &&
+			original.meter_track_colour == labrador::Colour(184, 184, 184) &&
+			original.paper.keyline_width <= 4.0f && original_identity.ink_colour.a == 1.0f &&
+			held_measurements[0].x > 0.0f && held_measurements[1].x > 0.0f && held_measurements[2].x > 0.0f,
+			"The retained actual CPU HUD loads the authored health/track defaults and real label/timer/identity font metadata");
+		const std::string baseline = read_text(scratch.source / L"presentation.json");
+		const std::string tuning_source = read_text(scratch.source / L"tuning.json");
+		const std::string tuning_staged = read_text(scratch.staged / L"tuning.json");
+		const auto unchanged = [&]
+		{
+			require(retained_hud == &hud && &presentation.hud() == look && &look->paper == paper &&
+				&look->closing_clock == clock && &presentation.player_identity() == identity &&
+				geometry() == held_geometry && unselected() == held_unselected &&
+				resource_names() == held_names && identity_geometry() == held_identity &&
+				resources.sprite_sheet(look->sprite_sheet) == sheet &&
+				sheet->resolve_sprite_frame(look->fill_frame) == fill &&
+				sheet->sprite_frame(fill).source_rectangle() == fill_source &&
+				sheet->sprite_frame(fill).origin() == fill_origin && font_handles() == held_fonts &&
+				font_measurements() == held_measurements && !impl.in_match() &&
+				!impl.can_apply() && impl.request().empty() &&
+				read_text(scratch.source / L"tuning.json") == tuning_source &&
+				read_text(scratch.staged / L"tuning.json") == tuning_staged,
+				"Health adoption retains the actual HUD, borrowed full HUD/identity records, every unselected material/numeric/resource input and public sheet/frame/font lookups, without match work");
+		};
+		// The retained real HUD resolves engine sheet/font metadata with null
+		// texture handles. CPU observes borrowed records and public lookups,
+		// not its private captured handles, pixels, or a Player/Level draw.
+		const auto initial_colours = colour_values(presentation);
+		std::srand(0x4ea140);
+		const int expected_random = std::rand();
+		std::srand(0x4ea140);
+		for (const auto& [word, expected] : std::array<std::pair<const char*, labrador::Colour>, 4>{ {
+			{ "RED", { 255, 0, 0 } }, { "3165A7", { 49, 101, 167 } },
+			{ "2060C080", { 32, 96, 192, 128 } }, { "A532D600", { 165, 50, 214, 0 } } } })
+		{
+			auto expected_colours = initial_colours;
+			expected_colours[hud_health_colour_index] = expected;
+			require(impl.execute(std::string("tune presentation.hud.health_colour ") + word).ok &&
+				colour_values(presentation) == expected_colours && look->health_colour == expected &&
+				read_text(scratch.source / L"presentation.json") == baseline &&
+				read_text(scratch.staged / L"presentation.json") == baseline,
+				"Health accepts straight named/RGB/asymmetric partial and nonblack zero-alpha channels without changing another colour or content copy");
+			unchanged();
+		}
+		const TuneDocument* const pending = impl.tune_document("presentation");
+		require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok &&
+			impl.execute("tune.reset presentation.hud.health_colour").ok &&
+			look->health_colour == original.health_colour && pending->edits().size() == 1 &&
+			pending->edits().contains("debug_overlay.colour") &&
+			presentation.debug_overlay().colour == labrador::Colour(120, 154, 188),
+			"Health resets independently to the original tint while retaining an unrelated live colour edit");
+		unchanged();
+		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok &&
+			colour_values(presentation) == initial_colours && pending->edits().empty() &&
+			pending->current().text() == baseline,
+			"Independent reset restores the initial document with the same retained HUD and resource lookups");
+		const JsonSpanDocument baseline_document(baseline, "hud-health-colour-save-reference");
+		const JsonLeaf* health_leaf = baseline_document.find("hud.health_colour");
+		require(health_leaf != nullptr, "The actual authored health token exists");
+		const std::string saved = baseline_document.replaced(*health_leaf, "\"2060C080\"");
+		require(impl.execute("tune presentation.hud.health_colour 2060C080").ok &&
+			impl.execute("tune.save presentation").ok && look->health_colour == labrador::Colour(32, 96, 192, 128) &&
+			read_text(scratch.source / L"presentation.json") == saved &&
+			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
+			pending->baseline().text() == saved && pending->current().text() == saved,
+			"Health save replaces exactly one quoted token and rebases the retained borrowed HUD record");
+		unchanged();
+		require(impl.execute("tune presentation.hud.health_colour A532D600").ok &&
+			impl.execute("tune presentation.debug_overlay.colour 789ABC").ok &&
+			pending->edits().size() == 2 && pending->edits().contains("hud.health_colour") &&
+			pending->edits().contains("debug_overlay.colour"),
+			"A fresh health edit and an unrelated supported colour are both pending before merged-reader refusal");
+		const JsonSpanDocument saved_document(saved, "hud-health-colour-merged-reference");
+		const JsonLeaf* keyline = saved_document.find("hud.paper.keyline_width");
+		require(keyline != nullptr && original.paper.keyline_width <= 4.0f,
+			"Health merge fixture uses the existing ordinary HUD paper keyline-width bound");
+		const std::string external = saved_document.replaced(*keyline, "4.1");
+		write_text(scratch.source / L"presentation.json", external);
+		const std::string pending_text = pending->current().text();
+		const auto pending_colours = colour_values(presentation);
+		const auto ledger = [&]
+		{
+			std::vector<std::array<std::string, 3>> result;
+			for (const auto& [path, edit] : pending->edits())
+				{ result.push_back({ path, edit.baseline_token, edit.current_token }); }
+			return result;
+		};
+		const auto held_ledger = ledger();
+		for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+		{
+			require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == external &&
+				read_text(scratch.staged / L"presentation.json") == saved &&
+				pending->current().text() == pending_text && pending->baseline().text() == saved &&
+				ledger() == held_ledger && pending->edits().size() == 2 &&
+				pending->edits().contains("hud.health_colour") && pending->edits().contains("debug_overlay.colour") &&
+				colour_values(presentation) == pending_colours,
+				"External hud.paper.keyline_width 4.1 refuses the complete ordinary reader even with force, retaining exact source/staged/live/current/baseline and BOTH ledger keys plus every baseline/current token");
+			unchanged();
+		}
+		const std::string overlay_only = saved_document.replaced(*saved_document.find("debug_overlay.colour"), "\"789ABC\"");
+		auto restored_colours = pending_colours;
+		restored_colours[hud_health_colour_index] = labrador::Colour(32, 96, 192, 128);
+		require(impl.execute("tune.reset presentation.hud.health_colour").ok &&
+			colour_values(presentation) == restored_colours && pending->edits().size() == 1 &&
+			pending->edits().contains("debug_overlay.colour") && pending->current().text() == overlay_only &&
+			pending->baseline().text() == saved && read_text(scratch.source / L"presentation.json") == external &&
+			read_text(scratch.staged / L"presentation.json") == saved &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			"Health resets to its saved partial-alpha token while retaining the unrelated pending edit and exact invalid external source/staging without recovery files");
+		unchanged();
+		restored_colours[3] = initial_colours[3];
+		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok &&
+			colour_values(presentation) == restored_colours && pending->edits().empty() &&
+			pending->current().text() == saved && pending->baseline().text() == saved &&
+			read_text(scratch.source / L"presentation.json") == external &&
+			read_text(scratch.staged / L"presentation.json") == saved,
+			"Resetting the unrelated colour retains the saved health baseline and exact external source/staging");
+		unchanged();
+		write_text(scratch.source / L"presentation.json", saved);
+		require(std::rand() == expected_random,
+			"Health colour commands, independent/saved resets and valid/refused saves consume no gameplay random draw");
+	}
+
 	void check_acting_colour_tunes(const std::filesystem::path& game_directory)
 	{
 		ScratchContent scratch(game_directory, L"acting-colour-records");
@@ -3441,6 +3664,7 @@ namespace debug_console_acceptance
 		check_glass_colour_tunes(game_directory);
 		check_silhouette_body_colour_tunes(game_directory);
 		check_scribble_colour_tunes(game_directory);
+		check_hud_health_colour_tunes(game_directory);
 		check_acting_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
