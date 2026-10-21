@@ -193,7 +193,7 @@ void InterfaceGameplay::draw_meter(DrawList& draw_list,
 	sprite_sheet->draw(draw_list, this->fill_frame_,
 		RectangleF(position - Vector2F(pen), size + Vector2F(pen * 2.0f)), look.paper.ink);
 	sprite_sheet->draw(draw_list, this->fill_frame_,
-		RectangleF(position, size), look.meter_track_colour);
+		RectangleF(position, size), CrudeDrawing::premultiplied(look.meter_track_colour));
 	// Draw exactly the owned fraction of the track, including an empty
 	// meter at zero. Presentation never changes health or ammunition state.
 	const float fill_width = size.x * std::clamp(amount, 0.0f, 1.0f);

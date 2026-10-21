@@ -795,11 +795,11 @@ namespace debug_console_acceptance
 			TuneDocument health_document("presentation", health_baseline);
 			const JsonLeaf* health_leaf = health_document.find(health_path);
 			require(health_leaf != nullptr && health_leaf->kind == JsonLeaf::Kind::string &&
-				health_document.find("hud.meter_track_colour") == nullptr &&
+				health_document.find("hud.meter_track_colour") != nullptr &&
 				health_document.find("hud.sprite_sheet") == nullptr && health_document.find("hud.fill_frame") == nullptr &&
 				health_document.find("hud.meter_label_font") == nullptr && health_document.find("hud.timer.font") == nullptr &&
 				health_document.find("hud.player_identity.font") == nullptr,
-				"Health is eligible while track tint and captured HUD texture/font names remain outside the string tree");
+				"Health and track are eligible while captured HUD texture/font names remain outside the string tree");
 			health_document.commit(health_document.edited(*health_leaf, "\"11223344\""), health_path);
 			require(health_document.reverted(health_path) == health_baseline,
 				"Health reset restores its original escaped tint token and every CRLF byte");
@@ -830,6 +830,54 @@ namespace debug_console_acceptance
 				require(health_unsupported.find(health_path) == nullptr && health_refused.written == 0 &&
 					health_refused.conflicts.size() == 1 && health_refused.text == health_invalid,
 					"Force cannot insert a health colour, replace null/a container or expose literal aliases");
+			}
+		}
+		{
+			const std::string track_path = "hud.meter_track_colour";
+			const std::string track_baseline = "{\r\n  \"hud\":{\"meter_track_colour\":\"\\u00428B8B8\","
+				"\"health_colour\":\"76E8B5\",\"sprite_sheet\":\"captured\",\"fill_frame\":\"solid\","
+				"\"meter_label_font\":\"label\",\"timer\":{\"font\":\"clock\"},"
+				"\"player_identity\":{\"font\":\"identity\"}},\r\n"
+				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
+			const JsonSpanDocument track_reference(track_baseline, "hud-track-colour-reference");
+			TuneDocument track_document("presentation", track_baseline);
+			const JsonLeaf* track_leaf = track_document.find(track_path);
+			require(track_leaf != nullptr && track_leaf->kind == JsonLeaf::Kind::string &&
+				track_document.find("hud.health_colour") != nullptr &&
+				track_document.find("hud.sprite_sheet") == nullptr && track_document.find("hud.fill_frame") == nullptr &&
+				track_document.find("hud.meter_label_font") == nullptr && track_document.find("hud.timer.font") == nullptr &&
+				track_document.find("hud.player_identity.font") == nullptr,
+				"Track and health are eligible while captured HUD texture/font names remain outside the string tree");
+			track_document.commit(track_document.edited(*track_leaf, "\"11223344\""), track_path);
+			require(track_document.reverted(track_path) == track_baseline,
+				"Track reset restores its original escaped tint token and every CRLF byte");
+			const std::string track_external_number = track_reference.replaced(*track_reference.find("number"), "25");
+			const JsonSpanDocument track_external_reference(track_external_number, "hud-track-colour-reference");
+			const TuneSplice track_splice = track_document.splice(track_external_number, false);
+			require(track_splice.conflicts.empty() && track_splice.written == 1 && track_splice.text ==
+				track_external_reference.replaced(*track_external_reference.find(track_path), "\"11223344\"") &&
+				count_of(track_splice.text, "\r\n") == count_of(track_baseline, "\r\n"),
+				"Track splice preserves unselected health, captured font/texture strings, escaped bytes, external number and CRLF");
+			const std::string track_pending = track_document.current().text();
+			const TuneEdit track_held_edit = track_document.edits().at(track_path);
+			bool track_wrong_type = false;
+			try { track_document.commit(track_document.edited(*track_document.find(track_path), "false"), track_path); }
+			catch (const std::invalid_argument&) { track_wrong_type = true; }
+			require(track_wrong_type && track_document.current().text() == track_pending && track_document.edits().size() == 1 &&
+				track_document.edits().at(track_path).baseline_token == track_held_edit.baseline_token &&
+				track_document.edits().at(track_path).current_token == track_held_edit.current_token,
+				"A wrong-type track commit retains the pending string edit and both token spellings");
+			for (const std::string& track_invalid : { std::string("{}"),
+				track_reference.replaced(*track_reference.find(track_path), "null"),
+				track_reference.replaced(*track_reference.find(track_path), "{\"value\":\"RED\"}"),
+				std::string("{\"hud.meter_track_colour\":\"RED\"}"),
+				std::string("{\"hud\":{\"meter_track_colour.r\":\"RED\"}}") })
+			{
+				const TuneDocument track_unsupported("presentation", track_invalid);
+				const TuneSplice track_refused = track_document.splice(track_invalid, true);
+				require(track_unsupported.find(track_path) == nullptr && track_refused.written == 0 &&
+					track_refused.conflicts.size() == 1 && track_refused.text == track_invalid,
+					"Force cannot insert a track colour, replace null/a container or expose literal aliases");
 			}
 		}
 		{
@@ -1061,10 +1109,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited forty colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited forty-one colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly forty authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly forty-one authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -1139,7 +1187,8 @@ namespace debug_console_acceptance
 			"presentation.opening.scribble.r", "presentation.opening.scribble_extra",
 			"presentation.opening.sticky_notes[0]", "presentation.opening.stickers[0]",
 			"hud.health_colour", "tuning.hud.health_colour", "presentation.hud.health_colour.r",
-			"presentation.hud.health_colour_extra", "presentation.hud.meter_track_colour",
+			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
+			"presentation.hud.meter_track_colour.r", "presentation.hud.meter_track_colour_extra",
 			"presentation.hud.sprite_sheet", "presentation.hud.fill_frame", "presentation.hud.meter_label_font",
 			"presentation.hud.timer.font", "presentation.hud.player_identity.font" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
@@ -1194,6 +1243,7 @@ namespace debug_console_acceptance
 			{ "presentation.opening.silhouette", TuneScope::live },
 			{ "presentation.opening.scribble", TuneScope::live },
 			{ "presentation.hud.health_colour", TuneScope::live },
+			{ "presentation.hud.meter_track_colour", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -1304,7 +1354,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All forty colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All forty-one colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;

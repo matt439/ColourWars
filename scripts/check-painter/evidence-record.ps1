@@ -214,6 +214,19 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($HudTrackTuneColourOnly) {
+    $result.scope = 'hud-track-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-opaque-B8B8B8','literal-35BCE1','literal-0161C180','literal-A532D600'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained direct InterfaceGameplay only: paired supplied health/ammo0/0,.5/.5,1/1, TeamA blue_orange, keyboard-and-mouse slot, timer123.25, ordinary effects and running clock; three paired cases, not all nine Cartesian combinations. No Player/Level/Scene, polling or local/Player/Level/State/input/time updates.'
+    $result.audio = 'No audio consumer/listening acceptance; private preferences unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('one-live-hud-track-field','three-paired-health-ammo-contexts','single-opaque-ink-underlay','two-disjoint-ROIs-lossless192x32-stack','ink-track-unchanged-health-team-prefix-order','six-controls-twelve-track-discriminations','fully-filled-four-palette-invariance','unchanged-fill-prefixes','73728-independent-retained-RGB-pixels')
+    $result.checks = 'One live presentation.hud.meter_track_colour field reaches both tracks of the retained actual HUD consumer. Shared54 reads/12 rows/12 lossless paired192x32 ROI stacks73728pixels221352P6bytes. Independent raw geometry/alpha is limited to two disjoint192x16 interiors: health [1036,64,1228,80) and PAINT [1036,122,1228,138), stacked without resampling and excluding the42-row source gap. Ordered opaque ink20 then selected track then unchanged opaque health/team prefixes, widths0/96/192. Six wrong references separately discriminate both tracks:12discriminations,27648changed control pixels and9216unchanged complement pixels. Retained composites independently check all73728 RGB pixels; native C++ owns RGBA and exact actual/raw comparison precedes whole-composite source precision checks. Fully filled pairs are byte-identical across all four palettes; alpha0 reveals ink20 in visible suffixes while filled prefixes remain fixed. Opaque ink erases earlier panel layers; one Canvas adds no selected-material backdrop. Whole copied-HUD frames prove adoption only. Borrowed HUD/identity records, complete unselected style/resources, caller inputs, viewport and RNG remain fixed; zero all updates/no event fade.'
+    if ($Preset -eq 'x64-debug') { $result.actions += @('9-real-commands9states-half-half-only','36-additional-reads9rows','totals90reads21rows12crops','one-track-token-private-save-rebase-reset','two-private-PlaySettings-and-JumpJ-seed-Saves'); $result.checks += ' Debug half/half only; original/saved whole-HUD resets, exact one-track-token private Save/rebase and unchanged default display/real content/private preferences/queued work.' }
+    else { $result.actions += @('literal-consumer-only','no-developer-transcript-scratch-or-Save') }
+    $result.checks += ' Three paired amount contexts are not all nine Cartesian cases; the192x32 stack is not one contiguous native crop. Supplementary source models must agree across one whole composite, without per-pixel mixing, tolerance, capture-fitting or universal GPU precision claims. Supplied fractions do not prove gameplay health/ammunition behavior or an actual Level sequence. No independent full HUD/text/border/art reconstruction, extra layout/roster/aspect/clamp matrix, human/readability/listening/physical-input or performance acceptance.'
+}
 elseif ($HudHealthTuneColourOnly) {
     $result.scope = 'hud-health-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

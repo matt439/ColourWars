@@ -106,6 +106,9 @@ namespace
 		// InterfaceGameplay reads the borrowed health tint on every meter draw;
 		// caller health/ammo, the track and captured sheet/fonts stay intact.
 		{ "presentation.hud.health_colour", TuneScope::live },
+		// Both HUD meters borrow the track tint on each draw; their ordered
+		// health/team fill prefixes and captured sheet/fonts remain unchanged.
+		{ "presentation.hud.meter_track_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a
