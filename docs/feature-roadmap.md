@@ -495,9 +495,9 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 
 ## Action bindings (`GAP#4.2`)
 
-**OPEN; default evaluators and keyboard Jump rebinding are implemented.**
-The keyboard Jump slice awaits the validation recorded below; broader action
-and pad rebinding remain open.
+**Default evaluators and keyboard Jump rebinding are implemented and validated.**
+**Remaining scope: UNSCOPED (`GAP#4.2`).** Broader action and Pad 1-4 rebinding
+need their own bounded slices, as described below.
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
