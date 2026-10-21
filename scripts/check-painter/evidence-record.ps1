@@ -214,6 +214,19 @@ elseif ($ExposedColourAlphaOnly) {
         $result['developer_command_scope'] = 'not-run-release-consumer-only'
     }
 }
+elseif ($SilhouetteBodyTuneColourOnly) {
+    $result.scope = 'silhouette-body-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-opaque-0E0E0E','literal-35BCE1','literal-2060C080','literal-A532D600'); $result.resolutions = @('1280x720')
+    $result.inputs = 'Retained direct Silhouette only: adult-rest-mug, adult-half-stand and child-rest with fixed persona/poses/screens/camera; no Level, input polling or local/Player/Level/State/input/time updates.'
+    $result.audio = 'No audio consumer/listening acceptance; private preferences unchanged.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('one-live-body-field','nine-local-ordered-RGBA-patches','one-effective-opaqueBLACK-underlay','thirteen-per-reference-controls','retained-consumer-repeat','324-literal-retained-RGB-pixels')
+    $result.checks = 'One live presentation.opening.silhouette field reaches the existing retained body consumer. Independent raw proof is limited to nine3x3 patches with ordered1/2/3 selected writes; complete copied-Silhouette frames prove adoption only. Shared61reads/12rows/12lossless native crops759808pixels and2279604P6bytes;13controls,34affected-patch rejections and8unchanged guards. Adult crops are320x224 two-panel native montages; child crops208x224. Alpha0 reveals opaqueBLACK ink at the selected patches and preserves unselected rim/shade. Borrowed records/resources, unselected style, captured persona/poses/screens/camera, exterior bounds/deltas and RNG remain fixed; zero all updates/no event fade.'
+    if ($Preset -eq 'x64-debug') { $result.actions += @('9-real-commands9states3contexts','108-additional-reads27rows','totals169reads39rows12crops','one-token-private-save-rebase-reset','two-private-PlaySettings-and-JumpJ-seed-Saves'); $result.checks += ' Debug original/saved whole-frame resets, exact one-body-token private Save/rebase and default display/actual content/private preferences/queued-work retention.' }
+    else { $result.actions += @('literal-consumer-only','no-developer-transcript-scratch-or-Save') }
+    $result.checks += ' No independent complete body mask/footprint, universal poses/scales, actual Level/story visibility, human/readability/listening/physical-input or performance acceptance.'
+}
 elseif ($GlassTuneColourOnly) {
     $result.scope = 'glass-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

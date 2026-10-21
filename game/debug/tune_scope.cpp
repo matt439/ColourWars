@@ -97,6 +97,9 @@ namespace
 		// Monitor reads the same borrowed glass tint for its main glass, palette,
 		// picker and close button; persona and captured resources stay intact.
 		{ "presentation.opening.glass_colour", TuneScope::live },
+		// Silhouette reads its borrowed body tint for every ordered mass fill;
+		// persona, pose inputs and captured resources stay intact.
+		{ "presentation.opening.silhouette", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirty-seven audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of thirty-eight audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -330,7 +330,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-thirty-seven audited colour paths below, can be read and changed while the game runs,
+thirty-eight audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -377,7 +377,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These thirty-seven existing string fields are supported; numeric path
+**Colours.** These thirty-eight existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -427,6 +427,7 @@ The latest validation is recorded under
 | `presentation.opening.acting.face` | live | Eye paint of existing FigureActing overlays, on the next applicable draw; later BLACK pupils remain. |
 | `presentation.opening.acting.sweat` | live | Sweat of existing FigureActing cheat overlays, on the next applicable draw. |
 | `presentation.opening.glass_colour` | live | Initial glass and palette of existing Monitor draws, plus picker panels and close-button faces, on each applicable draw. |
+| `presentation.opening.silhouette` | live | Body mass of existing Silhouette story draws, on the next applicable draw. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -505,6 +506,19 @@ fade. Each of the four ordered shade passes submits
 Making all three art colours nonblack zero alpha removes their contributions
 while retaining the separate body fill. This increment changes no drawing,
 default colour or artwork.
+
+The separate `opening.silhouette` body scalar is borrowed on the next applicable
+story draw. One mass-tint wrapper premultiplies base RGBA once; opaque `0E0E0E`,
+art/order/resources and caller persona/pose stay intact. Overlaps retain their
+ordered one/two/three-write accumulation and per-write quantization; no union
+mask, event fade or Reduce Effects change is introduced. Alpha0 removes only
+body contributions, retaining prior ink masses and later rim/shade.
+
+Body qualification is limited to nine literal 3x3 interior patches over the
+fixed opaque-black undercoat. Copied full artwork proves adoption only, not
+independent full geometry. The historical field26 art proof still fixes body
+RGB14 and independently covers only three mug patches; it is unchanged.
+Actual-Level body visibility remains unmeasured, with source caller traces only.
 
 Reveal card ink, paper and shade are borrowed on each visible percentage-card
 draw. Captured sheet/fill/font bindings and the existing captured percentage-text
@@ -612,7 +626,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the thirty-seven colour strings listed above join numbers and booleans in `tune`.
+only the thirty-eight colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1331,7 +1345,7 @@ as the game. In Release:
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the thirty-seven listed colour fields above are
+  and inserting keys in `tune.save`: the thirty-eight listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1340,12 +1354,12 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Thirty-seven existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Thirty-eight existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
-respawn pen colour, cursor ink/fill/shade/shadow, silhouette ink/rim/shade and reveal
+respawn pen colour, cursor ink/fill/shade/shadow, silhouette body/ink/rim/shade and reveal
 ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat and glass colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
@@ -1371,6 +1385,36 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Silhouette body increment (2026-10-20), **verified**:
+path 38, `presentation.opening.silhouette`, reads live on applicable story draws.
+One mass-tint premultiplication preserves opaque `0E0E0E`, art/order/resources
+and repeated-write multiplicity.
+
+Both game/editor builds, four focused CPU cases and both native first
+executions pass. Shade_width 0.004 below pen_width 0.008 rejects ordinary/forced
+merged saves, preserving source/staged/live/current/baseline and every ledger
+key/token pair; one-token save/rebase/reset retains unrelated edits.
+
+Shared evidence has 61 readbacks, 12 rows and 12 crops (759808 pixels).
+Nine literal 3x3 RGBA patches qualify ordered one/two/three body writes;
+retained PPMs independently check 324 literal RGB pixels. Thirteen wrong
+references yield 34 affected-patch refusals/eight unchanged guards. Alpha0
+retains BLACK ink and later art. Copied full artwork proves adoption only;
+broad exterior bounds do not independently prove the complete body mask.
+
+Debug's nine commands/nine states across three contexts add 108 readbacks/27
+rows: totals 169/39/12. Exact one-Body-token Save/rebase/saved reset and two
+private PlaySettings/Jump J seed Saves retain default display, real content/
+private preferences/resources/RNG. All updates are zero.
+
+All 28 shared files, including 12 PPMs, and the supplemental contact PNG match
+between presets. Root inspected all crops; twelve frozen hashes/default JSON
+and fresh Silhouette source/object hashes/timestamps reconcile. Receipts:
+`out/validation/crossfeed-20261020/silhouette-body-colour-v1/`.
+Child half-size uses a simulated 640x360 screen inside the 1280x720 application.
+Actual-Level body visibility, human story/comfort/readability, small-view,
+balance, hardware/listening and performance remain open. More fields remain.
 
 Glass colour increment (2026-10-20), **verified**:
 path 37, `presentation.opening.glass_colour`, is live at all four Monitor

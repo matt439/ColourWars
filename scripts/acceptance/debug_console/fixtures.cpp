@@ -140,7 +140,7 @@ namespace debug_console_acceptance
 			presentation.opening().reveal_art.shade, presentation.opening().cursor_art.shade,
 			presentation.opening().cursor_art.shadow, presentation.opening().desktop_colour,
 			presentation.opening().monitor_art.power_light, presentation.opening().program_colour,
-			presentation.opening().face, presentation.opening().sweat, presentation.opening().glass_colour };
+			presentation.opening().face, presentation.opening().sweat, presentation.opening().glass_colour, presentation.opening().silhouette };
 	}
 #endif
 }
