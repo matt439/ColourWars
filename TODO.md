@@ -131,7 +131,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 
 **Owner:** [docs/review/gap-audit.md, Class 2](docs/review/gap-audit.md#class-2--gaps-in-the-role-as-the-engines-demonstration),
 frozen as above, with live [menu and demonstration scopes](docs/feature-roadmap.md#per-player-menu-focus-gapd1).
-These add to the hierarchies, never flatten them (CLAUDE.md); D6 is `GAP#4.2`.
+These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
@@ -254,4 +254,4 @@ editor, `ROAD` feature roadmap, `DBG` developer console, `DOC`/`CI`/`TOOL` the n
 **`size`:** engineer-hours: `S` ≤2 h · `M` 2–6 h · `L` 6–20 h · `XL` >20 h.
 
 **Out of scope for rows:** findings that hold the game to the engine's T11 ("flatten the
-hierarchy", "make it a variant") are misfiled (CLAUDE.md), and a missing-bank silent fallback is correct.
+hierarchy", "make it a variant") are misfiled (AGENTS.md), and a missing-bank silent fallback is correct.

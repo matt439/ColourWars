@@ -54,7 +54,7 @@ struct BotSeatView
 // bot's BotRandom. Every output is connected, never opens a menu or the F1
 // overlay. Debug-only.
 //
-// Deliberately a hierarchy (CLAUDE.md, "deliberately OOP-heavy"): each
+// Deliberately a hierarchy (AGENTS.md, "deliberately OOP-heavy"): each
 // behaviour refines the one it extends through a virtual hook.
 class Bot
 {

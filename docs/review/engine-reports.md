@@ -10,7 +10,7 @@
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
-> They are drafted here rather than in the submodule on purpose. CLAUDE.md puts
+> They are drafted here rather than in the submodule on purpose. AGENTS.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
 > owes it, and this is the client.
 
