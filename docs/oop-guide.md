@@ -18,7 +18,7 @@ the current code; the documents under `review/` remain historical records.
 | Single and multilevel inheritance | [WeaponBucket](../game/objects/weapon_bucket.h), [Weapon](../game/objects/weapon.h), [ProjectileMist](../game/objects/projectile_mist.h) | Bucket specializes `RelativeVelocityWeapon`, which specializes `Weapon`; mist specializes `DiffusingProjectile`, which specializes `Projectile`. Each intermediate class shares meaningful behavior. |
 | Multiple inheritance | [StructurePaintable](../game/objects/structure_paintable.h), [Player](../game/objects/player.h) | A painted structure has both structure behavior and the scoring interface. A player combines movement, collision, animation and texture roles. |
 | Runtime polymorphism | [Player::update_weapon_and_get_projectiles](../game/objects/player.cpp), [WeaponBuilder](../game/objects/weapon_builder.cpp) | Player owns a `unique_ptr<Weapon>`; the factory chooses its concrete type and virtual calls select the behavior. Player does not switch on weapon classes. |
-| Factory over a closed family | [TerrainMaterial](../game/objects/terrain_material.h), [implementation](../game/objects/terrain_material.cpp) | `TerrainMaterial::make` maps a level's `material` name and collision type to `GroundMaterial`, `PencilMaterial` and their siblings, refusing a mismatch. Each leaf works out its drawing in its constructor; `OrientedTerrainMaterial` shares the long-axis layout between pencil, ruler, eraser and tin. A `Structure` owns its material and never asks which one it has. |
+| Factory over a closed family | [TerrainMaterial](../game/objects/terrain_material.h), [implementation](../game/objects/terrain_material.cpp) | `TerrainMaterial::make` maps a level's `material` name and collision type to `GroundMaterial`, `PencilMaterial` and their siblings, refusing a mismatch. Each leaf works out its drawing in its constructor ([terrain_material_drawings.cpp](../game/objects/terrain_material_drawings.cpp)); `OrientedTerrainMaterial` shares the long-axis layout between pencil, ruler, eraser and tin. A `Structure` owns its material and never asks which one it has. |
 | Overriding and shared algorithms | [WeaponRoller](../game/objects/weapon_roller.cpp), [WeaponBucket](../game/objects/weapon_bucket.cpp) | Roller changes aim and tint; bucket changes firing sound. Shared ammunition and firing work remains in the base workflow. |
 | Composition | [PaintTile](../game/objects/paint_tile.h), [OptionRow](../game/states/option_row.h) | A tile owns its splash animation. A settings row owns its label and value, and accepts an adjustment callback. |
 | Ownership and borrowing | [Level](../game/objects/level.h), [LevelBuilder](../game/objects/level_builder.cpp) | Scene owns its objects; Level owns Scene and borrows Player pointers. Moving a `unique_ptr` transfers ownership. |
@@ -179,8 +179,9 @@ For a new selectable primary weapon, keep these registrations together:
    `grenade_std` is still passed as an ignored secondary placeholder, and `none`
    marks an unset weapon. Neither belongs in the primary range.
 2. Add its record under `weapons` in [tuning.json](../game/content/tuning.json).
-   In [tuning.cpp](../game/tuning.cpp), register it in both the constructor's
-   `add_weapon` list and `validate_resources`' weapon list. Supply the sprite,
+   Register it in both the constructor's `add_weapon` list in
+   [tuning.cpp](../game/tuning.cpp) and `validate_resources`' weapon list in
+   [tuning_validation.cpp](../game/tuning_validation.cpp). Supply the sprite,
    projectile kind, ammunition/timing values, sound names and relative-velocity
    settings required by its chosen implementation. A looping sound needs
    independent voices for each team and player position. Each weapon supplies
@@ -197,7 +198,7 @@ For a new selectable primary weapon, keep these registrations together:
    Add the description to `main_menu.weapon_descriptions` in
    [presentation.json](../game/content/presentation.json) and the corresponding
    `describe` registration in [presentation_read_menu.cpp](../game/presentation_read_menu.cpp).
-   The description array in [presentation.h](../game/presentation.h) includes
+   The description array in [presentation_menu.h](../game/presentation_menu.h) includes
    `random_primary`; keep that relationship if reorganizing the enum.
 5. Supply any new frames/animations in the sprite-sheet definition and texture,
    and any new wave/effect names in the live

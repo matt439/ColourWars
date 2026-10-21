@@ -25,6 +25,7 @@ add_executable(ColourWars WIN32
     session.cpp
     text_wrap.cpp
     tuning.cpp
+    tuning_validation.cpp
     tunnelling_limits.cpp
 
     debug/bind_commands.cpp
@@ -117,6 +118,7 @@ add_executable(ColourWars WIN32
     objects/structure.cpp
     objects/structure_paintable.cpp
     objects/terrain_material.cpp
+    objects/terrain_material_drawings.cpp
     objects/team_colour.cpp
     objects/weapon.cpp
     objects/weapon_motion.cpp
@@ -141,6 +143,7 @@ add_executable(ColourWars WIN32
     states/stick_settings_menu.cpp
     states/end_menu.cpp
     states/game_states.cpp
+    states/game_level_dev_tools.cpp
     states/main_menu.cpp
     states/main_menu_credits.cpp
     states/main_menu_exit.cpp

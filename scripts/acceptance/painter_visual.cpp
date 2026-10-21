@@ -104,6 +104,7 @@ namespace
 #include "scripts/acceptance/painter_visual/view_shake_checks.h"
 #include "scripts/acceptance/painter_visual/aim_marker_checks.h"
 #include "scripts/acceptance/painter_visual/drift_checks.h"
+#include "scripts/acceptance/painter_visual/foreground_checks.h"
 #include "scripts/acceptance/painter_visual/monitor_checks.h"
 #include "scripts/acceptance/painter_visual/miniature_terrain_checks.h"
 #include "scripts/acceptance/painter_visual/countdown_checks.h"
@@ -126,6 +127,7 @@ namespace
 #include "scripts/acceptance/painter_visual/pause_question_checks.h"
 #include "scripts/acceptance/painter_visual/results_menu_checks.h"
 #include "scripts/acceptance/painter_visual/main_menu_checks.h"
+#include "scripts/acceptance/painter_visual/title_home_text_checks.h"
 #if COLOURWARS_DEV_TOOLS
 #include "scripts/acceptance/painter_visual/tune_colour_checks.h"
 #endif
@@ -148,8 +150,12 @@ namespace
 #include "scripts/acceptance/painter_visual/scribble_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/hud_health_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/hud_track_tune_colour_checks.h"
+#include "scripts/acceptance/painter_visual/crack_colour_fixture.h"
 #include "scripts/acceptance/painter_visual/crack_tune_colour_checks.h"
+#include "scripts/acceptance/painter_visual/limb_colour_fixture.h"
 #include "scripts/acceptance/painter_visual/limb_tune_colour_checks.h"
+#include "scripts/acceptance/painter_visual/player_identity_ink_checks.h"
+#include "scripts/acceptance/painter_visual/player_identity_background_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_checks.h"
 #include "scripts/acceptance/painter_visual/setup_paper_checks.h"
 #include "scripts/acceptance/painter_visual/weapon_catalog_checks.h"

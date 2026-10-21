@@ -167,14 +167,14 @@ editor default.
 
 | File | Key (line) | Resolved as | Resolved at | Validated at |
 |---|---|---|---|---|
-| `tuning.json` | `match.sounds.countdown` (:27) | effect, in **the level's** bank (since 2026-10-15) | `level.cpp` | `tuning.cpp:534`, once per stage (`content_validation.cpp:33-34`) |
-| | `match.sounds.zoom_out` (:28) | effect | `level.cpp:65-66` | `tuning.cpp:535` |
-| | `match.sounds.hover` (:29), `click` (:30) | wave | `level.cpp:80-81`, only when the opening runs | `tuning.cpp:536-537` |
+| `tuning.json` | `match.sounds.countdown` (:27) | effect, in **the level's** bank (since 2026-10-15) | `level.cpp` | `tuning_validation.cpp:211`, once per stage (`content_validation.cpp:33-34`) |
+| | `match.sounds.zoom_out` (:28) | effect | `level.cpp:65-66` | `tuning_validation.cpp:215` |
+| | `match.sounds.hover` (:29), `click` (:30) | wave | `level.cpp:80-81`, only when the opening runs | `tuning_validation.cpp:217-218` |
 | | `paint.sound_bank`, `paint.splash_sounds`, `capture_sound`, `dud_sound`, `impact_sounds` (2026-10-15) | waves | Level-owned `PaintAudio`; surfaces report contact results | `GameTuning::validate_resources`, every variant and projectile kind |
-| | `player.sound_bank` (:98), `player.sounds.*` (:100-103) | wave | the `Player` constructor (`player.cpp`) | `tuning.cpp:468-475` |
+| | `player.sound_bank` (:98), `player.sounds.*` (:100-103) | wave | the `Player` constructor (`player.cpp`) | `tuning_validation.cpp:110-117` |
 | | `weapons.<w>.sound_bank` (:131, :151, :165, :183, :203) | bank | `weapon.cpp:49` | |
-| | `weapons.<w>.shoot_sound` (:132, :152, :166, :184, :204) | wave | `weapon.cpp:52-53` | `tuning.cpp:498` |
-| | `weapons.<w>.loop_sounds.team_a/team_b` (:136-137, :168-169, :188-189) | effect | `weapon.cpp:50-51, 324-344` | `tuning.cpp:500-509` |
+| | `weapons.<w>.shoot_sound` (:132, :152, :166, :184, :204) | wave | `weapon.cpp:52-53` | `tuning_validation.cpp:159-160` |
+| | `weapons.<w>.loop_sounds.team_a/team_b` (:136-137, :168-169, :188-189) | effect | `weapon.cpp:50-51, 324-344` | `tuning_validation.cpp:177-186` |
 | `presentation.json` | `menu_style.sound_bank` (:47) | bank for all menus | `menu_page.cpp:11` | |
 | | `menu_style.sounds.direction/confirm/cancel` (:49-51) | wave | `menu_page.cpp:16-18` | `presentation.cpp:842-844` |
 | | `main_menu.music` (:111) | effect | `main_menu.cpp:17`; also by name at `controls_settings_menu.cpp:91-96` | `presentation.cpp:847` |
@@ -194,7 +194,7 @@ above:
 | `game/states/stage_preview.cpp` and `level_object_builder.cpp` | Stage previews build real `StructurePaintable`s. Since 2026-10-15 surfaces report contact results; Level owns paint audio, so previews resolve no paint voices and play none | Every paint cue is checked at startup; match construction resolves the same choices in `PaintAudio` |
 | `game/debug/tune_scope.cpp:26`; `tune_target.cpp:31, 56, 90` | `tuning.match.sounds.*.volume` is live-tunable; a tuned candidate is re-validated against the loaded banks | New `match.sounds.*` slots inherit live tuning. `debug_console/tune_document_checks.cpp` (`check_tune_scope`) pins the list |
 | `game/play_settings.h:8-12`; `save.cpp:79-80, 174-175, 309-310`; `controls_settings_menu.cpp:58-59, 84-97`; `menu_page.cpp:280-298`; every `* preferences_->sfx_gain()` / `music_gain()` in the play calls above | The player's 0-100 music and SFX volumes. Every wave and effect is multiplied by one of the two; Apply re-sets the menu music's volume by name (`controls_settings_menu.cpp:91-96`) | Every new cue must be routed through the right gain (music or SFX). Room tone and stings need a deliberate choice of which. `scripts/acceptance/settings.cpp:88-140` pins the stored values |
-| `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level_audio.cpp`). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
+| `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/states/game_level_dev_tools.cpp` (`debug_sync_audio`); `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level_audio.cpp`). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
 | `game/main.cpp:107`; `content_validation.cpp:9-34`; `resource_validation.h:37-47` | Startup validation of every name above against the loaded banks | Unchanged in shape; extend it for every new slot (section 4) |
 
 Validation can be fooled in a fresh clone. A silent bank accepts any name
