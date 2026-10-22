@@ -54,7 +54,7 @@ void Level::draw_miniature_world(Renderer& renderer, const Scene::ViewOverlay& o
 	// owner of the normal gameplay fan-out. The pin's collision span mirrors
 	// its current render order; a native parity check guards that dependency.
 	// Miniature art is chosen by this path rather than by zoom, which is why
-	// this walk is not Scene::draw yet (POL#28).
+	// this walk is not Scene::draw yet (POL#29).
 	for (int index = 0; index < count; ++index)
 	{
 		const Scene::View& view = this->scene_->view(index);

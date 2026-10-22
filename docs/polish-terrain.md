@@ -272,7 +272,7 @@ was answered with `DrawList::camera()` and `viewport()`, so a structure's own
 `draw()` can now read its view; the camera parameter that used to be threaded
 into the miniature draw is gone.
 
-**Next (`POL#28`):** draw the overview and monitor through `Scene::draw`.
+**Next (`POL#29`):** draw the overview and monitor through `Scene::draw`.
 `Structure::draw` would call `paint_miniature` when a draw-mode flag, set by
 Level in `update()` while the overview or monitor shows, says so; never by
 camera scale alone: a scale rule would switch 4-player gameplay panes to

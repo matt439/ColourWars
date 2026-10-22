@@ -59,7 +59,7 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#17`/`POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
-| `POL#28` | OPEN | LOW | M | Draw overview/monitor terrain through `Scene::draw` with `DrawList::camera()` and a path-set miniature flag; delete `miniature_view` and the scenery mirror; integration check of order, cull and pixels. [Next](docs/polish-terrain.md#small-view-terrain-readability-2026-10-18). |
+| `POL#29` | OPEN | LOW | M | Draw overview/monitor terrain through `Scene::draw` with `DrawList::camera()` and a path-set miniature flag; delete `miniature_view` and the scenery mirror; integration check of order, cull and pixels. [Next](docs/polish-terrain.md#small-view-terrain-readability-2026-10-18). |
 
 ## Feel and feedback
 

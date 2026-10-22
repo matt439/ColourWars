@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Seven are live as unfiled drafts with exhibits (6, 12, 15, 18, 20, 22, 23). Sixteen are closed** and kept below as one paragraph
+> **Four are live as unfiled drafts with exhibits (6, 12, 15, 23). Nineteen are closed** and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped or declined), and
 > what this repository spent the answer on, if anything.
 >
@@ -91,9 +91,9 @@ to scope separately.
 
 Thirteen drafts were present at approval; report 21 later added a fourteenth
 and report 22 (2026-10-22) a fifteenth. Labrador answered 9, 10, 11, 13, 14,
-16, 17, 19 and 21 before any was filed, and all nine are now [closed](#closed),
-so six of those fifteen drafts remain unfiled (6, 12, 15, 18, 20 and 22);
-report 22 is checked only against `0c15f34` so far. Report 23 (2026-10-22), found while spending 16, is a sixteenth, checked
+16, 17, 18, 19, 20, 21 and 22 before any was filed, and all twelve are now
+[closed](#closed), so three of those fifteen drafts remain unfiled (6, 12 and
+15). Report 23 (2026-10-22), found while spending 16, is a sixteenth, checked
 against `19cf650`. Recording this approval posts no reports and leaves
 the engine pin unchanged. The next work is a fresh upstream-master
 check and preparation of the minimal report/reproducer for each surviving gap;
@@ -421,7 +421,7 @@ hidden/not-foreground requirement as the regression check.
 
 # Closed
 
-Sixteen reports, all answered. Ten were spent here in code; 9 and 10 were
+Nineteen reports, all answered. Thirteen were spent here in code; 9 and 10 were
 answered as document only and 14 was narrowed, and those three changed only
 comments and docs; 17 changed only a manifest comment, 19 needs more evidence
 and 21 was declined; and those six spent nothing in code — an answer that leaves the workaround where it is still
@@ -430,7 +430,8 @@ reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
 [What the audit changed](#what-the-audit-changed) for reports 1–5, `f81e937`
 for 7 and 8, the parent of `7041dc1` for 13 and 21, `a0e6f7e` for 11, 16,
-17 and 19, and the parent of `07e4879` for 9, 10 and 14.
+17 and 19, the parent of `07e4879` for 9, 10 and 14, and the parent of
+`c657dd1` for 18, 20 and 22.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -1036,7 +1037,7 @@ list, so pixels are unchanged. `projected_miniature_quads(const Camera&)` keeps
 its parameter as the test seam it is. The draft and its null-renderer
 illustration are deleted.
 
-**Kept, and now `POL#28`:** the sequential overview/monitor walk in
+**Kept, and now `POL#29`:** the sequential overview/monitor walk in
 `miniature_view.cpp` and its `dynamic_cast<const Structure*>`,
 `Level::draw_miniature_world`'s view offset, the `scenery_` mirror and
 StagePreview's own walk. Deleting them means `Structure::draw` choosing the
@@ -1058,7 +1059,7 @@ stated rule contradicted: `scene.h` forbids hand-copied per-view walks, and
 `game_object.h` described a camera a `draw()` could not get. And it did not
 foresee the cull contract. The miniature strokes are clipped to their
 structure's own extent, so by this client's reading they already meet it; the
-`POL#28` pixel oracles are where that gets checked.
+`POL#29` pixel oracles are where that gets checked.
 
 ## 21. ~~Digital action evaluation remains client code~~ — declined, `197aff1`
 
@@ -1153,8 +1154,11 @@ validation already checks every one.
 live.** The draft asked for raw handles and left whether a mismatched pair is
 "checked, asserted or documented" upstream; the engine made a mismatch
 unrepresentable, so the client spends pairs and cannot assemble one from halves
-it resolved separately. Three of the four asks were declined, and so was the
-`std::less<>` hygiene the draft said "rides with the main ask". The draft put the
+it resolved separately. The asks' raw-handle shape was declined and their
+substance answered with pairs: the strip and frame setters and the handle
+constructors, as `SheetStrip`/`SheetFrame` constructors and protected setters.
+The frame-only `set_frame` and the `UiTexture` forms were declined outright, and
+so was the `std::less<>` hygiene the draft said "rides with the main ask". The draft put the
 splash handles in "PaintTile's shared paint record", which is `PaintTuning`, read
 before any sheet exists; they needed a record of their own beside it. And it did
 not foresee the atomic name setters.
