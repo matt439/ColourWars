@@ -57,6 +57,12 @@ updates gap-audit F8 against the release machinery this game has since built.
 The engine's PI-09/PI-10 already reserve filing and a decision; PI-11 is a
 conditional implementation story, not an implemented answer.
 
+**Moved 2026-10-22 to upstream master `0c15f34`.** Two commits: the engine's
+agent brief became `AGENTS.md` imported by `CLAUDE.md`, plus website
+explorations. Under `engine/` only a comment in `engine/CMakeLists.txt`
+changed, so nothing closed and no citation here moved; both presets, consumer
+acceptance and the startup check pass on the new pin.
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -145,7 +151,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 19 | No public later-show convenience for an Application initialized hidden | exact standalone hidden-creation control and `game/main.cpp` startup order | local unfiled request - master checked 2026-10-20; four hidden Debug/Release cases pass; first present remains open |
 | 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
 | 21 | Digital action evaluation remains client code | runtime saved Jump mapping and the standalone `action_evaluation.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
-| 22 | Handle-holding drawables can only be re-pointed by name | paint-splash reset, projectile construction and figure clip changes, each handing back a name | local unfiled draft - checked against the pin `52e809a` 2026-10-22, not upstream master; no sanitized request or synthetic example yet |
+| 22 | Handle-holding drawables can only be re-pointed by name | paint-splash reset, projectile construction and figure clip changes, each handing back a name | local unfiled draft - checked against upstream master `0c15f34` 2026-10-22; no sanitized request or synthetic example yet |
 
 Nothing else is outstanding, on either side, beyond reports 6 and 9-22 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -946,10 +952,11 @@ governs any later publication. Refresh upstream immediately before filing.
 
 ## 22. Handle-holding drawables can only be re-pointed by name — **draft with paint-splash exhibit**
 
-**Drafted 2026-10-22 against the pin `52e809a`, not against upstream master.**
-No fetch was made. Before filing, fetch upstream master, recheck every engine
-citation below against it, and record that commit with the report. There is no
-sanitized request or synthetic example yet; preparing them is the next step.
+**Drafted 2026-10-22 against the pin `52e809a`; rechecked the same day against
+upstream master `0c15f34`,** whose `engine/` sources match `52e809a` apart from
+one CMake comment, so every engine citation below holds there. Refresh upstream
+again immediately before filing. There is no sanitized request or synthetic
+example yet; preparing them is the next step.
 
 ### What happens
 
