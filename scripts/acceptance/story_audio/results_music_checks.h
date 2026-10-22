@@ -74,8 +74,8 @@ namespace
 		const int original_sfx = world.preferences.sfx_volume;
 		const auto& music = world.presentation.results_menu().music;
 		const auto& mix = world.presentation.music_mix();
-		world.preferences.music_volume = 35;
-		world.preferences.sfx_volume = 0;
+		world.set_music_volume(35);
+		world.set_sfx_volume(0);
 		world.begin = recorded_sounds(world.device).size();
 		{
 			ResultsAudio audio(&world.audio, &world.preferences, world.presentation);
@@ -98,8 +98,8 @@ namespace
 			audio.suspend();
 			require(world.state(music.name) == SoundState::paused,
 				"Focus loss did not preserve the results coda on its paused voice");
-			world.preferences.music_volume = 60;
-			world.preferences.sfx_volume = 100;
+			world.set_music_volume(60);
+			world.set_sfx_volume(100);
 			audio.resume();
 			audio.resume();
 			require(world.state(music.name) == SoundState::playing && world.plays(music.name) == 1 &&
@@ -107,7 +107,7 @@ namespace
 				close_to(world.last_volume(music.name), music.volume * 0.6f),
 				"Results focus return restarted the coda or ignored current music gain");
 			audio.suspend();
-			world.preferences.music_volume = 0;
+			world.set_music_volume(0);
 			audio.resume();
 			require(world.plays(music.name) == 1 && close_to(world.last_volume(music.name), 0.0f),
 				"Results focus return ignored music mute or replayed the coda");
@@ -118,7 +118,7 @@ namespace
 			world.device.stop_voice(world.voices.at(music.name), true);
 			const int resumed = music_voice_calls(world, music.name, SoundCall::resume_voice);
 			audio.suspend();
-			world.preferences.music_volume = 80;
+			world.set_music_volume(80);
 			audio.resume();
 			require(world.state(music.name) == SoundState::stopped && world.plays(music.name) == 1 &&
 				music_voice_calls(world, music.name, SoundCall::resume_voice) == resumed,
@@ -127,7 +127,7 @@ namespace
 		require(world.state(music.name) == SoundState::stopped,
 			"Results-audio destruction left its voice alive");
 		world.begin = recorded_sounds(world.device).size();
-		world.preferences.music_volume = 0;
+		world.set_music_volume(0);
 		{
 			ResultsAudio fresh(&world.audio, &world.preferences, world.presentation);
 			require(world.plays(music.name) == 1 && close_to(world.last_volume(music.name), 0.0f),
@@ -150,8 +150,8 @@ namespace
 			silent.fade_out();
 			require(silent.finished(), "Silent-bank results exit did not finish immediately");
 		}
-		world.preferences.music_volume = original_music;
-		world.preferences.sfx_volume = original_sfx;
+		world.set_music_volume(original_music);
+		world.set_sfx_volume(original_sfx);
 		check_screen_music(world);
 		check_music_exit_callbacks();
 	}
@@ -163,8 +163,8 @@ namespace
 		const auto& music = world.presentation.main_menu().music;
 		const auto& mix = world.presentation.music_mix();
 		const auto& bank = world.presentation.menu().sound_bank;
-		world.preferences.music_volume = 40;
-		world.preferences.sfx_volume = 0;
+		world.set_music_volume(40);
+		world.set_sfx_volume(0);
 		world.begin = recorded_sounds(world.device).size();
 		{
 			ScreenMusic audio(bank, &world.audio, &world.preferences, music, mix, true);
@@ -191,7 +191,7 @@ namespace
 			audio.update(mix.fade_in * 0.5f);
 			require(close_to(world.last_volume(music.name), music.volume * 0.4f * 0.5f),
 				"Persistent menu music missed its fade-in midpoint");
-			world.preferences.music_volume = 20;
+			world.set_music_volume(20);
 			audio.update(0.0f);
 			require(close_to(world.last_volume(music.name), music.volume * 0.2f * 0.5f),
 				"Zero-time settings refresh advanced the envelope or ignored applied gain");
@@ -205,8 +205,8 @@ namespace
 			audio.update(mix.fade_in * 20.0f);
 			require(world.state(music.name) == SoundState::paused && recorded_sounds(world.device).size() == paused,
 				"Focus suspension advanced the menu fade or adjusted its paused voice");
-			world.preferences.music_volume = 60;
-			world.preferences.sfx_volume = 100;
+			world.set_music_volume(60);
+			world.set_sfx_volume(100);
 			audio.resume();
 			audio.resume();
 			require(world.state(music.name) == SoundState::playing && world.plays(music.name) == 1 &&
@@ -232,7 +232,7 @@ namespace
 				"Focus/updates resurrected a completed screen-music exit");
 		}
 
-		world.preferences.music_volume = 100;
+		world.set_music_volume(100);
 		world.begin = recorded_sounds(world.device).size();
 		{
 			ScreenMusic interrupted(bank, &world.audio, &world.preferences, music, mix, true);
@@ -271,7 +271,7 @@ namespace
 		{
 			PresentationSound quiet = music;
 			quiet.volume = authored_silent ? 0.0f : music.volume;
-			world.preferences.music_volume = authored_silent ? 100 : 0;
+			world.set_music_volume(authored_silent ? 100 : 0);
 			world.begin = recorded_sounds(world.device).size();
 			ScreenMusic muted(bank, &world.audio, &world.preferences, quiet, mix, true);
 			muted.update(mix.fade_in);
@@ -279,7 +279,7 @@ namespace
 			require(muted.finished() && world.state(music.name) == SoundState::stopped && world.plays(music.name) == 1,
 				"Muted/authored-zero screen exit waited for an inaudible fade or replayed music");
 		}
-		world.preferences.music_volume = 100;
+		world.set_music_volume(100);
 		world.begin = recorded_sounds(world.device).size();
 		{
 			ScreenMusic zero(bank, &world.audio, &world.preferences, music, mix, true);
@@ -300,8 +300,8 @@ namespace
 		}
 		require(recorded_sounds(world.device).size() == absent,
 			"Silent-bank screen music reached an audible recorder device");
-		world.preferences.music_volume = original_music;
-		world.preferences.sfx_volume = original_sfx;
+		world.set_music_volume(original_music);
+		world.set_sfx_volume(original_sfx);
 	}
 
 	void check_music_exit_callbacks()
@@ -474,8 +474,8 @@ namespace
 				"Arena ending sting does not match its accepted cue binding");
 			for (const int players : { 1, 2, 4 })
 			{
-				world.preferences.music_volume = players == 1 ? 0 : 40;
-				world.preferences.sfx_volume = 0;
+				world.set_music_volume(players == 1 ? 0 : 40);
+				world.set_sfx_volume(0);
 				world.build(OpeningMode::off, players, 0.25f, arena.stage);
 				world.level->update(world.idle, 0.0f);
 				world.level->update(world.idle, -1.0f);
@@ -496,8 +496,8 @@ namespace
 				world.level->update(world.idle, -1.0f);
 				world.level->suspend();
 				require(world.state(expected) == SoundState::paused, "Suspension did not pause the ending sting");
-				world.preferences.music_volume = 75;
-				world.preferences.sfx_volume = 100;
+				world.set_music_volume(75);
+				world.set_sfx_volume(100);
 				world.level->resume();
 				require(world.state(expected) == SoundState::playing && world.plays(expected) == 1 &&
 					close_to(world.last_volume(expected), stage->end_sting_volume() * 0.75f),
@@ -529,7 +529,7 @@ namespace
 				"The silent Movement Course emitted an arena ending sting");
 		}
 		world.level.reset();
-		world.preferences.music_volume = original_music;
-		world.preferences.sfx_volume = original_sfx;
+		world.set_music_volume(original_music);
+		world.set_sfx_volume(original_sfx);
 	}
 }

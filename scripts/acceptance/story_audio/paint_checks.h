@@ -78,8 +78,8 @@
 			json["paint"]["min_capture_interval"].SetFloat(0.4f);
 		});
 		const auto& paint = tuning.paint();
-		PaintAudio audio(&paint, &world.audio, &world.preferences);
-		world.preferences.sfx_volume = 35;
+		PaintAudio audio(&paint, &world.audio);
+		world.set_sfx_volume(35);
 		world.begin = recorded_sounds(world.device).size();
 		audio.update(weapon_step);
 		audio.contact(ProjectileType::spray, 0, true, true);
@@ -120,8 +120,8 @@
 		require(world.wave_plays(paint.dud_sound.name) == 1 && choice_plays(world, paint.splash_sounds) ==
 			static_cast<int>(paint.splash_sounds.size()), "Long update created an impact backlog or separate dud budget");
 
-		PaintAudio independent(&paint, &world.audio, &world.preferences);
-		world.preferences.sfx_volume = 0;
+		PaintAudio independent(&paint, &world.audio);
+		world.set_sfx_volume(0);
 		world.begin = recorded_sounds(world.device).size();
 		independent.update(weapon_step);
 		for (int owner = 0; owner < 4; ++owner)
@@ -137,7 +137,7 @@
 			world.wave_volume_is(paint.splash_sounds[index], 0.0f);
 		}
 		world.wave_volume_is(paint.capture_sound, 0.0f);
-		world.preferences.sfx_volume = 65;
+		world.set_sfx_volume(65);
 		independent.update(0.401f);
 		independent.contact(ProjectileType::spray, 0, true, true);
 		require(close_to(world.last_wave_volume(paint.splash_sounds[1]), paint.splash_sounds[1].volume * 0.65f),
@@ -152,7 +152,7 @@
 
 		AudioResources silent;
 		silent.add_sound_bank(paint.sound_bank, SoundBank::silent());
-		PaintAudio fallback(&paint, &silent, &world.preferences);
+		PaintAudio fallback(&paint, &silent);
 		fallback.update(weapon_step);
 		fallback.contact(ProjectileType::ball, 0, true, true);
 		fallback.update(1.0f);
@@ -186,13 +186,13 @@
 	{
 		using namespace mattmath;
 		const auto& paint = world.tuning.paint();
-		world.preferences.sfx_volume = 50;
+		world.set_sfx_volume(50);
 		for (const auto type : { ProjectileType::spray, ProjectileType::jet, ProjectileType::rolling,
 			ProjectileType::mist, ProjectileType::ball })
 		{
 			for (bool projectile_first : { false, true })
 			{
-				PaintAudio audio(&paint, &world.audio, &world.preferences);
+				PaintAudio audio(&paint, &world.audio);
 				audio.update(weapon_step);
 				auto surface = paint_surface(world, { 0, 0, 100, 50 });
 				auto shots = paint_projectiles(world, type);
@@ -226,7 +226,7 @@
 			}
 		}
 
-		PaintAudio audio(&paint, &world.audio, &world.preferences);
+		PaintAudio audio(&paint, &world.audio);
 		audio.update(weapon_step);
 		auto first = paint_surface(world, { 0, 0, 100, 50 });
 		auto second = paint_surface(world, { 0, 0, 100, 50 });
@@ -260,7 +260,7 @@
 		const auto& paint = world.tuning.paint();
 		for (bool launch : { false, true })
 		{
-			PaintAudio audio(&paint, &world.audio, &world.preferences);
+			PaintAudio audio(&paint, &world.audio);
 			audio.update(weapon_step);
 			const RectangleF rectangle(0, -50, 5, 100);
 			Structure cover("sprite_sheet_1", "square_white_4", rectangle,
@@ -277,7 +277,7 @@
 				choice_plays(world, paint.splash_sounds) == 0 && world.wave_plays(paint.capture_sound.name) == 0,
 				"Swept or launch bare-geometry contact missed or duplicated its dud");
 		}
-		PaintAudio audio(&paint, &world.audio, &world.preferences);
+		PaintAudio audio(&paint, &world.audio);
 		audio.update(weapon_step);
 		auto no_faces = paint_surface(world, { 0, 0, 100, 50 }, {});
 		auto shot = paint_projectiles(world, ProjectileType::jet);

@@ -31,6 +31,6 @@ void WeaponBucket::handle_shoot_sound(bool shooting_this_update, bool /*holding_
     if (shooting_this_update)
     {
         this->sound_bank_->play_wave(this->shoot_sound_,
-            this->details().shoot_sound_volume * this->preferences_->sfx_gain());
+            this->details().shoot_sound_volume);
     }
 }

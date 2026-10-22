@@ -169,7 +169,7 @@
 
 	void check_movement_landings(World& world)
 	{
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		const auto& sounds = world.tuning.player().movement_sounds;
 		MovementCourse course(world, world.tuning);
@@ -205,7 +205,7 @@
 		world.begin = recorded_sounds(world.device).size();
 		course.land();
 		require(choice_plays(world, sounds.land) == 0, "Respawn fall/settling played a landing");
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		course.tick(movement_input(0.0f, true));
 		course.land();
 		require(choice_plays(world, sounds.land) == 1, "Respawn did not rearm its next ordinary landing");
@@ -242,7 +242,7 @@
 	void check_movement_impact_gain(World& world)
 	{
 		const auto& sounds = world.tuning.player().movement_sounds;
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		float short_volume = 0.0f;
 		for (float drop : { 20.0f, 1000.0f })
 		{
@@ -274,7 +274,7 @@
 
 	void check_movement_steps_and_walls(World& world)
 	{
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		const auto& sounds = world.tuning.player().movement_sounds;
 		MovementCourse course(world, world.tuning);
@@ -393,7 +393,7 @@
 		for (int index = 0; index < 4; ++index) { course.add(index * 2000.0f, 0.0f, tuning.player().max_velocity.x); }
 		course.floor();
 		course.tick(movement_input(1.0f));
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		course.tick(movement_input(-1.0f));
 		require(world.wave_plays(sounds.skid.name) == 4, "Four players shared or missed skid edges");
@@ -412,7 +412,7 @@
 		{
 			require(world.wave_plays(sound.name) > 0, "Four-player travel failed to cycle independent footsteps");
 		}
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		for (int tick = 0; tick < 60; ++tick) { course.tick(movement_input(1.0f)); }
 		world.begin = recorded_sounds(world.device).size();
 		course.tick(movement_input(-1.0f));

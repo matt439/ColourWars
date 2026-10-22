@@ -11,6 +11,7 @@
 #include "game/states/connection_audio.h"
 #include "game/states/resume_audio.h"
 #include "game/states/results_audio.h"
+#include "game/sound_groups.h"
 #include "game/objects/projectile_jet.h"
 #include "engine/assets/sound_bank_loader.h"
 #include "engine/assets/sprite_sheet_loader.h"
@@ -110,6 +111,7 @@ namespace
 		GameTuning tuning;
 		Presentation presentation;
 		Registry<LevelLoadedInfo> levels{ "Level" };
+		StageList stages;
 		ResolutionManager resolution;
 		ViewportManager viewports{ &resolution };
 		Mouse mouse;
@@ -165,10 +167,28 @@ namespace
 					(content / "levels" / (std::string(stage) + ".json")).string().c_str());
 				info->validate();
 				this->levels.add(stage, std::move(info));
+				this->stages.push_back(Stage{ stage });
 			}
+			// The groups main.cpp assigns. Every volume change below goes
+			// through set_*_volume, as the Controls page's Apply does.
+			sound_groups::assign(this->audio, this->tuning, this->presentation,
+				this->levels, this->stages);
+			sound_groups::apply(this->audio, this->preferences);
 			this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render, &this->audio,
 				&this->preferences, &this->levels, &this->tuning, &this->presentation, &this->resolution,
 				nullptr, &this->partitioner, &this->mouse);
+		}
+
+		void set_sfx_volume(int volume)
+		{
+			this->preferences.sfx_volume = volume;
+			sound_groups::apply(this->audio, this->preferences);
+		}
+
+		void set_music_volume(int volume)
+		{
+			this->preferences.music_volume = volume;
+			sound_groups::apply(this->audio, this->preferences);
 		}
 
 		void build(OpeningMode opening, int players = 2, float duration = 0.25f,
@@ -302,6 +322,7 @@ namespace
 #include "scripts/acceptance/story_audio/movement_checks.h"
 #include "scripts/acceptance/story_audio/paint_checks.h"
 #include "scripts/acceptance/story_audio/painted_checks.h"
+#include "scripts/acceptance/story_audio/sound_group_checks.h"
 #include "scripts/acceptance/story_audio/connection_checks.h"
 #include "scripts/acceptance/story_audio/resume_checks.h"
 #include "scripts/acceptance/story_audio/menu_content_checks.h"
@@ -339,6 +360,7 @@ int main(int argc, char** argv)
 		check_end_menu_art_content(std::filesystem::path(argv[1]));
 		check_pause_menu_art_content(std::filesystem::path(argv[1]));
 		check_results_menu_art_content(std::filesystem::path(argv[1]));
+		check_sound_groups(world);
 		check_connection_audio(world);
 		check_resume_audio(world);
 		check_resume_weapon_audio(world);
@@ -389,7 +411,7 @@ int main(int argc, char** argv)
 		check_paint_contacts(world);
 		check_paint_duds_and_launch(world);
 		check_level_paint_after_owner_death(world);
-		std::cout << "PASS story audio: menu cue content, connection edges/aggregation/gains/mute, "
+		std::cout << "PASS story audio: menu cue content, every authored sound in its Music/SFX group, connection edges/aggregation/gains/mute, "
 			"resume content/beats/cancellation/gains/mute and stale-fire loop cleanup, "
 			"results coda one-shot/focus/gains/mute/completed-state guard/teardown and arena ending-sting content/selection/lifecycle, "
 			"arena music raw-clock fades/ducking/restore/preferences/suspension/ending/silent fallback, "

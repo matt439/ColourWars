@@ -26,7 +26,7 @@ MenuLevelSettings* MenuContext::level_settings() const
 void MenuContext::reset_connection_audio()
 {
 	this->connection_audio_ = std::make_unique<ConnectionAudio>(this->data_->audio_resources(),
-		&this->data_->save()->play_settings(), *this->data_->presentation());
+		*this->data_->presentation());
 }
 
 void MenuContext::set_music_update(std::function<void(float)> update)

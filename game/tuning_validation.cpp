@@ -10,6 +10,8 @@
 
 // GameTuning::validate_resources and validate_match_sounds: the startup checks
 // of the parsed tuning against the loaded fonts, frames, animations and sounds.
+// The sounds are the two reference lists below, which game/sound_groups.cpp
+// also walks to put each one in its group.
 
 using namespace labrador;
 using namespace mattmath;
@@ -49,26 +51,10 @@ void GameTuning::validate_resources(const RenderResources& render,
 	splash(ProjectileType::rolling, "rolling");
 	splash(ProjectileType::mist, "mist");
 	splash(ProjectileType::ball, "ball");
-	for (size_t i = 0; i < this->paint_.splash_sounds.size(); ++i)
+	for (const SoundReference& sound : this->sound_references())
 	{
-		check.wave("paint.splash_sounds[" + std::to_string(i) + "].name",
-			this->paint_.sound_bank, this->paint_.splash_sounds[i].name);
+		check.sound(sound);
 	}
-	check.wave("paint.capture_sound.name", this->paint_.sound_bank,
-		this->paint_.capture_sound.name);
-	check.wave("paint.dud_sound.name", this->paint_.sound_bank,
-		this->paint_.dud_sound.name);
-	const auto impact = [&](ProjectileType type, const char* key)
-	{
-		check.wave(std::string("paint.impact_sounds.") + key + ".name",
-			this->paint_.sound_bank,
-			this->paint_.impact_sounds[static_cast<size_t>(type)].name);
-	};
-	impact(ProjectileType::spray, "spray");
-	impact(ProjectileType::jet, "jet");
-	impact(ProjectileType::rolling, "rolling");
-	impact(ProjectileType::mist, "mist");
-	impact(ProjectileType::ball, "ball");
 
 	const auto animation = [&](const char* key, const PlayerAnimationTuning& clip,
 		bool action = false)
@@ -107,33 +93,6 @@ void GameTuning::validate_resources(const RenderResources& render,
 	animation("fire", this->player_.fire, true);
 	animation("hurt", this->player_.hurt, true);
 	animation("elimination", this->player_.elimination, true);
-	check.wave("player.sounds.damage.name", this->player_.sound_bank,
-		this->player_.damage_sound.name);
-	check.wave("player.sounds.death.name", this->player_.sound_bank,
-		this->player_.death_sound.name);
-	check.wave("player.sounds.jump.name", this->player_.sound_bank,
-		this->player_.jump_sound.name);
-	check.wave("player.sounds.respawn.name", this->player_.sound_bank,
-		this->player_.respawn_sound.name);
-	for (size_t i = 0; i < this->player_.redraw_sounds.size(); ++i)
-	{
-		check.effect("player.redraw_sounds[" + std::to_string(i) + "].name",
-			this->player_.sound_bank, this->player_.redraw_sounds[i].name);
-	}
-	const auto movement_choices = [&](const char* key,
-		const std::vector<SoundTuning>& choices)
-	{
-		for (size_t i = 0; i < choices.size(); ++i)
-		{
-			check.wave(std::string("player.movement_sounds.") + key + "[" +
-				std::to_string(i) + "].name", this->player_.sound_bank, choices[i].name);
-		}
-	};
-	movement_choices("land", this->player_.movement_sounds.land);
-	movement_choices("step", this->player_.movement_sounds.step);
-	movement_choices("step_painted", this->player_.movement_sounds.step_painted);
-	check.wave("player.movement_sounds.skid.name", this->player_.sound_bank,
-		this->player_.movement_sounds.skid.name);
 
 	const auto weapon = [&](WeaponType type, const char* key)
 	{
@@ -156,34 +115,6 @@ void GameTuning::validate_resources(const RenderResources& render,
 		}
 		// Weapon's debug marker uses the weapon's own sheet as well.
 		check.frame(prefix + ".sheet (nozzle marker)", details.sheet_name, "nozzle");
-		check.wave(prefix + ".shoot_sound.name", details.sound_bank_name,
-			details.shoot_sound_name);
-		check.wave(prefix + ".feedback_sounds.empty.name", details.sound_bank_name,
-			entry.feedback_sounds.empty.name);
-		check.wave(prefix + ".feedback_sounds.recovered.name", details.sound_bank_name,
-			entry.feedback_sounds.recovered.name);
-		const auto feedback_sound = [&](const char* key, const std::optional<SoundTuning>& sound)
-		{
-			if (sound.has_value())
-			{
-				check.wave(prefix + ".feedback_sounds." + key + ".name",
-					details.sound_bank_name, sound->name);
-			}
-		};
-		feedback_sound("stop", entry.feedback_sounds.stop);
-		feedback_sound("ready", entry.feedback_sounds.ready);
-		feedback_sound("lift", entry.feedback_sounds.lift);
-		feedback_sound("settle", entry.feedback_sounds.settle);
-		if (entry.loop_sounds.present)
-		{
-			for (size_t index = 0; index < entry.loop_sounds.team_a.size(); ++index)
-			{
-				check.effect(prefix + ".loop_sounds.team_a[" + std::to_string(index) + "]",
-					details.sound_bank_name, entry.loop_sounds.team_a[index]);
-				check.effect(prefix + ".loop_sounds.team_b[" + std::to_string(index) + "]",
-					details.sound_bank_name, entry.loop_sounds.team_b[index]);
-			}
-		}
 	};
 	weapon(WeaponType::sprayer, "sprayer");
 	weapon(WeaponType::sniper, "sniper");
@@ -208,21 +139,143 @@ void GameTuning::validate_match_sounds(const RenderResources& render,
 	const AudioResources& audio, const std::string& bank) const
 {
 	const ResourceValidation check(this->source_path_, render, audio);
-	check.effect("match.sounds.countdown.name", bank, this->match_.countdown_sound.name);
-	check.effect("match.sounds.go.name", bank, this->match_.go_sound.name);
-	check.effect("match.sounds.time_up.name", bank, this->match_.time_up_sound.name);
-	check.effect("match.sounds.last_ten.name", bank, this->match_.last_ten_sound.name);
-	check.effect("match.sounds.zoom_out.name", bank, this->match_.zoom_out_sound.name);
-	check.effect("match.sounds.room_tone.name", bank, this->match_.room_tone_sound.name);
-	check.wave("match.sounds.hover.name", bank, this->match_.hover_sound.name);
-	check.wave("match.sounds.click.name", bank, this->match_.click_sound.name);
-	check.effect("match.sounds.sigh.name", bank, this->match_.sigh_sound.name);
-	check.effect("match.sounds.chair.name", bank, this->match_.chair_sound.name);
-	check.effect("match.sounds.glass_in.name", bank, this->match_.glass_in_sound.name);
-	check.wave("match.sounds.close.name", bank, this->match_.close_sound.name);
-	check.effect("match.sounds.celebrate.name", bank, this->match_.celebrate_sound.name);
-	check.effect("match.sounds.slump.name", bank, this->match_.slump_sound.name);
-	check.effect("match.sounds.colour_in.name", bank, this->match_.colour_in_sound.name);
-	check.effect("match.sounds.skip.name", bank, this->match_.skip_sound.name);
-	check.effect("match.sounds.undo.name", bank, this->match_.undo_sound.name);
+	for (const SoundReference& sound : this->match_sound_references(bank))
+	{
+		check.sound(sound);
+	}
+}
+
+std::vector<SoundReference> GameTuning::sound_references() const
+{
+	std::vector<SoundReference> sounds;
+	const auto wave = [&](std::string key, const std::string& bank, const std::string& name)
+	{
+		sounds.push_back({ std::move(key), bank, name, false });
+	};
+	const auto effect = [&](std::string key, const std::string& bank, const std::string& name)
+	{
+		sounds.push_back({ std::move(key), bank, name, true });
+	};
+
+	for (size_t i = 0; i < this->paint_.splash_sounds.size(); ++i)
+	{
+		wave("paint.splash_sounds[" + std::to_string(i) + "].name",
+			this->paint_.sound_bank, this->paint_.splash_sounds[i].name);
+	}
+	wave("paint.capture_sound.name", this->paint_.sound_bank,
+		this->paint_.capture_sound.name);
+	wave("paint.dud_sound.name", this->paint_.sound_bank,
+		this->paint_.dud_sound.name);
+	const auto impact = [&](ProjectileType type, const char* key)
+	{
+		wave(std::string("paint.impact_sounds.") + key + ".name",
+			this->paint_.sound_bank,
+			this->paint_.impact_sounds[static_cast<size_t>(type)].name);
+	};
+	impact(ProjectileType::spray, "spray");
+	impact(ProjectileType::jet, "jet");
+	impact(ProjectileType::rolling, "rolling");
+	impact(ProjectileType::mist, "mist");
+	impact(ProjectileType::ball, "ball");
+
+	wave("player.sounds.damage.name", this->player_.sound_bank,
+		this->player_.damage_sound.name);
+	wave("player.sounds.death.name", this->player_.sound_bank,
+		this->player_.death_sound.name);
+	wave("player.sounds.jump.name", this->player_.sound_bank,
+		this->player_.jump_sound.name);
+	wave("player.sounds.respawn.name", this->player_.sound_bank,
+		this->player_.respawn_sound.name);
+	for (size_t i = 0; i < this->player_.redraw_sounds.size(); ++i)
+	{
+		effect("player.redraw_sounds[" + std::to_string(i) + "].name",
+			this->player_.sound_bank, this->player_.redraw_sounds[i].name);
+	}
+	const auto movement_choices = [&](const char* key,
+		const std::vector<SoundTuning>& choices)
+	{
+		for (size_t i = 0; i < choices.size(); ++i)
+		{
+			wave(std::string("player.movement_sounds.") + key + "[" +
+				std::to_string(i) + "].name", this->player_.sound_bank, choices[i].name);
+		}
+	};
+	movement_choices("land", this->player_.movement_sounds.land);
+	movement_choices("step", this->player_.movement_sounds.step);
+	movement_choices("step_painted", this->player_.movement_sounds.step_painted);
+	wave("player.movement_sounds.skid.name", this->player_.sound_bank,
+		this->player_.movement_sounds.skid.name);
+
+	const auto weapon = [&](WeaponType type, const char* key)
+	{
+		const WeaponTuning& entry = this->weapon(type);
+		const WeaponDetails& details = entry.details;
+		const std::string prefix = std::string("weapons.") + key;
+		wave(prefix + ".shoot_sound.name", details.sound_bank_name,
+			details.shoot_sound_name);
+		wave(prefix + ".feedback_sounds.empty.name", details.sound_bank_name,
+			entry.feedback_sounds.empty.name);
+		wave(prefix + ".feedback_sounds.recovered.name", details.sound_bank_name,
+			entry.feedback_sounds.recovered.name);
+		const auto feedback_sound = [&](const char* feedback,
+			const std::optional<SoundTuning>& sound)
+		{
+			if (sound.has_value())
+			{
+				wave(prefix + ".feedback_sounds." + feedback + ".name",
+					details.sound_bank_name, sound->name);
+			}
+		};
+		feedback_sound("stop", entry.feedback_sounds.stop);
+		feedback_sound("ready", entry.feedback_sounds.ready);
+		feedback_sound("lift", entry.feedback_sounds.lift);
+		feedback_sound("settle", entry.feedback_sounds.settle);
+		if (entry.loop_sounds.present)
+		{
+			for (size_t index = 0; index < entry.loop_sounds.team_a.size(); ++index)
+			{
+				effect(prefix + ".loop_sounds.team_a[" + std::to_string(index) + "]",
+					details.sound_bank_name, entry.loop_sounds.team_a[index]);
+				effect(prefix + ".loop_sounds.team_b[" + std::to_string(index) + "]",
+					details.sound_bank_name, entry.loop_sounds.team_b[index]);
+			}
+		}
+	};
+	weapon(WeaponType::sprayer, "sprayer");
+	weapon(WeaponType::sniper, "sniper");
+	weapon(WeaponType::roller, "roller");
+	weapon(WeaponType::mister, "mister");
+	weapon(WeaponType::bucket, "bucket");
+	return sounds;
+}
+
+std::vector<SoundReference> GameTuning::match_sound_references(const std::string& bank) const
+{
+	const auto effect = [&](const char* key, const SoundTuning& sound)
+	{
+		return SoundReference{ key, bank, sound.name, true };
+	};
+	const auto wave = [&](const char* key, const SoundTuning& sound)
+	{
+		return SoundReference{ key, bank, sound.name, false };
+	};
+	return {
+		effect("match.sounds.countdown.name", this->match_.countdown_sound),
+		effect("match.sounds.go.name", this->match_.go_sound),
+		effect("match.sounds.time_up.name", this->match_.time_up_sound),
+		effect("match.sounds.last_ten.name", this->match_.last_ten_sound),
+		effect("match.sounds.zoom_out.name", this->match_.zoom_out_sound),
+		effect("match.sounds.room_tone.name", this->match_.room_tone_sound),
+		wave("match.sounds.hover.name", this->match_.hover_sound),
+		wave("match.sounds.click.name", this->match_.click_sound),
+		effect("match.sounds.sigh.name", this->match_.sigh_sound),
+		effect("match.sounds.chair.name", this->match_.chair_sound),
+		effect("match.sounds.glass_in.name", this->match_.glass_in_sound),
+		wave("match.sounds.close.name", this->match_.close_sound),
+		effect("match.sounds.celebrate.name", this->match_.celebrate_sound),
+		effect("match.sounds.slump.name", this->match_.slump_sound),
+		effect("match.sounds.colour_in.name", this->match_.colour_in_sound),
+		effect("match.sounds.skip.name", this->match_.skip_sound),
+		effect("match.sounds.undo.name", this->match_.undo_sound),
+	};
 }

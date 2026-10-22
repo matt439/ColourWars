@@ -239,7 +239,7 @@ void GameLevel::build_and_enter_level()
 	this->data()->debug().after_level_build(*this);
 	this->menu_context_->reset_connection_audio();
 	this->resume_audio_ = std::make_unique<ResumeAudio>(this->data()->audio_resources(),
-		&this->data()->save()->play_settings(), *this->data()->presentation());
+		*this->data()->presentation());
 
 	// Discard loading time so fixed-step updates do not advance the new match
 	// to catch up with the time spent building it.

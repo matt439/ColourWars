@@ -12,6 +12,7 @@
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/source_paths.h"
+#include "game/sound_groups.h"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -369,6 +370,9 @@ DebugStatus DebugDirectorImpl::reload_content()
 		validate_game_content(*tuning, *presentation, this->data_->render_resources(),
 			this->data_->audio_resources(), *this->data_->level_infos(),
 			*this->data_->stages(), this->data_->save()->play_settings());
+		// A sound the candidate names for the first time joins its group now.
+		sound_groups::assign(*this->data_->audio_resources(), *tuning, *presentation,
+			*this->data_->level_infos(), *this->data_->stages());
 		// What the reader just accepted becomes live tuning's baseline.
 		std::string texts[2];
 		for (int file = 0; file < 2; ++file)

@@ -2,8 +2,8 @@
 #include "game/states/connection_audio.h"
 
 ConnectionAudio::ConnectionAudio(const labrador::AudioResources* resources,
-	const PlaySettings* preferences, const Presentation& presentation) :
-	SoundBankObject(presentation.menu().sound_bank, resources), preferences_(preferences),
+	const Presentation& presentation) :
+	SoundBankObject(presentation.menu().sound_bank, resources),
 	lost_(presentation.pause_menu().pad_lost_sound), back_(presentation.pause_menu().pad_back_sound)
 {
 	this->lost_wave_ = this->resolve_wave(this->lost_.name);
@@ -24,10 +24,10 @@ void ConnectionAudio::update(const Pads& eligible, const Pads& connected)
 	// One of each kind per sample, even if several pads change together.
 	if (lost)
 	{
-		this->play_wave(this->lost_wave_, this->lost_.volume * this->preferences_->sfx_gain());
+		this->play_wave(this->lost_wave_, this->lost_.volume);
 	}
 	if (back)
 	{
-		this->play_wave(this->back_wave_, this->back_.volume * this->preferences_->sfx_gain());
+		this->play_wave(this->back_wave_, this->back_.volume);
 	}
 }

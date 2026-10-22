@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/sound_groups.h"
 #include "game/game_data.h"
 #include "game/input_slots.h"
 
@@ -539,6 +540,7 @@ int wmain(int argc, wchar_t** argv)
         route_records << "players,tick,view,centre_x,feet_y,camera_x,camera_y,grounded,changed_pixels\n";
 
         Registry<LevelLoadedInfo> levels("Level");
+        StageList stages;
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
         require(presentation.movement_feedback().enabled,
@@ -579,9 +581,13 @@ int wmain(int argc, wchar_t** argv)
             [&](const std::string& directory, const std::string& name, bool) {
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());
                 info->validate();
+                stages.push_back(Stage{ name });
                 levels.add(name, std::move(info));
             }, nullptr });
         app.load_manifest((content / "manifest.json").string().c_str());
+        // Silence through the groups the game assigns, as main.cpp does.
+        sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages);
+        sound_groups::apply(*app.audio_resources(), preferences);
         presentation.validate_resources(*app.render_resources(), *app.audio_resources());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(),
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,

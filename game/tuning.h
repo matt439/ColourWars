@@ -5,6 +5,7 @@
 #include "game/objects/projectile_type.h"
 #include "game/objects/weapon_details.h"
 #include "game/objects/weapon_type.h"
+#include "game/sound_reference.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
 #include "engine/render/colour.h"
@@ -304,6 +305,10 @@ public:
 	// Match sounds are played through the bank chosen by each level.
 	void validate_match_sounds(const labrador::RenderResources& render,
 		const labrador::AudioResources& audio, const std::string& bank) const;
+	// Every sound validate_resources checks, and every match sound played
+	// through `bank`: what game/sound_groups.cpp puts in the SFX group.
+	std::vector<SoundReference> sound_references() const;
+	std::vector<SoundReference> match_sound_references(const std::string& bank) const;
 
 	const InputTuning& input() const;
 	const MatchTuning& match() const;

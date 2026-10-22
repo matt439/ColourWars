@@ -1,9 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/paint_audio.h"
 
-PaintAudio::PaintAudio(const PaintTuning* tuning,
-    const labrador::AudioResources* audio, const PlaySettings* preferences) :
-    tuning_(tuning), preferences_(preferences), bank_(audio->sound_bank(tuning->sound_bank))
+PaintAudio::PaintAudio(const PaintTuning* tuning, const labrador::AudioResources* audio) :
+    tuning_(tuning), bank_(audio->sound_bank(tuning->sound_bank))
 {
     for (const SoundTuning& sound : tuning->splash_sounds)
     {
@@ -38,22 +37,21 @@ void PaintAudio::contact(ProjectileType type, int owner, bool painted, bool capt
     const size_t index = owner >= 0 && owner < paint_owners::count ?
         static_cast<size_t>(owner) : static_cast<size_t>(paint_owners::count);
     Owner& state = this->owners_[index];
-    const float gain = this->preferences_->sfx_gain();
     if (state.impact_remaining <= 0.0f)
     {
         if (painted)
         {
             const size_t kind = static_cast<size_t>(type);
             this->bank_->play_wave(this->impacts_.at(kind),
-                this->tuning_->impact_sounds.at(kind).volume * gain);
+                this->tuning_->impact_sounds.at(kind).volume);
             const size_t variant = state.next_splash;
             this->bank_->play_wave(this->splashes_[variant],
-                this->tuning_->splash_sounds[variant].volume * gain);
+                this->tuning_->splash_sounds[variant].volume);
             state.next_splash = (variant + 1) % this->splashes_.size();
         }
         else
         {
-            this->bank_->play_wave(this->dud_, this->tuning_->dud_sound.volume * gain);
+            this->bank_->play_wave(this->dud_, this->tuning_->dud_sound.volume);
         }
         state.impact_remaining = this->tuning_->min_impact_interval;
     }
@@ -61,7 +59,7 @@ void PaintAudio::contact(ProjectileType type, int owner, bool painted, bool capt
     // it, and a prior dud/impact cannot hide a newly changed patch's cue.
     if (painted && captured && state.capture_remaining <= 0.0f)
     {
-        this->bank_->play_wave(this->capture_, this->tuning_->capture_sound.volume * gain);
+        this->bank_->play_wave(this->capture_, this->tuning_->capture_sound.volume);
         state.capture_remaining = this->tuning_->min_capture_interval;
     }
 }

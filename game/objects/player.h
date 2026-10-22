@@ -407,7 +407,7 @@ private:
 
     void respawn();
     bool redrawing() const;
-    float redraw_gain() const;
+    float redraw_volume() const;
     void update_redraw_sound(float dt) const;
     void stop_redraw_sound() const;
 

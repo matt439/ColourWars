@@ -4,7 +4,7 @@
 	void check_weapon_starts(World& world)
 	{
 		world.level.reset();
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		for (const auto type : { WeaponType::sprayer, WeaponType::roller, WeaponType::mister })
 		{
 			world.begin = recorded_sounds(world.device).size();
@@ -158,7 +158,7 @@
 		for (const auto type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
 			WeaponType::mister, WeaponType::bucket })
 		{
-			world.preferences.sfx_volume = 40;
+			world.set_sfx_volume(40);
 			world.begin = recorded_sounds(world.device).size();
 			const auto& feedback = no_regen.weapon(type).feedback_sounds;
 			auto weapon = world.weapon(no_regen, type);
@@ -221,7 +221,7 @@
 			world.wave_volume_is(ordinary.feedback_sounds.recovered, 0.4f);
 			weapon->stop_sounds();
 		}
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		world.begin = recorded_sounds(world.device).size();
 		auto muted = world.weapon(world.tuning, WeaponType::sprayer);
 		const auto& feedback = world.tuning.weapon(WeaponType::sprayer).feedback_sounds;
@@ -236,7 +236,7 @@
 
 		// Brief regenerated shots during the same hold must not repeatedly
 		// re-arm empty as a fresh press and bypass its authored rate limit.
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		auto cycling = world.weapon(world.tuning, WeaponType::sprayer);
 		exhaust(world, *cycling, world.tuning);
@@ -251,7 +251,7 @@
 	{
 		const auto& tuning = world.tuning.weapon(WeaponType::sniper);
 		const SoundTuning& ready = *tuning.feedback_sounds.ready;
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		auto weapon = world.weapon(world.tuning, WeaponType::sniper);
 		update_weapon(*weapon, false, tuning.details.shoot_interval);
@@ -295,7 +295,7 @@
 			world.wave_plays(tuning.feedback_sounds.recovered.name) == 1,
 			"Late affordability recovery replayed a previously unaffordable cooldown cue");
 
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		world.begin = recorded_sounds(world.device).size();
 		weapon = world.weapon(world.tuning, WeaponType::sniper);
 		update_weapon(*weapon, false, 2.0f);
@@ -306,7 +306,7 @@
 
 	void check_independent_loops(World& world)
 	{
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		const auto& tuning = world.tuning.weapon(WeaponType::sprayer);
 		std::vector<std::unique_ptr<Weapon>> weapons;
@@ -339,7 +339,7 @@
 		require(world.wave_plays(tuning.feedback_sounds.stop->name) == 1,
 			"Pause/resume or forced lifecycle stop played an ordinary stop cue");
 
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		world.begin = recorded_sounds(world.device).size();
 		update_weapon(*weapons[0], true);
 		update_weapon(*weapons[0], false);
@@ -349,7 +349,7 @@
 	void check_roller_contacts(World& world)
 	{
 		using namespace mattmath;
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		const auto& tuning = world.tuning.weapon(WeaponType::roller);
 		const RectangleF rectangle(0.0f, -world.tuning.player().size.y,
@@ -404,7 +404,7 @@
 		require(world.wave_plays(tuning.feedback_sounds.lift->name) == 1 &&
 			world.wave_plays(tuning.feedback_sounds.settle->name) == 1,
 			"Released roller played airborne/landing feedback");
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		world.begin = recorded_sounds(world.device).size();
 		tick(true);
 		tick(true, true);
@@ -417,7 +417,7 @@
 	void check_player_weapon_lifecycle(World& world)
 	{
 		using namespace mattmath;
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		const RectangleF rectangle(Vector2F::ZERO, world.tuning.player().size);
 		Player player(rectangle, &world.tuning, &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),

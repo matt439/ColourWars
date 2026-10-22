@@ -18,8 +18,7 @@ ScreenMusic::~ScreenMusic()
 
 void ScreenMusic::apply_gain()
 {
-	this->set_effect_volume(this->effect_, this->music_.volume *
-		this->preferences_->music_gain() * this->envelope_.gain());
+	this->set_effect_volume(this->effect_, this->music_.volume * this->envelope_.gain());
 }
 
 void ScreenMusic::update(float dt)

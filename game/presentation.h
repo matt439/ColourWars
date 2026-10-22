@@ -8,6 +8,7 @@
 #include "game/objects/team_colour.h"
 #include "game/presentation_menu.h"
 #include "game/presentation_menu_text.h"
+#include "game/sound_reference.h"
 
 #include <array>
 #include <string>
@@ -562,6 +563,9 @@ public:
 
 	void validate_resources(const labrador::RenderResources& render,
 		const labrador::AudioResources& audio) const;
+	// Every menu, results and screen-music sound validate_resources checks,
+	// with the group game/sound_groups.cpp puts it in.
+	std::vector<SoundReference> sound_references() const;
 	// Validate composed Stage text against the actual loaded catalog, without
 	// assuming a maximum stage count or a particular widest numeric glyph.
 	void validate_stage_counts(const labrador::RenderResources& render,

@@ -23,6 +23,7 @@ add_executable(ColourWars WIN32
     presentation_validation.cpp
     save.cpp
     session.cpp
+    sound_groups.cpp
     text_wrap.cpp
     tuning.cpp
     tuning_validation.cpp

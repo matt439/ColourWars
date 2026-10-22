@@ -2,8 +2,8 @@
 #include "game/states/resume_audio.h"
 
 ResumeAudio::ResumeAudio(const labrador::AudioResources* resources,
-	const PlaySettings* preferences, const Presentation& presentation) :
-	SoundBankObject(presentation.menu().sound_bank, resources), preferences_(preferences),
+	const Presentation& presentation) :
+	SoundBankObject(presentation.menu().sound_bank, resources),
 	sound_(presentation.pause_menu().resume_sound)
 {
 	this->effect_ = this->resolve_effect(this->sound_.name);
@@ -26,7 +26,7 @@ void ResumeAudio::update(float remaining)
 	// Only the currently displayed beat sounds. A long update does not queue
 	// missed numbers, and any prior tail is discarded before this fresh play.
 	this->stop_effect(this->effect_, true);
-	this->play_effect(this->effect_, false, this->sound_.volume * this->preferences_->sfx_gain());
+	this->play_effect(this->effect_, false, this->sound_.volume);
 	this->beat_ = beat;
 }
 

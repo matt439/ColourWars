@@ -60,7 +60,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		&presentation->player_identity(), render_resources);
 	this->player_identity_remaining_.assign(this->players_.size(),
 		presentation->player_identity().emphasis_duration);
-	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources, preferences);
+	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources);
 	this->blocked_shot_feedback_ = std::make_unique<BlockedShotFeedback>(
 		&presentation->blocked_shot(), render_resources);
 	for (Player* player : this->players_)
@@ -196,7 +196,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->glass_in_started_ = true;
 			this->set_room_tone(false);
 			this->sound_bank_->play_effect(this->glass_in_sound_, false,
-				this->tuning_->match().glass_in_sound.volume * this->preferences_->sfx_gain());
+				this->tuning_->match().glass_in_sound.volume);
 		}
 		// One cue for the displayed number, including the initial beat. A long
 		// tick never queues the missed beats over GO or live play.
@@ -205,7 +205,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 				std::ceil(before) != std::ceil(this->start_timer_)))
 		{
 			this->sound_bank_->play_effect(this->countdown_sound_, false,
-				this->tuning_->match().countdown_sound.volume * this->preferences_->sfx_gain());
+				this->tuning_->match().countdown_sound.volume);
 		}
 		if (this->start_timer_ > 0.0f)
 		{
@@ -223,7 +223,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			{
 				this->sound_bank_->stop_effect(this->countdown_sound_, true);
 				this->sound_bank_->play_effect(this->go_sound_, false,
-					this->tuning_->match().go_sound.volume * this->preferences_->sfx_gain());
+					this->tuning_->match().go_sound.volume);
 			}
 			this->state_ = LevelState::active;
 			if (before > 0.0f || starting) { this->emphasise_players(); }
@@ -246,7 +246,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		{
 			this->last_ten_second_ = second;
 			this->sound_bank_->play_effect(this->last_ten_sound_, false,
-				this->tuning_->match().last_ten_sound.volume * this->preferences_->sfx_gain());
+				this->tuning_->match().last_ten_sound.volume);
 		}
 		if (this->timer_ <= 0.0f)
 		{
@@ -265,7 +265,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			if (this->end_sting_.valid())
 			{
 				this->sound_bank_->play_effect(this->end_sting_, false,
-					this->end_sting_volume_ * this->preferences_->music_gain());
+					this->end_sting_volume_);
 			}
 			this->stop_player_sounds();
 			for (Player* player : this->players_)
@@ -280,9 +280,9 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->sound_bank_->stop_effect(this->go_sound_, true);
 			this->sound_bank_->stop_effect(this->last_ten_sound_, true);
 			this->sound_bank_->play_effect(this->time_up_sound_, false,
-				this->tuning_->match().time_up_sound.volume * this->preferences_->sfx_gain());
+				this->tuning_->match().time_up_sound.volume);
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false,
-				this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
+				this->tuning_->match().zoom_out_sound.volume);
 			this->start_reveal();
 		}
 	}

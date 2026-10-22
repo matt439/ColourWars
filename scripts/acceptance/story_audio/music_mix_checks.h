@@ -92,8 +92,8 @@ namespace
 	{
 		const int original_music = world.preferences.music_volume;
 		const int original_sfx = world.preferences.sfx_volume;
-		world.preferences.music_volume = 40;
-		world.preferences.sfx_volume = 0;
+		world.set_music_volume(40);
+		world.set_sfx_volume(0);
 		const auto& mix = world.presentation.music_mix();
 		const LevelLoadedInfo* stage = world.levels.get("close_quarters");
 		const std::string music = stage->music_name();
@@ -120,11 +120,11 @@ namespace
 		world.level->update_music(mix.fade_in * 20.0f);
 		require(close_to(world.last_volume(music), full) && world.plays(music) == 1,
 			"Long raw audio time overshot or replayed the full music loop");
-		world.preferences.music_volume = 0;
-		world.preferences.sfx_volume = 100;
+		world.set_music_volume(0);
+		world.set_sfx_volume(100);
 		world.level->update_music(0.001f);
 		require(close_to(world.last_volume(music), 0.0f), "Settled music ignored a newly applied mute");
-		world.preferences.music_volume = 65;
+		world.set_music_volume(65);
 		world.level->update_music(0.001f);
 		require(close_to(world.last_volume(music), stage->music_volume() * 0.65f) && world.plays(music) == 1,
 			"Settled music ignored unmute/current music gain or restarted its loop");
@@ -135,8 +135,8 @@ namespace
 		require(world.state(music) == SoundState::stopped && recorded_sounds(world.device).size() == stopped,
 			"Stopped music was restarted or adjusted by resume/raw time");
 		world.level.reset();
-		world.preferences.music_volume = original_music;
-		world.preferences.sfx_volume = original_sfx;
+		world.set_music_volume(original_music);
+		world.set_sfx_volume(original_sfx);
 	}
 
 	void check_music_mix_duck_and_suspend(World& world)
@@ -145,7 +145,7 @@ namespace
 		const auto& mix = world.presentation.music_mix();
 		const LevelLoadedInfo* stage = world.levels.get("close_quarters");
 		const std::string music = stage->music_name();
-		world.preferences.music_volume = 50;
+		world.set_music_volume(50);
 		const float full = stage->music_volume() * 0.5f;
 		start_music_mix(world);
 		world.level->update_music(mix.fade_in);
@@ -178,7 +178,7 @@ namespace
 		world.level->update_music(mix.duck_time * 20.0f);
 		require(world.state(music) == SoundState::paused && recorded_sounds(world.device).size() == suspended,
 			"Hard suspension advanced the music envelope or emitted gain calls");
-		world.preferences.music_volume = 30;
+		world.set_music_volume(30);
 		world.level->resume_music();
 		require(world.state(music) == SoundState::playing && world.plays(music) == 1 &&
 			close_to(world.last_volume(music), stage->music_volume() * 0.3f * paused_gain),
@@ -204,7 +204,7 @@ namespace
 			"Long raw time overshot restoration or replayed the music");
 		world.level.reset();
 		require(world.state(music) == SoundState::stopped, "Teardown left the enveloped music loop alive");
-		world.preferences.music_volume = original_music;
+		world.set_music_volume(original_music);
 	}
 
 	MenuLevelSettings music_mix_settings()
@@ -226,7 +226,7 @@ namespace
 	void check_music_mix_ending(World& world, const std::filesystem::path& content)
 	{
 		const int original_music = world.preferences.music_volume;
-		world.preferences.music_volume = 40;
+		world.set_music_volume(40);
 		const auto& mix = world.presentation.music_mix();
 		const LevelLoadedInfo* stage = world.levels.get("close_quarters");
 		const std::string music = stage->music_name();
@@ -294,7 +294,7 @@ namespace
 		require(world.state(music) == SoundState::stopped && world.state(sting) == SoundState::stopped &&
 			world.plays(music) == 1 && world.plays(sting) == 1,
 			"Overview resume/raw time resurrected forced-silent transition music");
-		world.preferences.music_volume = original_music;
+		world.set_music_volume(original_music);
 	}
 
 	void check_music_mix_silence(World& world)

@@ -10,7 +10,7 @@
 		const float leave = opening.settle + opening.preview * 2.0f + opening.undo;
 		const float chair = leave + opening.leave * 0.35f;
 		const float length = leave + opening.leave;
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.build(OpeningMode::full);
 		world.level->update(world.idle, leave - 0.001f);
 		require(world.plays(match.sigh_sound.name) == 0 && world.plays(match.chair_sound.name) == 0 &&
@@ -25,14 +25,14 @@
 		world.level->suspend();
 		require(world.state(match.sigh_sound.name) == SoundState::paused &&
 			world.state(match.chair_sound.name) == SoundState::paused, "Suspension did not pause room voices");
-		world.preferences.sfx_volume = 25;
+		world.set_sfx_volume(25);
 		world.level->resume();
 		require(world.state(match.chair_sound.name) == SoundState::playing &&
 			world.plays(match.chair_sound.name) == 1, "Resume restarted a room cue instead of continuing it");
 		require(close_to(world.last_volume(match.sigh_sound.name), match.sigh_sound.volume * 0.25f) &&
 			close_to(world.last_volume(match.chair_sound.name), match.chair_sound.volume * 0.25f),
 			"Resume did not apply edited SFX gain to the paused room cues");
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.level->resume();
 		world.volume_is(match.sigh_sound.name, match.sigh_sound.volume * 0.4f);
 		world.volume_is(match.chair_sound.name, match.chair_sound.volume * 0.4f);
@@ -103,7 +103,7 @@
 		world.level->update(world.idle, 0.0f);
 		require(world.plays(match.sigh_sound.name) == 1 && world.plays(match.chair_sound.name) == 1,
 			"A quick opening or long tick missed or repeated a crossed room cue");
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		world.build(OpeningMode::off, 1);
 		world.until([&] { return world.level->state() == LevelState::finished; });
 		require(!world.level->revealed() && world.plays(match.sigh_sound.name) == 0 &&
@@ -162,7 +162,7 @@
 		const float second = timing.settle + timing.preview * 1.4f;
 		const float undo = timing.settle + timing.preview * 2.0f;
 		const float length = undo + timing.undo + timing.leave;
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.build(OpeningMode::full);
 		world.level->update(world.idle, first - 0.001f);
 		require(world.wave_plays(match.hover_sound.name) == 0 &&
@@ -184,7 +184,7 @@
 		world.volume_is(match.undo_sound.name, match.undo_sound.volume * 0.4f);
 		world.level->suspend();
 		require(world.state(match.undo_sound.name) == SoundState::paused, "Suspension did not pause opening undo");
-		world.preferences.sfx_volume = 25;
+		world.set_sfx_volume(25);
 		world.level->resume();
 		require(world.state(match.undo_sound.name) == SoundState::playing && world.plays(match.undo_sound.name) == 1 &&
 			close_to(world.last_volume(match.undo_sound.name), match.undo_sound.volume * 0.25f),
@@ -206,7 +206,7 @@
 		world.level->suspend();
 		require(world.state(match.colour_in_sound.name) == SoundState::paused &&
 			world.state(match.glass_in_sound.name) == SoundState::paused, "Suspension did not pause owned opening cues");
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		world.level->resume();
 		require(world.plays(match.glass_in_sound.name) == 1 &&
 			close_to(world.last_volume(match.glass_in_sound.name), 0.0f) &&
@@ -223,7 +223,7 @@
 			"Split countdown repeated a skip or glass entry");
 		world.level->suspend();
 		require(world.state(match.skip_sound.name) == SoundState::paused, "Suspension did not pause skip audio");
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		world.level->resume();
 		require(world.plays(match.skip_sound.name) == 1 &&
 			close_to(world.last_volume(match.skip_sound.name), match.skip_sound.volume * 0.4f),
@@ -240,7 +240,7 @@
 		const auto& match = world.tuning.match();
 		const auto& timing = match.opening;
 		const float length = timing.settle + timing.preview * 2.0f + timing.undo + timing.leave;
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		for (const auto mode : { OpeningMode::full, OpeningMode::quick })
 		{
 			world.build(mode);
@@ -341,7 +341,7 @@
 		const float alone = click + timing.show + timing.leave;
 		for (const auto winner : { PlayerTeam::none, PlayerTeam::a, PlayerTeam::b })
 		{
-			world.preferences.sfx_volume = 40;
+			world.set_sfx_volume(40);
 			prepare_reveal(world, winner);
 			world.level->update(world.idle, first - 0.001f);
 			require(world.wave_plays(match.hover_sound.name) == 0 && world.wave_plays(match.click_sound.name) == 0 &&
@@ -354,7 +354,7 @@
 			world.level->update(world.idle, second - first);
 			require(world.wave_plays(match.hover_sound.name) == (winner == PlayerTeam::none ? 0 : 2),
 				"Second reveal swatch arrival missed, repeated or played during a draw");
-			world.preferences.sfx_volume = 0;
+			world.set_sfx_volume(0);
 			world.level->update(world.idle, click - second - 0.002f);
 			require(world.wave_plays(match.click_sound.name) == 0 && world.wave_plays(match.close_sound.name) == 0,
 				"Reveal click/close sounded before the cursor committed");
@@ -367,7 +367,7 @@
 			world.level->update(world.idle, alone - click - 0.002f);
 			require(world.plays(match.celebrate_sound.name) == 0 && world.plays(match.slump_sound.name) == 0,
 				"Figures reacted while the person was still in the room");
-			world.preferences.sfx_volume = 25;
+			world.set_sfx_volume(25);
 			world.level->update(world.idle, 0.002f);
 			const int reactions = winner == PlayerTeam::none ? 0 : 1;
 			require(world.plays(match.celebrate_sound.name) == reactions && world.plays(match.slump_sound.name) == reactions,
@@ -379,7 +379,7 @@
 				world.level->suspend();
 				require(world.state(match.celebrate_sound.name) == SoundState::paused &&
 					world.state(match.slump_sound.name) == SoundState::paused, "Suspension did not pause reaction voices");
-				world.preferences.sfx_volume = 0;
+				world.set_sfx_volume(0);
 				world.level->resume();
 				require(world.plays(match.celebrate_sound.name) == 1 && world.plays(match.slump_sound.name) == 1 &&
 					close_to(world.last_volume(match.celebrate_sound.name), 0.0f) &&
@@ -406,7 +406,7 @@
 		for (const auto winner : { PlayerTeam::none, PlayerTeam::a })
 		{
 			prepare_reveal(world, winner);
-			world.preferences.sfx_volume = 40;
+			world.set_sfx_volume(40);
 			world.level->update(world.idle, timing.walk_in + timing.hover * 2.0f + timing.decide +
 				timing.show + timing.leave + timing.react + 0.001f);
 			require(world.level->state() == LevelState::finished, "Long reveal did not finish");

@@ -133,14 +133,10 @@ protected:
 	MenuSound cancel_sound_;
 	MenuSound resolve_sound(const PresentationSound& sound) const;
 
-	// Menu and results sounds use the user's SFX gain. Music is separate so
-	// it keeps its own gain without changing the authored relative volumes.
-	void play_wave(labrador::SoundBank::WaveHandle wave, float volume = 1.0f,
-		float pitch = 0.0f, float pan = 0.0f) const;
-	// At its authored volume, under the same SFX gain.
+	// Menu and results sounds play at their authored volumes; the user's SFX
+	// and Music volumes are their sound groups' (game/sound_groups.h).
+	using labrador::SoundBankObject::play_wave;
 	void play_wave(const MenuSound& sound) const;
-	void play_effect(labrador::SoundBank::EffectHandle effect, bool loop = false,
-		float volume = 1.0f, float pitch = 0.0f, float pan = 0.0f) const;
 
 	// Optional control legend, drawn after page widgets. Set only actions
 	// this page accepts; it can be built before or after the widget trees.

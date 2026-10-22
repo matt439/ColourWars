@@ -89,7 +89,7 @@ void check_painted_player_contacts(World& world)
 {
     using namespace mattmath;
     const auto& sounds = world.tuning.player().movement_sounds;
-    world.preferences.sfx_volume = 40;
+    world.set_sfx_volume(40);
     for (const auto team : { PlayerTeam::none, PlayerTeam::a, PlayerTeam::b })
     {
         MovementCourse course(world, world.tuning);
@@ -238,12 +238,12 @@ void check_painted_audio_budget(World& world)
 {
     const auto& sounds = world.tuning.player().movement_sounds;
     SoundBank* bank = world.audio.sound_bank(world.tuning.player().sound_bank);
-    MovementAudio audio(&sounds, bank, &world.preferences, 0);
+    MovementAudio audio(&sounds, bank, 0);
     const auto contact = [&](float distance, float dt, bool wet)
     {
         audio.end_contacts(true, true, true, 0.0f, distance, 0.0f, 0.0f, dt, wet);
     };
-    world.preferences.sfx_volume = 40;
+    world.set_sfx_volume(40);
     world.begin = recorded_sounds(world.device).size();
     contact(0.0f, weapon_step, false);
     contact(sounds.stride_distance * 0.6f, sounds.min_step_interval, false);
@@ -270,7 +270,7 @@ void check_painted_audio_budget(World& world)
     std::vector<MovementAudio> seats;
     for (int seat = 0; seat < 4; ++seat)
     {
-        seats.emplace_back(&sounds, bank, &world.preferences, seat);
+        seats.emplace_back(&sounds, bank, seat);
         seats.back().end_contacts(true, true, true, 0, 0, 0, 0, weapon_step, true);
         seats.back().end_contacts(true, true, true, 0, sounds.stride_distance,
             0, 0, sounds.min_step_interval, true);
@@ -289,7 +289,7 @@ void check_painted_audio_budget(World& world)
         require(world.wave_plays(sounds.step_painted[step].name) == 2,
             "Painted footsteps skipped or repeated their deterministic variants");
     }
-    world.preferences.sfx_volume = 0;
+    world.set_sfx_volume(0);
     world.begin = recorded_sounds(world.device).size();
     seats.front().end_contacts(true, true, true, 0, sounds.stride_distance,
         0, 0, sounds.min_step_interval, true);
@@ -299,7 +299,7 @@ void check_painted_audio_budget(World& world)
 void check_painted_landings(World& world)
 {
     const auto& sounds = world.tuning.player().movement_sounds;
-    world.preferences.sfx_volume = 40;
+    world.set_sfx_volume(40);
     MovementCourse course(world, world.tuning);
     Player& player = course.add();
     auto& surface = painted_course_surface(course, { -1000, 0, 4000, 100 });
@@ -337,7 +337,7 @@ void check_painted_landings(World& world)
     require(queued && player.velocity().y < 0.0f && choice_plays(world, sounds.step_painted) == 1 &&
         choice_plays(world, sounds.land) == 0 && choice_plays(world, sounds.step) == 0,
         "Buffered painted landing/takeoff missed its impact or invented an ordinary step");
-    world.preferences.sfx_volume = 0;
+    world.set_sfx_volume(0);
     world.begin = recorded_sounds(world.device).size();
     course.land();
     require(choice_plays(world, sounds.step_painted) == 1, "Buffered painted takeoff did not rearm landing");

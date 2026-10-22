@@ -5,9 +5,9 @@ void check_resume_audio(World& world)
 	const auto& sound = world.presentation.pause_menu().resume_sound;
 	const auto voice = world.voices.at(sound.name);
 	world.begin = recorded_sounds(world.device).size();
-	world.preferences.sfx_volume = 35;
+	world.set_sfx_volume(35);
 	{
-		ResumeAudio audio(&world.audio, &world.preferences, world.presentation);
+		ResumeAudio audio(&world.audio, world.presentation);
 		audio.update(0.0f);
 		audio.update(-1.0f);
 		require(world.plays(sound.name) == 0, "An inactive resume count-in invented a beat");
@@ -16,7 +16,7 @@ void check_resume_audio(World& world)
 		audio.update(2.01f);
 		require(world.plays(sound.name) == 1, "A displayed resume number repeated its cue");
 		world.volume_is(sound.name, sound.volume * 0.35f);
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		audio.update(2.0f);
 		require(world.plays(sound.name) == 2 && close_to(world.last_volume(sound.name), 0.0f),
 			"The next resume number missed its cue or ignored current SFX mute");
@@ -27,7 +27,7 @@ void check_resume_audio(World& world)
 		audio.update(-5.0f);
 		require(world.plays(sound.name) == 3 && world.state(sound.name) == SoundState::stopped,
 			"Finishing the resume count-in left its voice alive or invented a GO cue");
-		world.preferences.sfx_volume = 65;
+		world.set_sfx_volume(65);
 		audio.update(3.0f);
 		require(world.plays(sound.name) == 4 && close_to(world.last_volume(sound.name), sound.volume * 0.65f),
 			"A new resume count-in retained its old beat or SFX gain");
@@ -60,7 +60,7 @@ void check_resume_audio(World& world)
 	// beat, and crossing zero never catches up a missed beat.
 	world.begin = recorded_sounds(world.device).size();
 	{
-		ResumeAudio audio(&world.audio, &world.preferences, world.presentation);
+		ResumeAudio audio(&world.audio, world.presentation);
 		audio.update(4.0f);
 		audio.update(0.25f);
 		require(world.plays(sound.name) == 2, "A skipped resume number left a cue backlog");
@@ -70,12 +70,12 @@ void check_resume_audio(World& world)
 	}
 	AudioResources missing_bank;
 	missing_bank.add_sound_bank(world.presentation.menu().sound_bank, SoundBank::silent());
-	ResumeAudio silent_audio(&missing_bank, &world.preferences, world.presentation);
+	ResumeAudio silent_audio(&missing_bank, world.presentation);
 	silent_audio.update(3.0f);
 	silent_audio.update(1.0f);
 	silent_audio.stop();
 	silent_audio.update(0.0f);
-	world.preferences.sfx_volume = original_volume;
+	world.set_sfx_volume(original_volume);
 }
 
 void check_resume_weapon_audio(World& world)

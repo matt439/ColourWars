@@ -1,6 +1,5 @@
 #pragma once
 
-#include "game/play_settings.h"
 #include "game/tuning.h"
 #include "engine/audio/sound_bank.h"
 
@@ -18,7 +17,7 @@ class MovementAudio
 {
 public:
     MovementAudio(const PlayerMovementSounds* tuning, labrador::SoundBank* bank,
-        const PlaySettings* preferences, int player_num);
+        int player_num);
 
     MovementContactCues end_contacts(bool can_act, bool supported, bool grounded,
         float impact_speed, float distance, float previous_velocity, float input, float dt,
@@ -28,7 +27,6 @@ public:
 private:
     const PlayerMovementSounds* tuning_;
     labrador::SoundBank* bank_;
-    const PlaySettings* preferences_;
     std::vector<labrador::SoundBank::WaveHandle> land_;
     std::vector<labrador::SoundBank::WaveHandle> step_;
     std::vector<labrador::SoundBank::WaveHandle> step_painted_;

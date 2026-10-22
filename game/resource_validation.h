@@ -2,6 +2,7 @@
 
 #include "engine/audio/audio_resources.h"
 #include "engine/render/render_resources.h"
+#include "game/sound_reference.h"
 
 #include <stdexcept>
 #include <string>
@@ -49,6 +50,12 @@ public:
 		const std::string& name) const
 	{
 		check(key, [&] { audio_.sound_bank(bank)->resolve_effect(name); });
+	}
+
+	void sound(const SoundReference& sound) const
+	{
+		if (sound.effect) { effect(sound.key, sound.bank, sound.name); }
+		else { wave(sound.key, sound.bank, sound.name); }
 	}
 
 private:

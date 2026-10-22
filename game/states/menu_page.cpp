@@ -393,13 +393,6 @@ Camera MenuPage::ui_camera() const
 		this->viewport_manager()->fullscreen_viewport());
 }
 
-void MenuPage::play_wave(SoundBank::WaveHandle wave, float volume,
-	float pitch, float pan) const
-{
-	SoundBankObject::play_wave(wave,
-		volume * this->save()->play_settings().sfx_gain(), pitch, pan);
-}
-
 MenuSound MenuPage::resolve_sound(const PresentationSound& sound) const
 {
 	return { this->resolve_wave(sound.name), sound.volume };
@@ -408,11 +401,4 @@ MenuSound MenuPage::resolve_sound(const PresentationSound& sound) const
 void MenuPage::play_wave(const MenuSound& sound) const
 {
 	this->play_wave(sound.wave, sound.volume);
-}
-
-void MenuPage::play_effect(SoundBank::EffectHandle effect, bool loop,
-	float volume, float pitch, float pan) const
-{
-	SoundBankObject::play_effect(effect, loop,
-		volume * this->save()->play_settings().sfx_gain(), pitch, pan);
 }

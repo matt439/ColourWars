@@ -134,7 +134,8 @@ shape is the strike rate: **of the seven reports filed with exhibits, six were
 implemented the day they were filed.** The seventh needed no filing — the
 engine had already fixed it.
 
-Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
+Report 6 got its client-side mixing exhibit and was answered before it was
+filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narrowed-19cf650)).
 
 ---
 
@@ -142,7 +143,6 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 6 | Shared Music/SFX attenuation remains emitter work | per-emitter saved gains and standalone `audio_gain_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 23 | Resizing a hidden window activates it | `SettingsProbeActivationGuard`, the `WH_CBT` veto five painter fixtures hold around `set_resolution` | local unfiled draft - checked against pin `19cf650` 2026-10-22; no sanitized request or synthetic example yet |
@@ -153,53 +153,6 @@ leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
-
----
-
-## 6. No audio bus, master gain, listener or voice cap — **draft with mixing exhibit**
-
-**Fileable slice prepared 2026-10-20: shared Music/SFX attenuation.** The
-client's saved gains in `game/play_settings.h` are multiplied into per-emitter
-calls in `game/states/menu_page.cpp`, `game/objects/weapon.cpp`,
-`game/objects/level_audio.cpp` and `game/states/screen_music.cpp`. Music also
-keeps authored level, fade and pause ducking; resume paths reapply the user
-gain to individual retained effects. This is the concrete repeated work.
-
-The [sanitized request](../engine-reports/audio-attenuation.md) and
-[standalone synthetic exhibit](../../scripts/engine-reports/audio_gain_exhibit.cpp)
-reduce it to two loops and two independent one-shot emitters in one bank.
-The ordinary per-call API works as documented: each emitter supplies its own
-volume, and an emitter that omits user-gain multiplication retains its local
-level. The request is for extracting shared attenuation, with authored
-levels/group assignment/fades/ducking remaining client policy.
-
-**Checked and exercised 2026-10-20.** A fresh upstream fetch at 19:34:53 UTC
-confirmed master `52e809a5a0229d37db4373faa7853df4c861a310`; a whole-engine
-comparison against that `FETCH_HEAD` passed at 19:50:08 UTC.
-`AudioDevice`, `SoundBank` and `AudioResources` still expose no master/group
-gain setter. Application's AudioDevice is private, and exposing it alone would
-not create a missing operation. `play_wave` returns void; effect setters
-address individual retained voices.
-
-The exact synthetic source passed MSVC 19.51.36256.0 under `/W4 /WX` in Debug
-(`/MDd /Od /D_DEBUG`) and Release (`/MD /O2 /DNDEBUG`). It compiled directly
-with SoundBank, AudioResources, the existing null AudioDevice implementation
-and math/scalar.cpp, without an engine static library or CMake configure.
-Both runs exited 0 with empty stderr and the same nine asserted recorded
-requests/volumes. The report includes the full source list, flags,
-reproduction commands, observed output and source SHA-256.
-
-The null backend records requests, not physical mixing or time. This proves
-the client's per-emitter arithmetic/refresh and the raw-site negative control;
-it establishes no loudness, duration, completion, latency or listening result.
-The earlier broad listener/voice-budget asks remain separate unfiled proposals
-requiring their own concrete exhibits; they are not bundled into this slice.
-
-Local validation receipts are under
-`out/validation/crossfeed-20261020/audio-report-final-v1/`; the master comparison
-is in `key-audio-source-recheck.json` beside them. No audio hardware was
-opened, and no game/window/assets or engine changes were involved. No issue
-has been filed and the engine pin is unchanged. Refresh master before filing.
 
 ---
 
@@ -542,6 +495,80 @@ two disagree exactly when a font is regenerated with a narrower region, and no
 build step prevents that.
 
 This report also produced report 8, below.
+
+## 6. ~~No audio bus, master gain, listener or voice cap~~ — accepted, narrowed, `19cf650`
+
+Asked, in its fileable slice, for shared Music/SFX attenuation: the saved
+gains in `play_settings.h` were multiplied into every emitter by hand, and the
+resume paths re-applied the user gain to each retained effect, with authored
+levels, group assignment, fades and ducking left to the client. **Accepted,
+narrowed**, in "Mix named sound group volumes into every level a bank sends".
+`engine/audio/sound_group.h` adds `SoundGroupHandle`, which belongs to the
+`AudioResources` that issued it. `AudioResources` adds `add_sound_group`
+(starts at 1, throws on a duplicate), `resolve_sound_group`, and a
+non-const `set_group_volume`, clamped to [0,1], beside `group_volume`.
+`SoundBank` adds the load-time `set_wave_group` and `set_effect_group`; a
+second assignment moves a sound, and a silent bank checks the call and
+discards it. The level sent is the clamped local level times the group's
+volume, with an ungrouped sound at 1. A one-shot already playing keeps the
+level it launched with. A group change pushes one `set_voice_volume` to each
+playing or paused effect in the group, and a stopped one takes it at its next
+`play_effect`. **Declined:** a master bus, fades, ducking, a listener and a
+voice cap. The engine recorded the listener and the voice budget as unfiled
+and not covered by the decision.
+
+**Spent** in this commit. `game/sound_groups.{h,cpp}` adds `music` and `sfx`
+at load, in `wWinMain` after `validate_game_content`, and again for a
+reloaded candidate on Debug `reload`. The engine cannot list a bank's waves,
+so the assignment walks the game's own references. `GameTuning` and
+`Presentation` now list their sounds once (`sound_references`,
+`match_sound_references`, `SoundReference` in `game/sound_reference.h`), and
+`validate_resources` and `validate_match_sounds` check that same list. A sound
+cannot be checked and still be left out of its group. Stage music, end stings
+and the menu and results music are music, everything else is sfx, and the
+Controls volume preview stays in neither. The assignment refuses, naming both
+keys, a sound named under two different groups. `sound_groups::apply` pushes
+`PlaySettings` into both groups at startup and on Controls Apply, through
+`GameData`'s non-const `AudioResources`, whether or not the save succeeds.
+Apply's `update_music(0)` re-push is deleted. Every `* sfx_gain()` and
+`* music_gain()` at the emitters is gone: `Level`, its opening and reveal,
+`MovementAudio`, `PaintAudio`, `Player` (`redraw_gain` became
+`redraw_volume`), `Weapon` and the bucket and sniper, `ConnectionAudio`,
+`ResumeAudio`, `ScreenMusic::apply_gain`, and `MenuPage`, whose `play_wave`
+and `play_effect` wrappers are now the base class's through a `using`.
+`MovementAudio`, `PaintAudio`, `ConnectionAudio` and `ResumeAudio` read
+`PlaySettings` for nothing else and no longer take it. `Level::resume`,
+`Player::resume_sounds` and `Weapon::resume_sounds` lost their seventeen
+re-pushes before `resume_effect`. Acceptance's `story_audio` world assigns
+the groups the same way and changes a volume only through
+`set_sfx_volume`/`set_music_volume`. A new `check_sound_groups` plays every
+listed sound with one group muted and then the other, and fails if any sound
+is out of its group. The silent-bank fallback takes the same assignment. The
+four hardware probes (`painter_visual`, `paint_fx_visual`,
+`movement_feedback_visual`, `frame_pacing`) assign and apply too, so their
+zero volumes still silence them. The draft and its standalone exhibit are
+deleted.
+
+**Kept:** `music_gain()`/`sfx_gain()`, which now feed `apply`. The volume
+preview, which multiplies the *pending* `selection_.sfx_gain()` into its
+ungrouped wave. `ScreenMusic::finished()`, which reads `music_gain() == 0` as
+policy. The music fade and pause duck in `Level` and `ScreenMusic`, which
+compose with the group volume through `set_effect_volume`. The redraw pen's
+per-tick `set_effect_volume`. The save format, which still stores two 0-100
+integers. `Level::resume_music` still pushes fade times duck before resuming.
+
+**The prediction was wrong about where the policy would end up.** The draft
+said group assignment would "remain client policy" as if it were a handful of
+calls. Because the engine cannot list a bank's waves, the client has to walk
+its own authored references, and that made it worth giving validation and
+assignment one list. Membership is fixed per wave or effect at load, not per
+call, so the one emitter that bypasses the applied gain, the volume preview,
+works only because `ui.volume_preview` is its own wave. Had it shared a wave
+with a menu sound, this answer would not have fitted, and the assignment now
+refuses that case. The heading's master gain was declined, and nothing is
+lost, since the game has no master slider. The draft's cost estimate was
+right. Both halves it named, the per-emitter multiplication and the resume
+re-push, are gone.
 
 ## 7. ~~Four math names deleted as uncalled, with callers here~~ — `343433c`
 
@@ -1219,6 +1246,16 @@ changed none of the facts.
   again with a reproduction, the ask writes itself: an engine that throws out
   of its own window procedure dies silently, which is the one failure mode T6
   is meant to rule out.
+
+- **A listener model and a voice budget.** Report 6 carried both as broader
+  proposals beside its attenuation slice, never with an exhibit, and the engine
+  answered the slice alone: its decision records them as unfiled and says it
+  does not cover them. Nothing here works around either. Positional audio has
+  no caller in a split-screen game whose views share one mix, and no voice
+  limit has been hit. Any limit this game wants stays client-side: the
+  per-owner paint budgets in `PaintAudio` and the movement rate limits are
+  that already. If a voice cap is ever needed, the exhibit is the code that
+  had to count voices.
 
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):

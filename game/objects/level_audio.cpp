@@ -69,54 +69,23 @@ void Level::pause_audio() const
 void Level::resume()
 {
 	this->set_music_ducked(false);
-	if (this->end_sting_.valid())
-	{
-		this->sound_bank_->set_effect_volume(this->end_sting_,
-			this->end_sting_volume_ * this->preferences_->music_gain());
-		this->sound_bank_->resume_effect(this->end_sting_);
-	}
+	// Nothing re-pushes the player's volume here: a change made while paused
+	// reached these voices through their sound group (game/sound_groups.h).
+	if (this->end_sting_.valid()) { this->sound_bank_->resume_effect(this->end_sting_); }
 	this->resume_music();
-	this->sound_bank_->set_effect_volume(this->zoom_out_sound_,
-		this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->zoom_out_sound_);
-	this->sound_bank_->set_effect_volume(this->countdown_sound_,
-		this->tuning_->match().countdown_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->countdown_sound_);
-	this->sound_bank_->set_effect_volume(this->go_sound_,
-		this->tuning_->match().go_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->go_sound_);
-	this->sound_bank_->set_effect_volume(this->time_up_sound_,
-		this->tuning_->match().time_up_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->time_up_sound_);
-	this->sound_bank_->set_effect_volume(this->last_ten_sound_,
-		this->tuning_->match().last_ten_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->last_ten_sound_);
-	this->sound_bank_->set_effect_volume(this->room_tone_sound_,
-		this->tuning_->match().room_tone_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->room_tone_sound_);
-	this->sound_bank_->set_effect_volume(this->sigh_sound_,
-		this->tuning_->match().sigh_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->sigh_sound_);
-	this->sound_bank_->set_effect_volume(this->chair_sound_,
-		this->tuning_->match().chair_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->chair_sound_);
-	this->sound_bank_->set_effect_volume(this->glass_in_sound_,
-		this->tuning_->match().glass_in_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->glass_in_sound_);
-	this->sound_bank_->set_effect_volume(this->celebrate_sound_,
-		this->tuning_->match().celebrate_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->celebrate_sound_);
-	this->sound_bank_->set_effect_volume(this->slump_sound_,
-		this->tuning_->match().slump_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->slump_sound_);
-	this->sound_bank_->set_effect_volume(this->colour_in_sound_,
-		this->tuning_->match().colour_in_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->colour_in_sound_);
-	this->sound_bank_->set_effect_volume(this->skip_sound_,
-		this->tuning_->match().skip_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->skip_sound_);
-	this->sound_bank_->set_effect_volume(this->undo_sound_,
-		this->tuning_->match().undo_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->undo_sound_);
 	this->resume_player_sounds();
 }
@@ -141,7 +110,7 @@ void Level::update_music(float dt)
 	this->music_fade_.advance(dt);
 	this->music_duck_.advance(dt);
 	this->sound_bank_->set_effect_volume(this->music_, this->music_volume_ *
-		this->preferences_->music_gain() * this->music_fade_.gain() * this->music_duck_.gain());
+		this->music_fade_.gain() * this->music_duck_.gain());
 	if (this->music_ending_ && this->music_fade_.gain() == 0.0f)
 	{
 		this->sound_bank_->stop_effect(this->music_, true);
@@ -159,7 +128,7 @@ void Level::resume_music() const
 {
 	if (!this->music_.valid() || this->sound_bank_->effect_state(this->music_) != SoundState::paused) { return; }
 	this->sound_bank_->set_effect_volume(this->music_, this->music_volume_ *
-		this->preferences_->music_gain() * this->music_fade_.gain() * this->music_duck_.gain());
+		this->music_fade_.gain() * this->music_duck_.gain());
 	this->sound_bank_->resume_effect(this->music_);
 }
 

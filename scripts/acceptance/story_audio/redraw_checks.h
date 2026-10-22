@@ -68,7 +68,7 @@ namespace
     void check_redraw_boundaries(World& world, const ContentVariant& content)
     {
         world.level.reset();
-        world.preferences.sfx_volume = 40;
+        world.set_sfx_volume(40);
         GameTuning tuning = world.tuning;
         RespawnRedrawPresentation look = world.presentation.respawn_redraw();
         look.draw_from = 0.25f;
@@ -102,15 +102,15 @@ namespace
             "Nonpositive player updates touched redraw audio or rewound its visible outline");
         player->pause_sounds();
         require(world.state(name) == SoundState::paused, "Player pause left the redraw pen running");
-        world.preferences.sfx_volume = 25;
+        world.set_sfx_volume(25);
         player->resume_sounds();
         require(world.state(name) == SoundState::playing && world.plays(name) == 1 &&
             close_to(world.last_volume(name), tuning.player().redraw_sounds[0].volume * 0.25f),
             "Redraw resume restarted the pen or kept stale SFX gain");
-        world.preferences.sfx_volume = 0;
+        world.set_sfx_volume(0);
         player->update(weapon_step);
         require(close_to(world.last_volume(name), 0.0f), "Running redraw pen ignored mute");
-        world.preferences.sfx_volume = 100;
+        world.set_sfx_volume(100);
         tuning = content.tuning([](rapidjson::Document& json)
         {
             json["player"]["redraw_sounds"][0]["volume"].SetFloat(0.08f);
@@ -133,7 +133,7 @@ namespace
     void check_redraw_player_lifecycle(World& world)
     {
         world.level.reset();
-        world.preferences.sfx_volume = 40;
+        world.set_sfx_volume(40);
         RespawnRedrawPresentation look = world.presentation.respawn_redraw();
         look.draw_from = 0.0f;
         look.fill_at = 1.0f;
@@ -201,7 +201,7 @@ namespace
             world.level->update(world.idle, world.tuning.player().respawn_delay *
                 (look.draw_from + (look.fill_at - look.draw_from) * 0.25f));
         };
-        world.preferences.sfx_volume = 40;
+        world.set_sfx_volume(40);
         for (int count : { 1, 2, 4 })
         {
             build(count, 20.0f);
@@ -217,7 +217,7 @@ namespace
                 require(world.state(world.tuning.player().redraw_sounds[static_cast<size_t>(index)].name) ==
                     SoundState::paused, "Level suspension did not pause each redraw voice");
             }
-            world.preferences.sfx_volume = 25;
+            world.set_sfx_volume(25);
             world.level->resume();
             const size_t before = recorded_sounds(world.device).size();
             world.level->update(world.idle, 0.0f);

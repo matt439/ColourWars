@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/sound_groups.h"
 #include "engine/app/application.h"
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
@@ -353,6 +354,7 @@ int wmain(int argc, wchar_t** argv)
         std::ofstream records(output / "painter.csv");
         records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress,animation_state,action_age,action_frame,tool_pose,pressure,valve,travel_phase,mist_tail_remaining,muzzle_remaining,empty_remaining,recovered_remaining,hurt_remaining,elimination_remaining,death_x,death_y,death_width,death_height,breath,lean,blinking\n";
         Registry<LevelLoadedInfo> levels("Level");
+        StageList stages;
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
         Save saved_preferences;
@@ -385,9 +387,13 @@ int wmain(int argc, wchar_t** argv)
             [&](const std::string& directory, const std::string& name, bool) {
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());
                 info->validate();
+                stages.push_back(Stage{ name });
                 levels.add(name, std::move(info));
             }, nullptr });
         app.load_manifest((content / "manifest.json").string().c_str());
+        // Silence through the groups the game assigns, as main.cpp does.
+        sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages);
+        sound_groups::apply(*app.audio_resources(), preferences);
         tuning.validate_resources(*app.render_resources(), *app.audio_resources());
         presentation.validate_resources(*app.render_resources(), *app.audio_resources());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(),

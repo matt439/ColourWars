@@ -185,7 +185,7 @@ namespace
         const auto& sounds = world.tuning.player().movement_sounds;
         const int initial_volume = world.preferences.sfx_volume;
         world.preferences.sfx_volume = 0;
-        MovementAudio cues(&sounds, world.audio.sound_bank("paint_exe"), &world.preferences, 0);
+        MovementAudio cues(&sounds, world.audio.sound_bank("paint_exe"), 0);
         const auto request = [&](bool supported, bool grounded, float distance,
             float speed = 0.0f, float direction = 0.0f, float elapsed = dt)
         {

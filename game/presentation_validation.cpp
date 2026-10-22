@@ -1169,24 +1169,10 @@ void Presentation::validate_resources(const RenderResources& render,
 			": match.countdown_size must leave room below the GET READY heading.");
 	}
 
-	const std::string& bank = this->menu_.sound_bank;
-	check.wave("menu_style.sounds.direction.name", bank, this->menu_.direction_sound.name);
-	check.wave("menu_style.sounds.confirm.name", bank, this->menu_.confirm_sound.name);
-	check.wave("menu_style.sounds.cancel.name", bank, this->menu_.cancel_sound.name);
-	check.wave("main_menu.sounds.error.name", bank, this->main_menu_.error_sound.name);
-	check.wave("main_menu.sounds.ready.name", bank, this->main_menu_.ready_sound.name);
-	check.wave("main_menu.sounds.unready.name", bank, this->main_menu_.unready_sound.name);
-	check.wave("controls_settings.sounds.volume_preview.name", bank, this->controls_settings_.volume_preview_sound.name);
-	check.effect("main_menu.music.name", bank, this->main_menu_.music.name);
-	check.wave("pause_menu.window_open_sound.name", bank, this->pause_menu_.window_open_sound.name);
-	check.wave("pause_menu.sounds.pad_lost.name", bank, this->pause_menu_.pad_lost_sound.name);
-	check.wave("pause_menu.sounds.pad_back.name", bank, this->pause_menu_.pad_back_sound.name);
-	check.effect("pause_menu.sounds.resume.name", bank, this->pause_menu_.resume_sound.name);
-	check.wave("end_menu.sounds.series.name", bank, this->end_menu_.series_sound.name);
-	check.wave("results_menu.sounds.winner.name", bank, this->results_menu_.winner_sound.name);
-	check.wave("results_menu.sounds.draw.name", bank, this->results_menu_.draw_sound.name);
-	check.effect("results_menu.sounds.fill.name", bank, this->results_menu_.fill_sound.name);
-	check.effect("results_menu.music.name", bank, this->results_menu_.music.name);
+	for (const SoundReference& sound : this->sound_references())
+	{
+		check.sound(sound);
+	}
 
 	// Non-menu primitive drawing and developer overlays still use this texel.
 	check.frame("built-in primitive frame 'pixel'", "sprite_sheet_1", "pixel");
@@ -2113,6 +2099,42 @@ void Presentation::validate_resources(const RenderResources& render,
 		std::ignore = fixed_menu_size("menu_text.results.team_b_percentage at monitor", team_b,
 			this->opening_.percent_font);
 	}
+}
+
+std::vector<SoundReference> Presentation::sound_references() const
+{
+	const std::string& bank = this->menu_.sound_bank;
+	const auto wave = [&](const char* key, const PresentationSound& sound,
+		SoundGroupRole group = SoundGroupRole::sfx)
+	{
+		return SoundReference{ key, bank, sound.name, false, group };
+	};
+	const auto effect = [&](const char* key, const PresentationSound& sound,
+		SoundGroupRole group = SoundGroupRole::sfx)
+	{
+		return SoundReference{ key, bank, sound.name, true, group };
+	};
+	return {
+		wave("menu_style.sounds.direction.name", this->menu_.direction_sound),
+		wave("menu_style.sounds.confirm.name", this->menu_.confirm_sound),
+		wave("menu_style.sounds.cancel.name", this->menu_.cancel_sound),
+		wave("main_menu.sounds.error.name", this->main_menu_.error_sound),
+		wave("main_menu.sounds.ready.name", this->main_menu_.ready_sound),
+		wave("main_menu.sounds.unready.name", this->main_menu_.unready_sound),
+		// Auditions the pending SFX value, which the group does not carry yet.
+		wave("controls_settings.sounds.volume_preview.name",
+			this->controls_settings_.volume_preview_sound, SoundGroupRole::none),
+		effect("main_menu.music.name", this->main_menu_.music, SoundGroupRole::music),
+		wave("pause_menu.window_open_sound.name", this->pause_menu_.window_open_sound),
+		wave("pause_menu.sounds.pad_lost.name", this->pause_menu_.pad_lost_sound),
+		wave("pause_menu.sounds.pad_back.name", this->pause_menu_.pad_back_sound),
+		effect("pause_menu.sounds.resume.name", this->pause_menu_.resume_sound),
+		wave("end_menu.sounds.series.name", this->end_menu_.series_sound),
+		wave("results_menu.sounds.winner.name", this->results_menu_.winner_sound),
+		wave("results_menu.sounds.draw.name", this->results_menu_.draw_sound),
+		effect("results_menu.sounds.fill.name", this->results_menu_.fill_sound),
+		effect("results_menu.music.name", this->results_menu_.music, SoundGroupRole::music),
+	};
 }
 
 void Presentation::validate_stage_counts(const RenderResources& render, size_t total, size_t eligible) const

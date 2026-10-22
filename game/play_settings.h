@@ -18,7 +18,8 @@ struct StickSettings
 };
 
 // User preferences, borrowed from Save by a live match. Authored sound levels
-// remain in tuning/presentation; these are multipliers over that balance.
+// remain in tuning/presentation; the two volumes are the music and SFX sound
+// groups' over that balance (game/sound_groups.h).
 struct PlaySettings
 {
 	int aim_sensitivity = 3;

@@ -14,6 +14,7 @@
 #include "game/states/game_states.h"
 #include "game/save.h"
 #include "game/simulation.h"
+#include "game/sound_groups.h"
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -112,6 +113,10 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		phase = FailurePhase::validation;
 		validate_game_content(tuning, presentation, app.render_resources(),
 			app.audio_resources(), level_infos, stages, save.play_settings());
+		// The saved Music and SFX volumes are group volumes from here on;
+		// the Controls page pushes a change through the same call.
+		sound_groups::assign(*app.audio_resources(), tuning, presentation, level_infos, stages);
+		sound_groups::apply(*app.audio_resources(), save.play_settings());
 
 		data.set_application(&app);
 		data.set_save(&save);

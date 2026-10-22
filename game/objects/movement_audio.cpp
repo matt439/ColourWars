@@ -4,8 +4,8 @@
 using namespace labrador;
 
 MovementAudio::MovementAudio(const PlayerMovementSounds* tuning, SoundBank* bank,
-    const PlaySettings* preferences, int player_num) :
-    tuning_(tuning), bank_(bank), preferences_(preferences)
+    int player_num) :
+    tuning_(tuning), bank_(bank)
 {
     for (const SoundTuning& sound : tuning->land)
     {
@@ -111,7 +111,7 @@ void MovementAudio::reset()
 void MovementAudio::play(SoundBank::WaveHandle wave, const SoundTuning& tuning,
     float strength) const
 {
-    this->bank_->play_wave(wave, tuning.volume * strength * this->preferences_->sfx_gain());
+    this->bank_->play_wave(wave, tuning.volume * strength);
 }
 
 void MovementAudio::play_painted(float strength)

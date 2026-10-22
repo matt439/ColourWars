@@ -4,6 +4,7 @@
 #include "game/states/keyboard_jump_menu.h"
 #include "game/objects/crude_drawing.h"
 #include "game/controls_text.h"
+#include "game/sound_groups.h"
 #include <algorithm>
 
 using namespace labrador;
@@ -196,8 +197,9 @@ void ControlsSettingsMenu::apply_settings()
 	// The child commits pad profiles independently of these shared preferences.
 	this->selection_.sticks = this->save()->play_settings().sticks;
 	const bool saved = this->save()->set_play_settings_and_save(this->selection_);
-	// Apply the saved gain through the owner so an in-progress fade survives.
-	this->menu_context()->update_music(0.0f);
+	// The settings in memory changed whether or not the file did. The groups
+	// reach every playing and paused voice, so a music fade carries on.
+	sound_groups::apply(*this->data()->audio_resources(), this->save()->play_settings());
 	this->play_wave(this->confirm_sound_);
 	this->set_status(saved ? this->text().status.controls_saved :
 		this->text().status.active_save_failed,
@@ -256,7 +258,8 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 					if (this->selection_.sfx_volume != previous_sfx)
 					{
 						// Audition the pending value even when the saved setting is mute.
-						// MenuPage::play_wave would multiply by the applied gain again.
+						// The preview wave is in no sound group, because the SFX group
+						// still carries the applied value.
 						SoundBankObject::play_wave(this->volume_preview_sound_,
 							this->presentation().controls_settings().volume_preview_sound.volume *
 							this->selection_.sfx_gain());

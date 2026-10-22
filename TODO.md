@@ -94,7 +94,7 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#23` | DECISION | HIGH | L | Listen to the in-game 1/2/4-player mix and decide whether optional detail earns a cue; world detail follows the reference arena. [Remaining work](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration). |
-| `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
+| `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains (now Music/SFX sound-group volumes, report 6), mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release
 
@@ -144,13 +144,12 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The four live drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The three live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#6` | OPEN | MED | S | Review the prepared shared Music/SFX attenuation request and refresh upstream before filing; its synthetic null-audio Debug/Release exhibit passes and remains unfiled. Listener/voice-budget proposals remain outside this slice. [Report](docs/engine-reports/audio-attenuation.md). |
 | `ENG#12` | OPEN | MED | S | Review the prepared named in-memory JSON parsing request and refresh upstream before filing; its synthetic CMake Debug/Release exhibit passes and remains unfiled. Object enumeration/source-span portions remain open. [Report](docs/engine-reports/json-candidate-parsing.md). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half was answered by report 14 (`Application::frame_timings`). |

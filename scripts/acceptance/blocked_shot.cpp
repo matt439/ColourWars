@@ -206,7 +206,7 @@ namespace
     {
         for (const bool projectile_first : { false, true })
         {
-            PaintAudio audio(&world.tuning.paint(), &world.audio, &world.preferences);
+            PaintAudio audio(&world.tuning.paint(), &world.audio);
             audio.update(dt);
             auto surface = world.surface({ true, true, true, true });
             auto shots = world.shots(ProjectileType::jet, { -8, 50 }, Vector2F::ZERO);

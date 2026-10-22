@@ -435,7 +435,7 @@ void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
 void Weapon::play_feedback_sound(SoundBank::WaveHandle sound,
     const SoundTuning& tuning) const
 {
-    this->sound_bank_->play_wave(sound, tuning.volume * this->preferences_->sfx_gain());
+    this->sound_bank_->play_wave(sound, tuning.volume);
 }
 void Weapon::update_ground_contact(bool /*supported*/, bool /*established_support*/,
     float /*dt*/)
@@ -462,10 +462,10 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
         if (!this->loop_playing_)
         {
             this->sound_bank_->play_wave(this->shoot_sound_,
-                this->details().shoot_sound_volume * this->preferences_->sfx_gain());
+                this->details().shoot_sound_volume);
             this->sound_bank_->play_effect(
                 this->loop_sound_, true,
-                this->details().shoot_sound_volume * this->preferences_->sfx_gain());
+                this->details().shoot_sound_volume);
             this->loop_playing_ = true;
         }
     }
@@ -497,8 +497,6 @@ void Weapon::resume_sounds() const
     {
         return;
     }
-    this->sound_bank_->set_effect_volume(this->loop_sound_,
-        this->details().shoot_sound_volume * this->preferences_->sfx_gain());
     this->sound_bank_->resume_effect(this->loop_sound_);
 }
 SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,

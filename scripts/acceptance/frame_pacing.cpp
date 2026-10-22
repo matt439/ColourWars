@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/sound_groups.h"
 #include "engine/app/application.h"
 #include "game/content_validation.h"
 #include "game/debug/debug_director_impl.h"
@@ -159,6 +160,8 @@ int wmain(int argc, wchar_t** argv)
         app.load_manifest((content / "manifest.json").string().c_str());
         validate_game_content(tuning, presentation, app.render_resources(), app.audio_resources(),
             levels, stages, preferences.play_settings());
+        sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages);
+        sound_groups::apply(*app.audio_resources(), preferences.play_settings());
         data.set_application(&app);
         data.set_save(&preferences);
         data.set_level_infos(&levels);

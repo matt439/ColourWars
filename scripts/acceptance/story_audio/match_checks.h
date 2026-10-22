@@ -36,7 +36,7 @@ namespace
 	void check_last_ten_boundaries(World& world)
 	{
 		const auto& sound = world.tuning.match().last_ten_sound;
-		world.preferences.sfx_volume = 40;
+		world.set_sfx_volume(40);
 		enter_match_clock(world, 12.25f, 4);
 		for (int tick = 0; tick < 8; ++tick) { step_match_clock(world, 0.25f); }
 		require(world.plays(sound.name) == 0, "Last-ten cue sounded while the displayed clock exceeded ten");
@@ -45,7 +45,7 @@ namespace
 		world.volume_is(sound.name, sound.volume * 0.4f);
 		world.level->suspend();
 		require(world.state(sound.name) == SoundState::paused, "Suspension did not pause last-ten audio");
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		world.level->resume();
 		require(world.state(sound.name) == SoundState::playing && world.plays(sound.name) == 1 &&
 			close_to(world.last_volume(sound.name), 0.0f),
@@ -75,7 +75,7 @@ namespace
 		const auto& sound = world.tuning.match().last_ten_sound;
 		for (int players : { 1, 2, 4 })
 		{
-			world.preferences.sfx_volume = players == 1 ? 0 : 35;
+			world.set_sfx_volume(players == 1 ? 0 : 35);
 			enter_match_clock(world, 9.75f, players);
 			require(world.plays(sound.name) == 1, "A short match missed its first displayed last-ten second");
 			world.volume_is(sound.name, sound.volume * world.preferences.sfx_gain());
@@ -131,7 +131,7 @@ namespace
 		{
 			for (int players : { 2, 4 })
 			{
-				world.preferences.sfx_volume = 40;
+				world.set_sfx_volume(40);
 				world.build(mode, players);
 				world.level->update(world.idle, 0.0f);
 				world.level->update(world.idle, -1.0f);
@@ -143,7 +143,7 @@ namespace
 				room_tone_volume_is(world, 0.4f);
 				world.level->suspend();
 				require(world.state(sound.name) == SoundState::paused, "Suspension did not pause room tone");
-				world.preferences.sfx_volume = 25;
+				world.set_sfx_volume(25);
 				world.level->resume();
 				require(world.state(sound.name) == SoundState::playing && world.plays(sound.name) == 1,
 					"Room-tone resume restarted the loop");
@@ -209,7 +209,7 @@ namespace
 			world.until([&] { return world.level->state() == LevelState::finished; });
 			require(world.plays(sound.name) == 0, "Intro-off or solo practice played room tone");
 		}
-		world.preferences.sfx_volume = 0;
+		world.set_sfx_volume(0);
 		world.build(OpeningMode::full);
 		world.level->update(world.idle, 0.001f);
 		room_tone_volume_is(world, 0.0f);
@@ -221,7 +221,7 @@ namespace
 		require(world.plays(sound.name) == 1 && world.state(sound.name) == SoundState::playing,
 			"Skipped opening did not retain room tone for the later reveal");
 		world.level->suspend();
-		world.preferences.sfx_volume = 60;
+		world.set_sfx_volume(60);
 		world.level->resume();
 		room_tone_volume_is(world, 0.6f);
 		world.level.reset();
