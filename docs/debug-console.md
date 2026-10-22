@@ -1390,8 +1390,8 @@ as the game. In Release:
   pad and is covered on the CPU side only. Its Win32 key and screenshot driver
   and its launch, focus and transcript helpers are in
   `scripts/check-debug-console/driver.ps1`, which it dot-sources.
-- The engine reports this forced are 9, 10, 11, 12, and the drafts 13 (key
-  names) and 14 (frame statistics), in
+- The engine reports this forced are 9, 10, 11, 12, 14 (frame statistics),
+  and 13 (key names, closed in `2851ad9`), in
   [engine-reports.md](review/engine-reports.md).
 
 ## Not done

@@ -6,9 +6,9 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Fifteen are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22). Seven are closed** and kept below as one paragraph
-> each — what was asked, what shipped, and what this repository spent the
-> answer on.
+> **Thirteen are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22). Nine are closed** and kept below as one paragraph
+> each — what was asked, what the engine answered (shipped or declined), and
+> what this repository spent the answer on, if anything.
 >
 > They are drafted here rather than in the submodule on purpose. AGENTS.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -89,9 +89,10 @@ drafts, unrelated game source, game assets and private captures/data out of the
 public report. Requests beyond what the example demonstrates remain proposals
 to scope separately.
 
-The thirteen drafts present at approval remain unfiled. Report 21 now adds a
-fourteenth unfiled draft, and report 22 (2026-10-22) a fifteenth, checked only
-against the pin so far. Recording this approval posts no reports and leaves
+Thirteen drafts were present at approval; report 21 later added a fourteenth
+and report 22 (2026-10-22) a fifteenth. Labrador answered 13 and 21 before
+either was filed, and both are now [closed](#closed), so thirteen unfiled
+drafts remain; report 22 is checked only against `0c15f34` so far. Recording this approval posts no reports and leaves
 the engine pin unchanged. The next work is a fresh upstream-master
 check and preparation of the minimal report/reproducer for each surviving gap;
 filing uses the approved scope and established route above. This supporting
@@ -153,7 +154,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
 | 22 | Handle-holding drawables can only be re-pointed by name | paint-splash reset, projectile construction and figure clip changes, each handing back a name | local unfiled draft - checked against upstream master `0c15f34` 2026-10-22; no sanitized request or synthetic example yet |
 
-Nothing else is outstanding, on either side, beyond reports 6 and 9-22 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond the live reports below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -992,10 +993,13 @@ uses `std::less<>`.
 
 # Closed
 
-Seven reports, all answered, all spent here. Kept as outcomes rather than as
-reports: what was asked, what shipped, what this repository did with it. The
-original bodies are in git — see [What the audit changed](#what-the-audit-changed)
-for reports 1–5, and `f81e937` for 7 and 8.
+Nine reports, all answered. Eight were spent here in code; 21 was declined
+and spent nothing in code — an answer that leaves the
+workaround where it is still closes the report. Kept as outcomes rather than as
+reports: what was asked, what the engine answered, what this repository did
+with it. The original bodies are in git — see
+[What the audit changed](#what-the-audit-changed) for reports 1–5, `f81e937`
+for 7 and 8, and the parent of `7041dc1` for 13 and 21.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
