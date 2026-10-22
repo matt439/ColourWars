@@ -1,6 +1,7 @@
 // Application::set_resolution resizes the window with SetWindowPos and no
 // SWP_NOACTIVATE, which activates even a hidden window and makes it the
-// foreground (Labrador 19cf650; report 16 kept the window hidden but not this).
+// foreground (Labrador 19cf650; report 16 kept the window hidden but not this,
+// and report 23 asks for it).
 // A thread-local CBT hook refuses activation of only that probe while
 // preserving every other application's activation and the production call.
 class SettingsProbeActivationGuard
@@ -136,9 +137,12 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         if (page == 0)
         {
             // The real windowed Apply path keeps a hidden window hidden and
-            // inactive; this pins that engine contract.
+            // inactive; this pins that engine contract. It is the direct-save
+            // route: a display trial would call set_resolution, whose resize
+            // activates a hidden window (report 23).
             const HWND window = static_cast<HWND>(app.window());
             tap(Key::enter); tick();
+            require(stack.depth() == 2, "Status Apply pushed a display trial; it must take the direct-save route");
             require(IsWindowVisible(window) == FALSE && !app.fullscreen() && GetForegroundWindow() != window,
                 "Status Apply exposed or activated its hidden probe");
         }

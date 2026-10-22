@@ -170,8 +170,13 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const auto apply = [&](bool display_trial = false)
     {
-        // The real Apply path keeps the hidden probe hidden and inactive.
+        // The direct-save route keeps the hidden probe hidden and inactive
+        // unaided. The display trial calls set_resolution, whose resize has no
+        // SWP_NOACTIVATE and activates a hidden window (report 23), so only
+        // that route keeps the activation veto.
         const HWND window = static_cast<HWND>(app.window());
+        std::optional<SettingsProbeActivationGuard> activation;
+        if (display_trial) { activation.emplace(window); }
         const auto before = saved_bytes();
         const auto resolution = preferences.resolution();
         const bool fullscreen = preferences.fullscreen();

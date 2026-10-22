@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Thirteen are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22). Nine are closed** and kept below as one paragraph
+> **Ten are live as unfiled drafts with exhibits (6, 9, 10, 12, 14, 15, 18, 20, 22, 23). Thirteen are closed** and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped or declined), and
 > what this repository spent the answer on, if anything.
 >
@@ -90,9 +90,11 @@ public report. Requests beyond what the example demonstrates remain proposals
 to scope separately.
 
 Thirteen drafts were present at approval; report 21 later added a fourteenth
-and report 22 (2026-10-22) a fifteenth. Labrador answered 13 and 21 before
-either was filed, and both are now [closed](#closed), so thirteen unfiled
-drafts remain; report 22 is checked only against `0c15f34` so far. Recording this approval posts no reports and leaves
+and report 22 (2026-10-22) a fifteenth. Labrador answered 11, 13, 16, 17, 19
+and 21 before any was filed, and all six are now [closed](#closed), so nine of
+those drafts remain unfiled; report 22 is checked only against `0c15f34` so
+far. Report 23 (2026-10-22), found while spending 16, is a sixteenth, checked
+against `19cf650`. Recording this approval posts no reports and leaves
 the engine pin unchanged. The next work is a fresh upstream-master
 check and preparation of the minimal report/reproducer for each surviving gap;
 filing uses the approved scope and established route above. This supporting
@@ -149,6 +151,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 18 | Independent Label visibility convenience | supported zero-tint/empty-text alternatives and standalone `label-visibility/` null recording | local unfiled draft - master checked 2026-10-20; null Debug/Release verified; order/retirement/font questions stay separate |
 | 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
 | 22 | Handle-holding drawables can only be re-pointed by name | paint-splash reset, projectile construction and figure clip changes, each handing back a name | local unfiled draft - checked against upstream master `0c15f34` 2026-10-22; no sanitized request or synthetic example yet |
+| 23 | Resizing a hidden window activates it | `SettingsProbeActivationGuard`, the `WH_CBT` veto five painter fixtures hold around `set_resolution` | local unfiled draft - checked against pin `19cf650` 2026-10-22; no sanitized request or synthetic example yet |
 
 Nothing else is outstanding, on either side, beyond the live reports below and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
@@ -777,13 +780,56 @@ uses `std::less<>`.
   similar client caching: with handles in hand those metrics are one indexed
   read.
 
+## 23. Resizing a hidden window activates it — **draft with activation-guard exhibit**
+
+Found 2026-10-22 while spending [report 16](#16-windowed-apply-shows-a-deliberately-hidden-window--7db3d5c),
+against the pin `19cf650`; upstream master has not been rechecked since. It is
+**unfiled**, and has no sanitized request or synthetic example yet.
+
+### What happens
+
+`Application::set_resolution` calls `Window::resize_client`
+(`engine/app/win32/window.cpp`), which sizes with
+`SetWindowPos(handle, HWND_TOP, 0, 0, w, h, SWP_NOMOVE | SWP_NOZORDER)`. With
+no `SWP_NOACTIVATE`, the call activates the window even while it is hidden, and
+it becomes the foreground window when the process has foreground rights.
+Report 16's answer made `enter_fullscreen` and `leave_fullscreen` size a hidden
+window with `SWP_NOACTIVATE`, and the `visible` comments now say the engine
+never shows a window created hidden; this is the one resize path that still
+takes focus. Home alpha's fixture shows it directly: hidden, inactive and not
+foreground before `app.set_resolution(1280x720)`; hidden, active and foreground
+after.
+
+### Exhibit
+
+`SettingsProbeActivationGuard` in
+[save_status_checks.h](../../scripts/acceptance/painter_visual/save_status_checks.h):
+a thread-local `WH_CBT` hook that refuses `HCBT_ACTIVATE` for the probe's
+window only. Five painter fixtures hold it around a real `set_resolution` -
+display trial, Home alpha, Options defaults, paused Options, and settings menu
+around its display-trial Applies - because every display trial's callback in
+[display_confirmation.cpp](../../game/states/display_confirmation.cpp) calls
+`set_resolution`. Without it a hidden probe would steal the desktop's
+foreground whenever it had the rights to.
+
+### The ask
+
+That `resize_client` pass `SWP_NOACTIVATE`, or more narrowly that it does so
+when the window is hidden, matching `leave_fullscreen`.
+
+### What an answer lets this repository delete
+
+`SettingsProbeActivationGuard` and its five uses; each fixture keeps its
+hidden/not-foreground requirement as the regression check.
+
 ---
 
 # Closed
 
-Nine reports, all answered. Eight were spent here in code; 21 was declined
-and spent nothing in code — an answer that leaves the
-workaround where it is still closes the report. Kept as outcomes rather than as
+Thirteen reports, all answered. Ten were spent here in code; 17 changed only
+a manifest comment, 19 needs more evidence and 21 was declined, and those three
+spent nothing in code — an answer that leaves the workaround where it is still
+closes the report. Kept as outcomes rather than as
 reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
 [What the audit changed](#what-the-audit-changed) for reports 1–5, `f81e937`
@@ -1062,21 +1108,23 @@ the desktop, the `ShowWindow(SW_HIDE)` after each Apply, Keep and rollback, and
 the keyboard/mouse/stack re-arm that undid them are deleted: the window now
 stays hidden unaided. Each fixture keeps its "not visible, not foreground, not
 full screen" requirement, which is now a regression check on the engine's
-contract instead of something the fixture restored. Save status, settings menu
-and settings values also lose `SettingsProbeActivationGuard`, the `WH_CBT` veto
-on the probe's activation. Production code needed nothing; the game is visible
-and `display_confirmation.cpp` already calls the ordinary `set_fullscreen`.
+contract instead of something the fixture restored. Save status and settings
+values also lose `SettingsProbeActivationGuard`, the `WH_CBT` veto on the
+probe's activation; both now require that their Apply takes the direct-save
+route, which pushes no display trial and so never calls `set_resolution`.
+Production code needed nothing; the game is visible and
+`display_confirmation.cpp` already calls the ordinary `set_fullscreen`.
 
-**The guard stays in four fixtures, and why is a new finding.** Display trial,
-Home alpha, Options defaults and paused Options each resize the hidden window,
-and without the veto all four failed their foreground check. Home alpha
-isolates it: before `app.set_resolution(1280x720)` the window is hidden,
-inactive and not foreground; after, it is still hidden but active and the
-foreground window. `Window::resize_client` sizes with `SetWindowPos(...,
-SWP_NOMOVE | SWP_NOZORDER)` and no `SWP_NOACTIVATE`, so it activates a hidden
-window, which breaks the same "takes no focus" promise report 16 was about, on
-a path that report never named. The guard's comment now says so. It is
-unfiled, and the next report to draft from this client.
+**The guard stays in five fixtures, and why is a new finding** — now
+[report 23](#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit).
+Display trial, Home alpha, Options defaults and paused Options each resize the
+hidden window, and without the veto all four failed their foreground check.
+Settings menu keeps it around its two display-trial Applies only: every trial's
+callback calls `set_resolution`, so it is the same path, and that fixture
+passing without the veto in the first cut of this commit proved only that the
+probe lacked foreground rights at that moment. Home alpha isolates it: before
+`app.set_resolution(1280x720)` the window is hidden, inactive and not
+foreground; after, it is still hidden but active and the foreground window.
 
 **The prediction was wrong about the size of the workaround, both ways.** The
 ledger named it as "the `apply` helper in `settings_menu_checks.h`". The guard
@@ -1084,7 +1132,7 @@ was defined in `save_status_checks.h` and used in seven fixtures, so the spend
 reached seven files, not one. The report asked only about leaving full screen;
 the fixtures that trial full screen On were behind the guard for the entering
 path, which the report never named. But the guard was also covering a third
-path, the windowed resize, so "that guard can go" was true for only three of
+path, the windowed resize, so "that guard can go" was true for only two of
 the seven. And the hidden controls' 1280x720 "size report" was a premise the
 engine corrected: a hidden windowed window makes no size report before its
 constructor returns, and the preset is 1280x720, so that observation could not

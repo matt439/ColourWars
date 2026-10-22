@@ -223,8 +223,11 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     }
     // A real Controls Apply may update shared preferences while display defaults
     // remain pending. Parent Apply must preserve that independently saved edit.
+    // Controls rows: Pad sticks, Keyboard Jump, Music, SFX, View shake, Aim
+    // marker, Reduce effects, Apply, Back - so View shake is four down and
+    // Apply three more.
     device = keyboard; seed(); open(); restore(); go(3); tap(GamepadButton::a); tick();
-    for (int move = 0; move < 3; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
+    for (int move = 0; move < 4; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
     for (int move = 0; move < 3; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::a); expected.view_shake = true; preserved(preferences.play_settings());
     tap(GamepadButton::b); tick(); compare("controls-saved-parent-pending"); apply(size, true); reload(true); compare("controls-merge-applied");
     require(records.good(), "Options defaults evidence write failed");

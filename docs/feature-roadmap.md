@@ -635,7 +635,7 @@ help and paused-opening refresh with captured text/layout and frozen simulation,
 RNG and available Debug fingerprints. All 88 shared PPMs match across presets.
 The ownership leaf checks eleven common observations per preset and eleven
 additional Debug observations for queued work, reserved shortcuts, the pad chord
-and private posted F10 hook messages. Actual OS focus delivery is outside that
+and F10 held through Keyboard. Actual OS focus delivery is outside that
 probe. All ten affected legacy UI runs pass: Controls (including Pad Sticks),
 percentages, paused options, menu motion and Settings in both presets.
 

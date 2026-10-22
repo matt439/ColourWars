@@ -143,7 +143,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The thirteen live drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The ten live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
@@ -160,6 +160,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#18` | OPEN | LOW | S | Review the prepared Label visibility convenience; refresh upstream before filing. Null Debug/Release passes; unfiled. Order/retirement/font questions stay separate. [Report](docs/engine-reports/label-visibility.md). |
 | `ENG#20` | OPEN | LOW | S | Review the active view-context request; refresh upstream before filing. Source audit and null Debug/Release illustration pass; unfiled. Art policy and Scene/order integration stay separate. [Report](docs/engine-reports/view-context.md). |
 | `ENG#22` | OPEN | LOW | S | Prepare the handle-overload request (re-pointing drawables takes names only) and a synthetic example; unfiled. Update-path compares, not a measured bottleneck. [Report](docs/review/engine-reports.md#22-handle-holding-drawables-can-only-be-re-pointed-by-name--draft-with-paint-splash-exhibit). |
+| `ENG#23` | OPEN | LOW | S | Prepare the hidden-window resize request (`set_resolution`'s resize has no `SWP_NOACTIVATE` and activates a hidden window) and a synthetic example; recheck upstream; unfiled. Five painter fixtures hold a `WH_CBT` veto meanwhile. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

@@ -83,8 +83,12 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     const auto apply = [&]
     {
         if (controls) { tap(Key::enter); return; }
+        // Fullscreen stays Off and the resolution is the saved one, so Apply
+        // takes the direct-save route: no display trial and no set_resolution,
+        // whose resize would activate the hidden probe (report 23).
         const HWND window = static_cast<HWND>(app.window());
         tap(Key::enter); tick();
+        require(stack.depth() == 2, "Value Apply pushed a display trial; it must take the direct-save route");
         require(!app.fullscreen() && IsWindowVisible(window) == FALSE && GetForegroundWindow() != window,
             "Value Apply exposed or activated its probe, or applied pending fullscreen On");
     };
