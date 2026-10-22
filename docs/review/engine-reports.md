@@ -52,7 +52,7 @@ been answered by this repository. See
 **Packaging draft added 2026-10-15 against published master `52e809a`.**
 `git ls-remote origin refs/heads/master` in the engine confirmed that revision;
 its CMake files still have no install/export rules or content-staging helper.
-[Report 15](#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit)
+[Report 15](#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--document-only-48fb236)
 updates gap-audit F8 against the release machinery this game has since built.
 The engine's PI-09/PI-10 already reserve filing and a decision; PI-11 is a
 conditional implementation story, not an implemented answer.
@@ -143,7 +143,6 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 23 | Resizing a hidden window activates it | `SettingsProbeActivationGuard`, the `WH_CBT` veto five painter fixtures hold around `set_resolution` | local unfiled draft - checked against pin `19cf650` 2026-10-22; no sanitized request or synthetic example yet |
 
 Nothing else is outstanding, on either side, beyond the live reports below and the
@@ -152,135 +151,6 @@ leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
-
----
-
-## 15. Runtime packaging and content staging are repeated in the client — **draft with release exhibit**
-
-**Exhibit: a working release, not a proposed packaging system.**
-[game/CMakeLists.txt](../../game/CMakeLists.txt) defines `colourwars_content`,
-an always-run target that mirrors assets beside the executable even when only
-content changes. It calls
-[stage_runtime_assets.cmake](../../cmake/stage_runtime_assets.cmake) to copy the
-reviewed runtime list and prune stale assets within four owned content folders.
-A removed optional bank disappears from the runtime mirror.
-[release_package.cmake](../../cmake/release_package.cmake)
-then owns install rules and CPack ZIP generation;
-[runtime_assets.cmake](../../cmake/runtime_assets.cmake) owns the reviewed list
-shared by staging and packaging; [release_assets.cmake](../../cmake/release_assets.cmake)
-checks it against the manifest.
-
-**Development-staging request prepared 2026-10-20.** The sanitized
-[report](../engine-reports/runtime-staging.md) and exact tested
-[synthetic fixture](../../scripts/engine-reports/runtime-staging/CMakeLists.txt)
-are ready for review and remain **unfiled**. This is an optional CMake
-convenience/extraction request, not a packaging bug. A maintained documented
-recipe is a possible answer. The wider runtime-install proposal below has
-no new proof or implementation from this staging fixture.
-
-### What happens
-
-The game's development mirror and release tree use the same runtime content
-list. Both include the accepted replacement bank and its definition, excluding
-private legacy audio, editable sources and tools. Development can omit the
-optional bank for the silent fallback; packaging requires it. The release
-script follows `TARGET_RUNTIME_DLLS:ColourWars`, adds
-the MSVC runtime with `InstallRequiredSystemLibraries`, copies third-party
-notices, and refuses configurations outside this game's supported Release
-x64 D3D11/XAudio2 build. CI's **Extract and inspect Release package** step in
-[ci.yml](../../.github/workflows/ci.yml) checks required DLLs and rejects audio
-and development-file leaks. A clean-PC run remains `ROAD#1`; a package that
-passes this inspection is not evidence of that run.
-
-This already works. The remaining cost is that a game building on Labrador
-must discover and encode the engine's runtime dependencies and content-root
-layout itself, alongside the game's own shipping choices. A dependency or
-loader-layout change at a pin bump makes the client recheck those rules. The
-minimal sample independently spells its development copies in
-`samples/minimal/CMakeLists.txt`; it explicitly says it has no install rules.
-
-Checked against published engine master `52e809a` on 2026-10-15: the tracked
-`CMakeLists.txt` and `*.cmake` files have no `install(...)`, `export(...)`,
-CPack setup, package-config generation, or shared content-staging helper.
-`engine/app/content_root.h` owns executable-relative resolution; the game
-owns the matching build layout. Engine product stories
-[PI-09](../../external/labrador/docs/product/STORIES.md#pi-09),
-[PI-10](../../external/labrador/docs/product/STORIES.md#pi-10) and
-[PI-11](../../external/labrador/docs/product/STORIES.md#pi-11) already describe
-filing this demand, deciding it, and conditionally supplying runtime install
-support. Those stories do not close the implementation gap.
-
-Fresh upstream master was fetched on 2026-10-20 at 19:34:53 UTC as
-`52e809a5a0229d37db4373faa7853df4c861a310`; the whole engine worktree was
-confirmed unchanged against that `FETCH_HEAD` at 19:50:08 UTC. The shared
-staging helper is still absent, while executable-relative resolution and the
-minimal sample's always-run copy target already exist.
-
-### Measured staging exhibit
-
-The standalone CMake project links only prebuilt engine/Math libraries and
-CMake's ordinary Win32 system libraries; it builds no engine/backend targets
-and starts no Application or devices. Its console uses the existing public
-content-root/path APIs. Its assets are three synthetic text files, with a
-caller-owned one-required/one-optional allowlist and one deliberately unlisted
-source. It removes only the exact missing declared optional file, never an
-unowned directory or broad output tree.
-
-Both MSVC 19.51.36256.0 `/W4 /WX` Debug and Release runs passed baseline,
-asset-text edit and optional-source removal phases: six process exits 0 with
-empty stderr. Asset-only rebuilds contained no compiler/linker command and
-preserved executable SHA-256 and modification time. The unlisted file stayed
-out, an unrelated output marker survived, and an executable-relative read
-defeated the misleading required file at cwd. Both missing-required builds
-exited 1 before any staged-output hash changed. The final fixture produced no
-CMake warnings; checks remain active in Release.
-
-Retained v1 Debug configure/build passed, but its phase-0 runtime oracle
-correctly failed: `file(WRITE)` generated a CRLF decoy while the binary check
-required LF. V2 explicitly generates UNIX newlines and resolves existing
-ancestors before appending absent path components, avoiding `REAL_PATH` calls
-on files not yet created. No warning was suppressed, and the console oracle,
-LF source assets and engine were unchanged. Fresh v2 runs above pass; the v1
-failure is a fixture error, not an engine staging failure.
-
-Receipts remain under
-`out/validation/crossfeed-20261020/runtime-staging-report-final-v1/` and
-`runtime-staging-report-final-v2/`, including the final `result.json`, verbose
-build/negative logs, process stdout/stderr and source hashes. The tracked
-fixture preserves tested source bytes and uses local Git LF attributes for
-its exact text payloads. These runs do not establish install/ZIP/CRT or
-clean-machine acceptance.
-
-The frozen gap audit's F8 is broader than this evidence now supports. This
-game has a supported shipping mechanism: its own install/CPack rules. Missing
-engine install/export/package-config support also means it supplies no CMake
-package for a `find_package(Labrador)` consumer, but ColourWars uses
-`add_subdirectory` and has no prebuilt-package workaround to delete. That is
-context, not a second demand from this caller.
-
-### The bounded ask and remaining runtime-install scope
-
-Consider a documented development-staging convenience taking a consuming
-target, source content root and explicit required/optional relative file
-lists. It would replace generic always-run copy/removal mechanics in
-`colourwars_content`/`stage_runtime_assets.cmake`; a documented recipe may be
-sufficient. The caller retains asset selection, manifest/format checks,
-generated-file and fallback rules, and any stricter mirror pruning. The
-synthetic fixture's single-config MSVC constraints are validation conditions,
-not proposed requirements on a generic helper.
-
-The earlier runtime-install proposal remains separate: following engine
-runtime DLLs, supplying redistributable CRT files and rejecting a debug CRT
-would need its own bounded preparation/validation before claiming an answer.
-PI-11 describes that conditional scope. The game retains Release/backend
-restrictions, its accepted-bank requirement, package name/layout, build stamp,
-notices and CI assertions. No unused `find_package`/export framework or broad
-directory copy is requested by this client.
-
-**Status:** local unfiled draft. Review the prepared staging report and refresh
-upstream immediately before authorized filing through the publication gate.
-Record an engine implementation or a decline with its trade-off here; this
-preparation makes neither and changes no engine pin.
 
 ---
 
@@ -867,6 +737,50 @@ GPU wait on d3d12. And the ledger left GPU timestamps "open" as the broader
 `ENG#14`/`DBG#5` wish; the engine declined them, so `DBG#5`'s GPU half waits on
 nothing now. It is not planned.
 
+## 15. ~~Runtime packaging and content staging are repeated in the client~~ — document only, `48fb236`
+
+Asked, in its fileable slice, for an optional development-staging convenience:
+a consuming target, a source content root and explicit required and optional
+file lists, to replace the generic always-run copy and removal mechanics in
+`colourwars_content`/`stage_runtime_assets.cmake`. A documented recipe was
+named as a possible answer, and the runtime-install proposal (engine runtime
+DLLs, CRT, refusing a debug CRT) was kept separate. **Document only**, in
+"Say the template's content mirror never removes a file". No CMake staging
+helper was added. The template's always-run copy target is the documented
+recipe, and the staging target is part of what a game owns (ARCHITECTURE *A
+game project*, T1). `samples/minimal/CMakeLists.txt` now says that
+`copy_directory_if_different` never removes a file. A stale mirror hides a
+missing required file, and keeps an optional bank from being replaced by the
+silent one. The assets guide gained "Optional content and stale copies", a
+`cmake -P` list-and-remove recipe that copies the listed files, fails on a
+missing required one and removes a missing optional one. The template's
+README notes the change. The runtime-install half is PI-11, which the engine
+says "stays undecided". Its reopen condition is a second move of the
+content-root rule or PI-11 being accepted, and not a count of callers.
+
+**Spent: nothing.** The recipe is a strict subset of this game's stager. It
+copies and removes only what it lists. It has no path-safety checks, no
+refusal of linked entries, no audio or font validation and no pruning of
+unlisted stale files inside the owned content roots. Adopting it would weaken
+`stage_runtime_assets.cmake`, which the engine now records as legitimately
+the client's. `colourwars_content`, `runtime_assets.cmake`,
+`release_assets.cmake`, `release_package.cmake` and
+`cmake/check_runtime_staging.cmake` all stay. The last is this game's own
+regression test of the stager, not part of the exhibit, and
+`runtime-staging-<id>` there is only a scratch-folder name. The draft and its
+synthetic `scripts/engine-reports/runtime-staging/` fixture are deleted. The
+runtime-install residue moves to
+[What is deliberately not here](#what-is-deliberately-not-here) and
+`ENG#PARKED`. Gap-audit F8 stays as written. Its staging half is answered as
+document only, and its install/export half is PI-11.
+
+**The prediction was wrong about what an answer would delete.** The bounded
+ask said an engine convenience or recipe "would replace generic always-run
+copy/removal mechanics" here. It replaces nothing. The engine's own decision
+says the client "could delete nothing directly". The hedge that "a documented
+recipe may be sufficient" was right as a description of the answer, and
+wrong about what it would let this repository delete.
+
 ## 16. ~~Windowed Apply shows a deliberately hidden window~~ — `7db3d5c`
 
 Asked that an Application initialized with `visible=false` stay hidden through
@@ -1268,6 +1182,17 @@ changed none of the facts.
   again with a reproduction, the ask writes itself: an engine that throws out
   of its own window procedure dies silently, which is the one failure mode T6
   is meant to rule out.
+
+- **Runtime install facts: the engine's runtime DLLs, the redistributable CRT
+  and refusing a debug CRT.** Report 15 kept this half separate from its
+  staging slice, and the engine left it to PI-11, which "stays undecided". The
+  reopen condition is PI-11 being accepted or the content-root rule moving a
+  second time. Nothing here is a workaround waiting on it:
+  `release_package.cmake` follows `TARGET_RUNTIME_DLLS:ColourWars`, adds the
+  MSVC runtime through `InstallRequiredSystemLibraries`, refuses
+  configurations outside Release x64 D3D11/XAudio2, and CI inspects the ZIP.
+  It works, so there is no exhibit to delete. If PI-11 is accepted, read it
+  against that file. A clean-PC run is still `ROAD#1`. Parked as `ENG#PARKED`.
 
 - **A listener model and a voice budget.** Report 6 carried both as broader
   proposals beside its attenuation slice, never with an exhibit, and the engine
