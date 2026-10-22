@@ -9,8 +9,10 @@
 
 // A key with the modifiers a debug bind needs held: "f5", "shift+f5",
 // "ctrl+shift+f2". Ctrl and Shift only: Alt+F4, Alt+Space and Alt+Tab belong
-// to the system whatever a bind says. The engine names no keys (engine report
-// 13), so the table is here. Debug-only bodies.
+// to the system whatever a bind says. The token is labrador::key_name's, save
+// where the console's older spelling differs ("1", "numpad1", "delete",
+// "pageup"); which keys are bindable, those spellings, case folding and the
+// chord grammar are this game's. Debug-only bodies.
 struct KeyChord
 {
 	labrador::Key key = labrador::Key::none;
@@ -26,10 +28,8 @@ namespace debug_keys
 	// numpad0-9, then the named keys. Lower case.
 	const std::vector<std::pair<labrador::Key, std::string>>& names();
 
-	// The table's name for a key, or empty.
-	std::string key_name(labrador::Key key);
-
-	// Case-insensitive; "ctrl+" and "shift+" in any order before the key.
+	// Case-insensitive; "ctrl+" and "shift+" in any order before the key. The
+	// key is a names() spelling or the engine's token for a bindable key.
 	std::optional<KeyChord> parse(std::string_view text);
 
 	// "shift+f5": the form parse reads back.

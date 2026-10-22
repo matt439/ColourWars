@@ -664,18 +664,12 @@ using the approved gameplay style. Physical-pad comfort remains `ROAD#2`, and
 human readability, comfort, balance and hardware acceptance stay open. This
 keyboard slice does not close `GAP#4.2`.
 
-The working action evaluator and saved Jump consumer now support the local
-[ENG#21 action-evaluation draft](engine-reports/action-evaluation.md), carrying
-the former `GAP#F2` request. Fresh upstream master was checked on 2026-10-20 at
-`52e809a5a0229d37db4373faa7853df4c861a310`; the standalone synthetic exhibit
-passes Debug and Release against its prebuilt engine libraries. The request is
-limited to source evaluation and independent alias edges under T1. Game action
-names/defaults, save/UI conflicts, menu ownership and roster policy remain
-client concerns. Gamepads already has checked per-slot state/edges and
-caller-owned trigger thresholds; neither is a missing API. A pad-capture
-request still needs a real pad-rebinding caller. No issue has been filed;
-refresh upstream before later publication. Filing uses the
-[approved minimal-report scope and issue route](review/engine-reports.md#publication-gate-engpublish).
+Labrador declined the action-evaluation request (engine report 21, formerly
+`GAP#F2`) in `197aff1`: evaluating a binding table is the action map, which its
+boundary table gives to the game, and its clients already combine sources by
+rules that disagree. The evaluator stays client code; see the
+[closed entry](review/engine-reports.md#21-digital-action-evaluation-remains-client-code--declined-197aff1).
+A pad-capture request still needs a real pad-rebinding caller.
 
 ## Per-player menu focus (`GAP#D1`)
 

@@ -117,11 +117,13 @@ authorized.
 ## Why the exhibits matter more than the asks
 
 `PHILOSOPHY.md` declines speculative frameworks, and the engine has been
-consistent about it: `gamepad.h` says outright that there is no action map
-because "the paint-shooter and the sample both spell their bindings in code,
-and neither has a rebinding screen to fill such a table from". That is the
-right call, and it means a report saying "an engine should have X" is worth
-nothing. A report saying "here is the code I wrote because it did not" is worth
+consistent about it: `gamepad.h` used to say there was no action map because
+no client had "a rebinding screen to fill such a table from". When this client
+grew one, the engine did not take the exhibit as a reason to build the map; it
+re-took the absence on firmer ground, the boundary table that gives bindings to
+the game (report 21, [Closed](#21-digital-action-evaluation-remains-client-code--declined-197aff1)).
+That is the right call, and it means a report saying "an engine should have X"
+is worth nothing. A report saying "here is the code I wrote because it did not" is worth
 something.
 
 So each report leads with the workaround. The evidence for this being the right
@@ -142,7 +144,6 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 10 | Optional host capture convenience without State lifecycle changes | `capture_stack` plus the tested public-API final-State alternative | local unfiled request - master checked 2026-10-20; Debug/Release controls pass; unavoidable-redraw claim withdrawn |
 | 11 | Optional opt-out for bare system-menu keys | native F10 queue hook and standalone `system_keys_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release requests reproduce |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
-| 13 | `Key` has no names | Debug bind names, saved keyboard Jump tokens and the standalone `key_names.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 14 | No frame statistics or GPU timing | client perf hooks and standalone `frame_phase_boundaries.cpp` | local unfiled CPU-phase request - master checked 2026-10-20; manual public-call example passes Debug/Release |
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 16 | Windowed Apply shows a deliberately hidden window | standalone `hidden_apply_exhibit.cpp` and the client Apply guard | local unfiled bug draft - master checked 2026-10-20; Debug/Release reproduce |
@@ -150,7 +151,6 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 18 | Independent Label visibility convenience | supported zero-tint/empty-text alternatives and standalone `label-visibility/` null recording | local unfiled draft - master checked 2026-10-20; null Debug/Release verified; order/retirement/font questions stay separate |
 | 19 | No public later-show convenience for an Application initialized hidden | exact standalone hidden-creation control and `game/main.cpp` startup order | local unfiled request - master checked 2026-10-20; four hidden Debug/Release cases pass; first present remains open |
 | 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
-| 21 | Digital action evaluation remains client code | runtime saved Jump mapping and the standalone `action_evaluation.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 22 | Handle-holding drawables can only be re-pointed by name | paint-splash reset, projectile construction and figure clip changes, each handing back a name | local unfiled draft - checked against upstream master `0c15f34` 2026-10-22; no sanitized request or synthetic example yet |
 
 Nothing else is outstanding, on either side, beyond reports 6 and 9-22 below. The fullscreen workaround the
@@ -431,49 +431,6 @@ that also requires client knowledge of accepted/consumed fields. Keep these
 asks distinct when preparing further exhibits. Review the narrow report and
 refresh upstream before authorized filing through the
 [publication gate](#publication-gate-engpublish).
-
----
-
-## 13. `Key` has no names — **draft, low priority**
-
-**Exhibit added by the developer debug system (phase 4).** `bind <key> <line>`
-and `binds.cfg` name keys in text. The saved keyboard Jump preference now adds
-a Release-safe naming consumer in `game/input_bindings.cpp`.
-
-**Minimal report prepared 2026-10-20.** The sanitized
-[request](../engine-reports/key-names.md) and standalone
-[synthetic exhibit](../../scripts/engine-reports/key_names.cpp) are ready for
-review and remain **unfiled**. Fresh upstream master was fetched at 19:34:53
-UTC as `52e809a5a0229d37db4373faa7853df4c861a310`; the engine worktree was
-confirmed unchanged against that `FETCH_HEAD`. The exact synthetic source
-passed direct MSVC C++20 `/W4 /WX` Debug and Release compile/run checks. Its
-nine-entry subset proves canonical parse/format round trips and strict error
-handling, not a complete key map or physical-input acceptance. Review the
-prepared report and refresh upstream before authorized filing through the
-[publication gate](#publication-gate-engpublish).
-
-### What happens
-
-`labrador::Key` has no portable canonical `key_name(Key)`/`key_from_name`
-codec. So `game/debug/debug_keys.cpp` carries its own table of about
-eighty names (`a`-`z`, `0`-`9`, `f1`-`f12`, `numpad0`-`9`, `pageup`,
-`lbracket`, ...) built against the enum's order. The saved keyboard preference
-carries its own explicit A-Z/Space token table and separate UI labels. Clients
-that persist key names must maintain those translations as the enum changes.
-
-The existing web `key_from_code` is acknowledged: it decodes DOM events,
-collapses multiple modifier/Enter codes to the same enum key and supplies no
-reverse formatter. It does not answer the portable token round trip. Typed
-characters, localized labels and hardware identity are separate concerns.
-
-### The ask, when it goes
-
-`std::string_view key_name(Key)` and `std::optional<Key> key_from_name(std::string_view)`
-next to the enum, with one documented canonical spelling per real key and
-defined unknown/sentinel results. Answering it could replace the canonical
-token lookup in both consumers. Existing file aliases may remain if the engine
-chooses different spellings; allowed subsets, UI labels, case normalization
-and `ctrl+`/`shift+` chord grammar stay the game's.
 
 ---
 
@@ -913,43 +870,6 @@ master before any filing through the
 
 ---
 
-## 21. Digital action evaluation remains client code - **local unfiled draft**
-
-The former `GAP#F2` request is now **ENG#21**. The working
-[action evaluator](../../game/action_bindings.cpp) and
-[saved Jump mapping](../../game/input_bindings.cpp), consumed by the actual
-[PlayerInput](../../game/objects/player_input.cpp), provide the client exhibit.
-The proposed extraction is limited to generic physical-source evaluation and
-independent source-edge combination; action names/defaults, threshold choices,
-save/UI conflicts, menu ownership and roster policy stay in the client.
-
-The [sanitized request](../engine-reports/action-evaluation.md) accompanies a
-[standalone synthetic example](../../scripts/engine-reports/action_evaluation.cpp).
-It demonstrates changing the binding to an already-held key without inventing
-a press, and overlapping button/trigger sources whose edges remain independent.
-It asks for no new slot lookup, trigger threshold or pad-capture API.
-
-**Checked and exercised 2026-10-20.** A fresh upstream fetch at 19:34:53 UTC
-confirmed master `52e809a5a0229d37db4373faa7853df4c861a310`; the relevant source
-matches that `FETCH_HEAD`. The engine still explicitly defers action mapping
-above its existing device primitives. The synthetic example passed with MSVC
-19.51.36256.0 under `/W4 /WX` in Debug and Release, linked only to the prebuilt
-`LabradorEngine.lib` and `MattMath.lib`, without game objects, window or
-graphics/audio/physical-input devices.
-The report records the exact flags, reproduction commands and observed output.
-T1 supports considering extraction from this newly exercised consumer; the
-engine's API shape and decision remain upstream's.
-
-Local receipts are under
-`out/validation/crossfeed-20261020/action-evaluation-repro/`, with the fresh-fetch
-and source checks alongside it in `action-report-upstream.txt` and
-`action-report-source-recheck.txt`. These are synthetic implementation checks,
-not hardware, physical-input, human or performance acceptance. No issue has
-been filed, the engine is unchanged, and the approved intake route above still
-governs any later publication. Refresh upstream immediately before filing.
-
----
-
 ## 22. Handle-holding drawables can only be re-pointed by name — **draft with paint-splash exhibit**
 
 **Drafted 2026-10-22 against the pin `52e809a`; rechecked the same day against
@@ -1238,6 +1158,83 @@ character is still caught at index 14.
 the same two characters, in two repositories, for the reason report 5 records —
 and this one is exempting them from a region check rather than from a glyph
 lookup.
+
+## 13. ~~`Key` has no names~~ — `2851ad9`
+
+Asked for `key_name(Key)` and `key_from_name(std::string_view)` next to the
+enum, one canonical spelling per key, with defined results for the sentinels.
+**Accepted** as asked, in "Name every key, so a game can save a binding and read
+it back". The token is the enumerator's own spelling (`digit_1`, `numpad_1`,
+`page_up`, `left_bracket`, `del`), exact and case-sensitive, empty or nothing
+for `none` and `count`, and declared a file format: `keyboard.h` now also
+promises that a future left/right split adds keys and leaves `shift` meaning
+either side. Allowed subsets, labels, case folding, aliases and chords were
+left to the client, as the report asked.
+
+**Spent** in this commit. The saved Jump preference lost its name column:
+`input_key_name` and `input_key_from_name` are the engine's codec behind the
+game's A-Z/Space domain check, which stays after the lookup because the engine
+accepts `enter`, `f1` and `left`, which Jump must not. Its 27 tokens were
+already the enumerator spellings, so no save changes meaning; acceptance now
+also pins them to `labrador::key_name`. `debug_keys` lost its enum-order
+arithmetic and about fifty hand-written names: an explicit bindable list is
+named by the engine, `debug_keys::key_name` is gone (and with it the
+unqualified call the pin bump `15cdfc1` had to qualify), and `parse` also takes
+the engine's token. `keyboard_jump_collision` looks the chord up directly
+instead of round-tripping through two name tables. The standalone draft and
+exhibit are deleted.
+
+**The prediction was wrong twice.** It treated the ask as a pure addition, and
+it shipped as a **source break** here through ADL: an unqualified
+`key_name(labrador::Key)` became ambiguous, in `debug_keys.cpp` and in the
+exhibit itself, which stopped compiling at the pin that answered it. And it
+said the answer "could replace the canonical token lookup in both consumers".
+That held for the save, not for the console. The engine chose identifier
+spellings over the console's shorter ones, and 25 console tokens differ:
+`0`-`9`, `numpad0`-`9`, `delete`, `pageup`, `pagedown`, `lbracket`,
+`rbracket`. They stay the console's canonical spelling as a small override
+table, because `binds.cfg` files already hold them and a bind that fails to
+parse is only a warning, so dropping them would lose binds silently. The
+`del`-or-`delete` question the draft left open went against this spelling.
+The bindable subset stays explicit too: walking the whole enum would make bare
+`shift` and `control` bindable, which collide with the chord modifiers.
+
+## 21. ~~Digital action evaluation remains client code~~ — declined, `197aff1`
+
+Asked (formerly `GAP#F2`) for generic evaluation of typed physical bindings
+with independent per-source edges, on the argument that the new rebinding
+screen removed the engine's stated reason for having no action map.
+**Declined**, document only, in "Decline report 21 and re-take the reason the
+engine has no action map". The engine agreed the stated reason was now false
+and replaced it everywhere it was written, starting with `gamepad.h`, on other
+grounds: evaluating a binding table *is* the action map, which PHILOSOPHY's
+boundary table gives to the game (T1), and combining sources is policy on which
+the clients already disagree. LineSweeper rebuilds edges from combined held
+state; its pause menu and the components gallery OR each source's `pressed()`;
+this client ORs per-source edges for game actions and uses a held-before rule
+for its menus. The per-source edge functions the draft offered as a fallback
+were already the engine's half. If a third client, or a second rebindable
+action here, needs the same evaluator unchanged, the engine names a
+`samples/components` piece as the route, not an engine API.
+
+**Spent: nothing in code.** `game/action_bindings.*`,
+`effective_action_bindings` and `PlayerInput` stay as they are; the source
+merge, the two held-before rules, the trigger thresholds and the binding
+tables are this client's by the boundary table, and the decline is the record
+of that. The standalone draft and exhibit are deleted, and the roadmap's
+filing paragraph is replaced by a pointer here. The frozen gap audit keeps its
+`GAP#F2` row as written.
+
+**The prediction was wrong about what the exhibit would buy.** The draft
+argued that a real rebinding screen supplied the exhibit the engine's absence
+was waiting for, so T1 would support extraction. The exhibit falsified the
+reason and moved nothing else: the decision stands on a reason that does not
+move when a client grows a screen. The draft's own concession — that an
+extraction "must document its semantics or expose source results for the
+client to combine" — was the answer, and the engine already did the second.
+This is the first report here whose exhibit was declined outright, which
+breaks the six-of-seven strike rate [above](#why-the-exhibits-matter-more-than-the-asks)
+rather than extending it.
 
 ---
 

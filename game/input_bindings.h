@@ -15,7 +15,8 @@ struct InputBindings
 };
 
 // This first domain is explicitly A-Z and Space, independent of Key ordinals.
-// Names are strict lowercase save tokens; labels name physical key positions.
+// Names are labrador::key_name's tokens ("a", "space"), restricted to that
+// domain: the spelling is the engine's file format. Labels are this game's.
 // Conversion outside this domain throws invalid_argument. Conflict checks use
 // other default gameplay keyboard sources, excluding Jump and intro skip.
 bool keyboard_jump_key_supported(labrador::Key key);

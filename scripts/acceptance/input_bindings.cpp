@@ -152,6 +152,9 @@ namespace
             require(keyboard_jump_key_supported(expected.key) && input_key_name(expected.key) == expected.name &&
                 input_key_label(expected.key) == expected.label && input_key_from_name(expected.name) == expected.key,
                 "Physical Jump key name/label/domain differs from its explicit 27-entry contract");
+            require(input_key_name(expected.key) == labrador::key_name(expected.key) &&
+                labrador::key_from_name(expected.name) == expected.key,
+                "A saved Jump token no longer matches the engine's key_name spelling");
             const auto conflict = keyboard_jump_conflict(expected.key);
             require(conflict.has_value() == conflicting(expected.key), "Jump conflict set is not exactly A/D/S within the supported domain");
             if (conflict)

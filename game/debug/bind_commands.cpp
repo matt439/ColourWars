@@ -128,8 +128,7 @@ void DebugDirectorImpl::save_binds()
 bool DebugDirectorImpl::keyboard_jump_collision(labrador::Key key) const
 {
 	if (!keyboard_jump_key_supported(key)) { return false; }
-	const auto chord = debug_keys::parse(input_key_name(key));
-	return chord.has_value() && this->binds_.find(*chord) != nullptr;
+	return this->binds_.find(KeyChord{ key }) != nullptr;
 }
 
 void DebugDirectorImpl::register_bind_commands()

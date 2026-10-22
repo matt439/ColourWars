@@ -1306,7 +1306,7 @@ as the game. In Release:
   console, the `screenshot.dir` and perf commands and `draw_status`;
   `bind_commands.cpp`, the bind commands and `binds.cfg`; `debug_files.*`, the
   console's atomic file reads and writes); the key names
-  (`debug_keys.*`, engine report 13) and the bind table (`debug_binds.*`); the
+  (`debug_keys.*`) and the bind table (`debug_binds.*`); the
   console's editing and drawing, shared by the frozen and live consoles and
   the panels (`debug_console_view.*`; `debug_console_state.*` is now a thin
   state around it); the perf ring (`debug_perf.*`). The shipped scripts are data

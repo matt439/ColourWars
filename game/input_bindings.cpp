@@ -10,23 +10,21 @@ using namespace labrador;
 
 namespace
 {
+	// The save token is labrador::key_name; which keys Jump may take, and what a
+	// player is shown for each, are this game's.
 	struct KeyName
 	{
 		Key key;
-		std::string_view name;
 		std::wstring_view label;
 	};
 
 	constexpr std::array<KeyName, 27> key_names{ {
-		{ Key::a, "a", L"A" }, { Key::b, "b", L"B" }, { Key::c, "c", L"C" },
-		{ Key::d, "d", L"D" }, { Key::e, "e", L"E" }, { Key::f, "f", L"F" },
-		{ Key::g, "g", L"G" }, { Key::h, "h", L"H" }, { Key::i, "i", L"I" },
-		{ Key::j, "j", L"J" }, { Key::k, "k", L"K" }, { Key::l, "l", L"L" },
-		{ Key::m, "m", L"M" }, { Key::n, "n", L"N" }, { Key::o, "o", L"O" },
-		{ Key::p, "p", L"P" }, { Key::q, "q", L"Q" }, { Key::r, "r", L"R" },
-		{ Key::s, "s", L"S" }, { Key::t, "t", L"T" }, { Key::u, "u", L"U" },
-		{ Key::v, "v", L"V" }, { Key::w, "w", L"W" }, { Key::x, "x", L"X" },
-		{ Key::y, "y", L"Y" }, { Key::z, "z", L"Z" }, { Key::space, "space", L"Space" }
+		{ Key::a, L"A" }, { Key::b, L"B" }, { Key::c, L"C" }, { Key::d, L"D" }, { Key::e, L"E" },
+		{ Key::f, L"F" }, { Key::g, L"G" }, { Key::h, L"H" }, { Key::i, L"I" }, { Key::j, L"J" },
+		{ Key::k, L"K" }, { Key::l, L"L" }, { Key::m, L"M" }, { Key::n, L"N" }, { Key::o, L"O" },
+		{ Key::p, L"P" }, { Key::q, L"Q" }, { Key::r, L"R" }, { Key::s, L"S" }, { Key::t, L"T" },
+		{ Key::u, L"U" }, { Key::v, L"V" }, { Key::w, L"W" }, { Key::x, L"X" }, { Key::y, L"Y" },
+		{ Key::z, L"Z" }, { Key::space, L"Space" }
 	} };
 }
 
@@ -57,8 +55,8 @@ std::optional<GameAction> keyboard_jump_conflict(Key key)
 
 std::string_view input_key_name(Key key)
 {
-	for (const auto& value : key_names) { if (value.key == key) { return value.name; } }
-	throw std::invalid_argument("Keyboard Jump key must be A-Z or Space");
+	if (!keyboard_jump_key_supported(key)) { throw std::invalid_argument("Keyboard Jump key must be A-Z or Space"); }
+	return labrador::key_name(key);
 }
 
 std::wstring_view input_key_label(Key key)
@@ -69,8 +67,9 @@ std::wstring_view input_key_label(Key key)
 
 Key input_key_from_name(std::string_view name)
 {
-	for (const auto& value : key_names) { if (value.name == name) { return value.key; } }
-	throw std::invalid_argument("Unknown keyboard Jump key name");
+	const std::optional<Key> key = labrador::key_from_name(name);
+	if (!key || !keyboard_jump_key_supported(*key)) { throw std::invalid_argument("Unknown keyboard Jump key name"); }
+	return *key;
 }
 
 void InputBindings::validate() const
