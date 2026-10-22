@@ -18,8 +18,11 @@ It includes intervening engine work, render submission and Present indirectly.
 `update_ms` sums the game's Level updates before the current draw; `draw_ms`
 times its layout refresh and draw-list recording, including joined render workers.
 These components are diagnostics, not an exact sum of the interval. No GPU
-timestamps, separate Present duration, compositor timing or scan-out is measured;
-[engine report 14](review/engine-reports.md) retains that missing seam.
+timestamps, separate Present duration, compositor timing or scan-out is measured.
+Since [engine report 14](review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--accepted-narrowed-7344610)
+`Application::frame_timings()` publishes the last frame's begin_frame, submit and
+end_frame CPU times; reading them into the capture is `DBG#5`. GPU, compositor
+and scan-out time stay unmeasured: the engine declined GPU timing.
 
 CSV rows also retain simulation-update, collision-object and projectile counts.
 The summary uses nearest-rank p50/p95/p99, mean, maximum, zero-update and catch-up

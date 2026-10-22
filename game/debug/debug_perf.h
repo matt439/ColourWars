@@ -9,8 +9,9 @@
 // with the interval since the previous one, the CPU time of the game's own
 // Level::update calls in it and of its own match draw. Fed with explicit
 // timestamps in milliseconds, so it can be tested without a clock. The frame
-// interval includes intervening submit/Present wall time indirectly; separate
-// Present durations and GPU/scan-out timings remain engine report 14.
+// interval includes intervening submit/Present wall time indirectly; the
+// engine's begin_frame/submit/end_frame CPU times are in
+// Application::frame_timings() and not read here yet. GPU time is not measured.
 // Debug-only bodies.
 class DebugPerf
 {

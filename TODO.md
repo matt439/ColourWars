@@ -143,19 +143,16 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The ten live drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The seven live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ENG#6` | OPEN | MED | S | Review the prepared shared Music/SFX attenuation request and refresh upstream before filing; its synthetic null-audio Debug/Release exhibit passes and remains unfiled. Listener/voice-budget proposals remain outside this slice. [Report](docs/engine-reports/audio-attenuation.md). |
-| `ENG#9` | OPEN | MED | S | Review the prepared optional post-poll observer request and refresh upstream immediately before filing; its synthetic Debug/Release exhibit passes. Input routing/capture remains separately scoped and unanswered. [Report](docs/engine-reports/input-observer.md). |
-| `ENG#10` | OPEN | LOW | S | Review the narrowed, unfiled host-capture convenience request and tested final-State alternative; refresh upstream before filing. Redraw is not unavoidable, and no displayed-frame outcome is qualified. [Report](docs/engine-reports/frame-readback.md). |
 | `ENG#12` | OPEN | MED | S | Review the prepared named in-memory JSON parsing request and refresh upstream before filing; its synthetic CMake Debug/Release exhibit passes and remains unfiled. Object enumeration/source-span portions remain open. [Report](docs/engine-reports/json-candidate-parsing.md). |
-| `ENG#14` | OPEN | LOW | S | Review the prepared CPU frame-statistics request and refresh upstream before filing; its manual public-renderer example passes Debug/Release, while Application phases/GPU timing remain unmeasured. [Report](docs/engine-reports/cpu-frame-statistics.md). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
+| `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half was answered by report 14 (`Application::frame_timings`). |
 | `ENG#15` | OPEN | MED | S | Review the prepared, unfiled development-staging convenience request and refresh upstream before filing; its synthetic Debug/Release phases pass. Runtime-install scope stays separate. [Report](docs/engine-reports/runtime-staging.md). |
 | `ENG#18` | OPEN | LOW | S | Review the prepared Label visibility convenience; refresh upstream before filing. Null Debug/Release passes; unfiled. Order/retirement/font questions stay separate. [Report](docs/engine-reports/label-visibility.md). |
 | `ENG#20` | OPEN | LOW | S | Review the active view-context request; refresh upstream before filing. Source audit and null Debug/Release illustration pass; unfiled. Art policy and Scene/order integration stay separate. [Report](docs/engine-reports/view-context.md). |
@@ -172,8 +169,8 @@ flow and a console over the menus are deliberately not done and get no rows.
 |---|---|---|---|---|
 | `DBG#1` | OPEN | LOW | M | Extend colour tuning beyond forty-four audited fields; general string/font edits and missing-key insertion remain separate slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
-| `DBG#4` | BLOCKED | LOW | S | Typing in the live console blanks the whole keyboard seat. Waits on `ENG#9`. |
-| `DBG#5` | BLOCKED | LOW | S | The perf overlay has no GPU, present or submit time. Waits on `ENG#14`. |
+| `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
+| `DBG#5` | OPEN | LOW | S | Read `Application::frame_timings()` begin_frame/submit/end_frame CPU times into the perf overlay and `perf.capture` (schema 2, analyzer); GPU time was declined by the engine (report 14). [Next step](docs/debug-console.md#not-done). |
 | `DBG#6` | DEFERRED | LOW | M | Scripts stop when the window loses focus; no run-while-inactive switch. |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
 
@@ -192,7 +189,7 @@ A new row for one of these gets its section back.
 | area | owner | a row returns with |
 |---|---|---|
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
-| Closed engine reports (1–5, 7, 8) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
+| Closed engine reports (1–5, 7–11, 13, 14, 16, 17, 19, 21) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
 | The OOP showcase | [oop-guide.md](docs/oop-guide.md) | a base class or weapon contract the guide no longer describes |

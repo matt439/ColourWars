@@ -342,8 +342,8 @@ void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs
 	// The live console has the keyboard: the keyboard seat stands still (no
 	// move, jump, drop, shot, F1 or pause) while it is open and on the frame
 	// it closed, whose Escape release is that seat's pause key. Mouse aim is
-	// read by the level directly and still follows the cursor (engine
-	// report 9).
+	// read by the level directly and still follows the cursor. Raw reads are
+	// never consumed, so which reader sees the keys is this client's policy.
 	const std::size_t keyboard = static_cast<std::size_t>(input_slots::keyboard_and_mouse);
 	if ((this->live_open_ || this->blank_keyboard_once_) && keyboard < inputs.size())
 	{

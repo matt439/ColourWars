@@ -143,10 +143,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 6 | Shared Music/SFX attenuation remains emitter work | per-emitter saved gains and standalone `audio_gain_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
-| 9 | Per-frame overlay orchestration and separately scoped input routing | client debug forwarding and reader gates; standalone `input_observer.cpp` | local unfiled observer draft - master checked 2026-10-20; synthetic Debug/Release runs pass; capture/routing remains separately scoped |
-| 10 | Optional host capture convenience without State lifecycle changes | `capture_stack` plus the tested public-API final-State alternative | local unfiled request - master checked 2026-10-20; Debug/Release controls pass; unavoidable-redraw claim withdrawn |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
-| 14 | No frame statistics or GPU timing | client perf hooks and standalone `frame_phase_boundaries.cpp` | local unfiled CPU-phase request - master checked 2026-10-20; manual public-call example passes Debug/Release |
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 18 | Independent Label visibility convenience | supported zero-tint/empty-text alternatives and standalone `label-visibility/` null recording | local unfiled draft - master checked 2026-10-20; null Debug/Release verified; order/retirement/font questions stay separate |
 | 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
@@ -209,144 +206,6 @@ has been filed and the engine pin is unchanged. Refresh master before filing.
 
 ---
 
-## 9. No application-level per-frame hook or input capture — **draft with console exhibit**
-
-**Observer slice prepared 2026-10-20.** The minimal
-[request](../engine-reports/input-observer.md) and
-[standalone example](../../scripts/engine-reports/input_observer.cpp) cover an
-optional observer between Application's device polls and the top-state update.
-Upstream master was freshly checked at 19:34:53 UTC, and the reviewed engine
-worktree matched FETCH_HEAD at 19:50:08 UTC:
-`52e809a5a0229d37db4373faa7853df4c861a310`. Direct MSVC 19.51.36256.0 Debug and
-Release runs against prebuilt engine/math libraries passed all four synthetic
-checks with exit 0 and empty stderr. The original Debug receipt required CRLF/LF
-normalization of retained logs; Debug was not rerun and its process ID was not
-retained.
-
-Application has no built-in observer at that point, and StateContext updates
-only its top state. These are source observations, not edge-function defects.
-A pushed transparent console therefore suspends the underlying update by
-design. A permanent root State containing a nested StateContext is a valid
-existing-API alternative; the example also demonstrates that composition.
-The request is a convenience that could remove or relocate global forwarding,
-not an unavoidable engine limitation. The full menu-update template and
-`before_*` hooks also serve motion, music, scripts, rebuild and timing work.
-
-**Capture/routing remains a separately scoped proposal.** Raw device snapshots
-correctly remain readable by multiple consumers. The client's live console
-uses explicit keyboard-seat and closing-frame filters; mouse aim reads Mouse
-directly and is not hidden by those PlayerInputData filters. Its pad chord
-clears selected per-slot match flags and resets only that pad's menu arming;
-the older claim about losing another pad's A press no longer applies.
-
-The physical-key capture page now guards raw ownership before ordinary debug
-hooks, resets its readers on entry/exit, and drains its gesture under client
-neutral/focus/release rules. It also chooses how to handle queued developer
-work. An observer alone would not replace these policies or hide raw reads.
-A capture/filtered-view extraction would require its own precise contract and
-reader adoption. It cannot distinguish typing a movement key from intending
-that same key for gameplay, so simultaneous play/type and deletion of the
-whole-seat filter are not promised.
-
-Existing polling, edges, thresholds, focus/connection notifications and mouse
-capture-cancellation epochs are not missing. System-key interception was
-report 11, [closed](#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--accepted-narrowed-0f3b283); key labels, control-key repeat, post-stack drawing and pad identity are
-outside the prepared observer slice. Both halves remain unfiled, the engine
-is unchanged, and upstream must be refreshed immediately before filing.
-
----
-
-<a id="10-no-way-to-read-back-the-frame-that-was-presented--draft-with-screenshot-exhibit"></a>
-
-## 10. Optional host capture convenience - **draft with existing final-State alternative**
-
-The sanitized [request](../engine-reports/frame-readback.md),
-[exact tested control](../../scripts/engine-reports/frame-readback/frame_readback.cpp)
-and [corrected build recipe](../../scripts/engine-reports/frame-readback/build-frame-readback.ps1)
-are prepared and remain **unfiled**. The old anchor is retained, but its broad
-claim is withdrawn: a second world draw is not unavoidable. The remaining
-question is an optional host convenience versus existing public composition.
-
-### Current workaround and existing alternative
-
-The Debug `screenshot` command still uses
-[`capture_stack`](../../game/debug/debug_screenshot.cpp): `begin_frame`,
-public complete stack `draw`, `submit` and `read_back_buffer`, without
-`end_frame`. It performs an extra draw. `capturing_` excludes that redraw from
-normal perf/pacing samples and also controls screenshot-specific display
-policy; an engine hook would not automatically delete all those policies.
-
-Private `Application::render` has no host callback between ordinary stack
-submission and end-frame. However public submit is idempotent. A non-covering
-final State can run after underlying drawing, submit/read there, and leave
-the outer submit a no-op. A client-owned truly final draw path can also put
-equivalent code directly there. Neither requires another world draw.
-
-The State observer is visually non-covering but changes lifecycle: push
-suspends the underlying State; its next update queues removal and consumes
-that update, then resumes the world after observer destruction. It must not
-pop during draw, which lacks update's deferral. These costs describe this
-observer pattern, not every possible final-draw integration.
-
-### Checked source and measured control
-
-Fresh upstream master was fetched on 2026-10-20 at 19:34:53 UTC as
-`52e809a5a0229d37db4373faa7853df4c861a310`, with the whole engine worktree
-confirmed unchanged against that `FETCH_HEAD`. StateContext walks the visible
-stack bottom to top, Scene drawing joins its pooled tasks before returning,
-and D3D11 end-marker is an advisory immediate-context PIX operation with no
-later view draw. The fixture itself records one view on the calling thread;
-it does not qualify pooled workers or arbitrary unfinished client tasks.
-
-Both MSVC 19.51.36256.0 `/W4 /WX` Debug/Release builds and hidden runs passed,
-exit 0 with empty stderr. The control makes three world draws and four
-readbacks: two out-of-band red/blue captures, then one world draw captured by
-the final State and compared after outer submit/end-marker. Full-buffer RGBA
-checks and the saved first CPU copy pass. Pop remains pending at depth 2 until
-the observer's update returns, then destruction/resume leave depth 1. One
-observer update is consumed; underlying world updates remain zero.
-
-There is no Application loop, end-frame/present, visible window, file asset,
-save, global input/focus operation or game implementation change. The actual
-D3D11/XAudio2/XInput shell initializes real devices. This validates the public
-composition model on this build, not normal-loop game integration, repeated
-observer draws before an update, other-backend abandonment or display timing.
-The exact source and recipe hashes are recorded in the report.
-
-The initial v1 recipe accidentally splatted an undefined argument array into
-CL. It printed usage, compiled no C++, produced no executable and
-was caught before any process launch. V2 corrects the splat and enables strict
-mode. That retained failure is a fixture-recipe error, not a compiler or
-engine bug. Receipts remain in
-`out/validation/crossfeed-20261020/frame-readback-report-final-v1/` and
-`frame-readback-report-final-v2/`; the latter contains both successful compile
-and process logs plus `result.json`. Local LF attributes preserve tested bytes
-and the recipe's source-hash guard after checkout.
-
-### Submitted composition and remaining request
-
-`read_back_buffer` is a synchronous GPU-stalling copy of top-row-first RGBA
-between submit and end-frame. Null records draws but cannot rasterize/read
-pixels. A submitted buffer is not a previously displayed image: D3D11 present
-can queue/synchronize and discard contents, and no CPU return or readback
-proves compositor acceptance or scan-out. Readback after present is outside
-the portable contract. No asynchronous-copy or presented/displayed outcome
-was tested.
-
-If avoiding observer lifecycle/update ownership justifies a host one-shot
-capture point, document its post-submit/pre-end-frame timing and delivery
-semantics. Otherwise document the existing final-State/final-draw pattern.
-This is an optional convenience, not a proven missing rendering capability.
-PNG encoding/names/paths, screenshot display policy and when to incur a stall
-stay client-owned. A callback alone would not remove the synchronous GPU
-stall or supply asynchronous copy/frame lifetimes.
-
-**Status:** local unfiled request. Review this narrowed scope and refresh
-upstream immediately before authorized filing through the publication gate.
-No host hook, game integration or public issue was made.
-
----
-
 ## 12. JSON is read-only, path-only and opaque — **draft with live-tuning exhibit**
 
 **Minimal candidate-parsing slice prepared 2026-10-20.** The sanitized
@@ -387,52 +246,6 @@ that also requires client knowledge of accepted/consumed fields. Keep these
 asks distinct when preparing further exhibits. Review the narrow report and
 refresh upstream before authorized filing through the
 [publication gate](#publication-gate-engpublish).
-
----
-
-## 14. No frame statistics or GPU timing — **draft with perf exhibit**
-
-The [CPU frame-statistics request](../engine-reports/cpu-frame-statistics.md)
-now has an exact tested [standalone manual public-call example](../../scripts/engine-reports/frame_phase_boundaries.cpp).
-It remains **unfiled**. Source inspection of fresh upstream master
-`52e809a5a0229d37db4373faa7853df4c861a310` (checked 2026-10-20) confirms no
-Application completed-frame timing accessor and no Renderer timestamp-query
-service. This first request is CPU elapsed phase data, not GPU execution.
-
-The client already times Level updates and match draws with QPC. Its
-draw-to-draw intervals include intervening submit/Present wall time indirectly;
-their separate durations and whole-Application phases remain unavailable.
-Target simulation dt is not an elapsed rendered-frame interval.
-
-The synthetic source initializes the actual hidden D3D11/XAudio2 Application
-but owns a separate real StateContext/manual Renderer loop. Both MSVC
-19.51.36256.0 `/W4 /WX` Debug/Release runs pass three empty-view iterations,
-exit 0 and have empty stderr. Each output has the exact scope/header, three
-finite nonnegative CPU wall rows and final PASS line. No Application phase or
-frame interval, GPU, timing threshold or performance qualification is measured.
-Raw transient durations are evidence, not a benchmark.
-
-The first useful request is a stable read-only completed-engine-frame sequence
-with validity and documented elapsed interval, aggregate Application-update
-duration/count, prepare/record duration, submit-call duration and end-frame-call
-duration. This is the current client for the observability half of engine
-`REV#10`; it does not ask for its whole engine-drawn overlay.
-
-An answer could replace client stopwatch pairs, with an explicit change from
-match-only to engine phase semantics. Match eligibility, frame deduplication,
-capture/export, object counts and level-build timing remain client code.
-The draw ingestion hook may remain, and screenshot-gap policy remains because
-capture work inside an Application update can affect its elapsed duration.
-The old blanket deletion claim for the draw hook/screenshot suppression is
-therefore narrowed.
-
-Retained receipts are under
-`out/validation/crossfeed-20261020/frame-stats-report-final-v1/`. The example
-and recipe hashes match both executed configurations. No engine change or
-public issue was made. Refresh upstream unconditionally before filing.
-GPU timestamps, scan-out, broader counters/overlay and visible uncontended
-hardware qualification remain outside this prepared CPU slice; the broader
-`ENG#14`/`DBG#5` wishes remain open.
 
 ---
 
@@ -998,6 +811,86 @@ the same two characters, in two repositories, for the reason report 5 records �
 and this one is exempting them from a region check rather than from a glyph
 lookup.
 
+## 9. ~~No application-level per-frame hook or input capture~~ — document only, `f1e5244`
+
+Asked for an optional observer between `Application`'s device polls and the
+top state's update, so a console or overlay could see every frame whatever is
+on the stack, with input capture/routing as a separately scoped second half.
+**Document only**, in "Document the root state that sees every frame"; the
+capture half is **declined** as game policy. No `Application` hook was added: a
+callback there would need its own push/pop, empty-stack, audio-order and
+catch-up rules, and a root `State` that owns a nested `StateContext` already
+answers all four. `state_context.h`'s class comment now gives that pattern as
+contract: the root's `update()` runs its own code and then the nested
+`update(dt)`, its `draw()` draws the nested stack and then over it, its
+activation callbacks and `init()` forward to the nested `notify_activation`,
+`Application::depth()` is 1 for as long as it runs, and a frame capture goes in
+its `update()`. CoreTests pin it, and the website's states and input pages say
+so. On capture the engine kept to the boundary table: bindings and routing are
+the game's, raw reads are never consumed, and a console gates its own readers,
+which is the mechanism this client already has.
+
+**Spent: nothing in code.** The forwarding stays where it is, from
+`MenuPage`'s update template and `GameLevel`'s match update and draw into the
+debug director, because adopting the root would only move it. It would also
+change `Application::depth()` to 1 under the client's three readers (the
+`perf.capture` precondition and the match-draw eligibility in
+`script_commands.cpp`, and the status text in `debug_status_text.cpp`), and
+move every `push` and `transition_to` the game makes on `Application` onto the
+nested context. The keyboard-seat blank in `debug_director_hooks.cpp` stays as
+this client's policy, and its comment and `debug-console.md` stop calling it a
+workaround. `DBG#4` stops waiting on this report and is deferred. The draft and
+its standalone exhibit are deleted.
+
+**The prediction was wrong about the second half.** The ledger kept capture and
+routing as a proposal to scope and file later; the engine declined it outright.
+`DBG#4` and `debug-console.md` gave the seat blank's reason as "the engine has
+no per-key consume", which was the wrong dependency: the engine will not add
+one, and one would not have fixed the overlap the report itself conceded,
+between a typed key and the same key played. The ledger also missed a cost the
+engine spelled out: the root state changes what `Application::depth()` returns,
+and this client reads it in three places. It was right that the observer was a
+convenience and that the forwarding would move rather than go.
+
+## 10. ~~Optional host capture convenience~~ — document only, `ac58ca1`
+
+Asked for an optional host capture point between `submit` and `end_frame`, so
+the Debug `screenshot` command could read the frame the loop draws instead of
+drawing the stack again, with a non-covering final `State` that submits and
+reads back from its `draw()` recorded as the existing alternative. **Document
+only**, in "State that a frame submitted and never presented is legal". No hook
+was added: it would be a branch in every `Application::render` to serve a debug
+command, and it would not remove the stall, the PNG work or the client's
+measurement flag. `renderer.h` now states the term the redraw rests on, that a
+frame submitted and never presented is legal and contributes nothing to the
+next one, and documents the redraw as the supported way to capture a frame
+inside a running `Application`: `begin_frame`, `app.draw(*app.renderer())`,
+`submit`, `read_back_buffer`, no `end_frame`, from an `update()` after the
+update whose world it should show, never from a `draw()`. It promises the frame
+the stack would draw, not what was displayed, and a draw that reads a clock or
+counter is only as exact as that draw. `state.h` now puts any state that calls
+`begin_frame`, `submit` or `end_frame` from `draw()` outside the contract. Null
+and pixel contract cases ship, with goldens.
+
+**Spent: nothing in code.** `capture_stack` in `debug_screenshot.cpp` is
+already the documented shape, and every caller of `capture_screenshot_if_ready`
+runs from an update hook or a script tick. Its header comment and
+`debug-console.md` now cite the engine's contract instead of this report.
+`capturing_` stays: the match draw reads a clock and feeds the perf ring, which
+is the case the engine's pure-read caveat names, and the flag also drives the
+screenshot's strip and status policy. PNG encoding, naming and paths stay. The
+draft, the control and its build recipe (with the `.gitattributes` that guarded
+its hash check) are deleted.
+
+**The prediction was wrong about which shape was the answer.** The ledger
+withdrew its claim that a second world draw is unavoidable, offered the
+final-State pattern as the zero-redraw alternative, and asked the engine,
+failing a hook, to document that pattern. The engine did the reverse. The
+redraw the ledger called "the current workaround" is the one sanctioned
+capture, and the final-State alternative is now a contract violation, not an
+option. So the withdrawn claim was in effect right: redrawing is the supported
+route, and the engine made it exact rather than avoidable.
+
 ## 11. ~~F10 and a lone Alt belong to the system menu, with no opt-out~~ — accepted, narrowed, `0f3b283`
 
 Asked for an optional caller mechanism to suppress the bare system-menu
@@ -1085,6 +978,61 @@ parse is only a warning, so dropping them would lose binds silently. The
 `del`-or-`delete` question the draft left open went against this spelling.
 The bindable subset stays explicit too: walking the whole enum would make bare
 `shift` and `control` bindable, which collide with the chord modifiers.
+
+## 14. ~~No frame statistics or GPU timing~~ — accepted, narrowed, `7344610`
+
+Asked for a stable, read-only snapshot of the last completed engine frame: a
+sequence with a validity state, its elapsed interval, the Application update's
+duration and count, and prepare/record, submit and end-frame durations, as the
+observing half of engine `REV#10`; GPU timestamps were left for later.
+**Accepted, narrowed**, in "Publish the last frame's CPU phase times from
+Application" (engine story PI-19). `application.h` adds `FrameTimings` and
+`Application::frame_timings()`, by value: `frame` (0 until the first completed
+frame, so no separate valid flag), `updates` (fixed steps that tick), `interval`
+(tick start minus the previous one, zero on the first frame and after
+`reset_elapsed_time` or `on_resuming`), and `update_time` (polls, every stack
+update and audio), `begin_frame_time`, `draw_time` (the whole
+`StateContext::draw`, joined fan-out included), `submit_time` (with
+`end_marker`) and `end_frame_time`, all `std::chrono::nanoseconds`. It is written
+after `end_frame`, so during frame N it describes N-1. A frame that throws or
+renders nothing publishes nothing, and a game's own capture frame does not
+advance `frame`; its time lands in `update_time`. This was the one part of the
+loop reports a client could not build, because those phases run where it cannot
+reach. GPU time, history, distributions, counters and an overlay were
+**declined**, and `REV#10`'s overlay stays deferred. AppTests feed the recorder
+synthetic time points; a null-preset loop case runs a real `Application`.
+
+**Spent: the documentation now; the new columns are `DBG#5`.** `debug_perf.h`,
+`debug-console.md` and `polish-frame-pacing.md` stop saying the engine exposes
+no frame statistics: `frame_timings()` has the begin_frame/submit/end_frame CPU
+split, and GPU, compositor and scan-out stay unmeasured because the engine
+declined GPU timing. `DBG#5` is unblocked and restated with its next step in
+`debug-console.md`'s Not done: pair the snapshot with the previous committed
+match frame by `frame`, add the three columns to the panel and to
+`perf.capture` as schema 2, and teach `analyze_frame_pacing.py`, which accepts
+only schema 1's exact fields, to read both. **Kept, and not replaced by the
+snapshot:** the match-draw QPC stopwatch (`begin_match_draw` to the top of
+`draw_status`), because the engine's `draw_time` also holds the debug panels and
+live console drawn after it, so swapping it would fold overlay cost into
+"draw"; the `Level::update` stopwatch, because one Application update runs the
+debug clock's zero or several level updates and `update_time` also holds polls,
+audio, hooks, scripts and screenshot redraws; `frame_ms`, which the per-player
+`render fps` text reads and which the one-frame-late, tick-to-tick `interval`
+would change visibly; level-build timing; and `capturing_`'s screenshot-gap
+policy, eligibility, the ring, export and object counts, which the engine lists
+as client policy itself. The draft, its standalone example and its build recipe
+are deleted.
+
+**The prediction was wrong about the draw stopwatch.** The ledger said an
+answer "could replace client stopwatch pairs", and the engine's own record
+named the paired stopwatch around the match draw as deletable. It cannot go
+without changing what "draw" means here, so the engine's numbers are additive
+rather than a replacement. The shape also differed from the ask: no explicit
+valid state (`frame == 0` instead), and `begin_frame` split from `draw` rather
+than folded into a prepare/record duration, because `begin_frame` can hold a
+GPU wait on d3d12. And the ledger left GPU timestamps "open" as the broader
+`ENG#14`/`DBG#5` wish; the engine declined them, so `DBG#5`'s GPU half waits on
+nothing now. It is not planned.
 
 ## 16. ~~Windowed Apply shows a deliberately hidden window~~ — `7db3d5c`
 

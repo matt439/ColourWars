@@ -26,7 +26,8 @@ struct ScreenCapture
 // The engine allows readback only between submit and end_frame, and
 // Application::render runs those back to back, so this is the frame the
 // render probes read; the next Application::render begins a fresh frame.
-// Engine report 10 asks for a capture of the presented frame instead.
+// This is the engine's documented capture (Renderer::read_back_buffer): a
+// submitted, never-presented frame is legal and leaves nothing to the next.
 // Call it from a state's update, never from inside a draw. Throws what the
 // renderer throws (the null backend refuses readback).
 ScreenCapture capture_stack(labrador::Application& application);

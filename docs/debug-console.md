@@ -939,10 +939,11 @@ match, not the title. The status strip and overlays are included; the log says
   so `screenshot a; feedback off; screenshot b` is two pictures of one
   simulation frame.
 
-It re-renders the stack into an unpresented frame and reads it back, because the
-engine offers no way to read the frame it presents (engine report 10). That
-redraw adds no sample to the perf numbers, and the frame after it is not timed
-across the capture.
+It re-renders the stack into an unpresented frame and reads it back, from an
+update, which is the engine's documented way to capture a frame inside a running
+`Application` (`Renderer::read_back_buffer`; a submitted frame that is never
+presented is legal). That redraw adds no sample to the perf numbers, and the
+frame after it is not timed across the capture.
 
 ## Scripts
 
@@ -1126,7 +1127,9 @@ match: a shorter panel (the top 30%, opaque enough to read over the HUD cards;
   recording does not desynchronise the replay; the recording holds the blanked
   seat.
 
-This is engine report 9's workaround, and its cost is recorded there.
+Blanking the seat is this client's input policy. Raw reads are never consumed,
+and the engine declined input capture as game policy
+([report 9](review/engine-reports.md#9-no-application-level-per-frame-hook-or-input-capture--document-only-f1e5244), closed).
 
 ## Perf
 
@@ -1162,9 +1165,11 @@ screenshot's capture is a gap, not a frame - the first draw after one starts a n
 very first). Focus loss and covering pages now break the interval immediately,
 including draws that occur before another simulation update.
 Frame intervals include intervening submit/Present wall time indirectly.
-**Not measured separately**: Present, GPU work or scan-out - `Application`
-exposes no frame statistics and `Renderer` no timestamp queries (engine report
-14). The panel says CPU for that reason.
+**Not measured separately**: Present, GPU work or scan-out. `Application`
+publishes the last frame's `begin_frame`, `submit` and `end_frame` CPU times
+(`frame_timings()`, from engine report 14) and the panel does not read them yet
+(`DBG#5`, under [Not done](#not-done)); the engine declined GPU timing. The
+panel says CPU for that reason.
 
 The per-player F1/Back text also uses the current measured draw-to-draw interval:
 `render fps: 30.0` means a 33.33 ms rendered interval even when `sim dt` remains
@@ -1390,9 +1395,10 @@ as the game. In Release:
   pad and is covered on the CPU side only. Its Win32 key and screenshot driver
   and its launch, focus and transcript helpers are in
   `scripts/check-debug-console/driver.ps1`, which it dot-sources.
-- The engine reports this forced are 9, 10, 12, 14 (frame statistics),
-  11 (system-menu keys, closed in `0f3b283`) and 13 (key names, closed in
-  `2851ad9`), in
+- The engine reports this forced are 12 (live tuning, open) and, closed, 9
+  (per-frame hook and input capture, `f1e5244`), 10 (frame capture,
+  `ac58ca1`), 11 (system-menu keys, `0f3b283`), 13 (key names, `2851ad9`) and
+  14 (frame statistics, `7344610`), in
   [engine-reports.md](review/engine-reports.md).
 
 ## Not done
@@ -1406,9 +1412,19 @@ as the game. In Release:
   level (which would change a review's checksums anyway). A Debug-only "run
   while inactive" switch would not stop the suspend; not built.
 - **Typing in the live console while the keyboard player keeps playing**: the
-  whole keyboard seat is blanked, because the engine has no per-key consume
-  (engine report 9).
-- **GPU, present and submit time** in the perf overlay (engine report 14).
+  whole keyboard seat is blanked (`DBG#4`). The keys you type are the keyboard
+  seat's play keys, and nothing can tell typing a key from playing it; the
+  engine declined input capture as game policy (report 9), so a per-key gate
+  would be this client's own and is not built.
+- **Present and submit time** in the perf overlay (`DBG#5`). The next step:
+  read `Application::frame_timings()` in `begin_match_draw`, pair it with the
+  previous committed match frame by its `frame` number (it describes the last
+  completed frame, and a capture redraw does not advance it), add
+  `begin_frame`/`submit`/`end_frame` columns to the panel and to `perf.capture`
+  as schema 2, and teach `scripts/perf/analyze_frame_pacing.py` both schemas.
+  The match-draw and `Level::update` stopwatches stay: the engine's `draw_time`
+  includes the debug panels drawn after the match and its `update_time` the
+  polls, audio and scripts. **GPU time** is not planned: the engine declined it.
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
   and inserting keys in `tune.save`: the forty-four listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
