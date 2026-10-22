@@ -150,7 +150,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9); runtime install facts (PI-11, undecided upstream; report 15). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9); runtime install facts (PI-11, undecided upstream; report 15); a listener and voice cap (report 6). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half was answered by report 14 (`Application::frame_timings`). |
 | `ENG#23` | OPEN | LOW | S | Prepare the hidden-window resize request (`set_resolution`'s resize has no `SWP_NOACTIVATE` and activates a hidden window) and a synthetic example; recheck upstream; unfiled. Five painter fixtures hold a `WH_CBT` veto meanwhile. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
@@ -223,7 +223,7 @@ the owner; a second copy here goes stale unnoticed.
 
 **`id`:** a stable handle, not an order; a retired id is never reused. Gap-audit rows keep the
 audit's own section number (`GAP#4.2`, `GAP#D3`, `GAP#F8`), ledger rows the report number
-(`ENG#12`); the rest are `PREFIX#n` by owner: `STORY` backstory, `POL` polish plan, `ED` level
+(`ENG#23`); the rest are `PREFIX#n` by owner: `STORY` backstory, `POL` polish plan, `ED` level
 editor, `ROAD` feature roadmap, `DBG` developer console, `DOC`/`CI`/`TOOL` the named file.
 
 **`status`**, a closed list:

@@ -210,11 +210,11 @@ hidden/not-foreground requirement as the regression check.
 
 # Closed
 
-Twenty-two reports, all answered. Fifteen were spent here in code; 9 and 10 were
-answered as document only and 14 was narrowed, and those three changed only
-comments and docs; 15 was answered as document only, 17 changed only a manifest
-comment, 19 needs more evidence and 21 was declined; and those seven spent
-nothing in code — an answer that leaves the workaround where it is still
+Twenty-two reports, all answered. Fourteen were spent here in code. Eight
+spent nothing in code: 1 was fixed before it was filed; 9 and 10 were answered
+as document only and 14 was narrowed, and those three changed only comments and
+docs; 15 was answered as document only, 17 changed only a manifest comment, 19
+needs more evidence and 21 was declined — an answer that leaves the workaround where it is still
 closes the report. Kept as outcomes rather than as
 reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
@@ -871,7 +871,7 @@ manifest's per-monitor-v2 declaration the engine keeps the requested client
 size, across DPI changes too. The declaration and `check-startup.ps1`'s
 PerMonitorV2 check stay; they are this client's policy. The manifest's
 Vista-8.1 `supportedOS` entries now describe systems the engine cannot load on,
-and are left for a housekeeping pass, since they change nothing.
+and are deliberately left untracked: they change nothing, so no row owns them.
 
 **The prediction was right about the code and missed two things.** It did not
 foresee the floor: ColourWars links the engine, so it inherits Windows 10
@@ -1069,9 +1069,9 @@ reason and moved nothing else: the decision stands on a reason that does not
 move when a client grows a screen. The draft's own concession — that an
 extraction "must document its semantics or expose source results for the
 client to combine" — was the answer, and the engine already did the second.
-This is the first report here whose exhibit was declined outright, which
-breaks the six-of-seven strike rate [above](#why-the-exhibits-matter-more-than-the-asks)
-rather than extending it.
+This is the first report here whose exhibit was declined outright. It sits
+outside the six-of-seven strike rate [above](#why-the-exhibits-matter-more-than-the-asks),
+which counts filed reports; this one was answered before it was filed.
 
 ## 22. ~~Handle-holding drawables can only be re-pointed by name~~ — accepted, narrowed, `bec82f0`
 
@@ -1168,7 +1168,7 @@ still only reads.
   [display baseline](../polish-foundation.md#display-baseline).
 
 - **`Renderer::window_size_changed` returns a signal `Application` ignores**
-  (`application.cpp:436,463`, both `std::ignore =`), and **nothing reports the
+  (`application.cpp:468,495`, both `std::ignore =`), and **nothing reports the
   desktop size**. Both still true.
 
   **But the reason this was parked has expired.** It was filed under "one part
@@ -1228,8 +1228,8 @@ still only reads.
   second client should re-derive it — and is a small ask best made alongside
   something else.
 
-- **`Scene::contacts()` having no reader** (`scene.h:200`) and
-  **`labrador::Label` having no client** (`engine/render/label.h:26` — it
+- **`Scene::contacts()` having no reader** (`scene.h:204`) and
+  **`labrador::Label` having no client** (`engine/render/label.h:35` — it
   moved out of `scene/`). Neither was an engine defect. Both were things this
   client had not got round to exercising, a debt this repository owed the
   engine rather than the other way round, and both are now paid.

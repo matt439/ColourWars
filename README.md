@@ -331,7 +331,7 @@ game links `labrador_settings`, which Labrador defines and this repository
 deliberately does not copy.
 
 Then read [docs/review/engine-reports.md](docs/review/engine-reports.md). It is
-the ledger of reports this client has filed against the engine, and a pin bump
+the ledger of reports this client owes the engine, and a pin bump
 is the moment the answered ones become visible here — each closed report records
 what it lets this repository delete.
 
