@@ -118,7 +118,7 @@ namespace debug_keys
 	std::string chord_name(const KeyChord& chord)
 	{
 		return std::string(chord.ctrl ? "ctrl+" : "") + (chord.shift ? "shift+" : "") +
-			key_name(chord.key);
+			debug_keys::key_name(chord.key);
 	}
 
 	bool reserved(const KeyChord& chord)
