@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Ten are live as unfiled drafts with exhibits (6, 9, 10, 12, 14, 15, 18, 20, 22, 23). Thirteen are closed** and kept below as one paragraph
+> **Seven are live as unfiled drafts with exhibits (6, 12, 15, 18, 20, 22, 23). Sixteen are closed** and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped or declined), and
 > what this repository spent the answer on, if anything.
 >
@@ -90,10 +90,10 @@ public report. Requests beyond what the example demonstrates remain proposals
 to scope separately.
 
 Thirteen drafts were present at approval; report 21 later added a fourteenth
-and report 22 (2026-10-22) a fifteenth. Labrador answered 11, 13, 16, 17, 19
-and 21 before any was filed, and all six are now [closed](#closed), so nine of
-those drafts remain unfiled; report 22 is checked only against `0c15f34` so
-far. Report 23 (2026-10-22), found while spending 16, is a sixteenth, checked
+and report 22 (2026-10-22) a fifteenth. Labrador answered 9, 10, 11, 13, 14,
+16, 17, 19 and 21 before any was filed, and all nine are now [closed](#closed),
+so six of those fifteen drafts remain unfiled (6, 12, 15, 18, 20 and 22);
+report 22 is checked only against `0c15f34` so far. Report 23 (2026-10-22), found while spending 16, is a sixteenth, checked
 against `19cf650`. Recording this approval posts no reports and leaves
 the engine pin unchanged. The next work is a fresh upstream-master
 check and preparation of the minimal report/reproducer for each surviving gap;
@@ -639,15 +639,16 @@ hidden/not-foreground requirement as the regression check.
 
 # Closed
 
-Thirteen reports, all answered. Ten were spent here in code; 17 changed only
-a manifest comment, 19 needs more evidence and 21 was declined, and those three
-spent nothing in code — an answer that leaves the workaround where it is still
+Sixteen reports, all answered. Ten were spent here in code; 9 and 10 were
+answered as document only and 14 was narrowed, and those three changed only
+comments and docs; 17 changed only a manifest comment, 19 needs more evidence
+and 21 was declined; and those six spent nothing in code — an answer that leaves the workaround where it is still
 closes the report. Kept as outcomes rather than as
 reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
 [What the audit changed](#what-the-audit-changed) for reports 1–5, `f81e937`
-for 7 and 8, the parent of `7041dc1` for 13 and 21, and `a0e6f7e` for 11, 16,
-17 and 19.
+for 7 and 8, the parent of `7041dc1` for 13 and 21, `a0e6f7e` for 11, 16,
+17 and 19, and the parent of `07e4879` for 9, 10 and 14.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
