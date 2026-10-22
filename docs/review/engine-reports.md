@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Fourteen are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21). Seven are closed** and kept below as one paragraph
+> **Fifteen are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -84,7 +84,8 @@ public report. Requests beyond what the example demonstrates remain proposals
 to scope separately.
 
 The thirteen drafts present at approval remain unfiled. Report 21 now adds a
-fourteenth unfiled draft. Recording this approval posts no reports and leaves
+fourteenth unfiled draft, and report 22 (2026-10-22) a fifteenth, checked only
+against the pin so far. Recording this approval posts no reports and leaves
 the engine pin unchanged. The next work is a fresh upstream-master
 check and preparation of the minimal report/reproducer for each surviving gap;
 filing uses the approved scope and established route above. This supporting
@@ -144,8 +145,9 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 19 | No public later-show convenience for an Application initialized hidden | exact standalone hidden-creation control and `game/main.cpp` startup order | local unfiled request - master checked 2026-10-20; four hidden Debug/Release cases pass; first present remains open |
 | 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
 | 21 | Digital action evaluation remains client code | runtime saved Jump mapping and the standalone `action_evaluation.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
+| 22 | Handle-holding drawables can only be re-pointed by name | paint-splash reset, projectile construction and figure clip changes, each handing back a name | local unfiled draft - checked against the pin `52e809a` 2026-10-22, not upstream master; no sanitized request or synthetic example yet |
 
-Nothing else is outstanding, on either side, beyond reports 6 and 9-21 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 6 and 9-22 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -939,6 +941,125 @@ and source checks alongside it in `action-report-upstream.txt` and
 not hardware, physical-input, human or performance acceptance. No issue has
 been filed, the engine is unchanged, and the approved intake route above still
 governs any later publication. Refresh upstream immediately before filing.
+
+---
+
+## 22. Handle-holding drawables can only be re-pointed by name — **draft with paint-splash exhibit**
+
+**Drafted 2026-10-22 against the pin `52e809a`, not against upstream master.**
+No fetch was made. Before filing, fetch upstream master, recheck every engine
+citation below against it, and record that commit with the report. There is no
+sanitized request or synthetic example yet; preparing them is the next step.
+
+### What happens
+
+The engine's drawables hold handles, and say why. `SpriteSheetObject` keeps a
+`SpriteSheetHandle` because holding the name "means a
+std::map<std::string, ...> descent per draw, per drawable" (PHILOSOPHY T7, T8);
+`TextureObject` keeps a `frame_handle`, `AnimationObject` a `strip_handle`, and
+`Registry` states the rule outright: "Per-frame code touches no string-keyed
+map". The draw path honours it.
+
+The setters that *re-point* one of those drawables do not. Every one takes
+names only:
+
+- `AnimationObject::set_animation_strip_and_reset(const std::string&, const std::string&)`
+  ([animation_object.h](../../external/labrador/engine/render/animation_object.h));
+- `SpriteSheetObject::set_sprite_sheet(const std::string&)`
+  ([sprite_sheet_object.h](../../external/labrador/engine/render/sprite_sheet_object.h)),
+  which the strip setter and the two-argument frame setter call;
+- both `TextureObject::set_frame` overloads, sheet-and-frame and frame-only
+  ([texture_object.h](../../external/labrador/engine/render/texture_object.h));
+- `UiTexture::set_sprite_frame(const std::string&)` and `UiTexture::set_texture`
+  ([widget.h](../../external/labrador/engine/ui/widget.h));
+- and the `AnimationObject` and `TextureObject` constructors.
+
+The client can already resolve the handles — `RenderResources::resolve_sprite_sheet`,
+`SpriteSheet::resolve_animation_strip` and `resolve_sprite_frame` are public —
+but the members are private and no setter accepts one. A client holding a
+resolved handle has to hand back the name, and each call pays a
+`std::map<std::string, int>` descent in `Registry` for the sheet and another
+in `NameTable` for the strip or frame. Nothing is allocated (every hot caller below
+passes an existing `std::string`); the cost is string compares on the update
+path, in exactly the place the engine's own comments say it should not be.
+
+### Exhibits
+
+- **Paint splash, per painted tile.** `PaintTile::paint` calls
+  `PaintTileSplash::reset_and_play(sheet, strip)`, which calls
+  `set_animation_strip_and_reset` with the tile's splash sheet and the
+  per-`ProjectileType` strip name ([paint_tile.cpp](../../game/objects/paint_tile.cpp)).
+  The sheet never changes and the strip is one of five. It runs per tile per
+  paint contact, and the sprayer's `shoot_interval` is `0.0` and the roller's
+  `0.0001` ([tuning.json](../../game/content/tuning.json)), so with a trigger
+  held it is effectively every tick, several tiles per contact, per firing player.
+- **Projectile construction, per spawn.** `Projectile`'s constructor passes
+  `details.sheet_name` and `details.animation_strip_name` to the
+  `AnimationObject` constructor ([projectile.cpp](../../game/objects/projectile.cpp));
+  sprayer and roller spawn every tick while firing, and a mister shot spawns
+  several. `ProjectileJet` resolves the strip a further time to read its frame
+  size ([projectile_jet.cpp](../../game/objects/projectile_jet.cpp)).
+- **Figure clip change, per animation-state change.** `Player::set_animation_state`
+  calls `TextureObject::set_frame(info.sheet, info.uniform_texture)` and
+  `set_animation_strip_and_reset(info.sheet, info.strip)`, then
+  `FigureClothing::select` makes the same call again for the paint strip
+  ([player_figure.cpp](../../game/objects/player_figure.cpp),
+  [figure_clothing.h](../../game/objects/figure_clothing.h)): the sheet resolved
+  three times per change. Every `PlayerAnimationState` is a closed enum with
+  a fixed tuning record, so the whole table could be resolved once per player.
+- **Menu icons.** `MenuIcon::set_sprite_frame` and the team- and weapon-select
+  pages re-point `UiTexture`s by frame name
+  ([menu_panel.cpp](../../game/states/menu_panel.cpp)); minor, menu-only.
+
+This is not a measured Release bottleneck and is not filed as one. A source
+audit (2026-10-22) found no allocation and no draw-path string lookup in
+Release; these sites are O(log n) compares on the update path. The report is
+that the API contradicts its own stated rule at the one point a client cannot
+work around, not that a frame is slow.
+
+### The ask
+
+Handle overloads beside the name forms, which stay:
+
+- `set_animation_strip_and_reset(SpriteSheetHandle, SpriteSheet::strip_handle)`;
+- `set_frame(SpriteSheetHandle, SpriteSheet::frame_handle)` and
+  `set_frame(SpriteSheet::frame_handle)`;
+- `UiTexture::set_sprite_frame(SpriteSheet::frame_handle)` (and a handle
+  `set_texture`);
+- handle constructors for `AnimationObject` and `TextureObject`.
+
+The pairing rule the engine already enforces — a strip or frame handle only
+means anything against the sheet it came from, so sheet and element move
+together — carries over unchanged; the two-handle forms keep it. Whether a
+mismatched pair is checked, asserted or documented is upstream's call.
+
+**Secondary, low priority, hygiene.** `Registry::indices_` and
+`NameTable::indices_` are `std::map<std::string, int>` with the default
+comparator ([registry.h](../../external/labrador/engine/core/registry.h),
+[name_table.h](../../external/labrador/engine/core/name_table.h)), and
+`resolve`/`get`/`contains` take `const std::string&`, so a literal or
+`std::string_view` caller builds a temporary. `std::less<>` and `string_view`
+parameters would fix that, and are the prerequisite for any client
+`string_view` parameter above them to be worth anything. Today every hot caller
+passes a `std::string` and the literals in use fit the small-string buffer, so
+this rides with the main ask rather than standing alone. This client's
+`DebugRegistry` ([debug_registry.h](../../game/debug/debug_registry.h)) already
+uses `std::less<>`.
+
+### What an answer lets this repository delete
+
+- The name round-trip in the splash reset: `PaintTile`'s shared paint record
+  could hold one sheet handle and five strip handles, resolved at level build,
+  and `reset_and_play` would take handles.
+- The per-spawn name resolution in `Projectile` and `ProjectileJet`: the
+  projectile builder could resolve each `ProjectileType`'s sheet and strip once.
+- Three sheet and three element resolutions per `Player` state change: one
+  handle table per `PlayerAnimationState`, built in `Player`'s constructor and
+  shared with `FigureClothing`.
+- The repeat-clip gate in `PaintTileSplash::reset_and_play`, added so a repeat
+  contact skips re-resolving the strip only to read its frame metrics, and any
+  similar client caching: with handles in hand those metrics are one indexed
+  read.
 
 ---
 

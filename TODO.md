@@ -142,7 +142,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The fourteen drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The fifteen drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
@@ -164,6 +164,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#19` | OPEN | LOW | S | Review the prepared, unfiled later-show convenience request and refresh upstream before filing; hidden creation passes four Debug/Release cases. First visible game frame and `GAP#5.1` remain open. [Report](docs/engine-reports/startup-visibility.md). |
 | `ENG#20` | OPEN | LOW | S | Review the active view-context request; refresh upstream before filing. Source audit and null Debug/Release illustration pass; unfiled. Art policy and Scene/order integration stay separate. [Report](docs/engine-reports/view-context.md). |
 | `ENG#21` | OPEN | LOW | S | Review the prepared action-evaluation request (formerly `GAP#F2`) and refresh upstream before filing; its synthetic Debug/Release exhibit passes. [Report](docs/engine-reports/action-evaluation.md). |
+| `ENG#22` | OPEN | LOW | S | Check upstream master, then prepare the handle-overload request (re-pointing drawables takes names only) and a synthetic example; unfiled. Update-path compares, not a measured bottleneck. [Report](docs/review/engine-reports.md#22-handle-holding-drawables-can-only-be-re-pointed-by-name--draft-with-paint-splash-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
