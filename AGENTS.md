@@ -164,7 +164,8 @@ of them at [docs/review/engine-reports.md](docs/review/engine-reports.md): each
 one a case where the API forced a bad answer, carrying as its exhibit the
 workaround that is in this repository because of it. They are drafted here
 rather than in the submodule because a report is a thing the client owes, and
-this is the client. Reports are struck as the engine answers them, and a pin
+this is the client. Reports are struck as the engine answers them — declined,
+document-only and needs-more-evidence answers close a report too — and a pin
 bump is when the answers become visible — so **after moving the pin, read that
 file**: it records what each closure lets this repository delete.
 

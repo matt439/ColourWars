@@ -6,9 +6,12 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **One is live as an unfiled draft with an exhibit (23). Twenty-two are closed** and kept below as one paragraph
-> each — what was asked, what the engine answered (shipped or declined), and
-> what this repository spent the answer on, if anything.
+> **One is live as an unfiled draft with an exhibit (23), found after the
+> engine's last answers. Twenty-two are closed** and kept below as one paragraph
+> each — what was asked, what the engine answered (shipped, document only,
+> declined or waiting on evidence), and what this repository spent the answer
+> on, if anything. A report is closed when it is answered, whether or not the
+> answer was the one asked for.
 >
 > They are drafted here rather than in the submodule on purpose. AGENTS.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -63,6 +66,12 @@ explorations. Under `engine/` only a comment in `engine/CMakeLists.txt`
 changed, so nothing closed and no citation here moved; both presets, consumer
 acceptance and the startup check pass on the new pin.
 
+**Moved 2026-10-22 to upstream master `19cf650`**, in `15cdfc1`. Fifteen
+commits, and they answered every live report, 6 and 9-22: each has a recorded
+decision and all fifteen are now [closed](#closed). One source break, from
+report 13's answer. See
+[What the 2026-10-22 bump changed](#what-the-2026-10-22-bump-changed).
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -89,25 +98,20 @@ drafts, unrelated game source, game assets and private captures/data out of the
 public report. Requests beyond what the example demonstrates remain proposals
 to scope separately.
 
-Thirteen drafts were present at approval; report 21 later added a fourteenth
-and report 22 (2026-10-22) a fifteenth. Labrador answered all fifteen before any was
-filed (6, 12 and 15 last, by `19cf650`), and all fifteen are now
-[closed](#closed), so none of those drafts remains unfiled. Report 23 (2026-10-22), found while spending 16, is a sixteenth, checked
-against `19cf650`. Recording this approval posts no reports and leaves
-the engine pin unchanged. The next work is a fresh upstream-master
-check and preparation of the minimal report/reproducer for each surviving gap;
-filing uses the approved scope and established route above. This supporting
-work does not change TODO's level-first priority.
+**None of the approved drafts was ever filed, because none needed to be.**
+Thirteen were present at approval; report 21 later added a fourteenth and
+report 22 (2026-10-22) a fifteenth. Labrador read all fifteen from this
+repository and recorded a decision on each (`cacf112`) before any went through
+the issue route, then answered them by `19cf650`, and all fifteen are
+[closed](#closed). The 2026-10-21 provenance recheck of fourteen exhibit
+sources against `52e809a` (under `out/validation/crossfeed-20261020/`) is
+historical with them; every exhibit it covered has been deleted.
 
-**Provenance re-checked 2026-10-21:** a [fresh live-master read](../../out/validation/crossfeed-20261020/engine-reports-refresh-20261021/live-master-check.json)
-at 02:33:22 UTC still reported upstream `52e809a5a0229d37db4373faa7853df4c861a310`.
-The [source recheck](../../out/validation/crossfeed-20261020/engine-reports-refresh-20261021/source-reconciliation-v1/freeze-v1.json)
-matches all fourteen already-tested exhibit sources and 55 retained engine-file
-pins; two known build-recipe edits change comments only. No builds or exhibits
-were rerun, and no new runtime failure is recorded; the 2026-10-20 execution
-records remain historical. All fourteen drafts remain unfiled under the approved
-minimal-report scope and established issue route above. No public filing or
-engine pin change occurred.
+**The route is now for future reports**, and report 23 (2026-10-22), found
+while spending 16 and checked only against the pin `19cf650`, is the first.
+Its next work is a fresh upstream-master check and the minimal
+report/reproducer; filing uses the approved scope and established route above.
+This supporting work does not change TODO's level-first priority.
 
 Before authorized filing, refresh engine master from upstream and recheck the
 concrete client exhibit against that revision. Record the checked commit with
@@ -133,6 +137,13 @@ shape is the strike rate: **of the seven reports filed with exhibits, six were
 implemented the day they were filed.** The seventh needed no filing — the
 engine had already fixed it.
 
+The fifteen after those (6, 9-22) were answered without being filed, all in
+the 2026-10-22 bump: eight accepted, most of them narrowed (6, 11, 13, 14, 16,
+17, 20, 22), one split (12), four document only (9, 10, 15, 18), one waiting on
+evidence (19) and one declined (21). Every one had an exhibit, and the
+declines and document-only answers were argued against the exhibit, not
+against the ask.
+
 Report 6 got its client-side mixing exhibit and was answered before it was
 filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narrowed-19cf650)).
 
@@ -144,7 +155,7 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 |---|---|---|---|
 | 23 | Resizing a hidden window activates it | `SettingsProbeActivationGuard`, the `WH_CBT` veto five painter fixtures hold around `set_resolution` | local unfiled draft - checked against pin `19cf650` 2026-10-22; no sanitized request or synthetic example yet |
 
-Nothing else is outstanding, on either side, beyond the live reports below and the
+Nothing else is outstanding, on either side, beyond report 23 below and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -1133,7 +1144,11 @@ not foresee the atomic name setters.
 
 Re-checked 2026-08-15 against `6b5c0bd`; citations re-pointed 2026-09-17 at
 `984cf13`, where the comment sweeps moved every one of them by a few lines and
-changed none of the facts.
+changed none of the facts. Re-read 2026-10-23 at `19cf650`: the bump answered
+none of them, and added the runtime-install and listener/voice entries below
+as residue of reports 15 and 6. `window_size_changed` is still ignored
+(`application.cpp:468,495`), there is still no desktop-size query, and `json.h`
+still only reads.
 
 - **Who owns a resolution-independent world height.** This entry used to say
   `CameraTools` never sets a scale, so a 4K player saw nine times the world a
@@ -1537,3 +1552,56 @@ world height since `fbd45dc`; the entry is now the narrower ownership question.
 and the movement-feedback, workshop-playable and workshop-style probes passed
 with their windows hidden through `visible`. No pad, touchscreen or audio
 playback was exercised.
+
+# What the 2026-10-22 bump changed
+
+Moved from `0c15f34` to upstream master at `19cf650` in `15cdfc1`: fifteen
+commits, and every one of them about this repository. The first, `cacf112`,
+records Labrador's decision on each of the fifteen live reports in its
+`docs/review/colourwars-reports/` (a table in the README and one file per
+area: window, loop, input, draw, content); the other fourteen implement or
+document those decisions. **Every live report was answered**, which no bump
+before had done for more than one, and none of them had been filed.
+
+| # | Decision | Engine commit | Spent here |
+|---|---|---|---|
+| 6 | accepted, narrowed: named sound groups; master bus, fades, ducking, listener and voice cap declined | `19cf650` | `759d2e1` |
+| 9 | document only: a root `State` is the per-frame observer; capture declined | `f1e5244` | `07e4879`, docs only |
+| 10 | document only: the redraw is the supported capture | `ac58ca1` | `07e4879`, docs only |
+| 11 | accepted, narrowed: the bare `SC_KEYMENU` is swallowed, no option | `0f3b283` | `bf01d5f` |
+| 12 | split: `parse_json` accepted, key enumeration a separate story (PI-20), spans declined | `3af746b` | `52b6aeb` |
+| 13 | accepted: `key_name` and `key_from_name` | `2851ad9` | `7041dc1` |
+| 14 | accepted, narrowed: CPU `frame_timings()`, GPU time declined | `7344610` | `07e4879`, docs; columns are `DBG#5` |
+| 15 | document only: the template's mirror and a recipe; install is PI-11, undecided | `48fb236` | `c0691fd`, nothing in code |
+| 16 | accepted, widened to entering full screen | `7db3d5c` | `bf01d5f`, in part |
+| 17 | accepted, narrowed: client pixels kept under per-monitor v2; floor Windows 10 1607 | `dae6c87` | `bf01d5f`, a manifest comment |
+| 18 | document only: `UiText::set_hidden`; zero-alpha tint warned | `30cb06a` | `c657dd1` |
+| 19 | needs more evidence: two first-frame captures asked for | `cacf112` | `bf01d5f`, nothing in code; captures are `GAP#5.1` |
+| 20 | accepted, narrowed: `DrawList::camera()` and `viewport()` | `11ec1fc` | `c657dd1`, in part; the walk is `POL#29` |
+| 21 | declined: the action map stays the game's | `197aff1` | `7041dc1`, nothing in code |
+| 22 | accepted, narrowed: `SheetFrame`/`SheetStrip` pairs | `bec82f0` | `c657dd1` |
+
+**One source break, and it was report 13's own answer.** `labrador::key_name`
+made the unqualified `key_name(labrador::Key)` in `game/debug/debug_keys.cpp`
+ambiguous through argument-dependent lookup; `15cdfc1` qualified the call to
+build at the new pin, and `7041dc1` then deleted the client function the
+qualification pointed at. The engine's `CHANGES.md` now says in its preamble
+that a new free function taking an engine type can break a game this way.
+Three silent changes reach this game and are recorded under their reports:
+Windows 10 1607 as the load floor (17), F10 and a lone Alt no longer freezing a
+Release build in the system menu (11), and atomic name setters on
+`TextureObject` and `AnimationObject` (22).
+
+**What it left.** Spending 16 found report 23 (`27ec7e1`), the one live report
+now. 19 leaves this repository the two captures under `GAP#5.1`; 14 leaves
+`DBG#5`'s three columns; 20 leaves `POL#29`; 12's PI-20 and 15's PI-11 are
+engine stories with no row here, and 15's install half and 6's listener and
+voice cap are parked under
+[What is deliberately not here](#what-is-deliberately-not-here). Every draft
+in `docs/engine-reports/` and every exhibit in `scripts/engine-reports/` is
+deleted, and both folders with them. The ledger's counts were reconciled after
+each closing commit (`a0e6f7e`, `ce1d20f`, `af9181f`, `532986e`) and once more
+in this one.
+
+**Validation:** this commit built `x64-debug` and passed Debug consumer
+acceptance; the closing commits record their own.
