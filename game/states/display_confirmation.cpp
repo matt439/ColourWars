@@ -156,7 +156,14 @@ bool MainMenuDisplayConfirmation::close_if_finished()
 void MainMenuDisplayConfirmation::refresh_countdown()
 {
 	const float remaining = this->trial_ ? this->trial_->remaining() : this->timeout_;
-	this->countdown_->set_text(this->text().display_countdown(static_cast<int>(std::ceil(remaining))));
+	// The text changes once a second; it is rebuilt only when the whole second does.
+	const int seconds = static_cast<int>(std::ceil(remaining));
+	if (this->shown_seconds_ == seconds)
+	{
+		return;
+	}
+	this->countdown_->set_text(this->text().display_countdown(seconds));
+	this->shown_seconds_ = seconds;
 	this->countdown_->set_position(Vector2F(
 		this->calculate_center_position(this->countdown_->bounds().width, DESIGN_RESOLUTION.x),
 		this->calculate_widget_position(0, 2).y));

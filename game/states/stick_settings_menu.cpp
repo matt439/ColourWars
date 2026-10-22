@@ -238,14 +238,38 @@ void StickSettingsMenu::refresh_preview()
 	const StickResponse response = stick_response(left, right, authored, this->selection_, this->slot_);
 	this->preview_->set_response(left, right, response, this->selection_.movement_deadzone(this->slot_, authored),
 		this->selection_.aim_deadzone(this->slot_));
-	this->connection_->set_text(this->text().stick_connection(this->slot_, pad.connected));
-	this->raw_movement_->set_text(this->text().stick_raw_movement(rounded_percent(left.x)));
-	this->movement_response_->set_text(this->text().stick_movement_response(rounded_percent(response.movement)));
+	// Each readout's text follows only its integer inputs, so it is rebuilt
+	// when they change; the empty records force the first write.
+	const std::array<int, 2> connection = { this->slot_, pad.connected ? 1 : 0 };
+	if (this->shown_connection_ != connection)
+	{
+		this->connection_->set_text(this->text().stick_connection(this->slot_, pad.connected));
+		this->shown_connection_ = connection;
+	}
+	const int raw_movement = rounded_percent(left.x);
+	if (this->shown_raw_movement_ != raw_movement)
+	{
+		this->raw_movement_->set_text(this->text().stick_raw_movement(raw_movement));
+		this->shown_raw_movement_ = raw_movement;
+	}
+	const int movement_response = rounded_percent(response.movement);
+	if (this->shown_movement_response_ != movement_response)
+	{
+		this->movement_response_->set_text(this->text().stick_movement_response(movement_response));
+		this->shown_movement_response_ = movement_response;
+	}
+	const bool aim_active = !(response.aim == Vector2F::ZERO);
 	const Vector2F aim = response.aim.normalized();
 	const int raw_x = rounded_percent(right.x), raw_y = rounded_percent(right.y);
-	this->aim_readout_->set_text(response.aim == Vector2F::ZERO ?
-		this->text().stick_aim_inactive(raw_x, raw_y) :
-		this->text().stick_aim_active(raw_x, raw_y, rounded_percent(aim.x), rounded_percent(aim.y)));
+	const std::array<int, 5> aim_inputs = { aim_active ? 1 : 0, raw_x, raw_y,
+		aim_active ? rounded_percent(aim.x) : 0, aim_active ? rounded_percent(aim.y) : 0 };
+	if (this->shown_aim_ != aim_inputs)
+	{
+		this->aim_readout_->set_text(aim_active ?
+			this->text().stick_aim_active(raw_x, raw_y, aim_inputs[3], aim_inputs[4]) :
+			this->text().stick_aim_inactive(raw_x, raw_y));
+		this->shown_aim_ = aim_inputs;
+	}
 }
 
 void StickSettingsMenu::apply_settings()

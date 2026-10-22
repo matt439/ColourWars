@@ -8,6 +8,8 @@
 #include "game/objects/player_input_data.h"
 #include "game/input_slots.h"
 
+#include <optional>
+
 
 class DebugDirector;
 
@@ -82,6 +84,9 @@ private:
 	bool opening_ = true;
 	void refresh_connections();
 	bool waiting_for_players_ = false;
+	// Bit per roster seat whose pad was missing when the texts were last
+	// built. Empty until the first build, so that one always happens.
+	std::optional<unsigned int> shown_missing_seats_;
 	std::unique_ptr<labrador::UiText> connection_status_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiText> player_num_ = nullptr;

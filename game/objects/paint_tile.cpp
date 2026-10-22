@@ -173,6 +173,8 @@ void PaintTileSplash::read_clip(const std::string& animation_strip_name)
 	const RectangleI& source = clip.frame_rect(0);
 	this->set_origin(Vector2F(static_cast<float>(source.width) / 2.0f,
 		static_cast<float>(source.height) / 2.0f));
+	this->clip_sheet_ = this->sprite_sheet();
+	this->clip_name_ = animation_strip_name;
 }
 
 void PaintTileSplash::set_rectangle_center(const Vector2F& center)
@@ -189,8 +191,14 @@ void PaintTileSplash::reset_and_play()
 void PaintTileSplash::reset_and_play(const std::string& sheet_name,
 	const std::string& animation_strip_name)
 {
+	// Engine-forced name lookups (sheet, then strip) on every contact; see
+	// docs/review/engine-reports.md, report 22.
 	this->set_animation_strip_and_reset(sheet_name, animation_strip_name);
-	this->read_clip(animation_strip_name);
+	if (this->sprite_sheet() != this->clip_sheet_ ||
+		animation_strip_name != this->clip_name_)
+	{
+		this->read_clip(animation_strip_name);
+	}
 	this->reset_and_play();
 }
 bool PaintTileSplash::active() const

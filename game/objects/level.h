@@ -292,6 +292,10 @@ private:
 	// By view; see set_seat_labels. Present in every build, only ever set by
 	// the Debug director, so empty in Release.
 	std::vector<std::wstring> seat_labels_;
+	// By view: each HUD identity box's whole text. Built from the view, the
+	// player's team and pad slot (all fixed for the match) and seat_labels_,
+	// so only construction and set_seat_labels rebuild it; draws only read it.
+	std::vector<std::wstring> identity_texts_;
 
 	// Borrowed shell services; both outlive every level.
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
@@ -451,6 +455,8 @@ private:
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
 	void update_player_identity(float dt);
+	// Rebuilds identity_texts_. Main thread, never from a draw.
+	void refresh_identity_texts();
 	// Makes the labels on first use, then applies overlays_.stations and the
 	// current presentation (so tune is live). Main thread, between updates.
 	void refresh_station_labels();

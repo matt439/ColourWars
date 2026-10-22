@@ -44,6 +44,23 @@ public:
         bool reduced_effects = false,
         bool clock_running = true) const;
 
+    // The same, with the identity box's whole text already built by
+    // identity_text. Level keeps one per view so the draw path allocates nothing.
+    void draw_gameplay_interface_prepared(labrador::DrawList& draw_list,
+        const mattmath::Vector2F& resolution,
+        int player_index,
+        const std::wstring& identity,
+        float health,
+        float ammo,
+        float timer,
+        const labrador::Colour& team_colour,
+        bool reduced_effects = false,
+        bool clock_running = true) const;
+
+    // "P1  /  TEAM A\n" followed by the device label: the identity box's text.
+    static std::wstring identity_text(int player_index, PlayerTeam team,
+        const std::wstring& device_label);
+
 private:
     void draw_paper_panel(labrador::DrawList& draw_list,
         const mattmath::RectangleF& face, float scale) const;

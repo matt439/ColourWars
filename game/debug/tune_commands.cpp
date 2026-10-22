@@ -194,6 +194,7 @@ void DebugDirectorImpl::set_content_directories(std::filesystem::path source,
 		document.reset();
 	}
 	this->tune_load_tried_ = false;
+	++this->tune_generation_;
 }
 
 std::filesystem::path DebugDirectorImpl::source_content_directory() const
@@ -213,6 +214,7 @@ std::filesystem::path DebugDirectorImpl::staged_content_directory() const
 void DebugDirectorImpl::load_tune_documents()
 {
 	this->tune_load_tried_ = true;
+	++this->tune_generation_;
 	for (int file = 0; file < 2; ++file)
 	{
 		const std::filesystem::path path = this->staged_content_directory() /
@@ -270,6 +272,21 @@ std::vector<std::string> DebugDirectorImpl::tune_paths()
 		}
 	}
 	return paths;
+}
+
+std::array<int, 3> DebugDirectorImpl::tune_revision()
+{
+	std::array<int, 3> revision{ 0, -1, -1 };
+	for (std::size_t file = 0; file < 2; ++file)
+	{
+		if (const TuneDocument* document = this->tune_document(file_names[file]))
+		{
+			revision[file + 1] = document->revision();
+		}
+	}
+	// Read after tune_document(), which may have just loaded them.
+	revision[0] = this->tune_generation_;
+	return revision;
 }
 
 std::string DebugDirectorImpl::tune_token(const std::string& path)

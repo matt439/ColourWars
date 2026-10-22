@@ -21,7 +21,7 @@ public:
 	std::optional<float> duration() const;
 	// No override uses match.duration from tuning, including live Debug tuning.
 	void set_duration(std::optional<float> seconds);
-	std::vector<MenuPlayerSettings> player_settings() const;
+	const std::vector<MenuPlayerSettings>& player_settings() const;
 	// Preserves retained seats and defaults newly added seats to unclaimed.
 	// Rejects counts outside 1-4 without changing the roster or its count.
 	void set_player_count(int player_count);

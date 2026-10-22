@@ -71,11 +71,16 @@ public:
 	// FNV-1a over the current text: what a replay header records.
 	std::uint64_t current_hash() const;
 
+	// Advances on every commit and rebase, so a reader can keep what it
+	// derived from the current text (the debug menu's tree) until it moves.
+	int revision() const { return this->revision_; }
+
 private:
 	std::string name_;
 	JsonSpanDocument baseline_;
 	JsonSpanDocument current_;
 	std::map<std::string, TuneEdit> edits_;
+	int revision_ = 0;
 };
 
 // FNV-1a, 64-bit.

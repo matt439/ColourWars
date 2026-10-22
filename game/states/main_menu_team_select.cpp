@@ -219,11 +219,32 @@ bool MainMenuTeamSelect::all_players_unconfirmed() const
 }
 void MainMenuTeamSelect::update_team_select_visuals()
 {
+	// The style follows the live presentation. The frames and enabled states
+	// below follow only each row's team and readiness, so they are rewritten
+	// when one of those changes; the empty record forces the first write.
+	const SelectPresentation& look = this->look().team_select;
+	this->team_focus_.set_style({ look.unselected, look.unselected, look.selected });
+	const size_t player_count = static_cast<size_t>(this->player_count());
+	bool changed = this->displayed_teams_.size() != player_count;
+	for (size_t i = 0; !changed && i < player_count; i++)
+	{
+		changed = this->displayed_teams_[i] != this->selected_team(static_cast<int>(i)) ||
+			this->displayed_confirmations_[i] != this->confirmations_[i];
+	}
+	if (!changed)
+	{
+		return;
+	}
+	this->displayed_teams_.resize(player_count);
+	this->displayed_confirmations_.resize(player_count);
+
 	this->deselect_and_unconfirm_all_widgets();
 	const auto& frames = this->team_select_selected_frames_;
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
+		this->displayed_teams_[static_cast<size_t>(i)] = this->selected_team(i);
+		this->displayed_confirmations_[static_cast<size_t>(i)] = this->confirmations_[i];
 		MenuChoiceIcon* selected_widget = nullptr;
 		switch (this->selected_team(i))
 		{
@@ -256,8 +277,6 @@ void MainMenuTeamSelect::update_team_select_visuals()
 void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 {
 	const auto& frames = this->team_select_frames_;
-	const SelectPresentation& look = this->look().team_select;
-	this->team_focus_.set_style({ look.unselected, look.unselected, look.selected });
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->player_widgets_[i]->player_a->set_motion_selected(false);

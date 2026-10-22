@@ -40,20 +40,12 @@ std::vector<DebugMenuRow> DebugMenuModel::collect() const
 	if (!this->picker_.empty())
 	{
 		const DebugEntry* picked = this->entry(this->picker_);
-		std::vector<std::string> choices;
+		const std::vector<std::string>& choices = this->picker_choices_;
 		std::string head = this->picker_;
 		std::string current;
 		if (picked != nullptr)
 		{
 			const DebugMenuTraits& traits = picked->menu();
-			try
-			{
-				choices = picked->suggestions(picked->is_variable() ? 0 : traits.pick_argument);
-			}
-			catch (const std::exception&)
-			{
-				choices.clear();
-			}
 			if (picked->is_variable())
 			{
 				current = static_cast<const DebugVariable*>(picked)->value_text();
@@ -188,6 +180,19 @@ void DebugMenuModel::enter(std::string category, std::string picker)
 	}
 	this->category_ = std::move(category);
 	this->picker_ = std::move(picker);
+	this->picker_choices_.clear();
+	if (const DebugEntry* picked = this->picker_.empty() ? nullptr : this->entry(this->picker_))
+	{
+		try
+		{
+			this->picker_choices_ = picked->suggestions(picked->is_variable() ? 0 :
+				picked->menu().pick_argument);
+		}
+		catch (const std::exception&)
+		{
+			this->picker_choices_.clear();
+		}
+	}
 	this->focus_hint_ = 0;
 	++this->level_;
 }
@@ -223,13 +228,28 @@ void DebugMenuModel::enter_tune_node(std::string node, const std::string& focus_
 	this->tune_page_ = 0;
 }
 
+const std::vector<std::string>& DebugMenuModel::tune_node_children() const
+{
+	const std::array<int, 3> revision = this->director_.tune_revision();
+	if (!this->tune_children_valid_ || revision != this->tune_children_revision_ ||
+		this->tune_node_ != this->tune_children_node_)
+	{
+		this->tune_children_ = tune_children(this->director_.tune_paths(), this->tune_node_);
+		this->tune_children_node_ = this->tune_node_;
+		this->tune_children_revision_ = revision;
+		this->tune_children_valid_ = true;
+	}
+	return this->tune_children_;
+}
+
 std::vector<DebugMenuRow> DebugMenuModel::tuning_rows() const
 {
 	std::vector<DebugMenuRow> rows;
+	const std::vector<std::string>& children = this->tune_node_children();
 	if (this->tune_node_.empty())
 	{
 		// The two files, then tune.diff, tune.reset and tune.save.
-		for (const std::string& child : tune_children(this->director_.tune_paths(), ""))
+		for (const std::string& child : children)
 		{
 			DebugMenuRow row{ Kind::category, child.substr(0, child.size() - 1), ">", child, true };
 			rows.push_back(row);
@@ -246,46 +266,50 @@ std::vector<DebugMenuRow> DebugMenuModel::tuning_rows() const
 		return rows;
 	}
 
-	std::vector<DebugMenuRow> all;
-	for (const std::string& child : tune_children(this->director_.tune_paths(), this->tune_node_))
-	{
-		std::string label = child.substr(this->tune_node_.size());
-		const char last = label.empty() ? ' ' : label.back();
-		if (last == '.' || last == '[')
+	// Only the rows on the shown page read their values: each is a search of
+	// the file's leaves.
+	const auto row_of_child = [this](const std::string& child) -> DebugMenuRow
 		{
-			label.pop_back();
+			std::string label = child.substr(this->tune_node_.size());
+			const char last = label.empty() ? ' ' : label.back();
+			if (last == '.' || last == '[')
+			{
+				label.pop_back();
+				if (this->tune_node_.back() == '[')
+				{
+					label = "[" + label;
+				}
+				return { Kind::category, label + (last == '[' ? "[]" : ""), ">", child, true };
+			}
 			if (this->tune_node_.back() == '[')
 			{
 				label = "[" + label;
 			}
-			all.push_back({ Kind::category, label + (last == '[' ? "[]" : ""), ">", child, true });
-			continue;
-		}
-		if (this->tune_node_.back() == '[')
-		{
-			label = "[" + label;
-		}
-		const TuneScope scope = tune_scope_of(child);
-		std::string value = this->director_.tune_token(child);
-		if (scope != TuneScope::live)
-		{
-			value += std::string("  *") + tune_scope_name(scope);
-		}
-		const bool colour = tune_colour_path(child);
-		if (colour) { value += "  (console)"; }
-		all.push_back({ colour ? Kind::inspect : Kind::variable, label, value, "tune " + child, true });
-	}
+			const TuneScope scope = tune_scope_of(child);
+			std::string value = this->director_.tune_token(child);
+			if (scope != TuneScope::live)
+			{
+				value += std::string("  *") + tune_scope_name(scope);
+			}
+			const bool colour = tune_colour_path(child);
+			if (colour) { value += "  (console)"; }
+			return { colour ? Kind::inspect : Kind::variable, label, value, "tune " + child, true };
+		};
 
-	if (all.size() <= max_rows)
+	if (children.size() <= max_rows)
 	{
-		return all;
+		for (const std::string& child : children)
+		{
+			rows.push_back(row_of_child(child));
+		}
+		return rows;
 	}
 	const std::size_t per_page = max_rows - 1;
-	const std::size_t pages = (all.size() + per_page - 1) / per_page;
+	const std::size_t pages = (children.size() + per_page - 1) / per_page;
 	const std::size_t page = std::min(this->tune_page_, pages - 1);
-	for (std::size_t i = page * per_page; i < all.size() && i < (page + 1) * per_page; ++i)
+	for (std::size_t i = page * per_page; i < children.size() && i < (page + 1) * per_page; ++i)
 	{
-		rows.push_back(all[i]);
+		rows.push_back(row_of_child(children[i]));
 	}
 	rows.push_back({ Kind::more, "more (" + std::to_string(page + 1) + "/" +
 		std::to_string(pages) + ")", ">", "", true });

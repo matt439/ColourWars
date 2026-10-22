@@ -51,6 +51,11 @@ private:
 	std::vector<labrador::UiWidget*> actions_;
 	labrador::UiText* help_ = nullptr;
 	labrador::UiText* status_ = nullptr;
+	// What the help text was last built from; it is rebuilt only on a change.
+	bool help_shown_ = false;
+	labrador::Key shown_saved_key_{};
+	labrador::Key shown_pending_key_{};
+	bool shown_collision_ = false;
 	mattmath::RectangleF help_limit_;
 	mattmath::RectangleF status_limit_;
 	labrador::Colour status_ink_;

@@ -98,15 +98,28 @@ void KeyboardJumpMenu::set_status(const std::wstring& value, bool warning)
 
 void KeyboardJumpMenu::refresh_values()
 {
+	// The help text follows only the saved key, the pending key and the debug
+	// collision flag, so it is rebuilt when one of them changes.
+	const Key saved = this->save()->input_bindings().keyboard_jump;
+	const Key pending = this->selection_.keyboard_jump;
+	const bool collision = this->data()->debug().keyboard_jump_collision(pending);
+	if (this->help_shown_ && saved == this->shown_saved_key_ &&
+		pending == this->shown_pending_key_ && collision == this->shown_collision_)
+	{
+		return;
+	}
 	const auto& copy = this->text().keyboard_jump;
-	std::wstring help = copy.help_block(std::wstring(input_key_label(this->save()->input_bindings().keyboard_jump)),
-		std::wstring(input_key_label(this->selection_.keyboard_jump)));
-	if (this->data()->debug().keyboard_jump_collision(this->selection_.keyboard_jump))
+	std::wstring help = copy.help_block(input_key_label(saved), input_key_label(pending));
+	if (collision)
 	{
 		help += L"\n" + copy.debug_collision;
 	}
 	this->help_->set_text(help);
 	fit_text(*this->help_, this->help_limit_);
+	this->help_shown_ = true;
+	this->shown_saved_key_ = saved;
+	this->shown_pending_key_ = pending;
+	this->shown_collision_ = collision;
 }
 
 void KeyboardJumpMenu::set_actions_enabled(bool enabled)

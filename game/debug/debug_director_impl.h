@@ -159,6 +159,10 @@ public:
 	std::vector<std::string> tune_paths();
 	// The token a prefixed path holds now, or empty.
 	std::string tune_token(const std::string& path);
+	// Changes whenever tune_paths() could: a document loaded or dropped (the
+	// first element), or one committed or rebased (its revision, -1 when the
+	// file could not be read).
+	std::array<int, 3> tune_revision();
 
 	// Level updates since the running match was built.
 	int level_updates() const { return this->level_updates_; }
@@ -374,6 +378,8 @@ private:
 	std::array<std::unique_ptr<TuneDocument>, 2> tune_docs_;
 	std::array<std::unique_ptr<TuneTarget>, 2> tune_targets_;
 	bool tune_load_tried_ = false;
+	// Bumped whenever tune_docs_ are replaced; see tune_revision().
+	int tune_generation_ = 0;
 	// The texts `reload` validated, which become the tuning baseline when
 	// they are applied.
 	std::string pending_tuning_text_;

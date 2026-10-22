@@ -326,6 +326,10 @@ private:
 	// A presentation rebase reaches newly opened pages, never this pairing.
 	std::array<std::string, 3> team_select_frames_;
 	std::array<std::string, 3> team_select_selected_frames_;
+	// Each row's team and readiness when its icons were last written. Empty
+	// until the first write, so that one always happens.
+	std::vector<PlayerTeam> displayed_teams_;
+	std::vector<ConfirmationState> displayed_confirmations_;
 	void shuffle_teams();
 	void update_team_select_visuals();
 	void deselect_and_unconfirm_all_widgets();
@@ -382,6 +386,9 @@ private:
 	// Keep names, frames and descriptions paired with the atlas captured on entry.
 	WeaponSelectArtworkPresentation weapon_select_art_;
 	std::array<std::wstring, MainMenuPresentation::DESCRIBED_WEAPONS> weapon_descriptions_;
+	// Each row's weapon when its icon and text were last written; none until
+	// the first write, so that one always happens.
+	std::vector<WeaponType> displayed_weapons_;
 	void update_weapon_select_visuals();
 	void unconfirm_all_widgets();
 	bool all_players_confirmed() const;
@@ -389,7 +396,7 @@ private:
 	static WeaponType random_weapon();
 	void set_level_settings() const;
 	void cycle_weapons(labrador::Direction direction, int player_index);
-	std::wstring weapon_description(WeaponType type) const;
+	const std::wstring& weapon_description(WeaponType type) const;
 	void check_paper_geometry() const;
 };
 

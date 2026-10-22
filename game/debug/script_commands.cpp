@@ -497,17 +497,20 @@ void DebugDirectorImpl::draw_status(labrador::Renderer& renderer)
 	// both when a narrow window cannot hold them on one row).
 	std::vector<mattmath::RectangleF> avoid = this->match_ != nullptr ?
 		this->match_->debug_screen_obstacles() : std::vector<mattmath::RectangleF>();
-	const mattmath::RectangleF paint = DebugConsoleView::draw_panel(renderer, data,
+	// Resolved once here for every panel below, not once per panel.
+	const DebugConsoleView::OverlayHandles handles =
+		DebugConsoleView::OverlayHandles::resolve(data);
+	const mattmath::RectangleF paint = DebugConsoleView::draw_panel(renderer, data, handles,
 		this->paint_lines(), Anchor::bottom_left, avoid);
 	avoid.push_back(paint);
 	if (this->overlay_perf_)
 	{
-		avoid.push_back(DebugConsoleView::draw_perf(renderer, data, this->perf_, avoid));
+		avoid.push_back(DebugConsoleView::draw_perf(renderer, data, handles, this->perf_, avoid));
 	}
 	if (!this->console_open() && (this->screenshot_strip_ || !this->capturing_))
 	{
 		const std::string strip = this->status_strip();
-		DebugConsoleView::draw_panel(renderer, data,
+		DebugConsoleView::draw_panel(renderer, data, handles,
 			strip.empty() ? std::vector<std::string>() : std::vector<std::string>{ strip },
 			Anchor::bottom_right, avoid);
 	}

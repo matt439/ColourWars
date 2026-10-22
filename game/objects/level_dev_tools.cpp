@@ -63,6 +63,7 @@ const Label& Level::station_label(int index) const
 void Level::set_seat_labels(std::vector<std::wstring> labels)
 {
 	this->seat_labels_ = std::move(labels);
+	this->refresh_identity_texts();
 }
 
 int Level::projectile_count() const

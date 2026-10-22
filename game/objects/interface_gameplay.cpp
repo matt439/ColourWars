@@ -68,6 +68,29 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	const Colour& team_colour,
 	bool reduced_effects, bool clock_running) const
 {
+	this->draw_gameplay_interface_prepared(draw_list, resolution, player_index,
+		identity_text(player_index, team, device_label), health, ammo, timer,
+		team_colour, reduced_effects, clock_running);
+}
+
+std::wstring InterfaceGameplay::identity_text(int player_index, PlayerTeam team,
+	const std::wstring& device_label)
+{
+	return PlayerBadge::label(player_index) +
+		(team == PlayerTeam::a ? L"  /  TEAM A\n" : L"  /  TEAM B\n") +
+		device_label;
+}
+
+void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
+	const Vector2F& resolution,
+	int player_index,
+	const std::wstring& identity,
+	float health,
+	float ammo,
+	float timer,
+	const Colour& team_colour,
+	bool reduced_effects, bool clock_running) const
+{
 	const HudPresentation& look = *this->look_;
 	const float scale = std::min(
 		resolution.x / look.player_identity_reference_width,
@@ -81,9 +104,6 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	draw_list.set_filter(TextureFilter::linear);
 	this->draw_timer(draw_list, resolution, timer, scale, reduced_effects, clock_running);
 
-	const std::wstring identity = PlayerBadge::label(player_index) +
-		(team == PlayerTeam::a ? L"  /  TEAM A\n" : L"  /  TEAM B\n") +
-		device_label;
 	const Vector2F identity_pos(resolution.x * look.player_identity_offset.x,
 		resolution.y * look.player_identity_offset.y);
 	const Vector2F identity_size = this->render_resources()->measure_text(

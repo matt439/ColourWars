@@ -288,13 +288,14 @@ RectangleF MainMenuJoin::check_paper_bounds(const UiWidget& widget, const char* 
 void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs)
 {
 	bool ready = this->level_settings()->input_roster_complete();
-	const std::vector<MenuPlayerSettings> players = this->level_settings()->player_settings();
+	const std::vector<MenuPlayerSettings>& players = this->level_settings()->player_settings();
 	float previous_bottom = this->heading_->bounds().bottom();
 	for (int player = 0; player < this->player_count(); ++player)
 	{
 		const bool connected = inputs[player].connected;
 		JoinMotionRow& motion = *this->join_motion_[player];
-		if (motion.slot != players[player].num || motion.connected != connected)
+		const bool row_changed = motion.slot != players[player].num || motion.connected != connected;
+		if (row_changed)
 		{
 			// Device changes settle quietly; only accepted join/leave actions
 			// below may respond, after the final roster has been refreshed.
@@ -303,12 +304,18 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		motion.slot = players[player].num;
 		motion.connected = connected;
 		ready = ready && connected;
-		std::wstring label = this->level_settings()->player_label(player, this->text());
-		if (!connected && players[player].num >= 0)
+		// The label follows only the row's seat and connection. Init labels each
+		// row for its starting record (slot -1, disconnected), which carries no
+		// reconnect suffix, so an unchanged row already shows the right text.
+		if (row_changed)
 		{
-			label += this->text().connection.join_reconnect_suffix;
+			std::wstring label = this->level_settings()->player_label(player, this->text());
+			if (!connected && players[player].num >= 0)
+			{
+				label += this->text().connection.join_reconnect_suffix;
+			}
+			this->players_[player]->set_text(label);
 		}
-		this->players_[player]->set_text(label);
 		this->players_[player]->set_colour(connected ?
 			this->setup_art_.focus_ink : this->setup_art_.disabled_ink);
 		const RectangleF row = this->check_paper_bounds(*this->players_[player], "player row", motion.accent.get());
@@ -318,8 +325,12 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		}
 		previous_bottom = row.bottom();
 	}
-	this->status_->set_text(ready ? this->text().connection.join_ready :
-		this->text().connection.join_waiting);
+	const std::wstring& status = ready ? this->text().connection.join_ready :
+		this->text().connection.join_waiting;
+	if (this->status_->text() != status)
+	{
+		this->status_->set_text(status);
+	}
 	if (this->check_paper_bounds(*this->status_, "status").y < previous_bottom)
 	{
 		throw std::runtime_error("main_menu.player_count_spacing: Join status must follow the player rows without overlap.");

@@ -293,6 +293,16 @@ RectangleF DebugConsoleView::place_panel(const Vector2F& size, Anchor anchor,
 	return backing();
 }
 
+DebugConsoleView::OverlayHandles DebugConsoleView::OverlayHandles::resolve(const GameData& data)
+{
+	RenderResources* resources = data.render_resources();
+	OverlayHandles handles;
+	handles.sheet = resources->resolve_sprite_sheet("sprite_sheet_1");
+	handles.pixel = resources->sprite_sheet(handles.sheet)->resolve_sprite_frame("pixel");
+	handles.font = resources->resolve_sprite_font(data.presentation()->debug_overlay().font);
+	return handles;
+}
+
 RectangleF DebugConsoleView::draw_panel(Renderer& renderer, const GameData& data,
 	const std::vector<std::string>& lines, Anchor anchor, const std::vector<RectangleF>& avoid)
 {
@@ -300,9 +310,20 @@ RectangleF DebugConsoleView::draw_panel(Renderer& renderer, const GameData& data
 	{
 		return RectangleF();
 	}
+	return draw_panel(renderer, data, OverlayHandles::resolve(data), lines, anchor, avoid);
+}
+
+RectangleF DebugConsoleView::draw_panel(Renderer& renderer, const GameData& data,
+	const OverlayHandles& handles, const std::vector<std::string>& lines, Anchor anchor,
+	const std::vector<RectangleF>& avoid)
+{
+	if (lines.empty())
+	{
+		return RectangleF();
+	}
 	RenderResources* resources = data.render_resources();
 	const DebugOverlayPresentation& look = data.presentation()->debug_overlay();
-	const FontHandle font = resources->resolve_sprite_font(look.font);
+	const FontHandle font = handles.font;
 	const float line_height = std::max(look.line_spacing, 1.0f);
 
 	std::vector<std::wstring> wide;
@@ -320,11 +341,9 @@ RectangleF DebugConsoleView::draw_panel(Renderer& renderer, const GameData& data
 		Vector2F(viewport.width, viewport.height), avoid);
 	const Vector2F position = background.position() + Vector2F(pad_x, pad_y);
 
-	const RenderResources::SpriteSheetHandle sheet_handle =
-		resources->resolve_sprite_sheet("sprite_sheet_1");
-	const SpriteSheet* sheet = resources->sprite_sheet(sheet_handle);
+	const SpriteSheet* sheet = resources->sprite_sheet(handles.sheet);
 	list.set_filter(TextureFilter::point);
-	sheet->draw(list, sheet->resolve_sprite_frame("pixel"), background, panel_colour);
+	sheet->draw(list, handles.pixel, background, panel_colour);
 	list.set_filter(TextureFilter::linear);
 	for (std::size_t i = 0; i < wide.size(); ++i)
 	{
@@ -341,9 +360,15 @@ RectangleF DebugConsoleView::draw_panel(Renderer& renderer, const GameData& data
 RectangleF DebugConsoleView::draw_perf(Renderer& renderer, const GameData& data,
 	const DebugPerf& perf, const std::vector<RectangleF>& avoid)
 {
+	return draw_perf(renderer, data, OverlayHandles::resolve(data), perf, avoid);
+}
+
+RectangleF DebugConsoleView::draw_perf(Renderer& renderer, const GameData& data,
+	const OverlayHandles& handles, const DebugPerf& perf, const std::vector<RectangleF>& avoid)
+{
 	RenderResources* resources = data.render_resources();
 	const DebugOverlayPresentation& look = data.presentation()->debug_overlay();
-	const FontHandle font = resources->resolve_sprite_font(look.font);
+	const FontHandle font = handles.font;
 	const float line_height = std::max(look.line_spacing, 1.0f);
 	const std::vector<std::string> lines = perf.lines();
 
@@ -363,9 +388,8 @@ RectangleF DebugConsoleView::draw_perf(Renderer& renderer, const GameData& data,
 		Vector2F(viewport.width, viewport.height), avoid);
 	const Vector2F origin = background.position() + Vector2F(pad_x, pad_y);
 
-	const SpriteSheet* sheet = resources->sprite_sheet(
-		resources->resolve_sprite_sheet("sprite_sheet_1"));
-	const SpriteSheet::frame_handle pixel = sheet->resolve_sprite_frame("pixel");
+	const SpriteSheet* sheet = resources->sprite_sheet(handles.sheet);
+	const SpriteSheet::frame_handle pixel = handles.pixel;
 	list.set_filter(TextureFilter::point);
 	sheet->draw(list, pixel, background, panel_colour);
 

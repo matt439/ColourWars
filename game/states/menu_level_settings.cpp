@@ -20,7 +20,7 @@ void MenuLevelSettings::set_duration(std::optional<float> seconds)
 	this->duration_ = seconds;
 }
 
-std::vector<MenuPlayerSettings> MenuLevelSettings::player_settings() const
+const std::vector<MenuPlayerSettings>& MenuLevelSettings::player_settings() const
 {
 	return this->player_settings_;
 }

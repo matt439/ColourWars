@@ -4,6 +4,9 @@
 #include "game/states/option_row.h"
 #include "game/states/menu_panel.h"
 
+#include <array>
+#include <optional>
+
 class StickResponsePreview;
 
 // Profiles belong to XInput slots, independently of match roster/view numbers.
@@ -40,4 +43,10 @@ private:
 	labrador::UiText* raw_movement_ = nullptr;
 	labrador::UiText* movement_response_ = nullptr;
 	labrador::UiText* aim_readout_ = nullptr;
+	// The integer inputs each live readout was last written from. Empty until
+	// the first write, so that one always happens.
+	std::optional<std::array<int, 2>> shown_connection_;
+	std::optional<int> shown_raw_movement_;
+	std::optional<int> shown_movement_response_;
+	std::optional<std::array<int, 5>> shown_aim_;
 };

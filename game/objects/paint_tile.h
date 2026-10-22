@@ -45,6 +45,11 @@ private:
 	float frame_time_ = 0.0f;
 	int frame_count_ = 0;
 	bool active_ = false;
+	// Which clip frame_time_, frame_count_ and the origin were read from. A
+	// repeat contact with the same sheet and strip reuses them rather than
+	// resolving the strip again; a live tuning edit changes the key.
+	const labrador::SpriteSheet* clip_sheet_ = nullptr;
+	std::string clip_name_;
 	void read_clip(const std::string& animation_strip_name);
 };
 

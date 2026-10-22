@@ -37,6 +37,8 @@ private:
 	std::chrono::steady_clock::time_point started_at_;
 	double simulated_seconds_ = 0.0;
 	double advanced_seconds_ = 0.0;
+	// The whole second the countdown text last showed; empty until the first.
+	std::optional<int> shown_seconds_;
 	bool covered_ = false;
 	bool closing_ = false;
 	bool applying_ = false;

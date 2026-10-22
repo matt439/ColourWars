@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -56,7 +57,9 @@ public:
 
 	explicit DebugMenuModel(DebugDirectorImpl& director);
 
-	// Rebuilt from live values on every call.
+	// Rebuilt from live values on every call. What is expensive to list (a
+	// picker's choices, a tuning node's children) is kept between calls: a
+	// picker's from when it was entered, a node's until the tune documents move.
 	std::vector<DebugMenuRow> rows() const;
 
 	// "DEBUG", "DEBUG / view", "DEBUG / match / stage".
@@ -80,6 +83,9 @@ private:
 	DebugDirectorImpl& director_;
 	std::string category_;
 	std::string picker_;
+	// The picker's choices, read once on entering it: the play picker lists
+	// the replay folder on disk, which the page must not do every frame.
+	std::vector<std::string> picker_choices_;
 
 	// The tuning category walks the content files' paths: the node shown
 	// ("" for the two files, else a prefix ending in '.' or '['), and which
@@ -87,6 +93,15 @@ private:
 	std::string tune_node_;
 	std::size_t tune_page_ = 0;
 	std::vector<DebugMenuRow> tuning_rows() const;
+	// tune_children(tune_paths(), tune_node_), cached against the node and
+	// the director's tune_revision(): building every prefixed path is a
+	// thousand allocations. Filled from rows(), which only the page's update
+	// and the model's own actions call, never a draw.
+	const std::vector<std::string>& tune_node_children() const;
+	mutable std::vector<std::string> tune_children_;
+	mutable std::string tune_children_node_;
+	mutable std::array<int, 3> tune_children_revision_{ -1, -1, -1 };
+	mutable bool tune_children_valid_ = false;
 	std::size_t focus_hint_ = 0;
 	int level_ = 0;
 

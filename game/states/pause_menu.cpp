@@ -145,28 +145,41 @@ void PauseMenuInitial::update_page(float /*dt*/)
 
 void PauseMenuInitial::refresh_connections()
 {
-	std::wstring missing;
-	int count = 0;
-	const std::vector<MenuPlayerSettings> players = this->level_settings()->player_settings();
+	const std::vector<MenuPlayerSettings>& players = this->level_settings()->player_settings();
+	// Both texts follow only which seats are missing, so they are rebuilt when
+	// that set changes; the empty record forces the first build.
+	unsigned int missing_seats = 0;
 	for (int player = 0; player < static_cast<int>(players.size()); ++player)
 	{
-		const int slot = players[player].num;
-		if (pad_seat_missing(slot, *this->data()->gamepads(), this->data()->debug()))
+		if (pad_seat_missing(players[player].num, *this->data()->gamepads(), this->data()->debug()))
 		{
-			if (count > 0)
-			{
-				missing += count % 2 == 0 ? L"\n" : L"   ";
-			}
-			missing += this->level_settings()->player_label(player, this->text());
-			++count;
+			missing_seats |= 1u << player;
 		}
 	}
 	const bool was_waiting = this->waiting_for_players_;
-	this->waiting_for_players_ = !missing.empty();
-	this->connection_status_->set_text(this->waiting_for_players_ ? missing :
-		this->text().connection.all_connected);
-	this->player_num_->set_text(this->waiting_for_players_ ?
-		this->text().connection.controller_lost : this->player_number_text());
+	if (this->shown_missing_seats_ != missing_seats)
+	{
+		std::wstring missing;
+		int count = 0;
+		for (int player = 0; player < static_cast<int>(players.size()); ++player)
+		{
+			if ((missing_seats & (1u << player)) != 0)
+			{
+				if (count > 0)
+				{
+					missing += count % 2 == 0 ? L"\n" : L"   ";
+				}
+				missing += this->level_settings()->player_label(player, this->text());
+				++count;
+			}
+		}
+		this->waiting_for_players_ = !missing.empty();
+		this->connection_status_->set_text(this->waiting_for_players_ ? missing :
+			this->text().connection.all_connected);
+		this->player_num_->set_text(this->waiting_for_players_ ?
+			this->text().connection.controller_lost : this->player_number_text());
+		this->shown_missing_seats_ = missing_seats;
+	}
 	this->connection_status_->set_position(Vector2F(
 		this->calculate_center_position(this->connection_status_->bounds().width,
 			DESIGN_RESOLUTION.x), this->look().status_y));

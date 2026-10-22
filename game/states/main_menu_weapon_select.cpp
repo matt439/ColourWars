@@ -175,14 +175,28 @@ bool MainMenuWeaponSelect::all_players_unconfirmed() const
 void MainMenuWeaponSelect::update_weapon_select_visuals()
 {
 	this->unconfirm_all_widgets();
+	// The frames, name and description follow only the row's weapon, so they
+	// are rewritten when it changes. A new row starts at none, which no row
+	// can select, so its first write always happens. Colours follow readiness
+	// and the live presentation, so they are still set every tick.
+	this->displayed_weapons_.resize(static_cast<size_t>(this->player_count()),
+		WeaponType::none);
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		const WeaponChoicePresentation& choice =
-			this->weapon_select_art_.choice(this->select_states_[i].type);
-		this->player_widgets_[i]->weapon_icon->set_sprite_frame(
-			choice.frame, choice.paint_frame, choice.supply_strip);
-		this->player_widgets_[i]->weapon_name->set_text(choice.name);
+		const WeaponType type = this->select_states_[i].type;
+		WeaponType& displayed = this->displayed_weapons_[static_cast<size_t>(i)];
+		if (displayed != type)
+		{
+			const WeaponChoicePresentation& choice =
+				this->weapon_select_art_.choice(type);
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame(
+				choice.frame, choice.paint_frame, choice.supply_strip);
+			this->player_widgets_[i]->weapon_name->set_text(choice.name);
+			this->player_widgets_[i]->weapon_description->set_text(
+				this->weapon_description(type));
+			displayed = type;
+		}
 
 		if (this->select_states_[i].state == ConfirmationState::confirmed)
 		{
@@ -191,9 +205,6 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 			this->player_widgets_[i]->weapon_name->
 				set_colour(this->paper_art_.focus_ink);
 		}
-
-		this->player_widgets_[i]->weapon_description->set_text(
-			this->weapon_description(this->select_states_[i].type));
 	}
 	this->check_paper_geometry();
 }
@@ -339,7 +350,7 @@ void MainMenuWeaponSelect::init()
 	}
 	this->update_weapon_select_visuals();
 }
-std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type) const
+const std::wstring& MainMenuWeaponSelect::weapon_description(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
 	return this->weapon_descriptions_.at(index);

@@ -94,6 +94,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		&presentation->debug_overlay());
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
 		render_resources, &presentation->hud(), &presentation->player_identity());
+	this->refresh_identity_texts();
 	this->sound_bank_ = audio_resources->sound_bank(sound_bank_name);
 
 	// A silent stage leaves music_ unresolved; every music call checks it.

@@ -58,19 +58,37 @@ public:
 	static mattmath::RectangleF place_panel(const mattmath::Vector2F& size, Anchor anchor,
 		const mattmath::Vector2F& screen, const std::vector<mattmath::RectangleF>& avoid);
 
+	// The panels' resources by handle: the overlay font, the sheet and its
+	// "pixel" frame. Each is a search by name, so a caller drawing every frame
+	// resolves them once, outside the draw, and passes them in.
+	struct OverlayHandles
+	{
+		labrador::RenderResources::SpriteSheetHandle sheet;
+		labrador::SpriteSheet::frame_handle pixel;
+		labrador::FontHandle font;
+
+		static OverlayHandles resolve(const GameData& data);
+	};
+
 	// A small panel of overlay-font lines in a bottom corner of the window,
 	// clear of every pane's HUD (top) and of `avoid` (the opening cards, the
 	// panels drawn before it): the non-default strip (x0.25, PAUSED, GOD ...)
 	// and the paint coverage. Draws nothing for no lines. Returns the panel's
-	// rectangle, empty when nothing was drawn.
+	// rectangle, empty when nothing was drawn. Without `handles`, resolves them.
 	static mattmath::RectangleF draw_panel(labrador::Renderer& renderer, const GameData& data,
 		const std::vector<std::string>& lines, Anchor anchor,
 		const std::vector<mattmath::RectangleF>& avoid = {});
+	static mattmath::RectangleF draw_panel(labrador::Renderer& renderer, const GameData& data,
+		const OverlayHandles& handles, const std::vector<std::string>& lines, Anchor anchor,
+		const std::vector<mattmath::RectangleF>& avoid);
 
 	// The perf overlay, bottom left: a bar graph of the last frames' frame
 	// time over its min / avg / max lines.
 	static mattmath::RectangleF draw_perf(labrador::Renderer& renderer, const GameData& data,
 		const DebugPerf& perf, const std::vector<mattmath::RectangleF>& avoid);
+	static mattmath::RectangleF draw_perf(labrador::Renderer& renderer, const GameData& data,
+		const OverlayHandles& handles, const DebugPerf& perf,
+		const std::vector<mattmath::RectangleF>& avoid);
 
 private:
 	bool live_ = false;

@@ -51,7 +51,7 @@ const JsonLeaf* TuneDocument::find(std::string_view path) const
 
 std::vector<std::string> TuneDocument::prefixed_paths() const
 {
-	// The debug menu asks for this every frame, so it stays linear: calling
+	// The debug menu asks for this whenever the tree changes, so it stays linear: calling
 	// find() per leaf scanned the whole document per leaf, and at a thousand
 	// presentation leaves that cost Debug frames long enough to lose a tap.
 	// A path's tunability is its first leaf's, as find() would answer.
@@ -108,6 +108,7 @@ void TuneDocument::commit(std::string candidate_text, const std::string& path)
 		this->edits_[path] = { baseline, token };
 	}
 	this->current_ = std::move(candidate);
+	++this->revision_;
 }
 
 std::string TuneDocument::reverted(const std::string& path) const
@@ -131,6 +132,7 @@ void TuneDocument::rebase(std::string text)
 	this->baseline_ = document;
 	this->current_ = std::move(document);
 	this->edits_.clear();
+	++this->revision_;
 }
 
 TuneSplice TuneDocument::splice(const std::string& disk_text, bool force) const

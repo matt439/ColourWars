@@ -103,15 +103,10 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	// The HUD uses pane-local coordinates, so draw it with the identity camera.
 	list.set_camera(Camera::DEFAULT_CAMERA);
 
-	const std::size_t view = static_cast<std::size_t>(view_index);
-	const std::wstring device = view < this->seat_labels_.size() &&
-		!this->seat_labels_[view].empty() ?
-		this->seat_labels_[view] : input_slots::device_name(player->player_num());
-	this->interface_gameplay_->draw_gameplay_interface(list,
+	this->interface_gameplay_->draw_gameplay_interface_prepared(list,
 		player_vp.size(),
 		view_index,
-		device,
-		player->team(),
+		this->identity_texts_[static_cast<std::size_t>(view_index)],
 		player->health() / this->tuning_->player().starting_health,
 		player->weapon_ammo() / this->tuning_->starting_ammo(),
 		this->timer_,
@@ -160,6 +155,20 @@ void Level::emphasise_players()
 	if (this->state_ != LevelState::active) { return; }
 	std::fill(this->player_identity_remaining_.begin(), this->player_identity_remaining_.end(),
 		this->presentation_->player_identity().emphasis_duration);
+}
+
+void Level::refresh_identity_texts()
+{
+	this->identity_texts_.resize(this->players_.size());
+	for (std::size_t view = 0; view < this->players_.size(); ++view)
+	{
+		const Player& player = *this->players_[view];
+		const bool labelled = view < this->seat_labels_.size() &&
+			!this->seat_labels_[view].empty();
+		this->identity_texts_[view] = InterfaceGameplay::identity_text(
+			static_cast<int>(view), player.team(), labelled ?
+			this->seat_labels_[view] : input_slots::device_name(player.player_num()));
+	}
 }
 
 void Level::update_player_identity(float dt)
