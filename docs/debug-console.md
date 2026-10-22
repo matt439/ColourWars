@@ -105,11 +105,10 @@ nor pause the match or a menu, and that holds for a chord let go before
 0.5 s. On a menu page only the chording pad's presses are forgotten; the
 keyboard and other pads keep theirs.
 
-**F10 is normally the system's.** The engine hands F10 and a lone Alt to
-`DefWindowProc`, which opens the window's system menu and freezes the game
-until the next key. Debug builds take F10 back with a thread message hook
-(engine report 11); F11 does the same without one. A lone Alt tap still enters
-the system menu: press Escape to leave it.
+**F10 is an ordinary key.** The engine's window treats F10 and a lone Alt as
+keys and nothing else, in every build, so neither opens the system menu or
+freezes the game; F10 and F11 are both read from the `Keyboard`. Alt+Space
+still opens the system menu, and Alt+F4 still closes the window.
 
 In the console:
 
@@ -1240,9 +1239,9 @@ as the game. In Release:
 - The grave key, F2-F9, F11 and the pad chord do nothing (pad Back still
   toggles F1, Start still pauses); the clock always runs one update a frame. No
   script, bind, history or autoexec file is read or written.
-  F10, like a lone Alt, still enters the system menu loop until the next key,
-  because the hook that claims it is Debug-only ([engine report
-  11](review/engine-reports.md)).
+  F10 does nothing either; like a lone Alt, it no longer enters the system
+  menu loop, because the engine treats both as plain keys
+  ([engine report 11](review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--accepted-narrowed-0f3b283)).
 - What does ship, by design, so no class layout depends on `_DEBUG`: the
   `DebugMatchTarget` and `DebugPageTarget` interfaces (their RTTI names and
   vtables), `GameLevel`'s small `debug_*` adapters and the pages'
@@ -1373,7 +1372,8 @@ as the game. In Release:
   real Debug executable, mostly through scripts it writes into each launch's
   isolated profile (`exec`, `+exec`) and the transcript's `echo` markers, with
   key events only where keys are the point: the console, F9 and F1-F4, the
-  F10 debug menu, staging and Apply, Escape into the pause menu, Alt. In order:
+  F10 debug menu, staging and Apply, Escape into the pause menu, and a lone
+  Alt tap that must not freeze the game (informational). In order:
   phases 1-2 (`check_drive.cfg`: goto, status, restart+goto, cheats, the
   screenshot command; `check_menus.cfg`; a 1280x720 launch paused in the
   countdown for the panels and the debug menu); phase 3 (`-Phase3Only`: a
@@ -1390,8 +1390,9 @@ as the game. In Release:
   pad and is covered on the CPU side only. Its Win32 key and screenshot driver
   and its launch, focus and transcript helpers are in
   `scripts/check-debug-console/driver.ps1`, which it dot-sources.
-- The engine reports this forced are 9, 10, 11, 12, 14 (frame statistics),
-  and 13 (key names, closed in `2851ad9`), in
+- The engine reports this forced are 9, 10, 12, 14 (frame statistics),
+  11 (system-menu keys, closed in `0f3b283`) and 13 (key names, closed in
+  `2851ad9`), in
   [engine-reports.md](review/engine-reports.md).
 
 ## Not done

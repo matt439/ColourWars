@@ -5,8 +5,8 @@ param(
     [string]$OutputDirectory,
     [ValidateRange(4, 120)]
     [int]$StartupSeconds = 12,
-    # The lone-Alt probe is informational (engine report 11) and leaves the
-    # window in the system menu loop for a moment if Alt still opens it.
+    # The lone-Alt probe is informational: a lone Alt is an ordinary key to the
+    # engine's window, and the probe records whether the game kept running.
     [switch]$SkipAltProbe,
     # Run only the phase-3 launch (bots, tune, record/play, tuning menu).
     [switch]$Phase3Only,
@@ -231,7 +231,7 @@ try {
     if (-not (Wait-Transcript 'check-menus-done' 40)) { throw 'check_menus.cfg did not finish.' }
     Save-Shot '17-started-from-menus.png'
 
-    # 9: a lone Alt tap (evidence for engine report 11), then quit.
+    # 9: a lone Alt tap, which must not enter the system menu loop, then quit.
     if (-not $SkipAltProbe) {
         $before = Count-Transcript '] status'
         $driver::Tap($alt, $false); Start-Sleep -Milliseconds 500

@@ -170,21 +170,13 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const auto apply = [&](bool display_trial = false)
     {
-        // Win32 leave_fullscreen shows even an initially hidden window. Keep
-        // that real Apply path off the desktop, then hide and rearm the probe.
+        // The real Apply path keeps the hidden probe hidden and inactive.
         const HWND window = static_cast<HWND>(app.window());
-        const SettingsProbeActivationGuard activation(window);
-        require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0,
-            SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE,
-            "Could not keep the settings Apply probe off the desktop");
         const auto before = saved_bytes();
         const auto resolution = preferences.resolution();
         const bool fullscreen = preferences.fullscreen();
         const auto palette = preferences.team_palette();
-        tap(Key::enter);
-        ShowWindow(window, SW_HIDE);
-        app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
-        stack.notify_activation(true); tick();
+        tap(Key::enter); tick();
         require(stack.depth() == (display_trial ? 3 : 2),
             "Settings Apply did not use its expected display-trial or direct-save route");
         if (stack.depth() == 3)
@@ -194,10 +186,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
                 "Display trial committed the staged settings before Keep");
             // The real child begins on Revert. Its first direction follows
             // the neutral tick above, then a fresh confirmation chooses Keep.
-            tap(Key::up); tap(Key::enter);
-            ShowWindow(window, SW_HIDE);
-            app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
-            stack.notify_activation(true); tick();
+            tap(Key::up); tap(Key::enter); tick();
             require(stack.depth() == 2, "Display Keep did not resume the existing Options page");
         }
         require(IsWindowVisible(window) == FALSE && !app.fullscreen() && GetForegroundWindow() != window,
@@ -480,7 +469,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     require(std::filesystem::remove(blocked), "Could not remove the isolated write refusal fixture");
 
     // Saved fullscreen metadata is enough to exercise the disabled row. Only
-    // Off is applied using the isolated offscreen, windowed fixture above.
+    // Off is applied using the isolated hidden, windowed fixture above.
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         true, TeamColourPair::blue_yellow), "Could not seed the fullscreen Options fixture");
     resize_page({ 1280, 720 });

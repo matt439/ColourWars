@@ -143,18 +143,16 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 6 | Shared Music/SFX attenuation remains emitter work | per-emitter saved gains and standalone `audio_gain_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 9 | Per-frame overlay orchestration and separately scoped input routing | client debug forwarding and reader gates; standalone `input_observer.cpp` | local unfiled observer draft - master checked 2026-10-20; synthetic Debug/Release runs pass; capture/routing remains separately scoped |
 | 10 | Optional host capture convenience without State lifecycle changes | `capture_stack` plus the tested public-API final-State alternative | local unfiled request - master checked 2026-10-20; Debug/Release controls pass; unavoidable-redraw claim withdrawn |
-| 11 | Optional opt-out for bare system-menu keys | native F10 queue hook and standalone `system_keys_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release requests reproduce |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 14 | No frame statistics or GPU timing | client perf hooks and standalone `frame_phase_boundaries.cpp` | local unfiled CPU-phase request - master checked 2026-10-20; manual public-call example passes Debug/Release |
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
-| 16 | Windowed Apply shows a deliberately hidden window | standalone `hidden_apply_exhibit.cpp` and the client Apply guard | local unfiled bug draft - master checked 2026-10-20; Debug/Release reproduce |
-| 17 | DPI-correct client-size conversion for an opted-in application | existing awareness manifest and standalone hidden `window-dpi/` baseline/arithmetic fixture | local unfiled request - master checked 2026-10-20; Debug/Release 96-DPI baselines pass; scaled/transition acceptance remains open |
 | 18 | Independent Label visibility convenience | supported zero-tint/empty-text alternatives and standalone `label-visibility/` null recording | local unfiled draft - master checked 2026-10-20; null Debug/Release verified; order/retirement/font questions stay separate |
-| 19 | No public later-show convenience for an Application initialized hidden | exact standalone hidden-creation control and `game/main.cpp` startup order | local unfiled request - master checked 2026-10-20; four hidden Debug/Release cases pass; first present remains open |
 | 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
 | 22 | Handle-holding drawables can only be re-pointed by name | paint-splash reset, projectile construction and figure clip changes, each handing back a name | local unfiled draft - checked against upstream master `0c15f34` 2026-10-22; no sanitized request or synthetic example yet |
 
-Nothing else is outstanding, on either side, beyond the live reports below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond the live reports below and the
+evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
+leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -248,8 +246,8 @@ that same key for gameplay, so simultaneous play/type and deletion of the
 whole-seat filter are not promised.
 
 Existing polling, edges, thresholds, focus/connection notifications and mouse
-capture-cancellation epochs are not missing. System-key interception remains
-ENG#11; key labels, control-key repeat, post-stack drawing and pad identity are
+capture-cancellation epochs are not missing. System-key interception was
+report 11, [closed](#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--accepted-narrowed-0f3b283); key labels, control-key repeat, post-stack drawing and pad identity are
 outside the prepared observer slice. Both halves remain unfiled, the engine
 is unchanged, and upstream must be refreshed immediately before filing.
 
@@ -343,52 +341,6 @@ stall or supply asynchronous copy/frame lifetimes.
 **Status:** local unfiled request. Review this narrowed scope and refresh
 upstream immediately before authorized filing through the publication gate.
 No host hook, game integration or public issue was made.
-
----
-
-## 11. F10 and a lone Alt belong to the system menu, with no opt-out — **draft, low priority**
-
-The [minimal optional-mechanism report](../engine-reports/system-menu-keys.md)
-and [standalone Application exhibit](../../scripts/engine-reports/system_keys_exhibit.cpp)
-make the existing Debug F10 workaround concrete. Key messages do reach the
-engine's void callbacks before the Win32 procedure continues to
-`DefWindowProc`; the gap is a caller option to suppress the resulting bare
-system-menu request. F10 is not untranslated or inherently unbindable.
-
-Fresh engine master `52e809a5a0229d37db4373faa7853df4c861a310` was checked on
-2026-10-20 at 19:34:53 UTC, with the complete engine worktree matched to that
-tree. No bare-system-menu option is present. The client still uses its
-Debug-only `WH_GETMESSAGE` hook in `debug_director_impl.cpp` to consume bare
-F10 before dispatch and count the press itself.
-
-Both MSVC 19.51.36256.0 `/W4 /WX` Debug/Release runs exit 0 with empty stderr.
-The real hidden Application receives only synthetic messages directed to its
-owned HWND. Each A/F10/Alt pair reaches raw engine down/up snapshots once;
-A produces no menu request, while F10 and bare Alt each produce one
-zero-character `SC_KEYMENU`. An owned WndProc barrier consumes that command
-before default handling, after a direct command self-test. No menu loop is
-entered. Repeated native hidden/offscreen/nonforeground checks pass, and the
-initial engine logical keyboard-focus value of 1 remains unchanged at all
-sample points; this logical value is not an OS-focus trace.
-
-The normal D3D11/XAudio2 services initialize with one worker/view, but no
-manifest, assets, state or game objects are loaded and no sound is played.
-Only the owned HWND is moved offscreen, a current-thread CBT guard vetoes only
-its activation, and its original WndProc is restored. No global input or
-foreground manipulation is used.
-
-The request is an optional bare-menu suppression mechanism that preserves
-key delivery and leaves native defaults available. Alt+F4 and other command/
-mnemonic contracts remain required follow-up acceptance, not tested facts.
-An answer could remove the native F10 queue hook and manual counter; F11
-retention is client UI policy. The fixture does not measure physical input
-delivery, an actual modal pause or human/hardware acceptance.
-
-Receipts are under
-`out/validation/crossfeed-20261020/system-keys-report-final-v2/`. The earlier
-fixture's invalid false-logical-focus assumption and incomplete wrapper
-receipt remain private. The engine is unchanged, the draft remains unfiled,
-and upstream must be refreshed immediately before filing.
 
 ---
 
@@ -610,92 +562,6 @@ preparation makes neither and changes no engine pin.
 
 ---
 
-## 16. Windowed Apply shows a deliberately hidden window — **draft with probe exhibit**
-
-Observed in the actual Options page on 2026-10-15 and now reproduced by the
-[minimal engine-only bug report](../engine-reports/hidden-window-apply.md) and
-[standalone Application exhibit](../../scripts/engine-reports/hidden_apply_exhibit.cpp).
-An application initialized with `visible=false` and `fullscreen=false` becomes
-visible according to `IsWindowVisible` after `set_fullscreen(false)`.
-
-Fresh upstream master was checked on 2026-10-20 at 19:34:53 UTC:
-`52e809a5a0229d37db4373faa7853df4c861a310`. Application still calls
-`Window::leave_fullscreen` unconditionally for false, and the Win32 method
-still calls `ShowWindow(handle, SW_SHOWNORMAL)`.
-
-Both MSVC 19.51.36256.0 `/W4 /WX` Debug/Release runs reproduce the same
-hidden -> visible -> hidden flag sequence, exit 0 and have empty stderr.
-The actual D3D11/XAudio2 Application initializes one worker/view but loads no
-manifest, game objects, assets or state and plays no sound. Its owned HWND is
-placed outside the virtual desktop, a current-thread CBT guard vetoes only its
-activation, and the program samples then immediately hides it. Its before/after
-foreground/bounds checks pass; this is not a continuous OS-focus trace.
-
-The client workaround remains the `apply` helper in
-[`settings_menu_checks.h`](../../scripts/acceptance/painter_visual/settings_menu_checks.h):
-move the owned window offscreen, guard activation, Apply, hide and rearm local
-input. The request is to preserve deliberate hidden visibility, including an
-already-windowed Apply, so that guard can go.
-
-Receipts are under
-`out/validation/crossfeed-20261020/hidden-apply-report-final-v1/`, including
-`result.json`, both compile argument/log sets and process stdout/stderr. No
-engine change or public issue was made. Refresh upstream immediately before
-filing the unfiled bug draft. Fullscreen, DPI/monitor, human, pad, listening
-and performance gates remain open.
-
----
-
-## 17. The Win32 window ignores DPI once the client opts in — **draft with manifest exhibit**
-
-**Minimal report prepared 2026-10-20.** The
-[DPI-correct sizing request](../engine-reports/window-dpi.md),
-[synthetic source](../../scripts/engine-reports/window-dpi/dpi_window_baseline.cpp)
-and dedicated manifest remain **unfiled**. Fresh upstream master was fetched
-at 19:34:53 UTC as `52e809a5a0229d37db4373faa7853df4c861a310`; the engine
-worktree was checked against that tree. Refresh upstream before filing through
-the [publication gate](#publication-gate-engpublish).
-
-ColourWars already opts into per-monitor-v2 in
-[its executable manifest](../../game/settings.manifest), and
-[startup acceptance](../../scripts/check-startup.ps1) checks its process/window
-awareness. The executable chooses this policy. A manifest is the recommended
-declaration; an API call before window creation is also supported.
-
-At the checked engine revision, `outer_size_for_client` uses the DPI-unaware
-`AdjustWindowRectEx` for creation and windowed resize arithmetic. Window has
-no `WM_DPICHANGED` case or public DPI query/notification. Existing `WM_SIZE`
-handling already adopts actual client dimensions in layout and renderer state.
-The primary API contract establishes a source mismatch for per-monitor-aware
-callers; no exact scaled-monitor pixel error is claimed from this host.
-
-Both standalone Debug/Release builds pass under MSVC 19.51.36256.0 `/W4 /WX`,
-exit 0 with empty stderr and share seven identical normalized stdout lines.
-The actual hidden HWND reports per-monitor-v2 context at 96 DPI, an exact
-1280x720 client, and matching layout/back buffer. Independent rectangle queries
-return 1296x759 at 96 DPI, 1298x767 at 120, 1302x776 at 144 and 1306x791 at
-192; those queries do not move the window or change its effective DPI.
-Source/recipe hashes, compile logs and explicit process receipts are retained
-under `out/validation/crossfeed-20261020/dpi-report-final-v1/`.
-
-The request is DPI-correct conversion of an explicit client-pixel request and
-a documented transition policy. Microsoft's suggested-rectangle behavior and
-always keeping a requested physical-pixel size are different choices; the
-latter is not prescribed as the only correct handler. A portable DPI accessor
-is a separate potential request; this Windows client already has a native
-HWND escape hatch.
-
-The source changes no display settings, moves no monitor/window, sends no
-synthetic DPI message, starts no loop and renders no pixels. It is a 100%
-baseline, not mixed-DPI or sharpness acceptance. No client workaround is
-deleted, and the awareness manifest stays. Engine
-[G151](../../external/labrador/docs/product/GAP-REGISTER.md#g151) and
-[OCA-66](../../external/labrador/docs/product/STORIES.md#oca-66) still own the
-template awareness decision and attended 150% result; this report does not
-close them.
-
----
-
 <a id="18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit"></a>
 
 ## 18. Independent Label visibility convenience — **draft with station-label exhibit**
@@ -740,84 +606,6 @@ A visibility flag alone would not delete the client's lazy first-use
 labels. Keep these questions separate when preparing further exhibits.
 Freshly fetch and recheck upstream master before any filing through the
 [publication gate](#publication-gate-engpublish).
-
----
-
-<a id="19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit"></a>
-
-## 19. No public later-show convenience for a hidden Application - **draft with hidden-creation exhibit**
-
-The sanitized [request](../engine-reports/startup-visibility.md),
-[exact tested source](../../scripts/engine-reports/startup-visibility/startup_hidden_creation.cpp)
-and [public build recipe](../../scripts/engine-reports/startup-visibility/build-startup-hidden.ps1)
-are prepared and remain **unfiled**. The stable old section anchor is retained
-above; its former unretained timing is not current supporting evidence.
-
-### Existing capability and bounded gap
-
-`ApplicationOptions::visible=false` already creates a hidden window, including
-its device/services. `Application` and `Window` expose native handles but no
-public later-show convenience. A Windows client can use `ShowWindow` through
-`Application::window()`; that alternative is available and is not proven
-broken. It requires the caller to choose platform show-command, sizing and
-focus policy. This client has no production later-show workaround to delete.
-
-Fresh upstream master was fetched on 2026-10-20 at 19:34:53 UTC as
-`52e809a5a0229d37db4373faa7853df4c861a310`, with the whole engine worktree
-confirmed unchanged against that `FETCH_HEAD`. Win32 chooses `SW_HIDE` for
-hidden creation; its default-visible branch requests `SW_SHOWDEFAULT` or
-`SW_SHOWMAXIMIZED`. Actual windowed visibility also follows launcher policy.
-A hidden smoke launch does not establish normal first-visible startup pixels.
-
-The order in [game/main.cpp](../../game/main.cpp) still matters: initialize,
-register kinds, load/validate content, construct the first state and run. The
-initial default-visible request precedes device/content setup, but neither the
-historical unretained timing nor hidden controls measure an actual first
-present. The old claim that one `app.show()` after validation closes startup
-is withdrawn: first-state construction and first rendering still follow.
-
-### Measured positive control
-
-Two direct MSVC 19.51.36256.0 `/W4 /WX` builds link the existing D3D11,
-XAudio2 and XInput shell/dependencies. Four sequential Debug/Release
-windowed/fullscreen-option runs all exited 0 with empty stderr. Each observed
-an owned hidden HWND, 1280x720 client/layout/back-buffer sizes and Direct3D 11,
-then verified destruction during scope teardown. The fullscreen-option data
-is a hidden-creation observation, not monitor-sized geometry or a transition
-guarantee.
-
-The source loads no assets or save, starts no state loop, and performs no
-drawing, presentation, showing, input injection or foreground request. It initializes
-real devices; asset-free does not mean device-free. Runtime checks remain
-active in Release. Header inspection establishes the absent public method;
-the runtime control establishes only the already-supported hidden half.
-
-Receipts are retained under
-`out/validation/crossfeed-20261020/startup-visibility-report-final-v1/`, with
-two compile argument/log sets, four stdout/stderr pairs and `result.json`.
-The exact source SHA-256 is
-`E4CE532B903884BC2B6A06D3CF228554E042251D1FDCD93E7F2BBB9C48DC6A1E`.
-The source/build recipe preserve prepared bytes; local Git attributes retain
-LF so the recipe's source-hash guard survives Windows checkout.
-
-### The request and remaining startup gate
-
-Consider an explicit public later-show operation or a documented supported
-sequence, with launcher show-command, fullscreen sizing and focus/input
-effects specified. Intentionally hidden tools must remain hidden unless they
-explicitly request otherwise. Documenting native-handle use is a possible
-answer; no failing direct-Win32 sequence is claimed. The fullscreen-Apply
-visibility issue remains separate report 16.
-
-First-visible game content and `GAP#5.1` remain open. Showing after validation
-alone, automatic clear/present, loading-card/transition design, startup timing
-and hardware/human acceptance are outside this control's evidence. A retained
-rendered/visibility check at the actual first-frame boundary is still needed
-before the client's startup half can close.
-
-**Status:** local unfiled request, low priority. Review the prepared report and
-refresh upstream immediately before authorized filing through the publication
-gate. No engine change, first-frame closure or public issue was made.
 
 ---
 
@@ -999,7 +787,8 @@ workaround where it is still closes the report. Kept as outcomes rather than as
 reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
 [What the audit changed](#what-the-audit-changed) for reports 1–5, `f81e937`
-for 7 and 8, and the parent of `7041dc1` for 13 and 21.
+for 7 and 8, the parent of `7041dc1` for 13 and 21, and `a0e6f7e` for 11, 16,
+17 and 19.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -1163,6 +952,54 @@ the same two characters, in two repositories, for the reason report 5 records �
 and this one is exempting them from a region check rather than from a glyph
 lookup.
 
+## 11. ~~F10 and a lone Alt belong to the system menu, with no opt-out~~ — accepted, narrowed, `0f3b283`
+
+Asked for an optional caller mechanism to suppress the bare system-menu
+request, the zero-character `SC_KEYMENU` that F10 and a lone Alt each send,
+while keeping key delivery and leaving native defaults available.
+**Accepted, narrowed**, in "Let F10 and Alt alone be keys, not the system
+menu". The Win32 window now returns 0 for every `WM_SYSCOMMAND` that is
+`SC_KEYMENU` with an `lParam` of zero, unconditionally and in every build;
+Alt+F4, Alt+Space and Alt+Tab still reach `DefWindowProc` and stay the
+system's, and `window.h`'s `on_key_down` says so publicly. The *option* was
+declined (T1, T3): its other value is a game frozen in a menu loop on a window
+with no menu bar, and nothing in either repository would set it. AppTests pin
+the predicate and the F10/Alt key edges. There is no live menu-loop case,
+because `SC_KEYMENU` on a hidden window never enters the loop, so a physical
+F10 and bare Alt on a focused window remain the engine's attended check.
+
+**Spent** in this commit. The Debug-only `WH_GETMESSAGE` hook in
+`debug_director_impl.cpp` and its press counter are deleted, and F10 is read
+from `Keyboard` like F11. So is the second channel that existed only because
+the hook hid F10 from `Keyboard`: `DebugDirector::capture_blocked_key_down`,
+`KeyboardJumpCapture::update`'s `blocked_key_down` parameter and its
+double-count guard, `forget_menu_key` and its four callers, and
+`reset_menu_key_if_unfocused`. Keyboard edges are per frame and `Keyboard`
+drops held keys on focus loss itself, so no counter is left to clear. The
+capture acceptance now holds F10 through `Keyboard` and pins the same three
+behaviours (a held F10 blocks neutral entry, F10+J is ambiguous, F10 alone is
+unsupported); the "reported through both channels" case went with its second
+channel. The ownership matrix's posted-F10 cases became `Keyboard` presses,
+with the count unchanged. `debug-console.md` and AGENTS.md lose their hook
+paragraphs. `check-debug-console.ps1`'s lone-Alt probe stays informational,
+without its report-11 framing; it is the nearest local thing to the engine's
+attended check, and was not run for this commit. One behaviour moved: Alt+F10
+now toggles the debug menu, as Alt+F11 always did, because the hook's bit-29
+exemption for it is not reproduced.
+
+**The prediction was wrong three ways.** The draft asked for an option that
+left native defaults available; the engine declined the option and swallows
+the bare command for every caller. The ledger said an answer "could remove the
+native F10 queue hook and manual counter". It removed more: the hook hid F10
+from `Keyboard`, so a whole second channel had been built to make F10 visible
+to Keyboard Jump capture again, and all of it was spendable. And the ledger
+counted only Debug. Release never had the hook, so F10 or a lone Alt froze a
+Release game in the system menu loop until the next key; the engine fixed that
+with no client change, and `debug-console.md`'s Release section stopped saying
+otherwise. The draft's "Alt+F4 and other command contracts remain required
+follow-up acceptance" did not survive either: the engine kept them by
+construction, narrower than GLFW, which drops Alt+Space too.
+
 ## 13. ~~`Key` has no names~~ — `2851ad9`
 
 Asked for `key_name(Key)` and `key_from_name(std::string_view)` next to the
@@ -1202,6 +1039,144 @@ parse is only a warning, so dropping them would lose binds silently. The
 `del`-or-`delete` question the draft left open went against this spelling.
 The bindable subset stays explicit too: walking the whole enum would make bare
 `shift` and `control` bindable, which collide with the chord modifiers.
+
+## 16. ~~Windowed Apply shows a deliberately hidden window~~ — `7db3d5c`
+
+Asked that an Application initialized with `visible=false` stay hidden through
+`set_fullscreen(false)`, including an already-windowed Apply. **Accepted, and
+widened**, in "Keep a hidden window hidden when it changes full screen".
+`enter_fullscreen` had the same defect (`SW_SHOWMAXIMIZED`), so both paths now
+read `IsWindowVisible` at call time and size a hidden window with
+`SetWindowPos` and `SWP_NOACTIVATE`, never showing it; entering uses a
+file-local `monitor_rect`, which throws naming the step if `GetMonitorInfoW`
+fails. A shown window keeps its old path. Only the size is promised: a hidden
+full-screen window is restored rather than maximised, and `WM_SIZE` reports
+both alike. The `visible` comments in `application.h` and `window.h` now say
+the engine never shows a window created hidden. The optional monitor-sizing of
+hidden full-screen *creation* was left out by the owner.
+
+**Spent, in part,** in this commit. In the seven painter fixtures that wrapped
+Apply (save status, settings menu, display trial, Home alpha, Options defaults,
+paused Options, settings values) the `SetWindowPos(-32000, -32000)` move off
+the desktop, the `ShowWindow(SW_HIDE)` after each Apply, Keep and rollback, and
+the keyboard/mouse/stack re-arm that undid them are deleted: the window now
+stays hidden unaided. Each fixture keeps its "not visible, not foreground, not
+full screen" requirement, which is now a regression check on the engine's
+contract instead of something the fixture restored. Save status, settings menu
+and settings values also lose `SettingsProbeActivationGuard`, the `WH_CBT` veto
+on the probe's activation. Production code needed nothing; the game is visible
+and `display_confirmation.cpp` already calls the ordinary `set_fullscreen`.
+
+**The guard stays in four fixtures, and why is a new finding.** Display trial,
+Home alpha, Options defaults and paused Options each resize the hidden window,
+and without the veto all four failed their foreground check. Home alpha
+isolates it: before `app.set_resolution(1280x720)` the window is hidden,
+inactive and not foreground; after, it is still hidden but active and the
+foreground window. `Window::resize_client` sizes with `SetWindowPos(...,
+SWP_NOMOVE | SWP_NOZORDER)` and no `SWP_NOACTIVATE`, so it activates a hidden
+window, which breaks the same "takes no focus" promise report 16 was about, on
+a path that report never named. The guard's comment now says so. It is
+unfiled, and the next report to draft from this client.
+
+**The prediction was wrong about the size of the workaround, both ways.** The
+ledger named it as "the `apply` helper in `settings_menu_checks.h`". The guard
+was defined in `save_status_checks.h` and used in seven fixtures, so the spend
+reached seven files, not one. The report asked only about leaving full screen;
+the fixtures that trial full screen On were behind the guard for the entering
+path, which the report never named. But the guard was also covering a third
+path, the windowed resize, so "that guard can go" was true for only three of
+the seven. And the hidden controls' 1280x720 "size report" was a premise the
+engine corrected: a hidden windowed window makes no size report before its
+constructor returns, and the preset is 1280x720, so that observation could not
+tell.
+
+## 17. ~~The Win32 window ignores DPI once the client opts in~~ — accepted, narrowed, `dae6c87`
+
+Asked for DPI-correct conversion of an explicit client-pixel request in a
+process that has opted into per-monitor awareness, and a documented transition
+policy. **Accepted, narrowed**, in "Keep the client size in a
+per-monitor-aware process". `outer_size_for_client` takes a DPI and calls
+`AdjustWindowRectExForDpi`. Creation sizes at the system DPI and corrects
+before the show if a v2 window lands on another density; `resize_client` and
+`leave_fullscreen` use the window's own DPI under v2. `WM_GETDPISCALEDSIZE`
+answers the outer size that keeps the current client (with no full-screen
+special case, and `FALSE` while iconic), and `WM_DPICHANGED` applies the
+suggested rect under v2. Per-monitor v1 behaves as before. The policy is that
+physical client pixels are kept: Microsoft's default logical-size rect was
+declined as fighting `set_resolution`'s contract, and a portable DPI query or
+notification was declined under T1. To import the per-DPI calls statically the
+owner set the engine's Windows floor at **Windows 10 1607** (G105, with its own
+CHANGES entry). Only synthetic-message AppTests ship; real scaled and mixed-DPI
+runs stay attended work under the engine's OCA-66.
+
+**Spent: nothing in code**, as predicted. No client code re-adjusted the outer
+rect, so nothing was deleted. `game/settings.manifest`'s comment that the
+engine "does not yet size itself for a changed DPI" is rewritten: under the
+manifest's per-monitor-v2 declaration the engine keeps the requested client
+size, across DPI changes too. The declaration and `check-startup.ps1`'s
+PerMonitorV2 check stay; they are this client's policy. The manifest's
+Vista-8.1 `supportedOS` entries now describe systems the engine cannot load on,
+and are left for a housekeeping pass, since they change nothing.
+
+**The prediction was right about the code and missed two things.** It did not
+foresee the floor: ColourWars links the engine, so it inherits Windows 10
+1607, and a pre-1607 Windows now fails at load on a missing import with no
+build-time signal. The README already says Windows 10/11 x64, so nothing this
+repository promised breaks. And the draft allowed that Microsoft's
+suggested-rect behaviour was as valid an answer as keeping physical pixels; the
+engine ruled it out on its own resolution contract. A scaled-display look at
+ColourWars is not this report's business: OCA-66 owns the attended runs, and
+this repository's own, if it wants one, would be a new `DECISION` row.
+
+<a id="19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit"></a>
+
+## 19. ~~No public later-show convenience for a hidden Application~~ — needs more evidence, `cacf112`
+
+Asked for an explicit public later-show operation for an Application
+initialized hidden, or a documented supported sequence for a native
+`ShowWindow`, with show command, full-screen sizing and focus specified.
+**Needs more evidence**, recorded in "Record the engine's decision on each of
+ColourWars' fifteen live reports"; the engine's own table leaves the row open
+while it waits. There is no `Window::show()` or `Application::show()`, and the
+document-only closure the draft offered was declined as "the same commitment
+as `show()` made in prose": it would choose show command, focus and full-screen
+sizing without first-frame evidence. The engine reframed the question as what a
+default-visible launch shows between `ShowWindow` and the first present. The
+window is shown inside the `Window` constructor, before the device exists, and
+is painted with the `COLOR_WINDOW + 1` class brush until then. If that is the
+problem, its preferred fix is engine-side and has no new name: size with 16's
+`monitor_rect`, show after the first `end_frame`, and a null or black brush,
+which fixes every visible game without a client call. What shipped, in 16's
+`7db3d5c`: the `visible` comments say the engine never shows a window created
+hidden and that a window shown by other means is outside the contract, and the
+`Window` constructor comment says a hidden windowed window makes no size report
+before it returns, which answered the draft's open question (a).
+
+**Spent: nothing in code.** `game/main.cpp` keeps its initialize, register,
+load/validate, first-state, run order, and no native `ShowWindow` was added:
+the engine declined to bless that sequence and puts a natively shown window
+outside its contract. The draft and the hidden-creation exhibit are deleted,
+and the polish plan's "needs an engine show-after-load" is restated.
+
+**Outstanding, and this repository's** (`GAP#5.1`, now `DECISION`). The engine
+asks for two captures, each recorded with commit and date: a default-visible
+`x64-release` launch of `samples/minimal` and of ColourWars on the owner's
+desktop, from `ShowWindow` to the first present (the class brush or not, and
+for how long); and the same with a hidden launch and a native `ShowWindow`
+after the first state is constructed. If the first shows a flash and the second
+cures it, the engine-side fix above follows. They go back to Labrador as new
+evidence on its decision, not as this report reopened. They are attended screen
+captures, not ctest.
+
+**The prediction was wrong about what the problem is.** The draft offered a
+later-show call or a documented sequence as acceptable; the engine took
+neither. The ledger and the polish plan treated the issue as *when* the window
+is shown relative to the client's loading, so a client call after validation;
+the engine thinks the likely cure is automatic and in the engine, and points
+out that the white flash itself has never been observed. The hidden control's
+1280x720 size report, offered as the supported half, could not distinguish
+anything: a hidden windowed window makes no size report before its constructor
+returns.
 
 ## 21. ~~Digital action evaluation remains client code~~ — declined, `197aff1`
 

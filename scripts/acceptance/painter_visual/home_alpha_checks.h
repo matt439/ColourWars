@@ -49,13 +49,10 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     MenuContext context(&data, &input, &plan);
     const HWND window = static_cast<HWND>(app.window());
     require(IsWindow(window) != FALSE && !app.fullscreen(), "Home alpha fixture needs its own windowed process");
+    // set_resolution would activate the hidden window; trials resize it too, so
+    // the veto stays until every retained trial is destroyed.
     const SettingsProbeActivationGuard activation(window);
-    require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0,
-        SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE,
-        "Cannot keep the Home alpha fixture's private window offscreen");
-    ShowWindow(window, SW_HIDE);
     app.set_resolution(ScreenResolution::s_1280_720);
-    ShowWindow(window, SW_HIDE);
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     require(app.resolution_manager()->resolution_ivec() == Vector2I(1280, 720) &&
         IsWindowVisible(window) == FALSE && GetForegroundWindow() != window && !app.fullscreen(),
@@ -66,7 +63,7 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         StateContext& stack; Presentation& presentation; Presentation original; HWND window;
         ~RestoreHomeAlpha()
         {
-            this->stack.clear(); ShowWindow(this->window, SW_HIDE); this->presentation = this->original;
+            this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, presentation, original, window };
     const auto unchanged = [&]
@@ -123,9 +120,7 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         default: throw std::runtime_error("Home alpha fixture contains an unknown capture site");
         }
         ++openings;
-        // Trial Apply and rollback target the same private window/preset. The
-        // activation hook stays active until every retained trial is destroyed.
-        ShowWindow(window, SW_HIDE);
+        // Trial Apply and rollback target the same private window/preset.
         require(stack.depth() == 1, "Home alpha page factory changed its local stack depth");
         unchanged();
     };

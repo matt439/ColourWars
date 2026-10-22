@@ -25,52 +25,6 @@
 
 using namespace labrador;
 
-namespace
-{
-	// F10 never reaches the engine as a key the game can bind: the window
-	// procedure hands WM_SYSKEYUP to DefWindowProc, which opens the system
-	// menu's modal loop and freezes the game until the next key. A thread
-	// message hook, installed only while a Debug director is attached, takes
-	// F10 out of the queue before the window sees it and counts the press.
-	// Engine report 11 asks for a way to do this without a hook.
-	int f10_presses = 0;
-	bool f10_down = false;
-
-	LRESULT CALLBACK f10_message_hook(int code, WPARAM remove, LPARAM message_pointer)
-	{
-		if (code == HC_ACTION && message_pointer != 0)
-		{
-			MSG* message = reinterpret_cast<MSG*>(message_pointer);
-			const bool key = message->message == WM_SYSKEYDOWN || message->message == WM_SYSKEYUP ||
-				message->message == WM_KEYDOWN || message->message == WM_KEYUP;
-			// Bit 29 is Alt: Alt+F10 stays the system's.
-			const bool alt = (message->lParam & (1 << 29)) != 0;
-			if (key && message->wParam == VK_F10)
-			{
-				const bool down = message->message == WM_SYSKEYDOWN || message->message == WM_KEYDOWN;
-				// Bit 30: the key was already down (auto-repeat).
-				const bool repeat = (message->lParam & (1 << 30)) != 0;
-				if (remove == PM_REMOVE)
-				{
-					// Track repeats and Alt transitions too: capture must not
-					// mistake F10+A for a single neutral-to-A gesture.
-					f10_down = down;
-					if (!alt && down && !repeat) { ++f10_presses; }
-				}
-				if (!alt) { message->message = WM_NULL; }
-			}
-		}
-		return CallNextHookEx(nullptr, code, remove, message_pointer);
-	}
-
-	bool take_f10_press()
-	{
-		const bool pressed = f10_presses > 0;
-		f10_presses = 0;
-		return pressed;
-	}
-}
-
 // ---------------------------------------------------------------------------
 
 DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentation) :
@@ -97,15 +51,7 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->tune_targets_[1] = std::make_unique<PresentationTarget>(presentation, tuning);
 }
 
-DebugDirectorImpl::~DebugDirectorImpl()
-{
-	if (this->f10_hook_ != nullptr)
-	{
-		UnhookWindowsHookEx(static_cast<HHOOK>(this->f10_hook_));
-		f10_presses = 0;
-		f10_down = false;
-	}
-}
+DebugDirectorImpl::~DebugDirectorImpl() = default;
 
 DebugStatus DebugDirectorImpl::submit_console_line(const std::string& line)
 {
@@ -123,18 +69,6 @@ void DebugDirectorImpl::attach(Application* application, GameData* data)
 	if (application != nullptr)
 	{
 		this->load_tune_documents();
-	}
-	if (application != nullptr && this->f10_hook_ == nullptr)
-	{
-		f10_presses = 0;
-		f10_down = false;
-		this->f10_hook_ = SetWindowsHookExW(WH_GETMESSAGE, f10_message_hook, nullptr,
-			GetCurrentThreadId());
-		if (this->f10_hook_ == nullptr)
-		{
-			this->log_.warning("F10 is the system's (the message hook failed); use F11 "
-				"for the debug menu");
-		}
 	}
 }
 
@@ -367,32 +301,15 @@ DebugChord::Pads DebugDirectorImpl::debug_pads() const
 	return pads;
 }
 
-void DebugDirectorImpl::reset_menu_key_if_unfocused() const
-{
-	if (this->f10_hook_ != nullptr && this->application_ != nullptr &&
-		(this->application_->keyboard() == nullptr || !this->application_->keyboard()->focused()))
-	{
-		f10_presses = 0;
-		f10_down = false;
-	}
-}
-
-bool DebugDirectorImpl::capture_blocked_key_down() const
-{
-	this->reset_menu_key_if_unfocused();
-	return this->f10_hook_ != nullptr && f10_down;
-}
-
 bool DebugDirectorImpl::poll_debug_menu_toggle(float dt)
 {
 	if (this->data_ == nullptr || this->application_ == nullptr)
 	{
 		return false;
 	}
-	this->reset_menu_key_if_unfocused();
 	const DebugChord::Pads pads = this->debug_pads();
 	const bool chord = this->chord_.update(pads, dt);
-	const bool f10 = take_f10_press();
+	const bool f10 = this->data_->keyboard()->pressed(Key::f10);
 	const bool f11 = this->data_->keyboard()->pressed(Key::f11);
 	if (!chord && !f10 && !f11)
 	{
@@ -407,12 +324,6 @@ bool DebugDirectorImpl::poll_debug_menu_toggle(float dt)
 		this->open_debug_menu();
 	}
 	return true;
-}
-
-void DebugDirectorImpl::forget_menu_key()
-{
-	this->reset_menu_key_if_unfocused();
-	take_f10_press();
 }
 
 void DebugDirectorImpl::open_debug_menu()

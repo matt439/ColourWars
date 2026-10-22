@@ -89,8 +89,6 @@ void DebugConsoleView::init(const GameData& data)
 DebugConsoleView::Outcome DebugConsoleView::update(const Keyboard& keyboard, float dt,
 	DebugDirectorImpl& director)
 {
-	director.forget_menu_key();
-
 	// The grave key toggles. Its own character is dropped by returning before
 	// typed() is read, and while it is held or released all text is dropped.
 	if (!this->first_update_ && keyboard.pressed(Key::grave))

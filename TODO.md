@@ -45,7 +45,8 @@ This is a selection guide, not another priority order; each owner defines a boun
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
-  and a supported hardware baseline (`POL#25`).
+  and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
+  (`GAP#5.1`).
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -123,7 +124,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 |---|---|---|---|---|
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `GAP#4.2` | UNSCOPED | MED | L | Define the next bounded action/pad rebinding slice; keyboard Jump is implemented and validated. Rebinding artwork remains a later UI pass. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
-| `GAP#5.1` | BLOCKED | LOW | M | The blank startup window waits on `ENG#19`. Hard-cut transitions are a later UI-art slice using the approved style. Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. |
+| `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
 
@@ -151,16 +152,12 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#6` | OPEN | MED | S | Review the prepared shared Music/SFX attenuation request and refresh upstream before filing; its synthetic null-audio Debug/Release exhibit passes and remains unfiled. Listener/voice-budget proposals remain outside this slice. [Report](docs/engine-reports/audio-attenuation.md). |
 | `ENG#9` | OPEN | MED | S | Review the prepared optional post-poll observer request and refresh upstream immediately before filing; its synthetic Debug/Release exhibit passes. Input routing/capture remains separately scoped and unanswered. [Report](docs/engine-reports/input-observer.md). |
 | `ENG#10` | OPEN | LOW | S | Review the narrowed, unfiled host-capture convenience request and tested final-State alternative; refresh upstream before filing. Redraw is not unavoidable, and no displayed-frame outcome is qualified. [Report](docs/engine-reports/frame-readback.md). |
-| `ENG#11` | OPEN | LOW | S | Review the prepared optional bare-system-menu suppression request and refresh upstream before filing; synthetic Debug/Release F10/Alt requests reproduce and remain unfiled. [Report](docs/engine-reports/system-menu-keys.md). |
 | `ENG#12` | OPEN | MED | S | Review the prepared named in-memory JSON parsing request and refresh upstream before filing; its synthetic CMake Debug/Release exhibit passes and remains unfiled. Object enumeration/source-span portions remain open. [Report](docs/engine-reports/json-candidate-parsing.md). |
 | `ENG#14` | OPEN | LOW | S | Review the prepared CPU frame-statistics request and refresh upstream before filing; its manual public-renderer example passes Debug/Release, while Application phases/GPU timing remain unmeasured. [Report](docs/engine-reports/cpu-frame-statistics.md). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
 | `ENG#15` | OPEN | MED | S | Review the prepared, unfiled development-staging convenience request and refresh upstream before filing; its synthetic Debug/Release phases pass. Runtime-install scope stays separate. [Report](docs/engine-reports/runtime-staging.md). |
-| `ENG#16` | OPEN | LOW | S | Review the prepared hidden-window Apply bug report and refresh upstream before filing; the public Application call reproduces in Debug/Release. [Report](docs/engine-reports/hidden-window-apply.md). |
-| `ENG#17` | OPEN | LOW | S | Review the prepared DPI-sizing request and refresh upstream before filing; Debug/Release hidden 96-DPI baselines and rectangle queries pass. Scaled/transition acceptance and OCA-66 remain open. [Report](docs/engine-reports/window-dpi.md). |
 | `ENG#18` | OPEN | LOW | S | Review the prepared Label visibility convenience; refresh upstream before filing. Null Debug/Release passes; unfiled. Order/retirement/font questions stay separate. [Report](docs/engine-reports/label-visibility.md). |
-| `ENG#19` | OPEN | LOW | S | Review the prepared, unfiled later-show convenience request and refresh upstream before filing; hidden creation passes four Debug/Release cases. First visible game frame and `GAP#5.1` remain open. [Report](docs/engine-reports/startup-visibility.md). |
 | `ENG#20` | OPEN | LOW | S | Review the active view-context request; refresh upstream before filing. Source audit and null Debug/Release illustration pass; unfiled. Art policy and Scene/order integration stay separate. [Report](docs/engine-reports/view-context.md). |
 | `ENG#22` | OPEN | LOW | S | Prepare the handle-overload request (re-pointing drawables takes names only) and a synthetic example; unfiled. Update-path compares, not a measured bottleneck. [Report](docs/review/engine-reports.md#22-handle-holding-drawables-can-only-be-re-pointed-by-name--draft-with-paint-splash-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |

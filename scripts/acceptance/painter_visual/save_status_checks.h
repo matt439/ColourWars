@@ -1,6 +1,8 @@
-// The engine's real windowed Apply may show its initially hidden probe. A
-// thread-local CBT hook refuses activation of only that probe while preserving
-// every other application's activation and the production Apply itself.
+// Application::set_resolution resizes the window with SetWindowPos and no
+// SWP_NOACTIVATE, which activates even a hidden window and makes it the
+// foreground (Labrador 19cf650; report 16 kept the window hidden but not this).
+// A thread-local CBT hook refuses activation of only that probe while
+// preserving every other application's activation and the production call.
 class SettingsProbeActivationGuard
 {
 public:
@@ -28,6 +30,7 @@ private:
     inline static thread_local HWND target_ = nullptr;
     HHOOK hook_ = nullptr;
 };
+
 
 // Independent status copy, fitting and save/reload checks use their own profile.
 // They deliberately exercise callbacks after replacing the source text/font.
@@ -132,14 +135,10 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     {
         if (page == 0)
         {
-            // The real windowed Apply path may show its window. Keep that
-            // window off the desktop and hide it without taking foreground.
+            // The real windowed Apply path keeps a hidden window hidden and
+            // inactive; this pins that engine contract.
             const HWND window = static_cast<HWND>(app.window());
-            const SettingsProbeActivationGuard activation(window);
-            require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0,
-                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE, "Cannot keep status Apply offscreen");
-            tap(Key::enter); ShowWindow(window, SW_HIDE);
-            app.keyboard()->set_focused(true); app.mouse()->set_focused(true); stack.notify_activation(true); tick();
+            tap(Key::enter); tick();
             require(IsWindowVisible(window) == FALSE && !app.fullscreen() && GetForegroundWindow() != window,
                 "Status Apply exposed or activated its hidden probe");
         }

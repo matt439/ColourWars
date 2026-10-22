@@ -68,10 +68,10 @@ namespace
                 "New capture skipped its neutral entry gate");
         }
 
-        void frame(bool blocked = false, bool cancel = false)
+        void frame(bool cancel = false)
         {
             this->keyboard.poll();
-            this->capture.update(this->keyboard.state(), this->keyboard.previous_state(), blocked, cancel);
+            this->capture.update(this->keyboard.state(), this->keyboard.previous_state(), cancel);
         }
 
         void ready()
@@ -104,7 +104,7 @@ namespace
                     "Repeated terminal-frame update changed an accepted result");
             }
             this->keyboard.on_key_down(Key::escape);
-            this->frame(true, true);
+            this->frame(true);
             this->keyboard.set_focused(false);
             this->frame();
             require(this->capture.phase() == Phase::complete && this->capture.result() == key,
@@ -252,26 +252,28 @@ namespace
 
     void blocked_and_focus()
     {
+        // F10 is an ordinary Keyboard key: the engine no longer hands it to the
+        // system menu, so a held F10 is seen like any other named key.
         CaptureHarness blocked;
-        blocked.frame(true);
-        blocked.frame(true);
-        require(blocked.capture.phase() == Phase::waiting_neutral,
-            "Intercepted held F10 did not block neutral entry");
+        blocked.keyboard.on_key_down(Key::f10);
         blocked.frame();
-        require(blocked.capture.phase() == Phase::ready, "Releasing intercepted F10 did not establish neutral");
+        blocked.frame();
+        require(blocked.capture.phase() == Phase::waiting_neutral,
+            "Held F10 did not block neutral entry");
+        blocked.up(Key::f10);
+        require(blocked.capture.phase() == Phase::ready, "Releasing F10 did not establish neutral");
+        blocked.keyboard.on_key_down(Key::f10);
         blocked.keyboard.on_key_down(Key::j);
-        blocked.frame(true);
+        blocked.frame();
         require(blocked.capture.phase() == Phase::waiting_neutral &&
             blocked.capture.rejection() == Rejection::ambiguous,
-            "A supported key plus intercepted F10 was not a chord");
-        blocked.keyboard.on_key_up(Key::j);
-        blocked.frame(true);
-        blocked.no_choice("Intercepted F10 drain selected a binding");
-        blocked.frame();
-        blocked.keyboard.on_key_down(Key::f10);
-        blocked.frame(true);
+            "A supported key plus held F10 was not a chord");
+        blocked.up(Key::j);
+        blocked.no_choice("Draining a held F10 selected a binding");
+        blocked.up(Key::f10);
+        blocked.down(Key::f10);
         require(blocked.capture.rejection() == Rejection::unsupported,
-            "F10 reported through both channels was counted twice as a chord");
+            "F10 alone was not rejected as unsupported");
         blocked.up(Key::f10);
         blocked.down(Key::j);
         blocked.up(Key::j);
@@ -311,7 +313,7 @@ namespace
         require(neutral_focus.capture.phase() == Phase::waiting_neutral,
             "First focused snapshot established neutral before a fresh focused frame");
         neutral_focus.ready();
-        std::cout << "PASS keyboard capture blocking/focus: intercepted F10, dual-channel F10, "
+        std::cout << "PASS keyboard capture blocking/focus: held F10, F10 chord, F10 alone, "
             "focus cancellation, held return and fresh neutral rearming\n";
     }
 
@@ -363,18 +365,18 @@ namespace
         CaptureHarness owner_back;
         owner_back.ready();
         owner_back.down(Key::j);
-        owner_back.frame(true, true); // Owning pad's Back release, while F10 is still held.
+        owner_back.keyboard.on_key_down(Key::f10);
+        owner_back.frame(true); // Owning pad's Back release, while F10 is held.
         require(owner_back.capture.phase() == Phase::cancelling, "Owner Back did not request cancellation");
-        owner_back.keyboard.on_key_up(Key::j);
-        owner_back.frame(true);
+        owner_back.up(Key::j);
         require(owner_back.capture.phase() == Phase::cancelling,
-            "Owner cancellation completed while an intercepted key remained held");
-        owner_back.frame();
+            "Owner cancellation completed while F10 remained held");
+        owner_back.up(Key::f10);
         require(owner_back.capture.phase() == Phase::cancelled && !owner_back.capture.result(),
             "Owner cancellation did not complete after every input was neutral");
         CaptureHarness neutral_back;
         neutral_back.ready();
-        neutral_back.frame(false, true);
+        neutral_back.frame(true);
         require(neutral_back.capture.phase() == Phase::cancelled && !neutral_back.capture.result(),
             "Owner Back at neutral did not complete cancellation");
         std::cout << "PASS keyboard capture cancellation: fresh/entry-held Escape, owner Back, "

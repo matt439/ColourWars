@@ -305,7 +305,7 @@ namespace debug_console_acceptance
 		FakePage capturing;
 		director.capture_input_frame(capturing);
 		require(!director.before_page_update(capturing, dt) && capturing.starts == 0 && capturing.dismissals == 0 &&
-			impl.log().lines().size() == 1 && !director.capture_blocked_key_down(),
+			impl.log().lines().size() == 1,
 			"Repeated capture frames run no developer page work or duplicate cancellation notice");
 		director.end_keyboard_capture();
 		require(!director.before_page_update(capturing, dt) &&

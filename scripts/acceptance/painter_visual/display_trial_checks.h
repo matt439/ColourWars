@@ -20,11 +20,10 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto save_path = output / "display-trial-profile" / "ColourWars" / "save_data.json";
     const std::filesystem::path blocked(save_path.wstring() + L".tmp");
     const HWND window = static_cast<HWND>(app.window());
+    // Trials resize the hidden window, which would activate it (see the guard).
     // Rollback may run from notification or destruction, so guard the whole
     // fixture, including explicit stack cleanup; this guard must never nest.
     const SettingsProbeActivationGuard activation(window);
-    require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0,
-        SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE, "Cannot keep display trials offscreen");
     Save preferences; PlaySettings expected; expected.aim_sensitivity = 5;
     expected.music_volume = expected.sfx_volume = 0; expected.view_shake = expected.aim_marker = false;
     for (size_t slot = 0; slot < expected.sticks.size(); ++slot)
@@ -94,7 +93,6 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto resize = [&](Vector2I size) { app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y); };
     const auto hide = [&]
     {
-        ShowWindow(window, SW_HIDE); app.keyboard()->set_focused(true); app.mouse()->set_focused(true); stack.notify_activation(true);
         require(IsWindowVisible(window) == FALSE && GetForegroundWindow() != window && !app.fullscreen(), "Display trial exposed, activated or fullscreened its private window");
     };
     const auto old = [&](bool rolled_back)

@@ -126,37 +126,23 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
     record("partial-debug-chord-release-owned", false);
     painter_scripted_pads::states[0].buttons = 0; tick(0.6f); tick(); record("debug-chord-final-release-owned", false);
 
-    const HWND window = static_cast<HWND>(app.window());
-    require(window != nullptr && GetWindowThreadProcessId(window, nullptr) == GetCurrentThreadId(),
-        "F10 hook fixture needs its own current-thread native window");
-    const auto post_f10 = [&](bool down, bool repeat = false)
-    {
-        const UINT message = down ? WM_SYSKEYDOWN : WM_SYSKEYUP;
-        LPARAM bits = 1 | (static_cast<LPARAM>(0x44) << 16);
-        if (repeat || !down) { bits |= static_cast<LPARAM>(1) << 30; }
-        if (!down) { bits |= static_cast<LPARAM>(1) << 31; }
-        require(PostMessageW(window, message, VK_F10, bits) != FALSE, "Cannot post private F10 hook message");
-        MSG actual{};
-        require(PeekMessageW(&actual, window, message, message, PM_REMOVE) != FALSE && actual.message == WM_NULL,
-            "Debug hook did not consume the probe's private posted F10 message");
-        // Never dispatch: this tests the hook without invoking a system menu,
-        // sending global input, taking focus or translating a physical key.
-        require(director.capture_blocked_key_down() == down, "F10 hook held state missed down/repeat/up");
-    };
-    open(-1); post_f10(true); tick(); post_f10(true, true); tick();
-    tap_key(Key::k); record("posted-f10-blocks-key-gesture", true);
-    tap_key(Key::escape); record("posted-f10-cancel-drains", true);
-    post_f10(false); tick(); tick(); record("posted-f10-release-not-deferred", false);
-    open(-1); post_f10(true); tick();
+    // F10 is an ordinary Keyboard key in every build; held through capture it
+    // must neither choose a binding nor open the debug menu once released.
+    open(-1); app.keyboard()->on_key_down(Key::f10); tick(); tick();
+    tap_key(Key::k); record("held-f10-blocks-key-gesture", true);
+    tap_key(Key::escape); record("held-f10-cancel-drains", true);
+    app.keyboard()->on_key_up(Key::f10); tick(); tick(); record("f10-release-not-deferred", false);
+    require(!director.impl()->debug_menu_open(), "F10 held through capture opened the debug menu after release");
+    open(-1); app.keyboard()->on_key_down(Key::f10); tick();
     app.keyboard()->set_focused(false); stack.notify_activation(false); tick();
-    require(!director.capture_blocked_key_down(), "Focus loss retained intercepted F10 held state");
+    require(!app.keyboard()->state().is_down(Key::f10), "Focus loss retained held F10");
     app.keyboard()->set_focused(true); stack.notify_activation(true); tick(); tick();
-    post_f10(false); tick(); tap_key(Key::k); record("posted-f10-focus-rearms-fresh-key", false, Key::k);
+    tap_key(Key::k); record("f10-focus-rearms-fresh-key", false, Key::k);
 #endif
     require(cases == (COLOURWARS_DEV_TOOLS ? 22 : 11) && records.good(), "Jump ownership receipt is incomplete");
     std::cout << "PASS Keyboard Jump ownership: " << cases << " actual-menu observations over " << updates <<
         " scripted input updates; owner/fallback/reconnect, cancel drain and fresh Space; "
-        "Debug additionally covers queued work, reserved shortcuts/chord and private posted F10 hook/focus. "
+        "Debug additionally covers queued work, reserved shortcuts/chord and held F10/focus. "
         "No global input or physical-device acceptance.\n";
 }
 #endif

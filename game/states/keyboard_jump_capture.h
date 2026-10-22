@@ -6,7 +6,7 @@
 // One physical keyboard gesture. The page samples once per update; queries and
 // repeated samples of a terminal frame never accept the choice a second time.
 // All named keys participate in neutral/chord detection, including keys outside
-// the small binding domain. A debug hook can supply its intercepted F10 state.
+// the small binding domain.
 class KeyboardJumpCapture
 {
 public:
@@ -16,8 +16,7 @@ public:
 	void reset();
 	void focus_lost();
 	void update(const labrador::KeyboardState& now,
-		const labrador::KeyboardState& before, bool blocked_key_down = false,
-		bool cancel_requested = false);
+		const labrador::KeyboardState& before, bool cancel_requested = false);
 
 	Phase phase() const { return this->phase_; }
 	Rejection rejection() const { return this->rejection_; }

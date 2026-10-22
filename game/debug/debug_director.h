@@ -111,7 +111,6 @@ public:
 	// queued developer work on entry; drain reserved keys/chords each frame.
 	void begin_keyboard_capture();
 	void capture_input_frame(DebugPageTarget& page);
-	bool capture_blocked_key_down() const;
 	void end_keyboard_capture();
 	// A bare developer bind on a capturable Jump key is a warning, not a conflict.
 	bool keyboard_jump_collision(labrador::Key key) const;
@@ -154,7 +153,6 @@ inline OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const { retur
 inline bool DebugDirector::before_page_update(DebugPageTarget&, float) { return false; }
 inline void DebugDirector::begin_keyboard_capture() {}
 inline void DebugDirector::capture_input_frame(DebugPageTarget&) {}
-inline bool DebugDirector::capture_blocked_key_down() const { return false; }
 inline void DebugDirector::end_keyboard_capture() {}
 inline bool DebugDirector::keyboard_jump_collision(labrador::Key) const { return false; }
 inline void DebugDirector::draw_status(labrador::Renderer&) const {}

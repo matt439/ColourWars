@@ -4,8 +4,8 @@
 #if COLOURWARS_DEV_TOOLS
 void resume_native_tap(Application& app, WPARAM key)
 {
-    // F10 is intercepted by the production WH_GETMESSAGE hook, so drive
-    // its native queue rather than only the Keyboard object.
+    // Drive the native queue rather than only the Keyboard object, so the
+    // window procedure's own translation is part of the path.
     const HWND window = static_cast<HWND>(app.window());
     // The window maps physical scan positions, not virtual-key characters.
     // Include the set-1 scan field that real keyboard messages carry.

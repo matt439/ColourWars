@@ -617,7 +617,6 @@ void DebugDirectorImpl::begin_keyboard_capture()
 {
 	this->keyboard_capture_ = true;
 	this->cancel_capture_work();
-	this->forget_menu_key();
 	this->chord_.consume(this->debug_pads());
 }
 
@@ -628,7 +627,6 @@ void DebugDirectorImpl::capture_input_frame(DebugPageTarget& page)
 	this->close_live_console("raw keyboard capture");
 	this->perf_.break_interval();
 	this->cancel_capture_work();
-	this->forget_menu_key();
 	this->chord_.consume(this->debug_pads());
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
@@ -639,7 +637,6 @@ void DebugDirectorImpl::capture_input_frame(DebugPageTarget& page)
 void DebugDirectorImpl::end_keyboard_capture()
 {
 	this->cancel_capture_work();
-	this->forget_menu_key();
 	this->chord_.consume(this->debug_pads());
 	this->keyboard_capture_ = false;
 }

@@ -932,9 +932,15 @@ in these numbers is the match's first draw after the build, which `perf` treats 
 an interval start. What remains of `GAP#5.1` is the hard cut itself: a transition
 look in the Paint.exe language (a fade, a wipe, a redraw or a deliberate cut) is UI
 art for a later pass using the approved gameplay style. Separately, the startup
-window shows a blank client area during the asset walk (about 53 ms in Release), which needs an
-engine show-after-load: [report 19](review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit)
-(`ENG#19`).
+window is thought to show a blank client area during the asset walk (about 53 ms in
+Release, an unretained timing). Labrador answered
+[report 19](review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
+"needs more evidence": it calls the white flash inferred, not observed, and wants two
+captures, recorded with commit and date: a default-visible `x64-release` launch from
+`ShowWindow` to the first present, and a hidden launch shown natively after the first
+state is constructed. If the first shows a flash and the second cures it, the engine's
+preferred fix is its own (show after the first `end_frame`, no class-brush paint) and
+needs no client call. Those captures are this repository's to make (`GAP#5.1`).
 Re-measure with `perf` when the blockouts (`POL#17`, `POL#21`) add geometry: the
 build makes paint tiles for every paintable face.
 

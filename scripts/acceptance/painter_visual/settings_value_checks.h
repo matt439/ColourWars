@@ -83,11 +83,8 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     const auto apply = [&]
     {
         if (controls) { tap(Key::enter); return; }
-        const HWND window = static_cast<HWND>(app.window()); const SettingsProbeActivationGuard activation(window);
-        require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0,
-            SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE, "Cannot keep value Apply offscreen");
-        tap(Key::enter); ShowWindow(window, SW_HIDE);
-        app.keyboard()->set_focused(true); app.mouse()->set_focused(true); stack.notify_activation(true); tick();
+        const HWND window = static_cast<HWND>(app.window());
+        tap(Key::enter); tick();
         require(!app.fullscreen() && IsWindowVisible(window) == FALSE && GetForegroundWindow() != window,
             "Value Apply exposed or activated its probe, or applied pending fullscreen On");
     };

@@ -159,8 +159,6 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     const std::filesystem::path blocked(save_path.wstring() + L".tmp");
     const HWND window = static_cast<HWND>(app.window());
     const SettingsProbeActivationGuard activation(window);
-    require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0,
-        SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE, "Cannot keep paused Options private");
     Save preferences; PlaySettings expected; expected.aim_sensitivity = 5;
     expected.music_volume = expected.sfx_volume = 0; expected.view_shake = expected.aim_marker = false;
     for (size_t slot = 0; slot < expected.sticks.size(); ++slot)
@@ -205,8 +203,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         { require(p.sticks[i].movement_deadzone == expected.sticks[i].movement_deadzone &&
             p.sticks[i].aim_deadzone == expected.sticks[i].aim_deadzone, "Paused Options replaced a pad profile"); }
     };
-    const auto hide = [&] { ShowWindow(window, SW_HIDE); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
-        stack.notify_activation(true); require(!app.fullscreen() && IsWindowVisible(window) == FALSE && GetForegroundWindow() != window,
+    const auto hide = [&] { require(!app.fullscreen() && IsWindowVisible(window) == FALSE && GetForegroundWindow() != window,
             "Paused Options showed, activated or fullscreened its private window"); };
     const auto resize = [&](Vector2I size) { app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y); };

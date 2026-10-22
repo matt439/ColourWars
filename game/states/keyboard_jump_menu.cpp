@@ -206,8 +206,7 @@ void KeyboardJumpMenu::finish_capture(bool accepted)
 void KeyboardJumpMenu::update_capture()
 {
 	const Keyboard& keyboard = *this->data()->keyboard();
-	this->capture_.update(keyboard.state(), keyboard.previous_state(),
-		this->data()->debug().capture_blocked_key_down(), this->capture_pad_back());
+	this->capture_.update(keyboard.state(), keyboard.previous_state(), this->capture_pad_back());
 	if (this->capture_.phase() == KeyboardJumpCapture::Phase::complete) { this->finish_capture(true); }
 	else if (this->capture_.phase() == KeyboardJumpCapture::Phase::cancelled) { this->finish_capture(false); }
 	else { this->refresh_capture_status(); }

@@ -87,7 +87,6 @@ public:
 	bool before_page_update(DebugPageTarget& page, float dt);
 	void begin_keyboard_capture();
 	void capture_input_frame(DebugPageTarget& page);
-	bool capture_blocked_key_down() const;
 	void end_keyboard_capture();
 	bool keyboard_jump_collision(labrador::Key key) const;
 
@@ -98,10 +97,6 @@ public:
 	bool blocking_console_open() const { return this->console_open_; }
 	void set_debug_menu(DebugMenuPage* page);
 	bool debug_menu_open() const { return this->debug_menu_ != nullptr; }
-
-	// The console calls this every frame it is open, so an F10 typed there is
-	// not replayed as a debug-menu toggle once it closes.
-	void forget_menu_key();
 
 	// The debug menu's own input and context, made on first use: it is pushed
 	// over any state, so it borrows none of theirs.
@@ -245,9 +240,6 @@ private:
 	std::unique_ptr<MenuLevelSettings> menu_settings_;
 	std::unique_ptr<MenuContext> menu_context_;
 
-	// The thread message hook that turns F10 into a debug-menu toggle
-	// instead of the system menu (see engine-reports.md, report 11).
-	void* f10_hook_ = nullptr;
 	bool keyboard_capture_ = false;
 
 	// `intro`: empty for the game's own choice, else full, quick or off.
@@ -288,7 +280,6 @@ private:
 	bool open_console_if_requested(bool match_hook);
 	bool poll_debug_menu_toggle(float dt);
 	DebugChord::Pads debug_pads() const;
-	void reset_menu_key_if_unfocused() const;
 	void cancel_capture_work();
 	void open_debug_menu();
 	void run_binds(DebugMatchTarget& match);

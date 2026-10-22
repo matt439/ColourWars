@@ -136,11 +136,6 @@ void DebugDirector::capture_input_frame(DebugPageTarget& page)
 	if (this->impl_ != nullptr) { this->impl_->capture_input_frame(page); }
 }
 
-bool DebugDirector::capture_blocked_key_down() const
-{
-	return this->impl_ != nullptr && this->impl_->capture_blocked_key_down();
-}
-
 void DebugDirector::end_keyboard_capture()
 {
 	if (this->impl_ != nullptr) { this->impl_->end_keyboard_capture(); }

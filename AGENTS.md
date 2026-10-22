@@ -73,8 +73,7 @@ match **`** opens the console (the match freezes while it is open; Escape
 closes), **F2**-**F4** collision, camera and paint overlays, **F5** restart,
 **F6** pause, **F7** step, **F9** toggle
 movement feedback. Anywhere, **F10**/**F11** or holding pad **Back+Start** opens
-the debug menu (F10 is taken back from the system menu by a Debug-only message
-hook; see the doc). `help` lists the commands. The console also tunes
+the debug menu. `help` lists the commands. The console also tunes
 `tuning.json`/`presentation.json` live (`tune`; `tune.save` writes only the
 edited tokens back to `game/content/`), puts scripted bots on idle seats
 (`+stage movement_course +players 4 +bot all paint`), and records and replays

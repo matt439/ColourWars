@@ -18,8 +18,9 @@
         scaled display (125%/150%) bitmap-stretches every point-sampled frame.
         dpiAwareness (Windows 10 1607+) takes the first value it understands;
         dpiAware is what older Windows reads. scripts/check-startup.ps1 holds
-        the built executable to PerMonitorV2. The engine's window does not yet
-        size itself for a changed DPI: docs/review/engine-reports.md, report 17. -->
+        the built executable to PerMonitorV2. Under it the engine's window keeps
+        the client pixel size the game asked for, across DPI changes too; this
+        declaration is what opts in (docs/review/engine-reports.md, report 17). -->
    <asmv3:application>
        <asmv3:windowsSettings>
            <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
