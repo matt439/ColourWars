@@ -9,7 +9,7 @@ class GameTuning;
 class Presentation;
 
 // The live object one content file feeds, as live tuning reaches it: build
-// the real object from a candidate file (so every rule the game checks at
+// the real object from the candidate text (so every rule the game checks at
 // startup, cross-field ones included, judges the edit), then copy the
 // candidate over the live object. Copy assignment keeps the address of every
 // sub-record that weapons, projectiles, the HUD and movement feedback point
@@ -25,14 +25,16 @@ public:
 	// "tuning" or "presentation".
 	virtual std::string_view file() const = 0;
 
-	// Constructs the reader's object from `candidate_file` (UTF-8) and keeps
-	// it. Throws the reader's own message. `context`, when it has a running
+	// Parses `candidate` in memory (labrador::parse_json), constructs the
+	// reader's object from it and keeps it. Throws the reader's own message,
+	// which names `source_name`: the content file's own name for an edit
+	// ("tuning.json"), the written file's path for tune.save. `context`, when it has a running
 	// application, also runs validate_game_content for edits that reach level
 	// construction (`checks_levels`), and otherwise the object's own
 	// validate_resources: startup's checks of numbers against the loaded
 	// frames and fonts.
-	virtual void validate(const std::string& candidate_file, const GameData* context,
-		bool checks_levels) = 0;
+	virtual void validate(std::string_view candidate, const std::string& source_name,
+		const GameData* context, bool checks_levels) = 0;
 
 	// Copies the validated candidate over the live object. `keep_live_toggle`
 	// keeps the F9 movement feedback switch as it is (every edit but one of
@@ -50,8 +52,8 @@ public:
 	~TuningTarget() override;
 
 	std::string_view file() const override { return "tuning"; }
-	void validate(const std::string& candidate_file, const GameData* context,
-		bool checks_levels) override;
+	void validate(std::string_view candidate, const std::string& source_name,
+		const GameData* context, bool checks_levels) override;
 	void apply(bool keep_live_toggle) override;
 
 private:
@@ -67,8 +69,8 @@ public:
 	~PresentationTarget() override;
 
 	std::string_view file() const override { return "presentation"; }
-	void validate(const std::string& candidate_file, const GameData* context,
-		bool checks_levels) override;
+	void validate(std::string_view candidate, const std::string& source_name,
+		const GameData* context, bool checks_levels) override;
 	void apply(bool keep_live_toggle) override;
 
 private:

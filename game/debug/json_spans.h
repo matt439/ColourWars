@@ -36,8 +36,9 @@ struct JsonLeaf
 // does, including when the first value is a null or container. String spans
 // include their quotes and original escapes; scanning one does not make it
 // tunable (TuneDocument owns that policy). Nulls and containers carry no span.
-// The engine
-// has no in-memory parse and no key enumeration of its own (engine report 12).
+// The engine parses from memory (labrador::parse_json) but keeps no spans,
+// and declined to (engine report 12), so this stays the tool's. It has no
+// key enumeration yet either: that is its own story, PI-20.
 class JsonSpanDocument
 {
 public:

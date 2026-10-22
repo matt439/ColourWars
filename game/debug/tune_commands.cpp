@@ -3,7 +3,6 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/content_root.h"
-#include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/replay.h"
@@ -15,7 +14,6 @@
 #include <charconv>
 #include <cmath>
 #include <fstream>
-#include <process.h>
 
 // tune, tune.diff, tune.reset, tune.save and tune.find: live edits of the
 // numbers, booleans and audited presentation colours, validated by the
@@ -69,19 +67,6 @@ namespace
 			return false;
 		}
 		return true;
-	}
-
-	void replace_all(std::string& text, const std::string& from, const std::string& to)
-	{
-		if (from.empty())
-		{
-			return;
-		}
-		for (std::size_t at = text.find(from); at != std::string::npos;
-			at = text.find(from, at + to.size()))
-		{
-			text.replace(at, from.size(), to);
-		}
 	}
 
 	// Forward slashes throughout, as reload prints its directory.
@@ -305,63 +290,12 @@ std::string DebugDirectorImpl::tune_token(const std::string& path)
 	return leaf == nullptr ? std::string() : std::string(document->current().token(*leaf));
 }
 
-std::vector<std::filesystem::path> stale_tune_directories(const std::filesystem::path& temp)
-{
-	std::vector<std::filesystem::path> result;
-	std::error_code error;
-	for (std::filesystem::directory_iterator it(temp, error), end; !error && it != end;
-		it.increment(error))
-	{
-		const std::wstring name = it->path().filename().wstring();
-		const std::wstring prefix = L"ColourWars-tune-";
-		if (name.size() <= prefix.size() || name.compare(0, prefix.size(), prefix) != 0)
-		{
-			continue;
-		}
-		const bool digits = std::all_of(name.begin() + static_cast<std::ptrdiff_t>(prefix.size()),
-			name.end(), [](wchar_t c) { return c >= L'0' && c <= L'9'; });
-		std::error_code ignored;
-		// Only an empty folder: removing one cannot delete anybody's data.
-		if (digits && it->is_directory(ignored) && std::filesystem::is_empty(it->path(), ignored))
-		{
-			result.push_back(it->path());
-		}
-	}
-	return result;
-}
-
 DebugStatus DebugDirectorImpl::tune_validate_and_apply(int file, const std::string& candidate,
 	const std::string& edited_path)
 {
 	TuneDocument& document = *this->tune_docs_[static_cast<std::size_t>(file)];
 	const std::string name = file_names[file];
 
-	// The engine reads JSON only from a file (engine report 12). A file, not
-	// a folder: earlier builds left empty ColourWars-tune-<pid> folders behind
-	// (the folder's removal raced the reader's handle), swept once here.
-	std::error_code ignored;
-	const std::filesystem::path temp = std::filesystem::temp_directory_path(ignored);
-	if (!this->tune_swept_)
-	{
-		this->tune_swept_ = true;
-		for (const std::filesystem::path& stale : stale_tune_directories(temp))
-		{
-			std::filesystem::remove(stale, ignored);
-		}
-	}
-	const std::filesystem::path path = temp /
-		(L"ColourWars-tune-" + std::to_wstring(_getpid()) + L"-" + labrador::widen(name) + L".json");
-	const auto remove_candidate = [&]
-		{
-			std::filesystem::remove(path, ignored);
-		};
-	if (!write_bytes(path, candidate))
-	{
-		remove_candidate();
-		return DebugStatus::failure("tune: cannot write the candidate " +
-			labrador::path_to_utf8(path));
-	}
-	const std::string utf8 = labrador::path_to_utf8(path);
 	// Every edit runs the reader and, with an application, the resource checks
 	// startup runs on that file; paint also reaches every stage's objects, and
 	// the player's size and the speeds its per-step travel is taken from reach
@@ -374,17 +308,15 @@ DebugStatus DebugDirectorImpl::tune_validate_and_apply(int file, const std::stri
 			edited_path == "player.drop_down_velocity");
 	try
 	{
-		this->tune_targets_[static_cast<std::size_t>(file)]->validate(utf8, this->data_,
-			checks_levels);
+		// Parsed in memory under the content file's name, so a rejection
+		// names tuning.json or presentation.json and nothing is written.
+		this->tune_targets_[static_cast<std::size_t>(file)]->validate(candidate, name + ".json",
+			this->data_, checks_levels);
 	}
 	catch (const std::exception& e)
 	{
-		remove_candidate();
-		std::string message = e.what();
-		replace_all(message, utf8, name + ".json");
-		return DebugStatus::failure("tune: rejected: " + message);
+		return DebugStatus::failure("tune: rejected: " + std::string(e.what()));
 	}
-	remove_candidate();
 
 	// F9 is a live switch; only an edit of the flag itself replaces it.
 	const bool touches_toggle = name == "presentation" && (edited_path.empty() ?
@@ -707,8 +639,14 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 		// the next launch refuses.
 		try
 		{
+			bool read = false;
+			const std::string written = read_bytes(source, read);
+			if (!read)
+			{
+				throw std::runtime_error("cannot read " + shown(source) + " back");
+			}
 			this->tune_targets_[static_cast<std::size_t>(file)]->validate(
-				shown(source), this->data_, true);
+				written, shown(source), this->data_, true);
 			this->tune_targets_[static_cast<std::size_t>(file)]->apply(true);
 		}
 		catch (const std::exception& e)

@@ -144,13 +144,12 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The three live drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The two live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#12` | OPEN | MED | S | Review the prepared named in-memory JSON parsing request and refresh upstream before filing; its synthetic CMake Debug/Release exhibit passes and remains unfiled. Object enumeration/source-span portions remain open. [Report](docs/engine-reports/json-candidate-parsing.md). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half was answered by report 14 (`Application::frame_timings`). |
 | `ENG#15` | OPEN | MED | S | Review the prepared, unfiled development-staging convenience request and refresh upstream before filing; its synthetic Debug/Release phases pass. Runtime-install scope stays separate. [Report](docs/engine-reports/runtime-staging.md). |

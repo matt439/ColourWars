@@ -8,7 +8,6 @@
 #include "game/debug/debug_menu_model.h"
 #include "game/debug/debug_perf.h"
 #include "game/debug/debug_text_field.h"
-#include "game/debug/tune_document.h"
 #include "game/objects/debug_text.h"
 #include "game/session.h"
 #include <cmath>
@@ -463,17 +462,6 @@ namespace debug_console_acceptance
 			"bot pushes the labels at once");
 		require(impl.execute("bot off").ok && match.seat_labels.empty(), "bot off clears them");
 		test.director.detach_match(match);
-
-		// Old empty tune folders are found; anything else is left alone.
-		ScratchFolder temp(L"tune_temp");
-		std::filesystem::create_directories(temp.root / L"ColourWars-tune-999999");
-		std::filesystem::create_directories(temp.root / L"ColourWars-tune-999998");
-		write_text(temp.root / L"ColourWars-tune-999998" / L"keep.txt", "keep");
-		std::filesystem::create_directories(temp.root / L"ColourWars-tune-abc");
-		write_text(temp.root / L"ColourWars-tune-1-tuning.json", "{}");
-		const std::vector<std::filesystem::path> stale = stale_tune_directories(temp.root);
-		require(stale.size() == 1 && stale[0].filename() == L"ColourWars-tune-999999",
-			"Only the empty ColourWars-tune-<digits> folder is stale");
 
 		// Grammar and availability fail before any device or output is needed.
 		// A real capture/barrier uses the hardware probe's Application loop.

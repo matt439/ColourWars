@@ -17,6 +17,7 @@
 namespace labrador
 {
 	class AudioResources;
+	class JsonDocument;
 	class RenderResources;
 }
 
@@ -560,6 +561,9 @@ class Presentation
 public:
 	// Loads and validates the file, reporting invalid content with source context.
 	explicit Presentation(const char* path);
+	// From a document already read or parsed (labrador::parse_json); every
+	// diagnostic names document.source_path().
+	explicit Presentation(const labrador::JsonDocument& document);
 
 	void validate_resources(const labrador::RenderResources& render,
 		const labrador::AudioResources& audio) const;

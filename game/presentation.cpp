@@ -113,10 +113,14 @@ const WeaponChoicePresentation& WeaponSelectArtworkPresentation::choice(WeaponTy
 	return this->choices[index];
 }
 
-Presentation::Presentation(const char* path)
+Presentation::Presentation(const char* path) :
+	Presentation(read_json_file(path))
 {
-	const JsonDocument document = read_json_file(path);
-	this->source_path_ = path;
+}
+
+Presentation::Presentation(const JsonDocument& document)
+{
+	this->source_path_ = document.source_path();
 	const JsonValue root = document.root();
 
 	this->team_palette_ = read_team_palette(root);

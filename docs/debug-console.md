@@ -1385,7 +1385,7 @@ as the game. In Release:
   four-seat paint-bot match, live tune, record and play to `MATCH`, the tuning
   tree); phase 4 (`-Phase4Only`: `+exec review_feedback_ab +quit` with an
   autoexec, 18 PNGs and nine checksums; `station_tour`; `bots_4p`; Shift+F5 on
-  a bind; the `%TEMP%` sweep on a planted folder in an isolated TEMP; the live
+  a bind; a tune edit that leaves nothing in an isolated TEMP; the live
   console; perf; binds and history across a restart). It saves screenshots
   throughout. `-SaveToSource` adds a
   `tune.save` on the real `game/content/tuning.json`: it refuses unless git
@@ -1395,11 +1395,12 @@ as the game. In Release:
   pad and is covered on the CPU side only. Its Win32 key and screenshot driver
   and its launch, focus and transcript helpers are in
   `scripts/check-debug-console/driver.ps1`, which it dot-sources.
-- The engine reports this forced are 12 (live tuning, open) and, closed, 9
-  (per-frame hook and input capture, `f1e5244`), 10 (frame capture,
-  `ac58ca1`), 11 (system-menu keys, `0f3b283`), 13 (key names, `2851ad9`) and
-  14 (frame statistics, `7344610`), in
-  [engine-reports.md](review/engine-reports.md).
+- The engine reports this forced are all closed: 9 (per-frame hook and input
+  capture, `f1e5244`), 10 (frame capture, `ac58ca1`), 11 (system-menu keys,
+  `0f3b283`), 12 (live tuning: candidates are parsed in memory by
+  `parse_json`, `3af746b`, and source spans stay this tool's by the engine's
+  decision), 13 (key names, `2851ad9`) and 14 (frame statistics, `7344610`),
+  in [engine-reports.md](review/engine-reports.md).
 
 ## Not done
 
@@ -1463,9 +1464,10 @@ replacement behavior. Check captured versus reopened/rebuilt consumers and repla
 edit restrictions. Keep numeric/boolean behavior and Release developer-tool
 exclusion intact. These checks use scratch content and isolated profiles.
 
-The local RapidJSON span reader and candidate-file validation already provide
-the required route. `ENG#12` asks the engine to replace that client workaround;
-it does not block this slice.
+The local RapidJSON span reader and in-memory candidate validation
+(`labrador::parse_json`, engine report 12) already provide the required route.
+The engine declined to keep source spans, so the span reader and splice stay
+this tool's.
 
 Figure arm/hand colour family (2026-10-21), **verified**:
 paths 43/44, `presentation.figure.arm_colour` and `presentation.figure.hand_colour`,

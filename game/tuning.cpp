@@ -573,10 +573,14 @@ namespace
 	}
 }
 
-GameTuning::GameTuning(const char* path)
+GameTuning::GameTuning(const char* path) :
+	GameTuning(read_json_file(path))
 {
-	const JsonDocument document = read_json_file(path);
-	this->source_path_ = path;
+}
+
+GameTuning::GameTuning(const JsonDocument& document)
+{
+	this->source_path_ = document.source_path();
 	const JsonValue root = document.root();
 
 	this->input_ = read_input(root);

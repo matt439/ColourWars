@@ -7,11 +7,11 @@
 #include "game/debug/json_spans.h"
 #include "game/debug/tune_document.h"
 #include "game/debug/tune_scope.h"
+#include "engine/assets/json.h"
 #include "engine/math/scalar.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <process.h>
 
 // Live tuning, the document side: JSON spans, the colour TuneDocument, tune
 // scopes and the consumed-leaf check.
@@ -318,16 +318,13 @@ namespace debug_console_acceptance
 	// has a key nothing reads and `tune` on it would do nothing.
 	int check_tune_consumed(const std::filesystem::path& game_directory)
 	{
-		const std::filesystem::path directory = std::filesystem::temp_directory_path() /
-			(L"colourwars_consumed_" + std::to_wstring(_getpid()));
-		std::filesystem::create_directories(directory);
 		int checked = 0;
 		std::size_t colours_checked = 0;
 		for (const char* name : { "tuning", "presentation" })
 		{
 			const std::string text = read_text(game_directory / (std::string(name) + ".json"));
 			const JsonSpanDocument document(text, name);
-			const std::filesystem::path candidate = directory / (std::string(name) + ".json");
+			const std::string source = std::string(name) + ".json";
 			for (const JsonLeaf& leaf : document.leaves())
 			{
 				if (leaf.kind == JsonLeaf::Kind::string) { continue; }
@@ -341,17 +338,18 @@ namespace debug_console_acceptance
 				{
 					continue;
 				}
-				write_text(candidate, document.replaced(leaf, "\"__unread__\""));
 				std::string message;
 				try
 				{
+					const labrador::JsonDocument candidate = labrador::parse_json(
+						document.replaced(leaf, "\"__unread__\""), source);
 					if (std::string(name) == "tuning")
 					{
-						GameTuning loaded(candidate.string().c_str());
+						GameTuning loaded(candidate);
 					}
 					else
 					{
-						Presentation loaded(candidate.string().c_str());
+						Presentation loaded(candidate);
 					}
 				}
 				catch (const std::exception& error)
@@ -373,9 +371,8 @@ namespace debug_console_acceptance
 					const JsonLeaf* leaf = document.find(path);
 					require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string,
 						"The audited colour is an authored string: " + path);
-					write_text(candidate, document.replaced(*leaf, "false"));
 					std::string message;
-					try { Presentation loaded(candidate.string().c_str()); }
+					try { Presentation loaded(labrador::parse_json(document.replaced(*leaf, "false"), source)); }
 					catch (const std::exception& error) { message = error.what(); }
 					require(message.find(last_key(path)) != std::string::npos,
 						"The Presentation reader consumes the audited colour and names a rejected type: " + path);
@@ -384,8 +381,6 @@ namespace debug_console_acceptance
 			}
 		}
 		require(colours_checked == colour_paths.size(), "All forty-four colour strings have real Presentation consumers");
-		std::error_code ignored;
-		std::filesystem::remove_all(directory, ignored);
 		return checked;
 	}
 }

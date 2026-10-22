@@ -50,7 +50,7 @@ param(
 # Phase 3 (one launch): bots, live tuning, record and play, the tuning menu.
 # Phase 4 (four launches): the shipped review scripts with +exec, autoexec,
 # binds and history across a restart, the live console, the perf overlay and
-# the %TEMP% sweep.
+# a tune edit that leaves nothing in an isolated %TEMP%.
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -524,8 +524,8 @@ finally {
 #   q2. +exec station_tour +quit: ten PNGs.
 #   q3. +exec bots_4p +quit: one PNG.
 #   q4. one launch on an isolated profile and TEMP: bind shift+f5 at the
-#       console, Shift+F5, F5 still restarts; a tune edit sweeps the planted
-#       empty ColourWars-tune-999999 and keeps the non-empty one; console.live 1,
+#       console, Shift+F5, F5 still restarts; a tune edit writes no candidate
+#       file to TEMP (it is parsed in memory); console.live 1,
 #       typing in the live console leaves P1 where it was while the match
 #       runs, Escape closes it without a pause menu; overlay perf and perf.
 #   q5. a second launch on the same profile: binds.cfg is read back, and the
@@ -606,13 +606,11 @@ try {
     if (@(Get-ChildItem -LiteralPath $folder -Filter '*.png').Count -ne 1) { throw 'bots_4p did not write its PNG.' }
     Assert-Transcript @('bots_4p: done', 'checksum ') 'bots_4p'
 
-    # q4: binds, the TEMP sweep, the live console, perf.
+    # q4: binds, a tune edit in an isolated TEMP, the live console, perf.
     $liveProfile = Join-Path $output 'p4-live-profile'
     Remove-Item -LiteralPath $liveProfile -Recurse -Force -ErrorAction SilentlyContinue
     $temp = Join-Path $liveProfile 'temp'
-    $null = New-Item -ItemType Directory -Path (Join-Path $temp 'ColourWars-tune-999999') -Force
-    $null = New-Item -ItemType Directory -Path (Join-Path $temp 'ColourWars-tune-999998') -Force
-    Set-Content -LiteralPath (Join-Path $temp 'ColourWars-tune-999998/keep.txt') -Value 'keep'
+    $null = New-Item -ItemType Directory -Path $temp -Force
     $transcript = Join-Path $output 'p4-live.log'
     Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
     $window = [IntPtr]::Zero
@@ -632,12 +630,10 @@ try {
     if (-not (Wait-Transcript '[F5] restart' 5)) { throw 'F5 no longer restarts.' }
     Start-Sleep -Seconds 4
 
-    # The first tune edit sweeps old empty tune folders from (this run's) TEMP.
+    # A tune edit is parsed in memory and writes nothing to (this run's) TEMP.
     Invoke-Checked "tune tuning.player.max_velocity.x $fastToken"
     Invoke-Checked 'tune.reset'
-    if (Test-Path -LiteralPath (Join-Path $temp 'ColourWars-tune-999999')) { throw 'The empty tune folder was not swept.' }
-    if (-not (Test-Path -LiteralPath (Join-Path $temp 'ColourWars-tune-999998/keep.txt'))) { throw 'A non-empty tune folder was touched.' }
-    if (@(Get-ChildItem -LiteralPath $temp -Filter 'ColourWars-tune-*.json').Count -ne 0) { throw 'A tune candidate file was left in TEMP.' }
+    if (@(Get-ChildItem -LiteralPath $temp -Filter 'ColourWars-tune-*').Count -ne 0) { throw 'A tune candidate was left in TEMP.' }
 
     # The live console: the match runs, the keyboard seat stands still.
     Invoke-Checked 'console.live 1'
@@ -696,7 +692,7 @@ try {
     Wait-Exit $process 15 'The relaunched game (history Up, Enter: quit)'
     Assert-Transcript @('] quit') 'relaunch'
 
-    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (6 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (10), bots_4p (1); bind Shift+F5 and F5; TEMP sweep; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
+    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (6 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (10), bots_4p (1); bind Shift+F5 and F5; tune writes nothing to TEMP; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
 }
 finally {
     if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }

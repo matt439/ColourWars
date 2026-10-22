@@ -4,6 +4,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/tune_target.h"
 #include "engine/app/application.h"
+#include "engine/assets/json.h"
 #include "game/content_validation.h"
 #include "game/game_data.h"
 #include "game/presentation.h"
@@ -41,11 +42,12 @@ TuningTarget::TuningTarget(GameTuning* live, const Presentation* presentation) :
 
 TuningTarget::~TuningTarget() = default;
 
-void TuningTarget::validate(const std::string& candidate_file, const GameData* context,
-	bool checks_levels)
+void TuningTarget::validate(std::string_view candidate_text, const std::string& source_name,
+	const GameData* context, bool checks_levels)
 {
 	this->candidate_.reset();
-	auto candidate = std::make_unique<GameTuning>(candidate_file.c_str());
+	auto candidate = std::make_unique<GameTuning>(
+		labrador::parse_json(candidate_text, source_name));
 	if (checks_levels && can_check_levels(context))
 	{
 		check_levels(*candidate, *this->presentation_, *context);
@@ -76,11 +78,12 @@ PresentationTarget::PresentationTarget(Presentation* live, const GameTuning* tun
 
 PresentationTarget::~PresentationTarget() = default;
 
-void PresentationTarget::validate(const std::string& candidate_file, const GameData* context,
-	bool checks_levels)
+void PresentationTarget::validate(std::string_view candidate_text, const std::string& source_name,
+	const GameData* context, bool checks_levels)
 {
 	this->candidate_.reset();
-	auto candidate = std::make_unique<Presentation>(candidate_file.c_str());
+	auto candidate = std::make_unique<Presentation>(
+		labrador::parse_json(candidate_text, source_name));
 	if (checks_levels && can_check_levels(context))
 	{
 		check_levels(*this->tuning_, *candidate, *context);

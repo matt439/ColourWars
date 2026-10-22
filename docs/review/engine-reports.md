@@ -143,7 +143,6 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
 | 23 | Resizing a hidden window activates it | `SettingsProbeActivationGuard`, the `WH_CBT` veto five painter fixtures hold around `set_resolution` | local unfiled draft - checked against pin `19cf650` 2026-10-22; no sanitized request or synthetic example yet |
 
@@ -153,49 +152,6 @@ leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
-
----
-
-## 12. JSON is read-only, path-only and opaque — **draft with live-tuning exhibit**
-
-**Minimal candidate-parsing slice prepared 2026-10-20.** The sanitized
-[request](../engine-reports/json-candidate-parsing.md) and standalone
-[synthetic exhibit](../../scripts/engine-reports/json-candidate-file-bridge/json_candidate_file_bridge.cpp)
-are ready for review and remain **unfiled**. Fresh upstream master was fetched
-at 19:34:53 UTC as `52e809a5a0229d37db4373faa7853df4c861a310`; the checked
-HEAD and JSON/file-path sources matched that `FETCH_HEAD`. The exact
-three-translation-unit CMake consumer passed MSVC C++20 `/W4 /WX` Debug and
-Release build/run checks. Both runs exited 0 with identical expected output
-and empty stderr, demonstrating three scratch writes, three removals and
-two client diagnostic pathname rewrites.
-
-### Prepared narrow request
-
-The Debug live-tuning client already owns the edited JSON bytes, but must
-write a temporary candidate to re-enter its ordinary checked reader
-(`game/debug/tune_commands.cpp`, `tune_validate_and_apply`). The reader's
-errors name that scratch path, so the client replaces it with the logical
-content filename. The prepared request asks only for an in-memory parse
-into the same owning `JsonDocument`, with a caller-supplied diagnostic source
-label. It is an additional read entry point, not a JSON writer. Once the
-client reader accepts that document/root, it could remove the temporary-file
-bridge and pathname replacement while retaining its validation/adoption rules.
-
-### Other JSON asks remain open
-
-Object-member/key enumeration and preservation of original source bytes/raw
-token spans remain separate, unresolved portions of this report. The client's
-`JsonSpanDocument` scanner finds tunable scalar paths and raw token spans;
-`TuneDocument` preserves source text and owns splice, save and conflict policy.
-A memory parse alone would not delete those mechanisms.
-
-Arrays already support `size()`/`at()`, and filename/key/index diagnostic
-context already exists through `source_path()`/`where()`. Enumeration alone
-would not turn the consumed-leaf acceptance check into an unknown-key error;
-that also requires client knowledge of accepted/consumed fields. Keep these
-asks distinct when preparing further exhibits. Review the narrow report and
-refresh upstream before authorized filing through the
-[publication gate](#publication-gate-engpublish).
 
 ---
 
@@ -749,6 +705,72 @@ with no client change, and `debug-console.md`'s Release section stopped saying
 otherwise. The draft's "Alt+F4 and other command contracts remain required
 follow-up acceptance" did not survive either: the engine kept them by
 construction, narrower than GLFW, which drops Alt+Space too.
+
+## 12. ~~JSON is read-only, path-only and opaque~~ — split, `3af746b`
+
+Asked, in its fileable slice, for an in-memory parse into the same owning
+`JsonDocument` with a caller-supplied diagnostic name, so the Debug live-tuning
+client could stop writing each candidate to a `%TEMP%` file to reach the
+checked reader and rewriting that scratch path out of its errors. Object-key
+enumeration and the preservation of raw source spans stayed unfiled asks of
+the same report. **Split three ways.** The parse is **accepted**, in "Parse
+JSON from memory through the file reader's own parse":
+`parse_json(std::string_view text, std::string source_name)` in
+`engine/assets/json.h`. It throws `invalid_argument` for an empty name and
+`runtime_error` "parse_json - '<name>' is not valid JSON: ..." on bad text.
+The document copies the text rather than borrowing it, and `source_path()` is
+the name it was given. `read_json_file` is now file IO plus the same private
+parse, with its messages unchanged byte for byte. Enumeration is **accepted as
+its own story**, PI-20, "A misspelt key in a manifest or sprite sheet is
+refused" (engine BACKLOG), argued from the engine's loaders, which read a
+misspelt optional key as its default. This client's consumed-key check is a
+second caller, not the reason. PI-20 is not built, and `JsonValue` has no key
+accessor yet. Spans and source-preserving splicing are **declined**, citing
+ARCHITECTURE's "`assets` only reads", PHILOSOPHY's no hot-reload and no
+editor, T9 and T1. Preserving and splicing source text is a debug tool's
+policy, so it stays in the client.
+
+**Spent** in this commit. `GameTuning` and `Presentation` gain a constructor
+from a `JsonDocument`, and the path constructors delegate to it, so startup
+diagnostics are unchanged. `TuneTarget::validate` takes the candidate text
+and parses it with `parse_json` under the logical name (`tuning.json`,
+`presentation.json`). `tune_validate_and_apply` lost its `%TEMP%` bridge: the
+scratch path, the write and removal, the `replace_all` that rewrote the
+scratch path into the logical name in messages, and the comment citing this
+report. Rejections read as before: "tune: rejected: tuning.json: ...". The
+one-time sweep of empty `ColourWars-tune-<pid>` folders left by older builds
+went with it (`stale_tune_directories`, `tune_swept_`), along with its
+session check, the planted folders in `check-debug-console.ps1` phase 4, and
+`debug-console.md`'s mention. Acceptance's `check_tune_consumed` was a second
+scratch-file bridge, one temp candidate per leaf, and now parses each
+replaced text in memory. `tune_checks`' two guards stay as regression guards:
+a rejection names the content file, not a temporary, and no candidate file is
+left in `%TEMP%`. `json_spans.h` and `debug-console.md` say what is now the
+engine's and what is the client's by decision. The draft and its CMake
+exhibit are deleted.
+
+**Kept:** `JsonSpanDocument` and `TuneDocument`, the span scanner and the
+source-preserving splice, save and conflict policy, which stay client-owned
+by the decline. The consumed-key check also needs the client's own knowledge
+of which fields it accepts, so PI-20 would not replace it. No TODO row
+tracks PI-20. A pin bump that brings it can decide whether
+`check_tune_consumed` or `JsonSpanDocument` has anything to gain.
+
+**The prediction was wrong about the open halves and about the size of the
+bridge.** The ledger called enumeration and spans "separate, unresolved
+portions" that would each need an exhibit of their own before filing. The
+engine decided both ahead of filing and without them: it accepted
+enumeration on its own grounds and declined spans outright. The draft also
+understated the workaround in two ways. Acceptance's `check_tune_consumed`
+wrote a second scratch file per leaf, which the ledger never listed. And an
+applied candidate was copy-assigned over the live object together with its
+deleted scratch path in `source_path_`, so a later diagnostic from the live
+tuning or presentation would name that file. `replace_all` only ever
+rewrote the candidate's own messages. The logical name fixes that as a side
+effect. One wording changes: a syntax error in a candidate now reads
+"parse_json - 'tuning.json' ..." where it used to read "read_json_file -
+'tuning.json' ...". Nothing pins the old prefix. The ledger was right that a
+memory parse alone would not delete `JsonSpanDocument` or `TuneDocument`.
 
 ## 13. ~~`Key` has no names~~ — `2851ad9`
 

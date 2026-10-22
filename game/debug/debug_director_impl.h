@@ -383,9 +383,6 @@ private:
 	DebugStatus tune_reset(const std::string& what);
 	DebugStatus tune_save(const std::string& which, bool force);
 	std::vector<std::string> tune_diff_lines(const std::string& which);
-	// Old %TEMP%\ColourWars-tune-<pid> folders (earlier builds left them
-	// empty) are removed once, on the first edit.
-	bool tune_swept_ = false;
 
 	// Phase 4 ---------------------------------------------------------------
 
