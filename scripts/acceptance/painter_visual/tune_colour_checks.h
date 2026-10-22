@@ -190,7 +190,7 @@ void tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     }
 
     command("overlay.stations on"); require(level.station_label_count() > 0, "actual match created no station labels");
-    const Label* station = &level.station_label(0); const int station_count = level.station_label_count();
+    const UiText* station = &level.station_label(0); const int station_count = level.station_label_count();
     const auto draw_station = [&]
     {
         return tune_colour_draw(app, black, [&](DrawList& list) { station->draw(list); },
@@ -204,9 +204,13 @@ void tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         tune_colour_pixels(station_after, 0x103060) > 0 && station_before.pixels != station_after.pixels,
         "same-size station refresh did not recolour the existing label with premultiplied RGBA");
     command("overlay.stations off"); level.refresh_layout();
-    const Colour hidden = station->colour();
-    require(hidden.r == 0 && hidden.g == 0 && hidden.b == 0 && hidden.a == 0,
-        "hidden station label retained colour energy");
+    const Frame station_empty = tune_colour_frozen([&]
+    {
+        return tune_colour_draw(app, black, [](DrawList&) {},
+            Camera(station->bounds().top_left() - Vector2F(32, 32), 1.0f));
+    });
+    require(station->hidden() && tune_colour_frozen(draw_station).pixels == station_empty.pixels,
+        "hidden station label still drew");
     command("overlay.stations on"); level.refresh_layout();
     require(tune_colour_frozen(draw_station).pixels == station_after.pixels,
         "re-enabled existing station label lost its tuned RGBA colour");

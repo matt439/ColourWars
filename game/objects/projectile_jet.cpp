@@ -11,13 +11,14 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	RenderResources* render_resources,
+	RenderResources::SheetStrip strip,
 	const ProjectileTuning* tuning,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		ProjectileType::jet, render_resources,
+		ProjectileType::jet, render_resources, strip,
 		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
@@ -29,8 +30,7 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	// The pressure streak follows its travel, independently of the square
 	// collision volume. Sprite origins are source texels, not world units.
 	const RectangleI& source = this->sprite_sheet()->animation_strip(
-		this->sprite_sheet()->resolve_animation_strip(
-			this->details().animation_strip_name)).frame_rect(0);
+		strip.strip()).frame_rect(0);
 	this->set_origin(Vector2F(static_cast<float>(source.width) / 2.0f,
 		static_cast<float>(source.height) / 2.0f));
 	if (velocity.length_squared() > 0.0f)

@@ -59,6 +59,7 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#17`/`POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#28` | OPEN | LOW | M | Draw overview/monitor terrain through `Scene::draw` with `DrawList::camera()` and a path-set miniature flag; delete `miniature_view` and the scenery mirror; integration check of order, cull and pixels. [Next](docs/polish-terrain.md#small-view-terrain-readability-2026-10-18). |
 
 ## Feel and feedback
 
@@ -143,7 +144,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The seven live drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The four live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
@@ -154,9 +155,6 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half was answered by report 14 (`Application::frame_timings`). |
 | `ENG#15` | OPEN | MED | S | Review the prepared, unfiled development-staging convenience request and refresh upstream before filing; its synthetic Debug/Release phases pass. Runtime-install scope stays separate. [Report](docs/engine-reports/runtime-staging.md). |
-| `ENG#18` | OPEN | LOW | S | Review the prepared Label visibility convenience; refresh upstream before filing. Null Debug/Release passes; unfiled. Order/retirement/font questions stay separate. [Report](docs/engine-reports/label-visibility.md). |
-| `ENG#20` | OPEN | LOW | S | Review the active view-context request; refresh upstream before filing. Source audit and null Debug/Release illustration pass; unfiled. Art policy and Scene/order integration stay separate. [Report](docs/engine-reports/view-context.md). |
-| `ENG#22` | OPEN | LOW | S | Prepare the handle-overload request (re-pointing drawables takes names only) and a synthetic example; unfiled. Update-path compares, not a measured bottleneck. [Report](docs/review/engine-reports.md#22-handle-holding-drawables-can-only-be-re-pointed-by-name--draft-with-paint-splash-exhibit). |
 | `ENG#23` | OPEN | LOW | S | Prepare the hidden-window resize request (`set_resolution`'s resize has no `SWP_NOACTIVATE` and activates a hidden window) and a synthetic example; recheck upstream; unfiled. Five painter fixtures hold a `WH_CBT` veto meanwhile. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 

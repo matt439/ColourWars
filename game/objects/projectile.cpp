@@ -7,6 +7,13 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
+RenderResources::SheetStrip resolve_projectile_strip(
+    const ProjectileTuning& tuning, const RenderResources& render_resources)
+{
+    return render_resources.resolve_sheet_strip(tuning.details.sheet_name,
+        tuning.details.animation_strip_name);
+}
+
 namespace
 {
     // The projectile can grow as well as move. Clip the interval during which
@@ -82,6 +89,7 @@ Projectile::Projectile(const Vector2F& velocity,
     const Colour& team_colour,
     ProjectileType type,
     RenderResources* render_resources,
+    RenderResources::SheetStrip strip,
     const ProjectileTuning* tuning,
     const Colour& color,
     float rotation,
@@ -89,9 +97,7 @@ Projectile::Projectile(const Vector2F& velocity,
     SpriteFlip flip,
     float layer_depth) :
     MovingObject(velocity, rotation),
-    AnimationObject(tuning->details.sheet_name,
-                    tuning->details.animation_strip_name,
-                    render_resources, color, rotation, origin, flip, layer_depth),
+    AnimationObject(strip, render_resources, color, rotation, origin, flip, layer_depth),
     tuning_(tuning),
     player_num_(player_num),
     team_colour_(team_colour),
@@ -108,6 +114,7 @@ DiffusingProjectile::DiffusingProjectile(
     const Colour& team_colour,
     ProjectileType type,
     RenderResources* render_resources,
+    RenderResources::SheetStrip strip,
     const ProjectileTuning* tuning,
     const Colour& color,
     float rotation,
@@ -116,7 +123,7 @@ DiffusingProjectile::DiffusingProjectile(
     float layer_depth) :
     Projectile(velocity, team, player_num,
         team_colour, type,
-        render_resources, tuning, color, rotation,
+        render_resources, strip, tuning, color, rotation,
         origin, flip, layer_depth)
 {
 

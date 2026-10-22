@@ -201,7 +201,7 @@ namespace
         const TeamColour& colours, float scale, const std::filesystem::path& output,
         const std::string& prefix, std::ofstream& records)
     {
-        const ProjectileBuilder builder(&tuning);
+        const ProjectileBuilder builder(&tuning, app.render_resources());
         for (const PlayerTeam team : { PlayerTeam::a, PlayerTeam::b })
         {
             for (int direction = 0; direction < 8; ++direction)
@@ -283,7 +283,7 @@ namespace
     void contact(Application& app, const GameTuning& tuning, const TeamColour& colours,
         Surfaces& objects, ProjectileType type, PlayerTeam team, int owner, float fraction = 0.5f)
     {
-        const ProjectileBuilder builder(&tuning);
+        const ProjectileBuilder builder(&tuning, app.render_resources());
         const std::array<Vector2F, 4> centres = {
             Vector2F(block.width * fraction, 0), Vector2F(block.width * fraction, 50),
             Vector2F(0, block.height * fraction), Vector2F(90, block.height * fraction) };
@@ -433,7 +433,7 @@ namespace
             const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
             area.offset(half.x, half.y);
             const ProjectileSpray shot(area, Vector2F::ZERO, team, owner,
-                colours.team_colour(team), app.render_resources(), &tuning.projectile(ProjectileType::spray));
+                colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
             object.on_contact(shot, Vector2F::ZERO, 0);
         };
         const std::array<std::vector<RectangleF>, 4> obstacles = {{ {}, {},
@@ -443,7 +443,7 @@ namespace
             RectangleF(90 - look.thickness + look.edge_width, 0, look.thickness - look.edge_width, 80),
             RectangleF(0, 0, look.thickness - look.edge_width, 63.5f),
             RectangleF(0, 45.25f, look.thickness - look.edge_width, 18.25f) };
-        const ProjectileBuilder builder(&tuning);
+        const ProjectileBuilder builder(&tuning, app.render_resources());
         for (int view = 0; view < view_count; ++view)
         {
             const size_t index = static_cast<size_t>(view);

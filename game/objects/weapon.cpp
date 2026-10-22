@@ -45,7 +45,7 @@ Weapon::Weapon(const GameTuning* tuning,
     const WeaponDetails& details = this->details();
 
     this->ammo_ = tuning->starting_ammo();
-    this->proj_builder_ = std::make_unique<ProjectileBuilder>(tuning);
+    this->proj_builder_ = std::make_unique<ProjectileBuilder>(tuning, render_resources);
     this->sound_bank_ = audio_resources->sound_bank(details.sound_bank_name);
     this->loop_sound_ = resolve_loop_sound(*this->sound_bank_,
         this->weapon_tuning_->loop_sounds, team, sound_index);

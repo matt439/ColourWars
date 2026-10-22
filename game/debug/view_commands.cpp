@@ -28,7 +28,7 @@ void DebugDirectorImpl::register_view_commands()
 		{ "paint", "paint coverage per team and per seat, bottom left (F4)",
 			&DebugDirectorImpl::overlay_paint_ },
 		{ "stations", "every station's name at its place in the world, the goto targets "
-			"(labrador::Label objects in the scene, under structures and players)",
+			"(labrador::UiText objects in the scene, under structures and players)",
 			&DebugDirectorImpl::overlay_stations_ },
 	};
 

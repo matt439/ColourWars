@@ -167,7 +167,7 @@ namespace debug_console_acceptance
 			"until GO, the reveal's length, intro overrides\n";
 	}
 
-	// overlay.stations on a real Level: one labrador::Label per station in
+	// overlay.stations on a real Level: one labrador::UiText per station in
 	// the Level's Scene, at its authored place, made on first use and only
 	// hidden after that; and a match that shows and hides them plays out
 	// bit for bit as one that never does.
@@ -199,15 +199,10 @@ namespace debug_console_acceptance
 		director.attach_match(match);
 		const StationLabelPresentation& look = presentation.debug_overlay().station_label;
 		const std::vector<LevelStation> stations = world.levels.get("movement_course")->stations();
-		// Shown is the presentation colour premultiplied; hidden is a tint that
-		// adds nothing under the engine's ONE, INV_SRC_ALPHA blend, which takes
-		// all four channels at zero. Alpha zero alone would add its rgb.
+		// Shown and hidden alike carry the presentation colour premultiplied;
+		// hidden is UiText::set_hidden, which skips the draw.
 		const labrador::Colour shown_tint = CrudeDrawing::premultiplied(look.colour);
-		const auto hidden = [&](int index)
-		{
-			const labrador::Colour tint = match.level->station_label(index).colour();
-			return tint.r == 0.0f && tint.g == 0.0f && tint.b == 0.0f && tint.a == 0.0f;
-		};
+		const auto hidden = [&](int index) { return match.level->station_label(index).hidden(); };
 		require(stations.size() == 10, "The course has eight stations and two spawns");
 
 		// The reference: the same seed and keys with the overlay never on.
@@ -229,29 +224,33 @@ namespace debug_console_acceptance
 		require(impl.status_strip().find("stations") != std::string::npos, "The strip names the overlay");
 		for (int index = 0; index < level.station_label_count(); ++index)
 		{
-			const labrador::Label& label = level.station_label(index);
+			const labrador::UiText& label = level.station_label(index);
 			const LevelStation& station = stations[static_cast<std::size_t>(index)];
 			const mattmath::RectangleF bounds = label.bounds();
 			const mattmath::Vector2F expected = station.position + look.offset;
-			require(label.text() == labrador::widen(station.name) && label.colour() == shown_tint,
-				station.name + " is labelled with its name in the station colour, premultiplied");
+			require(!label.hidden() && label.text() == labrador::widen(station.name) && label.colour() == shown_tint,
+				station.name + " is shown, labelled with its name in the station colour, premultiplied");
 			require(std::fabs(bounds.x - expected.x) < 0.01f && std::fabs(bounds.y - expected.y) < 0.01f &&
 				bounds.width > 0.0f && bounds.height > 0.0f,
 				station.name + "'s label is a real box at the station plus the offset, which the scene culls by");
 		}
-		const auto visible = [&] { return level.station_label(0).colour() == shown_tint; };
+		const auto visible = [&] { return !hidden(0) && level.station_label(0).colour() == shown_tint; };
 		for (int step = 0; step < length; ++step)
 		{
 			if (step == 100)
 			{
+				const mattmath::RectangleF shown_box = level.station_label(0).bounds();
 				require(impl.execute("overlay stations").ok && level.station_label_count() == 10 && hidden(0) &&
-					hidden(9), "Turned off, the labels stay and take a tint that adds nothing");
+					hidden(9) && level.station_label(0).colour() == shown_tint &&
+					level.station_label(0).bounds() == shown_box,
+					"Turned off, the labels stay, hidden, keeping their colour and their box");
 				require(impl.execute("tune presentation.debug_overlay.station_label.colour 10203000").ok,
 					"An invisible overlay may still receive an audited transparent colour");
 				level.refresh_layout();
 				require(hidden(0) && hidden(9) &&
+					level.station_label(0).colour() == CrudeDrawing::premultiplied(labrador::Colour(16, 32, 48, 0)) &&
 					impl.execute("tune.reset presentation.debug_overlay.station_label.colour").ok,
-					"A live colour edit does not reveal hidden station labels, and resets independently");
+					"A live colour edit is adopted by hidden station labels without revealing them, and resets independently");
 			}
 			if (step == 101)
 			{
@@ -267,7 +266,7 @@ namespace debug_console_acceptance
 		// Do the explicit rand sentinel after the seeded simulation comparison,
 		// so the sentinel's own seeding cannot perturb that comparison.
 		const MatchFingerprint before_colour = MatchFingerprint::of(level, length);
-		std::vector<const labrador::Label*> original_labels;
+		std::vector<const labrador::UiText*> original_labels;
 		for (int index = 0; index < level.station_label_count(); ++index)
 			{ original_labels.push_back(&level.station_label(index)); }
 		std::srand(8417); const int expected_random = std::rand(); std::srand(8417);
@@ -291,13 +290,14 @@ namespace debug_console_acceptance
 
 		// Every build re-applies the overlay, and overlay none hides the labels.
 		match.build();
-		require(match.level->station_label_count() == 10 && match.level->station_label(0).colour() == shown_tint,
+		require(match.level->station_label_count() == 10 && !hidden(0) &&
+			match.level->station_label(0).colour() == shown_tint,
 			"A rebuild shows the labels again");
-		require(impl.execute("overlay none").ok && hidden(0),
-			"overlay none hides them");
+		require(impl.execute("overlay none").ok && hidden(0) && match.level->station_label(0).colour() == shown_tint,
+			"overlay none hides them and keeps their colour");
 		director.detach_match(match);
-		std::cout << "PASS overlay.stations: a Label per station in the Scene, at the station, made once, "
-			"hidden by a zero tint, and the match unchanged by it\n";
+		std::cout << "PASS overlay.stations: a UiText per station in the Scene, at the station, made once, "
+			"hidden by set_hidden with its colour and box kept, and the match unchanged by it\n";
 	}
 }
 #endif

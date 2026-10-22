@@ -93,14 +93,23 @@ Player::Player(const RectangleF& rectangle,
         idle_sheet->resolve_animation_strip(player.idle.strip)).frame_rect(0);
     this->idle_paint_ = idle_sheet->animation_strip(
         idle_sheet->resolve_animation_strip(player.idle.paint_strip)).frame_rect(0);
+    for (size_t index = 0; index < this->figure_clips_.size(); ++index)
+    {
+        const PlayerAnimationTuning& clip =
+            this->animation_info(static_cast<PlayerAnimationState>(index));
+        this->figure_clips_[index] = {
+            render_resources->resolve_sheet_frame(clip.sheet, clip.uniform_texture),
+            render_resources->resolve_sheet_strip(clip.sheet, clip.strip),
+            render_resources->resolve_sheet_strip(clip.sheet, clip.paint_strip) };
+    }
     for (const PlayerAnimationState state : { PlayerAnimationState::taking_off,
         PlayerAnimationState::landing, PlayerAnimationState::firing,
         PlayerAnimationState::hurt, PlayerAnimationState::elimination })
     {
-        const PlayerAnimationTuning& clip = this->animation_info(state);
-        const SpriteSheet* sheet = render_resources->sprite_sheet(clip.sheet);
-        const AnimationStrip& strip = sheet->animation_strip(
-            sheet->resolve_animation_strip(clip.strip));
+        const RenderResources::SheetStrip& body =
+            this->figure_clips_[static_cast<size_t>(state)].body;
+        const AnimationStrip& strip =
+            render_resources->sprite_sheet(body.sheet())->animation_strip(body.strip());
         this->action_clips_[static_cast<size_t>(state) -
             static_cast<size_t>(PlayerAnimationState::taking_off)] =
             { strip.frame_count(), strip.frame_time() };

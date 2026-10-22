@@ -25,7 +25,7 @@ void draw_miniature_view(DrawList& list, const Camera& camera,
 		if (!object->cull_bounds(units_per_pixel).intersects(visible)) { continue; }
 		if (const auto* structure = dynamic_cast<const Structure*>(object))
 		{
-			structure->draw_miniature(list, camera);
+			structure->draw_miniature(list);
 		}
 		else
 		{

@@ -273,7 +273,7 @@ namespace
 		auto cover = std::make_unique<Structure>("sprite_sheet_1", "square_white_4", slab,
 			std::make_unique<RectangleF>(slab), &world.render, CollisionObjectType::structure);
 		CollisionObject* targets[]{ cover.get() };
-		auto shots = ProjectileBuilder(&tuning).build_projectiles({ -40.0f, 50.0f },
+		auto shots = ProjectileBuilder(&tuning, &world.render).build_projectiles({ -40.0f, 50.0f },
 			{ speed, 0.0f }, PlayerTeam::a, 0, Colour::blue, ProjectileType::jet, &world.render);
 		Projectile& shot = *shots.at(0);
 		shot.update(SECONDS_PER_STEP);

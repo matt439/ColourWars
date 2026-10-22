@@ -6,8 +6,23 @@
 #include "engine/core/game_object.h"
 #include "engine/render/animation_object.h"
 #include "engine/render/colour.h"
+#include "engine/render/render_resources.h"
 #include "game/tuning.h"
 
+#include <array>
+
+// PaintTuning's splash clips, resolved once against a RenderResources: the
+// clip a tile is built with, and the one each ProjectileType restarts it on.
+// Tuning is read before any sheet exists, so these live beside it, not in it.
+struct PaintSplashClips
+{
+	labrador::RenderResources::SheetStrip initial;
+	std::array<labrador::RenderResources::SheetStrip,
+		static_cast<size_t>(ProjectileType::count)> by_type;
+
+	static PaintSplashClips resolve(const PaintTuning& paint,
+		const labrador::RenderResources& render_resources);
+};
 
 class PaintTileSplash final : public labrador::AnimationObject, public labrador::GameObject
 {
@@ -15,8 +30,7 @@ public:
 	PaintTileSplash() = delete;
 	PaintTileSplash(
 		const mattmath::RectangleF& rectangle,
-		const std::string& sheet_name,
-		const std::string& animation_strip_name,
+		labrador::RenderResources::SheetStrip clip,
 		labrador::RenderResources* render_resources,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
@@ -26,8 +40,7 @@ public:
 
 	void set_rectangle_center(const mattmath::Vector2F& center);
 	void reset_and_play();
-	void reset_and_play(const std::string& sheet_name,
-		const std::string& animation_strip_name);
+	void reset_and_play(labrador::RenderResources::SheetStrip clip);
 	bool active() const;
 	void set_colour(const labrador::Colour& colour) override;
 
@@ -45,12 +58,8 @@ private:
 	float frame_time_ = 0.0f;
 	int frame_count_ = 0;
 	bool active_ = false;
-	// Which clip frame_time_, frame_count_ and the origin were read from. A
-	// repeat contact with the same sheet and strip reuses them rather than
-	// resolving the strip again; a live tuning edit changes the key.
-	const labrador::SpriteSheet* clip_sheet_ = nullptr;
-	std::string clip_name_;
-	void read_clip(const std::string& animation_strip_name);
+	// Reads frame_time_, frame_count_ and the origin from the current clip.
+	void read_clip(labrador::RenderResources::SheetStrip clip);
 };
 
 
@@ -60,9 +69,11 @@ class PaintTile final : public labrador::TextureObject, public labrador::GameObj
 {
 public:
 	PaintTile() = delete;
-	// Borrowed tuning must outlive the tile; it supplies the splash assets and size.
+	// Borrowed tuning and clips must outlive the tile; they supply the splash
+	// size and the splash animations, resolved against render_resources.
 	PaintTile(const mattmath::RectangleF& rectangle,
 		const PaintTuning* paint,
+		const PaintSplashClips* splash_clips,
 		labrador::RenderResources* render_resources,
 		const TeamColour& team_colours,
 		const labrador::Colour& color = labrador::Colour::white,
@@ -97,6 +108,7 @@ private:
 	int player_num_ = -1;
 	TeamColour team_colours_ = TeamColour();
 	const PaintTuning* paint_ = nullptr;
+	const PaintSplashClips* splash_clips_ = nullptr;
 	float wet_age_ = 0.0f;
 	bool along_x_ = true;
 	bool leading_ = true;

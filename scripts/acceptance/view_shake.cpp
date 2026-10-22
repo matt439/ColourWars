@@ -273,6 +273,7 @@ namespace
         {
             return ProjectileSpray(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
                 PlayerTeam::b, 1, Colour::white, &this->render,
+                resolve_projectile_strip(this->tuning.projectile(ProjectileType::spray), this->render),
                 &this->tuning.projectile(ProjectileType::spray));
         }
     };

@@ -96,7 +96,7 @@ namespace
             Vector2F position = { -40.0f, 50.0f }, Vector2F velocity = { 2000.0f, 0.0f },
             int owner = 3)
         {
-            return ProjectileBuilder(&this->tuning).build_projectiles(position,
+            return ProjectileBuilder(&this->tuning, &this->render).build_projectiles(position,
                 velocity, PlayerTeam::a, owner, Colour::blue, type, &this->render);
         }
 

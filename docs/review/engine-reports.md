@@ -145,9 +145,6 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 6 | Shared Music/SFX attenuation remains emitter work | per-emitter saved gains and standalone `audio_gain_exhibit.cpp` | local unfiled draft - master checked 2026-10-20; synthetic Debug/Release runs pass |
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 15 | Runtime packaging and content staging are repeated in the client | existing client release/staging rules and the synthetic `runtime-staging/` fixture | local unfiled draft - staging slice checked against master 2026-10-20; Debug/Release phases pass; runtime install remains separate |
-| 18 | Independent Label visibility convenience | supported zero-tint/empty-text alternatives and standalone `label-visibility/` null recording | local unfiled draft - master checked 2026-10-20; null Debug/Release verified; order/retirement/font questions stay separate |
-| 20 | Active view context during normal world drawing | miniature traversal and standalone `view-context/` caller-context null illustration | local unfiled draft - master checked 2026-10-20; API source audit and null Debug/Release verified; Scene/order integration stays separate |
-| 22 | Handle-holding drawables can only be re-pointed by name | paint-splash reset, projectile construction and figure clip changes, each handing back a name | local unfiled draft - checked against upstream master `0c15f34` 2026-10-22; no sanitized request or synthetic example yet |
 | 23 | Resizing a hidden window activates it | `SettingsProbeActivationGuard`, the `WH_CBT` veto five painter fixtures hold around `set_resolution` | local unfiled draft - checked against pin `19cf650` 2026-10-22; no sanitized request or synthetic example yet |
 
 Nothing else is outstanding, on either side, beyond the live reports below and the
@@ -377,221 +374,6 @@ Record an engine implementation or a decline with its trade-off here; this
 preparation makes neither and changes no engine pin.
 
 ---
-
-<a id="18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit"></a>
-
-## 18. Independent Label visibility convenience — **draft with station-label exhibit**
-
-**Visibility convenience slice prepared 2026-10-20.** The sanitized
-[request](../engine-reports/label-visibility.md) and standalone
-[synthetic null-renderer exhibit](../../scripts/engine-reports/label-visibility/label_visibility_recording.cpp)
-are ready for review and remain **unfiled**. The checked upstream master was
-freshly fetched at 19:34:53 UTC as
-`52e809a5a0229d37db4373faa7853df4c861a310`. The exact 26-translation-unit
-CMake consumer passed MSVC C++20 `/W4 /WX` Debug and Release builds and runs;
-both exited 0 with empty stderr and thirteen exact expected output lines.
-
-### Supported hiding and the convenience request
-
-The station-label client in `Level::refresh_station_labels` keeps scene-owned
-Labels and sets all four tint channels to zero while its overlay is off.
-Showing them restores the presentation colour. That is a supported current
-workaround, and `set_text(L"")` is another working alternative: it emits no
-glyphs, while changing the words and measured box until the client restores
-them. A client-owned GameObject can also contain a Label and choose whether
-to forward draw. The current API can already hide a label.
-
-The prepared request is only a Label-level visibility convenience independent
-of text, bounds and colour. The real null recording checks zero-RGBA vertex
-colour, unchanged words/bounds/geometry, alpha-only retained RGB, and tint/text
-restoration. It does not prove pixels, blending, readability or performance.
-The engine remains free to prefer these small client workarounds.
-
-### Other portions remain open and separate
-
-Scene category-order documentation, a possible layer mechanism, retirement of
-ordinary objects and public font rebinding remain outside this narrow report.
-The current renderer explicitly documents call order and ignored
-`layer_depth`; that is a contract, not an unproven renderer defect. The null
-fixture calls Label directly and does not test Scene's cull, ownership,
-admission, retirement or traversal. `TextObject::set_font` is protected, not a
-public Label font setter.
-
-A visibility flag alone would not delete the client's lazy first-use
-`end_tick()` admission; that depends on when the client creates the pending
-labels. Keep these questions separate when preparing further exhibits.
-Freshly fetch and recheck upstream master before any filing through the
-[publication gate](#publication-gate-engpublish).
-
----
-
-## 20. Scene drawing gives client objects no view context - **draft with miniature-terrain exhibit**
-
-**View-context request prepared 2026-10-20.** The sanitized
-[request](../engine-reports/view-context.md) and standalone
-[synthetic null-renderer illustration](../../scripts/engine-reports/view-context/view_context_recording.cpp)
-are ready for review and remain **unfiled**. Fresh upstream master was fetched
-at 19:34:53 UTC as `52e809a5a0229d37db4373faa7853df4c861a310`; the checked
-worktree matched it. The exact 21-translation-unit CMake consumer passed MSVC
-C++20 `/W4 /WX` Debug and Release builds/runs, both exit0 with empty stderr
-and ten exact expected output lines.
-
-### Source evidence and client workaround
-
-`GameObject::draw(DrawList&)` has no active view index or context parameter.
-DrawList exposes camera/viewport setters but no current-value readers. A
-caller can already query `Scene::view(index)`, and `cull_bounds` already gets
-inverse zoom for pure conservative extent. Neither gives the normal draw its
-active range context; culling must not become a mutable handoff between views.
-
-The client miniature path in `draw_miniature_view` and
-`Level::draw_miniature_world` retains explicit camera/viewport values, borrowed
-scenery admissions and a repeated cull/draw walk. Structure material stays
-before its paint and later actors. Its projected strokes and ruler-detail
-selection are client art policy. ViewOverlay runs after the world, so it is
-not an equivalent dispatch slot for replacing terrain before later objects.
-
-The fixture demonstrates an existing explicit caller-owned context helper:
-an ordinary world rectangle records 16x1 and 4x0 at the selected views; a
-client minimum-height policy records 16x1 and 4x1. Local coordinates, viewport
-origin, caller-state restoration, unchanged object bounds and existing cull
-allowance are checked. The helper is client code, not an invented engine API.
-Missing read access is public-source evidence, not a runtime API-absence test.
-
-### Narrow ask and limits
-
-Let normal world drawing read or receive its current camera and viewport,
-while the client retains art policy. The exact accessor/context/dispatch
-shape is upstream's decision. The null fixture does not instantiate Scene or
-test ownership, culling, ordering, admission, retirement or render-worker
-fan-out. It records geometry, not pixels, readability or performance.
-
-Scene category order and the collision span's unspecified order remain
-separate contract concerns. A context API could enable this client's normal
-world-slot projection, but deleting every borrowed list or repeated traversal
-would need a separate integration check. Freshly fetch and recheck upstream
-master before any filing through the
-[publication gate](#publication-gate-engpublish).
-
----
-
-## 22. Handle-holding drawables can only be re-pointed by name — **draft with paint-splash exhibit**
-
-**Drafted 2026-10-22 against the pin `52e809a`; rechecked the same day against
-upstream master `0c15f34`,** whose `engine/` sources match `52e809a` apart from
-one CMake comment, so every engine citation below holds there. Refresh upstream
-again immediately before filing. There is no sanitized request or synthetic
-example yet; preparing them is the next step.
-
-### What happens
-
-The engine's drawables hold handles, and say why. `SpriteSheetObject` keeps a
-`SpriteSheetHandle` because holding the name "means a
-std::map<std::string, ...> descent per draw, per drawable" (PHILOSOPHY T7, T8);
-`TextureObject` keeps a `frame_handle`, `AnimationObject` a `strip_handle`, and
-`Registry` states the rule outright: "Per-frame code touches no string-keyed
-map". The draw path honours it.
-
-The setters that *re-point* one of those drawables do not. Every one takes
-names only:
-
-- `AnimationObject::set_animation_strip_and_reset(const std::string&, const std::string&)`
-  ([animation_object.h](../../external/labrador/engine/render/animation_object.h));
-- `SpriteSheetObject::set_sprite_sheet(const std::string&)`
-  ([sprite_sheet_object.h](../../external/labrador/engine/render/sprite_sheet_object.h)),
-  which the strip setter and the two-argument frame setter call;
-- both `TextureObject::set_frame` overloads, sheet-and-frame and frame-only
-  ([texture_object.h](../../external/labrador/engine/render/texture_object.h));
-- `UiTexture::set_sprite_frame(const std::string&)` and `UiTexture::set_texture`
-  ([widget.h](../../external/labrador/engine/ui/widget.h));
-- and the `AnimationObject` and `TextureObject` constructors.
-
-The client can already resolve the handles — `RenderResources::resolve_sprite_sheet`,
-`SpriteSheet::resolve_animation_strip` and `resolve_sprite_frame` are public —
-but the members are private and no setter accepts one. A client holding a
-resolved handle has to hand back the name, and each call pays a
-`std::map<std::string, int>` descent in `Registry` for the sheet and another
-in `NameTable` for the strip or frame. Nothing is allocated (every hot caller below
-passes an existing `std::string`); the cost is string compares on the update
-path, in exactly the place the engine's own comments say it should not be.
-
-### Exhibits
-
-- **Paint splash, per painted tile.** `PaintTile::paint` calls
-  `PaintTileSplash::reset_and_play(sheet, strip)`, which calls
-  `set_animation_strip_and_reset` with the tile's splash sheet and the
-  per-`ProjectileType` strip name ([paint_tile.cpp](../../game/objects/paint_tile.cpp)).
-  The sheet never changes and the strip is one of five. It runs per tile per
-  paint contact, and the sprayer's `shoot_interval` is `0.0` and the roller's
-  `0.0001` ([tuning.json](../../game/content/tuning.json)), so with a trigger
-  held it is effectively every tick, several tiles per contact, per firing player.
-- **Projectile construction, per spawn.** `Projectile`'s constructor passes
-  `details.sheet_name` and `details.animation_strip_name` to the
-  `AnimationObject` constructor ([projectile.cpp](../../game/objects/projectile.cpp));
-  sprayer and roller spawn every tick while firing, and a mister shot spawns
-  several. `ProjectileJet` resolves the strip a further time to read its frame
-  size ([projectile_jet.cpp](../../game/objects/projectile_jet.cpp)).
-- **Figure clip change, per animation-state change.** `Player::set_animation_state`
-  calls `TextureObject::set_frame(info.sheet, info.uniform_texture)` and
-  `set_animation_strip_and_reset(info.sheet, info.strip)`, then
-  `FigureClothing::select` makes the same call again for the paint strip
-  ([player_figure.cpp](../../game/objects/player_figure.cpp),
-  [figure_clothing.h](../../game/objects/figure_clothing.h)): the sheet resolved
-  three times per change. Every `PlayerAnimationState` is a closed enum with
-  a fixed tuning record, so the whole table could be resolved once per player.
-- **Menu icons.** `MenuIcon::set_sprite_frame` and the team- and weapon-select
-  pages re-point `UiTexture`s by frame name
-  ([menu_panel.cpp](../../game/states/menu_panel.cpp)); minor, menu-only.
-
-This is not a measured Release bottleneck and is not filed as one. A source
-audit (2026-10-22) found no allocation and no draw-path string lookup in
-Release; these sites are O(log n) compares on the update path. The report is
-that the API contradicts its own stated rule at the one point a client cannot
-work around, not that a frame is slow.
-
-### The ask
-
-Handle overloads beside the name forms, which stay:
-
-- `set_animation_strip_and_reset(SpriteSheetHandle, SpriteSheet::strip_handle)`;
-- `set_frame(SpriteSheetHandle, SpriteSheet::frame_handle)` and
-  `set_frame(SpriteSheet::frame_handle)`;
-- `UiTexture::set_sprite_frame(SpriteSheet::frame_handle)` (and a handle
-  `set_texture`);
-- handle constructors for `AnimationObject` and `TextureObject`.
-
-The pairing rule the engine already enforces — a strip or frame handle only
-means anything against the sheet it came from, so sheet and element move
-together — carries over unchanged; the two-handle forms keep it. Whether a
-mismatched pair is checked, asserted or documented is upstream's call.
-
-**Secondary, low priority, hygiene.** `Registry::indices_` and
-`NameTable::indices_` are `std::map<std::string, int>` with the default
-comparator ([registry.h](../../external/labrador/engine/core/registry.h),
-[name_table.h](../../external/labrador/engine/core/name_table.h)), and
-`resolve`/`get`/`contains` take `const std::string&`, so a literal or
-`std::string_view` caller builds a temporary. `std::less<>` and `string_view`
-parameters would fix that, and are the prerequisite for any client
-`string_view` parameter above them to be worth anything. Today every hot caller
-passes a `std::string` and the literals in use fit the small-string buffer, so
-this rides with the main ask rather than standing alone. This client's
-`DebugRegistry` ([debug_registry.h](../../game/debug/debug_registry.h)) already
-uses `std::less<>`.
-
-### What an answer lets this repository delete
-
-- The name round-trip in the splash reset: `PaintTile`'s shared paint record
-  could hold one sheet handle and five strip handles, resolved at level build,
-  and `reset_and_play` would take handles.
-- The per-spawn name resolution in `Projectile` and `ProjectileJet`: the
-  projectile builder could resolve each `ProjectileType`'s sheet and strip once.
-- Three sheet and three element resolutions per `Player` state change: one
-  handle table per `PlayerAnimationState`, built in `Player`'s constructor and
-  shared with `FigureClothing`.
-- The repeat-clip gate in `PaintTileSplash::reset_and_play`, added so a repeat
-  contact skips re-resolving the strip only to read its frame metrics, and any
-  similar client caching: with handles in hand those metrics are one indexed
-  read.
 
 ## 23. Resizing a hidden window activates it — **draft with activation-guard exhibit**
 
@@ -1125,6 +907,55 @@ engine ruled it out on its own resolution contract. A scaled-display look at
 ColourWars is not this report's business: OCA-66 owns the attended runs, and
 this repository's own, if it wants one, would be a new `DECISION` row.
 
+<a id="18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit"></a>
+
+## 18. ~~Independent Label visibility convenience~~ — document only, `30cb06a`
+
+Asked for a `Label`-level visibility convenience independent of text, bounds
+and colour, for the Debug station labels, which hid by a tint of zero in all
+four channels; `set_text(L"")` and a client wrapper GameObject were offered as
+the alternatives already available. **Document only**, in "Point Label at
+UiText::set_hidden, and warn of the zero-alpha tint". No `Label::set_visible`:
+`UiText` (`engine/ui/widget.h`) is already text a scene can hold, its
+`set_hidden` skips the draw and keeps the words, `bounds()` and the colour, and
+it is not `final`, so a hidden flag on `Label` would be two spellings of one
+mechanism (T4). The decline does not rest on a caller count: under The public
+face's test the client writes nothing, it changes a type. `label.h`'s class
+comment now points at `UiText`, and names `set_text(L"")`, gated on a change, as
+the supported hide when the box may go empty. `colour.h` at `make_transparent`
+and `renderer.h` at the `draw_sprite`/`draw_text` tints now say that a
+zero-alpha tint still adds its colour under the premultiplied blend
+(`SEAM.md#5`). `tests/ui/text_widget_tests.cpp` pins `UiText`'s hidden early-out
+and its kept bounds. Category order, layers, retiring plain objects and a
+public `set_font` were not decided, and were never filed.
+
+**Spent** in this commit. The station labels are `UiText` now
+(`Level::station_labels_`, `station_label()`), built shown in the premultiplied
+presentation colour. `refresh_station_labels` sets that colour every time and
+then `set_hidden(!overlays_.stations)`, where it used to swap in
+`Colour(0, 0, 0, 0)`; the ternary and the comment citing this report are gone,
+and the premultiplication comment cites `renderer.h`. A hidden label keeps its
+real, edited colour. The `debug_console` stations check asserts `hidden()`, the
+kept colour and the kept box, and that a live colour edit is adopted while
+hidden without revealing; the painter `tune_colour` check asserts `hidden()` and
+that a hidden label draws nothing. The first-use creation and its `end_tick()`
+admission stay, which the engine names client policy. `set_text(L"")` was not
+taken: it changes the box the scene culls by. The draft and its null-renderer
+exhibit are deleted.
+
+**`Label` has no client here again.** The 2026-08-15 audit counted giving it
+one as a debt paid ([What the audit changed](#what-the-audit-changed)); the
+station labels were that client, and moving them is the engine's own
+recommendation.
+
+**The prediction was wrong about the premise.** The draft's case was that no
+engine class hides scene text while keeping its words, box and colour, and it
+listed only the zero tint, empty text and a wrapper as alternatives; `UiText`,
+one module over, already did it. The draft also checked the alpha-only tint as
+a side control, where the engine found it the real defect: `make_transparent`
+looks like the way to hide something and still draws. The client's zero-RGBA
+tint was right by care, not by any documented contract.
+
 <a id="19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit"></a>
 
 ## 19. ~~No public later-show convenience for a hidden Application~~ — needs more evidence, `cacf112`
@@ -1175,6 +1006,60 @@ out that the white flash itself has never been observed. The hidden control's
 anything: a hidden windowed window makes no size report before its constructor
 returns.
 
+## 20. ~~Scene drawing gives client objects no view context~~ — accepted, narrowed, `11ec1fc`
+
+Asked that normal world drawing could read or receive its current camera and
+viewport, with the shape left upstream and the art policy kept here; the
+exhibit was the overview/monitor miniature walk, which re-ran Scene's cull to
+hand `Structure` a camera. **Accepted, narrowed**, in "Let a drawable read its
+view's camera and viewport from the DrawList". `DrawList::camera()` returns the
+last `set_camera` on that list this frame, else `Camera::DEFAULT_CAMERA`, and
+`DrawList::viewport()` the viewport as last given to `set_viewport`, not
+snapped, else the whole back buffer. Both are valid only on a valid list and
+must not be stored; all five backends define them. `renderer.h` adds the
+contract that a draw which grows as the camera zooms out must say so through
+`cull_bounds(units_per_pixel)`. `game_object.h` now says a view-dependent
+`draw()` reads the list, replacing a sentence about a camera no `draw()` could
+reach, and `scene.h`'s `ViewOverlay` comment says the list arrives with the
+view's camera and viewport. `GameObject::draw`'s signature and Scene's dispatch
+are unchanged: a `draw(DrawList&, const DrawContext&)` (T8, and a source break)
+and a mutable per-view handoff (T2, under the fan-out) were refused. The engine
+supplies the mechanism and says it does not claim the client's deletion works.
+
+**Spent, in part,** in this commit. The threaded camera is gone:
+`TerrainMaterial::paint_miniature`, `Structure::draw_miniature` and
+`StructurePaintable::draw_miniature` take only the list, and `paint_miniature`
+copies `draw_list.camera()` (a copy, because it then sets `DEFAULT_CAMERA` on the
+same list) and restores it as before. `miniature_view`, StagePreview and the
+painter fixtures drop the argument; every caller already set the camera on the
+list, so pixels are unchanged. `projected_miniature_quads(const Camera&)` keeps
+its parameter as the test seam it is. The draft and its null-renderer
+illustration are deleted.
+
+**Kept, and now `POL#28`:** the sequential overview/monitor walk in
+`miniature_view.cpp` and its `dynamic_cast<const Structure*>`,
+`Level::draw_miniature_world`'s view offset, the `scenery_` mirror and
+StagePreview's own walk. Deleting them means `Structure::draw` choosing the
+miniature art itself so that `Scene::draw` can draw those views, and this client
+chooses that art by path (overview, monitor, stage preview), not by zoom. A
+scale rule would switch 4-player gameplay panes to miniature strokes in a window
+under about 540 pixels tall. So the deletion needs a path-set mode flag (the
+engine's "a const flag set in update()") and moves those views onto Scene's
+fan-out and category order, which is the integration check the decision asks
+for. [polish-terrain.md](../polish-terrain.md#small-view-terrain-readability-2026-10-18)
+owns it.
+
+**The prediction was wrong about what a reader would buy.** The draft said view
+context "could enable this client's normal world-slot projection" and left the
+deletion to a separate check, without seeing that a camera alone cannot delete
+the borrowed walk: it needs a behaviour decision the draft never named, the
+path-set mode. The draft also argued a convenience, where the engine found a
+stated rule contradicted: `scene.h` forbids hand-copied per-view walks, and
+`game_object.h` described a camera a `draw()` could not get. And it did not
+foresee the cull contract. The miniature strokes are clipped to their
+structure's own extent, so by this client's reading they already meet it; the
+`POL#28` pixel oracles are where that gets checked.
+
 ## 21. ~~Digital action evaluation remains client code~~ — declined, `197aff1`
 
 Asked (formerly `GAP#F2`) for generic evaluation of typed physical bindings
@@ -1211,6 +1096,68 @@ client to combine" — was the answer, and the engine already did the second.
 This is the first report here whose exhibit was declined outright, which
 breaks the six-of-seven strike rate [above](#why-the-exhibits-matter-more-than-the-asks)
 rather than extending it.
+
+## 22. ~~Handle-holding drawables can only be re-pointed by name~~ — accepted, narrowed, `bec82f0`
+
+Asked for handle overloads beside the name forms
+(`set_animation_strip_and_reset(SpriteSheetHandle, strip_handle)`,
+`set_frame(SpriteSheetHandle, frame_handle)` and `set_frame(frame_handle)`,
+`UiTexture` handle forms, handle constructors for `AnimationObject` and
+`TextureObject`) plus `std::less<>` and `string_view` on `Registry`/`NameTable`.
+The per-contact splash reset, the per-spawn projectile constructor and the
+per-state figure clip change each handed back names on the update path, against
+PHILOSOPHY's "Per-frame code touches no string-keyed map". **Accepted,
+narrowed**, in "Re-point sprites and animations by a resolved sheet pair".
+`render_resources.h` adds `RenderResources::SheetFrame` and `SheetStrip`,
+two-handle values only `resolve_sheet_frame`/`resolve_sheet_strip` can make, so
+a pair cannot be mismatched; each resolve throws naming the missing name.
+`TextureObject` and `AnimationObject` take them through public constructors and
+protected `set_frame(SheetFrame)` and `set_animation_strip_and_reset(SheetStrip)`,
+which throw at the call for an unresolved pair. The name setters are rebuilt on
+the pairs and are now atomic, so a bad name leaves the object unchanged: a
+silent behaviour change, recorded in `CHANGES.md`. **Declined:** the raw
+two-handle overloads (a frame handle from one sheet passed with another fails
+quietly, T2/T6, and T5 puts the check in the type), the frame-only `set_frame`
+(`draw_with` already draws another frame of the same sheet), the `UiTexture`
+forms (menus re-point on input; a one-line overload if a per-frame caller
+appears) and `std::less<>` (once objects hold pairs every remaining resolve is
+load-time).
+
+**Spent** in this commit, at all three hot sites. *Splash:* `PaintSplashClips`
+holds the tile's build-time clip and one `SheetStrip` per `ProjectileType`,
+resolved from `PaintTuning`; each `StructurePaintable` resolves it once and lends
+it to its tiles, and is no longer copyable because they borrow it.
+`PaintTileSplash::reset_and_play` takes the pair and reads the clip's frame time,
+count and origin by index, so the repeat-clip gate (`clip_sheet_`, `clip_name_`)
+and the comment citing this report are deleted. *Projectiles:*
+`ProjectileBuilder` takes the `RenderResources` and resolves each type's strip
+once (`resolve_projectile_strip`); every projectile constructor takes the
+`SheetStrip`, `Projectile` builds its `AnimationObject` from it, and
+`ProjectileJet` reads its frame size through it instead of resolving the strip
+again. *Figure:* `Player` resolves a `FigureClip` per `PlayerAnimationState`
+(uniform frame, body strip, paint strip) in its constructor;
+`set_animation_state` and `FigureClothing::select` re-point by pair, and the
+action-clip table reads from it. Frame times are still read live from tuning.
+Acceptance fixtures that build projectiles or tiles directly pass resolved
+pairs. There was no draft or exhibit to delete.
+
+**Kept:** the menu icons and the team- and weapon-select pages re-point
+`UiTexture`s by name, by the decline; load-time resolves (validation, the idle
+frame rectangles, supply strips) stay on names; `DebugRegistry` keeps its own
+`std::less<>`. No frame-time gain is claimed, since none was ever measured: this
+is conformance to the stated rule. A missing name now throws at level, weapon or
+player construction instead of at the first contact or spawn, and startup
+validation already checks every one.
+
+**The prediction was wrong about the shape, and about where the splash handles
+live.** The draft asked for raw handles and left whether a mismatched pair is
+"checked, asserted or documented" upstream; the engine made a mismatch
+unrepresentable, so the client spends pairs and cannot assemble one from halves
+it resolved separately. Three of the four asks were declined, and so was the
+`std::less<>` hygiene the draft said "rides with the main ask". The draft put the
+splash handles in "PaintTile's shared paint record", which is `PaintTuning`, read
+before any sheet exists; they needed a record of their own beside it. And it did
+not foresee the atomic name setters.
 
 ---
 
@@ -1283,8 +1230,10 @@ changed none of the facts.
   client had not got round to exercising, a debt this repository owed the
   engine rather than the other way round, and both are now paid.
   `Level::update_level_logic` hands `contacts()` to every player's
-  `end_contacts`. The Debug overlay `overlay.stations` holds one `Label` per
-  station in the level's scene. Using `Label` turned up report 18 above.
+  `end_contacts`. The Debug overlay `overlay.stations` held one `Label` per
+  station in the level's scene. Using `Label` turned up report 18, whose
+  answer ([Closed](#18-independent-label-visibility-convenience--document-only-30cb06a))
+  moved those labels to `UiText`, so `Label` has no client here again.
 
   A third item, the anti-tunnelling bound never being evaluated, is now paid.
   `game/tunnelling_limits.cpp` evaluates `can_tunnel` at startup, and on Debug

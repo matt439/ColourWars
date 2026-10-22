@@ -5,8 +5,22 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
+PaintSplashClips PaintSplashClips::resolve(const PaintTuning& paint,
+	const RenderResources& render_resources)
+{
+	PaintSplashClips clips;
+	clips.initial = render_resources.resolve_sheet_strip(paint.splash_sheet, paint.splash_animation);
+	for (size_t type = 0; type < clips.by_type.size(); ++type)
+	{
+		clips.by_type[type] = render_resources.resolve_sheet_strip(paint.splash_sheet,
+			paint.splash_animations[type]);
+	}
+	return clips;
+}
+
 PaintTile::PaintTile(const RectangleF& rectangle,
 	const PaintTuning* paint,
+	const PaintSplashClips* splash_clips,
 	RenderResources* render_resources,
 	const TeamColour& team_colours,
 	const Colour& color,
@@ -20,6 +34,7 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	rectangle_(rectangle),
 	team_colours_(team_colours),
 	paint_(paint),
+	splash_clips_(splash_clips),
 	wet_age_(paint->wet_duration),
 	along_x_(along_x),
 	leading_(leading),
@@ -27,7 +42,7 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	splash_(RectangleF(0.0f, 0.0f,
 		paint->thickness * paint->splash_scale,
 		paint->thickness * paint->splash_scale),
-		paint->splash_sheet, paint->splash_animation, render_resources, Colour::white,
+		splash_clips->initial, render_resources, Colour::white,
 		along_x ? (leading ? 0.0f : PI) : (leading ? -PI / 2.0f : PI / 2.0f))
 {
 	// The tile is stationary, so the splash centre is fixed at construction.
@@ -130,8 +145,7 @@ void PaintTile::paint(PlayerTeam team, int player_num, ProjectileType type)
 	}
 	this->team_ = team;
 	this->wet_age_ = 0.0f;
-	this->splash_.reset_and_play(this->paint_->splash_sheet,
-		this->paint_->splash_animations.at(static_cast<size_t>(type)));
+	this->splash_.reset_and_play(this->splash_clips_->by_type.at(static_cast<size_t>(type)));
 }
 RectangleF PaintTile::bounds() const
 {
@@ -146,35 +160,31 @@ RectangleF PaintTile::visual_bounds() const
 
 PaintTileSplash::PaintTileSplash(
 	const RectangleF& rectangle,
-	const std::string& sheet_name,
-	const std::string& animation_strip_name,
+	RenderResources::SheetStrip clip,
 	RenderResources* render_resources,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
-	AnimationObject(sheet_name, animation_strip_name,
-		render_resources,
+	AnimationObject(clip, render_resources,
 		color, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {
-	this->read_clip(animation_strip_name);
+	this->read_clip(clip);
 	// Construction must not start a decorative impact before paint arrives.
 	this->stop();
 }
 
-void PaintTileSplash::read_clip(const std::string& animation_strip_name)
+void PaintTileSplash::read_clip(RenderResources::SheetStrip clip)
 {
-	const AnimationStrip& clip = this->sprite_sheet()->animation_strip(
-		this->sprite_sheet()->resolve_animation_strip(animation_strip_name));
-	this->frame_time_ = clip.frame_time();
-	this->frame_count_ = clip.frame_count();
-	const RectangleI& source = clip.frame_rect(0);
+	// The object already holds clip.sheet(), so this is two indexed reads.
+	const AnimationStrip& strip = this->sprite_sheet()->animation_strip(clip.strip());
+	this->frame_time_ = strip.frame_time();
+	this->frame_count_ = strip.frame_count();
+	const RectangleI& source = strip.frame_rect(0);
 	this->set_origin(Vector2F(static_cast<float>(source.width) / 2.0f,
 		static_cast<float>(source.height) / 2.0f));
-	this->clip_sheet_ = this->sprite_sheet();
-	this->clip_name_ = animation_strip_name;
 }
 
 void PaintTileSplash::set_rectangle_center(const Vector2F& center)
@@ -188,17 +198,10 @@ void PaintTileSplash::reset_and_play()
 	this->reset();
 	this->play();
 }
-void PaintTileSplash::reset_and_play(const std::string& sheet_name,
-	const std::string& animation_strip_name)
+void PaintTileSplash::reset_and_play(RenderResources::SheetStrip clip)
 {
-	// Engine-forced name lookups (sheet, then strip) on every contact; see
-	// docs/review/engine-reports.md, report 22.
-	this->set_animation_strip_and_reset(sheet_name, animation_strip_name);
-	if (this->sprite_sheet() != this->clip_sheet_ ||
-		animation_strip_name != this->clip_name_)
-	{
-		this->read_clip(animation_strip_name);
-	}
+	this->set_animation_strip_and_reset(clip);
+	this->read_clip(clip);
 	this->reset_and_play();
 }
 bool PaintTileSplash::active() const

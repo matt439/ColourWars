@@ -171,7 +171,7 @@
 		int owner = 0, mattmath::Vector2F position = { 50.0f, 0.0f },
 		mattmath::Vector2F velocity = mattmath::Vector2F::ZERO)
 	{
-		return ProjectileBuilder(&world.tuning).build_projectiles(position, velocity, team, owner,
+		return ProjectileBuilder(&world.tuning, &world.render).build_projectiles(position, velocity, team, owner,
 			Colour::blue, type, &world.render);
 	}
 

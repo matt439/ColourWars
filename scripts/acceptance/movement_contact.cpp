@@ -167,7 +167,7 @@ namespace
         const RectangleF supplied(box.x + tuning.details.col_rect_size.x / 2.0f,
             box.y + tuning.details.col_rect_size.y / 2.0f, box.width, box.height);
         ProjectileJet shot(supplied, Vector2F::ZERO, team, team == PlayerTeam::a ? 0 : 1,
-            surface_colours.team_colour(team), &world.render, &tuning);
+            surface_colours.team_colour(team), &world.render, resolve_projectile_strip(tuning, world.render), &tuning);
         surface.on_contact(shot, Vector2F::ZERO, 0.0f);
         shot.on_contact(surface, Vector2F::ZERO, 0.0f);
     }
@@ -440,6 +440,7 @@ namespace
         require(course.count(MovementFeedbackKind::step) > 0, "Placement failed to rearm walking effects");
         const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
             PlayerTeam::b, 1, Colour::white, &world.render,
+            resolve_projectile_strip(world.tuning.projectile(ProjectileType::spray), world.render),
             &world.tuning.projectile(ProjectileType::spray));
         for (int hit = 0; hit < 10000 && course.player->health() > 0; ++hit)
         {

@@ -87,7 +87,7 @@ void StagePreview::draw(DrawList& draw_list) const
 	{
 		if (const auto* structure = dynamic_cast<const Structure*>(object.get()))
 		{
-			structure->draw_miniature(draw_list, camera);
+			structure->draw_miniature(draw_list);
 		}
 		else
 		{

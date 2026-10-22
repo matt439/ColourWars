@@ -77,7 +77,7 @@ LandmarkWorld landmark_world(Application& app, const LevelLoadedInfo& info, cons
                 splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
                 const PlayerTeam team = surfaces % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
                 const ProjectileSpray shot(splash, Vector2F::ZERO, team, surfaces % 2 == 0 ? 3 : 1,
-                    colours.team_colour(team), app.render_resources(), &tuning.projectile(ProjectileType::spray));
+                    colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
                 painted->on_contact(shot, Vector2F::ZERO, 0.0f); painted->update(10.0f);
             }
             const PaintTotal paint = painted->paint_total(); total += paint.total; owned += paint.team_a + paint.team_b; ++surfaces;
@@ -119,7 +119,7 @@ Frame landmark_frame(Application& app, const LandmarkWorld& world, const Landmar
         // expected atlas scenery, including the Hill ruler crossing the pot.
         for (const CollisionObject* object : world.scene->collision_objects())
         {
-            if (const auto* structure = dynamic_cast<const Structure*>(object)) { structure->draw_miniature(list, pane.camera); }
+            if (const auto* structure = dynamic_cast<const Structure*>(object)) { structure->draw_miniature(list); }
             else { object->draw(list); }
         }
     }

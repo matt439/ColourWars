@@ -115,7 +115,8 @@ namespace
     public:
         IntegratorProbe(const ProjectileTuning* tuning, ProjectileType type,
             const Vector2F& velocity, RenderResources* render) :
-            Projectile(velocity, PlayerTeam::a, 0, Colour::white, type, render, tuning),
+            Projectile(velocity, PlayerTeam::a, 0, Colour::white, type, render,
+                resolve_projectile_strip(*tuning, *render), tuning),
             rectangle_(Vector2F::ZERO, tuning->details.col_rect_size)
         {
         }
@@ -254,7 +255,7 @@ namespace
     {
         auto roller = world.weapon(tuning, WeaponType::roller);
         check_roller(*roller, tuning.weapon(WeaponType::roller), legacy);
-        const ProjectileBuilder builder(&tuning);
+        const ProjectileBuilder builder(&tuning, &world.render);
         for (const Vector2F velocity : { Vector2F(1000.0f, 0.0f), Vector2F(-750.0f, 200.0f) })
         {
             auto mist = builder.build_projectiles(Vector2F::ZERO, velocity,
@@ -298,7 +299,7 @@ namespace
         const WeaponTuning* roller_record = &live.weapon(WeaponType::roller);
         const ProjectileTuning* mist_record = &live.projectile(ProjectileType::mist);
         auto roller = world.weapon(live, WeaponType::roller);
-        const ProjectileBuilder builder(&live);
+        const ProjectileBuilder builder(&live, &world.render);
         auto existing_mist = builder.build_projectiles(Vector2F::ZERO, {1000.0f, 0.0f},
             PlayerTeam::a, 0, Colour::white, ProjectileType::mist, &world.render);
         IntegratorProbe flying(&live.projectile(ProjectileType::spray), ProjectileType::spray,

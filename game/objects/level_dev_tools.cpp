@@ -23,9 +23,11 @@ void Level::refresh_station_labels()
 	{
 		for (const LevelStation& station : this->stations_)
 		{
-			this->station_labels_.push_back(this->scene_->add(std::make_unique<Label>(
-				widen(station.name), look.font, station.position + look.offset,
-				this->render_resources_, look.colour, look.scale)));
+			const bool hidden = false;
+			this->station_labels_.push_back(this->scene_->add(std::make_unique<UiText>(
+				station.name, widen(station.name), look.font, station.position + look.offset,
+				this->render_resources_, CrudeDrawing::premultiplied(look.colour), hidden,
+				look.scale)));
 			this->scenery_.push_back(this->station_labels_.back());
 		}
 		// Admit them now, so a paused match shows them too. This runs between
@@ -33,20 +35,17 @@ void Level::refresh_station_labels()
 		// and its retirements made, so the labels are all this tick ends.
 		this->scene_->end_tick();
 	}
-	// The scene cannot retire a Label and Label is final, so off is a tint
-	// that contributes nothing (docs/review/engine-reports.md, report 18).
-	// The blend is premultiplied (ONE, INV_SRC_ALPHA) and the texel is
-	// multiplied by the tint as given, so that tint is zero in all four
-	// channels: make_transparent() zeroes only alpha, and its rgb would be
-	// added over the world. On is premultiplied for the same reason.
-	const Colour colour = this->overlays_.stations ?
-		CrudeDrawing::premultiplied(look.colour) : Colour(0.0f, 0.0f, 0.0f, 0.0f);
+	// The scene never retires a plain object, so off is set_hidden, which
+	// skips the draw and keeps the words, the box and the colour. The colour
+	// is premultiplied because the blend is (ONE, INV_SRC_ALPHA) and the tint
+	// multiplies the texel as given (engine/render/renderer.h, draw_text).
 	for (std::size_t index = 0; index < this->station_labels_.size(); ++index)
 	{
-		Label& label = *this->station_labels_[index];
+		UiText& label = *this->station_labels_[index];
 		label.set_position(this->stations_[index].position + look.offset);
 		label.set_scale(look.scale);
-		label.set_colour(colour);
+		label.set_colour(CrudeDrawing::premultiplied(look.colour));
+		label.set_hidden(!this->overlays_.stations);
 	}
 }
 
@@ -55,7 +54,7 @@ int Level::station_label_count() const
 	return static_cast<int>(this->station_labels_.size());
 }
 
-const Label& Level::station_label(int index) const
+const UiText& Level::station_label(int index) const
 {
 	return *this->station_labels_.at(static_cast<std::size_t>(index));
 }

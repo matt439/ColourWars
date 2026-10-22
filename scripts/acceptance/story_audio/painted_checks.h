@@ -11,7 +11,7 @@ void paint_box(World& world, StructurePaintable& surface,
     const RectangleF supplied(box.x + tuning.details.col_rect_size.x / 2.0f,
         box.y + tuning.details.col_rect_size.y / 2.0f, box.width, box.height);
     ProjectileJet shot(supplied, Vector2F::ZERO, team, 0, Colour::blue,
-        &world.render, &tuning);
+        &world.render, resolve_projectile_strip(tuning, world.render), &tuning);
     paint_contact(shot, surface);
 }
 

@@ -131,8 +131,11 @@ void TerrainMaterial::paint(DrawList& draw_list) const
 	}
 }
 
-void TerrainMaterial::paint_miniature(DrawList& draw_list, const Camera& camera) const
+void TerrainMaterial::paint_miniature(DrawList& draw_list) const
 {
+	// A copy: the reference is the list's own state, which set_camera below
+	// overwrites.
+	const Camera camera = draw_list.camera();
 	validate_miniature_camera(camera);
 	if (camera.scale >= 1.0f / CELL)
 	{

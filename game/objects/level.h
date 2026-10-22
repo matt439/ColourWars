@@ -25,7 +25,7 @@
 #include "engine/render/camera.h"
 #include "game/objects/level_overlays.h"
 #include "game/objects/level_station.h"
-#include "engine/render/label.h"
+#include "engine/ui/widget.h"
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
 #include "game/objects/monitor.h"
@@ -181,11 +181,11 @@ public:
 	std::wstring_view keyboard_controls_text() const;
 	mattmath::RectangleF keyboard_controls_text_bounds() const;
 	mattmath::RectangleF keyboard_controls_card_bounds() const;
-	// overlay.stations as the scene holds it: one Label per station, in
+	// overlay.stations as the scene holds it: one UiText per station, in
 	// LevelLoadedInfo::stations() order, made the first time the overlay is
 	// turned on and only hidden after that. None until then, so none in Release.
 	int station_label_count() const;
-	const labrador::Label& station_label(int index) const;
+	const labrador::UiText& station_label(int index) const;
 	// Counts for the perf overlay, as of the last update.
 	int projectile_count() const;
 	int collision_object_count() const;
@@ -197,7 +197,7 @@ private:
 	std::vector<float> player_identity_remaining_;
 	std::unique_ptr<labrador::Scene> scene_ = nullptr;
 	// Scene owns these non-collision objects for the match. Mirror admission
-	// order for the explicit-camera miniature path; never cache retiring shots.
+	// order for the miniature path (miniature_view.h); never cache retiring shots.
 	std::vector<labrador::GameObject*> scenery_;
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,
@@ -211,8 +211,9 @@ private:
 	std::vector<LevelStation> stations_;
 	// Borrowed from scene_, one per stations_ entry once shown. The scene
 	// never retires an object that is not a collision object, so these live
-	// for the match; hiding them is a tint of zero in all four channels.
-	std::vector<labrador::Label*> station_labels_;
+	// for the match; hiding them is UiText::set_hidden, which keeps their
+	// words, box and colour.
+	std::vector<labrador::UiText*> station_labels_;
 
 	// Scene-owned geometry and players, which live for the whole match. Flying
 	// paint sweeps this list so its cost does not grow with other projectiles.

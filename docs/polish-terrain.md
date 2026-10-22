@@ -252,28 +252,40 @@ need three pixels of spacing to remain separate, so major marks survive after
 minor marks become unresolvable. No palette, atlas, collision shape, paint
 budget, gameplay camera or world-grid value changes.
 
-`TerrainMaterial::paint_miniature` takes the view's camera explicitly. At one
+`TerrainMaterial::paint_miniature` reads the view's camera from the draw list
+(`DrawList::camera()`), which the caller has set. At one
 pixel per cell or above it calls the ordinary painting path. Smaller drawings
 use viewport-local integer rectangles and restore the caller's camera; their
 point sampler remains unchanged. Each paintable structure still draws its
 material, splashes, owned paint and runoff in that order. Normal active and
 countdown gameplay continues through `Scene::draw`.
 
-The pinned engine supplies neither view context to object drawing nor a
-replacement draw callback inside Scene's ordered world walk. Level therefore
-uses a small sequential traversal for overview/monitor views, retaining Scene's
-viewport, append offset, culling and scenery-before-collision order. Scene still
-owns every object. A borrowed scenery list includes shadows, idle drips and
-later debug station labels; live collision objects come from Scene. Its public
+The miniature art is chosen by draw path, not by zoom: only the overview,
+monitor and stage-preview views ask for it. Level therefore still uses a small
+sequential traversal for overview/monitor views, retaining Scene's viewport,
+append offset, culling and scenery-before-collision order. Scene still owns
+every object. A borrowed scenery list includes shadows, idle drips and later
+debug station labels; live collision objects come from Scene. Its public
 collision span does not promise render order, so parity with the pin is a
-tested dependency. Private [engine draft 20](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit)
-records what an engine answer would let the client delete. It is unfiled;
-prepare a minimal engine-focused report/reproducer under the approved scope
-and recheck upstream master before filing.
+tested dependency. Engine [report 20](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context--accepted-narrowed-11ec1fc)
+was answered with `DrawList::camera()` and `viewport()`, so a structure's own
+`draw()` can now read its view; the camera parameter that used to be threaded
+into the miniature draw is gone.
 
-StagePreview uses the same explicit-camera structure methods in its existing
-pane, with its existing camera and decorative object order. Drawing remains
-const and consumes no gameplay randomness. The current treatment is included in
+**Next (`POL#28`):** draw the overview and monitor through `Scene::draw`.
+`Structure::draw` would call `paint_miniature` when a draw-mode flag, set by
+Level in `update()` while the overview or monitor shows, says so; never by
+camera scale alone: a scale rule would switch 4-player gameplay panes to
+miniature strokes in a window under about 540 pixels tall.
+That deletes `miniature_view`, the borrowed scenery mirror and the
+`dynamic_cast` dispatch here and in StagePreview. It moves these views onto
+Scene's fan-out and category order, so it needs the integration check the
+engine itself names: the miniature, landmark and parallax pixel oracles across
+the arenas at 1P and 4P, 720 and 1080.
+
+StagePreview uses the same miniature structure methods in its existing pane,
+with its existing camera and decorative object order. Drawing remains const
+and consumes no gameplay randomness. The current treatment is included in
 the author's 2026-10-20 stage approval below.
 
 Retained native-size crops from a 1280x720 window compare the Close Quarters
@@ -431,10 +443,10 @@ claim that every candidate contributes a visible pixel. Separate frame-wide
 pixel deltas measure static-to-distant and distant-to-distant-plus-hills changes.
 Per-view rows repeat those frame-wide deltas; the totals count each frame once.
 
-The explicit-camera traversal is local to the probe. Labrador's current
-`Scene` culls before an object's `draw(DrawList&)`, which has no camera input;
-its callback runs after the world. The same friction is recorded by the
-[miniature-terrain exhibit](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit).
+The explicit-camera traversal is local to the probe. Labrador's `Scene`
+culls before an object's `draw(DrawList&)`, which can now read its view's
+camera from the list ([report 20](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context--accepted-narrowed-11ec1fc));
+its callback runs after the world.
 Runtime adoption would need a separate review of world ordering, scene-owned
 object admission/retirement, overlays and rendering cost. The current preview,
 editor, monitor and overview paths retain their static behavior; Reduce effects

@@ -62,7 +62,8 @@ int main(int argc, char** argv)
         // chooses a bounded splash, while its exact contact/score tile stays
         // fixed. Pausing cannot retire it; a long resumed tick must retire it.
         const RectangleF tile_rectangle(10, 20, tuning.paint().size.x, thickness);
-        PaintTile tile(tile_rectangle, &tuning.paint(), &render, colours);
+        const PaintSplashClips clips = PaintSplashClips::resolve(tuning.paint(), render);
+        PaintTile tile(tile_rectangle, &tuning.paint(), &clips, &render, colours);
         require(tile.visual_bounds() == tile_rectangle,
             "A newly constructed paint tile starts an impact");
         const float tile_area = tile.area();
@@ -70,8 +71,7 @@ int main(int argc, char** argv)
         const AnimationStrip& impact = effects->animation_strip(
             effects->resolve_animation_strip(tuning.paint().splash_animation));
         const float impact_duration = impact.frame_time() * static_cast<float>(impact.frame_count());
-        PaintTileSplash splash(tile_rectangle, tuning.paint().splash_sheet,
-            tuning.paint().splash_animation, &render);
+        PaintTileSplash splash(tile_rectangle, clips.initial, &render);
         require(!splash.active(), "Splash animation plays before a paint contact");
         splash.reset_and_play();
         splash.update(impact_duration * 0.5f);
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
             const Vector2F half_size = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f;
             launch.offset(half_size.x, half_size.y);
             const ProjectileSpray shot(launch, Vector2F::ZERO, team, owner,
-                Colour::white, &render, &tuning.projectile(ProjectileType::spray));
+                Colour::white, &render, resolve_projectile_strip(tuning.projectile(ProjectileType::spray), render), &tuning.projectile(ProjectileType::spray));
             surface.on_contact(shot, Vector2F::ZERO, 0);
         };
 

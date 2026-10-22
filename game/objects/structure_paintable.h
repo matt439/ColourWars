@@ -61,11 +61,13 @@ public:
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f,
 		std::unique_ptr<const TerrainMaterial> material = nullptr);
+	// Its tiles borrow splash_clips_, so it stays where it was built.
+	StructurePaintable(const StructurePaintable&) = delete;
+	StructurePaintable& operator=(const StructurePaintable&) = delete;
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
-	void draw_miniature(labrador::DrawList& draw_list,
-		const labrador::Camera& camera) const override;
+	void draw_miniature(labrador::DrawList& draw_list) const override;
 	// Surface splashes affect rendering extent, never layout/contact geometry.
 	mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
 	void on_contact(const labrador::CollisionObject& other,
@@ -86,6 +88,8 @@ private:
 	// Borrowed, and outlives the level: main() owns it.
 	const PaintTuning* paint_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
+	// Resolved once from paint_ and lent to every tile.
+	PaintSplashClips splash_clips_;
 	labrador::RenderResources::SpriteSheetHandle runoff_sheet_;
 	labrador::SpriteSheet::frame_handle runoff_frame_;
 

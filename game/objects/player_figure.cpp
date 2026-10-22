@@ -39,11 +39,13 @@ void Player::set_animation_state(PlayerAnimationState new_animation_state, bool 
 
     this->animation_state_ = new_animation_state;
 
+    // The clips were resolved at construction; frame_time stays live tuning.
     const PlayerAnimationTuning& info = this->animation_info(new_animation_state);
-    TextureObject::set_frame(info.sheet, info.uniform_texture);
+    const FigureClip& clip = this->figure_clips_[static_cast<size_t>(new_animation_state)];
+    TextureObject::set_frame(clip.uniform);
 
-    set_animation_strip_and_reset(info.sheet, info.strip);
-    this->clothing_.select(info);
+    set_animation_strip_and_reset(clip.body);
+    this->clothing_.select(clip.paint, info.frame_time);
     AnimationObject::play();
     if (info.frame_time.has_value())
     {

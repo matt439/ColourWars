@@ -276,7 +276,7 @@ label.
 | `overlay.collision` | per pane: the collision shape of every object in view (structures white, paintables green, jump-throughs cyan, ramps orange with their slope, players in their team colour, projectiles yellow) and the out-of-bounds edge in red |
 | `overlay.camera` | per pane: the camera's scroll border (magenta; the player moves inside it before the camera follows), the camera bounds (blue) and a cross at the followed centre |
 | `overlay.paint` | bottom left: paint coverage per team and per seat, as a share of the paintable area, live. When a narrow window cannot hold it and the bottom-right status strip on one row, the strip moves above it |
-| `overlay.stations` | in the world: every [station](#stations-and-goto)'s name, the spawns included, above the place `goto` puts a player. The names are `labrador::Label` objects in the level's scene, made the first time the overlay is turned on and hidden after that by a tint of zero in all four channels (alpha zero alone is not invisible under the engine's premultiplied blend), so they draw wherever the world is drawn (the intro picture and the overview too) and under structures and players. Font, scale, offset and colour are `presentation.debug_overlay.station_label`; scale, offset and colour tune live. No default key |
+| `overlay.stations` | in the world: every [station](#stations-and-goto)'s name, the spawns included, above the place `goto` puts a player. The names are `labrador::UiText` objects in the level's scene, made the first time the overlay is turned on and hidden after that by `set_hidden`, which keeps their words, box and colour, so they draw wherever the world is drawn (the intro picture and the overview too) and under structures and players. Font, scale, offset and colour are `presentation.debug_overlay.station_label`; scale, offset and colour tune live. No default key |
 | `overlay.perf` | bottom left, above the paint panel: the [perf](#perf) graph and numbers. Not part of `overlay all` |
 
 They are set from the console, the debug menu, launch arguments (`+overlay all`)
@@ -651,7 +651,7 @@ tint; changing the fallback does not recolour those stored flecks. Their
 highlight and keyline still read the live presentation. Console error, warning,
 echo, caret, status and perf foreground inks keep their separate fixed colours.
 Station labels use the new premultiplied tint on the next layout refresh,
-including drawing beneath a paused console; hidden labels stay all-zero tint.
+including drawing beneath a paused console; hidden labels adopt it too and stay hidden.
 An already-open page keeps its Home background tint until the page is reopened.
 This includes Home, Mode, Players, Join, Team, Weapon, Arena, Options, Controls,
 Pad Sticks, Credits, Exit confirmation and display confirmation. Team Select

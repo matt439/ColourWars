@@ -322,6 +322,17 @@ private:
         float frame_time = 0.0f;
     };
     std::array<ActionClip, 5> action_clips_;
+    // Each animation state's uniform frame, body strip and paint strip,
+    // resolved once in the constructor so a state change resolves no name.
+    struct FigureClip
+    {
+        labrador::RenderResources::SheetFrame uniform;
+        labrador::RenderResources::SheetStrip body;
+        labrador::RenderResources::SheetStrip paint;
+    };
+    static constexpr size_t ANIMATION_STATE_COUNT =
+        static_cast<size_t>(PlayerAnimationState::elimination) + 1;
+    std::array<FigureClip, ANIMATION_STATE_COUNT> figure_clips_;
     labrador::RenderResources::SpriteSheetHandle idle_sheet_;
     mattmath::RectangleI idle_body_;
     mattmath::RectangleI idle_paint_;

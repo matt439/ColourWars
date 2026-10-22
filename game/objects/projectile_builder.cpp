@@ -5,9 +5,15 @@ using namespace mattmath;
 using namespace DirectX;
 using namespace labrador;
 
-ProjectileBuilder::ProjectileBuilder(const GameTuning* tuning) :
+ProjectileBuilder::ProjectileBuilder(const GameTuning* tuning,
+	const RenderResources* render_resources) :
 	tuning_(tuning)
 {
+	for (size_t type = 0; type < this->strips_.size(); ++type)
+	{
+		this->strips_[type] = resolve_projectile_strip(
+			tuning->projectile(static_cast<ProjectileType>(type)), *render_resources);
+	}
 }
 
 std::vector<std::unique_ptr<Projectile>>
@@ -27,6 +33,7 @@ std::vector<std::unique_ptr<Projectile>>
 	// Require a tuning record before constructing any projectile of this kind.
 	const ProjectileTuning& tuning = this->tuning_->projectile(type);
 	const RectangleF rectangle(position, tuning.details.col_rect_size);
+	const RenderResources::SheetStrip strip = this->strips_.at(static_cast<size_t>(type));
 
 	std::vector<std::unique_ptr<Projectile>> projectiles;
 
@@ -36,32 +43,32 @@ std::vector<std::unique_ptr<Projectile>>
 		projectiles.push_back(
 			std::make_unique<ProjectileSpray>(
 				rectangle, velocity, team, player_num, team_colour,
-				render_resources, &tuning, rotation, origin, flip,
+				render_resources, strip, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
     case ProjectileType::jet:
 		projectiles.push_back(
 			std::make_unique<ProjectileJet>(
 				rectangle, velocity, team, player_num, team_colour,
-				render_resources, &tuning, rotation, origin, flip,
+				render_resources, strip, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
 	case ProjectileType::rolling:
 		projectiles.push_back(
 			std::make_unique<ProjectileRolling>(
 				rectangle, velocity, team, player_num, team_colour,
-				render_resources, &tuning, rotation, origin, flip,
+				render_resources, strip, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
 	case ProjectileType::mist:
 		return build_mist_projectiles(
 			position, velocity, team, player_num, team_colour, &tuning,
-			render_resources, rotation, origin, flip, layer_depth);
+			render_resources, strip, rotation, origin, flip, layer_depth);
 	case ProjectileType::ball:
 		projectiles.push_back(
 			std::make_unique<ProjectileBall>(
 				rectangle, velocity, team, player_num, team_colour,
-				render_resources, &tuning, rotation, origin, flip,
+				render_resources, strip, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
 	}
@@ -79,6 +86,7 @@ std::vector<std::unique_ptr<Projectile>>
 	const Colour& team_colour,
 	const ProjectileTuning* mist,
 	RenderResources* render_resources,
+	RenderResources::SheetStrip strip,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
@@ -102,6 +110,7 @@ std::vector<std::unique_ptr<Projectile>>
 				player_num,
 				team_colour,
 				render_resources,
+				strip,
 				mist,
 				rotation,
 				origin,

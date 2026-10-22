@@ -47,7 +47,7 @@ Frame miniature_material_frame(Application& app, const Canvas& canvas,
         canvas.draw(list, RectangleF(0, 0, pane.width, pane.height));
         list.set_camera(camera);
         if (material == nullptr) { continue; }
-        if (adapted) { material->paint_miniature(list, camera); }
+        if (adapted) { material->paint_miniature(list); }
         else { material->paint(list); }
     }
     return read(renderer);
@@ -270,7 +270,7 @@ Frame miniature_structure_frame(Application& app, const Canvas& canvas,
     list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
     canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
     list.set_camera(camera);
-    if (adapted) { structure.draw_miniature(list, camera); } else { structure.draw(list); }
+    if (adapted) { structure.draw_miniature(list); } else { structure.draw(list); }
     return read(renderer);
 }
 
@@ -297,7 +297,7 @@ void miniature_paint_matrix(Application& app, const Canvas& canvas, const GameTu
     const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
     splash.offset(half.x, half.y);
     const ProjectileSpray shot(splash, Vector2F::ZERO, PlayerTeam::a, 3, colours.team_a,
-        app.render_resources(), &tuning.projectile(ProjectileType::spray));
+        app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
     painted->on_contact(shot, Vector2F::ZERO, 0); overlay_reference->on_contact(shot, Vector2F::ZERO, 0);
     painted->update(10); overlay_reference->update(10);
     const PaintTotal before = painted->paint_total();
@@ -350,7 +350,7 @@ Frame miniature_scene_frame(Application& app, const Scene& scene, bool adapted,
             for (const GameObject* object : scenery) { object->draw(list); }
             for (const CollisionObject* object : scene.collision_objects())
             {
-                if (const auto* structure = dynamic_cast<const Structure*>(object)) { structure->draw_miniature(list, pane.camera); }
+                if (const auto* structure = dynamic_cast<const Structure*>(object)) { structure->draw_miniature(list); }
                 else { object->draw(list); }
             }
         }
@@ -441,6 +441,7 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         { scene.add(std::move(player)); }
         scene.add(std::make_unique<ProjectileSpray>(RectangleF(spawn + Vector2F(24, 48), Vector2F(64, 64)),
             Vector2F::ZERO, PlayerTeam::a, 3, Colour(0.2f, 0.5f, 0.9f), app.render_resources(),
+            resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()),
             &tuning.projectile(ProjectileType::spray)));
         scene.end_tick();
         for (const int count : { 1, 4 })

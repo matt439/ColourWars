@@ -67,10 +67,11 @@ public:
 
 	void paint(labrador::DrawList& draw_list) const;
 	// The small overview and monitor picture retain resolvable exposed edges
-	// and ruler marks in whole view pixels. The gameplay drawing above is
-	// untouched; at one pixel per authored cell this takes that exact path.
-	void paint_miniature(labrador::DrawList& draw_list,
-		const labrador::Camera& camera) const;
+	// and ruler marks in whole view pixels, for the camera the list reads
+	// (DrawList::camera()), which it restores before returning. The gameplay
+	// drawing above is untouched; at one pixel per authored cell this takes
+	// that exact path.
+	void paint_miniature(labrador::DrawList& draw_list) const;
 	// Viewport-local pixel rectangles, in painter order. Empty projections are
 	// omitted. A nonfinite translation or nonpositive/nonfinite scale is invalid.
 	std::vector<TerrainQuad> projected_miniature_quads(

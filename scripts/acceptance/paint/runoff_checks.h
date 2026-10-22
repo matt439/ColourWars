@@ -25,7 +25,7 @@ namespace
             const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
             area.offset(half.x, half.y);
             const ProjectileSpray shot(area, Vector2F::ZERO, team, owner,
-                colours.team_colour(team), &render, &tuning.projectile(ProjectileType::spray));
+                colours.team_colour(team), &render, resolve_projectile_strip(tuning.projectile(ProjectileType::spray), render), &tuning.projectile(ProjectileType::spray));
             object.on_contact(shot, Vector2F::ZERO, 0);
         };
         const auto prime = [&](StructurePaintable& object, float x, float bottom = 160.0f)

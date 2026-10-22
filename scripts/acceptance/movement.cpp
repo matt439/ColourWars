@@ -84,7 +84,7 @@ int main(int argc, char** argv)
         // Built once, up front: the action and feedback checks both use them,
         // and constructing them has no side effect on any run.
         const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
-            PlayerTeam::b, 1, Colour::white, &render, &tuning.projectile(ProjectileType::spray));
+            PlayerTeam::b, 1, Colour::white, &render, resolve_projectile_strip(tuning.projectile(ProjectileType::spray), render), &tuning.projectile(ProjectileType::spray));
         const int fatal_hits = static_cast<int>(std::ceil(tuning.player().starting_health /
             tuning.projectile(ProjectileType::spray).details.player_damage)) + 1;
         const Suite suite{ content, render, audio, preferences, tuning, presentation, feedback,

@@ -13,6 +13,7 @@ public:
 		int player_num,
 		const labrador::Colour& team_colour,
 		labrador::RenderResources* render_resources,
+		labrador::RenderResources::SheetStrip strip,
 		const ProjectileTuning* tuning,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,

@@ -324,6 +324,7 @@ namespace crossfeed_acceptance
         const PlayerTeam enemy = this->player->team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
         const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::ZERO, enemy, 1,
             Colour::white, &this->services.render,
+            resolve_projectile_strip(this->services.tuning.projectile(ProjectileType::spray), this->services.render),
             &this->services.tuning.projectile(ProjectileType::spray));
         for (int hit = 0; hit < 1000 && this->player->health() > 0.0f; ++hit)
         {

@@ -14,6 +14,10 @@
 
 class PaintAudio;
 
+// The tuning's sheet and animation strip as one resolved pair. Load-time.
+labrador::RenderResources::SheetStrip resolve_projectile_strip(
+	const ProjectileTuning& tuning, const labrador::RenderResources& render_resources);
+
 // Abstract paint projectile: shared lifetime, team filtering and swept contacts;
 // concrete subclasses supply their shape, movement update and drawing.
 class Projectile : public labrador::MovingObject,
@@ -21,13 +25,16 @@ class Projectile : public labrador::MovingObject,
 {
 public:
 	// Borrowed tuning must outlive the projectile. main() owns the immutable
-	// GameTuning, avoiding a copy of the asset names on each spawn.
+	// GameTuning, avoiding a copy of the asset names on each spawn. strip is
+	// the tuning's sheet and animation strip, resolved once by whoever spawns
+	// it (resolve_projectile_strip), so a spawn resolves no name.
 	Projectile(const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
 		ProjectileType type,
 		labrador::RenderResources* render_resources,
+		labrador::RenderResources::SheetStrip strip,
 		const ProjectileTuning* tuning,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
@@ -132,6 +139,7 @@ public:
 		const labrador::Colour& team_colour,
 		ProjectileType type,
 		labrador::RenderResources* render_resources,
+		labrador::RenderResources::SheetStrip strip,
 		const ProjectileTuning* tuning,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,

@@ -3,6 +3,8 @@
 #include "game/tuning.h"
 #include "engine/render/animation_object.h"
 
+#include <optional>
+
 // A second animation object keeps the team fill on the body's exact pose.
 // Player selects, resets and advances both clips together; draws are read-only.
 class FigureClothing final : public labrador::AnimationObject
@@ -18,10 +20,12 @@ public:
         if (clip.frame_time.has_value()) { this->set_frame_time(*clip.frame_time); }
     }
 
-    void select(const PlayerAnimationTuning& clip)
+    // paint_strip is the clip's paint strip, resolved by Player at construction.
+    void select(labrador::RenderResources::SheetStrip paint_strip,
+        std::optional<float> frame_time)
     {
-        this->set_animation_strip_and_reset(clip.sheet, clip.paint_strip);
-        if (clip.frame_time.has_value()) { this->set_frame_time(*clip.frame_time); }
+        this->set_animation_strip_and_reset(paint_strip);
+        if (frame_time.has_value()) { this->set_frame_time(*frame_time); }
         this->play();
     }
 

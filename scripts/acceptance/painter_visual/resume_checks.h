@@ -134,7 +134,7 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         for (int step = 0; step < 30; ++step) { tick(); }
         Player& player = const_cast<Player&>(level.player(0));
         const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
-            PlayerTeam::b, 0, Colour::white, app.render_resources(), &tuning.projectile(ProjectileType::spray));
+            PlayerTeam::b, 0, Colour::white, app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
         player.on_contact(hit, Vector2F::ZERO, 0.0f);
         require(player.health() < tuning.player().starting_health, "Resume fixture did not receive a nonfatal hit");
         // Put health close to regeneration, then pay a fresh shot so ammo,

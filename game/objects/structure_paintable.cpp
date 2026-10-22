@@ -47,6 +47,7 @@ StructurePaintable::StructurePaintable(
 		faces_(faces),
 		paint_(paint),
 		preferences_(preferences),
+		splash_clips_(PaintSplashClips::resolve(*paint, *render_resources)),
 		runoff_sheet_(render_resources->resolve_sprite_sheet(paint->sheet)),
 		runoff_frame_(render_resources->sprite_sheet(this->runoff_sheet_)->resolve_sprite_frame(paint->frame))
 {
@@ -81,9 +82,9 @@ void StructurePaintable::draw(DrawList& draw_list) const
 	this->draw_paint(draw_list);
 }
 
-void StructurePaintable::draw_miniature(DrawList& draw_list, const Camera& camera) const
+void StructurePaintable::draw_miniature(DrawList& draw_list) const
 {
-	Structure::draw_miniature(draw_list, camera);
+	Structure::draw_miniature(draw_list);
 	this->draw_paint(draw_list);
 }
 
@@ -343,7 +344,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
                         pitch, paint.thickness)
                     : RectangleF(leading ? edge : edge - paint.thickness, position,
                         paint.thickness, pitch);
-                paint_tiles.emplace_back(tile, this->paint_,
+                paint_tiles.emplace_back(tile, this->paint_, &this->splash_clips_,
                     this->render_resources(), this->team_colours_, Colour::white,
                     0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f, along_x, leading);
             }
