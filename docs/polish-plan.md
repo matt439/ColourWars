@@ -446,6 +446,12 @@ rechecked with `POL#17`/`POL#24`. The monitor palette now borrows the same kit s
 ([palette coherence](polish-terrain.md#monitor-palette-coherence-2026-10-18)),
 replacing its old grey ramp while keeping the final empty story slot.
 
+**Shared paintability finish (2026-10-24).** [Smooth white primer and dark sealed
+edges](polish-terrain.md#paintable-and-sealed-faces-2026-10-24) distinguish scoring
+faces across all five levels, including paintable one-way rulers and individually
+enabled sides or undersides. This drawing pass preserves each level's authored
+paintability; recognition at speed remains part of the human arena review.
+
 **Quiet cloud drift implemented 2026-10-18 (part of `POL#9`).** The
 [existing backdrop clouds](polish-terrain.md#quiet-cloud-drift-2026-10-18) now
 move slowly in bounded, independently phased cycles on the four-unit grid.

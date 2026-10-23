@@ -90,6 +90,24 @@ void StructurePaintable::draw_miniature(DrawList& draw_list) const
 
 void StructurePaintable::draw_paint(DrawList& draw_list) const
 {
+	// Use the actual exposed scoring strips: material and collision tags cannot
+	// tell whether a one-way support or an individual face accepts paint.
+	// Prime every strip first, so neutral sides never overwrite owned corners.
+	for (const PaintStrip& strip : this->paint_strips_)
+	{
+		const RectangleF first = this->paint_tiles_[static_cast<size_t>(strip.begin)].bounds();
+		const RectangleF last = this->paint_tiles_[static_cast<size_t>(strip.begin + strip.count - 1)].bounds();
+		const RectangleF band = clipped(RectangleF::union_of(first, last), this->rectangle());
+		const float depth = strip.along_x ? band.height : band.width;
+		const float edge = std::min(this->paint_->edge_width, depth / 2.0f);
+		this->render_resources()->sprite_sheet(this->runoff_sheet_)->draw(
+			draw_list, this->runoff_frame_, band, Colour::white);
+		const RectangleF inner = strip.along_x
+			? RectangleF(band.x, strip.leading ? band.bottom() - edge : band.top(), band.width, edge)
+			: RectangleF(strip.leading ? band.right() - edge : band.left(), band.y, edge, band.height);
+		this->render_resources()->sprite_sheet(this->runoff_sheet_)->draw(
+			draw_list, this->runoff_frame_, inner, Colour::black);
+	}
 	for (const auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.draw_splash(draw_list);

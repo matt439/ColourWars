@@ -91,7 +91,7 @@ namespace
 }
 
 GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& faces,
-	bool paintable, RenderResources* render_resources) :
+	RenderResources* render_resources) :
 	TerrainMaterial("ground", render_resources)
 {
 	constexpr float course = 16.0f * CELL;
@@ -104,16 +104,6 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 	// Darker toward the underside: only the top courses are laid as tiles.
 	this->add(RectangleF(rectangle.x, tiled_bottom, rectangle.width, rectangle.bottom() - tiled_bottom),
 		TerrainRole::ground_shade, rectangle);
-	if (paintable)
-	{
-		// The light lip says paint sticks here; the 12-unit paint band covers
-		// it. Like the keyline, only where nothing rests on the top.
-		for (const auto& [low, high] : faces.top)
-		{
-			this->add(RectangleF(low, rectangle.y + CELL, high - low, CELL * 2.0f),
-				TerrainRole::ground_top, rectangle);
-		}
-	}
 	for (int index = 0; index < tiled_courses; ++index)
 	{
 		const float top = rectangle.y + course * static_cast<float>(index);
@@ -341,6 +331,35 @@ SetSquareMaterial::SetSquareMaterial(const Shape& shape, const TerrainFaces& fac
 			const RectangleF hypotenuse = intersection(RectangleF(hyp_x, y0, step, y1 - y0), band);
 			if (outer_edge)
 			{
+				// Ramps reject paint too: the same dark sealed finish follows
+				// their slope and exposed legs, clipped to occupied stair rows.
+				const auto seal_row = [&](const RectangleF& edge_band)
+				{
+					const RectangleF seal = intersection(edge_band, band);
+					this->add(seal, TerrainRole::metal_dark, band);
+					constexpr float period = 8.0f * CELL;
+					const float phase = std::floor(y0 / CELL) * CELL;
+					for (float x = grid_from(seal.left() + phase - CELL, period) - phase;
+						x < seal.right(); x += period)
+					{
+						this->add(RectangleF(x, y0, CELL, y1 - y0), TerrainRole::metal_light, seal);
+					}
+				};
+				const float seal_width = step + 2.0f * CELL;
+				seal_row(RectangleF(t.hypotenuse_left() ? span->first : span->second - seal_width,
+					y0, seal_width, y1 - y0));
+				if (overlaps(vertical_leg, y0, y1))
+				{
+					seal_row(RectangleF(corner_right ? span->second - 3.0f * CELL : span->first,
+						y0, 3.0f * CELL, y1 - y0));
+				}
+				if (leg_near < 3.0f * CELL)
+				{
+					for (const auto& [low, high] : horizontal_leg)
+					{
+						seal_row(RectangleF(low, y0, high - low, y1 - y0));
+					}
+				}
 				// A surviving pixel row may borrow one pixel only from its own
 				// filled band, never from the triangle's empty side or tip.
 				this->add_stroke(hypotenuse, line, box,

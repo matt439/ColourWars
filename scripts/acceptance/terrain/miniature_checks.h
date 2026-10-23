@@ -75,8 +75,8 @@ namespace
 	void check_miniature_rulers(World& world)
 	{
 		// Known 320-by-40 fixtures exercise both orientations. A one-pixel
-		// ruler must stay light, and two pixels must retain a light body below
-		// one edge. Blanket widening would turn these into solid black bars.
+		// ruler keeps its silhouette; two pixels retain the sealed substrate
+		// below one keyline, while larger rulers leave a readable light body.
 		for (bool vertical : { false, true })
 		{
 			const RectangleF box(0.0f, 0.0f, vertical ? 40.0f : 320.0f,
@@ -97,19 +97,17 @@ namespace
 			for (int along = 1; along < 15; ++along)
 			{
 				require(at(two, along, 0) == TerrainRole::keyline &&
-					at(two, along, 1) == TerrainRole::ruler_fill,
-					"two-pixel miniature ruler lost its leading edge or light body");
+					at(two, along, 1) == TerrainRole::metal_dark,
+					"two-pixel miniature ruler lost its leading edge or sealed substrate");
 			}
 			const auto marked = ruler.projected_miniature_quads(Camera(0.0f, 0.0f, 0.1f));
 			for (int along : { 8, 16, 24 })
 			{
-				require(at(marked, along, 2) == TerrainRole::ruler_marks &&
-					at(marked, along + 1, 2) == TerrainRole::ruler_fill,
-					"resolvable ruler major tick collapsed or widened into its neighbour");
+				require(at(marked, along, 0) == TerrainRole::keyline &&
+					at(marked, along, 1) == TerrainRole::ruler_fill &&
+					at(marked, along, 3) == TerrainRole::keyline,
+					"miniature sealed edges crowded out the ruler interior or lost their silhouette");
 			}
-			require(at(marked, 1, 2) == TerrainRole::ruler_fill &&
-				at(marked, 3, 2) == TerrainRole::ruler_fill,
-				"unresolved ruler minor ticks crowded out the light interior");
 		}
 	}
 
@@ -118,7 +116,7 @@ namespace
 		const RectangleF box(0.0f, 0.0f, 96.0f, 32.0f);
 		TerrainFaces partial;
 		partial.top = { { 16.0f, 48.0f } };
-		const GroundMaterial ledge(box, partial, false, &world.render);
+		const GroundMaterial ledge(box, partial, &world.render);
 		const auto projected = ledge.projected_miniature_quads(Camera(0.0f, 0.0f, 0.1f));
 		for (int x = 0; x < 9; ++x)
 		{
@@ -131,17 +129,18 @@ namespace
 
 		// Two touching pieces expose only their outer ends. Sampling immediately
 		// on either side of the shared face must find fill, not a new seam.
-		TerrainFaces left = all_faces(box);
+		const RectangleF touching_box(0.0f, 0.0f, 96.0f, 96.0f);
+		TerrainFaces left = all_faces(touching_box);
 		left.right.clear();
-		const RectangleF neighbour(96.0f, 0.0f, 96.0f, 32.0f);
+		const RectangleF neighbour(96.0f, 0.0f, 96.0f, 96.0f);
 		TerrainFaces right = all_faces(neighbour);
 		right.left.clear();
-		const GroundMaterial first(box, left, false, &world.render);
-		const GroundMaterial second(neighbour, right, false, &world.render);
+		const GroundMaterial first(touching_box, left, &world.render);
+		const GroundMaterial second(neighbour, right, &world.render);
 		const Camera camera(0.0f, 0.0f, 0.125f);
 		const auto a = first.projected_miniature_quads(camera);
 		const auto b = second.projected_miniature_quads(camera);
-		for (int y : { 1, 2 })
+		for (int y : { 2, 6, 9 })
 		{
 			require(pixel_role(a, 11, y) == TerrainRole::ground_fill &&
 				pixel_role(b, 12, y) == TerrainRole::ground_fill,

@@ -33,7 +33,21 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($ResultPercentageOnly) {
+if ($SurfaceFinishOnly) {
+    $result.scope = 'surface-finish-only'
+    $result.Remove('stage')
+    $result.stages = @('close_quarters', 'king_of_the_hill', 'turbulence', 'movement_course', 'crossfeed')
+    $result.player_counts = @(1, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('literal-neutral-face-pixels', 'paintable-sealed-rulers', 'buried-and-disabled-faces', 'owned-corner-order', 'all-five-real-levels-clean-heavy', 'frozen-state-rng-debug-fingerprint')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result.inputs = 'Public builder-owned actual Levels with controlled stations on authored scoring tops, ninety neutral ticks to retire countdown art, controlled placement, six settling ticks and direct projectile contacts for heavy paint. Synthetic fixtures independently exercise per-face finish and corner order. No foreground or physical-device claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Smooth white primer versus sealed hatch: independent thin-ruler, top-only/all-face, buried interval and owned-corner pixels at half/quarter/eighth scale and fractional camera translation in one/four panes. All five real levels retain native 720p clean/heavy 1P/4P frames and each unscaled pane. Exactly 20 full frames, 50 pane crops, two synthetic boards and 52 readbacks; public/paint state, RNG, Debug fingerprint and score attribution survive drawing. Controlled station/paint setup establishes no route traversal, human readability, listening or physical-pad acceptance.'
+}
+elseif ($ResultPercentageOnly) {
     $result.scope = 'result-percentage-only'
     $result.Remove('stage')
     $result.stages = @('movement_course')
@@ -772,11 +786,11 @@ elseif ($MiniatureTerrainOnly) {
     $result.stages = @('close_quarters', 'king_of_the_hill', 'turbulence', 'movement_course')
     $result.palettes = @('blue_orange')
     $result.weapons = @('roller')
-    $result.actions = @('independent-edge-tick-pixels', 'masked-seam', 'lit-thin-ruler', 'ramp-silhouette', 'owned-paint-overlay', 'legacy-comparison', 'native-material-parity', 'native-scene-order-culling', 'opening-preview-push', 'active-pullback-overview', 'resize-return', 'frozen-state-rng')
+    $result.actions = @('independent-edge-tick-pixels', 'masked-seam', 'lit-thin-ruler', 'ramp-silhouette', 'owned-paint-overlay', 'legacy-comparison', 'native-material-parity', 'native-scene-order-culling', 'opening-preview-push', 'active-pullback-overview', 'resize-return', 'bounded-active-camera-normalization', 'frozen-state-rng')
     $result.input_slots = @(3, 1, 2, 0)
     $result.inputs = 'Direct material/Structure and actual builder-owned Level draws with neutral sparse PlayerInputData. Normal GamepadReader backend; no physical-device claim.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
-    $result.checks = 'Independent complete exposed-edge/masked-top-span/body pixel oracle and actual major-ruler tick/light-gap, one-pixel light ruler and original filled ramp silhouette checks. Legacy and adapted material comparisons at 1P/4P720p/1080p/QHD; exact point-sampled material equality at one cell per pixel and larger. Actual projectile-owned paint remains above terrain without changing score or attribution. All four real arena overview compositions compare legacy/adapted rasters; native Scene versus client traversal preserves painter order/culling/pixels. Actual sparse-roster solo and four-player opening/preview/push/active/pullback/overview contexts at all three native sizes preserve frozen public observations, RNG and Debug replay fingerprints, with exact resize returns. Selected native detail/context crops accompany compact comparison CSV; no video or full painter matrix. Muted rendering under possible concurrent Unreal validation does not establish human readability/style, physical-pad, listening or performance acceptance.'
+    $result.checks = 'Independent complete exposed-edge/masked-top-span/body pixel oracle and actual major-ruler tick/light-gap, one-pixel sealed ruler and original filled ramp silhouette checks. Legacy and adapted material comparisons at 1P/4P720p/1080p/QHD; exact point-sampled material equality at one cell per pixel and larger. Actual projectile-owned paint remains above terrain without changing score or attribution. All four real arena overview compositions compare legacy/adapted rasters; native Scene versus client traversal preserves painter order/culling/pixels. Actual sparse-roster solo and four-player opening/preview/push/active/pullback/overview contexts at all three native sizes preserve frozen public observations, RNG and Debug replay fingerprints, with exact resize returns. The measured Movement Course active deadzone cameras may differ by at most four float ULPs in Y after resize; unchanged scale/X and matching view/player cameras in each pane gate a temporary camera normalization, full-frame byte equality and exact restoration, recorded separately. Selected native detail/context crops accompany compact comparison CSV; no video or full painter matrix. Muted rendering under possible concurrent Unreal validation does not establish human readability/style, physical-pad, listening or performance acceptance.'
 }
 elseif ($DriftOnly) {
     $result.scope = 'cloud-drift-only'

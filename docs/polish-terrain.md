@@ -11,12 +11,12 @@ drawing of hills, trees, a house, clouds, a sun and birds behind.
 
 ## What it looks like
 
-Every collision object in the four shipped arenas wears a **material**, a drawing of
+Every collision object in the five current levels wears a **material**, a drawing of
 a piece of stationery that fills its collision shape exactly:
 
 | Material | Worn by | Drawing |
 |---|---|---|
-| `ground` | solid structures; the big paintable floors | Halved-bond tile courses with black joints in the top four courses, `ground_shade` below. Paintable ground has a light `ground_top` lip under its top keyline; solid ground does not. |
+| `ground` | solid structures; the big paintable floors | Halved-bond tile courses with black joints in the top four courses, `ground_shade` below. Scoring faces use the common white primer described below. |
 | `pencil` | long paintable platforms and walls | `pencil_body` with a shaded lower facet; an eraser and ferrule at the end away from the stage's mirror line, a cut wood end with its graphite core toward it. A pencil across the mirror line is cut at both ends; one standing up has its eraser at the top; one shorter than four times its thickness (or 60 units) has no end caps. |
 | `eraser` | tall paintable blocks (King of the Hill's tiers) | `eraser_fill`, a keylined `eraser_shade` lower third and one shine dash below the paint band. |
 | `paint_tin` | King of the Hill's summit | Metal tin side on: rim, `prop_accent` label band, shaded side. |
@@ -30,6 +30,73 @@ a house, clouds, a sun with a flat little face and two flights of birds, all fro
 hangs: baked speckle tiles, dense `shadow_deep` near the platform thinning to
 `shadow`.
 
+## Paintable and sealed faces (2026-10-24)
+
+**A smooth white primer band accepts paint; a dark edge with light diagonal
+hatching rejects it.** This shared face treatment applies to Close Quarters,
+King of the Hill, Turbulence, Movement Course and Crossfeed. Material still
+describes the object; the edge finish describes what paint does there.
+
+Primer follows the actual exposed scoring strips built by `StructurePaintable`,
+including authored `paintable_faces` and the builder's burial clipping. It marks
+only the top of a top-only platform, and also the sides or underside when those
+faces score. The same ruler can therefore be paintable in Crossfeed and sealed
+in another level without asking the player to remember a level-specific rule.
+The old ground-only light lip is removed.
+
+Every material draws its sealed edges first; rectangular faces share the same
+hatched band, and set-square ramps carry it along their slope. White primer
+covers the scoring intervals with a dark inner border. All primer is drawn
+before splashes and owned surface paint, so a neutral adjoining face cannot
+overwrite a team's colour at a corner. Team paint replaces the white band;
+sealed faces retain their hatching. Primer is clipped to the collision rectangle,
+including thin one-way supports. This changes drawing only: level geometry,
+collision, enabled scoring faces, paint area and ownership stay as authored.
+
+The treatment needs inspection in clean and heavily painted gameplay panes,
+especially four-player views and thin platforms. Renderer and geometry checks
+support that review; recognising the distinction at speed remains part of the
+human reference-arena readability review (`POL#17`/`POL#24`).
+
+Retained native-size examples: [face comparison](images/polish-terrain/surface-finish-board-720p.png)
+and [one four-player Crossfeed pane](images/polish-terrain/surface-finish-crossfeed-4p-pane-720p.png).
+The comparison includes paintable/sealed thin rulers, top-only/all-face blocks,
+a buried interval and a partly painted corner.
+
+Validation evidence is under `out/validation/surface-finish-20261024/`:
+
+- Debug and Release builds and all 42 consumer acceptance cases pass in each
+  preset. The terrain case requires all five levels, checks the shared sealed
+  finish and masked spans, and retains the shape, deterministic drawing and
+  miniature silhouette checks. Existing paint and Crossfeed cases retain their
+  authored score budgets and collision assertions.
+- `check-painter.ps1 -SurfaceFinishOnly` checks literal primer/sealed ruler,
+  enabled/disabled face, buried interval and owned-corner pixels at half,
+  quarter and eighth scale, including fractional translation and miniature
+  drawing. Each preset retains 20 real-Level clean/heavy 1P/4P context frames,
+  50 native pane crops and two synthetic detail crops, with 52 readbacks.
+  Frozen drawing preserves public state, paint ownership, player credit, RNG
+  and Debug replay fingerprints. Stations and heavy-paint contacts are controlled
+  fixture inputs; these are not route or multiplayer balance observations.
+  Final runs are Debug `native/x64-debug/80078fbbe49243a4825f546669e860fe/`
+  and Release `native/x64-release/6affb2211c10436b858a9dc213345f46/`;
+  all 72 PPM files match byte-for-byte (`native-reconciliation.json`).
+- Both normal startup checks pass with the accepted audio bank, isolated saves,
+  system-only PATH, per-monitor-v2 DPI and graceful shutdown.
+- The complete Debug `-MiniatureTerrainOnly` matrix passes in
+  `native/x64-debug/9b407444fb2147a0b1b838286483ea00/`: independent projection,
+  material, Scene/culling, StagePreview and all four older levels' 1P/4P story
+  paths at 720p/1080p/QHD, including resize return.
+
+The miniature resize oracle also records the Movement Course's active cameras
+returning two floating-point steps away in Y in 1P and 4P (the 1P difference is
+299 player/roller pixels; terrain is identical). In that specific state it
+requires exact X/scale and controller/view agreement, permits at most four Y
+steps per pane, temporarily restores all starting cameras for an exact whole-frame
+comparison, then restores and verifies the returned cameras. Other resize beats
+retain direct equality. This is fixture handling of camera history; gameplay
+camera code is unchanged.
+
 ## Rules
 
 - **One cell is four world units**, as the painter's. Keylines are one cell. Interior
@@ -42,13 +109,13 @@ hangs: baked speckle tiles, dense `shadow_deep` near the platform thinning to
   walkable, no tip beyond the rectangle (the pencil's cut end is the honest version of
   its sharpened one). If it is black-lined you can stand on it; backdrop props are
   lined in `bg_line`, never black, and never look solid.
-- **Outlines, lips and end caps go only on exposed faces.** The same exposed-interval
+- **Outlines, sealed edges and end caps go only on exposed faces.** The same exposed-interval
   test that decides where paint can land (`paint_face_geometry.h`) decides where
   terrain is outlined, so abutting and stacked pieces (King of the Hill's castle, the
   Turbulence divider's ledge) read as one surface rather than a seam.
 - **Thin rulers keep one keyline.** Under five cells thick the lower (or right) edge
-  stays open, so a 10-unit spawn ceiling is a black line over a light board, not a
-  black bar.
+  stays open. Their scoring top is smooth white; a sealed top retains the dark
+  hatched finish, with no second outline consuming the thin board.
 - **Material fits type.** `ground` on solid or paintable structures, `pencil`,
   `eraser` and `paint_tin` on paintable ones, `ruler` on jump-throughs, `set_square`
   on ramps only. The game, the editor and the schema refuse anything else
@@ -74,6 +141,9 @@ hangs: baked speckle tiles, dense `shadow_deep` near the platform thinning to
   miniature path projects that same drawing for each view without mutating it.
   A `Structure` owns its material; `Structure::draw` paints it instead of the
   stretched frame.
+- `StructurePaintable` overlays smooth white primer from its real scoring strips,
+  then draws splashes, owned paint and runoff. Normal and miniature views share
+  that face selection; the material's collision tag never decides paintability.
 - [`AirbrushShadow`](../game/objects/airbrush_shadow.h) lays the four baked speckle
   tiles along a span on the world grid, choosing a variant by grid index and cropping
   the last tile rather than stretching it.
@@ -97,7 +167,7 @@ paper, and that the material table refuses what it does not draw. Level-format a
 editor acceptance cover the field ([level editor](level-editor.md)).
 
 The terrain case also checks miniature projection at native and subpixel scales,
-negative/fractional camera origins, exposed seams, light thin rulers, surviving
+negative/fractional camera origins, exposed seams, thin rulers, surviving
 major marks and unchanged ramp pixel occupancy. These are geometry/raster rules,
 not human style acceptance.
 
@@ -118,7 +188,8 @@ approval below; each remains easy to reverse.
   blockout (`POL#17`).
 - **Which material each existing piece wears**: solids are ground, jump-throughs are
   rulers, long paintables pencils, tall ones erasers, the King of the Hill summit a
-  paint tin.
+  paint tin. The 2026-10-24 face finish above makes paintability explicit independently
+  of that material assignment.
 - **The one-cell keyline**, matching the figure, with thin rulers keeping only the top
   one.
 - **Paint covers the outline.** The paint band (12 units, keyline at its inner edge)
@@ -246,18 +317,21 @@ row bands, retaining the projected silhouette rather than inventing a ledge.
 Incidental brick joints and engraved interior lines keep their ordinary
 projection; the treatment does not widen everything drawn in black.
 
-A one-pixel ruler stays light. Two pixels can carry one leading keyline and
-a light body; larger rulers can retain their opposite edge and marks. Marks
-need three pixels of spacing to remain separate, so major marks survive after
-minor marks become unresolvable. No palette, atlas, collision shape, paint
+One-pixel miniature rulers retain their light silhouette; at two pixels the
+sealed substrate can survive beneath one leading keyline. At these tiny overview
+scales, primer and hatch detail can merge or disappear through pixel quantization;
+the gameplay face treatment is not a promise of per-face recognition in a miniature.
+Larger rulers can retain their opposite edge and marks where the sealed bands
+leave room. Marks need three pixels of spacing to remain separate, so major marks
+can survive after minor marks become unresolvable. No palette, atlas, collision shape, paint
 budget, gameplay camera or world-grid value changes.
 
 `TerrainMaterial::paint_miniature` reads the view's camera from the draw list
 (`DrawList::camera()`), which the caller has set. At one
 pixel per cell or above it calls the ordinary painting path. Smaller drawings
 use viewport-local integer rectangles and restore the caller's camera; their
-point sampler remains unchanged. Each paintable structure still draws its
-material, splashes, owned paint and runoff in that order. Normal active and
+point sampler remains unchanged. Each paintable structure now draws its
+material, primer, splashes, owned paint and runoff in that order. Normal active and
 countdown gameplay continues through `Scene::draw`.
 
 The miniature art is chosen by draw path, not by zoom: only the overview,

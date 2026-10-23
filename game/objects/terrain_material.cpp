@@ -87,7 +87,7 @@ std::unique_ptr<const TerrainMaterial> TerrainMaterial::make(const std::string& 
 	if (name == "ground")
 	{
 		if (type != CollisionObjectType::structure && !paintable) { return refuse(); }
-		return std::make_unique<GroundMaterial>(rectangle, faces, paintable, render_resources);
+		return std::make_unique<GroundMaterial>(rectangle, faces, render_resources);
 	}
 	if (name == "ruler")
 	{
@@ -298,26 +298,43 @@ void TerrainMaterial::add_ruler_mark(const RectangleF& rectangle,
 
 void TerrainMaterial::outline(const RectangleF& rectangle, const TerrainFaces& faces)
 {
-	for (const auto& [low, high] : faces.top)
+	const auto seal = [&](const std::vector<std::pair<float, float>>& spans,
+		bool along_x, bool leading, StrokeEdge edge)
 	{
-		this->add_stroke(RectangleF(low, rectangle.top(), high - low, CELL),
-			TerrainRole::keyline, rectangle, StrokeEdge::top);
-	}
-	for (const auto& [low, high] : faces.bottom)
-	{
-		this->add_stroke(RectangleF(low, rectangle.bottom() - CELL, high - low, CELL),
-			TerrainRole::keyline, rectangle, StrokeEdge::bottom);
-	}
-	for (const auto& [low, high] : faces.left)
-	{
-		this->add_stroke(RectangleF(rectangle.left(), low, CELL, high - low),
-			TerrainRole::keyline, rectangle, StrokeEdge::left);
-	}
-	for (const auto& [low, high] : faces.right)
-	{
-		this->add_stroke(RectangleF(rectangle.right() - CELL, low, CELL, high - low),
-			TerrainRole::keyline, rectangle, StrokeEdge::right);
-	}
+		const float thickness = std::min(3.0f * CELL,
+			along_x ? rectangle.height : rectangle.width);
+		const auto band = [&](float low, float high, float offset, float depth)
+		{
+			return along_x
+				? RectangleF(low, leading ? rectangle.top() + offset : rectangle.bottom() - offset - depth,
+					high - low, depth)
+				: RectangleF(leading ? rectangle.left() + offset : rectangle.right() - offset - depth,
+					low, depth, high - low);
+		};
+		for (const auto& [low, high] : spans)
+		{
+			const RectangleF limit = band(low, high, 0.0f, thickness);
+			this->add(limit, TerrainRole::metal_dark, rectangle);
+			// Sparse, world-aligned diagonal cuts. The smooth white scoring
+			// band masks these; disabled faces retain the same sealed finish.
+			constexpr float period = 8.0f * CELL;
+			for (float at = std::floor(low / period) * period - thickness;
+				at < high; at += period)
+			{
+				for (float inset = CELL; inset < thickness; inset += CELL)
+				{
+					this->add(band(at + inset, at + inset + CELL, inset,
+						std::min(CELL, thickness - inset)), TerrainRole::metal_light, limit);
+				}
+			}
+			this->add_stroke(band(low, high, 0.0f, std::min(CELL, thickness)),
+				TerrainRole::keyline, rectangle, edge);
+		}
+	};
+	seal(faces.top, true, true, StrokeEdge::top);
+	seal(faces.bottom, true, false, StrokeEdge::bottom);
+	seal(faces.left, false, true, StrokeEdge::left);
+	seal(faces.right, false, false, StrokeEdge::right);
 }
 
 OrientedTerrainMaterial::OrientedTerrainMaterial(const std::string& name,

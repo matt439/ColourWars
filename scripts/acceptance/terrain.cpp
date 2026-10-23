@@ -178,6 +178,7 @@ namespace
 
 #include "scripts/acceptance/terrain/cloud_checks.h"
 #include "scripts/acceptance/terrain/miniature_checks.h"
+#include "scripts/acceptance/terrain/surface_finish_checks.h"
 #include "scripts/acceptance/terrain/landmark_checks.h"
 
 namespace
@@ -302,7 +303,7 @@ int main(int argc, char** argv)
 		const GameTuning tuning((content / "tuning.json").string().c_str());
 		size_t stages = 0;
 		const auto levels = shipped_levels(content);
-		for (const char* stage : {"movement_course", "king_of_the_hill", "turbulence", "close_quarters"})
+		for (const char* stage : {"movement_course", "king_of_the_hill", "turbulence", "close_quarters", "crossfeed"})
 		{
 			require(std::count_if(levels.begin(), levels.end(), [&](const auto& path) { return path.stem().string() == stage; }) == 1,
 				std::string("Landmark acceptance needs each shipped arena exactly once: ") + stage);
@@ -313,6 +314,7 @@ int main(int argc, char** argv)
 			++stages;
 		}
 		check_rejections(world);
+		check_surface_finish(world);
 		check_miniature_rulers(world);
 		check_miniature_faces(world);
 		check_miniature_ramps(world);
@@ -322,7 +324,7 @@ int main(int argc, char** argv)
 			std::filesystem::absolute(argv[0]).parent_path() / "terrain-fixtures");
 		std::cout << "PASS terrain: " << stages << " stages fully materialled, every drawing inside "
 			"its collision shape and deterministic, shadows under real undersides, untinted "
-			"backdrops on paper, quantized miniature silhouettes with visible edges and ruler ticks, "
+			"backdrops on paper, shared sealed finishes clipped to exposed faces, quantized miniature silhouettes, "
 			"two native-size static landmarks per arena with stable bounds/RNG/reduction, "
 			"bounded deterministic cloud drift with live reduction, and material/drift/camera refusals.\n";
 		return 0;

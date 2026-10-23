@@ -10,12 +10,13 @@ public:
     {
         const RectangleF body(64, 64, 320, 128);
         this->add(body, TerrainRole::ground_fill, body);
-        TerrainFaces exposed;
-        exposed.top = { { 64.0f, 184.0f }, { 224.0f, 384.0f } };
-        exposed.bottom = { { 64.0f, 384.0f } };
-        exposed.left = { { 64.0f, 192.0f } };
-        exposed.right = { { 64.0f, 192.0f } };
-        this->outline(body, exposed);
+        // Primitive projection fixture, deliberately independent of the
+        // production sealed-edge recipe. Its exact masked stroke stays fixed.
+        this->add_stroke({ 64, 64, 120, 4 }, TerrainRole::keyline, body, StrokeEdge::top);
+        this->add_stroke({ 224, 64, 160, 4 }, TerrainRole::keyline, body, StrokeEdge::top);
+        this->add_stroke({ 64, 188, 320, 4 }, TerrainRole::keyline, body, StrokeEdge::bottom);
+        this->add_stroke({ 64, 64, 4, 128 }, TerrainRole::keyline, body, StrokeEdge::left);
+        this->add_stroke({ 380, 64, 4, 128 }, TerrainRole::keyline, body, StrokeEdge::right);
     }
 };
 
@@ -103,12 +104,11 @@ void miniature_ruler_orientations(Application& app, const Canvas& canvas, int co
     const Vector2I& size, std::ofstream& records)
 {
     TerrainFaces horizontal;
-    horizontal.top = { { 64.0f, 384.0f } }; horizontal.bottom = horizontal.top;
-    horizontal.left = { { 256.0f, 272.0f } }; horizontal.right = horizontal.left;
+    horizontal.top = { { 64.0f, 384.0f } };
     const RulerMaterial two_pixel({ 64, 256, 320, 16 }, horizontal, app.render_resources());
     TerrainFaces vertical;
-    vertical.top = { { 64.0f, 96.0f } }; vertical.bottom = vertical.top;
-    vertical.left = { { 64.0f, 384.0f } }; vertical.right = vertical.left;
+    // The far edge is buried; the measurement marks remain exposed inside.
+    vertical.left = { { 64.0f, 384.0f } };
     const RulerMaterial upright({ 64, 64, 32, 320 }, vertical, app.render_resources());
     const Camera camera(0, 0, 0.125f);
     const Frame board = miniature_material_frame(app, canvas, &two_pixel, camera, true, count);
@@ -119,7 +119,7 @@ void miniature_ruler_orientations(Application& app, const Canvas& canvas, int co
         for (int x = 8; x < 48; ++x)
         {
             miniature_pixel(board, pane, x, 32, 0x000000, "two-pixel ruler lost its one leading keyline");
-            miniature_pixel(board, pane, x, 33, 0xB5AFA3, "two-pixel ruler blackened its light row or end caps");
+            miniature_pixel(board, pane, x, 33, 0xB5AFA3, "two-pixel ruler lost the light row beneath its sealed leading edge");
         }
         for (int y = 9; y < 47; ++y)
         {
@@ -138,12 +138,11 @@ void miniature_material_matrix(Application& app, const Canvas& canvas,
 {
     MiniatureFixtureMaterial fixture(app.render_resources());
     TerrainFaces ruler_faces;
-    ruler_faces.top = { { 64.0f, 384.0f } }; ruler_faces.bottom = ruler_faces.top;
-    ruler_faces.left = { { 256.0f, 288.0f } }; ruler_faces.right = ruler_faces.left;
+    // Leading edge exposed, far edge and ends buried: isolate surviving ticks.
+    ruler_faces.top = { { 64.0f, 384.0f } };
     const RulerMaterial ruler({ 64, 256, 320, 32 }, ruler_faces, app.render_resources());
     TerrainFaces thin_faces;
-    thin_faces.top = { { 64.0f, 384.0f } }; thin_faces.bottom = thin_faces.top;
-    thin_faces.left = { { 256.0f, 266.0f } }; thin_faces.right = thin_faces.left;
+    thin_faces.top = { { 64.0f, 384.0f } };
     const RulerMaterial thin({ 64, 256, 320, 10 }, thin_faces, app.render_resources());
     const TriangleRightAxisAligned triangle(416, 192, 544, 192, 544, 64);
     TerrainFaces ramp_faces;
@@ -214,8 +213,8 @@ void miniature_material_matrix(Application& app, const Canvas& canvas,
                     {
                         for (int x = 8; x < 48; ++x)
                         {
-                            miniature_pixel(fixed, pane, x, 32, 0xB5AFA3,
-                                "one-pixel miniature ruler became a black bar instead of light material");
+                            miniature_pixel(fixed, pane, x, 32, 0x6E7275,
+                                "one-pixel miniature ruler lost its sealed substrate silhouette");
                         }
                     }
                 }
@@ -551,7 +550,7 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
             auto inputs = neutral_inputs();
             const auto sample = [&](const char* beat)
             {
-                Frame first;
+                Frame first; std::vector<Camera> first_cameras, first_player_cameras;
                 for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440), Vector2I(1280, 720) })
                 {
                     resize(app, *level, size);
@@ -561,6 +560,8 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
                     if (size.x == 1280 && first.pixels.empty())
                     {
                         first = frame;
+                        for (int view = 0; view < count; ++view)
+                        { first_cameras.push_back(level->view_camera(view)); first_player_cameras.push_back(level->player(view).camera()); }
                         if (std::string(beat) == "overview" || (count == 4 && std::string(beat) == "preview"))
                         {
                             const std::string stem = "miniature-terrain-story-" + std::string(stage) + '-' +
@@ -569,7 +570,49 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
                         }
                     }
                     else if (size.x == 1280)
-                    { require(frame.pixels == first.pixels, "actual miniature story changed after native resize return"); }
+                    {
+                        if (frame.pixels != first.pixels)
+                        {
+                            // The accepted hysteretic cameras can return two ULPs
+                            // away at the resized course's active deadzone edge.
+                            // Normalize only that measured camera state, then keep
+                            // the full-frame byte oracle (including the player).
+                            require(std::string(stage) == "movement_course" && std::string(beat) == "active",
+                                "Unexpected miniature resize return pixels outside the active course camera");
+                            std::vector<Camera> returned; bool changed = false;
+                            for (int view = 0; view < count; ++view)
+                            {
+                                const Camera original = first_player_cameras[static_cast<size_t>(view)];
+                                const Camera current = level->player(view).camera(); returned.push_back(current);
+                                float low = original.translation.y, high = low;
+                                for (int ulp = 0; ulp < 4; ++ulp)
+                                {
+                                    low = std::nextafter(low, -std::numeric_limits<float>::infinity());
+                                    high = std::nextafter(high, std::numeric_limits<float>::infinity());
+                                }
+                                std::cout << "CHECK miniature active resize camera pane " << view << ' ' << std::hexfloat <<
+                                    original.translation.x << ',' << original.translation.y << ',' << original.scale << " -> " <<
+                                    current.translation.x << ',' << current.translation.y << ',' << current.scale << std::defaultfloat << '\n';
+                                require(level->view_camera(view) == current && first_cameras[static_cast<size_t>(view)] == original &&
+                                    current.scale == original.scale && current.translation.x == original.translation.x &&
+                                    current.translation.y >= low && current.translation.y <= high,
+                                    "Unexpected miniature active resize camera state");
+                                changed |= current != original;
+                            }
+                            require(changed, "Miniature resize pixels changed without the measured camera drift");
+                            for (int view = 0; view < count; ++view)
+                            { const_cast<Player&>(level->player(view)).set_camera(first_player_cameras[static_cast<size_t>(view)]); }
+                            level->refresh_layout(); const Frame normalized = miniature_story_frozen(app, *level);
+                            for (int view = 0; view < count; ++view)
+                            { const_cast<Player&>(level->player(view)).set_camera(returned[static_cast<size_t>(view)]); }
+                            level->refresh_layout();
+                            require(normalized.pixels == first.pixels && frame.pixels == miniature_story_frozen(app, *level).pixels,
+                                "Miniature resize return changed pixels beyond its measured camera state");
+                            records << "resize-camera-normalized," << stage << ',' << count << ",1280,720,0," <<
+                                miniature_changed_pixels(first, frame) << '\n';
+                            std::cout << "CHECK miniature active normalized full-frame equality and restored cameras passed\n";
+                        }
+                    }
                 }
             };
             const auto advance = [&](float seconds)

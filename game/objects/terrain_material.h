@@ -37,7 +37,7 @@ struct TerrainQuad
 };
 
 // The spans of each face that nothing else covers, in world units along the
-// face. Outlines, lips and end caps are drawn only there, so abutting and
+// face. Outlines, sealed finishes and end caps are drawn only there, so abutting and
 // stacked rectangles read as one surface rather than a seam.
 struct TerrainFaces
 {
@@ -97,7 +97,8 @@ protected:
 	void configure_miniature_ruler(const mattmath::RectangleF& rectangle, bool vertical);
 	void add_ruler_mark(const mattmath::RectangleF& rectangle,
 		const mattmath::RectangleF& limit, bool major);
-	// A keyline CELL wide inside each exposed span of each face.
+	// A sealed dark edge with light diagonal hatching, inside every exposed
+	// face. StructurePaintable covers scoring intervals with smooth primer.
 	void outline(const mattmath::RectangleF& rectangle, const TerrainFaces& faces);
 
 private:
@@ -147,13 +148,13 @@ private:
 };
 
 // Solid ground and the big paintable floors: halved-bond tile courses with
-// black joints near the top, darkening to ground_shade below. Paintable
-// ground carries a light lip under the top keyline; solid ground does not.
+// black joints near the top, darkening to ground_shade below. Scoring faces
+// receive the same primer as every other material, from StructurePaintable.
 class GroundMaterial final : public TerrainMaterial
 {
 public:
 	GroundMaterial(const mattmath::RectangleF& rectangle, const TerrainFaces& faces,
-		bool paintable, labrador::RenderResources* render_resources);
+		labrador::RenderResources* render_resources);
 };
 
 // A long paintable pencil: eraser and ferrule at one end, a cut wood end with
