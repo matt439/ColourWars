@@ -242,6 +242,87 @@ These checks establish painting/scoring integration and retained traversal.
 Travel/repaint pacing, spawn pressure and human match balance remain playtest
 questions; home paint is included when reviewing those observations.
 
+### Paid repaint and opening checkpoints (2026-10-24)
+
+The ordinary-floor candidate needs fresh observations: the six-object results
+below belong to the earlier geometry. The painting probes now label their
+first contact **first any paint**, including home paint. The all-tool cold
+openings also record when the complete body leaves the home footprint, with
+total owned area, paid shots and reserve at that moment. That is a temporal
+checkpoint, not ownership clipped to a geographic region: the lower floor is
+one scored object spanning both home and approach.
+
+The separate Sniper opening comparison now arms its delayed request when the
+Player's **centre** crosses the home support's inward edge (X=620 / 2980).
+Using the broadened scored floor's outer edge would arm every spawn at tick
+one and collapse the intended input comparison. Each trial checks that the
+immediate request begins on tick one and the delayed request waits for the
+actual later crossing. Cold weapon cooldown can still make their paid ticks
+coincide. This centre-based gate precedes the full-body checkpoint above.
+
+The new [paid repaint case](../scripts/acceptance/crossfeed/repaint_checks.cpp)
+compares all five tools in both directions on the prepared lower route:
+walk from X=1150 to 2450, stop, turn and return to a stop (mirrored for B).
+It holds fire with forward/down aim throughout the route, including automatic
+resumption after ammunition recovery. This differs from the older shared
+route's stop-at-first-missed-shot policy. Each tool/team repeats the same
+inputs and RNG seed on neutral, fully friendly and fully opposing paint;
+oversized public contacts establish those initial ownership conditions only.
+An opposing-painted no-fire route is the negative control. No live opponent
+acts in these trials.
+
+The case checks identical movement, paid schedules and projectile completion
+across the three firing conditions, actual score transfer, no unique gain from
+friendly repainting, and no gain or payment without firing. Outward/return
+snapshots retain in-flight paint separately from the final settled area.
+The route is prepared with 60 shot-free ticks; it is not a cold opening or a
+measurement of starting-tank capacity, optimal coverage or safe-loop dominance.
+
+Current matched repaint observations (A / B; area in score units):
+
+| Tool | Paid shots | Final captured area | Added during return | Reserve on release |
+|---|---:|---:|---:|---:|
+| Sprayer | 146 / 146 | 8,064 / 8,208 | 240 / 240 | 0.004665 / 0.004665 |
+| Sniper | 5 / 5 | 864 / 576 | 0 / 0 | 0.333332 / 0.299999 |
+| Roller | 250 / 249 | 9,120 / 8,496 | 864 / 240 | 0.006665 / 0.003999 |
+| Mister | 41 / 40 | 9,216 / 7,920 | 4,608 / 3,312 | 0.18 / 0.20 |
+| Bucket | 10 / 9 | 5,136 / 5,712 | 2,640 / 2,256 | 0 / 0.10 |
+
+Each clean result equals the area stolen from the fully opposing condition;
+friendly repainting spends the same ammunition and adds zero unique team area.
+No-fire controls retain the original enemy ownership and full reserve. The
+round trip takes 281 / 275 ticks (4.6833 / 4.5833 seconds), including the stops.
+This preserves the previously observed direction asymmetry rather than
+qualifying side fairness. Mister adds another 432 / 384 area after release;
+the other tools add none after their return snapshots. Refilling after release
+takes 101-180 ticks across the ten tool/direction pairs. Cumulative paid cost can
+exceed one starting tank because regeneration continues between eligible shots.
+
+The cold-opening checkpoints show why first paint cannot stand for contest
+arrival: Sprayer, Roller, Mister and Bucket first paint before full-body home
+exit in all eight spawns, and Sniper does so in six. Full-body exit takes
+57-85 ticks. In the refreshed Sniper policy comparison, all four firing
+policies paint from all eight spawns by tick 180; immediate forward/down first
+paint is now tick 62, including home. Those counts say nothing about whether
+an opponent is threatened or contested paint is reached. The historical
+six-object opening table below remains a separate checkpoint.
+
+Both preset builds and their complete Crossfeed CPU cases pass. The current
+sources match the receipt hashes, and Debug/Release produce byte-identical
+measurement logs, including 40 repaint trials, 40 all-tool opening checkpoints
+and 40 Sniper policy trials. Receipts are under
+`out/validation/crossfeed-repaint-20261024/`: Debug
+`x64-debug/c6e4d9c416d9464ca420f1f7c42b7893/`, Release
+`x64-release/d24316d4236744d292d670bc1576b8e7/`, with the cross-build check in
+`validation-results.json`. These are CPU qualification checks; the earlier
+native clean/heavy pane evidence remains a separate record.
+
+These controlled measurements support paid repaint integration and expose
+limited new coverage on some return paths. Live opposing fire, alternate aim
+and routes, home-loop travel incentives and attended spawn-pressure/balance
+observations still determine the next `POL#17` / `POL#27` iteration. They do
+not justify a tuning or geometry change by themselves.
+
 ## Coupled movement and five-tool comparison (2026-10-20)
 
 This comparison retains the six-object coverage from 2026-10-20. P3 movement

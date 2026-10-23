@@ -182,8 +182,8 @@ namespace crossfeed_acceptance
                     " first_paid_owner_vx=" << fixed(this->run.first_paid_velocity.x) <<
                     " first_paid_nozzle_x=" << fixed(this->run.first_paid_nozzle.x) <<
                     " first_paid_nozzle_y=" << fixed(this->run.first_paid_nozzle.y) <<
-                    " first_contest_paint_tick=" << this->first_paint_tick <<
-                    " first_contest_paint_seconds=" << (this->first_paint_tick < 0 ? "unobserved" :
+                    " first_any_paint_tick=" << this->first_paint_tick <<
+                    " first_any_paint_seconds=" << (this->first_paint_tick < 0 ? "unobserved" :
                         fixed(static_cast<float>(this->first_paint_tick) * dt, 4)) <<
                     " first_paint_during_active=" << this->first_paint_during_active <<
                     " first_paint_owner_centre_x=" << fixed(this->first_paint_owner.x) <<
@@ -281,7 +281,13 @@ namespace crossfeed_acceptance
                 "Crossfeed painting opening did not begin at its complete authored spawn body over home");
             PaintingObservation observation(run, type, team);
             const float lower_y = s.map.named("floor_paint_a").rectangle.top();
+            const RectangleF home = s.map.named(right ? "spawn_a_floor" : "spawn_b_floor").rectangle;
+            const float home_exit = right ? home.right() : home.left();
             int landed_lower_tick = -1;
+            int home_exit_tick = -1;
+            int home_exit_paid = -1;
+            float home_exit_area = -1.0f;
+            float home_exit_ammo = -1.0f;
             const float angle = right ? PI / 3.0f : 2.0f * PI / 3.0f;
             for (int tick = 1; tick <= 180; ++tick)
             {
@@ -294,12 +300,23 @@ namespace crossfeed_acceptance
                     input(landed_lower_tick >= 0 ? direction : 0.0f, false, false, landed_lower_tick < 0));
                 actions.primary_shoot = observation.first_missed_tick < 0;
                 observation.tick(actions, true);
+                // A temporal checkpoint, not a spatial score partition: the
+                // ordinary lower floor spans both home and approach regions.
+                // Require the complete body to leave the home footprint.
+                const RectangleF body = run.player->rectangle();
+                if (home_exit_tick < 0 && (right ? body.left() >= home_exit : body.right() <= home_exit))
+                {
+                    home_exit_tick = tick;
+                    home_exit_paid = run.paid_events;
+                    home_exit_area = run.team_area(team);
+                    home_exit_ammo = run.player->weapon_ammo();
+                }
             }
             const Vector2F opening_position = run.player->center();
             const Vector2F opening_velocity = run.player->velocity();
             const std::string opening_support = run.support();
             const float active_area = run.team_area(team);
-            require(landed_lower_tick >= 0 && run.takeoffs == 0 &&
+            require(landed_lower_tick >= 0 && home_exit_tick > landed_lower_tick && run.takeoffs == 0 &&
                 (opening_position.x - (points[spawn].x + s.tuning.player().size.x / 2.0f)) * direction >
                     s.tuning.player().size.x,
                 "Crossfeed painting opening did not drop and make actual jump-free walking progress");
@@ -309,6 +326,12 @@ namespace crossfeed_acceptance
             std::cout << "MEASURE Crossfeed paint_opening_progress tool=" << painting_tool_name(type) <<
                 " team=" << (right ? 'a' : 'b') << " spawn=" << spawn <<
                 " active_input_ticks=180 landed_lower_tick=" << landed_lower_tick <<
+                " full_body_home_exit_tick=" << home_exit_tick <<
+                " owned_area_at_home_exit=" << fixed(home_exit_area) <<
+                " paid_events_at_home_exit=" << home_exit_paid <<
+                " reserve_at_home_exit=" << fixed(home_exit_ammo, 6) <<
+                " first_any_paint_before_home_exit=" <<
+                    (observation.first_paint_tick >= 0 && observation.first_paint_tick < home_exit_tick) <<
                 " progress_centre_x=" << fixed(opening_position.x) << " progress_centre_y=" << fixed(opening_position.y) <<
                 " progress_vx=" << fixed(opening_velocity.x) << " progress_vy=" << fixed(opening_velocity.y) <<
                 " progress_support=" << opening_support << " active_unique_owned_score_area=" << fixed(active_area) <<
@@ -329,8 +352,9 @@ namespace crossfeed_acceptance
             "An empty readiness state just after a paid shot is recorded separately; recovery can afford the next "
             "scheduled shot. A float cooldown clock follows all actual Run updates and paid resets, checked against "
             "public affordable readiness, without reading private state. Remaining movement continues, then fire "
-            "releases while surviving shots settle and ammunition recovers. All score is contested geometry in this "
-            "map; first paint locates its actual scored surface bounds and the player's simultaneous centre, not an "
+            "releases while surviving shots settle and ammunition recovers. Ordinary home floors also score; "
+            "first-any-paint includes them. Full-body home exit records total ownership at that tick, not paint "
+            "clipped to a geographic region. First paint locates its actual scored surface bounds and the player's simultaneous centre, not an "
             "inferred exact impact point. This is one scripted policy, not optimal opening time, whole-tank efficiency "
             "when ammunition remains, adversarial painting, human aim or competitive balance\n";
         for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,

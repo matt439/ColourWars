@@ -72,7 +72,10 @@ namespace crossfeed_acceptance
             require(points.size() == 4 && spawn < points.size(),
                 "Crossfeed Sniper openings need all four authored spawns per team");
             const Surface& floor = s.map.named(right ? "floor_paint_a" : "floor_paint_b");
-            const float gate_x = right ? floor.rectangle.left() : floor.rectangle.right();
+            const Surface& home = s.map.named(right ? "spawn_a_floor" : "spawn_b_floor");
+            // Home accepts paint too. Its inward edge defines a geographic
+            // departure gate independently of the lower floor's scored extent.
+            const float gate_x = right ? home.rectangle.right() : home.rectangle.left();
             const Vector2F target(floor.rectangle.center().x, floor.rectangle.top());
             const float forward_down = right ? PI / 3.0f : 2.0f * PI / 3.0f;
             Run run(s, points[spawn], team, WeaponType::sniper);
@@ -83,6 +86,8 @@ namespace crossfeed_acceptance
                 run.support() == (right ? "spawn_a_floor" : "spawn_b_floor") &&
                 run.player->rectangle() == RectangleF(points[spawn], s.tuning.player().size),
                 "Crossfeed Sniper opening did not begin cold at its complete authored spawn body");
+            require((run.player->center().x - gate_x) * direction < 0.0f,
+                "Crossfeed Sniper opening must start inside its home-exit gate");
 
             // This is a fixed authored target, not a trace, a visible-surface
             // search or a reaction to the previous shot. Sniper's barrel lies
@@ -123,7 +128,7 @@ namespace crossfeed_acceptance
             };
 
             int landed_lower_tick = -1;
-            int first_scoring_edge_tick = -1;
+            int first_home_exit_tick = -1;
             int first_fire_request_tick = -1;
             int first_paint_tick = -1;
             Vector2F first_paint_owner;
@@ -138,9 +143,9 @@ namespace crossfeed_acceptance
                 if (landed_lower_tick < 0 && supported(*run.player) &&
                     approximately(run.player->rectangle().bottom(), floor.rectangle.top()))
                 { landed_lower_tick = tick - 1; }
-                if (first_scoring_edge_tick < 0 && (run.player->center().x - gate_x) * direction >= 0.0f)
-                { first_scoring_edge_tick = tick; }
-                if (policy.delayed && first_scoring_edge_tick >= 0) { armed = true; }
+                if (first_home_exit_tick < 0 && (run.player->center().x - gate_x) * direction >= 0.0f)
+                { first_home_exit_tick = tick; }
+                if (policy.delayed && first_home_exit_tick >= 0) { armed = true; }
                 PlayerInputData actions = aimed(forward_down,
                     input(landed_lower_tick >= 0 ? direction : 0.0f, false, false, landed_lower_tick < 0));
                 actions.primary_shoot = policy.fire && armed;
@@ -168,9 +173,19 @@ namespace crossfeed_acceptance
             require(shots.size() == static_cast<size_t>(run.paid_events) &&
                 (shots.empty() ? run.first_paid_tick < 0 : shots.front().tick == run.first_paid_tick),
                 "Crossfeed Sniper opening paid-shot observations disagree with the actual Run");
+            require(first_home_exit_tick > 1 && first_home_exit_tick <= opening_ticks,
+                "Crossfeed Sniper opening did not cross its geographic home exit after live movement");
+            if (policy.fire)
+            {
+                require(first_fire_request_tick == (policy.delayed ? first_home_exit_tick : 1),
+                    "Crossfeed immediate/delayed firing request did not follow its distinct home-exit policy");
+                require(run.first_paid_tick >= first_fire_request_tick,
+                    "Crossfeed Sniper opening paid before its first firing request");
+            }
             if (!policy.fire)
             {
-                require(run.paid_events == 0 && run.team_area(team) == 0.0f && flying_objects(run) == 0 &&
+                require(first_fire_request_tick == -1 && run.paid_events == 0 &&
+                    run.team_area(team) == 0.0f && flying_objects(run) == 0 &&
                     run.player->weapon_ammo() == starting_ammo,
                     "Crossfeed Sniper no-fire control paid, painted or lost ammunition");
             }
@@ -179,7 +194,7 @@ namespace crossfeed_acceptance
                 " team=" << (right ? 'a' : 'b') << " spawn=" << spawn <<
                 " active_input_ticks=" << opening_ticks << " start_x=" << fixed(points[spawn].x) <<
                 " start_y=" << fixed(points[spawn].y) << " landed_lower_tick=" << landed_lower_tick <<
-                " scoring_gate_x=" << fixed(gate_x) << " scoring_edge_input_tick=" << first_scoring_edge_tick <<
+                " home_exit_gate_x=" << fixed(gate_x) << " home_exit_input_tick=" << first_home_exit_tick <<
                 " fixed_target_surface=" << (policy.aim_at_floor ? floor.name : "none") <<
                 " fixed_target_x=" << (policy.aim_at_floor ? fixed(target.x) : "none") <<
                 " fixed_target_y=" << (policy.aim_at_floor ? fixed(target.y) : "none") <<
@@ -187,8 +202,8 @@ namespace crossfeed_acceptance
                 " first_paid_tick=" << run.first_paid_tick <<
                 " first_paid_nozzle_x=" << fixed(run.first_paid_nozzle.x) <<
                 " first_paid_nozzle_y=" << fixed(run.first_paid_nozzle.y) <<
-                " first_contest_paint_tick=" << first_paint_tick <<
-                " first_contest_paint_seconds=" << (first_paint_tick < 0 ? "unobserved" :
+                " first_any_paint_tick=" << first_paint_tick <<
+                " first_any_paint_seconds=" << (first_paint_tick < 0 ? "unobserved" :
                     fixed(static_cast<float>(first_paint_tick) * dt, 4)) <<
                 " first_paint_owner_centre_x=" << fixed(first_paint_owner.x) <<
                 " first_paint_owner_centre_y=" << fixed(first_paint_owner.y) <<
@@ -232,11 +247,13 @@ namespace crossfeed_acceptance
         std::cout << "NOTE Crossfeed Sniper cold-opening comparison: five policies across all eight authored spawns. "
             "Every fresh Player begins without cooldown priming, drops until actual lower-floor contact and walks "
             "toward the centre for the same 180 live input ticks. The four firing policies combine immediate or "
-            "scored-floor-edge-delayed held input with forward/down aim or aim at the fixed own scored-floor top "
+            "home-exit-delayed held input with forward/down aim or aim at the fixed own scored-floor top "
             "midpoint from the actual attachment pivot. Gates and targets use authored geometry and current motion, "
             "never visibility searches, prior shot success or preselected outcomes. Once enabled, firing remains "
-            "requested through the window; the no-fire policy is a negative control. Public paid-launch observations "
-            "include launch retirements and ordinary scene sweeps. First paint identifies actual scored surfaces "
+            "requested through the window; home-exit delay is verified to withhold live input while the centre "
+            "remains inside home. Weapon cooldown may still make actual paid ticks coincide. "
+            "The no-fire policy is a negative control. Public paid-launch observations "
+            "include launch retirements and ordinary scene sweeps. First paint includes home and identifies actual scored surfaces "
             "and their bounds, with the owner's simultaneous centre separately, not an exact impact point. "
             "The snapshot credits only paint observed by tick180, with surviving projectiles counted but no later "
             "flight or released settling credited. Failure to paint is reported, not rejected. These policies are "

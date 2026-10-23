@@ -80,7 +80,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Qualify [Crossfeed's ordinary-floor paintability](docs/polish-crossfeed.md#author-clarification-ordinary-floor-accepts-paint), including homes and raised platforms: travel/repaint pacing, spawn pressure, all five tools and 1-4P/heavy-paint panes. Preserve other maps; human arena acceptance remains open. |
+| `POL#17` | OPEN | HIGH | XL | Qualify Crossfeed's ordinary-floor travel/repaint pacing under opposition, home-loop incentives, spawn pressure and 1-4P/heavy-paint readability. Preserve other maps; human arena acceptance remains open. [Next](docs/polish-crossfeed.md#paid-repaint-and-opening-checkpoints-2026-10-24). |
 | `POL#27` | OPEN | HIGH | L | Qualify the five-tool candidate with movement (`POL#3`): adversarial lanes, resource pressure and human balance. Sniper reserve and Mister lifetime hypotheses remain open. [Opening comparisons](docs/polish-crossfeed.md#aimed-and-delayed-sniper-openings-2026-10-20), [requirements](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after reference-arena acceptance; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
