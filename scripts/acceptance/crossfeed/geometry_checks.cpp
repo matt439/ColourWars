@@ -82,6 +82,24 @@ namespace crossfeed_acceptance
                 }
             }
         }
+        // Paintability is the default for ordinary flat supports, including
+        // one-way platforms and home ground. Check complete top coverage,
+        // independently of total area or a particular region's score share.
+        for (const Surface& floor : s.map.surfaces)
+        {
+            // Perimeter walls are not walking floors. The central base is
+            // covered by the plinth and paint-pass ramps, not exposed terrain.
+            if (floor.ramp() || floor.name == "boundary_floor" ||
+                floor.name == "boundary_wall_left" || floor.name == "boundary_wall_right") { continue; }
+            float covered_width = 0.0f;
+            for (const Strip& strip : strips)
+            {
+                if (&s.map.surfaces[strip.owner] == &floor && strip.face == 0)
+                { covered_width += strip.box.width; }
+            }
+            require(approximately(covered_width, floor.rectangle.width),
+                "Crossfeed ordinary flat support has an unpaintable gap on '" + floor.name + "'");
+        }
         auto objects = s.builder.build_collision_objects(s.map.info.collision_objects_json(), s.colours);
         require(objects.size() == s.map.surfaces.size(), "Crossfeed score builder changed the authored object count");
         float total = 0.0f;
@@ -111,7 +129,9 @@ namespace crossfeed_acceptance
         }
         regions << "region,top_area,bottom_area,vertical_area,total_area,share\n";
         constexpr std::array<const char*, 5> names{ "left_home", "left_contest", "centre", "right_contest", "right_home" };
-        const std::array<float, 6> cuts{ bounds.left(), 920.0f, 1400.0f, 2200.0f, 2680.0f, bounds.right() };
+        // Homes name the 620-unit support footprint, not a paint restriction.
+        // Steps and baffles belong to the adjacent approaches.
+        const std::array<float, 6> cuts{ bounds.left(), 620.0f, 1400.0f, 2200.0f, 2980.0f, bounds.right() };
         std::array<float, 5> areas{};
         std::array<float, 3> directions{};
         for (size_t region = 0; region < names.size(); ++region)
@@ -127,7 +147,7 @@ namespace crossfeed_acceptance
             std::cout << "MEASURE Crossfeed region=" << names[region] << " area=" << fixed(areas[region]) <<
                 " top=" << fixed(oriented[0]) << " underside=" << fixed(oriented[1]) << " vertical=" << fixed(oriented[2]) << '\n';
         }
-        require(areas.front() == 0.0f && areas.back() == 0.0f, "Crossfeed homes contain safe scoring surface");
+        require(approximately(areas.front(), areas.back()), "Crossfeed left/right home score differs");
         require(approximately(areas[1], areas[3]), "Crossfeed left/right shared score differs");
         require(approximately(directions[0] + directions[1] + directions[2], total, 1.0f),
             "Crossfeed regional score does not reconcile with runtime tiles");

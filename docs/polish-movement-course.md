@@ -100,7 +100,10 @@ For comparison, the **2026-10-08 historical baseline**, measured identically in 
 and Release, was tap 95 / 0.633331 s / 506.665 travel and held 207.472 / 1.01666 s /
 813.33 travel. P3 keeps the tap height and almost the same held apex while shortening
 tap airtime by about 0.117 s and held airtime by about 0.217 s. It addresses the
-measured airborne duration; the author's **too-high held jump remains unresolved**.
+measured airborne duration. In the 2026-10-24 Crossfeed playtest, the author
+reports that movement **feels good**. Keep P3 as the working baseline; this
+positive report does not specify an input device or close the remaining
+physical-pad and camera recognition checks.
 
 The earlier P1/P2 lower-jump profile, 3000/-730/-1800/0.22, measured tap 95 and held
 177.5, with held airtime 0.749997 s and travel 599.997. It works in Crossfeed's
@@ -369,7 +372,8 @@ checks, with physical-controller feel still to be reviewed under `POL#3`.
 
 ## Qualification still required
 
-The launch, gravity and acceleration settings remain candidates until playtests.
+The 2026-10-24 author playtest supports the current movement feel. The launch,
+gravity and acceleration settings remain open to further observations.
 The old movement note is not used as a specification.
 
 - Compare keyboard/mouse with physical controllers, including partial stick
@@ -388,8 +392,9 @@ The old movement note is not used as a specification.
 - Compare the current profile and input decisions in play and adjust the existing
   tuning values if needed. These choices are implemented; later feel review does not
   block further game implementation.
-- The shorter airtime is measured, but P3 retains the old held apex to preserve
-  the existing 200-unit climbs. The author's height feedback remains open; P2 is
-  a lower-jump comparison, with no per-stage isolation in the implementation.
+- The shorter airtime is measured, and P3 retains the old held apex to preserve
+  the existing 200-unit climbs. The latest author report is positive about
+  movement; P2 remains a lower-jump comparison, with no per-stage isolation in
+  the implementation.
 - This course is not a balanced competitive arena. Paint area, combat pacing and
   spawn fairness have not been accepted.

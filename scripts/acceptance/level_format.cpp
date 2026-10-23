@@ -272,6 +272,27 @@ namespace
             d["collision_objects"][0]["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
             d["collision_objects"][0]["material"].SetString("ruler");
         });
+        const auto scored_ruler = variant("paintable-ruler-jump-through", true, [](rapidjson::Document& d)
+        {
+            rapidjson::Value& object = d["collision_objects"][3];
+            object["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
+            object["material"].SetString("ruler");
+            for (const char* face : { "left", "bottom", "right" })
+            { object["paintable_faces"][face].SetBool(false); }
+        });
+        const LevelLoadedInfo scored_ruler_info(scored_ruler.string().c_str());
+        scored_ruler_info.validate();
+        scored_ruler_info.validate_content(builder, render, audio);
+        const auto scored_ruler_objects = builder.build_collision_objects(
+            scored_ruler_info.collision_objects_json(), TeamColour{});
+        require(to_collision_type(scored_ruler_objects[3]->tag()) == CollisionObjectType::structure_jump_through &&
+            dynamic_cast<const PaintableObject*>(scored_ruler_objects[3].get()) != nullptr,
+            "Paintable ruler lost its independent scoring or jump-through collision role");
+        variant("paintable-jump-material-mismatch", false, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][3]["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
+            d["collision_objects"][3]["material"].SetString("ground");
+        });
         variant("no-material", true, [](rapidjson::Document& d) { d["collision_objects"][0].RemoveMember("material"); });
         variant("bad-material", false, [](rapidjson::Document& d) { d["collision_objects"][0]["material"].SetString("chalk"); });
         variant("non-string-material", false, [](rapidjson::Document& d) { d["collision_objects"][0]["material"].SetInt(1); });

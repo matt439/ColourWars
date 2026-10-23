@@ -250,7 +250,8 @@ std::unique_ptr<CollisionObject>
 	if (type == "StructurePaintable")
 	{
 		const CollisionObjectType collision_type = collision_type_of(json, type,
-			{ CollisionObjectType::structure_paintable });
+			{ CollisionObjectType::structure_paintable,
+			  CollisionObjectType::structure_jump_through });
 
 		const RectangleF rectangle = decode_rectangle(json);
 

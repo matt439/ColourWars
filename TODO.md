@@ -69,7 +69,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | OPEN | MED | M | Qualify selected shorter airtime and C2 framing with all five tools: keyboard comfort, recognition, rear-threat awareness and input margins. Late 3/4P Course landing exposure is corrected geometrically. Preserve legacy 200-unit climbs; height feedback and pad review remain open. [Framing comparison](docs/polish-crossfeed.md#narrow-pane-framing-comparison-2026-10-20), [course](docs/polish-movement-course.md). |
+| `POL#3` | OPEN | MED | M | Author reports movement feels good; retain P3. Qualify C2 recognition, rear-threat awareness, all five tools and input margins; preserve legacy 200-unit climbs. Physical-pad review remains open. [Playtest](docs/polish-crossfeed.md#playtest-and-paint-coverage-iteration-2026-10-24), [course](docs/polish-movement-course.md). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -80,7 +80,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Qualify the original [Crossfeed map](docs/polish-crossfeed.md) against the [research criteria](docs/level-design-research.md); preserve existing maps and the CQ experiment. Iterate directed routes, spawn pressure, return pacing, all five tools and 1-4P/heavy-paint panes with the coupled tuning pass. Human reference-arena acceptance remains open. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
+| `POL#17` | OPEN | HIGH | XL | Qualify [Crossfeed's ordinary-floor paintability](docs/polish-crossfeed.md#author-clarification-ordinary-floor-accepts-paint), including homes and raised platforms: travel/repaint pacing, spawn pressure, all five tools and 1-4P/heavy-paint panes. Preserve other maps; human arena acceptance remains open. |
 | `POL#27` | OPEN | HIGH | L | Qualify the five-tool candidate with movement (`POL#3`): adversarial lanes, resource pressure and human balance. Sniper reserve and Mister lifetime hypotheses remain open. [Opening comparisons](docs/polish-crossfeed.md#aimed-and-delayed-sniper-openings-2026-10-20), [requirements](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after reference-arena acceptance; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |

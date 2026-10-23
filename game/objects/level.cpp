@@ -680,27 +680,27 @@ LevelEndInfo Level::level_end_info() const
 
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
-		if (to_collision_type(object->tag()) ==
-			CollisionObjectType::structure_paintable)
+		// Scoring is a role: a paintable support can retain jump-through
+		// collision without losing its held area or player contribution.
+		PaintableObject* paintable_object = dynamic_cast<PaintableObject*>(object);
+		if (paintable_object == nullptr)
 		{
-			// A failed pointer cast returns nullptr.
-			auto paintable_object = dynamic_cast<PaintableObject*>(object);
-
-			if (paintable_object == nullptr)
+			if (to_collision_type(object->tag()) == CollisionObjectType::structure_paintable)
 			{
 				throw std::runtime_error(
 					"Object tagged STRUCTURE_PAINTABLE is not an PaintableObject");
 			}
+			continue;
+		}
 
-			PaintTotal paint = paintable_object->paint_total();
+		PaintTotal paint = paintable_object->paint_total();
 
-			result.team_a_area += paint.team_a;
-			result.team_b_area += paint.team_b;
-			result.total_area += paint.total;
-			for (size_t slot = 0; slot < result.player_areas.size(); ++slot)
-			{
-				result.player_areas[slot] += paint.player_areas[slot];
-			}
+		result.team_a_area += paint.team_a;
+		result.team_b_area += paint.team_b;
+		result.total_area += paint.total;
+		for (size_t slot = 0; slot < result.player_areas.size(); ++slot)
+		{
+			result.player_areas[slot] += paint.player_areas[slot];
 		}
 	}
 

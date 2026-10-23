@@ -27,7 +27,7 @@ namespace level_editor_acceptance
             require(document.validate().empty(), "Shipped level did not validate");
             const std::map<std::string, double> runtime_areas = {
                 {"king_of_the_hill", 205920.0}, {"turbulence", 249000.0},
-                {"close_quarters", 136320.0}, {"movement_course", 202080.0}, {"crossfeed", 38880.0}};
+                {"close_quarters", 136320.0}, {"movement_course", 202080.0}, {"crossfeed", 124320.0}};
             const BlockoutTuning tuning = load_blockout_tuning(repo / "game/content/tuning.json",
                 repo / "editor/movement-baseline.json");
             require(std::abs(scoring_area(scoring_faces(document, tuning)) - runtime_areas.at(name)) < 0.1,

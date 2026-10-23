@@ -196,13 +196,8 @@
                     "required": ["collision_type", "paintable_faces"],
                     "properties": {
                         "type": { "enum": ["StructurePaintable"] },
-                        "collision_type": { "enum": ["STRUCTURE_PAINTABLE"] },
-                        "material": {
-                            "allOf": [
-                                { "$ref": "#/definitions/material" },
-                                { "enum": ["ground", "pencil", "eraser", "paint_tin"] }
-                            ]
-                        },
+                        "collision_type": { "enum": ["STRUCTURE_PAINTABLE", "STRUCTURE_JUMP_THROUGH"] },
+                        "material": { "$ref": "#/definitions/material" },
                         "paintable_faces": {
                             "type": "object",
                             "required": ["left", "top", "right", "bottom"],
@@ -213,6 +208,23 @@
                             "additionalProperties": true
                         }
                     }
+                },
+                {
+                    "anyOf": [
+                        { "not": { "required": ["material"] } },
+                        {
+                            "properties": {
+                                "collision_type": { "enum": ["STRUCTURE_PAINTABLE"] },
+                                "material": { "enum": ["ground", "pencil", "eraser", "paint_tin"] }
+                            }
+                        },
+                        {
+                            "properties": {
+                                "collision_type": { "enum": ["STRUCTURE_JUMP_THROUGH"] },
+                                "material": { "enum": ["ruler"] }
+                            }
+                        }
+                    ]
                 }
             ]
         },

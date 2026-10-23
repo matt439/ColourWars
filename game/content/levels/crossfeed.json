@@ -4,6 +4,7 @@
         "Original research-led Crossfeed prototype; design and validation: docs/polish-crossfeed.md.",
         "Required route: drop from home and walk over the central ramp/plinth. Higher routes are optional.",
         "Ramps support players but pass paint. Home floors and roofs are one-way player supports, solid to projectiles.",
+        "Ordinary exposed ground and platform tops accept paint, including one-way home and upper supports; ramps remain the traversal exception.",
         "Excluded from Random pending movement/weapon iteration and attended arena acceptance.",
         "Reuses accepted Close Quarters audio; this does not create a new cue or claim listening acceptance."
     ],
@@ -156,18 +157,24 @@
         },
         {
             "name": "boundary_floor_a",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle": {
                 "x": 0,
                 "y": 1280,
-                "width": 920,
+                "width": 620,
                 "height": 400
             },
-            "collision_type": "STRUCTURE",
-            "colour": "GAINSBORO"
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
         },
         {
             "name": "floor_paint_a",
@@ -176,9 +183,9 @@
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle": {
-                "x": 920,
+                "x": 620,
                 "y": 1280,
-                "width": 380,
+                "width": 680,
                 "height": 400
             },
             "collision_type": "STRUCTURE_PAINTABLE",
@@ -214,7 +221,7 @@
             "rectangle": {
                 "x": 2300,
                 "y": 1280,
-                "width": 380,
+                "width": 680,
                 "height": 400
             },
             "collision_type": "STRUCTURE_PAINTABLE",
@@ -228,22 +235,28 @@
         },
         {
             "name": "boundary_floor_b",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle": {
-                "x": 2680,
+                "x": 2980,
                 "y": 1280,
-                "width": 920,
+                "width": 620,
                 "height": 400
             },
-            "collision_type": "STRUCTURE",
-            "colour": "GAINSBORO"
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
         },
         {
             "name": "spawn_a_floor",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -254,11 +267,17 @@
                 "height": 10
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "GAINSBORO"
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
         },
         {
             "name": "spawn_a_roof",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -269,11 +288,17 @@
                 "height": 10
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "GAINSBORO"
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
         },
         {
             "name": "spawn_a_step",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -283,12 +308,18 @@
                 "width": 180,
                 "height": 80
             },
-            "collision_type": "STRUCTURE",
-            "colour": "GAINSBORO"
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
         },
         {
             "name": "spawn_a_baffle",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -298,8 +329,14 @@
                 "width": 240,
                 "height": 180
             },
-            "collision_type": "STRUCTURE",
-            "colour": "GAINSBORO"
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
         },
         {
             "name": "side_paint_a",
@@ -324,7 +361,7 @@
         },
         {
             "name": "upper_step_a",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -335,11 +372,17 @@
                 "height": 10
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "GAINSBORO"
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
         },
         {
             "name": "spawn_b_floor",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -350,11 +393,17 @@
                 "height": 10
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "GAINSBORO"
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
         },
         {
             "name": "spawn_b_roof",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -365,11 +414,17 @@
                 "height": 10
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "GAINSBORO"
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
         },
         {
             "name": "spawn_b_step",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -379,12 +434,18 @@
                 "width": 180,
                 "height": 80
             },
-            "collision_type": "STRUCTURE",
-            "colour": "GAINSBORO"
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
         },
         {
             "name": "spawn_b_baffle",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -394,8 +455,14 @@
                 "width": 240,
                 "height": 180
             },
-            "collision_type": "STRUCTURE",
-            "colour": "GAINSBORO"
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
         },
         {
             "name": "side_paint_b",
@@ -420,7 +487,7 @@
         },
         {
             "name": "upper_step_b",
-            "type": "Structure",
+            "type": "StructurePaintable",
             "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
@@ -431,7 +498,13 @@
                 "height": 10
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "GAINSBORO"
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
         },
         {
             "name": "centre_plinth",

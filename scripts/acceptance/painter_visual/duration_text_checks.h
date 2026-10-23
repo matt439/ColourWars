@@ -340,19 +340,21 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
     const std::string valid_tuning = replace(originals[0], "match.duration", "90.0");
     const std::string bad_tuning = replace(originals[0], "match.duration", "600000000.0");
     TuningTarget tuning_target(&private_tuning, &private_presentation);
-    write(tuning_path, valid_tuning); tuning_target.validate(tuning_path.string(), &data, false); ++validations; ++primed;
+    write(tuning_path, valid_tuning);
+    tuning_target.validate(valid_tuning, tuning_path.string(), &data, false); ++validations; ++primed;
     require(private_tuning.match().duration == 240.0f, "Duration target applied its primed candidate before apply");
     write(tuning_path, bad_tuning);
     const GameTuning bad_balance(tuning_path.string().c_str());
     bad_balance.validate_resources(resources, *app.audio_resources()); ++legacy_acceptances;
     refusal([&] { MainMenuModeSelect::validate_durations(&resources, bad_balance, private_presentation); },
         "menu_text.values.duration_default"); ++paired_refusals;
-    refusal([&] { ++validations; tuning_target.validate(tuning_path.string(), &data, false); },
+    refusal([&] { ++validations; tuning_target.validate(bad_tuning, tuning_path.string(), &data, false); },
         "menu_text.values.duration_default"); ++target_refusals;
     tuning_target.apply(false);
     require(private_tuning.match().duration == 240.0f,
         "Failed duration tuning validation retained a previously pending candidate"); ++failed_inert;
-    write(tuning_path, valid_tuning); tuning_target.validate(tuning_path.string(), &data, false); ++validations;
+    write(tuning_path, valid_tuning);
+    tuning_target.validate(valid_tuning, tuning_path.string(), &data, false); ++validations;
     tuning_target.apply(false);
     require(private_tuning.match().duration == 90.0f, "Duration tuning target did not accept a valid retry"); ++retries;
     const_cast<MatchTuning&>(private_tuning.match()).duration = 61.0f; tuning_target.apply(false);
@@ -366,7 +368,7 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
     const std::string bad_presentation = replace(originals[1], "main_menu.mode_select_spacing.x", "820.0");
     PresentationTarget presentation_target(&private_presentation, &private_tuning);
     write(presentation_path, valid_presentation);
-    presentation_target.validate(presentation_path.string(), &data, false); ++validations; ++primed;
+    presentation_target.validate(valid_presentation, presentation_path.string(), &data, false); ++validations; ++primed;
     require(private_presentation.main_menu().mode_select_spacing.x == 250.0f,
         "Duration presentation target applied its primed candidate before apply");
     write(presentation_path, bad_presentation);
@@ -374,13 +376,13 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
     bad_layout.validate_resources(resources, *app.audio_resources()); ++legacy_acceptances;
     refusal([&] { MainMenuModeSelect::validate_durations(&resources, private_tuning, bad_layout); },
         "the complete duration row"); ++paired_refusals;
-    refusal([&] { ++validations; presentation_target.validate(presentation_path.string(), &data, false); },
+    refusal([&] { ++validations; presentation_target.validate(bad_presentation, presentation_path.string(), &data, false); },
         "the complete duration row"); ++target_refusals;
     presentation_target.apply(false);
     require(private_presentation.main_menu().mode_select_spacing.x == 250.0f,
         "Failed duration presentation validation retained a previously pending candidate"); ++failed_inert;
     write(presentation_path, valid_presentation);
-    presentation_target.validate(presentation_path.string(), &data, false); ++validations; presentation_target.apply(false);
+    presentation_target.validate(valid_presentation, presentation_path.string(), &data, false); ++validations; presentation_target.apply(false);
     require(private_presentation.main_menu().mode_select_spacing.x == 251.0f,
         "Duration presentation target did not accept a valid retry"); ++retries;
     const_cast<MainMenuPresentation&>(private_presentation.main_menu()).mode_select_spacing.x = 250.0f;

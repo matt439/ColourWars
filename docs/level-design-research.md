@@ -111,6 +111,16 @@ firing geometry and the available scoring faces. The patch notes support
 measuring approach choices alongside weapon reach; they do not prove our map is
 balanced or tell us what a particular new wall should look like.
 
+**Author clarification, 2026-10-24:** take broad floor paintability from the
+Splatoon reference: ordinary floors, including home areas and raised platforms,
+should normally accept paint. Nonpaintable surfaces need a clear material or
+gameplay reason, such as grates; proximity to spawn is not that reason.
+[Nintendo's Turf War introduction](https://www.nintendo.com/au/news-and-articles/get-splatting-with-the-basics-in-our-splatoon-2-101/)
+describes ground coverage as the objective and distinguishes nonscoring walls.
+Our choice to score exposed walls and undersides still differs. The old H4
+wording was applied too restrictively in Crossfeed; assess regional area and
+travel/repaint cost without banning ordinary home floor from scoring.
+
 ### INVERSUS: give a map a tactical question, preserve its counterplay
 
 **Developer statements.** Ryan Juckett's [11 February 2016 map discussion](https://blog.playstation.com/2016/02/11/brain-bending-shooter-inversus-coming-to-ps4/)
@@ -172,7 +182,7 @@ They are not claims that another developer has prescribed these numbers.
 | H1: circulation | Useful alternate approaches reconnect at contested paint, with retreat / recovery choices. | A directed route graph names every required, optional and recovery connection. Drive each intended connection and return; record first-contest and uninterrupted painting time from each spawn. A drawn opening alone is insufficient. |
 | H2: intended inputs | Route importance and input family are separate: walk, tap, held jump and drop. | Test rises, gaps, whole-body ceiling / corner clearance and landing widths with the real Player at relevant starting speeds and hold durations, including +/-2 input ticks. Name whether a landing must continue, stop or reverse; reaching it alone does not prove braking room. A required 140-unit climb may intentionally need hold; a failed tap alone is not a tuning defect. |
 | H3: protected re-entry | Four full-body spawns per team lead to two physically distinct departures and useful decision space. | Check separation, support, repeated respawn, escape / return and sampled attacker firing positions for all five tools. Record which exits a position can threaten; do not claim universal spawn safety. |
-| H4: score geography | Shared contest dominates the budget; sheltered home painting cannot decide the result. Roller access includes connected walking paint, without removing walls / undersides. | Reconcile exposed strips and actual runtime tiles by object, region and face direction. Measure paint reachable per traversal / tank and repaint opportunity, rather than apparent platform size. |
+| H4: score geography | Ordinary floor and platform tops accept paint by default, including home areas; nonpaintable exceptions need a clear reason. Roller access includes connected walking paint, alongside walls / undersides. | Reconcile exposed strips and runtime tiles by object, region and face. Check ordinary-floor coverage; measure travel cost, paint per traversal / tank and repaint opportunity. Diagnose safe loops through geography and pacing rather than arbitrary paint bans. |
 | H5: contested height | A perch trades a useful lane for exposure elsewhere; it cannot simultaneously solve both home departures and all valuable paint. | Enumerate approaches, covered / uncovered targets and exits. Test actual arcs / sweeps through the authored solids. Ramps are traversal, not bullet-proof cover. |
 | H6: camera and warning | A compulsory landing and first escape choice are visible before commitment. | Capture 1/2/3/4-player native panes, moving approaches, clean and heavy paint. Measure time from visible threat / projectile to contact. A shared-screen screenshot cannot establish this. |
 | H7: weapon / scale fit | Straight fire, ballistic arcs, diffusion and contact painting have useful, different jobs. | Measure stationary and moving flight, first-contact distance / time, paint per burst / tank, damage opportunities, cadence and ammo recovery on the same map stations, mirrored by team. Add moving-target and cover-to-cover trials: compare exposure time, projectile arrival, repeat shots and retreat rather than treating an unobstructed range as counterplay. |

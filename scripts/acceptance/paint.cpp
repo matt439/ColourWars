@@ -32,6 +32,7 @@ namespace
 
 #include "scripts/acceptance/paint/runoff_checks.h"
 #include "scripts/acceptance/paint/runoff_content_checks.h"
+#include "scripts/acceptance/paint/jump_through_checks.h"
 
 int main(int argc, char** argv)
 {
@@ -39,6 +40,7 @@ int main(int argc, char** argv)
     {
         require(argc == 2, "Usage: paint.exe <content directory>");
         const std::filesystem::path content(argv[1]);
+        check_paintable_jump_through(content);
         RenderResources render;
         render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(
             (content / "textures/sprite_sheet_1.json").string().c_str(), TextureHandle{}));

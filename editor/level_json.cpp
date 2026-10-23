@@ -310,9 +310,9 @@ namespace colourwars_editor
             }
             else if (type == "StructurePaintable")
             {
-                if (collision_type != "STRUCTURE_PAINTABLE")
+                if (collision_type != "STRUCTURE_PAINTABLE" && collision_type != "STRUCTURE_JUMP_THROUGH")
                 {
-                    fail("A paintable structure needs STRUCTURE_PAINTABLE collision.");
+                    fail("A paintable structure needs STRUCTURE_PAINTABLE or STRUCTURE_JUMP_THROUGH collision.");
                 }
                 const Json& faces = member(object, "paintable_faces");
                 for (const char* face : { "left", "top", "right", "bottom" })

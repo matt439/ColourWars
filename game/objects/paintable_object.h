@@ -16,8 +16,8 @@ struct PaintTotal
 
 // A scoring role independent of the object's collision/rendering hierarchy.
 // Report current held area, including neutral area in total, not paint events.
-// Level discovers this role on collision objects tagged structure_paintable;
-// implementing this interface alone does not enroll an object in scoring.
+// Level discovers this role on its collision objects, independently of their
+// collision tag: solid and jump-through paintable supports both contribute.
 class PaintableObject
 {
 public:

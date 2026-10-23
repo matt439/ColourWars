@@ -180,7 +180,41 @@ namespace level_editor_acceptance
             write(invalid, changed);
             reject_without_change(reopened, [&] { reopened.load(invalid); }, "Invalid material loaded");
         }
+        // Paintability does not require solid player collision. Preserve the
+        // explicit top-only role while editing and round-tripping a thin ruler.
+        rapidjson::Document scored = parse(document.serialize());
+        const Entry support = added["StructurePaintable"];
+        rapidjson::Value& ruler = scored["collision_objects"][static_cast<rapidjson::SizeType>(support.index)];
+        ruler["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
+        ruler["material"].SetString("ruler");
+        ruler["rectangle"]["height"].SetDouble(10);
+        for (const char* face : { "left", "bottom", "right" })
+        { ruler["paintable_faces"][face].SetBool(false); }
+        ruler["paintable_faces"]["top"].SetBool(true);
+        const fs::path scored_path = scratch / "paintable-jump-through.json";
+        write(scored_path, encode(scored));
+        LevelDocument scored_document;
+        scored_document.load(scored_path);
+        require(scored_document.validate().empty(), "Editor rejected a paintable jump-through ruler");
+        scored_document.set_rectangle(support, { 120, 260, 320, 10 });
+        scored_document.set_property(support, "/paintable_faces/top", "false");
+        require(scored_document.undo(), "Paintable ruler face edit lacked undo");
+        scored_document.save(scored_path);
+        LevelDocument scored_reopened;
+        scored_reopened.load(scored_path);
+        const rapidjson::Document scored_json = parse(scored_reopened.serialize());
+        const rapidjson::Value& retained = scored_json["collision_objects"][static_cast<rapidjson::SizeType>(support.index)];
+        require(parse(scored_document.serialize()) == scored_json &&
+            std::string(retained["type"].GetString()) == "StructurePaintable" &&
+            std::string(retained["collision_type"].GetString()) == "STRUCTURE_JUMP_THROUGH" &&
+            retained["paintable_faces"]["top"].GetBool() && !retained["paintable_faces"]["bottom"].GetBool() &&
+            equal(scored_reopened.rectangle(support), { 120, 260, 320, 10 }),
+            "Editing or saving a paintable ruler changed collision, faces or physical support depth");
+        reject_without_change(scored_reopened,
+            [&] { scored_reopened.set_property(support, "/material", "ground"); },
+            "Paintable jump-through accepted a solid ground material");
         std::cout << "PASS optional materials: defaults, allowed types, inspector insert/clear and load refusal\n";
+        std::cout << "PASS paintable ruler: independent jump-through tag, top-only face, edit/undo and saved round trip\n";
     }
 
     void check_drift(const fs::path& repo, const fs::path& scratch)

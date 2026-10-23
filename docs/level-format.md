@@ -107,7 +107,7 @@ does not use it for lookup, collision or uniqueness.
 | Array | `type` | Allowed `collision_type` | Geometry and extra fields |
 |---|---|---|---|
 | `collision_objects` | `Structure` | `STRUCTURE`, `STRUCTURE_JUMP_THROUGH` | Rectangle; optional `material`. Fixed solid or jump-through terrain; no scoring paint. |
-| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE` | Rectangle plus all four `paintable_faces` booleans; optional `material`. Fixed paint-scoring terrain. |
+| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE`, `STRUCTURE_JUMP_THROUGH` | Rectangle plus all four `paintable_faces` booleans; optional `material`. Fixed paint-scoring solid or jump-through terrain. |
 | `collision_objects` | `StructureRamp` | `STRUCTURE_RAMP_RIGHT`, `STRUCTURE_RAMP_LEFT` | `triangle` with six coordinates; optional `material`. Fixed ramp collision; no scoring paint. |
 | `non_collision_objects` | `Visual` | None is read | Rectangle; optional `drift`. Decorative art with no collision or score; backdrop props use sheet `terrain`. |
 
@@ -150,6 +150,13 @@ Paintable rectangles require every face explicitly:
 ```json
 "paintable_faces": { "left": false, "top": true, "right": false, "bottom": false }
 ```
+
+Paintability and player collision are independent: `StructurePaintable` with
+`STRUCTURE_JUMP_THROUGH` keeps upward passage and Down-drop behavior while its
+enabled faces paint and score. Projectiles still collide with that support.
+Use `ruler` for this collision tag. Thin rulers can score just their top face;
+this avoids overlapping top and bottom strips when paint thickness exceeds the
+support's depth. Paint strips do not change the physical support rectangle.
 
 All-false is allowed. An authored true face creates scoring paint only where
 it remains exposed: other flat `Structure`/`StructurePaintable` rectangles,
@@ -201,7 +208,7 @@ draw unchanged. Each material may sit only on these collision types:
 |---|---|
 | `ground` | `STRUCTURE` (`Structure`) or `STRUCTURE_PAINTABLE` (`StructurePaintable`) |
 | `pencil`, `eraser`, `paint_tin` | `STRUCTURE_PAINTABLE` (`StructurePaintable`) |
-| `ruler` | `STRUCTURE_JUMP_THROUGH` (`Structure`) |
+| `ruler` | `STRUCTURE_JUMP_THROUGH` (`Structure` or `StructurePaintable`) |
 | `set_square` | `STRUCTURE_RAMP_LEFT` or `STRUCTURE_RAMP_RIGHT` (`StructureRamp`) |
 
 Any other value, a non-string, or a value on a type the table does not allow is

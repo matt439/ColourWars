@@ -128,9 +128,9 @@ The score is surface still held, not accumulated shots or paint events. A
 paintable object's totals must include neutral area in `total`, credited team
 area in `team_a`/`team_b`, and player area indexed by device slot. Read the
 `PaintableObject` contract and Level's enrollment rule together: the object
-must be in Scene's collision collection, tagged `structure_paintable`, and
-implement `PaintableObject`. Implementing the interface alone does not enroll
-an object in scoring.
+must be in Scene's collision collection and implement `PaintableObject`.
+That scoring role is independent of its collision tag: a painted one-way
+platform keeps `structure_jump_through` and contributes held area in full.
 
 Rendering follows another contract: engine `GameObject::draw` is const because
 several views may draw the same object concurrently. Change animation state

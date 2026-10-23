@@ -38,21 +38,22 @@ does not imply collision.
 
 | Piece | Left / centre bounds (X, Y, W, H) | Intended role |
 |---|---|---|
-| Home floor | 0, 1120, 620, 10 | One-way support; drop to lower departure. |
-| Home roof | 0, 960, 620, 10 | One-way player support, projectile blocker; optional held-jump shortcut from home. |
-| Home step | 620, 1040, 180, 80 | Optional upper departure: 80-unit tap rise. |
-| Home baffle | 800, 940, 240, 180 | Solid firing break; 100-unit held rise from step. |
+| Home floor | 0, 1120, 620, 10 | Paintable top; one-way support; drop to lower departure. |
+| Home roof | 0, 960, 620, 10 | Paintable top; one-way player support, projectile blocker; optional held-jump shortcut from home. |
+| Home step | 620, 1040, 180, 80 | Optional upper departure: 80-unit tap rise; scored exposed faces. |
+| Home baffle | 800, 940, 240, 180 | Solid firing break; 100-unit held rise from step; scored exposed faces. |
 | Side paint bench | 1040, 1040, 320, 60 | Useful painting / landing space; descending continuation from baffle. |
-| Upper ruler | 1400, 960, 260, 10 | Optional 40-gap / 80-rise connection from bench. |
+| Upper ruler | 1400, 960, 260, 10 | Paintable top; optional 40-gap / 80-rise connection from bench. |
 | Central mixer | 1660, 880, 280, 80 | Optional 80 rise from either ruler; scored upper and lower faces. |
 | Central plinth | 1620, 1120, 360, 160 | Required walking route, scored top and physical lower firing break. |
 | Left ramp | X=1300-1620, Y=1280-1120 | Required walking ascent; not projectile cover. |
-| Scored floor | X=920-1300, Y=1280 | Connected walking paint on shared approach; mirrored right. |
+| Scored floor | X=0-1300, Y=1280 | Continuous walking paint beneath home and along the approach; mirrored right. |
 
 The floor remains continuous at Y=1280. The right ramp descends from X=1980 to
-2300; the right-side pieces mirror the left. Unscored home / perimeter ground
-prevents a large private painting allowance. All four spawns per team begin on
-the home floor, at X=30/150/270/390 and Y=1000 on the left.
+2300; the right-side pieces mirror the left. Exposed flat ground beneath home
+and the one-way platform tops accept paint. Perimeter walls and the covered
+base beneath the ramps/plinth remain unscored. All four spawns per
+team begin on the home floor, at X=30/150/270/390 and Y=1000 on the left.
 
 Route importance and input family are independent:
 
@@ -122,22 +123,29 @@ playing-size warning time or readability.
 
 ## Paint and tool hypotheses
 
-All scoring is shared contest, with no scored home surfaces. The floor strips
-and plinth are top-only. Side benches and mixer expose all four faces, subject
-to the real builder's burial rules. Ramps remain unscored and pass paint.
+**Ordinary floor is paintable by default**, including home ground and raised
+platform tops. Home painting is legitimate work; geography and travel time
+must earn the contest rather than forbidding paint near spawn. Flat ground,
+the plinth and thin one-way rulers score on top. Departure steps, baffles,
+benches and mixer expose all four faces, subject to the real builder's burial
+rules. One-way movement and projectile blocking are independent of accepting
+paint. Ramps remain the deliberate traversal exception: they pass paint and
+do not score. Perimeter walls and covered foundations do not add hidden score.
 
 Independent exposed-area calculation, reconciled with the real builder's runtime tiles:
 
 | Region | Area | Share |
 |---|---:|---:|
-| Left floor + bench | 12,960 | 33.33% |
-| Central plinth + mixer | 12,960 | 33.33% |
-| Right floor + bench | 12,960 | 33.33% |
-| Total | 38,880 | 100% |
+| Left home ground + floor + roof | 22,320 | 17.95% |
+| Left approach + step + baffle + bench | 30,240 | 24.32% |
+| Central plinth + mixer + upper rulers | 19,200 | 15.44% |
+| Right approach + step + baffle + bench | 30,240 | 24.32% |
+| Right home ground + floor + roof | 22,320 | 17.95% |
+| Total | 124,320 | 100% |
 
-Top faces contribute 24,480 (63%), undersides 11,040 (28.4%) and
-walls 3,360 (8.6%). Each side bench loses its outer vertical face against the
-baffle. The mixer alone contributes 22.2%; verify practical painting and
+Top faces contribute 92,640 (74.5%), undersides 21,120 (17.0%) and
+walls 10,560 (8.5%). Each side bench loses its outer vertical face against the
+baffle. The mixer alone contributes about 7.0%; verify practical painting and
 repainting of its underside and both sides, rather than treating it as scenery.
 
 | Tool | Role to test, not an established balance result |
@@ -155,7 +163,90 @@ movement and weapon tuning are one comparison. Do not import foreign jump or
 weapon constants. The comparison below started at the unchanged authored values
 and distinguishes geometry/contact failures from tool-envelope changes.
 
+## Playtest and paint coverage iteration (2026-10-24)
+
+The author reports that movement **feels good**, but too few surfaces accept
+paint in Crossfeed. Input device, player count and individual tool observations
+were not specified. Keep P3 movement and C2 framing as the working baseline;
+this is positive feel evidence, not completion of the remaining pad, camera
+recognition or competitive acceptance checks.
+
+The initial map had six scored objects and only 760 units of paintable ground
+across its 3,600-unit width. Its ordinary home ground and raised platforms
+accepted no paint. A first coverage draft still preserved that restriction;
+the author's clarification below replaces it. The earlier draft's receipts
+remain under `out/validation/crossfeed-coverage-20261024/` and do not qualify
+the final ordinary-floor candidate.
+
+### Author clarification: ordinary floor accepts paint
+
+The author points to Splatoon: most floor accepts paint, with deliberate
+exceptions such as grates. The previous patch was too restrictive. The rule
+is now broad paintability across normal traversal surfaces, including home
+areas, rather than a small designated contest budget. The revised
+[research criterion H4](level-design-research.md#criteria-for-the-original-new-map)
+owns that correction too.
+
+Crossfeed now has 18 scored objects. All 2,600 units of exposed flat base ground
+and all ordinary platform tops accept paint, including both home floors,
+roofs and upper rulers. Steps and baffles accept paint on their exposed
+home-facing walls too. The two paint-pass ramps, perimeter walls and covered
+central foundation retain explicit exceptions. The score budget is the table
+above: 124,320 exposed area, including reachable home paint. Do not restore a
+zero-home-score assertion or force equal region shares as a substitute for
+playtesting routes, travel cost and repaint opportunity.
+
+The thin ruler tops retain their exact 10-unit supports and existing one-way
+collision tag. Paintability belongs to the object role; jumping up, landing,
+dropping through and blocking shots keep their existing semantics. Only their
+top scores, avoiding overlapping top/underside paint on a thin platform.
+Movement tuning, physical geometry and spawns remain as playtested.
+
+### Ordinary-floor validation
+
+Evidence root: `out/validation/crossfeed-floors-20261024/`.
+
+- Both game/editor builds pass. The `paint` consumer case constructs an actual
+  Crossfeed Level and verifies paid sprayer paint on the home one-way floor,
+  neutral/owned score and device-slot player credit, projectile blocking,
+  upward passage/landing and Down through the roof and floor. The physical
+  supports remain exactly 10 units deep. Both complete Crossfeed consumer
+  cases pass and reconcile 124,320 runtime area to independent face/region
+  partitions. Every ordinary flat support has complete top coverage; home
+  and approach budgets mirror. All 42 consumer cases pass in each preset.
+- Both hidden `CrossfeedOnly` D3D11 matrices pass their 1/2/3/4-player
+  clean/heavy moving approaches, home exits, overview and preview. Each
+  retains 21 full frames, 51 native crops and 43 readbacks. Paired movement,
+  frozen state, RNG and Debug fingerprints pass. Inspection confirms paint
+  on home ground and ruler tops; all 72 shared PPM images match between builds
+  and staged level hashes match the source (`native-reconciliation.json`).
+  Runs: Debug `native/x64-debug/cc0556babe484ceeab7db5d859681f71/`; Release
+  `native/x64-release/25f75a8075784819a9b7b935f45803f3/`.
+- Format/schema/runtime builder checks and editor edit/undo/save/reopen checks
+  cover paintable one-way rulers and reject incompatible materials. Both
+  editor suites and their three hidden-window checks pass under
+  `out/acceptance/<preset>/level-editor/`: Debug
+  `0527e8f88ad94f71878b2afad2514806`; Release
+  `5b7455f6dec3403bbbd600ccc65b1221`. The first Debug run exposed the old
+  editor Crossfeed area snapshot (38,880); only that snapshot was corrected
+  to the independent runtime total, retaining other maps and assertions.
+- Normal startup passes in both builds with the accepted bank, isolated save,
+  system-only PATH, per-monitor-v2 DPI and graceful shutdown (`startup/`).
+
+The native probe also required six stale duration-fixture calls to use the
+current text/source-path `TuneTarget::validate` signature. The repaired branch
+passes Debug `DurationTextOnly`, including all six real target validations
+(`out/validation/crossfeed-coverage-20261024/duration-fixture/`).
+
+These checks establish painting/scoring integration and retained traversal.
+Travel/repaint pacing, spawn pressure and human match balance remain playtest
+questions; home paint is included when reviewing those observations.
+
 ## Coupled movement and five-tool comparison (2026-10-20)
+
+This comparison retains the six-object coverage from 2026-10-20. P3 movement
+and C2 framing remain selected; current coverage receipts are recorded in the
+2026-10-24 iteration above.
 
 **P3 is the selected provisional global tuning.** P2 passed the Crossfeed
 comparison but failed 13 actual climbs in the preserved older arenas. P3 keeps
@@ -201,8 +292,9 @@ home, roof, baffle, ruler and mixer landings are checked separately.
 Horizontal acceleration, speed, braking, buffer, grace and the ramp gravity
 multiplier remain unchanged. Movement Course is resized for the shorter travel;
 its route results belong in [the course record](polish-movement-course.md).
-Retaining the high held apex meets a compatibility constraint; the author's
-high-jump/floatiness feedback still needs hands-on review.
+Retaining the high held apex meets a compatibility constraint. The author's
+2026-10-24 report that movement feels good supports keeping this profile;
+further input-device and camera recognition checks remain open.
 
 The global tuning also governs King of the Hill and Turbulence. A static audit
 identified 13 authored 200-unit climbs, then
