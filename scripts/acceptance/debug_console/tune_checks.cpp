@@ -371,6 +371,7 @@ namespace debug_console_acceptance
 		check_timer_colour_tunes(game_directory);
 		check_acting_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
+		check_hud_paper_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.
 		const std::string tuning_before = read_text(scratch.source / L"tuning.json");

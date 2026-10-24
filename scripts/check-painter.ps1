@@ -41,6 +41,7 @@ param(
     [switch] $HudTimerTuneColourOnly,
     [switch] $HudClosingMaterialsOnly,
     [switch] $HudClosingShadeOnly,
+    [switch] $HudPaperTuneColoursOnly,
     [switch] $HudLabelTuneColoursOnly,
     [switch] $StagePreviewBackgroundTuneColourOnly,
     [switch] $CrackTuneColourOnly,
@@ -110,7 +111,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$SurfaceFinishOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$CursorTuneColoursOnly.IsPresent + [int]$SilhouetteTuneColoursOnly.IsPresent + [int]$RevealTuneColoursOnly.IsPresent + [int]$CursorMaterialTuneColoursOnly.IsPresent + [int]$DesktopTuneColourOnly.IsPresent + [int]$PowerLightTuneColourOnly.IsPresent + [int]$ProgramTuneColourOnly.IsPresent + [int]$ProgramLevelVisibilityOnly.IsPresent + [int]$ActingTuneColoursOnly.IsPresent + [int]$GlassTuneColourOnly.IsPresent + [int]$SilhouetteBodyTuneColourOnly.IsPresent + [int]$ScribbleTuneColourOnly.IsPresent + [int]$HudHealthTuneColourOnly.IsPresent + [int]$HudTrackTuneColourOnly.IsPresent + [int]$HudTimerTuneColourOnly.IsPresent + [int]$HudClosingMaterialsOnly.IsPresent + [int]$HudClosingShadeOnly.IsPresent + [int]$HudLabelTuneColoursOnly.IsPresent + [int]$StagePreviewBackgroundTuneColourOnly.IsPresent + [int]$CrackTuneColourOnly.IsPresent + [int]$LimbTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$SurfaceFinishOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$CursorTuneColoursOnly.IsPresent + [int]$SilhouetteTuneColoursOnly.IsPresent + [int]$RevealTuneColoursOnly.IsPresent + [int]$CursorMaterialTuneColoursOnly.IsPresent + [int]$DesktopTuneColourOnly.IsPresent + [int]$PowerLightTuneColourOnly.IsPresent + [int]$ProgramTuneColourOnly.IsPresent + [int]$ProgramLevelVisibilityOnly.IsPresent + [int]$ActingTuneColoursOnly.IsPresent + [int]$GlassTuneColourOnly.IsPresent + [int]$SilhouetteBodyTuneColourOnly.IsPresent + [int]$ScribbleTuneColourOnly.IsPresent + [int]$HudHealthTuneColourOnly.IsPresent + [int]$HudTrackTuneColourOnly.IsPresent + [int]$HudTimerTuneColourOnly.IsPresent + [int]$HudClosingMaterialsOnly.IsPresent + [int]$HudClosingShadeOnly.IsPresent + [int]$HudPaperTuneColoursOnly.IsPresent + [int]$HudLabelTuneColoursOnly.IsPresent + [int]$StagePreviewBackgroundTuneColourOnly.IsPresent + [int]$CrackTuneColourOnly.IsPresent + [int]$LimbTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -245,6 +246,9 @@ try {
     if ($HudClosingShadeOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
         throw 'HudClosingShadeOnly requires the normal gamepad reader.'
     }
+    if ($HudPaperTuneColoursOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
+        throw 'HudPaperTuneColoursOnly requires the normal gamepad reader.'
+    }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -311,6 +315,7 @@ try {
     elseif ($HudTimerTuneColourOnly) { $probeArguments += 'hud-timer-tune-colour' }
     elseif ($HudClosingMaterialsOnly) { $probeArguments += 'hud-closing-materials' }
     elseif ($HudClosingShadeOnly) { $probeArguments += 'hud-closing-shade' }
+    elseif ($HudPaperTuneColoursOnly) { $probeArguments += 'hud-paper-tune-colours' }
     elseif ($HudLabelTuneColoursOnly) { $probeArguments += 'hud-label-tune-colours' }
     elseif ($StagePreviewBackgroundTuneColourOnly) { $probeArguments += 'stage-preview-background-tune-colour' }
     elseif ($CrackTuneColourOnly) { $probeArguments += 'crack-tune-colour' }
@@ -524,6 +529,7 @@ try {
     if ($HudTimerTuneColourOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-hud-timer-tune-colour.ps1') }
     if ($HudClosingMaterialsOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-hud-closing-materials.ps1') }
     if ($HudClosingShadeOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-hud-closing-shade.ps1') }
+    if ($HudPaperTuneColoursOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-hud-paper-tune-colours.ps1') }
     if ($HudLabelTuneColoursOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-hud-label-tune-colours.ps1') }
     if ($StagePreviewBackgroundTuneColourOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-stage-preview-background-tune-colour.ps1') }
     if ($CrackTuneColourOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-crack-tune-colour.ps1') }
@@ -533,6 +539,7 @@ try {
     if ($HudTimerTuneColourOnly) { Complete-HudTimerColourEvidence -Directory $captures }
     if ($HudClosingMaterialsOnly) { Complete-HudClosingMaterialsEvidence -Directory $captures }
     if ($HudClosingShadeOnly) { Complete-HudClosingShadeEvidence -Directory $captures }
+    if ($HudPaperTuneColoursOnly) { Complete-HudPaperTuneColourEvidence -Directory $captures }
     if ($HudLabelTuneColoursOnly) { Complete-HudLabelColourEvidence -Directory $captures }
     if ($StagePreviewBackgroundTuneColourOnly) { Complete-StagePreviewBackgroundColourEvidence -Directory $captures }
     if ($CrackTuneColourOnly) { Complete-CrackTuneColourEvidence -Directory $captures }

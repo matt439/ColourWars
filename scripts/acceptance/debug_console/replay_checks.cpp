@@ -236,7 +236,26 @@ namespace debug_console_acceptance
         const std::string recorded_closing_paper = impl.tune_token("presentation.hud.closing_clock.paper");
         const std::string recorded_closing_accent = impl.tune_token("presentation.hud.closing_clock.accent");
         const std::string recorded_closing_shade = impl.tune_token("presentation.hud.closing_clock.shade");
+        const std::string recorded_shared_ink = impl.tune_token("presentation.hud.paper.ink");
+        const std::string recorded_shared_paper = impl.tune_token("presentation.hud.paper.paper");
+        const std::string recorded_shared_shade = impl.tune_token("presentation.hud.paper.shade");
 		const std::string recorded_presentation = impl.tune_document("presentation")->current().text();
+        require(presentation.hud().paper.ink != labrador::Colour("2060C0FF") &&
+            presentation.hud().paper.paper != labrador::Colour("2060C0FF") &&
+            presentation.hud().paper.ink != labrador::Colour("A532D6FF") &&
+            presentation.hud().paper.paper != labrador::Colour("A532D6FF"),
+            "Shared-paper record/replay write attempts are opaque and distinct from the unchanged real counterpart");
+        const std::string recording_baseline = impl.tune_document("presentation")->baseline().text();
+        const auto presentation_ledger = [&]
+        {
+            std::vector<std::string> entries;
+            for (const auto& [key, edit] : impl.tune_document("presentation")->edits())
+                { entries.push_back(key + '=' + edit.baseline_token + "->" + edit.current_token); }
+            return entries;
+        };
+        const auto recording_edits = presentation_ledger();
+        const std::string recording_source = read_text(scratch.source / L"presentation.json");
+        const std::string recording_staged = read_text(scratch.staged / L"presentation.json");
 		require(impl.execute("tune presentation.debug_overlay.station_label.colour").ok &&
 			!impl.execute("tune presentation.debug_overlay.station_label.colour 12345678").ok &&
 			!impl.execute("tune.reset presentation.debug_overlay.station_label.colour").ok &&
@@ -251,7 +270,7 @@ namespace debug_console_acceptance
 			impl.tune_token("presentation.figure.quiet.face_colour") == recorded_quiet_face &&
 			impl.tune_document("presentation")->current().text() == recorded_presentation,
 			"Recording rejects quiet-face writes while allowing inspection and preserving the complete presentation bytes");
-		for (const auto& [path, token] : std::array<std::pair<const char*, std::string>, 10>{ {
+		for (const auto& [path, token] : std::array<std::pair<const char*, std::string>, 13>{ {
 			{ "presentation.hud.timer.colour", recorded_timer_colour },
 			{ "presentation.hud.timer.shadow_colour", recorded_timer_shadow },
 			{ "presentation.hud.closing_clock.text", recorded_closing_text },
@@ -261,13 +280,20 @@ namespace debug_console_acceptance
             { "presentation.hud.closing_clock.ink", recorded_closing_ink },
             { "presentation.hud.closing_clock.paper", recorded_closing_paper },
             { "presentation.hud.closing_clock.accent", recorded_closing_accent },
-            { "presentation.hud.closing_clock.shade", recorded_closing_shade } } })
+            { "presentation.hud.closing_clock.shade", recorded_closing_shade },
+            { "presentation.hud.paper.ink", recorded_shared_ink },
+            { "presentation.hud.paper.paper", recorded_shared_paper },
+            { "presentation.hud.paper.shade", recorded_shared_shade } } })
 		{
 			require(impl.execute(std::string("tune ") + path).ok &&
-				!impl.execute(std::string("tune ") + path + ((std::string(path) == "presentation.hud.closing_clock.text" || std::string(path) == "presentation.hud.closing_clock.ink" || std::string(path) == "presentation.hud.closing_clock.paper" || std::string(path) == "presentation.hud.closing_clock.accent") ? " 2060C0FF" : " 2060C080")).ok &&
+				!impl.execute(std::string("tune ") + path + ((std::string(path) == "presentation.hud.closing_clock.text" || std::string(path) == "presentation.hud.closing_clock.ink" || std::string(path) == "presentation.hud.closing_clock.paper" || std::string(path) == "presentation.hud.closing_clock.accent" || std::string(path) == "presentation.hud.paper.ink" || std::string(path) == "presentation.hud.paper.paper") ? " 2060C0FF" : " 2060C080")).ok &&
 				!impl.execute(std::string("tune.reset ") + path).ok &&
 				!impl.execute("tune.save presentation").ok && impl.recording() &&
-				impl.tune_token(path) == token && impl.tune_document("presentation")->current().text() == recorded_presentation,
+				impl.tune_token(path) == token && impl.tune_document("presentation")->current().text() == recorded_presentation &&
+                impl.tune_document("presentation")->baseline().text() == recording_baseline &&
+                presentation_ledger() == recording_edits &&
+                read_text(scratch.source / L"presentation.json") == recording_source &&
+                read_text(scratch.staged / L"presentation.json") == recording_staged,
 				"HUD clock/label and captured preview colours permit inspection but refuse writes/reset/save during recording without changing presentation bytes");
 		}
 		const int recorded_steps = drive(director, match, dt, 2000, [&] { return !impl.recording(); }, 300);
@@ -379,7 +405,7 @@ namespace debug_console_acceptance
 			impl.tune_token("presentation.figure.quiet.face_colour") == recorded_quiet_face &&
 			impl.tune_document("presentation")->current().text() == replayed_presentation,
 			"Replay rejects quiet-face writes while allowing inspection and preserving the complete presentation bytes");
-		for (const auto& [path, token] : std::array<std::pair<const char*, std::string>, 10>{ {
+		for (const auto& [path, token] : std::array<std::pair<const char*, std::string>, 13>{ {
 			{ "presentation.hud.timer.colour", recorded_timer_colour },
 			{ "presentation.hud.timer.shadow_colour", recorded_timer_shadow },
 			{ "presentation.hud.closing_clock.text", recorded_closing_text },
@@ -389,13 +415,20 @@ namespace debug_console_acceptance
             { "presentation.hud.closing_clock.ink", recorded_closing_ink },
             { "presentation.hud.closing_clock.paper", recorded_closing_paper },
             { "presentation.hud.closing_clock.accent", recorded_closing_accent },
-            { "presentation.hud.closing_clock.shade", recorded_closing_shade } } })
+            { "presentation.hud.closing_clock.shade", recorded_closing_shade },
+            { "presentation.hud.paper.ink", recorded_shared_ink },
+            { "presentation.hud.paper.paper", recorded_shared_paper },
+            { "presentation.hud.paper.shade", recorded_shared_shade } } })
 		{
 			require(impl.execute(std::string("tune ") + path).ok &&
-				!impl.execute(std::string("tune ") + path + ((std::string(path) == "presentation.hud.closing_clock.text" || std::string(path) == "presentation.hud.closing_clock.ink" || std::string(path) == "presentation.hud.closing_clock.paper" || std::string(path) == "presentation.hud.closing_clock.accent") ? " A532D6FF" : std::string(path) == "presentation.hud.closing_clock.shade" ? " A532D601" : " A532D600")).ok &&
+				!impl.execute(std::string("tune ") + path + ((std::string(path) == "presentation.hud.closing_clock.text" || std::string(path) == "presentation.hud.closing_clock.ink" || std::string(path) == "presentation.hud.closing_clock.paper" || std::string(path) == "presentation.hud.closing_clock.accent" || std::string(path) == "presentation.hud.paper.ink" || std::string(path) == "presentation.hud.paper.paper") ? " A532D6FF" : (std::string(path) == "presentation.hud.closing_clock.shade" || std::string(path) == "presentation.hud.paper.shade") ? " A532D601" : " A532D600")).ok &&
 				!impl.execute(std::string("tune.reset ") + path).ok &&
 				!impl.execute("tune.save presentation").ok && impl.playing() &&
-				impl.tune_token(path) == token && impl.tune_document("presentation")->current().text() == replayed_presentation,
+				impl.tune_token(path) == token && impl.tune_document("presentation")->current().text() == replayed_presentation &&
+                impl.tune_document("presentation")->baseline().text() == recording_baseline &&
+                presentation_ledger() == recording_edits &&
+                read_text(scratch.source / L"presentation.json") == recording_source &&
+                read_text(scratch.staged / L"presentation.json") == recording_staged,
 				"HUD clock/label and captured preview colours permit inspection but refuse writes/reset/save during playing without changing presentation bytes");
 		}
 		// A script runs under a replay exactly as typed lines do: wait and echo

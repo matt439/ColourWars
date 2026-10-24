@@ -42,10 +42,10 @@
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 55> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 58> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
 			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680",
-			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980", "0161C180", "4B8CD180", "5167B980", "C6A25D40", "2974C180", "5387C180", "6A9FC180", "8C52B6FF", "508CC680", "C46C3540", "5D8CB580", "286CB4FF", "E3C58AFF", "B851C6FF", "6D8EB580" };
+			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980", "0161C180", "4B8CD180", "5167B980", "C6A25D40", "2974C180", "5387C180", "6A9FC180", "8C52B6FF", "508CC680", "C46C3540", "5D8CB580", "286CB4FF", "E3C58AFF", "B851C6FF", "6D8EB580", "286CB4FF", "E3C58AFF", "6D8EB580" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
@@ -54,7 +54,7 @@
 			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 },
 			{ 94, 145, 199, 128 }, { 184, 106, 77, 64 }, { 115, 194, 165, 0 },
 			{ 212, 124, 42, 128 }, { 97, 178, 212, 64 }, { 156, 53, 231, 0 }, { 59, 151, 193, 128 }, { 166, 94, 41, 64 },
-			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 }, { 1, 97, 193, 128 }, { 75, 140, 209, 128 }, { 81, 103, 185, 128 }, { 198, 162, 93, 64 }, { 41, 116, 193, 128 }, { 83, 135, 193, 128 }, { 106, 159, 193, 128 }, { 140, 82, 182 }, { 80, 140, 198, 128 }, { 196, 108, 53, 64 }, { 93, 140, 181, 128 }, { 40, 108, 180 }, { 227, 197, 138 }, { 184, 81, 198 }, { 109, 142, 181, 128 } };
+			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 }, { 1, 97, 193, 128 }, { 75, 140, 209, 128 }, { 81, 103, 185, 128 }, { 198, 162, 93, 64 }, { 41, 116, 193, 128 }, { 83, 135, 193, 128 }, { 106, 159, 193, 128 }, { 140, 82, 182 }, { 80, 140, 198, 128 }, { 196, 108, 53, 64 }, { 93, 140, 181, 128 }, { 40, 108, 180 }, { 227, 197, 138 }, { 184, 81, 198 }, { 109, 142, 181, 128 }, { 40, 108, 180 }, { 227, 197, 138 }, { 109, 142, 181, 128 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -63,12 +63,12 @@
 			{
 				// Identity colours are opaque/distinct; closing-clock text is opaque.
 				// Keep those fallbacks within their separate reader contracts.
-				words[index] = index == 0 ? "BLUE" : index == identity_ink_colour_index ? "FEDCBAFF" :
-					index == identity_background_colour_index ? "0F1E2DFF" :
+				words[index] = index == 0 ? "BLUE" : (index == identity_ink_colour_index || index == hud_paper_ink_colour_index) ? "FEDCBAFF" :
+					(index == identity_background_colour_index || index == hud_paper_paper_colour_index) ? "0F1E2DFF" :
 					opaque_closing_colour_index(index) ? "FEDCBAFF" : "FEDCBA98";
 				expected[index] = index == 0 ? labrador::Colour(0, 0, 255) :
-					index == identity_ink_colour_index ? labrador::Colour(254, 220, 186) :
-					index == identity_background_colour_index ? labrador::Colour(15, 30, 45) :
+					(index == identity_ink_colour_index || index == hud_paper_ink_colour_index) ? labrador::Colour(254, 220, 186) :
+					(index == identity_background_colour_index || index == hud_paper_paper_colour_index) ? labrador::Colour(15, 30, 45) :
 					opaque_closing_colour_index(index) ? labrador::Colour(254, 220, 186) : labrador::Colour(254, 220, 186, 152);
 			}
 			const std::string token = "\"" + words[index] + "\"";
@@ -84,7 +84,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, stage_preview_background_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, stage_preview_background_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index, hud_paper_shade_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } },
@@ -154,7 +154,7 @@
 			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
 			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
 			colour_paths[silhouette_shade_colour_index], colour_paths[reveal_ink_colour_index],
-			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index], colour_paths[limb_arm_colour_index], colour_paths[limb_hand_colour_index], colour_paths[quiet_face_colour_index], colour_paths[hud_timer_colour_index], colour_paths[hud_timer_shadow_colour_index], colour_paths[closing_clock_text_colour_index], colour_paths[hud_label_colour_index], colour_paths[hud_identity_shadow_colour_index], colour_paths[stage_preview_background_colour_index], colour_paths[closing_clock_ink_colour_index], colour_paths[closing_clock_paper_colour_index], colour_paths[closing_clock_accent_colour_index], colour_paths[closing_clock_shade_colour_index] })
+			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index], colour_paths[limb_arm_colour_index], colour_paths[limb_hand_colour_index], colour_paths[quiet_face_colour_index], colour_paths[hud_timer_colour_index], colour_paths[hud_timer_shadow_colour_index], colour_paths[closing_clock_text_colour_index], colour_paths[hud_label_colour_index], colour_paths[hud_identity_shadow_colour_index], colour_paths[stage_preview_background_colour_index], colour_paths[closing_clock_ink_colour_index], colour_paths[closing_clock_paper_colour_index], colour_paths[closing_clock_accent_colour_index], colour_paths[closing_clock_shade_colour_index], colour_paths[hud_paper_ink_colour_index], colour_paths[hud_paper_paper_colour_index], colour_paths[hud_paper_shade_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -256,7 +256,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, stage_preview_background_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, stage_preview_background_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index, hud_paper_shade_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -318,7 +318,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, stage_preview_background_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, stage_preview_background_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index, hud_paper_shade_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -352,7 +352,7 @@
 				index == cursor_ink_colour_index ? "E7F809" : index == cursor_fill_colour_index ? "F8091A" :
 				index == silhouette_ink_colour_index ? "0A1B2C" :
 				index == silhouette_rim_colour_index ? "1B2C3D" : index == silhouette_shade_colour_index ? "2C3D4E" :
-				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : index == hud_health_colour_index ? "0A1B2C" : index == hud_track_colour_index ? "1B2C3D" : index == limb_arm_colour_index ? "3D4E5F" : index == limb_hand_colour_index ? "4E5F60" : index == quiet_face_colour_index ? "5F6071" : index == hud_timer_colour_index ? "607182" : index == hud_timer_shadow_colour_index ? "718293" : index == closing_clock_text_colour_index ? "8293A4" : index == hud_label_colour_index ? "93A4B5" : index == hud_identity_shadow_colour_index ? "A4B5C6" : index == stage_preview_background_colour_index ? "B5C6D7" : index == closing_clock_ink_colour_index ? "C6D7E8" : index == closing_clock_paper_colour_index ? "D7E8F9" : index == closing_clock_accent_colour_index ? "E8F90A" : index == closing_clock_shade_colour_index ? "F90A1B" : "2C3D4E";
+				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : index == hud_health_colour_index ? "0A1B2C" : index == hud_track_colour_index ? "1B2C3D" : index == limb_arm_colour_index ? "3D4E5F" : index == limb_hand_colour_index ? "4E5F60" : index == quiet_face_colour_index ? "5F6071" : index == hud_timer_colour_index ? "607182" : index == hud_timer_shadow_colour_index ? "718293" : index == closing_clock_text_colour_index ? "8293A4" : index == hud_label_colour_index ? "93A4B5" : index == hud_identity_shadow_colour_index ? "A4B5C6" : index == stage_preview_background_colour_index ? "B5C6D7" : index == closing_clock_ink_colour_index ? "C6D7E8" : index == closing_clock_paper_colour_index ? "D7E8F9" : index == closing_clock_accent_colour_index ? "E8F90A" : index == closing_clock_shade_colour_index ? "F90A1B" : index == hud_paper_shade_colour_index ? "0B1C2D" : "2C3D4E";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -380,7 +380,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, stage_preview_background_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, stage_preview_background_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index, hud_paper_shade_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -397,7 +397,7 @@
 				index == silhouette_rim_colour_index ? L"silhouette-rim-crlf" :
 				index == silhouette_shade_colour_index ? L"silhouette-shade-crlf" :
 				index == reveal_ink_colour_index ? L"reveal-ink-crlf" :
-				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : index == acting_sweat_colour_index ? L"acting-sweat-colour-crlf" : index == glass_colour_index ? L"glass-colour-crlf" : index == silhouette_body_colour_index ? L"silhouette-body-colour-crlf" : index == scribble_colour_index ? L"scribble-colour-crlf" : index == hud_health_colour_index ? L"hud-health-colour-crlf" : index == hud_track_colour_index ? L"hud-track-colour-crlf" : index == closing_clock_text_colour_index ? L"closing-clock-text-crlf" : index == hud_label_colour_index ? L"hud-label-foreground-crlf" : index == hud_identity_shadow_colour_index ? L"hud-identity-shadow-crlf" : index == stage_preview_background_colour_index ? L"stage-preview-background-crlf" : index == closing_clock_ink_colour_index ? L"closing-clock-ink-crlf" : index == closing_clock_paper_colour_index ? L"closing-clock-paper-crlf" : index == closing_clock_accent_colour_index ? L"closing-clock-accent-crlf" : index == closing_clock_shade_colour_index ? L"closing-clock-shade-crlf" : L"crack-colour-crlf";
+				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : index == acting_sweat_colour_index ? L"acting-sweat-colour-crlf" : index == glass_colour_index ? L"glass-colour-crlf" : index == silhouette_body_colour_index ? L"silhouette-body-colour-crlf" : index == scribble_colour_index ? L"scribble-colour-crlf" : index == hud_health_colour_index ? L"hud-health-colour-crlf" : index == hud_track_colour_index ? L"hud-track-colour-crlf" : index == closing_clock_text_colour_index ? L"closing-clock-text-crlf" : index == hud_label_colour_index ? L"hud-label-foreground-crlf" : index == hud_identity_shadow_colour_index ? L"hud-identity-shadow-crlf" : index == stage_preview_background_colour_index ? L"stage-preview-background-crlf" : index == closing_clock_ink_colour_index ? L"closing-clock-ink-crlf" : index == closing_clock_paper_colour_index ? L"closing-clock-paper-crlf" : index == closing_clock_accent_colour_index ? L"closing-clock-accent-crlf" : index == closing_clock_shade_colour_index ? L"closing-clock-shade-crlf" : index == hud_paper_shade_colour_index ? L"hud-paper-shade-crlf" : L"crack-colour-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -442,7 +442,7 @@
 				index == cursor_ink_colour_index ? "091A2B" : index == cursor_fill_colour_index ? "1A2B3C" :
 				index == silhouette_ink_colour_index ? "2B3C4D" :
 				index == silhouette_rim_colour_index ? "3C4D5E" : index == silhouette_shade_colour_index ? "4D5E6F" :
-				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : index == program_colour_index ? "C5D6E7" : index == acting_face_colour_index ? "D6E7F8" : index == acting_sweat_colour_index ? "E7F809" : index == glass_colour_index ? "F8091A" : index == silhouette_body_colour_index ? "091A2B" : index == scribble_colour_index ? "1A2B3C" : index == hud_health_colour_index ? "2B3C4D" : index == hud_track_colour_index ? "3C4D5E" : index == hud_label_colour_index ? "5E6F70" : index == hud_identity_shadow_colour_index ? "6F7081" : index == stage_preview_background_colour_index ? "708192" : index == closing_clock_ink_colour_index ? "8192A3" : index == closing_clock_paper_colour_index ? "92A3B4" : index == closing_clock_accent_colour_index ? "A3B4C5" : index == closing_clock_shade_colour_index ? "B4C5D6" : "4D5E6F";
+				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : index == program_colour_index ? "C5D6E7" : index == acting_face_colour_index ? "D6E7F8" : index == acting_sweat_colour_index ? "E7F809" : index == glass_colour_index ? "F8091A" : index == silhouette_body_colour_index ? "091A2B" : index == scribble_colour_index ? "1A2B3C" : index == hud_health_colour_index ? "2B3C4D" : index == hud_track_colour_index ? "3C4D5E" : index == hud_label_colour_index ? "5E6F70" : index == hud_identity_shadow_colour_index ? "6F7081" : index == stage_preview_background_colour_index ? "708192" : index == closing_clock_ink_colour_index ? "8192A3" : index == closing_clock_paper_colour_index ? "92A3B4" : index == closing_clock_accent_colour_index ? "A3B4C5" : index == closing_clock_shade_colour_index ? "B4C5D6" : index == hud_paper_shade_colour_index ? "C5D6E7" : "4D5E6F";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
 				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
@@ -644,3 +644,204 @@
 			}
 		}
 	}
+
+// Coupled shared-HUD ink/paper reader and persistence checks use isolated
+// LF/CRLF contexts; a same-colour sequential sweep would invalidate the pair.
+void check_hud_paper_colour_tunes(const std::filesystem::path& game_directory)
+{
+    for (const bool paper : { false, true })
+    {
+        const std::size_t index = paper ? hud_paper_paper_colour_index : hud_paper_ink_colour_index;
+        const std::size_t sibling_index = paper ? hud_paper_ink_colour_index : hud_paper_paper_colour_index;
+        const std::string path = colour_paths[index];
+        const std::string sibling_path = colour_paths[sibling_index];
+        const std::string local = path.substr(std::string("presentation.").size());
+        const std::string sibling_local = sibling_path.substr(std::string("presentation.").size());
+        for (const bool crlf : { false, true })
+        {
+            ScratchContent scratch(game_directory, paper ?
+                (crlf ? L"hud-paper-paper-crlf" : L"hud-paper-paper-lf") :
+                (crlf ? L"hud-paper-ink-crlf" : L"hud-paper-ink-lf"));
+            const auto source = scratch.source / L"presentation.json";
+            const auto staged = scratch.staged / L"presentation.json";
+            std::string baseline = read_text(source);
+            if (crlf)
+            {
+                std::string converted;
+                for (const char character : baseline)
+                    { converted += character == '\n' ? std::string("\r\n") : std::string(1, character); }
+                baseline = std::move(converted);
+                write_text(source, baseline);write_text(staged, baseline);
+            }
+            GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+            Presentation presentation(staged.string().c_str());
+            TestDirector test(tuning, presentation);auto& impl = test.impl;
+            impl.set_content_directories(scratch.source, scratch.staged);
+            const HudPresentation* const hud = &presentation.hud();
+            const PlayerIdentityPresentation* const badge = &presentation.player_identity();
+            const auto initial = colour_values(presentation);auto expected = initial;
+            const auto* const document = impl.tune_document("presentation");
+            const auto ledger = [&]
+            {
+                std::vector<std::string> values;
+                for (const auto& [key, edit] : document->edits())
+                    { values.push_back(key + '=' + edit.baseline_token + "->" + edit.current_token); }
+                return values;
+            };
+            const auto no_temporary = [&]
+            {
+                return !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+                    !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+                    !std::filesystem::exists(scratch.staged / L"presentation.json.tmp");
+            };
+            const auto held = [&]
+            {
+                require(colour_values(presentation) == expected && &presentation.hud() == hud &&
+                    &presentation.player_identity() == badge && !impl.in_match() &&
+                    !impl.can_apply() && impl.request().empty(),
+                    "Coupled shared-paper commands retain every unrelated colour, borrowed record and idle match state");
+            };
+            const auto refuse = [&](const std::string& command)
+            {
+                const auto before_values = colour_values(presentation);
+                const auto before_edits = ledger();
+                const std::string before_current = document->current().text();
+                const std::string before_baseline = document->baseline().text();
+                const std::string before_source = read_text(source);
+                const std::string before_staged = read_text(staged);
+                require(!impl.execute(command).ok && colour_values(presentation) == before_values &&
+                    document->current().text() == before_current && document->baseline().text() == before_baseline &&
+                    ledger() == before_edits && read_text(source) == before_source && read_text(staged) == before_staged &&
+                    no_temporary(), "A refused coupled shared-paper command preserves full live/documents/ledger/source/staging state: " + command);
+                held();
+            };
+            const auto set = [&](std::size_t selected, const char* word)
+            {
+                expected[selected] = std::string(word) == "RED" ? labrador::Colour(255, 0, 0) :
+                    std::string(word) == "BLUE" ? labrador::Colour(0, 0, 255) :
+                    std::string(word) == "GREEN" ? labrador::Colour(0, 128, 0) : labrador::Colour(word);
+                require(impl.execute(std::string("tune ") + colour_paths[selected] + ' ' + word).ok &&
+                    impl.tune_token(colour_paths[selected]) == std::string("\"") + word + '"',
+                    "A pair-safe shared-paper assignment preserves the exact quoted word");
+                held();
+            };
+            for (const char* word : { "RED", "a1B2c3", "102030FF" }) { set(index, word); }
+            for (const char* word : { "2060C080", "A532D600", "next", "prev", "toggle",
+                "on", "false", "+=1", "#112233", "12345", "GGGGGG", "white", "\"RED\"", "RED;feedback on" })
+                { refuse("tune " + path + ' ' + quote_word(word)); }
+            expected = initial;
+            require(impl.execute("tune.reset presentation").ok && document->current().text() == baseline &&
+                document->baseline().text() == baseline && document->edits().empty(),
+                "An isolated opaque shared-paper sweep resets exact authored bytes");held();
+
+            // One exact quoted token, then a genuine conflict with an unrelated
+            // external colour. Both pending and disk pairs remain reader-valid.
+            set(index, "123456FF");
+            const JsonSpanDocument authored(baseline, "hud-paper-single-save-reference");
+            const std::string saved = authored.replaced(*authored.find(local), "\"123456FF\"");
+            require(impl.execute("tune.save presentation").ok && read_text(source) == saved && read_text(staged) == saved &&
+                document->current().text() == saved && document->baseline().text() == saved &&
+                document->edits().empty() && no_temporary(),
+                "Shared opaque paper Save replaces exactly one LF/CRLF token and rebases both copies");held();
+            set(index, "ABCDEF");
+            const JsonSpanDocument disk(saved, "hud-paper-conflict-reference");
+            const std::string changed = disk.replaced(*disk.find(local), "\"FEDCBA\"");
+            const JsonSpanDocument changed_reference(changed, "hud-paper-conflict-overlay-reference");
+            const std::string external = changed_reference.replaced(*changed_reference.find("debug_overlay.colour"), "\"203040\"");
+            write_text(source, external);
+            require(colour_values(Presentation(source.string().c_str()))[index] == labrador::Colour("FEDCBA") &&
+                !document->edits().contains(sibling_local),
+                "The opaque conflict source is valid with a genuinely unedited distinct counterpart");
+            refuse("tune.save presentation");
+            const JsonSpanDocument force_reference(external, "hud-paper-force-reference");
+            const std::string forced = force_reference.replaced(*force_reference.find(local), "\"ABCDEF\"");
+            expected[3] = labrador::Colour("203040");
+            require(impl.execute("tune.save presentation force").ok && read_text(source) == forced && read_text(staged) == forced &&
+                document->current().text() == forced && document->baseline().text() == forced &&
+                document->edits().empty() && colour_values(Presentation(source.string().c_str())) == expected && no_temporary() &&
+                (crlf ? count_of(forced, "\r\n") == count_of(baseline, "\r\n") &&
+                    count_of(forced, "\n") == count_of(baseline, "\r\n") : forced.find('\r') == std::string::npos),
+                "Force overwrites only a reader-valid shared-paper conflict, adopts unrelated external bytes and preserves EOLs");held();
+            const auto forced_values = expected;
+            set(index, "RED");expected = forced_values;
+            require(impl.execute("tune.reset " + path).ok && document->edits().empty() &&
+                document->current().text() == forced && read_text(source) == forced && read_text(staged) == forced,
+                "Selected reset uses the field-valid saved opaque token");held();
+
+            // The pair is saved together using distinct literal tokens. This
+            // independent span oracle cannot silently rewrite its counterpart.
+            set(hud_paper_ink_colour_index, "RED");set(hud_paper_paper_colour_index, "35BCE1FF");
+            require(document->edits().size() == 2, "Both distinct shared-paper material tokens are pending");
+            const std::string pair_external = (crlf ? std::string("\r\n") : std::string("\n")) + forced;
+            const JsonSpanDocument pair_reference(pair_external, "hud-paper-pair-first-reference");
+            const std::string first = pair_reference.replaced(*pair_reference.find("hud.paper.ink"), "\"RED\"");
+            const JsonSpanDocument first_reference(first, "hud-paper-pair-second-reference");
+            const std::string pair_saved = first_reference.replaced(*first_reference.find("hud.paper.paper"), "\"35BCE1FF\"");
+            write_text(source, pair_external);
+            require(impl.execute("tune.save presentation").ok && document->edits().empty() &&
+                document->current().text() == pair_saved && document->baseline().text() == pair_saved &&
+                read_text(source) == pair_saved && read_text(staged) == pair_saved &&
+                colour_values(Presentation(source.string().c_str())) == expected && no_temporary(),
+                "A distinct shared-paper pair Save changes exactly two tokens, preserves external whitespace and rebases both ledgers");held();
+            const auto pair_values = expected;
+            const auto restore_pair = [&]
+            {
+                write_text(source, pair_saved);expected = pair_values;
+                require(impl.execute("tune.reset presentation").ok && document->edits().empty() &&
+                    document->current().text() == pair_saved && document->baseline().text() == pair_saved &&
+                    read_text(staged) == pair_saved && no_temporary(),
+                    "A whole-document reset restores the valid saved pair without adopting external content");held();
+            };
+            // Equal decoded values refuse even when the opposite token spells
+            // the same RGBA differently. The shade has no such distinctness rule.
+            refuse("tune " + path + (paper ? " FF0000FF" : " 35bCe1FF"));
+            set(index, "BLUE");set(sibling_index, "GREEN");set(3, "789ABC");
+            expected[index] = pair_values[index];
+            require(impl.execute("tune.reset " + path).ok && document->edits().size() == 2 &&
+                !document->edits().contains(local) && document->edits().contains(sibling_local) &&
+                document->edits().contains("debug_overlay.colour"),
+                "Successful selected paper reset retains the independent sibling and overlay ledger");held();restore_pair();
+
+            // Current pair is valid; reverting selected would restore its saved
+            // value onto a sibling now carrying that same RGBA via another lexeme.
+            set(index, "BLUE");set(sibling_index, paper ? "35bCe1FF" : "FF0000FF");
+            require(document->edits().size() == 2 && document->edits().contains(local) &&
+                document->edits().contains(sibling_local), "Reset collision has both real pending pair edits");
+            refuse("tune.reset " + path);restore_pair();
+
+            // Disk and current are each valid, but merged selected equals a
+            // genuinely unedited external counterpart. Force cannot bypass this.
+            set(index, "2060C0FF");set(3, "789ABC");
+            require(document->edits().size() == 2 && document->edits().contains(local) &&
+                !document->edits().contains(sibling_local), "Equality merge counterpart is genuinely unedited");
+            const JsonSpanDocument pair_disk(pair_saved, "hud-paper-equality-merge-reference");
+            const std::string equal_disk = pair_disk.replaced(*pair_disk.find(sibling_local), "\"2060C0\"");
+            write_text(source, equal_disk);
+            const auto disk_values = colour_values(Presentation(source.string().c_str()));
+            require(disk_values[index] == pair_values[index] && disk_values[sibling_index] == labrador::Colour("2060C0FF") &&
+                disk_values[hud_paper_ink_colour_index] != disk_values[hud_paper_paper_colour_index] &&
+                expected[hud_paper_ink_colour_index] != expected[hud_paper_paper_colour_index],
+                "Individually valid disk and current pairs produce an invalid equal-colour merged candidate");
+            for (const char* command : { "tune.save presentation", "tune.save presentation force" }) { refuse(command); }
+            restore_pair();
+
+            // After resetting selected, only sibling/overlay are pending. A valid
+            // external selected token now collides with the pending sibling.
+            set(index, "BLUE");set(sibling_index, "GREEN");set(3, "789ABC");
+            expected[index] = pair_values[index];
+            require(impl.execute("tune.reset " + path).ok && document->edits().size() == 2 &&
+                !document->edits().contains(local) && document->edits().contains(sibling_local),
+                "Selected reset leaves only sibling and overlay pending before external equality");held();
+            const std::string selected_external = pair_disk.replaced(*pair_disk.find(local), "\"008000FF\"");
+            write_text(source, selected_external);
+            const auto reset_disk_values = colour_values(Presentation(source.string().c_str()));
+            require(reset_disk_values[index] == labrador::Colour::green && reset_disk_values[sibling_index] == pair_values[sibling_index] &&
+                reset_disk_values[hud_paper_ink_colour_index] != reset_disk_values[hud_paper_paper_colour_index] &&
+                expected[sibling_index] == labrador::Colour::green &&
+                expected[hud_paper_ink_colour_index] != expected[hud_paper_paper_colour_index],
+                "External selected-after-reset source is valid alone; only the sibling splice creates equality");
+            for (const char* command : { "tune.save presentation", "tune.save presentation force" }) { refuse(command); }
+            restore_pair();
+        }
+    }
+}

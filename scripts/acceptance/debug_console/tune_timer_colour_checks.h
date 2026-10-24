@@ -4,10 +4,12 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
 {
     const bool closing_material = index == closing_clock_ink_colour_index ||
         index == closing_clock_paper_colour_index || index == closing_clock_accent_colour_index;
-    const bool opaque = opaque_closing_colour_index(index);
+    const bool shared_paper = hud_paper_colour_index(index);
+    const bool closing_shade = index == closing_clock_shade_colour_index;
+    const bool opaque = opaque_closing_colour_index(index) || opaque_hud_paper_colour_index(index);
     const bool positive_alpha = positive_alpha_colour_index(index);
-    const bool complete_resources = closing_material || positive_alpha;
-    const std::string sibling_word = (closing_material || positive_alpha) ? "4C83B5FF" : "4C83B580";
+    const bool complete_resources = closing_material || positive_alpha || shared_paper;
+    const std::string sibling_word = (closing_material || positive_alpha || shared_paper) ? "4C83B5FF" : "4C83B580";
     const bool label = index == hud_label_colour_index || index == hud_identity_shadow_colour_index;
     const bool shadow = index == hud_timer_shadow_colour_index || index == hud_identity_shadow_colour_index;
     const std::string saved_word = opaque ? "2060C0FF" : "2060C080";
@@ -15,7 +17,9 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const std::string saved_token = '"' + saved_word + '"';
     const std::string path = colour_paths[index];
     const std::string local = path.substr(std::string("presentation.").size());
-    const std::size_t sibling_index = positive_alpha ? closing_clock_paper_colour_index : closing_material ?
+    const std::size_t sibling_index = shared_paper ?
+        (index == hud_paper_paper_colour_index ? hud_paper_ink_colour_index : hud_paper_paper_colour_index) :
+        closing_shade ? closing_clock_paper_colour_index : closing_material ?
         (index == closing_clock_ink_colour_index ? closing_clock_paper_colour_index :
             index == closing_clock_paper_colour_index ? closing_clock_accent_colour_index : closing_clock_ink_colour_index) : label ?
         (index == hud_label_colour_index ? hud_identity_shadow_colour_index : hud_label_colour_index) :
@@ -23,13 +27,14 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const std::string sibling = colour_paths[sibling_index];
     const std::string sibling_local = sibling.substr(std::string("presentation.").size());
     {
-        const std::string baseline = "{\r\n\"hud\":{\"timer\":{\"colour\":\"\\u003141414\","
-            "\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"},"
+        const std::string baseline = std::string("{\r\n\"hud\":{\"timer\":{\"colour\":\"\\u003141414\","
+            "\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"},") +
+            (shared_paper ? "\"paper\":{\"ink\":\"\\u003141414\",\"paper\":\"\\u0046FF5DF\",\"shade\":\"\\u00300000055\"}," : "") +
             "\"closing_clock\":{\"text\":\"\\u003141414\",\"ink\":\"\\u003141414\",\"paper\":\"\\u0046FF5DF\",\"accent\":\"\\u0046FD34D\",\"shade\":\"\\u00300000055\"},"
             "\"player_identity\":{\"colour\":\"\\u003141414\",\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\",\"background_colour\":\"FFFFFF\"}},"
             "\r\n\"number\":1\r\n}\r\n";
         const std::string authored_token = positive_alpha ? "\"\\u00300000055\"" : shadow ? "\"\\u00300000022\"" :
-            index == closing_clock_paper_colour_index ? "\"\\u0046FF5DF\"" :
+            (index == closing_clock_paper_colour_index || index == hud_paper_paper_colour_index) ? "\"\\u0046FF5DF\"" :
             index == closing_clock_accent_colour_index ? "\"\\u0046FD34D\"" : "\"\\u003141414\"";
         const JsonSpanDocument reference(baseline, "normal-timer-document-reference");
         TuneDocument document("presentation", baseline);
@@ -74,9 +79,12 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         }
     }
 
-    // Generic 55-path sweeps cover strict named/RGB/RGBA input, LF/CRLF
+    // Generic 58-path sweeps and dedicated pair-aware LF/CRLF controls cover strict named/RGB/RGBA input, LF/CRLF
     // conflicts/force, atomic replacement and actual Presentation consumption.
-    ScratchContent scratch(game_directory, positive_alpha ? L"closing-clock-shade-records" : label ?
+    ScratchContent scratch(game_directory, shared_paper ?
+        (index == hud_paper_ink_colour_index ? L"hud-paper-ink-records" :
+            index == hud_paper_paper_colour_index ? L"hud-paper-paper-records" : L"hud-paper-shade-records") :
+        closing_shade ? L"closing-clock-shade-records" : label ?
         (shadow ? L"hud-identity-shadow-records" : L"hud-label-foreground-records") :
         closing_material ? (index == closing_clock_ink_colour_index ? L"closing-clock-ink-records" :
             index == closing_clock_paper_colour_index ? L"closing-clock-paper-records" : L"closing-clock-accent-records") :
@@ -154,11 +162,11 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     };
     const auto unselected = [&]
     {
-        return std::vector<labrador::Colour>{ look->paper.ink, look->paper.paper, look->paper.shade,
-            look->health_colour, look->meter_track_colour,
-
-            look->player_identity_background_colour,
-            identity->ink_colour, identity->background_colour };
+        std::vector<labrador::Colour> values{ look->health_colour, look->meter_track_colour,
+            look->player_identity_background_colour, identity->ink_colour, identity->background_colour };
+        if (!shared_paper)
+            { values.insert(values.begin(), { look->paper.ink, look->paper.paper, look->paper.shade }); }
+        return values;
     };
     const auto names = [&]
     {
@@ -182,6 +190,9 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         original.closing_clock.paper == labrador::Colour(255, 245, 223) &&
         original.closing_clock.accent == labrador::Colour(255, 211, 77) &&
         original.closing_clock.shade == labrador::Colour(0, 0, 0, 85) &&
+        original.paper.ink == labrador::Colour(20, 20, 20) &&
+        original.paper.paper == labrador::Colour(255, 245, 223) &&
+        original.paper.shade == labrador::Colour(0, 0, 0, 85) &&
         original.player_identity_colour == labrador::Colour(20, 20, 20) &&
         original.player_identity_shadow_colour == labrador::Colour(0, 0, 0, 34) &&
         held_measurements[0].x > 0.0f && held_measurements[1].x > 0.0f &&
@@ -242,7 +253,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             expected[index] = colour;
             require(impl.execute("tune " + path + ' ' + word).ok &&
                 impl.tune_token(path) == std::string("\"") + word + '"',
-                "Positive closing shade accepts AA01/FE/FF and may equal ink without a contrast restriction"); unchanged();
+                "Positive HUD shade accepts AA01/FE/FF and may equal ink without a contrast restriction"); unchanged();
         }
     }
     if (opaque || positive_alpha)
@@ -307,7 +318,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     if (opaque || positive_alpha)
     {
         for (const char* token : { "\"FFF5DF80\"", "\"FFF5DF00\"" })
-            { invalid_sources.push_back(saved_reference.replaced(*saved_reference.find((closing_material || positive_alpha) ? "hud.closing_clock.text" : "hud.closing_clock.paper"), token)); }
+            { invalid_sources.push_back(saved_reference.replaced(*saved_reference.find((shared_paper || closing_material || closing_shade) ? "hud.closing_clock.text" : "hud.closing_clock.paper"), token)); }
     }
     for (const std::string& invalid_source : invalid_sources)
     {
@@ -356,7 +367,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         document->current().text() == saved && document->baseline().text() == saved &&
         read_text(scratch.staged / L"presentation.json") == saved && read_text(scratch.source / L"presentation.json") == invalid,
         "Resetting the remaining edit restores the saved timer baseline without writing external content");unchanged();
-    if (label || closing_material || positive_alpha)
+    if (label || closing_material || positive_alpha || shared_paper)
     {
         // Save both independently selected HUD colour tokens in one valid merge.
         // The source whitespace, other clock colours, root badges and captured resources
@@ -395,6 +406,6 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
 
 void check_timer_colour_tunes(const std::filesystem::path& game_directory)
 {
-    for (const std::size_t index : { hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index })
+    for (const std::size_t index : { hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index, closing_clock_shade_colour_index, hud_paper_ink_colour_index, hud_paper_paper_colour_index, hud_paper_shade_colour_index })
         { check_timer_colour_tunes_for_field(game_directory, index); }
 }
