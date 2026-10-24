@@ -560,11 +560,91 @@ Debug `x64-debug/fbcf21000a68443696e739f3b0cbeff9/`, Release
 attempts are retained beside the final receipts. Runtime content is unchanged;
 the existing native 1-4P clean/heavy captures remain separate evidence.
 
-The next local slice is one actual-input walking Sprayer policy between
-canonical X=950 and X=1250 on the lower floor, mirrored by team, against these
-retained subject routes and both aim policies. Keep the four fire controls,
-fixed checkpoints and released-flight tail; qualify the attacker's endpoints
-and clearance before interpreting the pressure. Human arena/balance,
+The walking comparison below adds actual-input lower-approach motion against
+these retained subject routes and both aim policies. Human arena/balance,
+physical-pad and camera-recognition acceptance remain open.
+
+### Walking lower-approach pressure (2026-10-24)
+
+The [opposed-loop case](../scripts/acceptance/crossfeed/opposed_loop_checks.cpp)
+retains all 160 stationary trials and adds 160 with a walking Sprayer attacker.
+It starts cold at the same constructed canonical centre X=1150, walks toward
+950, then 1250, and repeats, mirrored by subject team. Normal Player input
+drives acceleration and braking; the goal changes only at a supported stop
+within eight units. Both subject routes, aim policies, four fire controls,
+seed, subject-first launch order, 600 active ticks and released-flight tail
+remain matched. Current-centre aim is evaluated after both players move,
+without lead, gravity or inherited-velocity compensation; Roller keeps its
+fixed forward/down volume.
+
+Full-body bounds, solid clearance, lower-floor height and support are checked
+each tick, including tail braking and the earlier narrow respawn exception.
+All eighty subject-fire-disabled walking controls reach eleven stopped
+endpoints, first near at tick 43 and first far at 96, with about 3,234.9 units
+of actual travel. The sampled canonical centre range is 954.47-1245.14.
+Their complete attacker trajectories and endpoint observations match across
+the attacker's own fire control. A respawn returns to the constructed centre
+station and resets the next goal to 950; that teleport does not count as
+travel. Active endpoint counters stop at tick 600.
+
+Advancing subjects with **both players firing** against the walking attacker
+at tick 600 (owned area A / B; observed loss sums positive net tick decreases
+and can hide concurrent healing):
+
+| Tool | Downward owned area | Opponent-aim owned area | Observed loss inflicted, downward → opponent aim | Subject observed loss, downward → opponent aim |
+|---|---:|---:|---:|---:|
+| Sprayer | 15,504 / 15,504 | 10,896 / 10,944 | 0.08 → 0.54 | 0.52 → 0.52 |
+| Sniper | 864 / 864 | 336 / 336 | 0.334 → 1.336 | 0.52 → 0.80 |
+| Roller | 22,080 / 22,656 | 22,080 / 22,656 | 0.135 → 0.135 | 0.52 → 0.52 |
+| Mister | 10,752 / 10,704 | 15,744 / 15,744 | 0.18 → 0.63 | 0.52 → 0.52 |
+| Bucket | 8,928 / 8,016 | 6,288 / 6,960 | 0.402 → 0.402 | 0.52 → 0.52 |
+
+All forty advancing samples with attacker fire first lose health at tick 106,
+eight ticks later than the stationary controls. Every firing pair first
+supports on the plinth at tick 188 and finishes four subject endpoints.
+Aimed Sniper kills the attacker once, which respawns and resumes its walking
+policy; the subject survives and pays nine shots, compared with one subject
+death and six paid shots against the stationary attacker. The revived
+attacker pays 287 shots with production's ammunition reset rather than 156
+without a respawn. These are effects of this motion/aim policy, not evidence
+that moving attackers are generally easier to face.
+
+Home subjects still take no damage and finish ten endpoints. With both players
+firing, their downward owned totals match the stationary controls except Mister, which finishes
+5,952 / 5,952 rather than 6,960 / 6,960. With opponent aim, home Sniper again
+kills the attacker twice with one active-window respawn. Moving bodies and
+projectiles can change coverage even when a player's fire is disabled;
+compare the four controls before attributing paint differences to incoming
+fire. These samples establish neither a safe home loop nor a route winner,
+side fairness, optimal aim or human balance. Keep P3, geometry and weapon
+values; Sniper reserve and Mister lifetime remain broader hypotheses.
+
+Both game/editor preset builds and complete Crossfeed CPU cases pass.
+Debug/Release logs are byte-identical; filtering only the new walking
+NOTE/PASS/MEASURE rows reproduces the entire preceding subject-aim log.
+The combined stationary/walking matrix contains 320 trials, 960 active
+checkpoints and 320 settled rows, including 288 matched no-fire-or-Roller
+aim checkpoint pairs and 96 settled pairs. Walking alternate-aim samples
+record twelve lethal events and eight respawns across both players and all
+fire controls; walking downward samples have none. The maximum released-flight
+tail is 111 ticks, outside the active comparison. Source hashes match the
+receipts and staged map/tuning/presentation match source. Evidence root:
+`out/validation/crossfeed-walking-pressure-20261024/`, Debug
+`x64-debug/58b3b0595b1f4f569ef51aefe2358fc1/`, Release
+`x64-release/a655957d25ed471da69a5f7e491f170d/`. Exports are
+`opposed-loop-checkpoints.csv`, `opposed-loop-settled.csv`,
+`comparison-at-600.csv` (stationary versus walking, both subject aims) and
+`validation-results.json`. Runtime content is unchanged; the existing native
+1-4P clean/heavy captures remain separate evidence.
+
+The next local slice starts the Sprayer at its opposing authored spawn zero
+instead of granting the lower-approach station. Drive its Down departure and
+lower crossing through actual input toward the same 950/1250 endpoints,
+mirrored by team, against the retained subject routes and aim policies.
+Keep the four fire controls, fixed checkpoints and released-flight tail;
+record arrival time, paint, payments and reserve consumed en route before
+interpreting pressure. Respawn should repeat that authored departure rather
+than restore the constructed attack station. Human arena/balance,
 physical-pad and camera-recognition acceptance remain open.
 
 ## Coupled movement and five-tool comparison (2026-10-20)
