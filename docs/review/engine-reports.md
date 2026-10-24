@@ -108,9 +108,11 @@ sources against `52e809a` (under `out/validation/crossfeed-20261020/`) is
 historical with them; every exhibit it covered has been deleted.
 
 **The route is now for future reports**, and report 23 (2026-10-22), found
-while spending 16 and checked only against the pin `19cf650`, is the first.
-Its next work is a fresh upstream-master check and the minimal
-report/reproducer; filing uses the approved scope and established route above.
+while spending 16, is the first. Its minimal request and guarded example were
+prepared and qualified locally on 2026-10-24. The read-only upstream-master
+check at 02:24:30 UTC resolved to the same pin `19cf650`. The current task
+forbids filing; separate author authorization and a fresh upstream recheck
+are required before using the established route above.
 This supporting work does not change TODO's level-first priority.
 
 Before authorized filing, refresh engine master from upstream and recheck the
@@ -153,7 +155,7 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 23 | Resizing a hidden window activates it | `SettingsProbeActivationGuard`, the `WH_CBT` veto five painter fixtures hold around `set_resolution` | local unfiled draft - checked against pin `19cf650` 2026-10-22; no sanitized request or synthetic example yet |
+| 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | prepared and qualified locally 2026-10-24; upstream checked 02:24:30 UTC at pin `19cf650`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
 
 Nothing else is outstanding, on either side, beyond report 23 below and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
@@ -167,8 +169,25 @@ reachable on a machine with no pad.
 ## 23. Resizing a hidden window activates it — **draft with activation-guard exhibit**
 
 Found 2026-10-22 while spending [report 16](#16-windowed-apply-shows-a-deliberately-hidden-window--7db3d5c),
-against the pin `19cf650`; upstream master has not been rechecked since. It is
-**unfiled**, and has no sanitized request or synthetic example yet.
+against the pin `19cf650`. A read-only upstream check on 2026-10-24 at
+02:24:30 UTC resolved master to the same full pinned revision.
+
+**Prepared locally (2026-10-24), unfiled:** the
+[sanitized request](hidden-window-resize/sanitized-request.md),
+[guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp)
+and [portable build recipe](hidden-window-resize/build-exhibit.ps1) are ready.
+Debug and Release builds from that repository location each observe one
+activation request and veto it, count zero focus requests, report an 800x600
+client, and preserve sampled foreground equality after resize and destruction.
+The caller's console-free launch preserves the foreground too. No renderer,
+audio device, game assets or unguarded takeover control is used.
+Exact source/compiler/cache/library/binary pins and results are under
+`out/validation/hidden-resize-20261024/final-v5/qualification-v5.json`; the
+earlier private source-review and qualification records remain separate.
+
+Filing requires separate author authorization; the current task forbids it.
+This preparation records the client's request, not an engine answer. Keep the
+five activation guards until an answer is consumed and requalified.
 
 ### What happens
 
@@ -185,6 +204,14 @@ foreground before `app.set_resolution(1280x720)`; hidden, active and foreground
 after.
 
 ### Exhibit
+
+The synthetic example above installs a current-thread CBT veto before Window
+construction and retains it through destruction. It filters activation/focus
+requests by its own process and thread so it can guard the not-yet-returned
+HWND. Exit 0 records a vetoed activation request and the sampled isolation
+conditions; exit 2 is explicitly inconclusive. It does not demonstrate actual
+foreground/focus theft. The README records the Windows-reported OS version,
+compiler/runtime and build/run instructions without machine or user identifiers.
 
 `SettingsProbeActivationGuard` in
 [save_status_checks.h](../../scripts/acceptance/painter_visual/save_status_checks.h):

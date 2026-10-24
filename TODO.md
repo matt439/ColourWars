@@ -51,6 +51,9 @@ This is a selection guide, not another priority order; each owner defines a boun
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
+- **Report filing:** the guarded resize request and example (`ENG#23`) are
+  prepared and locally qualified. Filing needs separate author authorization;
+  the current task forbids external report filing.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -155,7 +158,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9); runtime install facts (PI-11, undecided upstream; report 15); a listener and voice cap (report 6). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half was answered by report 14 (`Application::frame_timings`). |
-| `ENG#23` | OPEN | LOW | S | Prepare the hidden-window resize request (`set_resolution`'s resize has no `SWP_NOACTIVATE` and activates a hidden window) and a synthetic example; recheck upstream; unfiled. Five painter fixtures hold a `WH_CBT` veto meanwhile. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
+| `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
