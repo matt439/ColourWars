@@ -164,7 +164,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fifty-four audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fifty-five audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -329,7 +329,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-fifty-four audited colour paths below, can be read and changed while the game runs,
+fifty-five audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -376,7 +376,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These fifty-four existing string fields are supported; numeric path
+**Colours.** These fifty-five existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -443,6 +443,7 @@ The latest validation is recorded under
 | `presentation.hud.closing_clock.ink` | live, opaque | Closing-panel ink cross fills and detached beat tick under-strokes on applicable running draws. |
 | `presentation.hud.closing_clock.paper` | live, opaque | Inner closing-panel paper cross fills on applicable running draws. |
 | `presentation.hud.closing_clock.accent` | live, opaque | Four detached tick stripes while the existing closing beat geometry is active; settled/reduced draws omit them. |
+| `presentation.hud.closing_clock.shade` | live, alpha > 0 | Full RGB in both base shadows and six nested inset bands; bands scale only alpha by 0.12 before the existing premultiplication. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -674,10 +675,19 @@ premultiplication stay unchanged.
 Ink supplies the panel body and detached tick under-strokes, paper supplies the
 inner body, and accent supplies four thin tick stripes. The existing beat
 changes stroke geometry rather than selected colour alpha. Settled and reduced
-draws omit detached strokes; normal-clock draws omit the closing panel. The
-unselected closing shade is not tunable. Its bands copy shade RGB and scale
-only alpha by 0.12; the existing reader rejects alpha0. Any shade extension
-needs its own bounded consumer audit before selection.
+draws omit detached strokes; normal-clock draws omit the closing panel.
+
+Closing-clock shade is borrowed live with its separate positive-alpha rule.
+Named colours, RGB and RGBA with alpha01 through FF are valid; alpha0 is
+rejected. It is neither opaque-only nor zero-allowed, and no contrast or
+equality restriction is added. Authored `00000055` and the existing reader
+and drawing stay unchanged.
+
+Both base shadows retain full author RGB. Each of the six nested inset bands
+also copies that RGB, scales only alpha by 0.12, then uses the existing one
+premultiplication. Bottom/right overlaps keep their ordered repeated blends.
+This is no forced-black or default/render correction. Actual draw qualification
+is separate from the CPU metadata and reader checks below.
 
 HUD text foreground is read from `hud.player_identity.colour` for three
 submissions: the identity label, HEALTH and PAINT. Its separate
@@ -787,7 +797,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the fifty-four colour strings listed above join numbers and booleans in `tune`.
+only the fifty-five colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1528,7 +1538,7 @@ as the game. In Release:
   engine declined input capture as game policy (report 9), so a per-key gate
   would be this client's own and is not built.
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the fifty-four listed colour fields above are
+  and inserting keys in `tune.save`: the fifty-five listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1537,13 +1547,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Fifty-four existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Fifty-five existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette body/ink/rim/shade and reveal
-ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack, HUD health/track and shared label foreground/identity shadow, captured Stage Select preview backing, normal timer foreground/shadow, opaque closing text and panel ink/paper/accent, and figure arm/hand and quiet blink face colours.
+ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack, HUD health/track and shared label foreground/identity shadow, captured Stage Select preview backing, normal timer foreground/shadow, opaque closing text and panel ink/paper/accent, positive-alpha closing shade, and figure arm/hand and quiet blink face colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1571,6 +1581,75 @@ The local RapidJSON span reader and in-memory candidate validation
 (`labrador::parse_json`, engine report 12) already provide the required route.
 The engine declined to keep source spans, so the span reader and splice stay
 this tool's.
+
+Positive-alpha closing-clock shade increment (2026-10-24), **verified**:
+path 55, `presentation.hud.closing_clock.shade`, has an exact live row.
+That allowlist row is the only production change. Its existing positive-alpha
+reader accepts names/RGB and RGBA alpha01 through FF, refuses zero, and imposes
+no opaque-only, contrast or equality rule. Authored `00000055`, both base
+shadows, six RGB-preserving alpha-scaled bands, geometry, resources and
+rendering remain unchanged.
+
+Debug and Release game/editor builds and all four `debug_console` and
+`story_audio` CPU cases passed on their first attempts. Independent 55-path
+arrays and a separate positive-alpha classifier retain the 54 earlier
+contracts. Nine retained-HUD metadata subjects guard borrowed records, colours,
+geometry, fonts/resources and RNG without drawing or advancing a match.
+
+Actual commands accept named/RGB/partial shade, alpha01/FE/FF boundaries and a
+shade equal to ink. Black and nonblack zero refusals preserve complete live,
+document, ledger and file state. Exact escaped spans, one-token and shade/paper
+pair saves, selected/sibling resets, LF/CRLF conflict/force and rebase remain
+covered. External selected zero after reset cannot be adopted while other
+ledger entries are saved. Valid-positive recording/replay write attempts
+prove policy refusal without relying on an invalid zero input. Separate direct
+complete metadata resource validation and missing-frame refusal remain distinct
+from no-Application full-reader commands. Release developer exclusion passes.
+
+Both native presets passed on their first actual attempts, without a runtime
+failure or runtime source correction. Release uses **68 readbacks, 30 rows and
+12 native 202 x 100 crops**; combined Debug totals are **93/39/12**. Each preset
+has 242,400 crop pixels and 727,380 P6 bytes. Complete decoded PNG RGB matches
+the PPM payloads, with opaque alpha, for all twelve crops.
+
+Eight material sites cover 128 pixels: both base shadows and one/two/three-band
+depths in each direction. Two controlled underlays and four valid palettes,
+including minimum-positive alpha01, retain full author RGB and repeated
+source-over bands. Twelve independent patch observations compare 1,536 RGBA
+pixels. Eight wrong-reference controls produce all 48 site discriminations
+and 768 pixel inequalities per preset. The low positive input is valid without
+a universal visible-contrast guarantee.
+
+Twenty-two full-frame repeats and eight copied HUD comparisons establish
+retained drawing/adoption separately from those material references. Five
+normal-branch invariances, paired normal/reduced and settled/reduced relations,
+and two beat counterexamples retain applicability. Band pixels match across
+Canvases over opaque paper; exposed base-shadow relations retain the controlled
+underlay distinction. The proof covers these material sites, not complete
+glyph/panel reconstruction or natural Level sequencing.
+
+Debug executes ten statements with eight accepted rendered states, one private
+one-token Save/rebase and original/saved resets. Its single zero-alpha refusal
+preserves typed live/document/ledger/file/resource state, followed by one draw
+equal to the held valid partial-alpha frame. Zero is not an accepted visual
+palette. These checks add twenty-five reads and nine rows, including
+1,024 cached-reference patch checks; no extra crops or raw-reference reads
+are needed.
+
+Calibration totals are 2,176 pixel checks in Release and 2,976 in Debug.
+Every observation update, input poll and game Save counter remains zero.
+Evidence is under `out/validation/closing-shade-colour-20261024/`, with
+`validation-reconciliation-v1.json`. All 1,496 frozen source pins, nine prior
+fixtures, qualified producer/result hashes and the preserved a7a061f ZIP
+reconcile. Existing evidence remains intact; qualified core producers were
+reused for the native probes without repeating game builds.
+
+The preserved ZIP predates these changes. Human contrast/readability, comfort,
+C2 recognition, arena/weapon balance, physical controls, listening, clean-PC and
+performance acceptance remain open. `DBG#1` remains open. The separate shared
+HUD paper audit maps distinct opaque ink/paper, positive-alpha shade, three
+helper callers and two extra meter-border ink uses. It selects no implementation
+or mandatory backlog; reassess the actual report before choosing further work.
 
 Opaque closing-clock material family (2026-10-24), **verified**:
 paths 52-54 expose the existing `presentation.hud.closing_clock.ink`,

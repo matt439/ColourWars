@@ -133,6 +133,9 @@ namespace
         { "presentation.hud.closing_clock.ink", TuneScope::live },
         { "presentation.hud.closing_clock.paper", TuneScope::live },
         { "presentation.hud.closing_clock.accent", TuneScope::live },
+        // Full drop shadow and inset bands read the borrowed author RGBA;
+        // the existing reader requires positive alpha and drawing stays intact.
+        { "presentation.hud.closing_clock.shade", TuneScope::live },
 		// The retained HUD reads this shared identity/HEALTH/PAINT foreground
 		// and identity-only shadow per draw; badge inks/fonts stay separate.
 		{ "presentation.hud.player_identity.colour", TuneScope::live },

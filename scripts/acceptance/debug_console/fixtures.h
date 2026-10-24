@@ -307,7 +307,7 @@ namespace debug_console_acceptance
 	std::size_t log_index(const DebugLog& log, const std::string& text);
 	bool any_line(const DebugLog& log, const std::string& text);
 
-	// The fifty-four audited colour tune paths and their values, in the same order;
+	// The fifty-five audited colour tune paths and their values, in the same order;
 	// shared by tune_checks.cpp, tune_document_checks.cpp and tune_menu_checks.cpp.
 	inline constexpr std::size_t identity_ink_colour_index = 13;
 	inline constexpr std::size_t identity_background_colour_index = 14;
@@ -356,7 +356,13 @@ namespace debug_console_acceptance
         return index == closing_clock_text_colour_index || index == closing_clock_ink_colour_index ||
             index == closing_clock_paper_colour_index || index == closing_clock_accent_colour_index;
     }
-    inline const std::array<const char*, 54> colour_paths{
+    inline constexpr std::size_t closing_clock_shade_colour_index = 54;
+    // This independent domain is positive alpha, distinct from opaque/zero-allowed.
+    inline constexpr bool positive_alpha_colour_index(std::size_t index)
+    {
+        return index == closing_clock_shade_colour_index;
+    }
+    inline const std::array<const char*, 55> colour_paths{
 		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
 		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
 		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
@@ -375,7 +381,7 @@ namespace debug_console_acceptance
 		"presentation.opening.cursor_art.shadow", "presentation.opening.desktop_colour",
 		"presentation.opening.monitor_art.power_light", "presentation.opening.program_colour",
 		"presentation.opening.acting.face", "presentation.opening.acting.sweat",
-		"presentation.opening.glass_colour", "presentation.opening.silhouette", "presentation.opening.scribble", "presentation.hud.health_colour", "presentation.hud.meter_track_colour", "presentation.opening.crack", "presentation.figure.arm_colour", "presentation.figure.hand_colour", "presentation.figure.quiet.face_colour", "presentation.hud.timer.colour", "presentation.hud.timer.shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.player_identity.colour", "presentation.hud.player_identity.shadow_colour", "presentation.hud.player_identity.background_colour", "presentation.hud.closing_clock.ink", "presentation.hud.closing_clock.paper", "presentation.hud.closing_clock.accent" };
+		"presentation.opening.glass_colour", "presentation.opening.silhouette", "presentation.opening.scribble", "presentation.hud.health_colour", "presentation.hud.meter_track_colour", "presentation.opening.crack", "presentation.figure.arm_colour", "presentation.figure.hand_colour", "presentation.figure.quiet.face_colour", "presentation.hud.timer.colour", "presentation.hud.timer.shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.player_identity.colour", "presentation.hud.player_identity.shadow_colour", "presentation.hud.player_identity.background_colour", "presentation.hud.closing_clock.ink", "presentation.hud.closing_clock.paper", "presentation.hud.closing_clock.accent", "presentation.hud.closing_clock.shade" };
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
 
 	// console_checks.cpp
