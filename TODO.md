@@ -80,8 +80,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Compare one alternate subject aim against the qualified lower-approach pressure controls; attacker movement, spawn pressure, 1-4P/heavy-paint readability and human arena acceptance remain open. Preserve other maps. [Next](docs/polish-crossfeed.md#reciprocal-firing-and-lower-approach-pressure-2026-10-24). |
-| `POL#27` | OPEN | HIGH | L | Qualify the five-tool candidate with movement (`POL#3`): alternate aim under lower-approach pressure, resource use and human balance. Sniper reserve and Mister lifetime hypotheses remain open. [Pressure controls](docs/polish-crossfeed.md#reciprocal-firing-and-lower-approach-pressure-2026-10-24), [requirements](docs/polish-plan.md#design-requirements). |
+| `POL#17` | OPEN | HIGH | XL | Compare one walking lower-approach attacker against the qualified routes and subject aims; spawn pressure, 1-4P/heavy-paint readability and human arena acceptance remain open. Preserve other maps. [Next](docs/polish-crossfeed.md#subject-aim-and-retaliation-2026-10-24). |
+| `POL#27` | OPEN | HIGH | L | Qualify the five-tool candidate with movement (`POL#3`): walking lower-approach pressure, resource use and human balance. Sniper reserve and Mister lifetime hypotheses remain open. [Aim comparison](docs/polish-crossfeed.md#subject-aim-and-retaliation-2026-10-24), [requirements](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after reference-arena acceptance; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 

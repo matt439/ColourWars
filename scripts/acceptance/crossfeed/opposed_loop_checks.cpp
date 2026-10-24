@@ -9,6 +9,8 @@ namespace crossfeed_acceptance
         constexpr int active_ticks = 600;
         constexpr int tail_limit = 720;
 
+        enum class SubjectAim { downward, opponent };
+
         const char* tool_name(WeaponType type)
         {
             switch (type)
@@ -52,6 +54,8 @@ namespace crossfeed_acceptance
             int respawns = 0;
             int inactive_ticks = 0;
 
+            bool operator==(const HealthObservation&) const = default;
+
             void observe(const Player& player, float before, PlayerState previous, int tick)
             {
                 const float loss = std::max(0.0f, before - player.health());
@@ -75,10 +79,17 @@ namespace crossfeed_acceptance
             int lower_landing = -1;
             int home_exit = -1;
             int plinth_visit = -1;
+            std::vector<int> paid_ticks;
+            std::vector<int> opponent_paid_ticks;
+            std::array<float, 4> ownership{};
+            std::array<float, 2> reserve{};
+            int tail = 0;
+
+            bool operator==(const Result&) const = default;
         };
 
         Result trial(Services& services, WeaponType type, PlayerTeam team,
-            bool advancing, bool fire, bool opponent_fire)
+            bool advancing, bool fire, bool opponent_fire, SubjectAim aim = SubjectAim::downward)
         {
             const bool right = team == PlayerTeam::a;
             const PlayerTeam enemy = right ? PlayerTeam::b : PlayerTeam::a;
@@ -110,6 +121,30 @@ namespace crossfeed_acceptance
                 const Vector2F to_target = run.player->center() - origin;
                 return std::atan2(to_target.y, to_target.x);
             });
+            float requested_aim = 0.0f;
+            int verified_aim_ticks = 0;
+            if (aim == SubjectAim::opponent)
+            {
+                run.weapon_aim_after_movement = [&]
+                {
+                    const Vector2F offset = services.tuning.weapon(type).details.offset;
+                    const bool facing_right = opponent->center().x >= run.player->center().x;
+                    const Vector2F origin = run.player->center() + Vector2F(facing_right ? offset.x : -offset.x, offset.y);
+                    const Vector2F to_target = opponent->center() - origin;
+                    requested_aim = std::atan2(to_target.y, to_target.x);
+                    return requested_aim;
+                };
+                run.on_weapon_launch = [&](std::span<const std::unique_ptr<Projectile>>)
+                {
+                    if (type == WeaponType::roller || run.ticks > active_ticks ||
+                        run.player->state() != PlayerState::alive || run.player->health() <= 0.0f) { return; }
+                    const float actual = run.player->primary_weapon().rotation();
+                    require(approximately(std::cos(actual), std::cos(requested_aim)) &&
+                        approximately(std::sin(actual), std::sin(requested_aim)),
+                        "Crossfeed alternate subject aim did not reach the actual weapon phase");
+                    ++verified_aim_ticks;
+                };
+            }
             std::srand(2401027);
             Result result;
             result.subject.minimum = run.player->health();
@@ -119,12 +154,16 @@ namespace crossfeed_acceptance
             bool far_goal = false;
             float previous_own = 0.0f;
             float previous_enemy = 0.0f;
-            const auto check_opponent = [&]
+            const auto check_opponent = [&](PlayerState previous)
             {
                 run.require_clear(*opponent, "opposed loop opponent");
+                // Production respawn places the body and clears its support
+                // state; gravity re-establishes contact on the following tick.
+                const bool just_respawned = previous == PlayerState::dead && opponent->state() == PlayerState::alive &&
+                    opponent->rectangle() == opponent->spawn_rectangle() && opponent->velocity() == Vector2F::ZERO;
                 require(approximately(opponent->center().x, x(1150.0f)) &&
                     approximately(opponent->rectangle().bottom(), floor.rectangle.top()) &&
-                    (opponent->state() != PlayerState::alive || opponent->health() <= 0.0f || supported(*opponent)),
+                    (opponent->state() != PlayerState::alive || opponent->health() <= 0.0f || supported(*opponent) || just_respawned),
                     "Crossfeed stationary pressure opponent left its named floor station");
             };
             const auto score = [&]
@@ -146,7 +185,7 @@ namespace crossfeed_acceptance
                 const float before = run.player->health(), opponent_before = opponent->health();
                 const PlayerState state = run.player->state(), opponent_state = opponent->state();
                 run.tick(actions);
-                check_opponent();
+                check_opponent(opponent_state);
                 result.subject.observe(*run.player, before, state, tick);
                 result.opponent.observe(*opponent, opponent_before, opponent_state, tick);
                 if (state == PlayerState::dead && run.player->state() == PlayerState::alive)
@@ -184,7 +223,8 @@ namespace crossfeed_acceptance
                 if (tick == 180 || tick == 360 || tick == active_ticks)
                 {
                     const float own = run.team_area(team), other = run.team_area(enemy);
-                    std::cout << "MEASURE Crossfeed opposed_loop tool=" << tool_name(type) <<
+                    std::cout << "MEASURE Crossfeed " << (aim == SubjectAim::downward ? "opposed_loop" : "opposed_aim_loop") <<
+                        " tool=" << tool_name(type) <<
                         " team=" << (right ? 'a' : 'b') << " route=" << (advancing ? "advancing" : "home") <<
                         " fire=" << fire << " opponent_fire=" << opponent_fire << " checkpoint_tick=" << tick <<
                         " owned_area=" << fixed(own) << " enemy_area=" << fixed(other) << " neutral_area=" << fixed(total - own - other) <<
@@ -202,13 +242,26 @@ namespace crossfeed_acceptance
                         " lower_landing_tick=" << result.lower_landing << " full_body_home_exit_tick=" << result.home_exit <<
                         " first_supported_plinth_tick=" << result.plinth_visit << " stopped_endpoint_count=" << result.turns <<
                         " x=" << fixed(run.player->center().x) << " y=" << fixed(run.player->center().y) <<
-                        " flying_objects=" << flying_objects(run) << " scope=stationary-lower-approach-sprayer-current-centre-no-lead\n";
+                        " flying_objects=" << flying_objects(run);
+                    if (aim == SubjectAim::opponent)
+                    {
+                        std::cout << " requested_aim=current-opponent-centre effective_aim=" <<
+                            (type == WeaponType::roller ? "fixed-forward-down" : "signed-attachment-current-centre") <<
+                            " verified_aim_ticks=" << verified_aim_ticks <<
+                            " lead=none ballistic_compensation=none velocity_inheritance_compensation=none";
+                    }
+                    std::cout << " scope=stationary-lower-approach-sprayer-current-centre-no-lead\n";
                     previous_own = own;
                     previous_enemy = other;
                 }
             }
             result.paid = run.paid_events;
             result.opponent_paid = run.opponent_weapon_stats(opponent).paid_events;
+            result.paid_ticks = run.paid_ticks;
+            result.opponent_paid_ticks = run.opponent_weapon_stats(opponent).paid_ticks;
+            result.reserve = { run.player->weapon_ammo(), opponent->weapon_ammo() };
+            require(aim == SubjectAim::downward || type == WeaponType::roller || verified_aim_ticks > 0,
+                "Crossfeed alternate subject aim never qualified an active weapon update");
             require((fire ? result.paid > 0 : result.paid == 0) &&
                 (opponent_fire ? result.opponent_paid > 0 : result.opponent_paid == 0),
                 "Crossfeed opposed-loop payment did not follow each player's fire control");
@@ -224,15 +277,19 @@ namespace crossfeed_acceptance
             int tail = 0;
             while (flying_objects(run) > 0 && tail < tail_limit)
             {
+                const PlayerState opponent_state = opponent->state();
                 run.tick(input());
-                check_opponent();
+                check_opponent(opponent_state);
                 ++tail;
                 score();
                 require(run.paid_events == result.paid && run.opponent_weapon_stats(opponent).paid_events == result.opponent_paid,
                     "Crossfeed opposed-loop tail paid another shot");
             }
             require(flying_objects(run) == 0, "Crossfeed opposed-loop flight tail exceeded its finite limit");
-            std::cout << "MEASURE Crossfeed opposed_loop_settled tool=" << tool_name(type) << " team=" << (right ? 'a' : 'b') <<
+            result.ownership = { active_own, active_enemy, run.team_area(team), run.team_area(enemy) };
+            result.tail = tail;
+            std::cout << "MEASURE Crossfeed " << (aim == SubjectAim::downward ? "opposed_loop_settled" : "opposed_aim_loop_settled") <<
+                " tool=" << tool_name(type) << " team=" << (right ? 'a' : 'b') <<
                 " route=" << (advancing ? "advancing" : "home") << " fire=" << fire << " opponent_fire=" << opponent_fire <<
                 " tail_ticks=" << tail << " active_owned_area=" << fixed(active_own) << " active_enemy_area=" << fixed(active_enemy) <<
                 " settled_owned_area=" << fixed(run.team_area(team)) << " settled_enemy_area=" << fixed(run.team_area(enemy)) <<
@@ -252,6 +309,12 @@ namespace crossfeed_acceptance
             "The shot-free tail releases both players and is excluded from active results. No safety or balance ranking follows\n";
         int trials = 0;
         int advancing_damage_samples = 0;
+        int aim_trials = 0;
+        std::cout << "NOTE Crossfeed opposed aim loops add current-opponent-centre subject aim after movement from a signed "
+            "weapon attachment, with no lead, gravity or velocity-inheritance compensation. The attachment side is chosen "
+            "by relative player centres, including close crossings; this is a scripted policy, not perfect aim. "
+            "Roller retains production fixed-forward-down aim. All four controls, routes, seed, cold weapons and launch "
+            "order match the downward baseline; only non-firing subjects and fixed-aim Roller must match full results\n";
         for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller, WeaponType::mister, WeaponType::bucket })
         {
             for (const PlayerTeam team : { PlayerTeam::a, PlayerTeam::b })
@@ -266,6 +329,19 @@ namespace crossfeed_acceptance
                         "Crossfeed inactive-opponent controls changed subject movement under paid fire");
                     const Result opponent = trial(services, type, team, advancing, false, true);
                     const Result reciprocal = trial(services, type, team, advancing, true, true);
+                    const Result aim_neither = trial(services, type, team, advancing, false, false, SubjectAim::opponent);
+                    const Result aim_subject = trial(services, type, team, advancing, true, false, SubjectAim::opponent);
+                    const Result aim_opponent = trial(services, type, team, advancing, false, true, SubjectAim::opponent);
+                    const Result aim_reciprocal = trial(services, type, team, advancing, true, true, SubjectAim::opponent);
+                    require(aim_neither == neither && aim_opponent == opponent,
+                        "Crossfeed alternate no-fire subject changed matched movement, payments, health or paint");
+                    require(aim_subject.trajectory == aim_neither.trajectory && aim_subject.turns == aim_neither.turns &&
+                        aim_subject.lower_landing == aim_neither.lower_landing && aim_subject.home_exit == aim_neither.home_exit &&
+                        aim_subject.plinth_visit == aim_neither.plinth_visit,
+                        "Crossfeed alternate inactive-opponent control changed movement under paid fire");
+                    require(type != WeaponType::roller || (aim_subject == subject && aim_reciprocal == reciprocal),
+                        "Crossfeed fixed-aim Roller changed results under an ignored subject aim request");
+                    aim_trials += 4;
                     if (advancing)
                     {
                         advancing_damage_samples += opponent.subject.net_tick_loss > 0.0f ? 1 : 0;
@@ -276,9 +352,12 @@ namespace crossfeed_acceptance
             }
         }
         require(trials == 80, "Crossfeed opposed-loop matrix changed its bounded trial count");
+        require(aim_trials == 80, "Crossfeed alternate-aim matrix changed its bounded trial count");
         require(advancing_damage_samples > 0,
             "Crossfeed lower-approach pressure policy never caused observed health loss in an advancing sample");
         std::cout << "PASS Crossfeed opposed loops: eighty mirrored five-tool home/advancing trials, four independent "
             "fire controls, both-player payment/health/respawn observations and bounded released-flight tails\n";
+        std::cout << "PASS Crossfeed opposed aim loops: eighty matched alternate-aim trials, verified actual weapon aim, "
+            "identical no-fire and fixed-aim Roller controls; retaliation and paint remain observations, not balance gates\n";
     }
 }

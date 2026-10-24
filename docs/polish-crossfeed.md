@@ -481,11 +481,91 @@ hashes match source. Evidence root:
 `validation-results.json`. The prior native clean/heavy pane captures remain
 separate evidence; no geometry or runtime-content change required a new matrix.
 
-The next local slice is one alternate subject-aim policy on these same
-home/advancing routes and lower-approach controls, distinguishing retaliation
-from downward coverage before adding attacker movement or changing values.
+The subject-aim comparison below follows these same home/advancing routes and
+lower-approach controls, distinguishing retaliation from downward coverage.
 Attended spawn-pressure, balance, physical-pad and camera-recognition reviews
 remain open.
+
+### Subject aim and retaliation (2026-10-24)
+
+The [opposed-loop case](../scripts/acceptance/crossfeed/opposed_loop_checks.cpp)
+retains all eighty downward-aim trials and adds eighty with the subject aiming
+at the stationary opponent's current centre after movement. Both policies use
+the same cold spawn, RNG seed, home/advancing endpoints, 600 active ticks,
+four independent fire controls and subject-first launch order. The opponent
+remains a Sprayer at canonical X=1150 on our lower approach, mirrored for B.
+
+The alternate aim starts at the tool's attachment offset, signed toward the
+opponent according to the players' relative centres. It supplies no lead,
+gravity or inherited-velocity compensation. Close crossings can reverse the
+ray relative to that initial attachment-side choice; this is a reproducible
+input policy, not perfect aim. Each alive active update of the four aimed tools
+verifies the actual weapon rotation. Roller ignores the request and retains its production
+movement-facing, forward/down contact volume. No-fire subjects and Roller
+must retain their recorded trajectories, payments, health observations,
+ownership, reserve and flight tails across policies.
+
+Advancing subjects with **both players firing**, at tick 600 (owned area A / B;
+health loss sums positive net tick decreases and can hide concurrent healing):
+
+| Tool | Downward owned area | Opponent-aim owned area | Observed loss inflicted, downward → opponent aim | Subject observed loss, downward → opponent aim |
+|---|---:|---:|---:|---:|
+| Sprayer | 15,024 / 15,024 | 11,568 / 11,616 | 0.26 → 0.61 | 0.60 → 0.60 |
+| Sniper | 864 / 864 | 336 / 336 | 0.334 → 1.002 | 0.60 → 1.01 |
+| Roller | 22,368 / 22,944 | 22,368 / 22,944 | 0.435 → 0.435 | 0.60 → 0.60 |
+| Mister | 10,128 / 10,080 | 14,688 / 14,736 | 0.38 → 0.60 | 0.60 → 0.60 |
+| Bucket | 9,168 / 8,016 | 5,952 / 6,720 | 0.402 → 0.603 | 0.60 → 0.60 |
+
+Every advancing firing pair first supports on the plinth at tick 188. Aimed
+Sniper kills the opponent once; when both fire, the subject also dies once
+and respawns, finishing three stopped endpoints instead of four. The other
+tools retain four. Sniper pays six shots rather than nine in that reciprocal
+sample; the other subject totals remain 156 / 266 / 57 / 16 for Sprayer /
+Roller / Mister / Bucket. The revived opponent receives production's full
+ammunition reset at its constructed lower station, paying 287 rather than 156
+shots over the horizon. No travel from an authored enemy spawn is modelled.
+Retaliation therefore does not imply less incoming damage over the whole trial.
+
+Home subjects still take no damage and finish ten stopped endpoints. Their
+aimed owned areas are 7,776 / 7,776 (Sprayer), zero (Sniper), unchanged
+6,960 / 7,536 (Roller), 14,448 / 14,448 (Mister) and 5,616 / 5,856 (Bucket).
+Home Sniper now inflicts 2.004 observed loss, killing the stationary opponent
+twice with one respawn during the active window; Mister inflicts 0.28 instead
+of 0.11. These samples show different coverage and retaliation opportunities,
+including increased Mister coverage. They establish neither an unavoidable
+home threat nor a safe home loop, optimal aim, side fairness or weapon ranking.
+Keep P3, geometry and weapon values; Sniper reserve and Mister lifetime still
+need broader observations.
+
+The first runs exposed a fixture-only support assumption on the newly reached
+opponent respawn. `Player::place_at` resets support to air at the exact floor
+station. The station check now permits that one dead-to-alive tick only when
+the body equals its spawn rectangle and velocity is zero; position, bounds
+and solid clearance remain required, and normal support must return next tick.
+
+Both game/editor preset builds and complete Crossfeed CPU cases pass.
+Debug/Release logs are byte-identical, and filtering only the added aim rows
+reproduces the entire preceding receipt. All 160 opposed trials produce 480
+active checkpoints; the reconciliation also compares every logged field in
+144 no-fire-or-Roller checkpoint pairs and 48 settled pairs. The alternate
+samples record fourteen lethal events and ten respawns across both players,
+including firing-opponent-disabled controls; the downward baseline still has
+none. Maximum released-flight tail is 111 ticks, outside the active horizon.
+Current source hashes match both receipts and staged map/tuning/presentation
+match source. Evidence root: `out/validation/crossfeed-subject-aim-20261024/`,
+Debug `x64-debug/fbcf21000a68443696e739f3b0cbeff9/`, Release
+`x64-release/fcadce0f6b334d7e8b3a14299713d431/`. Exports are
+`opposed-loop-checkpoints.csv`, `opposed-loop-settled.csv`,
+`comparison-at-600.csv` and `validation-results.json`. The failed first
+attempts are retained beside the final receipts. Runtime content is unchanged;
+the existing native 1-4P clean/heavy captures remain separate evidence.
+
+The next local slice is one actual-input walking Sprayer policy between
+canonical X=950 and X=1250 on the lower floor, mirrored by team, against these
+retained subject routes and both aim policies. Keep the four fire controls,
+fixed checkpoints and released-flight tail; qualify the attacker's endpoints
+and clearance before interpreting the pressure. Human arena/balance,
+physical-pad and camera-recognition acceptance remain open.
 
 ## Coupled movement and five-tool comparison (2026-10-20)
 
