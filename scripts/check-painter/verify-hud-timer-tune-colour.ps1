@@ -168,16 +168,22 @@ function Read-HudTimerRoleEvidence {
     return [ordered]@{subject=$subject;prefix=$prefix;png_scope=$pngScope;directory=[IO.Path]::GetFullPath($captures);observed=$timerObserved;ppms=$timerPpmEvidence;inputs=@(foreach ($path in $timerInputs) {[ordered]@{path=$path;sha256=(Get-FileHash -LiteralPath $path).Hash}})}
 }
 
-$script:timerVerifiedContexts=@(Read-HudTimerRoleEvidence -Shadow $false; Read-HudTimerRoleEvidence -Shadow $true)
+. (Join-Path $PSScriptRoot 'verify-hud-closing-text-colour.ps1')
+$script:timerVerifiedContexts=@(
+    Read-HudTimerRoleEvidence -Shadow $false
+    Read-HudTimerRoleEvidence -Shadow $true
+    Read-HudClosingTextEvidence
+)
 $foreground=$script:timerVerifiedContexts[0].observed
 $shadow=$script:timerVerifiedContexts[1].observed
+$closing=$script:timerVerifiedContexts[2].observed
 $script:timerFamilyObserved=[ordered]@{
-    foreground46=$foreground;shadow47=$shadow
-    readbacks=($foreground.readbacks+$shadow.readbacks);csv_rows=($foreground.csv_rows+$shadow.csv_rows)
-    crops=8;crop_pixels=49776;ppm_bytes=149440;controls=7
-    control_discriminating_pixels=($foreground.control_discriminating_pixels+$shadow.control_discriminating_pixels)
-    calibration_pixel_checks=($foreground.calibration_pixel_checks+$shadow.calibration_pixel_checks)
-    private_game_saves=0;reference_scope='independently selected normal foreground46 and shadow47; ordered glyph/shadow/paper ROI; copied HUD adoption only'
+    foreground46=$foreground;shadow47=$shadow;closing_text48=$closing
+    readbacks=($foreground.readbacks+$shadow.readbacks+$closing.readbacks);csv_rows=($foreground.csv_rows+$shadow.csv_rows+$closing.csv_rows)
+    crops=12;crop_pixels=74664;ppm_bytes=224160;controls=9
+    control_discriminating_pixels=($foreground.control_discriminating_pixels+$shadow.control_discriminating_pixels+$closing.control_discriminating_pixels)
+    calibration_pixel_checks=($foreground.calibration_pixel_checks+$shadow.calibration_pixel_checks+$closing.calibration_pixel_checks)
+    private_game_saves=0;reference_scope='normal foreground46/shadow47 plus opaque closing text48; explicit role applicability; closing reference omits normal shadow; copied HUD adoption only'
     png_count=0;png_crops=@();png_pixels=0;png_rgb_bytes=0;png_complete=$false
 }
 $result.observed_counts=$script:timerFamilyObserved
@@ -189,8 +195,9 @@ function Complete-HudTimerColourEvidence {
     }
     $foreground=$script:timerVerifiedContexts[0].observed
     $shadow=$script:timerVerifiedContexts[1].observed
-    if (!$foreground.png_complete -or !$shadow.png_complete) { throw 'Both timer roles must finish PNG verification' }
-    $script:timerFamilyObserved.png_crops=@($foreground.png_crops)+@($shadow.png_crops)
-    $script:timerFamilyObserved.png_count=8;$script:timerFamilyObserved.png_pixels=49776
-    $script:timerFamilyObserved.png_rgb_bytes=149328;$script:timerFamilyObserved.png_complete=$true
+    $closing=$script:timerVerifiedContexts[2].observed
+    if (!$foreground.png_complete -or !$shadow.png_complete -or !$closing.png_complete) { throw 'All three timer roles must finish PNG verification' }
+    $script:timerFamilyObserved.png_crops=@($foreground.png_crops)+@($shadow.png_crops)+@($closing.png_crops)
+    $script:timerFamilyObserved.png_count=12;$script:timerFamilyObserved.png_pixels=74664
+    $script:timerFamilyObserved.png_rgb_bytes=223992;$script:timerFamilyObserved.png_complete=$true
 }

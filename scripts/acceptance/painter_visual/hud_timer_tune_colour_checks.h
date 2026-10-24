@@ -1,11 +1,17 @@
-// Paths 46/47: independently selected normal foreground and shadow. Source-derived font metrics and the
+// Paths 46/47/48: independently selected normal foreground, shadow and opaque closing text. Font metrics and the
 // fixed pure-paper ROI are hypotheses until the native qualification runs.
-enum class HudTimerSubject { foreground, shadow };
-enum class HudTimerReference { correct, straight, squared, reversed_order };
+enum class HudTimerSubject { foreground, shadow, closing_text };
+enum class HudTimerReference { correct, straight, squared, reversed_order, wrong_opaque, added_normal_shadow };
 Colour& hud_timer_selected(HudPresentation& look, HudTimerSubject subject)
-{ return subject == HudTimerSubject::foreground ? look.timer_colour : look.timer_shadow_colour; }
+{
+    if (subject == HudTimerSubject::foreground) { return look.timer_colour; }
+    return subject == HudTimerSubject::shadow ? look.timer_shadow_colour : look.closing_clock.text;
+}
 const Colour& hud_timer_selected(const HudPresentation& look, HudTimerSubject subject)
-{ return subject == HudTimerSubject::foreground ? look.timer_colour : look.timer_shadow_colour; }
+{
+    if (subject == HudTimerSubject::foreground) { return look.timer_colour; }
+    return subject == HudTimerSubject::shadow ? look.timer_shadow_colour : look.closing_clock.text;
+}
 struct HudTimerCase
 {
     const char* name;
@@ -31,7 +37,7 @@ const std::array<HudTimerCase, 8>& hud_timer_cases()
 std::vector<float> hud_timer_fixed_style(const HudPresentation& look, HudTimerSubject subject)
 {
     auto copy = look;
-    hud_timer_selected(copy, subject) = subject == HudTimerSubject::foreground ? Colour(20, 20, 20) : Colour(0, 0, 0, 34);
+    hud_timer_selected(copy, subject) = subject == HudTimerSubject::shadow ? Colour(0, 0, 0, 34) : Colour(20, 20, 20);
     auto values = hud_track_fixed_style(copy);
     // The track helper omits its own selected tint, so add that unselected
     // field explicitly here. The opposite timer colour and all closing colours remain guarded.
@@ -66,6 +72,13 @@ public:
             look_.fill_frame == "pixel" && pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) &&
             pixel_.origin() == Vector2F::ZERO && font_->line_spacing() == 74.21875f,
             "Timer fixture requires authored normal-clock geometry, paper, shadow and font");
+        if (subject_ == HudTimerSubject::closing_text)
+        {
+            require(look_.closing_clock.text == Colour(20, 20, 20) && look_.closing_clock.paper == Colour(255, 245, 223) &&
+                look_.closing_clock.keyline_width == 2 && look_.closing_clock.shadow_offset == 4 &&
+                look_.closing_clock.tick_reach == 12,
+                "Closing-text fixture requires its own authored opaque text, paper and panel geometry");
+        }
         const std::array<std::string, 3> font_names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };
         for (size_t i = 0; i < font_names.size(); ++i)
         {
@@ -97,6 +110,11 @@ public:
         }
         require(timer_font_ == fonts_[1] && font_ == font_pointers_[1] && font_->line_spacing() == 74.21875f,
             "Timer font pointer or source line spacing changed");
+        if (subject_ == HudTimerSubject::closing_text)
+        {
+            require(look_.closing_clock.text.a == 1.0f && expected_.closing_clock.text.a == 1.0f,
+                "Closing text must retain its existing opaque-only reader policy");
+        }
         struct GlyphPin { char32_t character; RectangleI rectangle; float x, y, advance; };
         const std::array<GlyphPin, 6> glyphs{ {
             { U'0', { 311, 57, 31, 47 }, 12, 21, -8 }, { U'1', { 140, 112, 11, 45 }, 22, 22, 2 },
@@ -130,11 +148,36 @@ public:
             // Inside the fixed ROI, stepped corners, right/bottom shade bands
             // and every other HUD component are absent. Its opaque paper is
             // one effective backdrop; changing the Canvas would add no case.
-            const float inside_left = position.x - 14, inside_top = 46;
-            const float right_shade = position.x + item.width + 8;
-            const float bottom_shade = 54 + 74.21875f + 2;
-            require(906 >= inside_left + 4 && 74 >= inside_top + 4 && 1028 <= right_shade &&
-                125 <= bottom_shade, "Timer ROI no longer stays entirely on unshaded opaque paper");
+            if (subject_ == HudTimerSubject::closing_text)
+            {
+                if (!item.normal)
+                {
+                    // Independently audited CLOSING panel: max((16,10),3*2)
+                    // padding, own pen2/shade4, text0:10 at (895,54). Detached
+                    // ticks are x863..877 / x1049..1063, outside this ROI.
+                    const float pen = look_.closing_clock.keyline_width;
+                    const Vector2F padding(std::max(look_.player_identity_padding.x, pen * 3),
+                        std::max(look_.player_identity_padding.y, pen * 3));
+                    const RectangleF face(position - padding, Vector2F(item.width, 74.21875f) + padding * 2);
+                    const RectangleF inside(face.x + pen, face.y + pen, face.width - 2 * pen, face.height - 2 * pen);
+                    require(item.width == 130 && position == Vector2F(895, 54) &&
+                        look_.closing_clock.paper == Colour(255, 245, 223) &&
+                        look_.closing_clock.keyline_width == 2 && look_.closing_clock.shadow_offset == 4 &&
+                        padding == Vector2F(16, 10) && inside.right() - 3 * pen == 1033 &&
+                        inside.bottom() - 3 * pen == 130.21875f && 906 >= inside.x + 2 * pen &&
+                        74 >= inside.y + 2 * pen && 1028 <= inside.right() - 3 * pen &&
+                        125 <= inside.bottom() - 3 * pen,
+                        "Closing text ROI no longer has its own unshaded opaque paper backdrop");
+                }
+            }
+            else
+            {
+                const float inside_left = position.x - 14, inside_top = 46;
+                const float right_shade = position.x + item.width + 8;
+                const float bottom_shade = 54 + 74.21875f + 2;
+                require(906 >= inside_left + 4 && 74 >= inside_top + 4 && 1028 <= right_shade &&
+                    125 <= bottom_shade, "Timer ROI no longer stays entirely on unshaded opaque paper");
+            }
         }
     }
 
@@ -160,7 +203,8 @@ public:
     Frame raw(size_t context, const Colour& colour, HudTimerReference mode = HudTimerReference::correct)
     {
         const auto& item = hud_timer_cases().at(context);
-        require(item.normal, "Timer raw oracle covers only the normal foreground branch");
+        const bool closing_text = subject_ == HudTimerSubject::closing_text;
+        require(closing_text ? !item.normal : item.normal, "Timer raw oracle requires an applicable selected-role branch");
         return render([&](DrawList& list)
         {
             // Independent ordered text oracle: literal pure paper, selected or
@@ -168,6 +212,21 @@ public:
             rectangle(list, roi(), Colour(255, 245, 223));
             list.set_filter(TextureFilter::linear);
             const Vector2F position((1920.0f - item.width) / 2.0f, 54.0f);
+            if (closing_text)
+            {
+                require(colour.a == 1.0f && (mode == HudTimerReference::correct ||
+                    mode == HudTimerReference::wrong_opaque || mode == HudTimerReference::added_normal_shadow),
+                    "Closing text has no straight/double-alpha discriminator at alpha1");
+                if (mode == HudTimerReference::added_normal_shadow)
+                {
+                    list.draw_text(timer_font_, item.text, position + Vector2F(2, 2), Colour(0, 0, 0, 34),
+                        1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+                }
+                list.draw_text(timer_font_, item.text, position,
+                    mode == HudTimerReference::wrong_opaque ? Colour(255, 0, 0) : colour,
+                    1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+                return; // The actual closing branch never calls normal shadow.
+            }
             const Colour selected_tint = mode == HudTimerReference::straight ? colour : mode == HudTimerReference::squared ?
                 Colour(colour.r * colour.a * colour.a, colour.g * colour.a * colour.a,
                     colour.b * colour.a * colour.a, colour.a) :
@@ -191,6 +250,8 @@ public:
         });
     }
     Frame normal(size_t context, const Colour& colour, bool copied_adoption)
+    { return observe(context, colour, copied_adoption); }
+    Frame observe(size_t context, const Colour& colour, bool copied_adoption)
     {
         require(hud_timer_selected(look_, subject_) == colour, "Timer observation selected channels differ");
         const Frame actual_frame = actual(context), repeated = actual(context);
@@ -212,6 +273,14 @@ public:
         require(first.pixels == repeated.pixels, "Timer closing repeated HUD draw changed RGBA");
         return first;
     }
+    Frame unchanged_normal(size_t context)
+    {
+        require(subject_ == HudTimerSubject::closing_text && hud_timer_cases().at(context).normal,
+            "Closing-text normal-branch control requires an inapplicable normal context");
+        const Frame first = actual(context), repeated = actual(context);
+        require(first.pixels == repeated.pixels, "Closing-text normal branch repeat changed RGBA");
+        return first;
+    }
     size_t control(size_t context, const Colour& colour, HudTimerReference mode)
     {
         require(normal_context_ == context && normal_colour_ == colour && !normal_reference_.pixels.empty(),
@@ -231,6 +300,16 @@ public:
                     normal_reference_.pixels[at + 2] == 20 && normal_reference_.pixels[at + 3] == 255 &&
                     !same_pixel(normal_reference_, wrong, at),
                     "Timer reversed-order control lost its source-derived opaque overlap witness");
+            }
+            if (mode == HudTimerReference::added_normal_shadow)
+            {
+                // Source glyph1 shifted by (2,2) covers (980,79), while NO
+                // unshifted glyph quad covers it. Correct closing is paper.
+                const size_t at = offset(980, 79);
+                require(subject_ == HudTimerSubject::closing_text && normal_reference_.pixels[at] == 255 &&
+                    normal_reference_.pixels[at + 1] == 245 && normal_reference_.pixels[at + 2] == 223 &&
+                    normal_reference_.pixels[at + 3] == 255 && !same_pixel(normal_reference_, wrong, at),
+                    "Closing added-shadow control lost its source-derived exposed paper witness");
             }
             return differences;
         }
@@ -257,7 +336,7 @@ public:
             { require(equal, "Timer wrong tint changed the raw reference outside the declared glyph ROI"); }
             else if (!equal) { ++changed; }
         } }
-        require(changed > 0 && changed <= 6222, "Timer straight/double-alpha reference failed to discriminate");
+        require(changed > 0 && changed <= 6222, "Timer negative reference failed to discriminate");
         return changed;
     }
     static void locality(const Frame& current, const Frame& baseline, bool changed)
@@ -283,7 +362,9 @@ private:
     { return std::equal(a.pixels.begin() + at, a.pixels.begin() + at + 4, b.pixels.begin() + at); }
     void failure(size_t context, const char* scope, const Frame& actual_frame, const Frame& reference) const
     {
-        const std::string stem = std::string(subject_ == HudTimerSubject::foreground ? "hud-timer-failure-" : "hud-timer-shadow-failure-") +
+        const char* prefix = subject_ == HudTimerSubject::foreground ? "hud-timer-failure-" :
+            subject_ == HudTimerSubject::shadow ? "hud-timer-shadow-failure-" : "hud-closing-text-failure-";
+        const std::string stem = std::string(prefix) +
             hud_timer_cases().at(context).name + '-' + scope;
         save(compact(actual_frame), output_ / (stem + "-actual.ppm"));
         save(compact(reference), output_ / (stem + "-reference.ppm"));
@@ -309,8 +390,10 @@ private:
     }
     Frame render(const std::function<void(DrawList&)>& draw)
     {
-        unchanged(); require(readbacks_ < (subject_ == HudTimerSubject::foreground ? 55U : 56U), "Timer probe exceeded its declared per-entrypoint readback budget");
-        const std::array<Colour, 4> before{ look_.timer_colour, look_.timer_shadow_colour, expected_.timer_colour, expected_.timer_shadow_colour };
+        const size_t budget = subject_ == HudTimerSubject::foreground ? 55U : subject_ == HudTimerSubject::shadow ? 56U : 50U;
+        unchanged(); require(readbacks_ < budget, "Timer probe exceeded its declared per-entrypoint readback budget");
+        const std::array<Colour, 6> before{ look_.timer_colour, look_.timer_shadow_colour, look_.closing_clock.text,
+            expected_.timer_colour, expected_.timer_shadow_colour, expected_.closing_clock.text };
         std::srand(46017); const int next = std::rand(); std::srand(46017);
         Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->player_viewport(0));
@@ -328,7 +411,8 @@ private:
                 result.pixels[at + 2] == channel && result.pixels[at + 3] == 255,
                 "Timer actual WHITE/BLACK calibration differs");
         } }
-        require(std::rand() == next && before == std::array<Colour, 4>{ look_.timer_colour, look_.timer_shadow_colour, expected_.timer_colour, expected_.timer_shadow_colour },
+        require(std::rand() == next && before == std::array<Colour, 6>{ look_.timer_colour, look_.timer_shadow_colour, look_.closing_clock.text,
+            expected_.timer_colour, expected_.timer_shadow_colour, expected_.closing_clock.text },
             "Timer drawing consumed RNG or changed selected live/copied colours");
         unchanged(); return result;
     }
@@ -345,6 +429,7 @@ private:
 void hud_timer_colour_consumer_checks(Application& app, const Presentation& presentation,
     const std::filesystem::path& output, HudTimerSubject subject = HudTimerSubject::foreground)
 {
+    require(subject != HudTimerSubject::closing_text, "Opaque closing text uses its own bounded scenario");
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     Presentation local = presentation; auto& look = const_cast<HudPresentation&>(local.hud());
     HudTimerColourProbe probe(app, local, output, subject);
@@ -432,6 +517,7 @@ void hud_timer_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output,
     HudTimerSubject subject = HudTimerSubject::foreground)
 {
+    require(subject != HudTimerSubject::closing_text, "Opaque closing text must not use normal alpha acceptance states");
     const bool shadow = subject == HudTimerSubject::shadow;
     const std::string prefix = shadow ? "hud-timer-shadow" : "hud-timer";
     const std::string path = shadow ? "hud.timer.shadow_colour" : "hud.timer.colour";

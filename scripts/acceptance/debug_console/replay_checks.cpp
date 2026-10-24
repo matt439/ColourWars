@@ -228,6 +228,7 @@ namespace debug_console_acceptance
 		const std::string recorded_quiet_face = impl.tune_token("presentation.figure.quiet.face_colour");
 		const std::string recorded_timer_colour = impl.tune_token("presentation.hud.timer.colour");
 		const std::string recorded_timer_shadow = impl.tune_token("presentation.hud.timer.shadow_colour");
+		const std::string recorded_closing_text = impl.tune_token("presentation.hud.closing_clock.text");
 		const std::string recorded_presentation = impl.tune_document("presentation")->current().text();
 		require(impl.execute("tune presentation.debug_overlay.station_label.colour").ok &&
 			!impl.execute("tune presentation.debug_overlay.station_label.colour 12345678").ok &&
@@ -243,16 +244,17 @@ namespace debug_console_acceptance
 			impl.tune_token("presentation.figure.quiet.face_colour") == recorded_quiet_face &&
 			impl.tune_document("presentation")->current().text() == recorded_presentation,
 			"Recording rejects quiet-face writes while allowing inspection and preserving the complete presentation bytes");
-		for (const auto& [path, token] : std::array<std::pair<const char*, std::string>, 2>{ {
+		for (const auto& [path, token] : std::array<std::pair<const char*, std::string>, 3>{ {
 			{ "presentation.hud.timer.colour", recorded_timer_colour },
-			{ "presentation.hud.timer.shadow_colour", recorded_timer_shadow } } })
+			{ "presentation.hud.timer.shadow_colour", recorded_timer_shadow },
+			{ "presentation.hud.closing_clock.text", recorded_closing_text } } })
 		{
 			require(impl.execute(std::string("tune ") + path).ok &&
-				!impl.execute(std::string("tune ") + path + " 2060C080").ok &&
+				!impl.execute(std::string("tune ") + path + (std::string(path) == "presentation.hud.closing_clock.text" ? " 2060C0FF" : " 2060C080")).ok &&
 				!impl.execute(std::string("tune.reset ") + path).ok &&
 				!impl.execute("tune.save presentation").ok && impl.recording() &&
 				impl.tune_token(path) == token && impl.tune_document("presentation")->current().text() == recorded_presentation,
-				"Normal timer foreground/shadow permit inspection but refuse writes/reset/save during recording without changing presentation bytes");
+				"Normal timer foreground/shadow and opaque closing text permit inspection but refuse writes/reset/save during recording without changing presentation bytes");
 		}
 		const int recorded_steps = drive(director, match, dt, 2000, [&] { return !impl.recording(); }, 300);
 		require(!impl.recording() && recorded_steps >= length && log_contains(log, "record: saved", DebugSeverity::info) &&
@@ -363,16 +365,17 @@ namespace debug_console_acceptance
 			impl.tune_token("presentation.figure.quiet.face_colour") == recorded_quiet_face &&
 			impl.tune_document("presentation")->current().text() == replayed_presentation,
 			"Replay rejects quiet-face writes while allowing inspection and preserving the complete presentation bytes");
-		for (const auto& [path, token] : std::array<std::pair<const char*, std::string>, 2>{ {
+		for (const auto& [path, token] : std::array<std::pair<const char*, std::string>, 3>{ {
 			{ "presentation.hud.timer.colour", recorded_timer_colour },
-			{ "presentation.hud.timer.shadow_colour", recorded_timer_shadow } } })
+			{ "presentation.hud.timer.shadow_colour", recorded_timer_shadow },
+			{ "presentation.hud.closing_clock.text", recorded_closing_text } } })
 		{
 			require(impl.execute(std::string("tune ") + path).ok &&
-				!impl.execute(std::string("tune ") + path + " A532D600").ok &&
+				!impl.execute(std::string("tune ") + path + (std::string(path) == "presentation.hud.closing_clock.text" ? " A532D6FF" : " A532D600")).ok &&
 				!impl.execute(std::string("tune.reset ") + path).ok &&
 				!impl.execute("tune.save presentation").ok && impl.playing() &&
 				impl.tune_token(path) == token && impl.tune_document("presentation")->current().text() == replayed_presentation,
-				"Normal timer foreground/shadow permit inspection but refuse writes/reset/save during playing without changing presentation bytes");
+				"Normal timer foreground/shadow and opaque closing text permit inspection but refuse writes/reset/save during playing without changing presentation bytes");
 		}
 		// A script runs under a replay exactly as typed lines do: wait and echo
 		// pass, a command that would change the simulation is refused, and that

@@ -42,10 +42,10 @@
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 47> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 48> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
 			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680",
-			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980", "0161C180", "4B8CD180", "5167B980", "C6A25D40", "2974C180", "5387C180", "6A9FC180" };
+			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980", "0161C180", "4B8CD180", "5167B980", "C6A25D40", "2974C180", "5387C180", "6A9FC180", "8C52B6FF" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
@@ -54,20 +54,22 @@
 			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 },
 			{ 94, 145, 199, 128 }, { 184, 106, 77, 64 }, { 115, 194, 165, 0 },
 			{ 212, 124, 42, 128 }, { 97, 178, 212, 64 }, { 156, 53, 231, 0 }, { 59, 151, 193, 128 }, { 166, 94, 41, 64 },
-			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 }, { 1, 97, 193, 128 }, { 75, 140, 209, 128 }, { 81, 103, 185, 128 }, { 198, 162, 93, 64 }, { 41, 116, 193, 128 }, { 83, 135, 193, 128 }, { 106, 159, 193, 128 } };
+			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 }, { 1, 97, 193, 128 }, { 75, 140, 209, 128 }, { 81, 103, 185, 128 }, { 198, 162, 93, 64 }, { 41, 116, 193, 128 }, { 83, 135, 193, 128 }, { 106, 159, 193, 128 }, { 140, 82, 182 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
 			if (impl.tune_token(path) == "\"" + words[index] + "\"")
 			{
-				// Identity colours have a stricter opaque/distinct contract. Keep
-				// their fallbacks opaque and different from one another too.
+				// Identity colours are opaque/distinct; closing-clock text is opaque.
+				// Keep those fallbacks within their separate reader contracts.
 				words[index] = index == 0 ? "BLUE" : index == identity_ink_colour_index ? "FEDCBAFF" :
-					index == identity_background_colour_index ? "0F1E2DFF" : "FEDCBA98";
+					index == identity_background_colour_index ? "0F1E2DFF" :
+					index == closing_clock_text_colour_index ? "FEDCBAFF" : "FEDCBA98";
 				expected[index] = index == 0 ? labrador::Colour(0, 0, 255) :
 					index == identity_ink_colour_index ? labrador::Colour(254, 220, 186) :
-					index == identity_background_colour_index ? labrador::Colour(15, 30, 45) : labrador::Colour(254, 220, 186, 152);
+					index == identity_background_colour_index ? labrador::Colour(15, 30, 45) :
+					index == closing_clock_text_colour_index ? labrador::Colour(254, 220, 186) : labrador::Colour(254, 220, 186, 152);
 			}
 			const std::string token = "\"" + words[index] + "\"";
 			require(impl.execute("tune " + path + " " + words[index]).ok &&
@@ -82,10 +84,12 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
-				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
+				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } },
+				{ index == closing_clock_text_colour_index ? "102030FF" : "10203040",
+					{ 16, 32, 48, index == closing_clock_text_colour_index ? 255 : 64 } } } })
 			{
 				const std::string path = colour_paths[index];
 				const std::string token = std::string("\"") + word + '"';
@@ -141,7 +145,7 @@
 			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
 			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
 			colour_paths[silhouette_shade_colour_index], colour_paths[reveal_ink_colour_index],
-			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index], colour_paths[limb_arm_colour_index], colour_paths[limb_hand_colour_index], colour_paths[quiet_face_colour_index], colour_paths[hud_timer_colour_index], colour_paths[hud_timer_shadow_colour_index] })
+			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index], colour_paths[limb_arm_colour_index], colour_paths[limb_hand_colour_index], colour_paths[quiet_face_colour_index], colour_paths[hud_timer_colour_index], colour_paths[hud_timer_shadow_colour_index], colour_paths[closing_clock_text_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -208,7 +212,7 @@
 			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
 			"presentation.hud.meter_track_colour.r", "presentation.hud.meter_track_colour_extra",
 			"presentation.hud.sprite_sheet", "presentation.hud.fill_frame", "presentation.hud.meter_label_font",
-			"hud.timer.colour", "tuning.hud.timer.colour", "presentation.hud.timer.colour.r", "presentation.hud.timer.colour_extra", "presentation.hud.timer.colour.value", "presentation.hud.timer_colour", "hud.timer.shadow_colour", "tuning.hud.timer.shadow_colour", "presentation.hud.timer.shadow_colour.r", "presentation.hud.timer.shadow_colour_extra", "presentation.hud.timer.shadow_colour.value", "presentation.hud.timer_shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.timer.font", "presentation.hud.player_identity.font" })
+			"hud.timer.colour", "tuning.hud.timer.colour", "presentation.hud.timer.colour.r", "presentation.hud.timer.colour_extra", "presentation.hud.timer.colour.value", "presentation.hud.timer_colour", "hud.timer.shadow_colour", "tuning.hud.timer.shadow_colour", "presentation.hud.timer.shadow_colour.r", "presentation.hud.timer.shadow_colour_extra", "presentation.hud.timer.shadow_colour.value", "presentation.hud.timer_shadow_colour", "hud.closing_clock.text", "tuning.hud.closing_clock.text", "presentation.hud.closing_clock.text.r", "presentation.hud.closing_clock.text_extra", "presentation.hud.closing_clock.text.value", "presentation.hud.closing_clock_text", "presentation.hud.closing_clock.ink", "presentation.hud.closing_clock.paper", "presentation.hud.closing_clock.shade", "presentation.hud.closing_clock.accent", "presentation.hud.timer.font", "presentation.hud.player_identity.font" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -243,7 +247,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -305,7 +309,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -315,14 +319,16 @@
 			require(original_leaf != nullptr, "The colour-save reference has its audited string token: " + path);
 			const std::string original_token(original.token(*original_leaf));
 			std::string saved = save_before;
-			saved.replace(original_leaf->begin, original_leaf->end - original_leaf->begin, "\"12345678\"");
-			require(impl.execute("tune " + path + " 12345678").ok && impl.execute("tune.save presentation").ok &&
+			const char* const save_word = index == closing_clock_text_colour_index ? "123456FF" : "12345678";
+			saved.replace(original_leaf->begin, original_leaf->end - original_leaf->begin, std::string("\"") + save_word + '"');
+			require(impl.execute("tune " + path + ' ' + save_word).ok && impl.execute("tune.save presentation").ok &&
 				read_text(scratch.source / L"presentation.json") == saved &&
 				read_text(scratch.staged / L"presentation.json") == saved && saved.find('\r') == std::string::npos &&
 				impl.tune_document("presentation")->edits().empty(),
 				"Colour save changes exactly one quoted LF token, refreshes staging and rebases the edits");
 			require(colour_values(Presentation((scratch.source / L"presentation.json").string().c_str()))[index] ==
-				labrador::Colour(18, 52, 86, 120), "The saved RGBA token loads through the real Presentation reader");
+				labrador::Colour(18, 52, 86, index == closing_clock_text_colour_index ? 255 : 120),
+				"The saved RGBA token loads through the real Presentation reader with its field opacity contract");
 			require(impl.execute("tune " + path + " ABCDEF").ok, "A second colour edit is pending before a disk conflict");
 			const JsonSpanDocument disk(saved, "colour-save-reference");
 			std::string external = disk.replaced(*disk.find(local), "\"FEDCBA\"");
@@ -337,7 +343,7 @@
 				index == cursor_ink_colour_index ? "E7F809" : index == cursor_fill_colour_index ? "F8091A" :
 				index == silhouette_ink_colour_index ? "0A1B2C" :
 				index == silhouette_rim_colour_index ? "1B2C3D" : index == silhouette_shade_colour_index ? "2C3D4E" :
-				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : index == hud_health_colour_index ? "0A1B2C" : index == hud_track_colour_index ? "1B2C3D" : index == limb_arm_colour_index ? "3D4E5F" : index == limb_hand_colour_index ? "4E5F60" : index == quiet_face_colour_index ? "5F6071" : index == hud_timer_colour_index ? "607182" : index == hud_timer_shadow_colour_index ? "718293" : "2C3D4E";
+				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : index == hud_health_colour_index ? "0A1B2C" : index == hud_track_colour_index ? "1B2C3D" : index == limb_arm_colour_index ? "3D4E5F" : index == limb_hand_colour_index ? "4E5F60" : index == quiet_face_colour_index ? "5F6071" : index == hud_timer_colour_index ? "607182" : index == hud_timer_shadow_colour_index ? "718293" : index == closing_clock_text_colour_index ? "8293A4" : "2C3D4E";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -365,7 +371,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
@@ -382,7 +388,7 @@
 				index == silhouette_rim_colour_index ? L"silhouette-rim-crlf" :
 				index == silhouette_shade_colour_index ? L"silhouette-shade-crlf" :
 				index == reveal_ink_colour_index ? L"reveal-ink-crlf" :
-				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : index == acting_sweat_colour_index ? L"acting-sweat-colour-crlf" : index == glass_colour_index ? L"glass-colour-crlf" : index == silhouette_body_colour_index ? L"silhouette-body-colour-crlf" : index == scribble_colour_index ? L"scribble-colour-crlf" : index == hud_health_colour_index ? L"hud-health-colour-crlf" : index == hud_track_colour_index ? L"hud-track-colour-crlf" : L"crack-colour-crlf";
+				index == reveal_paper_colour_index ? L"reveal-paper-crlf" : index == reveal_shade_colour_index ? L"reveal-shade-crlf" : index == cursor_shade_colour_index ? L"cursor-shade-crlf" : index == cursor_shadow_colour_index ? L"cursor-shadow-crlf" : index == desktop_colour_index ? L"desktop-colour-crlf" : index == power_light_colour_index ? L"power-light-colour-crlf" : index == program_colour_index ? L"program-colour-crlf" : index == acting_face_colour_index ? L"acting-face-colour-crlf" : index == acting_sweat_colour_index ? L"acting-sweat-colour-crlf" : index == glass_colour_index ? L"glass-colour-crlf" : index == silhouette_body_colour_index ? L"silhouette-body-colour-crlf" : index == scribble_colour_index ? L"scribble-colour-crlf" : index == hud_health_colour_index ? L"hud-health-colour-crlf" : index == hud_track_colour_index ? L"hud-track-colour-crlf" : index == closing_clock_text_colour_index ? L"closing-clock-text-crlf" : L"crack-colour-crlf";
 			ScratchContent crlf_scratch(game_directory, scratch_name);
 			std::string crlf;
 			for (const char character : read_text(crlf_scratch.source / L"presentation.json"))
@@ -401,15 +407,17 @@
 			const auto original_values = colour_values(crlf_presentation);
 			const JsonSpanDocument original(crlf, "selection-feedback-crlf-reference");
 			const JsonLeaf* leaf = original.find(local);
-			require(leaf != nullptr && original.token(*leaf) != "\"89ABCDEF\"" && count_of(crlf, "\r\n") > 0,
+			const char* const save_word = index == closing_clock_text_colour_index ? "89ABCDFF" : "89ABCDEF";
+			const std::string save_token = std::string("\"") + save_word + '"';
+			require(leaf != nullptr && original.token(*leaf) != save_token && count_of(crlf, "\r\n") > 0,
 				"Each selection/feedback CRLF save begins with a different authored token: " + path);
-			const std::string saved = original.replaced(*leaf, "\"89ABCDEF\"");
-			require(crlf_impl.execute("tune " + path + " 89ABCDEF").ok && crlf_impl.execute("tune.save presentation").ok &&
+			const std::string saved = original.replaced(*leaf, save_token);
+			require(crlf_impl.execute("tune " + path + ' ' + save_word).ok && crlf_impl.execute("tune.save presentation").ok &&
 				read_text(crlf_scratch.source / L"presentation.json") == saved &&
 				read_text(crlf_scratch.staged / L"presentation.json") == saved &&
 				crlf_impl.tune_document("presentation")->edits().empty() &&
 				colour_values(Presentation((crlf_scratch.source / L"presentation.json").string().c_str()))[index] ==
-					labrador::Colour(137, 171, 205, 239),
+					labrador::Colour(137, 171, 205, index == closing_clock_text_colour_index ? 255 : 239),
 				"Selection/feedback save changes exactly one CRLF string token, loads RGBA and rebases staging: " + path);
 			require(crlf_impl.execute("tune " + path + " ABCDEF").ok,
 				"A selection/feedback CRLF edit is pending before its independent conflict: " + path);

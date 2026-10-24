@@ -125,6 +125,9 @@ namespace
 		// The same retained HUD reads its normal-clock shadow per draw;
 		// foreground, closing signal and captured font remain independent.
 		{ "presentation.hud.timer.shadow_colour", TuneScope::live },
+		// The retained HUD reads this opaque text on its closing-clock branch;
+		// full candidate validation preserves the reader's alpha-one contract.
+		{ "presentation.hud.closing_clock.text", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

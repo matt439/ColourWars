@@ -159,6 +159,7 @@ namespace
 #include "scripts/acceptance/painter_visual/limb_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/quiet_face_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/hud_timer_tune_colour_checks.h"
+#include "scripts/acceptance/painter_visual/hud_closing_text_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_ink_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_background_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_checks.h"
@@ -504,6 +505,10 @@ int wmain(int argc, wchar_t** argv)
             hud_timer_colour_consumer_checks(app, presentation, output, HudTimerSubject::shadow);
 #if COLOURWARS_DEV_TOOLS
             hud_timer_tune_colour_checks(app, levels, tuning, presentation, content, output, HudTimerSubject::shadow);
+#endif
+            hud_closing_text_colour_consumer_checks(app, presentation, output);
+#if COLOURWARS_DEV_TOOLS
+            hud_closing_text_tune_colour_checks(app, levels, tuning, presentation, content, output);
 #endif
             return 0;
         }

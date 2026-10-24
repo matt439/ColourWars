@@ -1,7 +1,11 @@
-// Included in tune_checks.cpp's private namespace. Normal timer foreground
-// and shadow share focused checks; the independent closing signal stays fixed.
+// Included in tune_checks.cpp's private namespace. The normal timer pair
+// and opaque closing text share focused checks with separate alpha contracts.
 void check_timer_colour_tunes_for_field(const std::filesystem::path& game_directory, std::size_t index)
 {
+    const bool opaque = index == closing_clock_text_colour_index;
+    const std::string saved_word = opaque ? "2060C0FF" : "2060C080";
+    const std::string pending_word = opaque ? "A532D6FF" : "A532D600";
+    const std::string saved_token = '"' + saved_word + '"';
     const std::string path = colour_paths[index];
     const std::string local = path.substr(std::string("presentation.").size());
     const std::size_t sibling_index = index == hud_timer_colour_index ? hud_timer_shadow_colour_index : hud_timer_colour_index;
@@ -9,19 +13,20 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const std::string sibling_local = sibling.substr(std::string("presentation.").size());
     {
         const std::string baseline = "{\r\n\"hud\":{\"timer\":{\"colour\":\"\\u003141414\","
-            "\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"}},\r\n\"number\":1\r\n}\r\n";
-        const std::string authored_token = index == hud_timer_colour_index ? "\"\\u003141414\"" : "\"\\u00300000022\"";
+            "\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"},"
+            "\"closing_clock\":{\"text\":\"\\u003141414\",\"paper\":\"FFF5DF\"}},\r\n\"number\":1\r\n}\r\n";
+        const std::string authored_token = index == hud_timer_shadow_colour_index ? "\"\\u00300000022\"" : "\"\\u003141414\"";
         const JsonSpanDocument reference(baseline, "normal-timer-document-reference");
         TuneDocument document("presentation", baseline);
         const auto* leaf = document.find(local);
         require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
             document.current().token(*leaf) == authored_token &&
             document.find("hud.timer.font") == nullptr && document.find(sibling_local) != nullptr,
-            "Each exact normal timer colour is editable with its independently supported sibling; font stays unavailable");
-        document.commit(document.edited(*leaf, "\"2060C080\""), local);
+            "Each exact normal/closing timer colour is editable with its independently supported sibling; font stays unavailable");
+        document.commit(document.edited(*leaf, saved_token), local);
         const std::string pending = document.current().text();const auto edit = document.edits().at(local);
         require(document.edits().size() == 1 && edit.baseline_token == authored_token &&
-            edit.current_token == "\"2060C080\"" && document.reverted(local) == baseline,
+            edit.current_token == saved_token && document.reverted(local) == baseline,
             "Normal timer edits preserve escaped RGB spelling, both ledger tokens and exact CRLF reset bytes");
         for (const char* token : { "false", "null", "17", "{}", "[]" })
         {
@@ -37,13 +42,13 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         const JsonSpanDocument external_reference(external, "normal-timer-external-reference");
         const TuneSplice merged = document.splice(external, false);
         require(merged.conflicts.empty() && merged.written == 1 && merged.text ==
-            external_reference.replaced(*external_reference.find(local), "\"2060C080\""),
-            "The nested timer splice preserves unrelated external bytes, shadow/font strings and line endings");
+            external_reference.replaced(*external_reference.find(local), saved_token),
+            "The nested timer splice preserves unrelated external bytes, normal/closing sibling and font strings and line endings");
         for (const std::string& unavailable : { std::string("{}"),
             reference.replaced(*reference.find(local), "null"),
             reference.replaced(*reference.find(local), "{\"value\":\"141414\"}"),
-            std::string("{\"hud.timer.colour\":\"141414\"}"),
-            std::string("{\"hud\":{\"timer\":{\"colour.r\":\"141414\"}}}") })
+            std::string("{\"") + local + "\":\"141414\"}",
+            std::string("{\"hud\":{\"") + local.substr(4) + ".r\":\"141414\"}}" })
         {
             const TuneDocument unsupported("presentation", unavailable);
             const TuneSplice refused = document.splice(unavailable, true);
@@ -53,9 +58,10 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         }
     }
 
-    // Generic 47-path sweeps cover strict named/RGB/RGBA input, LF/CRLF
+    // Generic 48-path sweeps cover strict named/RGB/RGBA input, LF/CRLF
     // conflicts/force, atomic replacement and actual Presentation consumption.
-    ScratchContent scratch(game_directory, index == hud_timer_colour_index ? L"normal-timer-colour-records" : L"normal-timer-shadow-colour-records");
+    ScratchContent scratch(game_directory, opaque ? L"closing-clock-text-records" :
+        index == hud_timer_colour_index ? L"normal-timer-colour-records" : L"normal-timer-shadow-colour-records");
     GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
     Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
     TestDirector test(tuning, presentation);auto& impl = test.impl;
@@ -116,7 +122,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     {
         return std::vector<labrador::Colour>{ look->paper.ink, look->paper.paper, look->paper.shade,
             look->health_colour, look->meter_track_colour, look->closing_clock.ink,
-            look->closing_clock.paper, look->closing_clock.shade, look->closing_clock.text, look->closing_clock.accent,
+            look->closing_clock.paper, look->closing_clock.shade, look->closing_clock.accent,
             look->player_identity_colour, look->player_identity_shadow_colour, look->player_identity_background_colour,
             identity->ink_colour, identity->background_colour };
     };
@@ -128,8 +134,16 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const auto held_geometry = geometry();const auto held_unselected = unselected();const auto held_names = names();
     const auto held_fonts = font_handles();const auto held_measurements = font_measurements();
     const auto* const document = impl.tune_document("presentation");
+    const auto ledger = [&]
+    {
+        std::vector<std::string> values;
+        for (const auto& [key, edit] : document->edits())
+            { values.push_back(key + '=' + edit.baseline_token + "->" + edit.current_token); }
+        return values;
+    };
     require(document != nullptr && original.timer_colour == labrador::Colour(20, 20, 20) &&
         original.timer_shadow_colour == labrador::Colour(0, 0, 0, 34) &&
+        original.closing_clock.text == labrador::Colour(20, 20, 20) && original.closing_clock.text.a == 1.0f &&
         held_measurements[0].x > 0.0f && held_measurements[1].x > 0.0f && held_measurements[2].x > 0.0f,
         "The retained CPU HUD loads authored141414/00000022 and actual label/timer/identity font metadata");
     const auto unchanged = [&]
@@ -141,30 +155,47 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             font_handles() == held_fonts && font_measurements() == held_measurements && colour_values(presentation) == expected &&
             read_text(scratch.source / L"tuning.json") == tuning_source && read_text(scratch.staged / L"tuning.json") == tuning_staged &&
             !impl.in_match() && !impl.can_apply() && impl.request().empty(),
-            "Timer commands retain the real HUD, borrowed HUD/identity records, unselected shadow/closing/material/geometry and captured resource metadata without match work");
+            "Timer commands retain the real HUD, borrowed HUD/identity records, unselected clock materials/geometry and captured resource metadata without match work");
     };
     // No draw or private HUD internals are observed by this CPU fixture.
     // Actual normal/closing branch pixels and alpha are native-owned checks.
     std::srand(0x54494d45);const int next_random = std::rand();std::srand(0x54494d45);
-    for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 4>{ {
+    const std::array<std::pair<const char*, labrador::Colour>, 4> accepted{ {
         { "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } },
-        { "2060C080", { 32, 96, 192, 128 } }, { "A532D600", { 165, 50, 214, 0 } } } })
+        { opaque ? "2060C0FF" : "2060C080", { 32, 96, 192, opaque ? 255 : 128 } },
+        { "A532D600", { 165, 50, 214, 0 } } } };
+    for (std::size_t accepted_index = 0; accepted_index < (opaque ? 3u : accepted.size()); ++accepted_index)
     {
+        const auto& [word, colour] = accepted[accepted_index];
         expected[index] = colour;
         require(impl.execute("tune " + path + ' ' + word).ok && impl.tune_token(path) == std::string("\"") + word + '"' &&
             impl.execute("tune " + path).ok && log_contains(impl.log(), path + " = " + impl.tune_token(path), DebugSeverity::info),
-            "The retained normal timer accepts named, RGB, partial-alpha and nonzero-RGB alpha-zero input live");unchanged();
+            "The retained HUD accepts named/RGB/RGBA within the selected clock field opacity contract");unchanged();
+    }
+    if (opaque)
+    {
+        const std::string held_current = document->current().text();
+        const std::string held_baseline = document->baseline().text();
+        const auto held_edits = ledger();
+        for (const char* word : { "2060C080", "A532D600" })
+        {
+            require(!impl.execute("tune " + path + ' ' + word).ok &&
+                document->current().text() == held_current && document->baseline().text() == held_baseline &&
+                ledger() == held_edits && read_text(scratch.source / L"presentation.json") == baseline &&
+                read_text(scratch.staged / L"presentation.json") == baseline,
+                "Partial/zero closing-text alpha is refused atomically with live colours, exact documents, both ledger tokens and both files intact");unchanged();
+        }
     }
     expected[index] = initial[index];
     require(impl.execute("tune.reset " + path).ok && document->edits().empty() && document->current().text() == baseline &&
         read_text(scratch.source / L"presentation.json") == baseline && read_text(scratch.staged / L"presentation.json") == baseline,
         "Normal timer reset restores exact baseline bytes without writing either content copy");unchanged();
-    expected[index] = labrador::Colour("2060C080");
-    require(impl.execute("tune " + path + " 2060C080").ok && impl.execute("tune.diff presentation").ok &&
+    expected[index] = labrador::Colour(saved_word);
+    require(impl.execute("tune " + path + ' ' + saved_word).ok && impl.execute("tune.diff presentation").ok &&
         log_contains(impl.log(), path, DebugSeverity::info), "The real command diff includes the nested timer edit");unchanged();
     const std::string external = " \r\n" + baseline;
     const JsonSpanDocument external_reference(external, "normal-timer-save-reference");
-    const std::string saved = external_reference.replaced(*external_reference.find(local), "\"2060C080\"");
+    const std::string saved = external_reference.replaced(*external_reference.find(local), saved_token);
     write_text(scratch.source / L"presentation.json", external);
     require(impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
         read_text(scratch.staged / L"presentation.json") == saved && document->baseline().text() == saved &&
@@ -172,53 +203,81 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         !std::filesystem::exists(scratch.source / L"presentation.json.tmp") && !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
         "A timer-only Save changes one token, preserves external whitespace/sibling/font bytes and rebases both copies atomically");unchanged();
 
-    expected[index] = labrador::Colour("A532D600");
-    require(impl.execute("tune " + path + " A532D600").ok, "The saved timer baseline can be edited again");unchanged();
+    expected[index] = labrador::Colour(pending_word);
+    require(impl.execute("tune " + path + ' ' + pending_word).ok, "The saved timer baseline can be edited again");unchanged();
     expected[sibling_index] = labrador::Colour("4C83B580");
     require(impl.execute("tune " + sibling + " 4C83B580").ok && document->edits().size() == 2,
         "The selected timer colour and independent foreground/shadow sibling retain separate pending edits");unchanged();
     expected[3] = labrador::Colour("789ABC");
     require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok && document->edits().size() == 3,
-        "Both normal timer colours and unrelated overlay have three independent pending ledger entries");unchanged();
-    expected[index] = labrador::Colour("2060C080");
+        "Selected clock colour, normal sibling and unrelated overlay have three independent pending ledger entries");unchanged();
+    expected[index] = labrador::Colour(saved_word);
     require(impl.execute("tune.reset " + path).ok && document->edits().size() == 2 &&
         !document->edits().contains(local) && document->edits().contains(sibling_local) && document->edits().contains("debug_overlay.colour"),
-        "Resetting only the selected timer colour retains its sibling and unrelated pending edit and uses its saved partial-alpha baseline");unchanged();
-    expected[index] = labrador::Colour("A532D600");
-    require(impl.execute("tune " + path + " A532D600").ok && document->edits().size() == 3,
+        "Resetting only the selected timer colour retains its sibling and unrelated pending edit and uses its saved field-valid baseline");unchanged();
+    expected[index] = labrador::Colour(pending_word);
+    require(impl.execute("tune " + path + ' ' + pending_word).ok && document->edits().size() == 3,
         "The timer edit remains independent after selected reset");unchanged();
-    const auto ledger = [&]
-    {
-        std::vector<std::string> values;
-        for (const auto& [key, edit] : document->edits())
-            { values.push_back(key + '=' + edit.baseline_token + "->" + edit.current_token); }
-        return values;
-    };
     const auto held_ledger = ledger();const std::string current = document->current().text();
     const JsonSpanDocument saved_reference(saved, "normal-timer-invalid-merge-reference");
-    const std::string invalid = saved_reference.replaced(*saved_reference.find("hud.paper.keyline_width"), "4.1");
-    write_text(scratch.source / L"presentation.json", invalid);
-    for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+    std::vector<std::string> invalid_sources{
+        saved_reference.replaced(*saved_reference.find("hud.paper.keyline_width"), "4.1") };
+    if (opaque)
     {
-        require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == invalid &&
-            read_text(scratch.staged / L"presentation.json") == saved && document->current().text() == current &&
-            document->baseline().text() == saved && ledger() == held_ledger && document->edits().size() == 3,
-            "Ordinary and forced full-reader saves reject invalid external HUD paper without changing source/staging/live values or any of three ledger token pairs");unchanged();
+        for (const char* token : { "\"FFF5DF80\"", "\"FFF5DF00\"" })
+            { invalid_sources.push_back(saved_reference.replaced(*saved_reference.find("hud.closing_clock.paper"), token)); }
     }
-    expected[index] = labrador::Colour("2060C080");
+    for (const std::string& invalid_source : invalid_sources)
+    {
+        write_text(scratch.source / L"presentation.json", invalid_source);
+        for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+        {
+            require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == invalid_source &&
+                read_text(scratch.staged / L"presentation.json") == saved && document->current().text() == current &&
+                document->baseline().text() == saved && ledger() == held_ledger && document->edits().size() == 3 &&
+                !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+                !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+                !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+                "Ordinary/forced full-reader saves reject invalid external HUD geometry or partial/zero closing-paper alpha, restoring exact source and preserving staging/live/documents/three token pairs");unchanged();
+        }
+    }
+    std::string invalid = invalid_sources.back();
+    expected[index] = labrador::Colour(saved_word);
     require(impl.execute("tune.reset " + path).ok && document->edits().size() == 2 &&
         document->edits().contains(sibling_local) && document->edits().contains("debug_overlay.colour") && read_text(scratch.source / L"presentation.json") == invalid,
         "Selected timer reset retains its sibling, unrelated pending edit and invalid external source bytes");unchanged();
-    expected = initial;expected[index] = labrador::Colour("2060C080");
+    if (opaque)
+    {
+        // With the selected edit reset, invalid external selected alpha survives
+        // splicing of only the normal sibling and overlay and must fail the reader.
+        const std::string reset_current = document->current().text();
+        const auto reset_ledger = ledger();
+        for (const char* token : { "\"2060C080\"", "\"A532D600\"" })
+        {
+            invalid = saved_reference.replaced(*saved_reference.find(local), token);
+            write_text(scratch.source / L"presentation.json", invalid);
+            for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+            {
+                require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == invalid &&
+                    read_text(scratch.staged / L"presentation.json") == saved && document->current().text() == reset_current &&
+                    document->baseline().text() == saved && ledger() == reset_ledger && document->edits().size() == 2 &&
+                    !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+                    !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+                    !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+                    "Saving only sibling/overlay edits cannot adopt partial/zero external closing text, even with force; exact source/staging/documents/remaining token pairs survive");unchanged();
+            }
+        }
+    }
+    expected = initial;expected[index] = labrador::Colour(saved_word);
     require(impl.execute("tune.reset presentation").ok && document->edits().empty() &&
         document->current().text() == saved && document->baseline().text() == saved &&
         read_text(scratch.staged / L"presentation.json") == saved && read_text(scratch.source / L"presentation.json") == invalid,
         "Resetting the remaining edit restores the saved timer baseline without writing external content");unchanged();
-    require(std::rand() == next_random, "Normal timer tuning consumed gameplay RNG");
+    require(std::rand() == next_random, "Clock-colour tuning consumed gameplay RNG");
 }
 
 void check_timer_colour_tunes(const std::filesystem::path& game_directory)
 {
-    for (const std::size_t index : { hud_timer_colour_index, hud_timer_shadow_colour_index })
+    for (const std::size_t index : { hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index })
         { check_timer_colour_tunes_for_field(game_directory, index); }
 }
