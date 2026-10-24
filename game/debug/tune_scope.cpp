@@ -122,6 +122,9 @@ namespace
 		// Existing HUDs read this borrowed foreground on normal timer draws;
 		// closing-clock text, shadow and captured font handles stay separate.
 		{ "presentation.hud.timer.colour", TuneScope::live },
+		// The same retained HUD reads its normal-clock shadow per draw;
+		// foreground, closing signal and captured font remain independent.
+		{ "presentation.hud.timer.shadow_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

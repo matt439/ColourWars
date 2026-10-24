@@ -501,6 +501,10 @@ int wmain(int argc, wchar_t** argv)
 #else
             std::cout << "PASS normal HUD timer Release consumer scope; no developer commands executed\n";
 #endif
+            hud_timer_colour_consumer_checks(app, presentation, output, HudTimerSubject::shadow);
+#if COLOURWARS_DEV_TOOLS
+            hud_timer_tune_colour_checks(app, levels, tuning, presentation, content, output, HudTimerSubject::shadow);
+#endif
             return 0;
         }
         if (hud_track_tune_colour_only)

@@ -1,6 +1,11 @@
-// Path 46: normal clock foreground only. Source-derived font metrics and the
+// Paths 46/47: independently selected normal foreground and shadow. Source-derived font metrics and the
 // fixed pure-paper ROI are hypotheses until the native qualification runs.
-enum class HudTimerReference { correct, straight, squared };
+enum class HudTimerSubject { foreground, shadow };
+enum class HudTimerReference { correct, straight, squared, reversed_order };
+Colour& hud_timer_selected(HudPresentation& look, HudTimerSubject subject)
+{ return subject == HudTimerSubject::foreground ? look.timer_colour : look.timer_shadow_colour; }
+const Colour& hud_timer_selected(const HudPresentation& look, HudTimerSubject subject)
+{ return subject == HudTimerSubject::foreground ? look.timer_colour : look.timer_shadow_colour; }
 struct HudTimerCase
 {
     const char* name;
@@ -23,13 +28,13 @@ const std::array<HudTimerCase, 8>& hud_timer_cases()
     } };
     return cases;
 }
-std::vector<float> hud_timer_fixed_style(const HudPresentation& look)
+std::vector<float> hud_timer_fixed_style(const HudPresentation& look, HudTimerSubject subject)
 {
     auto copy = look;
-    copy.timer_colour = Colour(20, 20, 20);
+    hud_timer_selected(copy, subject) = subject == HudTimerSubject::foreground ? Colour(20, 20, 20) : Colour(0, 0, 0, 34);
     auto values = hud_track_fixed_style(copy);
     // The track helper omits its own selected tint, so add that unselected
-    // field explicitly here. Timer shadow and all closing colours are included.
+    // field explicitly here. The opposite timer colour and all closing colours remain guarded.
     const auto& track = look.meter_track_colour;
     values.insert(values.end(), { track.r, track.g, track.b, track.a });
     return values;
@@ -38,8 +43,9 @@ std::vector<float> hud_timer_fixed_style(const HudPresentation& look)
 class HudTimerColourProbe
 {
 public:
-    HudTimerColourProbe(Application& app, const Presentation& presentation, const std::filesystem::path& output) :
-        app_(app), presentation_(presentation), look_(presentation.hud()),
+    HudTimerColourProbe(Application& app, const Presentation& presentation, const std::filesystem::path& output,
+        HudTimerSubject subject = HudTimerSubject::foreground) :
+        subject_(subject), app_(app), presentation_(presentation), look_(presentation.hud()),
         identity_(presentation.player_identity()), expected_(look_), expected_identity_(identity_),
         hud_(app.render_resources(), &look_, &identity_),
         copied_(app.render_resources(), &expected_, &expected_identity_),
@@ -48,7 +54,7 @@ public:
         pixel_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))),
         timer_font_(app.render_resources()->resolve_sprite_font(look_.timer_font)),
         font_(app.render_resources()->font(timer_font_)),
-        fixed_(hud_timer_fixed_style(look_)), identity_fixed_(hud_track_identity_style(identity_)),
+        fixed_(hud_timer_fixed_style(look_, subject)), identity_fixed_(hud_track_identity_style(identity_)),
         names_(hud_track_resource_names(look_)), palette_(presentation.team_palette()), output_(output)
     {
         require(look_.timer_colour == Colour(20, 20, 20) && look_.timer_shadow_colour == Colour(0, 0, 0, 34) &&
@@ -73,7 +79,7 @@ public:
     {
         auto* resources = app_.render_resources();
         require(&look_ == &presentation_.hud() && &identity_ == &presentation_.player_identity() &&
-            hud_timer_fixed_style(look_) == fixed_ && hud_timer_fixed_style(expected_) == fixed_ &&
+            hud_timer_fixed_style(look_, subject_) == fixed_ && hud_timer_fixed_style(expected_, subject_) == fixed_ &&
             hud_track_identity_style(identity_) == identity_fixed_ &&
             hud_track_identity_style(expected_identity_) == identity_fixed_ &&
             hud_track_resource_names(look_) == names_ && hud_track_resource_names(expected_) == names_ &&
@@ -143,7 +149,7 @@ public:
     }
     Frame adoption(size_t context, const Colour& colour)
     {
-        expected_.timer_colour = colour;
+        hud_timer_selected(expected_, subject_) = colour;
         const auto& item = hud_timer_cases().at(context);
         return render([&](DrawList& list)
         {
@@ -157,23 +163,36 @@ public:
         require(item.normal, "Timer raw oracle covers only the normal foreground branch");
         return render([&](DrawList& list)
         {
-            // Independent normal text oracle: literal pure paper, separate
-            // unchanged shadow and explicitly multiplied straight colour.
+            // Independent ordered text oracle: literal pure paper, selected or
+            // unchanged shadow FIRST, then selected or unchanged foreground.
             rectangle(list, roi(), Colour(255, 245, 223));
             list.set_filter(TextureFilter::linear);
             const Vector2F position((1920.0f - item.width) / 2.0f, 54.0f);
-            list.draw_text(timer_font_, item.text, position + Vector2F(2, 2), Colour(0, 0, 0, 34),
-                1.0f, 0.0f, Vector2F::ZERO, 0.0f);
-            const Colour tint = mode == HudTimerReference::straight ? colour : mode == HudTimerReference::squared ?
+            const Colour selected_tint = mode == HudTimerReference::straight ? colour : mode == HudTimerReference::squared ?
                 Colour(colour.r * colour.a * colour.a, colour.g * colour.a * colour.a,
                     colour.b * colour.a * colour.a, colour.a) :
                 Colour(colour.r * colour.a, colour.g * colour.a, colour.b * colour.a, colour.a);
-            list.draw_text(timer_font_, item.text, position, tint, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+            const auto& foreground = look_.timer_colour;
+            const auto& shadow = look_.timer_shadow_colour;
+            const Colour foreground_tint = subject_ == HudTimerSubject::foreground ? selected_tint :
+                Colour(foreground.r * foreground.a, foreground.g * foreground.a, foreground.b * foreground.a, foreground.a);
+            const Colour shadow_tint = subject_ == HudTimerSubject::shadow ? selected_tint :
+                Colour(shadow.r * shadow.a, shadow.g * shadow.a, shadow.b * shadow.a, shadow.a);
+            const auto draw_foreground = [&]()
+            { list.draw_text(timer_font_, item.text, position, foreground_tint, 1.0f, 0.0f, Vector2F::ZERO, 0.0f); };
+            const auto draw_shadow = [&]()
+            { list.draw_text(timer_font_, item.text, position + Vector2F(2, 2), shadow_tint, 1.0f, 0.0f, Vector2F::ZERO, 0.0f); };
+            if (mode == HudTimerReference::reversed_order)
+            {
+                require(subject_ == HudTimerSubject::shadow, "Reversed timer order is a shadow overlap control only");
+                draw_foreground(); draw_shadow();
+            }
+            else { draw_shadow(); draw_foreground(); }
         });
     }
     Frame normal(size_t context, const Colour& colour, bool copied_adoption)
     {
-        require(look_.timer_colour == colour, "Timer observation selected channels differ");
+        require(hud_timer_selected(look_, subject_) == colour, "Timer observation selected channels differ");
         const Frame actual_frame = actual(context), repeated = actual(context);
         require(actual_frame.pixels == repeated.pixels, "Timer repeated HUD draw changed RGBA");
         if (copied_adoption)
@@ -198,7 +217,23 @@ public:
         require(normal_context_ == context && normal_colour_ == colour && !normal_reference_.pixels.empty(),
             "Timer negative reference requires its retained independently checked normal reference");
         const Frame wrong = raw(context, colour, mode);
-        try { return check_control(normal_reference_, wrong); }
+        try
+        {
+            const size_t differences = check_control(normal_reference_, wrong);
+            if (mode == HudTimerReference::reversed_order)
+            {
+                // Source BC2 audit: at world (919,79), the foreground glyph 2
+                // and its shifted shadow each have opaque WHITE 3x3 samples.
+                // Authored opaque foreground hides the correct under-shadow;
+                // drawing selected nonblack shadow last must change this site.
+                const size_t at = offset(919, 79);
+                require(normal_reference_.pixels[at] == 20 && normal_reference_.pixels[at + 1] == 20 &&
+                    normal_reference_.pixels[at + 2] == 20 && normal_reference_.pixels[at + 3] == 255 &&
+                    !same_pixel(normal_reference_, wrong, at),
+                    "Timer reversed-order control lost its source-derived opaque overlap witness");
+            }
+            return differences;
+        }
         catch (...) { failure(context, "negative-control", normal_reference_, wrong); throw; }
     }
     static void check_roi(const Frame& actual_frame, const Frame& raw_frame)
@@ -248,7 +283,8 @@ private:
     { return std::equal(a.pixels.begin() + at, a.pixels.begin() + at + 4, b.pixels.begin() + at); }
     void failure(size_t context, const char* scope, const Frame& actual_frame, const Frame& reference) const
     {
-        const std::string stem = std::string("hud-timer-failure-") + hud_timer_cases().at(context).name + '-' + scope;
+        const std::string stem = std::string(subject_ == HudTimerSubject::foreground ? "hud-timer-failure-" : "hud-timer-shadow-failure-") +
+            hud_timer_cases().at(context).name + '-' + scope;
         save(compact(actual_frame), output_ / (stem + "-actual.ppm"));
         save(compact(reference), output_ / (stem + "-reference.ppm"));
         const auto rgba = [&](const Frame& frame, const char* suffix)
@@ -273,8 +309,8 @@ private:
     }
     Frame render(const std::function<void(DrawList&)>& draw)
     {
-        unchanged(); require(readbacks_ < 55, "Timer probe exceeded its declared per-entrypoint readback budget");
-        const Colour before = look_.timer_colour, expected_before = expected_.timer_colour;
+        unchanged(); require(readbacks_ < (subject_ == HudTimerSubject::foreground ? 55U : 56U), "Timer probe exceeded its declared per-entrypoint readback budget");
+        const std::array<Colour, 4> before{ look_.timer_colour, look_.timer_shadow_colour, expected_.timer_colour, expected_.timer_shadow_colour };
         std::srand(46017); const int next = std::rand(); std::srand(46017);
         Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->player_viewport(0));
@@ -292,11 +328,11 @@ private:
                 result.pixels[at + 2] == channel && result.pixels[at + 3] == 255,
                 "Timer actual WHITE/BLACK calibration differs");
         } }
-        require(std::rand() == next && look_.timer_colour == before && expected_.timer_colour == expected_before,
+        require(std::rand() == next && before == std::array<Colour, 4>{ look_.timer_colour, look_.timer_shadow_colour, expected_.timer_colour, expected_.timer_shadow_colour },
             "Timer drawing consumed RNG or changed selected live/copied colours");
         unchanged(); return result;
     }
-    Application& app_; const Presentation& presentation_; const HudPresentation& look_;
+    HudTimerSubject subject_; Application& app_; const Presentation& presentation_; const HudPresentation& look_;
     const PlayerIdentityPresentation& identity_; HudPresentation expected_; PlayerIdentityPresentation expected_identity_;
     InterfaceGameplay hud_, copied_; Canvas canvas_; const SpriteSheet* sheet_; const SpriteFrame& pixel_;
     FontHandle timer_font_; const Font* font_; std::array<FontHandle, 3> fonts_{};
@@ -307,19 +343,26 @@ private:
 };
 
 void hud_timer_colour_consumer_checks(Application& app, const Presentation& presentation,
-    const std::filesystem::path& output)
+    const std::filesystem::path& output, HudTimerSubject subject = HudTimerSubject::foreground)
 {
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     Presentation local = presentation; auto& look = const_cast<HudPresentation&>(local.hud());
-    HudTimerColourProbe probe(app, local, output);
-    const std::array<Colour, 4> colours{ Colour(20, 20, 20), Colour(53, 188, 225), Colour(32, 96, 192, 128), Colour(165, 50, 214, 0) };
+    HudTimerColourProbe probe(app, local, output, subject);
+    const bool shadow = subject == HudTimerSubject::shadow;
+    const char* prefix = shadow ? "hud-timer-shadow" : "hud-timer";
+    const char* main_scope = shadow ? "normal-timer-shadow-glyph-roi" : "normal-timer-glyph-roi";
+    const char* branch_scope = shadow ? "public-hud-shadow-branch-counterexample" : "public-hud-branch-counterexample";
+    const char* summary_scope = shadow ? "normal-timer-shadow-glyph-roi-and-branch-invariance" : "normal-timer-glyph-roi-and-branch-invariance";
+    const size_t expected_reads = shadow ? 56 : 55, expected_controls = shadow ? 4 : 3;
+    Colour& selected = hud_timer_selected(look, subject);
+    const std::array<Colour, 4> colours{ shadow ? Colour(0, 0, 0, 34) : Colour(20, 20, 20), Colour(53, 188, 225), Colour(32, 96, 192, 128), Colour(165, 50, 214, 0) };
     constexpr std::array<const char*, 4> names{ "default", "rgb", "rgba128", "alpha0" };
     std::array<Frame, 4> main{}; size_t controls = 0, control_pixels = 0, rows = 0, crops = 0;
-    std::ofstream csv(output / "hud-timer-colour-main.csv");
+    std::ofstream csv(output / (std::string(prefix) + "-colour-main.csv"));
     csv << "state,raw_rgba_match,adoption_match,repeat_match,locality_match,frozen_style_resources_rng,controls,discriminating_pixels,scope\n";
     for (size_t state = 0; state < colours.size(); ++state)
     {
-        look.timer_colour = colours[state]; main[state] = probe.normal(0, colours[state], true);
+        selected = colours[state]; main[state] = probe.normal(0, colours[state], true);
         try { HudTimerColourProbe::locality(main[state], main[0], state != 0); }
         catch (...) { probe.preserve_failure(0, "main-locality", main[state], main[0]); throw; }
         size_t case_controls = 0, case_pixels = 0;
@@ -327,23 +370,27 @@ void hud_timer_colour_consumer_checks(Application& app, const Presentation& pres
         {
             case_pixels += probe.control(0, colours[state], mode); ++case_controls;
         };
-        if (state == 2) { control(HudTimerReference::straight); control(HudTimerReference::squared); }
+        if (state == 2)
+        {
+            control(HudTimerReference::straight); control(HudTimerReference::squared);
+            if (shadow) { control(HudTimerReference::reversed_order); }
+        }
         else if (state == 3) { control(HudTimerReference::straight); }
-        csv << names[state] << ",true,true,true,true,true," << case_controls << ',' << case_pixels << ",normal-timer-glyph-roi\n";
-        save(HudTimerColourProbe::compact(main[state]), output / (std::string("hud-timer-colour-") + names[state] + ".ppm"));
+        csv << names[state] << ",true,true,true,true,true," << case_controls << ',' << case_pixels << ',' << main_scope << '\n';
+        save(HudTimerColourProbe::compact(main[state]), output / ((std::string(prefix) + "-colour-") + names[state] + ".ppm"));
         ++rows; ++crops; controls += case_controls; control_pixels += case_pixels;
     }
     require(csv.good(), "Cannot retain timer main CSV");
     std::array<std::array<Frame, 8>, 2> branch{};
-    std::ofstream branches(output / "hud-timer-colour-branches.csv");
+    std::ofstream branches(output / (std::string(prefix) + "-colour-branches.csv"));
     branches << "state,context,normal_branch,raw_rgba_match,repeat_match,selection_guard,frozen_style_resources_rng,scope\n";
     for (size_t state = 0; state < 2; ++state)
     {
-        look.timer_colour = colours[state == 0 ? 0 : 2];
+        selected = colours[state == 0 ? 0 : 2];
         for (size_t context = 1; context < hud_timer_cases().size(); ++context)
         {
             const auto& item = hud_timer_cases()[context];
-            branch[state][context] = item.normal ? probe.normal(context, look.timer_colour, false) : probe.closing(context);
+            branch[state][context] = item.normal ? probe.normal(context, selected, false) : probe.closing(context);
             if (state != 0)
             {
                 try
@@ -355,7 +402,7 @@ void hud_timer_colour_consumer_checks(Application& app, const Presentation& pres
             }
             branches << (state == 0 ? "default" : "rgba128") << ',' << item.name << ',' << (item.normal ? "true" : "false")
                 << ',' << (item.normal ? "true" : "not-run-closing-invariance-only") << ",true,"
-                << (state == 0 ? "baseline" : item.normal ? "normal-locality" : "closing-exact") << ",true,public-hud-branch-counterexample\n";
+                << (state == 0 ? "baseline" : item.normal ? "normal-locality" : "closing-exact") << ",true," << branch_scope << '\n';
             ++rows;
         }
         require(branch[state][6].pixels == main[state == 0 ? 0 : 2].pixels,
@@ -365,25 +412,35 @@ void hud_timer_colour_consumer_checks(Application& app, const Presentation& pres
         require(branch[state][2].pixels != branch[state][7].pixels,
             "Closing beat counterexample failed to distinguish its optional tick accents");
     }
-    require(branches.good() && probe.readbacks() == 55 && rows == 18 && crops == 4 && controls == 3 && control_pixels > 0 && control_pixels <= 18666,
+    require(branches.good() && probe.readbacks() == expected_reads && rows == 18 && crops == 4 && controls == expected_controls && control_pixels > 0 && control_pixels <= expected_controls * 6222,
         "Timer shared exact readback/row/crop/control budget differs");
-    std::ofstream summary(output / "hud-timer-colour-consumer-summary.json");
-    summary << "{\"scope\":\"normal-timer-glyph-roi-and-branch-invariance\",\"readbacks\":55,\"csv_rows\":18,\"main_rows\":4,\"branch_rows\":14,"
+    std::ofstream summary(output / (std::string(prefix) + "-colour-consumer-summary.json"));
+    summary << "{\"scope\":\"" << summary_scope << "\",\"readbacks\":" << expected_reads << ",\"csv_rows\":18,\"main_rows\":4,\"branch_rows\":14,"
         "\"crops\":4,\"crop_width\":122,\"crop_height\":51,\"crop_pixels\":24888,\"ppm_bytes\":74720,\"roi_pixels\":6222,"
         "\"independent_roi_observations\":12,\"roi_pixel_checks\":74664,\"repeat_checks\":18,\"copied_adoption_checks\":4,"
-        "\"closing_colour_invariance_checks\":3,\"reduce_effects_checks\":6,\"controls\":3,\"control_discriminating_pixels\":" << control_pixels << ',' <<
-        "\"calibration_pixel_checks\":1760,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,"
+        "\"closing_colour_invariance_checks\":3,\"reduce_effects_checks\":6,\"controls\":" << expected_controls << ",\"control_discriminating_pixels\":" << control_pixels << ',' <<
+        "\"calibration_pixel_checks\":" << expected_reads * 32 << ",\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,"
         "\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain timer shared summary");
-    std::cout << "PASS normal HUD timer: 55 readbacks, 18 rows, 4 native 122 by 51 crops; independent font/paper/shadow RGBA, "
-        "3 discriminating tint controls and exact closing/Reduce Effects counterexamples. No updates or input polls.\n";
+    if (shadow) { std::cout << "PASS normal HUD timer shadow: 56 readbacks, 18 rows, 4 native 122 by 51 crops; ordered glyph/shadow RGBA, 4 tint/order controls and unchanged closing/foreground.\n"; }
+    else { std::cout << "PASS normal HUD timer: 55 readbacks, 18 rows, 4 native 122 by 51 crops; independent font/paper/shadow RGBA, "
+        "3 discriminating tint controls and exact closing/Reduce Effects counterexamples. No updates or input polls.\n"; }
 }
 
 #if COLOURWARS_DEV_TOOLS
 void hud_timer_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning,
-    Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
+    Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output,
+    HudTimerSubject subject = HudTimerSubject::foreground)
 {
-    const auto root = output / "hud-timer-tune-scratch", source = root / "source", staged = root / "staged";
+    const bool shadow = subject == HudTimerSubject::shadow;
+    const std::string prefix = shadow ? "hud-timer-shadow" : "hud-timer";
+    const std::string path = shadow ? "hud.timer.shadow_colour" : "hud.timer.colour";
+    const char* baseline_word = shadow ? "00000022" : "141414";
+    const Colour baseline_colour = shadow ? Colour(0, 0, 0, 34) : Colour(20, 20, 20);
+    const char* normal_scope = shadow ? "debug-live-normal-timer-shadow" : "debug-live-normal-timer";
+    const char* branch_scope = shadow ? "debug-shadow-closing-counterexample" : "debug-closing-counterexample";
+    const char* summary_scope = shadow ? "debug-live-normal-timer-shadow-and-closing-invariance" : "debug-live-normal-timer-and-closing-invariance";
+    const auto root = output / (prefix + "-tune-scratch"), source = root / "source", staged = root / "staged";
     require(!std::filesystem::exists(root), "Timer private scratch must be fresh");
     std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
     constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
@@ -413,9 +470,9 @@ void hud_timer_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
     data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "hud-timer-tune-commands.log").string()), "Cannot retain timer command transcript");
-    HudTimerColourProbe probe(app, presentation, output); JsonSpanDocument initial(bytes[1], "Timer private source");
-    const auto* token = initial.find("hud.timer.colour"); require(token != nullptr, "Timer existing nested token is absent");
+    require(impl.log().set_transcript((output / (prefix + "-tune-commands.log")).string()), "Cannot retain timer command transcript");
+    HudTimerColourProbe probe(app, presentation, output, subject); JsonSpanDocument initial(bytes[1], "Timer private source");
+    const auto* token = initial.find(path); require(token != nullptr, "Timer existing nested token is absent");
     const std::string saved_bytes = initial.replaced(*token, "\"2060C080\""); bool persisted = false;
     size_t commands = 0, rows = 0, branch_rows = 0; Frame baseline{}, saved{}, closing_before{};
     const auto unchanged = [&]()
@@ -439,17 +496,17 @@ void hud_timer_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
         if (line.starts_with("tune "))
         {
             const auto& log = impl.log().lines(); require(log.size() > before && log.back().severity == DebugSeverity::info &&
-                log.back().text.starts_with("tune: presentation.hud.timer.colour ") && log.back().text.ends_with("(live)"),
+                log.back().text.starts_with(("tune: presentation." + path + " ")) && log.back().text.ends_with("(live)"),
                 "Timer command lacks a fresh live-adoption success reply");
         }
     };
-    std::ofstream csv(output / "hud-timer-tune.csv");
+    std::ofstream csv(output / (prefix + "-tune.csv"));
     csv << "state,raw_rgba_match,adoption_match,repeat_match,private_bytes,frozen_style_resources_rng,token,scope\n";
     const auto check = [&](const char* state, const Colour& colour, const char* word)
     {
-        unchanged(); require(presentation.hud().timer_colour == colour, "Timer command parsed incorrect foreground channels");
+        unchanged(); require(hud_timer_selected(presentation.hud(), subject) == colour, "Timer command parsed incorrect foreground channels");
         const auto* document = impl.tune_document("presentation"); require(document != nullptr, "Timer current document disappeared");
-        const auto* leaf = document->current().find("hud.timer.colour");
+        const auto* leaf = document->current().find(path);
         require(leaf != nullptr && document->current().token(*leaf) == std::string("\"") + word + '"', "Timer current exact quoted token differs");
         const Frame frame = probe.normal(0, colour, true);
         if (std::string_view(state) == "baseline") { baseline = frame; }
@@ -459,37 +516,38 @@ void hud_timer_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
         { require(frame.pixels == saved.pixels, "Timer saved reset lost complete HUD RGBA"); }
         if (std::string_view(state) == "named")
         {
-            require(document->edits().size() == 1 && document->edits().contains("hud.timer.colour") &&
-                document->edits().at("hud.timer.colour").current_token == "\"RED\"", "Timer named RED token was not retained");
+            require(document->edits().size() == 1 && document->edits().contains(path) &&
+                document->edits().at(path).current_token == "\"RED\"", "Timer named RED token was not retained");
         }
-        csv << state << ",true,true,true,true,true," << word << ",debug-live-normal-timer\n"; ++rows; unchanged();
+        csv << state << ",true,true,true,true,true," << word << ',' << normal_scope << '\n'; ++rows; unchanged();
     };
-    std::ofstream branch_csv(output / "hud-timer-tune-branches.csv");
+    std::ofstream branch_csv(output / (prefix + "-tune-branches.csv"));
     branch_csv << "state,context,closing_unchanged,frozen_style_resources_rng,scope\n";
-    check("baseline", Colour(20, 20, 20), "141414"); closing_before = probe.actual(2);
-    branch_csv << "baseline,exact-ten,baseline,true,debug-closing-counterexample\n"; ++branch_rows;
-    command("tune presentation.hud.timer.colour RED"); check("named", Colour(255, 0, 0), "RED");
-    command("tune.reset presentation.hud.timer.colour"); check("reset-original", Colour(20, 20, 20), "141414");
-    command("tune presentation.hud.timer.colour 2060C080"); check("partial", Colour(32, 96, 192, 128), "2060C080");
+    check("baseline", baseline_colour, baseline_word); closing_before = probe.actual(2);
+    branch_csv << "baseline,exact-ten,baseline,true," << branch_scope << '\n'; ++branch_rows;
+    command("tune presentation." + path + " RED"); check("named", Colour(255, 0, 0), "RED");
+    command("tune.reset presentation." + path); check("reset-original", baseline_colour, baseline_word);
+    command("tune presentation." + path + " 2060C080"); check("partial", Colour(32, 96, 192, 128), "2060C080");
     require(probe.actual(2).pixels == closing_before.pixels, "Actual timer tune command changed a closing-clock frame");
-    branch_csv << "partial,exact-ten,true,true,debug-closing-counterexample\n"; ++branch_rows;
+    branch_csv << "partial,exact-ten,true,true," << branch_scope << '\n'; ++branch_rows;
     command("tune.save presentation"); persisted = true; unchanged();
     require(impl.tune_document("presentation")->edits().empty(), "Timer one-token Save did not rebase");
-    command("tune presentation.hud.timer.colour A532D600"); check("zero", Colour(165, 50, 214, 0), "A532D600");
-    command("tune.reset presentation.hud.timer.colour"); check("reset-saved", Colour(32, 96, 192, 128), "2060C080");
-    command("tune presentation.hud.timer.colour 35BCE1"); check("rgb", Colour(53, 188, 225), "35BCE1");
-    command("tune.reset presentation.hud.timer.colour"); check("final-saved", Colour(32, 96, 192, 128), "2060C080");
+    command("tune presentation." + path + " A532D600"); check("zero", Colour(165, 50, 214, 0), "A532D600");
+    command("tune.reset presentation." + path); check("reset-saved", Colour(32, 96, 192, 128), "2060C080");
+    command("tune presentation." + path + " 35BCE1"); check("rgb", Colour(53, 188, 225), "35BCE1");
+    command("tune.reset presentation." + path); check("final-saved", Colour(32, 96, 192, 128), "2060C080");
     require(csv.good() && branch_csv.good() && commands == 8 && rows == 8 && branch_rows == 2 && probe.readbacks() == 34 &&
         impl.tune_document("presentation")->edits().empty() && impl.tune_document("tuning")->edits().empty(),
         "Timer Debug exact command/state/branch/readback budget or saved final ledger differs");
-    std::ofstream summary(output / "hud-timer-tune-summary.json");
-    summary << "{\"scope\":\"debug-live-normal-timer-and-closing-invariance\",\"commands\":8,\"states\":8,\"readbacks\":34,\"csv_rows\":10,"
+    std::ofstream summary(output / (prefix + "-tune-summary.json"));
+    summary << "{\"scope\":\"" << summary_scope << "\",\"commands\":8,\"states\":8,\"readbacks\":34,\"csv_rows\":10,"
         "\"normal_rows\":8,\"branch_rows\":2,\"crops\":0,\"saved_tokens\":1,\"presentation_save_commands\":1,\"private_game_saves\":0,"
         "\"roi_pixel_checks\":49776,\"repeat_checks\":8,\"copied_adoption_checks\":8,\"closing_colour_invariance_checks\":1,\"calibration_pixel_checks\":1088,"
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,"
         "\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain timer Debug summary");
-    std::cout << "PASS timer tune: 8 real commands, 8 normal states and 2 closing observations; 34 additional readbacks, "
-        "one-token private Save/rebase and exact original/saved resets. No game Saves, updates or input polls.\n";
+    if (shadow) { std::cout << "PASS timer shadow tune: 8 real commands, 8 normal states and 2 closing observations; 34 additional readbacks, one-token private Save/rebase and exact authored-default/saved resets. No game Saves, updates or input polls.\n"; }
+    else { std::cout << "PASS timer tune: 8 real commands, 8 normal states and 2 closing observations; 34 additional readbacks, "
+        "one-token private Save/rebase and exact original/saved resets. No game Saves, updates or input polls.\n"; }
 }
 #endif

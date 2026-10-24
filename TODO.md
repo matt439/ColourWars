@@ -40,7 +40,7 @@ This is a selection guide, not another priority order; each owner defines a boun
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `DBG#1` | Qualify the selected normal HUD timer shadow colour after foreground path 46; preserve the separate closing clock | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
+| `DBG#1` | Qualify selected closing-clock text after the normal timer pair; preserve its existing opaque-only validation | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Crossfeed acceptance:** C2 identity/rear-threat recognition, 1-4P clean/heavy
@@ -168,7 +168,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#1` | OPEN | LOW | M | Audit and extend a selected existing colour consumer beyond forty-six audited paths; general string/font edits and missing-key insertion need separate scoped implementations. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
+| `DBG#1` | OPEN | LOW | M | Audit and extend a selected existing colour consumer beyond forty-seven audited paths; general string/font edits and missing-key insertion need separate scoped implementations. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#6` | DEFERRED | LOW | M | Scripts stop when the window loses focus; no run-while-inactive switch. |

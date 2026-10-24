@@ -42,10 +42,10 @@
 		const auto team_selected_frames = presentation.main_menu().team_select_selected_frames;
 		const char* const font = overlay->font.data();
 		const char* const sheet = movement->sprite_sheet.data();
-		std::array<std::string, 46> words{ "RED", "112233", "a1B2c3", "00000080",
+		std::array<std::string, 47> words{ "RED", "112233", "a1B2c3", "00000080",
 			"FFFFFF", "12345678", "654321", "BLUE", "10203040", "RED", "56789ABC", "35BCE1", "2266CC80",
 			"123456FF", "DDEEFF", "73A1C280", "19B87000", "C26D3A80", "2A80D500", "93C74D80", "D973A680",
-			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980", "0161C180", "4B8CD180", "5167B980", "C6A25D40", "2974C180", "5387C180" };
+			"A147B980", "27C4A500", "5E91C780", "B86A4D40", "73C2A500", "D47C2A80", "61B2D440", "9C35E700", "3B97C180", "A65E2940", "93C74D80", "4CA7D980", "D6824F80", "A35CDE80", "31C8A640", "8E52CB80", "5EA3D680", "6EC19A80", "B67D2980", "0161C180", "4B8CD180", "5167B980", "C6A25D40", "2974C180", "5387C180", "6A9FC180" };
 		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
 			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 },
 			{ 0, 0, 255 }, { 16, 32, 48, 64 }, { 255, 0, 0 }, { 86, 120, 154, 188 },
@@ -54,7 +54,7 @@
 			{ 147, 199, 77, 128 }, { 217, 115, 166, 128 }, { 161, 71, 185, 128 }, { 39, 196, 165, 0 },
 			{ 94, 145, 199, 128 }, { 184, 106, 77, 64 }, { 115, 194, 165, 0 },
 			{ 212, 124, 42, 128 }, { 97, 178, 212, 64 }, { 156, 53, 231, 0 }, { 59, 151, 193, 128 }, { 166, 94, 41, 64 },
-			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 }, { 1, 97, 193, 128 }, { 75, 140, 209, 128 }, { 81, 103, 185, 128 }, { 198, 162, 93, 64 }, { 41, 116, 193, 128 }, { 83, 135, 193, 128 } };
+			{ 147, 199, 77, 128 }, { 76, 167, 217, 128 }, { 214, 130, 79, 128 }, { 163, 92, 222, 128 }, { 49, 200, 166, 64 }, { 142, 82, 203, 128 }, { 94, 163, 214, 128 }, { 110, 193, 154, 128 }, { 182, 125, 41, 128 }, { 1, 97, 193, 128 }, { 75, 140, 209, 128 }, { 81, 103, 185, 128 }, { 198, 162, 93, 64 }, { 41, 116, 193, 128 }, { 83, 135, 193, 128 }, { 106, 159, 193, 128 } };
 		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
@@ -82,7 +82,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index })
 		{
 			for (const auto& [word, colour] : std::array<std::pair<const char*, labrador::Colour>, 3>{ {
 				{ "RED", { 255, 0, 0 } }, { "a1B2c3", { 161, 178, 195 } }, { "10203040", { 16, 32, 48, 64 } } } })
@@ -141,7 +141,7 @@
 			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
 			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
 			colour_paths[silhouette_shade_colour_index], colour_paths[reveal_ink_colour_index],
-			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index], colour_paths[limb_arm_colour_index], colour_paths[limb_hand_colour_index], colour_paths[quiet_face_colour_index], colour_paths[hud_timer_colour_index] })
+			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index], colour_paths[limb_arm_colour_index], colour_paths[limb_hand_colour_index], colour_paths[quiet_face_colour_index], colour_paths[hud_timer_colour_index], colour_paths[hud_timer_shadow_colour_index] })
 		{
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
@@ -208,7 +208,7 @@
 			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
 			"presentation.hud.meter_track_colour.r", "presentation.hud.meter_track_colour_extra",
 			"presentation.hud.sprite_sheet", "presentation.hud.fill_frame", "presentation.hud.meter_label_font",
-			"hud.timer.colour", "tuning.hud.timer.colour", "presentation.hud.timer.colour.r", "presentation.hud.timer.colour_extra", "presentation.hud.timer.colour.value", "presentation.hud.timer_colour", "presentation.hud.timer.shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.timer.font", "presentation.hud.player_identity.font" })
+			"hud.timer.colour", "tuning.hud.timer.colour", "presentation.hud.timer.colour.r", "presentation.hud.timer.colour_extra", "presentation.hud.timer.colour.value", "presentation.hud.timer_colour", "hud.timer.shadow_colour", "tuning.hud.timer.shadow_colour", "presentation.hud.timer.shadow_colour.r", "presentation.hud.timer.shadow_colour_extra", "presentation.hud.timer.shadow_colour.value", "presentation.hud.timer_shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.timer.font", "presentation.hud.player_identity.font" })
 		{
 			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
 				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
@@ -243,7 +243,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -305,7 +305,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index })
 		{
 			const std::string path = colour_paths[index];
 			const std::string local = path.substr(std::string("presentation.").size());
@@ -337,7 +337,7 @@
 				index == cursor_ink_colour_index ? "E7F809" : index == cursor_fill_colour_index ? "F8091A" :
 				index == silhouette_ink_colour_index ? "0A1B2C" :
 				index == silhouette_rim_colour_index ? "1B2C3D" : index == silhouette_shade_colour_index ? "2C3D4E" :
-				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : index == hud_health_colour_index ? "0A1B2C" : index == hud_track_colour_index ? "1B2C3D" : index == limb_arm_colour_index ? "3D4E5F" : index == limb_hand_colour_index ? "4E5F60" : index == quiet_face_colour_index ? "5F6071" : index == hud_timer_colour_index ? "607182" : "2C3D4E";
+				index == reveal_ink_colour_index ? "3D4E5F" : index == reveal_paper_colour_index ? "4E5F60" : index == reveal_shade_colour_index ? "5F6071" : index == cursor_shade_colour_index ? "607182" : index == cursor_shadow_colour_index ? "718293" : index == desktop_colour_index ? "8293A4" : index == power_light_colour_index ? "93A4B5" : index == program_colour_index ? "A4B5C6" : index == acting_face_colour_index ? "B5C6D7" : index == acting_sweat_colour_index ? "C6D7E8" : index == glass_colour_index ? "D7E8F9" : index == silhouette_body_colour_index ? "E8F90A" : index == scribble_colour_index ? "F90A1B" : index == hud_health_colour_index ? "0A1B2C" : index == hud_track_colour_index ? "1B2C3D" : index == limb_arm_colour_index ? "3D4E5F" : index == limb_hand_colour_index ? "4E5F60" : index == quiet_face_colour_index ? "5F6071" : index == hud_timer_colour_index ? "607182" : index == hud_timer_shadow_colour_index ? "718293" : "2C3D4E";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
@@ -365,7 +365,7 @@
 			blocked_highlight_colour_index, blocked_keyline_colour_index, idle_drip_keyline_colour_index,
 			respawn_pen_colour_index, cursor_ink_colour_index, cursor_fill_colour_index,
 			silhouette_ink_colour_index, silhouette_rim_colour_index, silhouette_shade_colour_index,
-			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index })
+			reveal_ink_colour_index, reveal_paper_colour_index, reveal_shade_colour_index, cursor_shade_colour_index, cursor_shadow_colour_index, desktop_colour_index, power_light_colour_index, program_colour_index, acting_face_colour_index, acting_sweat_colour_index, glass_colour_index, silhouette_body_colour_index, scribble_colour_index, hud_health_colour_index, hud_track_colour_index, crack_colour_index, limb_arm_colour_index, limb_hand_colour_index, quiet_face_colour_index, hud_timer_colour_index, hud_timer_shadow_colour_index })
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.

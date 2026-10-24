@@ -274,6 +274,12 @@ elseif ($HudTimerTuneColourOnly) {
         $result['developer_command_scope'] = 'debug-validated-commands'
     } else { $result['developer_command_scope'] = 'not-run-release-consumer-only' }
     $result.checks += ' Native PNG dimensions, IHDR, decoded opaque alpha and complete RGB parity to retained PPM are checked after contact export. No independent full-HUD/card reconstruction, actual Level sequence, physical input/hardware, human readability/comfort, listening, balance or performance acceptance. Full-candidate merge/refusal remains CPU-owned.'
+    $result.scope = 'normal-hud-timer-colour-family'
+    $result.palettes += @('shadow-authored-00000022','shadow-35BCE1','shadow-2060C080','shadow-A532D600')
+    $result.actions += @('independently-selected-normal-shadow47','unchanged-authored-opaque-foreground','ordered-shadow-before-foreground-reference','source-overlap-witness-919-79','one-additional-reversed-order-control')
+    $result.checks += ' Foreground46 retains its exact per-role files and counts. Shared mechanisms separately qualify shadow47 on the same source-derived ROI, font, opaque paper and fixed clock cases: 56 readbacks, 18 rows, four crops and four tint/order controls. Authored BLACK alpha34 has default parity; nonblack partial/zero tints discriminate the alpha contract. The full ordered reference draws selected shadow before unchanged opaque foreground; a reversed-order control must change the source-derived opaque overlap witness at (919,79). Shadow edits retain foreground, other HUD fields and closing frames. No extra partial-foreground context is added. Per-role metadata and captures remain separate.'
+    if ($Preset -eq 'x64-debug') { $result.checks += ' Shadow Debug adds its own eight real commands, eight normal states and two closing observations, one-token private Save/rebase and authored-default/saved resets: 34 additional reads and ten rows. Timer family Debug totals are 179 readbacks, 56 rows, eight crops and 5728 calibration pixel comparisons; foreground and shadow subtotals are 89/28/4 and 90/28/4.' }
+    else { $result.checks += ' Timer family Release totals are 111 readbacks, 36 rows, eight crops and 3552 calibration pixel comparisons; foreground and shadow subtotals are 55/18/4 and 56/18/4.' }
 }
 elseif ($HudTrackTuneColourOnly) {
     $result.scope = 'hud-track-tune-colour-only'
