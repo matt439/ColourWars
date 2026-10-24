@@ -382,6 +382,18 @@ std::string DebugDirectorImpl::rebuild_note() const
 		": queued; rebuilds when the debug menu closes" : ": rebuilding the match";
 }
 
+void DebugDirectorImpl::break_perf_interval()
+{
+	// A page/focus/screenshot transition can arrive before the next draw.
+	// Preserve an exact already-completed final sample before breaking, but
+	// never wait for or invent the phases of a frame still in flight.
+	if (this->application_ != nullptr)
+	{
+		this->perf_.break_interval(this->application_->frame_timings());
+	}
+	else { this->perf_.break_interval(); }
+}
+
 DebugStatus DebugDirectorImpl::start_perf_capture(const DebugArgs& args)
 {
 	int frames = 0;
@@ -415,6 +427,7 @@ DebugStatus DebugDirectorImpl::start_perf_capture(const DebugArgs& args)
 	const mattmath::Vector2I size = this->application_->resolution_manager()->resolution_ivec();
 	this->perf_width_ = size.x;
 	this->perf_height_ = size.y;
+	this->break_perf_interval();
 	if (!this->perf_.start_capture(static_cast<std::size_t>(frames)))
 	{
 		return DebugStatus::failure("perf.capture: could not start recording");
@@ -426,30 +439,48 @@ DebugStatus DebugDirectorImpl::start_perf_capture(const DebugArgs& args)
 
 void DebugDirectorImpl::finish_perf_capture()
 {
-	if (!this->perf_capture_path_ || !this->perf_.capture_ready()) { return; }
+	if (!this->perf_capture_path_) { return; }
+	// Update hooks run after the previous Application publish and before a
+	// scripted quit. Pair its last sample here; no extra match draw is needed.
+	if (this->application_ != nullptr)
+	{
+		this->perf_.observe_frame_timings(this->application_->frame_timings());
+	}
+	if (!this->perf_.capture_ready()) { return; }
 	std::filesystem::path csv_path = *this->perf_capture_path_;
 	csv_path += L".csv";
 	std::filesystem::path json_path = *this->perf_capture_path_;
 	json_path += L".json";
 	std::ostringstream csv;
 	csv.imbue(std::locale::classic());
-	csv << std::setprecision(17) << "frame,frame_ms,update_ms,draw_ms,updates,objects,projectiles\n";
+	csv << std::setprecision(17) << "frame,application_frame,frame_ms,update_ms,draw_ms,begin_frame_ms,submit_ms,end_frame_ms,updates,objects,projectiles\n";
 	std::size_t index = 0;
+	std::size_t paired = 0;
 	for (const DebugPerf::Frame& frame : this->perf_.captured_frames())
 	{
-		csv << ++index << ',' << frame.frame_ms << ',' << frame.update_ms << ',' << frame.draw_ms << ','
-			<< frame.updates << ',' << frame.objects << ',' << frame.projectiles << '\n';
+		csv << ++index << ',' << frame.application_frame << ',' << frame.frame_ms << ',' << frame.update_ms << ',' << frame.draw_ms;
+		if (frame.application_frame != 0)
+		{
+			csv << ',' << frame.begin_frame_ms << ',' << frame.submit_ms << ',' << frame.end_frame_ms;
+			++paired;
+		}
+		else { csv << ",,,"; }
+		csv << ',' << frame.updates << ',' << frame.objects << ',' << frame.projectiles << '\n';
 	}
-	const std::string json = "{\n  \"schema_version\": 1,\n  \"requested_frames\": " +
+	const bool complete = this->perf_.capture_complete() && paired == index;
+	const std::string reason = this->perf_.capture_complete() && !complete ?
+		"unpaired_engine_frame" : this->perf_.capture_reason();
+	const std::string json = "{\n  \"schema_version\": 2,\n  \"requested_frames\": " +
 		std::to_string(this->perf_.capture_target()) + ",\n  \"captured_frames\": " + std::to_string(index) +
-		",\n  \"complete\": " + (this->perf_.capture_complete() ? "true" : "false") +
-		",\n  \"reason\": \"" + this->perf_.capture_reason() +
-		"\",\n  \"timing_scope\": \"match_draw_begin_to_begin_cpu_wall_ms\"\n}\n";
+		",\n  \"complete\": " + (complete ? "true" : "false") +
+		",\n  \"reason\": \"" + reason +
+		"\",\n  \"timing_scope\": \"match_draw_begin_to_begin_cpu_wall_ms\",\n"
+		"  \"engine_timing_scope\": \"matched_completed_application_frame_cpu_wall_ms\",\n"
+		"  \"engine_paired_frames\": " + std::to_string(paired) + "\n}\n";
 	const bool written = debug_files::write_file(csv_path, csv.str()) && debug_files::write_file(json_path, json);
-	const bool complete = this->perf_.capture_complete();
 	this->perf_capture_path_.reset();
 	this->perf_.discard_capture();
-	this->perf_.break_interval();
+	this->break_perf_interval();
 	if (written)
 	{
 		this->log_.info(std::string("perf.capture: ") + (complete ? "complete " : "interrupted ") +
@@ -469,7 +500,7 @@ void DebugDirectorImpl::begin_match_draw()
 		this->application_->depth() != 2 || this->debug_menu_ != nullptr ||
 		this->console_open_)
 	{
-		this->perf_.break_interval();
+		this->break_perf_interval();
 		return;
 	}
 	const mattmath::Vector2I size = this->application_->resolution_manager()->resolution_ivec();
@@ -477,9 +508,9 @@ void DebugDirectorImpl::begin_match_draw()
 		this->match_ == nullptr || !this->match_->debug_perf_ready() ||
 		size.x != this->perf_width_ || size.y != this->perf_height_))
 	{
-		this->perf_.break_interval();
+		this->break_perf_interval();
 	}
-	this->perf_.begin_draw(perf_now_ms());
+	this->perf_.begin_draw(perf_now_ms(), this->application_->frame_timings());
 }
 
 void DebugDirectorImpl::draw_status(labrador::Renderer& renderer)

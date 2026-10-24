@@ -2,6 +2,7 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
+#include "engine/app/application.h"
 #include "game/debug/debug_perf.h"
 #include "game/objects/debug_text.h"
 #include <cmath>
@@ -12,6 +13,175 @@
 // session_checks.cpp (check_polish).
 namespace debug_console_acceptance
 {
+	namespace
+	{
+		labrador::FrameTimings completed_frame(std::uint64_t id, int begin = 1, int submit = 2, int end = 3)
+		{
+			labrador::FrameTimings frame;
+			frame.frame = id;
+			// A zero engine interval is valid on reset frames. Its phases
+			// still exist and must not replace the local Level/QPC stopwatches.
+			frame.interval = std::chrono::nanoseconds::zero();
+			frame.begin_frame_time = std::chrono::milliseconds(begin);
+			frame.submit_time = std::chrono::milliseconds(submit);
+			frame.end_frame_time = std::chrono::milliseconds(end);
+			frame.update_time = std::chrono::milliseconds(999);
+			frame.draw_time = std::chrono::milliseconds(888);
+			return frame;
+		}
+
+		void prime_pending(DebugPerf& perf, std::size_t target)
+		{
+			require(perf.start_capture(target), "Start an Application-frame pairing capture");
+			perf.begin_draw(100.0, completed_frame(10));
+			perf.end_draw(102.0);
+			perf.add_update(0.75);
+			perf.begin_draw(116.0, completed_frame(11));
+			perf.end_draw(118.0);
+			require(perf.size() == 1 && perf.at(0).application_frame == 0 &&
+				perf.capture_active() && !perf.capture_ready() && perf.captured_frames().size() == 1,
+				"A committed sample remains pending until its exact Application frame completes");
+		}
+
+		void check_perf_engine_frames()
+		{
+			DebugPerf perf;
+			require(perf.start_capture(1), "Start from Application frame zero");
+			perf.begin_draw(0.0, completed_frame(0, 0, 0, 0)); perf.end_draw(1.0);
+			perf.observe_frame_timings(completed_frame(0, 0, 0, 0));
+			perf.begin_draw(16.0, completed_frame(1, 0, 0, 0)); perf.end_draw(17.0);
+			perf.observe_frame_timings(completed_frame(1, 0, 0, 0));
+			require(perf.capture_active() && perf.at(0).application_frame == 0 && perf.engine_samples() == 0,
+				"Frame zero and a still-in-flight predecessor do not invent engine samples");
+			perf.observe_frame_timings(completed_frame(2, 0, 0, 0));
+			require(perf.capture_complete() && perf.captured_frames()[0].application_frame == 2 && perf.engine_samples() == 1,
+				"The first real completed frame can carry legitimate zero phases after a priming draw");
+			perf.reset();
+			prime_pending(perf, 1);
+			perf.observe_frame_timings(completed_frame(11));
+			perf.observe_frame_timings(completed_frame(11));
+			require(perf.capture_active() && perf.engine_samples() == 0 &&
+				perf.captured_frames().size() == 1 && perf.at(0).application_frame == 0,
+				"Repeated catch-up observations of the predecessor neither consume nor append a row");
+			perf.observe_frame_timings(completed_frame(12, 4, 50, 60));
+			require(perf.capture_ready() && perf.capture_complete() && !perf.capture_active() &&
+				perf.captured_frames().size() == 1 && perf.captured_frames()[0].application_frame == 12 &&
+				perf.at(0).begin_frame_ms == 4.0 && perf.at(0).submit_ms == 50.0 && perf.at(0).end_frame_ms == 60.0 &&
+				perf.at(0).frame_ms == 16.0 && perf.at(0).update_ms == 0.75 && perf.at(0).draw_ms == 2.0,
+				"The last requested sample completes from an update observation without an extra draw, using its own ID and phases");
+			perf.observe_frame_timings(completed_frame(12, 90, 91, 92));
+			perf.break_interval();
+			require(perf.capture_complete() && perf.captured_frames()[0].submit_ms == 50.0 &&
+				perf.captured_frames()[0].application_frame == 12,
+				"A duplicate snapshot is idempotent and a completed final sample survives an immediate menu/focus/capture break");
+			perf.discard_capture();
+			perf.begin_draw(200.0, completed_frame(20)); perf.end_draw(201.0);
+			perf.begin_draw(216.0, completed_frame(21)); perf.end_draw(218.0);
+			perf.observe_frame_timings(completed_frame(22, 0, 0, 0));
+			require(perf.engine_samples() == 2 && perf.at(0).application_frame == 22 &&
+				perf.begin_frame().min == 0.0 && perf.begin_frame().max == 4.0 && perf.begin_frame().avg == 2.0 &&
+				perf.submit().min == 0.0 && perf.submit().max == 50.0 && perf.submit().avg == 25.0 &&
+				perf.end_frame().min == 0.0 && perf.end_frame().max == 60.0 && perf.end_frame().avg == 30.0,
+				"Real zero phases and zero engine intervals remain valid; unavailable samples do not bias CPU phase statistics");
+
+			// The same value-fed break operation used by the director's
+			// match_suspended callback must discriminate publication from flight.
+			perf.reset(); prime_pending(perf, 1);
+			perf.break_interval(completed_frame(12, 7, 8, 9));
+			require(perf.capture_complete() && perf.capture_ready() && !perf.capture_active() &&
+				perf.captured_frames().size() == 1 && perf.captured_frames()[0].application_frame == 12 &&
+				perf.captured_frames()[0].begin_frame_ms == 7.0 && perf.captured_frames()[0].submit_ms == 8.0 &&
+				perf.captured_frames()[0].end_frame_ms == 9.0 && perf.current_frame_ms() == 0.0,
+				"Suspension before another update preserves target1 when its exact final Application frame was already published");
+			perf.reset(); prime_pending(perf, 1);
+			perf.break_interval(completed_frame(11, 7, 8, 9));
+			perf.observe_frame_timings(completed_frame(12, 7, 8, 9));
+			require(perf.capture_ready() && !perf.capture_complete() && perf.capture_reason() == "interrupted" &&
+				perf.captured_frames().size() == 1 && perf.captured_frames()[0].application_frame == 0 &&
+				perf.engine_samples() == 0 && perf.current_frame_ms() == 0.0,
+				"Suspension while target1 is still in flight interrupts and clears its join; later publication cannot revive it");
+
+			// A pending final sample must not survive cancellation and attach
+			// later to a different match/capture with the same numeric ID.
+			perf.reset(); prime_pending(perf, 1);
+			perf.observe_frame_timings(completed_frame(11));
+			perf.break_interval();
+			perf.observe_frame_timings(completed_frame(12, 7, 8, 9));
+			require(perf.capture_ready() && !perf.capture_complete() && perf.capture_reason() == "interrupted" &&
+				perf.captured_frames().size() == 1 && perf.captured_frames()[0].application_frame == 0 && perf.engine_samples() == 0,
+				"Breaking before publication interrupts and clears the pending join instead of filling it from a later observation");
+
+			for (int invalid = 0; invalid < 6; ++invalid)
+			{
+				perf.reset(); prime_pending(perf, 1);
+				auto snapshot = completed_frame(invalid == 0 ? 13 : invalid == 1 ? 10 : invalid == 2 ? 0 : 12);
+				if (invalid == 3) { snapshot.begin_frame_time = std::chrono::nanoseconds(-1); }
+				if (invalid == 4) { snapshot.submit_time = std::chrono::nanoseconds(-1); }
+				if (invalid == 5) { snapshot.end_frame_time = std::chrono::nanoseconds(-1); }
+				perf.observe_frame_timings(snapshot);
+				require(perf.capture_ready() && !perf.capture_complete() && perf.at(0).application_frame == 0 &&
+					perf.engine_samples() == 0 && perf.captured_frames().size() == 1,
+					"Missed/regressed/frame-zero or negative exact snapshots abort rather than borrow another frame or fill false phase zeros");
+			}
+			for (const std::uint64_t id : { std::uint64_t{11}, std::uint64_t{13}, std::uint64_t{10} })
+			{
+				perf.reset(); prime_pending(perf, 1);
+				perf.begin_draw(132.0, completed_frame(id));
+				perf.end_draw(134.0);
+				require(perf.capture_ready() && !perf.capture_complete() && perf.size() == 1 &&
+					perf.captured_frames()[0].application_frame == 0,
+					"A duplicate, missed or regressed Application frame at draw begin breaks the interval without appending an extra target row");
+			}
+			for (const double bad_time : { -1.0, 115.0, 116.0,
+				(std::numeric_limits<double>::quiet_NaN)(), (std::numeric_limits<double>::infinity)(),
+				-(std::numeric_limits<double>::infinity)() })
+			{
+				perf.reset(); prime_pending(perf, 1);
+				perf.begin_draw(bad_time, completed_frame(12));
+				perf.end_draw(134.0);
+				require(perf.capture_ready() && !perf.capture_complete() && perf.at(0).application_frame == 0,
+					"Invalid runtime QPC beginnings cancel a pending pair instead of exporting a completed capture");
+			}
+			perf.reset(); prime_pending(perf, 2);
+			perf.begin_draw(132.0, completed_frame(12, 4, 5, 6));
+			perf.end_draw((std::numeric_limits<double>::quiet_NaN)());
+			require(perf.capture_ready() && !perf.capture_complete() && perf.captured_frames().size() == 1 &&
+				perf.captured_frames()[0].application_frame == 12 && perf.captured_frames()[0].submit_ms == 5.0,
+				"An invalid later draw end interrupts but preserves the trustworthy previously completed sample");
+			perf.reset(); prime_pending(perf, 1); perf.reset();
+			perf.observe_frame_timings(completed_frame(12));
+			require(perf.size() == 0 && !perf.capture_ready() && perf.captured_frames().empty(),
+				"Reset clears pending IDs so a late completed snapshot cannot revive a discarded recording");
+			perf.reset();
+			require(perf.start_capture(1), "Start counter-overflow guard");
+			perf.begin_draw(1.0, completed_frame((std::numeric_limits<std::uint64_t>::max)()));
+			perf.end_draw(2.0);
+			require(perf.capture_ready() && !perf.capture_complete() && perf.size() == 0,
+				"The maximum Application frame cannot wrap its predicted ID to unavailable zero");
+
+			// Runtime pairing must update the correct ring slot and chronological
+			// capture copy after the overlay wraps, including the final target.
+			perf.reset();
+			const int total = static_cast<int>(DebugPerf::capacity) + 7;
+			require(perf.start_capture(static_cast<std::size_t>(total)), "Start a paired capture longer than the ring");
+			perf.begin_draw(0.0, completed_frame(20)); perf.end_draw(1.0);
+			for (int i = 1; i <= total; ++i)
+			{
+				perf.begin_draw(16.0 * i, completed_frame(20 + static_cast<std::uint64_t>(i)));
+				perf.end_draw(16.0 * i + 1.0);
+				require(perf.capture_active() && perf.captured_frames().size() == static_cast<std::size_t>(i),
+					"The target stays pending without overrunning until its exact engine snapshot arrives");
+				perf.observe_frame_timings(completed_frame(21 + static_cast<std::uint64_t>(i), i, i * 2, 0));
+			}
+			require(perf.capture_complete() && perf.captured_frames().size() == static_cast<std::size_t>(total) &&
+				perf.captured_frames().front().application_frame == 22 &&
+				perf.captured_frames().back().application_frame == 21 + static_cast<std::uint64_t>(total) &&
+				perf.engine_samples() == DebugPerf::capacity && perf.begin_frame().min == 8.0 &&
+				perf.begin_frame().max == total && perf.begin_frame().avg == 127.5,
+				"Exact phase data survives ring wrap in both history and the independent full capture");
+		}
+	}
+
 	void check_perf_frame_rate()
 	{
 		DebugPerf perf;
@@ -71,6 +241,7 @@ namespace debug_console_acceptance
 
 	void check_perf()
 	{
+		check_perf_engine_frames();
 		check_perf_frame_rate();
 		DebugPerf perf;
 		require(perf.size() == 0 && perf.frame().max == 0.0, "Empty");
@@ -93,10 +264,11 @@ namespace debug_console_acceptance
 			perf.at(0).updates == 2, "update sums each frame's updates");
 		perf.set_counts(182, 12);
 		const std::vector<std::string> lines = perf.lines();
-		require(lines.size() == 5 && lines[0] == "CPU ms    min    avg    max  (240 frames)" &&
+		require(lines.size() == 8 && lines[0] == "CPU wall ms min    avg    max  (240 frames)" &&
 			lines[1] == "frame   16.00  16.00  16.00" &&
 			lines[2] == "update   0.75   1.00   1.25  x2.00 a frame" &&
-			lines[3] == "draw     2.00   3.00   4.00" && lines[4] == "objects 182  projectiles 12",
+			lines[3] == "draw     2.00   3.00   4.00" && lines[4] == "begin  n/a (0 engine frames)" &&
+			lines[5] == "submit  n/a" && lines[6] == "end  n/a" && lines[7] == "objects 182  projectiles 12",
 			"perf lines, got '" + lines[2] + "'");
 		perf.end_draw(9999.0);
 		require(perf.size() == DebugPerf::capacity && perf.at(0).draw_ms == 2.0 + (299 % 3),

@@ -6,11 +6,14 @@
 #include "game/drawable_text.h"
 #include "game/game_data.h"
 #include "game/states/game_states.h"
+#include <rapidjson/document.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <cmath>
 
 #if !COLOURWARS_DEV_TOOLS
 #error The frame-pacing diagnostic requires the actual Debug game objects.
@@ -104,6 +107,59 @@ namespace
         file.flush();
         require(file.good(), "Frame-pacing device metadata write failed");
     }
+
+    void validate_capture(const std::filesystem::path& output, Application& app, int requested)
+    {
+        std::ifstream metadata(output / "debug/perf/sample.json", std::ios::binary);
+        const std::string text((std::istreambuf_iterator<char>(metadata)), std::istreambuf_iterator<char>());
+        rapidjson::Document capture;
+        capture.Parse(text.data(), text.size());
+        require(!capture.HasParseError() && capture.IsObject(), "Invalid actual perf.capture metadata");
+        const auto number = [&](const char* name, int expected)
+        {
+            return capture.HasMember(name) && capture[name].IsInt() && capture[name].GetInt() == expected;
+        };
+        const auto word = [&](const char* name, const char* expected)
+        {
+            return capture.HasMember(name) && capture[name].IsString() && std::string(capture[name].GetString()) == expected;
+        };
+        require(number("schema_version", 2) && number("requested_frames", requested) &&
+            number("captured_frames", requested) && number("engine_paired_frames", requested) &&
+            capture.HasMember("complete") && capture["complete"].IsBool() && capture["complete"].GetBool() &&
+            word("reason", "complete") && word("timing_scope", "match_draw_begin_to_begin_cpu_wall_ms") &&
+            word("engine_timing_scope", "matched_completed_application_frame_cpu_wall_ms"),
+            "Actual perf.capture must finish with every requested Application frame paired as schema2");
+        std::ifstream csv(output / "debug/perf/sample.csv");
+        std::string line;
+        require(static_cast<bool>(std::getline(csv, line)) && line ==
+            "frame,application_frame,frame_ms,update_ms,draw_ms,begin_frame_ms,submit_ms,end_frame_ms,updates,objects,projectiles",
+            "Actual schema2 capture columns differ");
+        int rows = 0;
+        std::uint64_t previous = 0;
+        while (std::getline(csv, line))
+        {
+            std::istringstream record(line);
+            std::vector<std::string> cells;
+            std::string cell;
+            while (std::getline(record, cell, ',')) { cells.push_back(cell); }
+            require(cells.size() == 11 && cells[0] == std::to_string(++rows) && !cells[1].empty() &&
+                std::all_of(cells[1].begin(), cells[1].end(), [](char c) { return c >= '0' && c <= '9'; }),
+                "Actual schema2 rows must be chronological with an explicit Application ID");
+            const std::uint64_t id = std::stoull(cells[1]);
+            require(id > 0 && (previous == 0 || id == previous + 1),
+                "Actual capture must use distinct consecutive completed Application frames");
+            previous = id;
+            for (std::size_t field = 2; field <= 7; ++field)
+            {
+                std::size_t consumed = 0;
+                const double value = std::stod(cells[field], &consumed);
+                require(consumed == cells[field].size() && std::isfinite(value) && value >= 0.0 &&
+                    (field != 2 || value > 0.0), "Actual capture CPU wall-time fields must be finite and available");
+            }
+        }
+        require(rows == requested && previous <= app.frame_timings().frame,
+            "The script may export/quit only after the final requested Application frame has completed");
+    }
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -193,6 +249,7 @@ int wmain(int argc, wchar_t** argv)
         require(std::filesystem::is_regular_file(output / "debug/perf/sample.csv") &&
             std::filesystem::is_regular_file(output / "debug/perf/sample.json"),
             "The Application loop ended without producing its requested perf.capture files");
+        validate_capture(output, app, frames);
         std::cout << "CAPTURE 1x Close Quarters " << players << "P; " << frames
             << " requested rendered samples; Debug diagnostic, no baseline acceptance\n";
         return 0;

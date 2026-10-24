@@ -165,7 +165,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#1` | OPEN | LOW | M | Extend colour tuning beyond forty-four audited fields; general string/font edits and missing-key insertion remain separate slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
-| `DBG#5` | OPEN | LOW | S | Read `Application::frame_timings()` begin_frame/submit/end_frame CPU times into the perf overlay and `perf.capture` (schema 2, analyzer); GPU time was declined by the engine (report 14). [Next step](docs/debug-console.md#not-done). |
 | `DBG#6` | DEFERRED | LOW | M | Scripts stop when the window loses focus; no run-while-inactive switch. |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
 

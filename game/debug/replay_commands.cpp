@@ -150,9 +150,10 @@ void DebugDirectorImpl::match_suspended(DebugMatchTarget& match)
 	{
 		return;
 	}
-	// Focus loss and stack coverage invalidate a continuous pacing capture
-	// immediately, even when several draws occur before the next update.
-	this->perf_.break_interval();
+	// Focus loss and stack coverage break the interval immediately. Preserve
+	// an already-published final sample before interrupting unfinished work,
+	// including suspension before the next update/export hook.
+	this->break_perf_interval();
 	if (this->recorder_ != nullptr)
 	{
 		this->recorder_->note_suspend(this->level_updates_);

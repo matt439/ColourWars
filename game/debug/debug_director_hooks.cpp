@@ -104,7 +104,7 @@ void DebugDirectorImpl::attach_match(DebugMatchTarget& match)
 	this->match_ = &match;
 	this->waiting_notice_shown_ = false;
 	// Perf times match frames: not the time spent in the menus before this.
-	this->perf_.break_interval();
+	this->break_perf_interval();
 	// A match started by the console was given its plan and the request was
 	// consumed; anything still queued was stored in the menus without `stage`
 	// (or left by a match that ended) and does not belong to this one.
@@ -124,7 +124,7 @@ void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
 {
 	if (this->match_ == &match)
 	{
-		this->perf_.break_interval();
+		this->break_perf_interval();
 		// The level is still alive: a recording ends with its final state.
 		this->stop_recording("the match ended");
 		this->stop_playing("the match ended");
@@ -255,7 +255,7 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 	}
 	// Bots, a replay or a recording start with the level's first update, and
 	// perf's next interval with its first draw (not the build before it).
-	this->perf_.break_interval();
+	this->break_perf_interval();
 	this->level_updates_ = 0;
 	this->last_print_.reset();
 	if (this->play_armed_ != nullptr)
@@ -446,7 +446,7 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 		// The capture redraws the stack: no perf sample (and the frame after
 		// it starts a new interval rather than timing the capture), and the
 		// strip only when screenshot.strip is on.
-		this->perf_.break_interval();
+		this->break_perf_interval();
 		this->capturing_ = true;
 		ScreenCapture image;
 		try
@@ -625,7 +625,7 @@ void DebugDirectorImpl::capture_input_frame(DebugPageTarget& page)
 	++this->hook_frames_;
 	this->keyboard_capture_ = true;
 	this->close_live_console("raw keyboard capture");
-	this->perf_.break_interval();
+	this->break_perf_interval();
 	this->cancel_capture_work();
 	this->chord_.consume(this->debug_pads());
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
@@ -652,7 +652,7 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 	// A page is on top: the live console exists only over a running match,
 	// and perf times only frames with the match on top (a page may cover it).
 	this->close_live_console("a menu opened");
-	this->perf_.break_interval();
+	this->break_perf_interval();
 	if (this->poll_debug_menu_toggle(dt))
 	{
 		return true;

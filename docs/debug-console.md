@@ -1136,13 +1136,16 @@ and the engine declined input capture as game policy
 `overlay perf` (or `overlay.perf on`, or a bind) shows, bottom left above the
 paint panel, a graph of the last 120 frames' frame time (one bar a frame; green
 up to 60 Hz, amber up to 30 Hz, red beyond; the white line is 16.7 ms; the graph
-is two 60 Hz frames tall unless a frame was longer) over five lines:
+is two 60 Hz frames tall unless a frame was longer) over eight lines. Illustrative values:
 
 ```text
-CPU ms    min    avg    max  (240 frames)
+CPU wall ms min    avg    max  (240 frames)
 frame   14.68  16.68  18.80
 update   0.06   0.11   0.17  x1.00 a frame
 draw     0.14   0.23   0.37
+begin    0.01   0.02   0.04 (240 engine frames)
+submit   0.10   0.16   0.25
+end     14.20  16.10  18.10
 objects 23  projectiles 0
 ```
 
@@ -1165,11 +1168,15 @@ screenshot's capture is a gap, not a frame - the first draw after one starts a n
 very first). Focus loss and covering pages now break the interval immediately,
 including draws that occur before another simulation update.
 Frame intervals include intervening submit/Present wall time indirectly.
-**Not measured separately**: Present, GPU work or scan-out. `Application`
-publishes the last frame's `begin_frame`, `submit` and `end_frame` CPU times
-(`frame_timings()`, from engine report 14) and the panel does not read them yet
-(`DBG#5`, under [Not done](#not-done)); the engine declined GPU timing. The
-panel says CPU for that reason.
+The `begin`, `submit` and `end` lines read `Application::frame_timings()`
+(engine report 14), pairing its last completed frame with the pending match
+sample by the exact application frame number. Their statistics include only
+paired samples; the `begin` line reports that count, and unavailable phases
+show `n/a`. A measured zero is valid. The final sample waits for publication
+before capture export, including a one-frame capture followed by scripted quit.
+These are CPU wall times, which may include GPU/display waits, and need not
+sum to the draw-to-draw interval. **Not measured separately**: Present, GPU
+work, CPU busy time, compositor timing or scan-out.
 
 The per-player F1/Back text also uses the current measured draw-to-draw interval:
 `render fps: 30.0` means a 33.33 ms rendered interval even when `sim dt` remains
@@ -1187,7 +1194,12 @@ profile. Labels use 1–64 letters, digits, `_` or `-`. Sampling starts with a f
 interval in a live match at 1x; focus/coverage, count-ins, clock changes, resizing,
 rebuilds and screenshots invalidate continuity. Export happens after sampling,
 and a script's next statement waits for it. `perf.reset` refuses while a capture
-is pending. Interrupted captures are marked incomplete. The
+is pending. Interrupted captures are marked incomplete. New captures use
+schema 2, with `application_frame`, `begin_frame_ms`, `submit_ms` and
+`end_frame_ms` alongside the existing interval, game-update, game-draw and
+population columns. Completion requires every engine frame to be paired;
+unavailable phases are blank, never invented zeroes. The analyzer accepts
+historical schema 1 captures without adding engine-phase measurements. The
 [frame-pacing workflow](polish-frame-pacing.md) adds isolated workloads,
 machine/load metadata, percentile summaries and the remaining POL#25 acceptance.
 
@@ -1417,15 +1429,6 @@ as the game. In Release:
   seat's play keys, and nothing can tell typing a key from playing it; the
   engine declined input capture as game policy (report 9), so a per-key gate
   would be this client's own and is not built.
-- **Present and submit time** in the perf overlay (`DBG#5`). The next step:
-  read `Application::frame_timings()` in `begin_match_draw`, pair it with the
-  previous committed match frame by its `frame` number (it describes the last
-  completed frame, and a capture redraw does not advance it), add
-  `begin_frame`/`submit`/`end_frame` columns to the panel and to `perf.capture`
-  as schema 2, and teach `scripts/perf/analyze_frame_pacing.py` both schemas.
-  The match-draw and `Level::update` stopwatches stay: the engine's `draw_time`
-  includes the debug panels drawn after the match and its `update_time` the
-  polls, audio and scripts. **GPU time** is not planned: the engine declined it.
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
   and inserting keys in `tune.save`: the forty-four listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).

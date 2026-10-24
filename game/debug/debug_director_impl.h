@@ -454,6 +454,7 @@ private:
 	int perf_height_ = 0;
 	DebugStatus start_perf_capture(const DebugArgs& args);
 	void finish_perf_capture();
+	void break_perf_interval();
 
 	bool staging_ = false;
 	void push_seat_labels(DebugMatchTarget& match);

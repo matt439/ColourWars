@@ -95,7 +95,7 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
     perf.add_update(0.5); perf.begin_draw(16.0); perf.end_draw(18.0);
     perf.add_update(0.5); perf.begin_draw(40.0); perf.end_draw(42.0);
     const std::vector<std::string> perf_lines = perf.lines();
-    require(perf_lines.size() == 5 && perf.size() == 2 && perf.at(0).frame_ms == 24.0 &&
+    require(perf_lines.size() == 8 && perf.size() == 2 && perf.at(0).frame_ms == 24.0 &&
         perf.at(1).frame_ms == 16.0, "Console alpha deterministic perf fixture is not the intended two frames");
     const std::vector<std::string> paint_lines{ "paint  A 12.5%  B 25.0%  free 62.5%" };
     const std::vector<std::string> status_lines{ "PAUSED ALPHA" };
@@ -257,7 +257,7 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
         {
             float panel_width = 240.0f;
             for (const std::string& value : perf_lines) { panel_width = std::max(panel_width, width(value)); }
-            const float panel_height = 46.0f + line_height * 5.0f;
+            const float panel_height = 46.0f + line_height * 8.0f;
             const Vector2F origin(10.0f, 710.0f - panel_height);
             rectangle({ origin.x - 6.0f, origin.y - 3.0f, panel_width + 12.0f, panel_height + 6.0f }, ordinary_panel);
             rectangle({ origin.x, origin.y, 240.0f, 40.0f }, Colour(0.10f, 0.13f, 0.17f, 0.95f));

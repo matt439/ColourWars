@@ -20,9 +20,26 @@ times its layout refresh and draw-list recording, including joined render worker
 These components are diagnostics, not an exact sum of the interval. No GPU
 timestamps, separate Present duration, compositor timing or scan-out is measured.
 Since [engine report 14](review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--accepted-narrowed-7344610)
-`Application::frame_timings()` publishes the last frame's begin_frame, submit and
-end_frame CPU times; reading them into the capture is `DBG#5`. GPU, compositor
+`Application::frame_timings()` publishes the last completed frame's begin_frame,
+submit and end_frame CPU wall times. The overlay and schema 2 capture now pair
+these by exact application frame number with the pending match sample, after
+the engine publishes it. The game-update and match-draw stopwatches remain:
+engine update/draw timings cover additional work outside those scopes.
+Engine phases can include GPU/display waits; they are neither CPU busy time
+nor GPU timing, and need not sum to the draw-begin interval. GPU, compositor
 and scan-out time stay unmeasured: the engine declined GPU timing.
+
+Schema 2 CSV columns are `frame,application_frame,frame_ms,update_ms,draw_ms,`
+`begin_frame_ms,submit_ms,end_frame_ms,updates,objects,projectiles`.
+Completion requires positive consecutive application IDs and a completed timing
+snapshot for every row, including the last row before export or scripted quit.
+A missed/regressed/invalid snapshot interrupts recording; an unavailable phase
+is blank, while a measured zero is valid. The overlay excludes unavailable
+engine samples from phase statistics and prints their paired count. Capture
+JSON retains `timing_scope: match_draw_begin_to_begin_cpu_wall_ms` and adds
+`engine_timing_scope: matched_completed_application_frame_cpu_wall_ms` and
+`engine_paired_frames`. The analyzer accepts historical schema 1 captures as
+recorded, without inventing application IDs or engine-phase measurements.
 
 CSV rows also retain simulation-update, collision-object and projectile counts.
 The summary uses nearest-rank p50/p95/p99, mean, maximum, zero-update and catch-up
@@ -158,6 +175,31 @@ resume count-in and focus loss without starting a recording. Its run is
 consumer logs are under `out/validation/frame-pacing/` and `out/acceptance/`.
 Isolated Debug and Release real-bank startup and graceful shutdown also pass.
 The engine pin and runtime content are unchanged.
+
+## Completed engine-phase pairing (2026-10-24)
+
+DBG#5 is implemented. Debug and Release game/editor builds and the focused
+`debug_console` and `story_audio` consumer cases pass, including Release's
+developer-code exclusion. Thirteen analyzer tests cover both schemas and
+invalid/missing/duplicate/regressed engine frames. CPU fixtures cover exact
+pairing, delayed publication, final one-frame capture, interruptions, zero
+phases and ring wrap.
+
+Six hidden real-Application captures pass: targets 1 and 32 rendered intervals
+for each of 1P, 2P and 4P. Every exported row has its exact positive consecutive
+application frame ID and completed engine phases. These bounded shared-load
+runs verify capture correctness; every summary retains
+`baseline_accepted: false`. Evidence and input fingerprints are under
+`out/validation/perf-timings-20261024/actual-target1/` and `actual-target32/`;
+`retained-evidence-reconciliation-v1.json` verifies their source, binary, content
+and raw-input pins alongside the build/CPU/Python receipts.
+
+The Debug native alpha leaf passes 389 readbacks, 190 rows and 16 crops,
+including the eight-line perf panel against independent geometry/text
+references. Its first run caught a reference height still fixed at five lines;
+the source-derived correction to eight retains the same comparison rules and
+budgets. Both attempts remain under `native-alpha/` and `native-alpha-v3/`.
+No GPU timing, human readability or visible performance acceptance is claimed.
 
 ## Remaining acceptance
 
