@@ -77,6 +77,25 @@ namespace crossfeed_acceptance
             }
         };
 
+        // Active-window records only. A life starts at the authored construction
+        // or production respawn tick; old in-flight contacts can outlive a life.
+        struct FireGateLife
+        {
+            int start_tick = 0;
+            int end_tick = -1;
+            int global_paid_at_start = 0;
+            int open_after_tick = -1;
+            int first_eligible_input_tick = -1;
+            int first_fire_input_tick = -1;
+            int first_paid_tick = -1;
+            int global_paid_at_open = -1;
+            int paid_events = 0;
+            float reserve_at_open = -1.0f;
+            float global_minimum_reserve_at_open = -1.0f;
+
+            bool operator==(const FireGateLife&) const = default;
+        };
+
         struct Result
         {
             std::vector<std::array<float, 6>> trajectory;
@@ -84,6 +103,9 @@ namespace crossfeed_acceptance
             // Only the authored-departure policy needs a Down input stream;
             // old trajectory records and output remain unchanged.
             std::vector<int> opponent_drop_trajectory;
+            std::vector<int> opponent_fire_input_trajectory;
+            std::vector<FireGateLife> opponent_fire_lives;
+            int opponent_closed_fire_input_ticks = 0;
             HealthObservation subject;
             HealthObservation opponent;
             int paid = 0;
@@ -116,7 +138,8 @@ namespace crossfeed_acceptance
         };
 
         Result trial(Services& services, WeaponType type, PlayerTeam team,
-            bool advancing, bool fire, bool opponent_fire, SubjectAim aim, OpponentMotion motion)
+            bool advancing, bool fire, bool opponent_fire, SubjectAim aim, OpponentMotion motion,
+            bool arrival_fire = false)
         {
             const bool right = team == PlayerTeam::a;
             const PlayerTeam enemy = right ? PlayerTeam::b : PlayerTeam::a;
@@ -127,6 +150,8 @@ namespace crossfeed_acceptance
             const Surface& floor = services.map.named(right ? "floor_paint_a" : "floor_paint_b");
             const Surface& plinth = services.map.named("centre_plinth");
             const bool from_spawn = motion == OpponentMotion::spawn_walking;
+            require(!arrival_fire || (from_spawn && opponent_fire),
+                "Crossfeed arrival fire needs an actual firing attacker from its authored spawn");
             const auto enemy_spawns = right ? services.map.info.team_b_spawns() : services.map.info.team_a_spawns();
             const Surface& opponent_home = services.map.named(right ? "spawn_b_floor" : "spawn_a_floor");
             const Surface& opponent_lower = services.map.named(right ? "boundary_floor_b" : "boundary_floor_a");
@@ -153,13 +178,21 @@ namespace crossfeed_acceptance
             bool opponent_far_goal = false;
             bool opponent_dropping = from_spawn;
             bool opponent_station_reached = false;
+            bool opponent_fire_gate = false;
+            bool opponent_fire_input = false;
             float opponent_input_x = 0.0f;
             run.set_opponent_input(opponent, [&](int)
             {
                 opponent_input_x = walking(motion) && !opponent_dropping ?
                     steer(*opponent, x(opponent_far_goal ? 1250.0f : 950.0f), services.tuning.player()) : 0.0f;
                 PlayerInputData actions = input(opponent_input_x, false, false, opponent_dropping);
-                actions.primary_shoot = opponent_fire;
+                // Input is selected before Scene may perform a production
+                // respawn. Close while dead so that respawn's own tick cannot
+                // inherit the preceding life's open fire input.
+                if (arrival_fire && (opponent->state() != PlayerState::alive || opponent->health() <= 0.0f))
+                { opponent_fire_gate = false; }
+                opponent_fire_input = opponent_fire && (!arrival_fire || opponent_fire_gate);
+                actions.primary_shoot = opponent_fire_input;
                 return actions;
             });
             run.set_opponent_weapon_aim(opponent, [&]
@@ -196,6 +229,7 @@ namespace crossfeed_acceptance
             }
             std::srand(2401027);
             Result result;
+            if (arrival_fire) { result.opponent_fire_lives.emplace_back(); }
             result.subject.minimum = run.player->health();
             result.opponent.minimum = opponent->health();
             float opponent_min_x = opponent->center().x, opponent_max_x = opponent->center().x;
@@ -276,10 +310,40 @@ namespace crossfeed_acceptance
                 const float before = run.player->health(), opponent_before = opponent->health();
                 const float opponent_before_x = opponent->center().x;
                 const PlayerState state = run.player->state(), opponent_state = opponent->state();
+                const int opponent_paid_before_tick = run.opponent_weapon_stats(opponent).paid_events;
                 run.tick(actions);
                 check_opponent(opponent_state);
                 result.subject.observe(*run.player, before, state, tick);
                 result.opponent.observe(*opponent, opponent_before, opponent_state, tick);
+                if (arrival_fire)
+                {
+                    const int paid_now = run.opponent_weapon_stats(opponent).paid_events;
+                    const int paid_delta = paid_now - opponent_paid_before_tick;
+                    result.opponent_fire_input_trajectory.push_back(opponent_fire_input ? 1 : 0);
+                    result.opponent_closed_fire_input_ticks += opponent_fire_input ? 0 : 1;
+                    FireGateLife& life = result.opponent_fire_lives.back();
+                    require(paid_delta >= 0 && (opponent_fire_input || paid_delta == 0),
+                        "Crossfeed arrival-gated attacker paid while its actual input was closed");
+                    require(paid_delta == 0 || (life.open_after_tick >= 0 &&
+                        tick >= life.first_eligible_input_tick && tick > life.open_after_tick),
+                        "Crossfeed arrival-gated payment preceded that life's supported arrival and next input tick");
+                    if (opponent_fire_input && life.first_fire_input_tick < 0) { life.first_fire_input_tick = tick; }
+                    life.paid_events += paid_delta;
+                    if (paid_delta > 0 && life.first_paid_tick < 0) { life.first_paid_tick = tick; }
+                    if (opponent_state == PlayerState::dead && opponent->state() == PlayerState::alive)
+                    {
+                        require(!opponent_fire_input && paid_delta == 0,
+                            "Crossfeed arrival-gated respawn inherited an open input or paid a shot");
+                        life.end_tick = tick - 1;
+                        FireGateLife next;
+                        next.start_tick = tick;
+                        next.global_paid_at_start = paid_now;
+                        result.opponent_fire_lives.push_back(next);
+                        opponent_fire_gate = false;
+                    }
+                    if (opponent->state() != PlayerState::alive || opponent->health() <= 0.0f)
+                    { opponent_fire_gate = false; }
+                }
                 if (walking(motion))
                 {
                     if (from_spawn) { result.opponent_drop_trajectory.push_back(opponent_dropping ? 1 : 0); }
@@ -341,6 +405,30 @@ namespace crossfeed_acceptance
                                 result.subject_at_opponent_arrival = result.subject;
                                 result.opponent_at_arrival = result.opponent;
                             }
+                            if (arrival_fire && !opponent_fire_gate)
+                            {
+                                FireGateLife& life = result.opponent_fire_lives.back();
+                                const auto& stats = run.opponent_weapon_stats(opponent);
+                                require(life.open_after_tick < 0 && life.paid_events == 0 &&
+                                    stats.paid_events == life.global_paid_at_start && !opponent_fire_input,
+                                    "Crossfeed arrival-gated life spent a paid event before its first supported stop");
+                                life.open_after_tick = tick;
+                                life.first_eligible_input_tick = tick + 1;
+                                life.global_paid_at_open = stats.paid_events;
+                                life.reserve_at_open = opponent->weapon_ammo();
+                                life.global_minimum_reserve_at_open = stats.minimum_ammo;
+                                opponent_fire_gate = true;
+                                // Initial-life no-subject-fire controls have no
+                                // older attacker flight. Later life contacts are
+                                // deliberately not treated as a gate violation.
+                                if (!fire && result.opponent_fire_lives.size() == 1)
+                                {
+                                    require(stats.paid_events == 0 && run.team_area(enemy) == 0.0f &&
+                                        result.subject.net_tick_loss == 0.0f && result.subject.lethal_events == 0 &&
+                                        opponent->weapon_ammo() >= services.tuning.starting_ammo() - tolerance,
+                                        "Crossfeed first-life no-subject-fire arrival gained attacker paint, damage or paid depletion before opening");
+                                }
+                            }
                         }
                         opponent_far_goal = !opponent_far_goal;
                     }
@@ -380,7 +468,7 @@ namespace crossfeed_acceptance
                 if (tick == 180 || tick == 360 || tick == active_ticks)
                 {
                     const float own = run.team_area(team), other = run.team_area(enemy);
-                    std::cout << "MEASURE Crossfeed " << motion_prefix(motion) <<
+                    std::cout << "MEASURE Crossfeed " << (arrival_fire ? "arrival_gated_spawn_walking_" : motion_prefix(motion)) <<
                         (aim == SubjectAim::downward ? "opposed_loop" : "opposed_aim_loop") <<
                         " tool=" << tool_name(type) <<
                         " team=" << (right ? 'a' : 'b') << " route=" << (advancing ? "advancing" : "home") <<
@@ -450,6 +538,32 @@ namespace crossfeed_acceptance
                             " arrival_snapshot_phase=after-both-weapons-and-Scene-resolution-through-first-supported-stopped950-tick" <<
                             " arrival_cost_scope=cumulative-paid-events-times-authored-cost-not-net-reserve-spend";
                     }
+                    if (arrival_fire)
+                    {
+                        const FireGateLife& life = result.opponent_fire_lives.back();
+                        const bool arrived = result.opponent_arrival_paid >= 0;
+                        const int paid = run.opponent_weapon_stats(opponent).paid_events;
+                        const float cost = services.tuning.weapon(WeaponType::sprayer).details.ammo_usage;
+                        std::cout << " opponent_fire_policy=first-supported-stop950-then-next-input-tick" <<
+                            " opponent_gate_open_next_input=" << opponent_fire_gate <<
+                            " opponent_gate_life_index=" << result.opponent_fire_lives.size() - 1 <<
+                            " opponent_gate_life_open_after_tick=" << life.open_after_tick <<
+                            " opponent_gate_life_first_eligible_input_tick=" << life.first_eligible_input_tick <<
+                            " opponent_gate_life_first_paid_tick=" << life.first_paid_tick <<
+                            " opponent_closed_fire_input_ticks=" << result.opponent_closed_fire_input_ticks <<
+                            " opponent_cumulative_nominal_paid_cost=" << fixed(static_cast<float>(paid) * cost, 6) <<
+                            " opponent_paid_events_after_first_arrival=" << (arrived ? paid - result.opponent_arrival_paid : -1) <<
+                            " opponent_nominal_paid_cost_after_first_arrival=" << fixed(arrived ?
+                                static_cast<float>(paid - result.opponent_arrival_paid) * cost : -1.0f, 6) <<
+                            " opponent_reserve_change_after_first_arrival=" << fixed(arrived ?
+                                opponent->weapon_ammo() - result.opponent_arrival_reserve : -1.0f, 6) <<
+                            " opponent_global_owned_area_change_after_first_arrival=" << fixed(arrived ?
+                                other - result.opponent_arrival_area[0] : -1.0f) <<
+                            " subject_observed_loss_after_first_arrival=" << fixed(arrived ?
+                                result.subject.net_tick_loss - result.subject_at_opponent_arrival.net_tick_loss : -1.0f, 4) <<
+                            " opponent_observed_loss_after_first_arrival=" << fixed(arrived ?
+                                result.opponent.net_tick_loss - result.opponent_at_arrival.net_tick_loss : -1.0f, 4);
+                    }
                     std::cout << " scope=" << (from_spawn ? "authored-spawn-walking" :
                         (motion == OpponentMotion::walking ? "walking" : "stationary")) <<
                         "-lower-approach-sprayer-current-centre-no-lead\n";
@@ -465,7 +579,7 @@ namespace crossfeed_acceptance
             require(aim == SubjectAim::downward || type == WeaponType::roller || verified_aim_ticks > 0,
                 "Crossfeed alternate subject aim never qualified an active weapon update");
             require((fire ? result.paid > 0 : result.paid == 0) &&
-                (opponent_fire ? result.opponent_paid > 0 : result.opponent_paid == 0),
+                (opponent_fire ? ((arrival_fire && fire) || result.opponent_paid > 0) : result.opponent_paid == 0),
                 "Crossfeed opposed-loop payment did not follow each player's fire control");
             require(opponent_fire || (result.subject.net_tick_loss == 0.0f && result.subject.lethal_events == 0),
                 "Crossfeed subject took damage without opposing fire");
@@ -501,6 +615,49 @@ namespace crossfeed_acceptance
                         "Crossfeed authored attacker no-fire arrival gained paint or spent reserve");
                 }
             }
+            if (arrival_fire)
+            {
+                result.opponent_fire_lives.back().end_tick = active_ticks;
+                require(result.opponent_fire_input_trajectory.size() == static_cast<size_t>(active_ticks) &&
+                    result.opponent_fire_lives.size() == static_cast<size_t>(result.opponent.respawns + 1),
+                    "Crossfeed arrival-gated active input or production-life accounting is incomplete");
+                int life_payments = 0;
+                for (size_t index = 0; index < result.opponent_fire_lives.size(); ++index)
+                {
+                    const FireGateLife& life = result.opponent_fire_lives[index];
+                    const bool opened = life.open_after_tick >= 0;
+                    require(life.end_tick >= life.start_tick &&
+                        (!opened || (life.open_after_tick >= life.start_tick && life.open_after_tick <= life.end_tick &&
+                            life.first_eligible_input_tick == life.open_after_tick + 1 &&
+                            life.global_paid_at_open == life.global_paid_at_start)) &&
+                        (life.first_fire_input_tick < 0 ? (!opened || life.first_eligible_input_tick > life.end_tick) :
+                            opened && life.first_fire_input_tick == life.first_eligible_input_tick) &&
+                        (life.paid_events == 0 ? life.first_paid_tick < 0 :
+                            opened && life.first_paid_tick >= life.first_eligible_input_tick && life.first_paid_tick <= life.end_tick),
+                        "Crossfeed arrival-gated life lost its opening/payment boundaries");
+                    life_payments += life.paid_events;
+                    const float cost = services.tuning.weapon(WeaponType::sprayer).details.ammo_usage;
+                    std::cout << "MEASURE Crossfeed arrival_gated_fire_life tool=" << tool_name(type) <<
+                        " team=" << (right ? 'a' : 'b') << " route=" << (advancing ? "advancing" : "home") <<
+                        " fire=" << fire << " opponent_fire=" << opponent_fire <<
+                        " subject_aim=" << (aim == SubjectAim::downward ? "downward" : "current-opponent-centre") <<
+                        " life_index=" << index << " life_start_tick=" << life.start_tick << " life_end_tick=" << life.end_tick <<
+                        " open_after_tick=" << life.open_after_tick << " first_eligible_input_tick=" << life.first_eligible_input_tick <<
+                        " first_fire_input_tick=" << life.first_fire_input_tick << " first_paid_tick=" << life.first_paid_tick <<
+                        " global_paid_events_at_life_start=" << life.global_paid_at_start <<
+                        " global_paid_events_at_open=" << life.global_paid_at_open << " life_paid_events=" << life.paid_events <<
+                        " life_cumulative_nominal_paid_cost=" << fixed(static_cast<float>(life.paid_events) * cost, 6) <<
+                        " reserve_at_open=" << fixed(life.reserve_at_open, 6) <<
+                        " global_minimum_reserve_at_open=" << fixed(life.global_minimum_reserve_at_open, 6) <<
+                        " scope=active-window-life-opening-after-Scene-resolution-first-eligible-next-input-cumulative-paid-cost-not-net-spend\n";
+                }
+                require(life_payments == result.opponent_paid,
+                    "Crossfeed arrival-gated per-life payments do not reconcile with actual global payments");
+                require(fire || (result.opponent_fire_lives.size() == 1 &&
+                    result.opponent_fire_lives.front().open_after_tick == result.opponent_first_endpoints[0] &&
+                    result.opponent_arrival_paid == 0 && result.opponent_paid > 0),
+                    "Crossfeed arrival-gated no-subject-fire control did not preserve first arrival supply then pay actual shots");
+            }
             const float active_own = run.team_area(team), active_enemy = run.team_area(enemy);
             run.set_opponent_input(opponent, {});
             int tail = 0;
@@ -517,7 +674,7 @@ namespace crossfeed_acceptance
             require(flying_objects(run) == 0, "Crossfeed opposed-loop flight tail exceeded its finite limit");
             result.ownership = { active_own, active_enemy, run.team_area(team), run.team_area(enemy) };
             result.tail = tail;
-            std::cout << "MEASURE Crossfeed " << motion_prefix(motion) <<
+            std::cout << "MEASURE Crossfeed " << (arrival_fire ? "arrival_gated_spawn_walking_" : motion_prefix(motion)) <<
                 (aim == SubjectAim::downward ? "opposed_loop_settled" : "opposed_aim_loop_settled") <<
                 " tool=" << tool_name(type) << " team=" << (right ? 'a' : 'b') <<
                 " route=" << (advancing ? "advancing" : "home") << " fire=" << fire << " opponent_fire=" << opponent_fire <<
@@ -542,6 +699,7 @@ namespace crossfeed_acceptance
             "by relative player centres, including close crossings; this is a scripted policy, not perfect aim. "
             "Roller retains production fixed-forward-down aim. All four controls, routes, seed, cold weapons and launch "
             "order match the downward baseline; only non-firing subjects and fixed-aim Roller must match full results\n";
+        int arrival_fire_trials = 0;
         const auto matrix = [&](OpponentMotion motion)
         {
             int trials = 0;
@@ -582,6 +740,33 @@ namespace crossfeed_acceptance
                             "Crossfeed alternate inactive-opponent control changed movement under paid fire");
                         require(type != WeaponType::roller || (aim_subject == subject && aim_reciprocal == reciprocal),
                             "Crossfeed fixed-aim Roller changed results under an ignored subject aim request");
+                        if (motion == OpponentMotion::spawn_walking)
+                        {
+                            // Reuse these eight retained controls; add only the
+                            // four cases whose opponent actually requests fire.
+                            const Result gated_opponent = trial(services, type, team, advancing, false, true,
+                                SubjectAim::downward, motion, true);
+                            const Result gated_reciprocal = trial(services, type, team, advancing, true, true,
+                                SubjectAim::downward, motion, true);
+                            const Result gated_aim_opponent = trial(services, type, team, advancing, false, true,
+                                SubjectAim::opponent, motion, true);
+                            const Result gated_aim_reciprocal = trial(services, type, team, advancing, true, true,
+                                SubjectAim::opponent, motion, true);
+                            require(gated_opponent.opponent_trajectory == neither.opponent_trajectory &&
+                                gated_opponent.opponent_drop_trajectory == neither.opponent_drop_trajectory &&
+                                gated_opponent.opponent_lower_landing == neither.opponent_lower_landing &&
+                                gated_opponent.opponent_home_exit == neither.opponent_home_exit &&
+                                gated_opponent.opponent_plinth_visit == neither.opponent_plinth_visit &&
+                                gated_opponent.opponent_turns == neither.opponent_turns &&
+                                gated_opponent.opponent_endpoint_counts == neither.opponent_endpoint_counts &&
+                                gated_opponent.opponent_first_endpoints == neither.opponent_first_endpoints,
+                                "Crossfeed arrival-gated undamaged attacker changed its retained no-fire route");
+                            require(gated_aim_opponent == gated_opponent,
+                                "Crossfeed arrival-gated alternate no-fire subject changed the matched full result");
+                            require(type != WeaponType::roller || gated_aim_reciprocal == gated_reciprocal,
+                                "Crossfeed arrival-gated fixed-aim Roller changed under an ignored aim request");
+                            arrival_fire_trials += 4;
+                        }
                         aim_trials += 4;
                         if (advancing)
                         {
@@ -634,6 +819,18 @@ namespace crossfeed_acceptance
             "arrival may remain unobserved at 600 under opposing fire. Nominal cost is not net reserve depletion after "
             "regeneration or respawn. New travel requires no positive damage result and does not establish safety, "
             "optimal aim or human balance. The tail releases both inputs, so a late respawn may stand at its authored home\n";
+        std::cout << "NOTE Crossfeed arrival-gated authored-spawn loops add only eighty actual-opponent-fire trials, reusing "
+            "the retained no-opponent-fire controls. The same 600-tick clock, seed, spawn route, aims and launch order apply. "
+            "Each life's fire gate opens only after its first actual supported stopped950 observation after Scene resolution; "
+            "the next tick is the first eligible input. Death/nonalive and production respawn close the gate until that life's "
+            "new arrival. Closed input must pay nothing; a later life may still receive contacts from old flight. First-ever "
+            "global arrival snapshots remain separate from active-window life gate records. Natural recovery remains active; "
+            "nominal paid costs are not net reserve spend. Arrival, payment and health outcomes under subject fire may be censored; "
+            "no positive pressure, safety, optimal aim or human balance follows. The released tail opens no gates or new shots\n";
         matrix(OpponentMotion::spawn_walking);
+        require(arrival_fire_trials == 80, "Crossfeed arrival-gated matrix changed its eighty added firing trials");
+        std::cout << "PASS Crossfeed arrival-gated authored-spawn loops: eighty mirrored five-tool home/advancing firing trials, "
+            "both subject aims and subject fire controls, first-supported950 next-tick fire, production-life reset and actual "
+            "payment boundaries, matched retained undamaged attacker routes and bounded released tails; prior 480 trials retained\n";
     }
 }

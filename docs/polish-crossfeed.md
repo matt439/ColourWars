@@ -702,14 +702,117 @@ and staged map/tuning/presentation match the receipts. Evidence root is
 `comparison-at-600.csv` and `validation-results.json`. Runtime content is
 unchanged, so existing native 1-4P clean/heavy captures remain separate evidence.
 
-The next local control withholds the travelling Sprayer's fire until its first
-actual supported stop near 950, then compares that policy with held fire during
-departure. Keep the same active clock, routes, aims and retained no-fire
-controls; report arrival reserve and subsequent paint, payments and damage.
-This separates a deliberately depleted arrival from pressure after reserving
-ammunition, without granting a station or extra time. It does not prescribe new
-tuning. Human arena/balance, physical-pad and camera-recognition acceptance
-remain open.
+The planned arrival-gated comparison is completed below. The remaining primary
+acceptance is attended camera/arena/weapon review; no further mandatory scripted
+matrix follows from this resource control.
+
+### Arrival-gated authored-spawn fire (2026-10-24)
+
+Both complete Crossfeed CPU cases pass on the qualified current production
+objects. Debug and Release logs are byte-identical (SHA256
+`882EB2FBD8AF553CBA80AB6B1D1FB0F29A9E5C2D192CC714B43ECE604663217A`).
+Filtering only the new policy/life records and its NOTE/PASS lines reproduces
+the entire retained 480-trial log. Reconciliation checks 560 trials, 1,680
+checkpoint rows, 560 settled rows, 82 active life intervals and the additional
+72 no-fire/Roller aim checkpoint pairs plus 24 settled pairs. Evidence is under
+`out/validation/crossfeed-arrival-fire-20261024/`, with exact source/probe/input
+pins in `matrix-result-v2.json` and `validation-reconciliation-v2.json`.
+
+The new policy adds **80 actual-opponent-fire trials**, reusing the existing
+no-opponent-fire controls rather than duplicating them. The complete opposed
+matrix is 560 trials: the preceding 480 plus five tools, two teams, home and
+advancing routes, two subject aims, and subject fire on/off. Seed 2401027, P3,
+C2, authored spawn-zero travel, 950/1250 endpoints, subject-first launch order,
+600 active ticks and released tails remain fixed. No runtime value changes.
+
+All 80 first-ever arrivals are observed at **246** with **zero paid shots,
+zero nominal cost, reserve/global minimum 1.000000 and zero attacker-owned
+area or observed subject loss**. All 80 life-zero gates open after that tick;
+the first eligible input, actual firing input and paid shot are **247**. This
+is an observed first payment, not a newly inserted cooldown reset. The forty
+subject-fire-disabled controls complete seven endpoints and 4,557.06/4,557.09
+units of actual mirrored travel. Their full attacker movement/Down histories,
+route milestones and endpoints match the reused retained no-fire controls;
+alternate-aim no-fire full results and fixed-aim Roller controls pass.
+
+At tick 180 the travelling gated attacker still has full reserve, no payments,
+no owned paint and no inflicted observed loss in every sample. By 360 it has
+paid 114 shots, reserve 0.201998, and global owned area 624-672 on advancing
+runs or 4,704-4,944 on home runs; subjects still have no observed loss. All
+forty advancing runs first lose health at **366** and record **0.43** observed
+loss by 600, versus held-departure matches' **180** and **0.03**. Home subjects
+remain undamaged. None of the gated subjects dies. Thus later first damage
+coexists with greater fixed-time damage here; it does not establish safety or
+a balance ranking. Observed loss sums positive net tick decreases and can
+hide concurrent healing.
+
+The healthy controls pay **148** shots by 600 (nominal cost **1.036**) and end
+at reserve **0.003998**. Held-departure matches pay **156** and end at
+**0.001331**; they had already paid 145 shots (nominal 1.015) and held only
+0.004998 at first arrival, below the 0.007 shot cost. Delaying fire preserves
+arrival supply while abandoning travel paint: at 600 the no-subject-fire
+gated attacker's global owned area is 864 on advancing runs and 4,944 at home,
+versus held matches' 13,968-14,016 and 15,936-16,176. Areas are global ownership,
+not geographically isolated corridor paint. Nominal paid cost is events times
+authored cost, not net reserve depletion; natural recovery remains active.
+
+Advancing reciprocal subjects' owned area at 600 (team A / B):
+
+| Tool | Held downward -> gated downward | Held opponent aim -> gated opponent aim |
+|---|---:|---:|
+| Sprayer | 16,080 / 16,080 -> 15,888 / 15,888 | 13,488 / 13,536 -> 13,152 / 13,200 |
+| Sniper | 1,056 / 1,056 -> 1,152 / 1,152 | 48 / 48 -> 48 / 48 |
+| Roller | 21,936 / 22,512 -> 22,128 / 22,704 | 21,936 / 22,512 -> 22,128 / 22,704 |
+| Mister | 10,944 / 10,896 -> 10,848 / 10,800 | 16,224 / 16,320 -> 16,176 / 16,272 |
+| Bucket | 9,936 / 9,264 -> 9,696 / 9,264 | 5,664 / 6,624 -> 5,664 / 6,624 |
+
+All eighty matched cases retain the attacker's observed health loss, first
+observed damage tick, lethal events and respawns. In advancing reciprocal
+runs, inflicted observed loss remains downward/opponent aim: Sprayer 0/0.03,
+Sniper 0.334/1.002, Roller 0.105/0.105, Mister 0.09/0.40 and Bucket 0.402/0.402.
+For home reciprocal runs, all downward owned areas match; opponent-aim Sprayer
+changes 6,912/7,104 -> 5,568/5,568, Mister 14,544/14,544 -> 14,064/14,064 and
+Bucket 5,232/5,712 -> 5,232/5,568, while Sniper and Roller match. These side
+observations do not establish fairness.
+
+There are **82 active construction/respawn life intervals**: 80 observed gate
+openings and two later intervals with unobserved arrivals. Aimed Sniper kills
+the attacker once in both home mirrors and once in both advancing mirrors:
+four attacker lethal events, two respawns, no subject lethal events/respawns.
+The home attackers respawn at **568**, begin a new closed gate and remain
+unarrived/unpaid through 600; their reserve 1.000000 is production respawn
+supply. Advancing Sniper attackers have no active-window respawn, a censored
+observation. Ordinary lives pay 148 shots; the killed home/advancing lives pay
+139/143. The first-ever arrival fields still describe life zero even when the
+current life's opening fields are -1.
+
+`life_end_tick` ends a construction-to-next-respawn interval (or the active
+window), including the dead wait; **567 is not the death tick**. Minimum reserve
+at an opening is the fixture's **global** minimum, not a reset per-life minimum.
+Per-life payments reconcile with global actual payments. Every closed-input
+tick pays nothing, including the arrival and production-respawn ticks. Existing
+projectile contacts from a preceding open period/life are allowed while input
+is closed; this fixture does not promise zero subsequent world contacts.
+Released tails open no gates or shots and reach at most **111** ticks, excluded
+from the active comparison. Both final complete CPU logs report success.
+
+The named unattended travel-fire/resource control is now answered. These
+observations warrant preserving the current P3/weapon hypotheses, not adding
+another mandatory matrix or changing tuning. The current priority remainder
+is attended spawn pressure, C2 identity/rear-threat recognition and 1-4P
+clean/heavy readability, five-tool balance, physical-pad comfort, and author
+arena acceptance. Existing native captures remain separate evidence; CPU
+success establishes none of those human gates. A further unattended priority
+slice needs a concrete observation or an explicitly bounded current owner
+requirement. The supporting DBG#1 live-consumer row remains a separately
+scoped OPEN item if selected; optional scalar inventory is not implied.
+
+Exports under `owner-analysis-v1/`: `facts.json`, `gated-checkpoints.csv`,
+`held-vs-gated-at-600.csv` (80 matched cases) and
+`gated-active-life-intervals.csv`. The logs are under
+`acceptance-v2/{x64-debug,x64-release}/crossfeed-run.log` in the parent evidence
+root. Baseline is `crossfeed-spawn-pressure-20261024/x64-debug/677cc1ea774f4735a3f7016951a6077b/run.log`.
+
 
 ## Coupled movement and five-tool comparison (2026-10-20)
 

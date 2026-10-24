@@ -43,6 +43,10 @@ This is a selection guide, not another priority order; each owner defines a boun
 | `DBG#1` | Audit and validate the next live colour consumer after arm/hand paths 43 and 44 | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
+- **Crossfeed acceptance:** C2 identity/rear-threat recognition, 1-4P clean/heavy
+  readability, five-tool pressure/resource tradeoffs and arena acceptance
+  (`POL#3`, `POL#17`, `POL#27`). The arrival-gated CPU control is complete;
+  the author's positive movement feedback remains the P3 baseline.
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
@@ -68,7 +72,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | OPEN | MED | M | Author reports movement feels good; retain P3. Qualify C2 recognition, rear-threat awareness, all five tools and input margins; preserve legacy 200-unit climbs. Physical-pad review remains open. [Playtest](docs/polish-crossfeed.md#playtest-and-paint-coverage-iteration-2026-10-24), [course](docs/polish-movement-course.md). |
+| `POL#3` | DECISION | MED | M | Retain the author's positive P3 movement baseline. Attended C2 identity/rear-threat recognition, five-tool/input-margin and physical-pad review remain; preserve legacy climbs. [Playtest](docs/polish-crossfeed.md#playtest-and-paint-coverage-iteration-2026-10-24), [course](docs/polish-movement-course.md). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -79,8 +83,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Compare arrival-gated Sprayer fire with held departure fire at fixed time; then spawn pressure, 1-4P/heavy-paint readability and human arena acceptance. Preserve other maps. [Next](docs/polish-crossfeed.md#authored-spawn-lower-approach-pressure-2026-10-24). |
-| `POL#27` | OPEN | HIGH | L | Separate travel firing from arrival reserve/pressure in the five-tool candidate, then human balance. Sniper reserve and Mister lifetime hypotheses remain open. [Next control](docs/polish-crossfeed.md#authored-spawn-lower-approach-pressure-2026-10-24). |
+| `POL#17` | DECISION | HIGH | XL | Attended Crossfeed spawn pressure, 1-4P clean/heavy readability and arena acceptance remain after the qualified arrival-fire control. Preserve other maps. [Evidence and review](docs/polish-crossfeed.md#arrival-gated-authored-spawn-fire-2026-10-24). |
+| `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains after separating travel fire from arrival pressure. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence and review](docs/polish-crossfeed.md#arrival-gated-authored-spawn-fire-2026-10-24). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after reference-arena acceptance; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
