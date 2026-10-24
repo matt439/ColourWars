@@ -288,10 +288,10 @@ artifact.
 
 Only the assets listed in [cmake/runtime_assets.cmake](cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.
-The ZIP includes licence notices, the seven compiled fonts, four sprite sheets,
-the three arenas and Movement Course, tuning, presentation, the replacement
-sound-bank definition and validated `paint_exe.xwb`, with audio provenance and
-CC0 terms. Source audio, development art, content tools and saves are excluded.
+The ZIP includes licence notices, the seven compiled fonts, six sprite sheets,
+the four arenas (including Crossfeed) and Movement Course, tuning, presentation,
+the replacement sound-bank definition and validated `paint_exe.xwb`, with audio
+provenance and CC0 terms. Source audio, development art, content tools and saves are excluded.
 Do not distribute the normal `game/` build directory in place of this ZIP.
 Debug packaging is rejected because its runtime is not redistributable.
 
