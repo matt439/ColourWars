@@ -1261,6 +1261,28 @@ still only reads.
   that already. If a voice cap is ever needed, the exhibit is the code that
   had to count voices.
 
+- **Losing the audio device is not recovered** (added 2026-10-24).
+  `AudioDevice::update` discards `AudioEngine::Update()`'s false return on
+  purpose (`engine/audio/xaudio2/audio_device.cpp`, beside the platform), so
+  unplugging headphones or switching the default output silences the game
+  until it is relaunched. DirectXTK's documented reply is `IsCriticalError()`
+  then `Reset()`, and only the engine can make it. Nothing here works around
+  it, so there is no exhibit yet. The `ROAD#3` listening session observes the
+  case. A report follows if that session shows it in ordinary play.
+
+- **Nothing keeps the display awake** (added 2026-10-24). Neither tree calls
+  `SetThreadExecutionState`, and pad input does not reliably reset Windows'
+  idle timer. `ROAD#6` makes the client call from `GameLevel`, so that a match
+  holds the display and the menus do not. The window shell is the more natural
+  owner, and once `ROAD#6` lands that call is the exhibit. It is small enough to
+  ride with another report.
+
+- **XInput is the only pad reader.** `engine/input/gamepad_reader.h` is one
+  function wide, so a GameInput backend (DualSense, DualShock, Switch Pro
+  without Steam Input) would be an engine addition behind an existing seam. No
+  exhibit: nothing here works around it. `ROAD#2` brings one such pad to
+  observe the limit.
+
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):
   `ARCHITECTURE.md` names the read-only asymmetry and settles it, and T12

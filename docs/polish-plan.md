@@ -1508,6 +1508,32 @@ ramps and decorations. See [Blockout aids](level-editor.md#blockout-aids) for th
 controls, measurement source, acceptance and limits. These aids explain a
 blockout; they do not replace playing it.
 
+### Decide which Splatoon mechanics to borrow (`POL#30`)
+
+**DECISION, answered with or after the coupled `POL#27` pass.** ColourWars
+follows Splatoon on purpose in places (no live score, random pairs). The
+[level research](level-design-research.md) lists the mechanics it does not
+borrow as constraints on maps, but nothing records whether that absence is a
+decision. A 2026-10-24 review named three. Each changes balance, so none should
+be added ahead of `POL#27`.
+
+- **Paint underfoot.** Standing on paint does nothing: no speed or ammunition
+  recovery on your own colour, no slowdown or damage on the enemy's, and
+  ammunition regenerates on a timer alone. This is the largest unexplored lever
+  for making territory matter during the round instead of only at the count.
+  The hook exists: the player already tracks the paintable structures
+  supporting it.
+- **A special charged by painting.** There are five primaries and nothing else.
+  Splatoon uses a special to answer "why keep painting when nobody is here".
+  The arena briefs currently answer that with geometry alone.
+- **A splat tally on results.** Results show surface held only. A per-owner
+  count on the contribution rows is small, since the damage path knows the
+  projectile's owner. It also nudges the game toward the kill emphasis it has
+  avoided ("eliminations make space to paint", below).
+
+The decision may be "no" for any of them. Record it here either way, so a later
+gap list reads the absence as intended.
+
 ### Let players learn by making a mess
 
 The game already has weapon descriptions, controls cards and timed solo practice

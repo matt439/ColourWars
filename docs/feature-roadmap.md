@@ -313,11 +313,73 @@ The next acceptance work requires hardware and is still outstanding:
    focus changes, fullscreen/resize, series draws, rematches and return to menu.
 4. Complete the [replacement-audio acceptance](polish-plan.md#5-replace-the-entire-audio-set)
    as that work lands: new music and effects, music/SFX gains, muting, suspension,
-   resumed weapon loops and the multiplayer mix. The ZIP now includes the
+   resumed weapon loops and the multiplayer mix. Also unplug headphones and
+   switch the default output mid-match. The pinned engine does not recover a
+   lost device ([ledger](review/engine-reports.md#what-is-deliberately-not-here)),
+   so record what is heard. The ZIP now includes the
    replacement bank; qualify actual playback from the extracted release and the
    missing-bank silent fallback separately.
 5. Relaunch and confirm saved settings; record device models, display layout,
    build revision and observed failures before choosing the next feature increment.
+6. Leave a pad-only series running past the display's sleep and screen-saver
+   timers once `ROAD#6` lands. Bring one non-XInput pad (DualSense, DualShock or
+   Switch Pro) without Steam Input, so the [XInput-only limit](#input-devices-and-seats)
+   is observed rather than assumed.
+
+## Couch-session gaps (2026-10-24 review)
+
+A 2026-10-24 review checked the current code against the frozen gap audit and
+found its first-class list almost entirely implemented. What follows is what it
+found untracked that belongs to this roadmap. Spawn protection went to
+[`POL#17`](polish-crossfeed.md), the unborrowed Splatoon mechanics to
+[`POL#30`](polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30), and
+audio-device loss to the [ledger](review/engine-reports.md#what-is-deliberately-not-here).
+
+### Display sleep during a match (`ROAD#6`)
+
+**OPEN.** Neither tree calls `SetThreadExecutionState`, and Windows does not
+reliably count XInput as activity for its idle timer. A long series played only
+on pads can blank the screen or start a screen saver mid-round.
+
+Next step: `GameLevel` asks for `ES_CONTINUOUS | ES_DISPLAY_REQUIRED` on
+construction and restores `ES_CONTINUOUS` in its destructor, so only a match
+holds the display awake and the menus let it sleep. The window shell is the
+better long-term owner, so the ledger's not-here list records the workaround.
+Acceptance is item 6 above, in the `ROAD#2` session.
+
+### Per-seat accessibility toggles (`ROAD#7`)
+
+**DEFERRED** until after the coupled `POL#27` pass. View shake, the aim marker
+and Reduce effects are single `PlaySettings` fields that apply to every pane,
+while stick deadzones are already per slot (`StickSettings`). On a shared screen
+a motion-sensitive player cannot opt out alone. The shape is the stick-profile
+pattern: per-slot copies with the global value as the default, edited from the
+same per-pad page. Before scoping, decide whether Reduce effects is per pane
+(view shake, flashes) or global (shared overlays, the resume signal).
+
+### More team palette pairs (`ROAD#8`)
+
+**DEFERRED** to the later UI art pass. Three pairs ship. Adding one is a content
+edit to the [team palette block](#team-palette-content-gap22-2026-10-15), and
+each extra pair widens the colour-vision route around the random roll. Making
+one a fixed Options choice still needs an enum entry and save key. Check each
+candidate pair against the arena art under deutan, protan and tritan simulation
+before shipping it.
+
+### Input devices and seats
+
+No rows. These are known limits, recorded so a later gap list does not file
+them again.
+
+- **XInput only.** DualShock, DualSense and Switch Pro pads work only through
+  Steam Input or a wrapper. The engine's reader seam is one function wide
+  (`engine/input/gamepad_reader.h`), so a GameInput backend is Labrador work and
+  would need an exhibit before it is a report. `ROAD#2` observes the limit
+  (item 6 above).
+- **One keyboard seat.** That seat aims with the mouse, so a second keyboard
+  player needs a keyboard-only aim model. That is a design question, not a
+  missing binding. It gets a row only if the author asks for two players on one
+  keyboard.
 
 ## Menu navigation follow-up (GAP#4.4)
 

@@ -108,6 +108,16 @@ benches, baffle tops and lower approaches against all spawn bodies and both
 departures. An enemy who reaches the baffle may gain a close angle into home;
 record this rather than inferring safety from symmetry or a roof.
 
+**Respawn grace is the fallback, not the first answer (2026-10-24).**
+`Player::respawn` refills health and ammunition and returns straight to alive,
+with no protection window. Splatoon pairs spawn geometry with brief spawn armour.
+If attended `POL#17` play shows spawn pressure that geometry and approach changes
+cannot fix, add a short damage-immune grace as a `tuning.json` player value,
+default 0. Paint should still land, as it does under the developer
+`damage_immune` cheat. Consider ending the grace early on the player's first shot.
+Do not add it while spawn trials are being measured: the trials above record
+damage at spawn, and immunity would hide what they measure.
+
 The overview is X=0-3600, Y=500-1380. Camera bounds match it. The native-size
 brush pot sits on the mixer and the tape roll on the right bench. Their quads
 start at (1672,564) and (2260,892): the frames' four- and twelve-unit transparent
