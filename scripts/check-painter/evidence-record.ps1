@@ -259,6 +259,22 @@ elseif ($CrackTuneColourOnly) {
     else { $result.actions += @('literal-consumer-only','no-developer-transcript-scratch-or-Save') }
     $result.checks += ' After contact export, eight same-stem PNGs retain native115x34 dimensions, bit_depth8 and colour_type2or6; strict IHDR and complete decoded RGB parity to PPM are checked with flat per-crop encoded metadata and no extra GPU reads. The two native contiguous crops are not mirrored integer approximations or a full Monitor reconstruction. Source models are bounded representatives without per-pixel mixing, tolerance, capture fitting or universal GPU precision claims. Rendered calibration does not establish full art correctness. Complete-candidate conflict/force refusal remains CPU-owned. No actual Level/story/roster/phase, arbitrary crack path/transform, physical input/hardware, human contrast/readability/comfort, listening, balance or performance acceptance.'
 }
+elseif ($HudTimerTuneColourOnly) {
+    $result.scope = 'hud-timer-tune-colour-only'
+    $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()
+    $result.palettes = @('authored-141414','literal-35BCE1','literal-2060C080','literal-A532D600'); $result.resolutions = @('1920x1080')
+    $result.inputs = 'Retained public InterfaceGameplay prepared draw with fixed health/ammunition/identity/team and supplied timer/running/reduced arguments. Leaf-only initial 1920x1080 hidden Application; no resize, focus action, injected input, input poll or positive-time update.'
+    $result.audio = 'No HUD audio cues or listening acceptance; no game Save writes.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.actions = @('one-live-normal-timer-foreground','source-derived-font-glyph-and-shadow-ROI','one-effective-opaque-paper-backdrop','four-normal-palettes','seven-explicit-branch-counterexamples','three-tint-negative-controls','four-native-122x51-crops')
+    $result.checks = 'Shared 55 readbacks, 18 CSV rows and four native 122x51 crops (24888 pixels, 74720 P6 bytes). Independent raw-font/explicit-channel proof covers only the fixed [906,74,1028,125) glyph/shadow ROI on authored opaque FFF5DF paper: 6222 RGBA pixels per observation, 12 observations and 74664 pixel comparisons. Separate unchanged 00000022 shadow precedes the selected normal foreground; copied complete-HUD frames prove adoption only. Three straight/double-base/nonblack-alpha0 references must discriminate inside the glyph ROI while raw reference exteriors stay exact; counts are observed, not analytical GPU precision predictions. Public supplied values cover 123.25, 10.01, exactly 10, fractional 9.25, zero and stopped 4.25, with normal/closing Reduce Effects controls. Three closing-colour invariance and six Reduce Effects relations retain their exact per-context frames. Every read checks 32 WHITE/BLACK RGBA calibration pixels. Captured font/resource metrics, complete unselected HUD/shadow/closing/identity/palette state and draw RNG remain fixed; all updates/input polls and game Save calls are zero.'
+    if ($Preset -eq 'x64-debug') {
+        $result.actions += @('eight-real-commands-eight-normal-states','two-command-closing-observations','one-token-private-save-rebase-reset')
+        $result.checks += ' Debug adds 34 readbacks and ten rows: eight normal states plus two closing observations. One exact timer-token private Save/rebase, named RED, original/saved resets and unchanged private default preferences pass without game Save calls. Combined Debug totals are 89 readbacks, 28 rows and four crops, with 2848 calibration pixel comparisons.'
+        $result['developer_command_scope'] = 'debug-validated-commands'
+    } else { $result['developer_command_scope'] = 'not-run-release-consumer-only' }
+    $result.checks += ' Native PNG dimensions, IHDR, decoded opaque alpha and complete RGB parity to retained PPM are checked after contact export. No independent full-HUD/card reconstruction, actual Level sequence, physical input/hardware, human readability/comfort, listening, balance or performance acceptance. Full-candidate merge/refusal remains CPU-owned.'
+}
 elseif ($HudTrackTuneColourOnly) {
     $result.scope = 'hud-track-tune-colour-only'
     $result.Remove('stage'); $result.stages = @(); $result.player_counts = @(); $result.input_slots = @(); $result.weapons = @()

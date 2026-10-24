@@ -164,7 +164,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of forty-five audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of forty-six audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -329,7 +329,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-forty-five audited colour paths below, can be read and changed while the game runs,
+forty-six audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -376,7 +376,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These forty-five existing string fields are supported; numeric path
+**Colours.** These forty-six existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -434,6 +434,7 @@ The latest validation is recorded under
 | `presentation.figure.arm_colour` | live | Procedural arms, outer hand squares and quiet blink lids on each applicable FigureAttachments draw; captured rest/sleeve layers retain their existing atlas tints. |
 | `presentation.figure.hand_colour` | live | Inner hand squares drawn after the tool and their arm-coloured borders on each applicable FigureAttachments draw. |
 | `presentation.figure.quiet.face_colour` | live | Eye paint-out on each applicable quiet blink draw; the later lid retains its independent arm colour, quiet timing and captured resources. |
+| `presentation.hud.timer.colour` | live | Normal HUD clock foreground on each applicable draw; the running final-ten-seconds signal uses separate closing-clock text. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -624,6 +625,16 @@ Track alpha0 restores the ink before later fills blend over or replace it.
 Health-only premultiplication and caller team/ammo semantics, amount clamping,
 geometry, resources and captured fonts stay unchanged.
 
+Normal HUD timer foreground is borrowed on every applicable normal-clock draw.
+One base premultiplication preserves authored opaque `141414`, the captured
+timer font, formatting and geometry. Alpha0 retains the opaque paper and the
+independent `00000022` shadow. A running positive time with `ceil(timer) <= 10`
+uses the separate closing-clock text and returns before either normal text
+call; foreground edits leave that signal unchanged. Zero, stopped short clocks
+and displayed times above ten use the normal foreground path. Public-HUD
+fixtures establish this draw behavior, not natural Level visibility or human
+timer contrast/readability acceptance.
+
 FigureAttachments borrows both `figure.arm_colour` and `figure.hand_colour`
 on each applicable procedural draw. Arm colour supplies four arguments:
 blink lids, both segments of each arm, and outer hand squares; hand colour
@@ -701,7 +712,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the forty-five colour strings listed above join numbers and booleans in `tune`.
+only the forty-six colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1442,7 +1453,7 @@ as the game. In Release:
   engine declined input capture as game policy (report 9), so a per-key gate
   would be this client's own and is not built.
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the forty-five listed colour fields above are
+  and inserting keys in `tune.save`: the forty-six listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1451,13 +1462,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Forty-five existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Forty-six existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette body/ink/rim/shade and reveal
-ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack, HUD health/track and figure arm/hand and quiet blink face colours.
+ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack, HUD health/track, normal timer foreground and figure arm/hand and quiet blink face colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1485,6 +1496,49 @@ The local RapidJSON span reader and in-memory candidate validation
 (`labrador::parse_json`, engine report 12) already provide the required route.
 The engine declined to keep source spans, so the span reader and splice stay
 this tool's.
+
+Normal HUD timer foreground increment (2026-10-24), **verified**:
+path 46, `presentation.hud.timer.colour`, is live on existing InterfaceGameplay
+normal-clock draws. Only its exact colour path and existing foreground tint
+argument change. The shadow, closing-clock branch, font/resources, caller
+inputs, formatting, geometry and authored content remain fixed.
+
+Both game/editor builds and all four Debug/Release `debug_console` and
+`story_audio` CPU cases pass, including Release developer-code exclusion.
+The independent 46-path sweep, escaped nested tokens, exact LF/CRLF source
+splices, one-token save/rebase, sibling-preserving selected resets and complete
+invalid-merge ledger retention are covered. Recording/replay reject new edits;
+retained CPU HUD/resource evidence is metadata only, with no pixel claim.
+
+`scripts/check-painter.ps1 -Preset <preset> -SkipBuild -HudTimerTuneColourOnly`
+passes at hidden 1920x1080. Shared consumer evidence is 55 readbacks, 18 rows
+and four native 122x51 crops (74720 PPM bytes). An independent same-font,
+linear-filter reference uses literal placement/channels on one effective
+opaque paper backdrop, retaining the separate shadow. Twelve observations
+check all 6222 RGBA ROI pixels. Three straight/double-alpha negative controls
+discriminate 7968 pixels. Copied full-HUD comparisons prove adoption only;
+the reference does not independently test the engine's font rasterizer.
+
+Eight source-derived contexts cover ordinary time, just above ten, exactly ten,
+fractional closing time, zero, stopped short time and Reduce Effects on normal
+and closing draws. Foreground edits retain the closing-clock signal exactly.
+Debug adds eight actual private commands/states, 34 readbacks and ten rows,
+including one-token save/rebase and exact original/saved resets; combined Debug
+is 89/28/4. Fonts/resources, unselected regions, repeated draws and RNG stay
+guarded, with zero observation updates, input polls or game Save calls. Seven
+shared raw CSV/JSON/PPM files and all four PNGs are byte-identical between
+presets; decoded PNG pixels match their complete PPM RGB payloads.
+
+The first Debug native launch stopped at a missing probe argument registration,
+before Application/window/renderer construction. Its failed receipt is retained.
+Only the accepted-mode predicate and usage string were corrected and reviewed;
+the unchanged oracle and exact tolerances passed in fresh native-v2 runs.
+Qualified game/editor and CPU producers were reused by hashes.
+
+Evidence is under `out/validation/hud-timer-colour-20261024/`. The preserved
+clean a7a061f Release ZIP predates this increment. Automated checks establish
+neither human clock readability/comfort nor attended Crossfeed, physical-pad,
+listening, clean-PC or performance acceptance. `DBG#1` remains open.
 
 Quiet blink face colour increment (2026-10-24), **verified**:
 path 45, `presentation.figure.quiet.face_colour`, reads live through existing

@@ -158,6 +158,7 @@ namespace
 #include "scripts/acceptance/painter_visual/limb_colour_fixture.h"
 #include "scripts/acceptance/painter_visual/limb_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/quiet_face_tune_colour_checks.h"
+#include "scripts/acceptance/painter_visual/hud_timer_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_ink_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_background_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_checks.h"
@@ -223,7 +224,8 @@ int wmain(int argc, wchar_t** argv)
 {
     try
     {
-        require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"identity" ||
+        require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"hud-timer-tune-colour" ||
+            std::wstring(argv[3]) == L"identity" ||
             std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
             std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
@@ -242,7 +244,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|surface-finish|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|cursor-material-tune-colours|desktop-tune-colour|power-light-tune-colour|program-tune-colour|program-level-visibility|acting-tune-colours|glass-tune-colour|silhouette-body-tune-colour|scribble-tune-colour|hud-health-tune-colour|hud-track-tune-colour|crack-tune-colour|limb-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|surface-finish|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|cursor-material-tune-colours|desktop-tune-colour|power-light-tune-colour|program-tune-colour|program-level-visibility|acting-tune-colours|glass-tune-colour|silhouette-body-tune-colour|scribble-tune-colour|hud-health-tune-colour|hud-track-tune-colour|hud-timer-tune-colour|crack-tune-colour|limb-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -288,6 +290,7 @@ int wmain(int argc, wchar_t** argv)
         const bool scribble_tune_colour_only = argc == 4 && std::wstring(argv[3]) == L"scribble-tune-colour";
         const bool hud_health_tune_colour_only = argc == 4 && std::wstring(argv[3]) == L"hud-health-tune-colour";
         const bool hud_track_tune_colour_only = argc == 4 && std::wstring(argv[3]) == L"hud-track-tune-colour";
+        const bool hud_timer_tune_colour_only = argc == 4 && std::wstring(argv[3]) == L"hud-timer-tune-colour";
         const bool crack_tune_colour_only = argc == 4 && std::wstring(argv[3]) == L"crack-tune-colour";
         const bool limb_tune_colours_only = argc == 4 && std::wstring(argv[3]) == L"limb-tune-colours";
         const bool exposed_colour_alpha_only = argc == 4 && std::wstring(argv[3]) == L"exposed-colour-alpha";
@@ -339,6 +342,7 @@ int wmain(int argc, wchar_t** argv)
         require(!scribble_tune_colour_only, "ScribbleTuneColourOnly requires the normal gamepad reader");
         require(!hud_health_tune_colour_only, "HudHealthTuneColourOnly requires the normal gamepad reader");
         require(!hud_track_tune_colour_only, "HudTrackTuneColourOnly requires the normal gamepad reader");
+        require(!hud_timer_tune_colour_only, "HudTimerTuneColourOnly requires the normal gamepad reader");
         require(!crack_tune_colour_only, "CrackTuneColourOnly requires the normal gamepad reader");
         require(!limb_tune_colours_only, "LimbTuneColoursOnly requires the normal gamepad reader");
 
@@ -372,7 +376,7 @@ int wmain(int argc, wchar_t** argv)
         ApplicationOptions options;
         options.window_class_name = L"ColourWarsPainterProbe";
         options.window_title = L"ColourWars painter validation";
-        options.resolution = ScreenResolution::s_1280_720;
+        options.resolution = hud_timer_tune_colour_only ? ScreenResolution::s_1920_1080 : ScreenResolution::s_1280_720;
         options.fullscreen = false;
         options.max_threads = 4;
         if (argc == 4 && (std::wstring(argv[3]) == L"miniature-terrain" ||
@@ -486,6 +490,16 @@ int wmain(int argc, wchar_t** argv)
             crack_tune_colour_checks(app, levels, tuning, presentation, content, output);
 #else
             std::cout << "PASS crack-tune-colour-only Release consumer-only scope; no developer commands executed\n";
+#endif
+            return 0;
+        }
+        if (hud_timer_tune_colour_only)
+        {
+            hud_timer_colour_consumer_checks(app, presentation, output);
+#if COLOURWARS_DEV_TOOLS
+            hud_timer_tune_colour_checks(app, levels, tuning, presentation, content, output);
+#else
+            std::cout << "PASS normal HUD timer Release consumer scope; no developer commands executed\n";
 #endif
             return 0;
         }

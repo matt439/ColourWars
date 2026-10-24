@@ -132,10 +132,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited forty-five colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited forty-six colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly forty-five authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly forty-six authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -218,7 +218,7 @@ namespace debug_console_acceptance
 			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
 			"presentation.hud.meter_track_colour.r", "presentation.hud.meter_track_colour_extra",
 			"presentation.hud.sprite_sheet", "presentation.hud.fill_frame", "presentation.hud.meter_label_font",
-			"presentation.hud.timer.font", "presentation.hud.player_identity.font" })
+			"hud.timer.colour", "tuning.hud.timer.colour", "presentation.hud.timer.colour.r", "presentation.hud.timer.colour_extra", "presentation.hud.timer.colour.value", "presentation.hud.timer_colour", "presentation.hud.timer.shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.timer.font", "presentation.hud.player_identity.font" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -380,7 +380,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All forty-five colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All forty-six colour strings have real Presentation consumers");
 		return checked;
 	}
 }

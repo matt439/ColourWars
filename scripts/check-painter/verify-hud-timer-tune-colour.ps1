@@ -1,0 +1,155 @@
+# This leaf verifies its own exact schemas before contact export, then verifies
+# native PNG bytes afterward. It does not execute code from retained artifacts.
+$timerUpdates = @('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls','observation_weapon_updates')
+$timerStates = @('default','rgb','rgba128','alpha0')
+function Get-TimerSha([byte[]]$Bytes) { [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes)) }
+function Assert-TimerKeys($Object,[string[]]$Expected,[string]$Scope) {
+    if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($Expected | Sort-Object) -join '|')) { throw "Timer exact $Scope schema differs" }
+}
+function Assert-TimerInteger($Object,[string]$Key,[long]$Expected) {
+    $value=$Object.$Key
+    if (($value -isnot [int] -and $value -isnot [long]) -or $value -ne $Expected) { throw "Timer exact integer differs: $Key" }
+}
+function Get-TimerCsvInteger($Row,[string]$Key) {
+    $text=[string]$Row.$Key; $value=0L
+    if ($text -cnotmatch '^(0|[1-9][0-9]*)$' -or ![long]::TryParse($text,[ref]$value)) { throw "Timer canonical CSV integer differs: $Key" }
+    return $value
+}
+function Assert-TimerCsvColumns($Rows,[string[]]$Expected,[int]$Count,[string]$Scope) {
+    if ($Rows.Count -ne $Count -or ($Rows[0].PSObject.Properties.Name -join '|') -cne ($Expected -join '|')) { throw "Timer exact $Scope CSV shape differs" }
+}
+function Assert-TimerFlags($Row,[string[]]$Flags) {
+    foreach ($flag in $Flags) { if ($Row.$flag -cne 'true') { throw "Timer native flag differs: $flag" } }
+}
+function Complete-HudTimerColourEvidence {
+    param([Parameter(Mandatory)][string]$Directory)
+    $context=$script:timerVerifiedContext
+    if ($null -eq $context -or ![StringComparer]::OrdinalIgnoreCase.Equals([IO.Path]::GetFullPath($Directory),$context.directory)) { throw 'Timer PNG completion directory differs' }
+    foreach ($inputFile in $context.inputs) {
+        if (!(Test-Path -LiteralPath $inputFile.path -PathType Leaf) -or (Get-FileHash -LiteralPath $inputFile.path).Hash -cne $inputFile.sha256) { throw 'Timer verified input changed before PNG completion' }
+    }
+    $pngs=@(Get-ChildItem -LiteralPath $Directory -Filter 'hud-timer-colour-*.png' -File)
+    $expected=@($context.ppms | ForEach-Object { [IO.Path]::ChangeExtension($_.name,'.png') })
+    if ($pngs.Count -ne 4 -or (($pngs.Name | Sort-Object) -join '|') -cne (($expected | Sort-Object) -join '|')) { throw 'Timer exact native PNG inventory differs' }
+    Add-Type -AssemblyName System.Drawing
+    $evidence=@(foreach ($ppm in $context.ppms) {
+        $ppmPath=Join-Path $Directory $ppm.name; $ppmBytes=[IO.File]::ReadAllBytes($ppmPath)
+        if ((Get-TimerSha $ppmBytes) -cne $ppm.sha256) { throw 'Timer PPM changed before PNG decode' }
+        $path=[IO.Path]::ChangeExtension($ppmPath,'.png'); $bytes=[IO.File]::ReadAllBytes($path)
+        $signature=@(137,80,78,71,13,10,26,10)
+        if ($bytes.Length -lt 33) { throw 'Timer PNG header truncated' }
+        for ($i=0; $i -lt 8; ++$i) { if ($bytes[$i] -ne $signature[$i]) { throw 'Timer PNG signature differs' } }
+        if (($bytes[8..11] -join ',') -cne '0,0,0,13' -or [Text.Encoding]::ASCII.GetString($bytes,12,4) -cne 'IHDR') { throw 'Timer PNG initial IHDR differs' }
+        $width=0L; $height=0L
+        for ($i=0; $i -lt 4; ++$i) { $width=$width*256+$bytes[16+$i]; $height=$height*256+$bytes[20+$i] }
+        if ($width -ne 122 -or $height -ne 51 -or $bytes[24] -ne 8 -or $bytes[25] -notin @(2,6) -or $bytes[26] -ne 0 -or $bytes[27] -ne 0 -or $bytes[28] -notin @(0,1)) { throw 'Timer PNG native RGB/RGBA IHDR differs' }
+        $bitmap=[Drawing.Bitmap]::new($path)
+        try {
+            if ($bitmap.Width -ne 122 -or $bitmap.Height -ne 51) { throw 'Timer decoded PNG dimensions differ' }
+            $rgb=[byte[]]::new(18666)
+            for ($y=0; $y -lt 51; ++$y) { for ($x=0; $x -lt 122; ++$x) {
+                $pixel=$bitmap.GetPixel($x,$y); $at=($y*122+$x)*3
+                if ($pixel.A -ne 255) { throw 'Timer decoded PNG alpha is not opaque' }
+                $rgb[$at]=$pixel.R; $rgb[$at+1]=$pixel.G; $rgb[$at+2]=$pixel.B
+            } }
+        } finally { $bitmap.Dispose() }
+        for ($i=0; $i -lt 18666; ++$i) { if ($rgb[$i] -ne $ppmBytes[14+$i]) { throw 'Timer decoded PNG differs from complete retained PPM RGB' } }
+        $digest=Get-TimerSha $rgb
+        if ($digest -cne $ppm.rgb_payload_sha256) { throw 'Timer decoded PNG RGB fingerprint differs' }
+        $metadata=[ordered]@{name=[IO.Path]::GetFileName($path);source_ppm=$ppm.name;scope='normal-timer-glyph-shadow-paper-ROI';width=122;height=51;pixels=6222;bit_depth=[int]$bytes[24];colour_type=[int]$bytes[25];ppm_sha256=$ppm.sha256;png_sha256=(Get-TimerSha $bytes);decoded_rgb_sha256=$digest;decoded_rgb_matches_ppm=$true;alpha_opaque=$true}
+        $metadata | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath "$path.metadata.json" -Encoding utf8
+        $metadata
+    })
+    $context.observed.png_crops=$evidence
+    $context.observed.png_count=4; $context.observed.png_pixels=24888; $context.observed.png_rgb_bytes=74664; $context.observed.png_complete=$true
+}
+
+$timerInputs=[Collections.Generic.List[string]]::new()
+$timerSummaryPath=Join-Path $captures 'hud-timer-colour-consumer-summary.json'
+$timerMainPath=Join-Path $captures 'hud-timer-colour-main.csv'
+$timerBranchPath=Join-Path $captures 'hud-timer-colour-branches.csv'
+foreach ($path in @($timerSummaryPath,$timerMainPath,$timerBranchPath,(Join-Path $run 'run.log'),(Join-Path $run 'run.err'))) {
+    if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw 'Timer required evidence file missing' }
+    $timerInputs.Add($path)
+}
+if (@(Get-ChildItem -LiteralPath $captures -Filter 'hud-timer-failure-*').Count) { throw 'Timer native failure artifacts remain' }
+$timerSummary=Get-Content -LiteralPath $timerSummaryPath -Raw | ConvertFrom-Json
+$timerMain=@(Import-Csv -LiteralPath $timerMainPath); $timerBranches=@(Import-Csv -LiteralPath $timerBranchPath)
+$timerCounts=[ordered]@{readbacks=55;csv_rows=18;main_rows=4;branch_rows=14;crops=4;crop_width=122;crop_height=51;crop_pixels=24888;ppm_bytes=74720;roi_pixels=6222;independent_roi_observations=12;roi_pixel_checks=74664;repeat_checks=18;copied_adoption_checks=4;closing_colour_invariance_checks=3;reduce_effects_checks=6;controls=3;calibration_pixel_checks=1760;private_game_saves=0}
+Assert-TimerKeys $timerSummary (@($timerCounts.Keys)+$timerUpdates+@('scope','control_discriminating_pixels')) 'shared'
+foreach ($key in $timerCounts.Keys) { Assert-TimerInteger $timerSummary $key $timerCounts[$key] }
+foreach ($key in $timerUpdates) { Assert-TimerInteger $timerSummary $key 0 }
+$timerControlPixels=$timerSummary.control_discriminating_pixels
+if (($timerControlPixels -isnot [int] -and $timerControlPixels -isnot [long]) -or $timerControlPixels -le 0 -or $timerControlPixels -gt 18666 -or $timerSummary.scope -cne 'normal-timer-glyph-roi-and-branch-invariance') { throw 'Timer shared scope or observed control support differs' }
+$timerMainColumns=@('state','raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng','controls','discriminating_pixels','scope')
+Assert-TimerCsvColumns $timerMain $timerMainColumns 4 'main'
+if (($timerMain.state -join '|') -cne ($timerStates -join '|')) { throw 'Timer main state order differs' }
+$timerSumPixels=0L
+foreach ($row in $timerMain) {
+    Assert-TimerFlags $row @('raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng')
+    $controls=switch ($row.state) { rgba128 {2} alpha0 {1} default {0} }
+    $observed=Get-TimerCsvInteger $row 'discriminating_pixels'
+    if ((Get-TimerCsvInteger $row 'controls') -ne $controls -or $observed -gt $controls*6222 -or ($controls -gt 0 -and $observed -le 0) -or $row.scope -cne 'normal-timer-glyph-roi') { throw 'Timer main observed tint-control accounting differs' }
+    $timerSumPixels += $observed
+}
+if ($timerSumPixels -ne $timerControlPixels) { throw 'Timer main control pixels do not sum to the native summary' }
+$timerBranchColumns=@('state','context','normal_branch','raw_rgba_match','repeat_match','selection_guard','frozen_style_resources_rng','scope')
+Assert-TimerCsvColumns $timerBranches $timerBranchColumns 14 'branch'
+$timerBranchNames=@('above-ten','exact-ten','fractional-closing','zero','stopped-short','reduced-normal','reduced-closing')
+$timerNormalContexts=@('above-ten','zero','stopped-short','reduced-normal')
+for ($i=0; $i -lt 14; ++$i) {
+    $row=$timerBranches[$i]; $state=if ($i -lt 7) {'default'} else {'rgba128'}; $context=$timerBranchNames[$i%7]
+    $normal=$context -cin $timerNormalContexts; $normalText=if ($normal) {'true'} else {'false'}
+    $raw=if ($normal) {'true'} else {'not-run-closing-invariance-only'}
+    $guard=if ($state -ceq 'default') {'baseline'} elseif ($normal) {'normal-locality'} else {'closing-exact'}
+    Assert-TimerFlags $row @('repeat_match','frozen_style_resources_rng')
+    if ($row.state -cne $state -or $row.context -cne $context -or $row.normal_branch -cne $normalText -or $row.raw_rgba_match -cne $raw -or $row.selection_guard -cne $guard -or $row.scope -cne 'public-hud-branch-counterexample') { throw 'Timer exact public branch observation differs' }
+}
+$timerPpms=@(Get-ChildItem -LiteralPath $captures -Filter 'hud-timer-colour-*.ppm' -File)
+$timerExpectedNames=@($timerStates | ForEach-Object { "hud-timer-colour-$_.ppm" })
+if ($timerPpms.Count -ne 4 -or (($timerPpms.Name | Sort-Object) -join '|') -cne (($timerExpectedNames | Sort-Object) -join '|')) { throw 'Timer exact native PPM inventory differs' }
+$timerHeader=[Text.Encoding]::ASCII.GetBytes("P6`n122 51`n255`n")
+$timerPpmEvidence=@(foreach ($name in $timerExpectedNames) {
+    $path=Join-Path $captures $name; $bytes=[IO.File]::ReadAllBytes($path)
+    if ($bytes.Length -ne 18680) { throw 'Timer canonical native P6 byte length differs' }
+    for ($i=0; $i -lt 14; ++$i) { if ($bytes[$i] -ne $timerHeader[$i]) { throw 'Timer canonical native P6 header differs' } }
+    $rgb=[byte[]]::new(18666); [Array]::Copy($bytes,14,$rgb,0,18666); $timerInputs.Add($path)
+    [ordered]@{name=$name;bytes=18680;sha256=(Get-TimerSha $bytes);rgb_payload_sha256=(Get-TimerSha $rgb)}
+})
+$timerLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
+if (@($timerLog | Where-Object { $_ -match 'Saving\.\.\.$' -or $_ -ceq 'Save was successful.' }).Count -or
+    @(Get-Content -LiteralPath (Join-Path $run 'run.err') | Where-Object { $_ -match '^save failure:' }).Count) { throw 'Timer scope unexpectedly called or failed a game Save' }
+$timerObserved=[ordered]@{consumer=$timerSummary;readbacks=55;csv_rows=18;crops=4;crop_pixels=24888;ppm_bytes=74720;controls=3;control_discriminating_pixels=$timerControlPixels;calibration_pixel_checks=1760;private_game_saves=0;reference_scope='normal glyph/shadow/pure-paper ROI independent; copied full HUD adoption only; closing invariance only';png_count=0;png_crops=@();png_complete=$false}
+if ($debug) {
+    $timerTunePath=Join-Path $captures 'hud-timer-tune-summary.json'; $timerTuneCsv=Join-Path $captures 'hud-timer-tune.csv'
+    $timerTuneBranches=Join-Path $captures 'hud-timer-tune-branches.csv'; $timerTranscript=Join-Path $captures 'hud-timer-tune-commands.log'
+    foreach ($path in @($timerTunePath,$timerTuneCsv,$timerTuneBranches,$timerTranscript)) {
+        if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw 'Timer required Debug evidence missing' }
+        $timerInputs.Add($path)
+    }
+    $tune=Get-Content -LiteralPath $timerTunePath -Raw | ConvertFrom-Json
+    $tuneRows=@(Import-Csv -LiteralPath $timerTuneCsv); $tuneBranchRows=@(Import-Csv -LiteralPath $timerTuneBranches)
+    $tuneCounts=[ordered]@{commands=8;states=8;readbacks=34;csv_rows=10;normal_rows=8;branch_rows=2;crops=0;saved_tokens=1;presentation_save_commands=1;private_game_saves=0;roi_pixel_checks=49776;repeat_checks=8;copied_adoption_checks=8;closing_colour_invariance_checks=1;calibration_pixel_checks=1088}
+    Assert-TimerKeys $tune (@($tuneCounts.Keys)+$timerUpdates+@('scope')) 'Debug'
+    foreach ($key in $tuneCounts.Keys) { Assert-TimerInteger $tune $key $tuneCounts[$key] }
+    foreach ($key in $timerUpdates) { Assert-TimerInteger $tune $key 0 }
+    if ($tune.scope -cne 'debug-live-normal-timer-and-closing-invariance') { throw 'Timer Debug scope differs' }
+    $tuneColumns=@('state','raw_rgba_match','adoption_match','repeat_match','private_bytes','frozen_style_resources_rng','token','scope')
+    Assert-TimerCsvColumns $tuneRows $tuneColumns 8 'Debug normal'
+    $states=@('baseline','named','reset-original','partial','zero','reset-saved','rgb','final-saved')
+    $tokens=@('141414','RED','141414','2060C080','A532D600','2060C080','35BCE1','2060C080')
+    for ($i=0; $i -lt 8; ++$i) {
+        $row=$tuneRows[$i]; Assert-TimerFlags $row @('raw_rgba_match','adoption_match','repeat_match','private_bytes','frozen_style_resources_rng')
+        if ($row.state -cne $states[$i] -or $row.token -cne $tokens[$i] -or $row.scope -cne 'debug-live-normal-timer') { throw 'Timer Debug exact normal state/token observation differs' }
+    }
+    Assert-TimerCsvColumns $tuneBranchRows @('state','context','closing_unchanged','frozen_style_resources_rng','scope') 2 'Debug closing'
+    for ($i=0; $i -lt 2; ++$i) {
+        $row=$tuneBranchRows[$i]; $state=if ($i -eq 0) {'baseline'} else {'partial'}; $equal=if ($i -eq 0) {'baseline'} else {'true'}
+        if ($row.state -cne $state -or $row.context -cne 'exact-ten' -or $row.closing_unchanged -cne $equal -or $row.frozen_style_resources_rng -cne 'true' -or $row.scope -cne 'debug-closing-counterexample') { throw 'Timer Debug exact closing observation differs' }
+    }
+    if ((Get-Item -LiteralPath $timerTranscript).Length -le 0 -or (Test-Path -LiteralPath (Join-Path $captures 'hud-timer-tune-scratch/profile/ColourWars/save_data.json'))) { throw 'Timer transcript/private game Save invariant differs' }
+    foreach ($name in @('source/tuning.json','source/presentation.json','staged/tuning.json','staged/presentation.json')) { $timerInputs.Add((Join-Path $captures "hud-timer-tune-scratch/$name")) }
+    $timerObserved.developer_commands=$tune; $timerObserved.readbacks=89; $timerObserved.csv_rows=28; $timerObserved.calibration_pixel_checks=2848
+} elseif (@(Get-ChildItem -LiteralPath $captures -Filter 'hud-timer-tune-*').Count) { throw 'Release timer proof must have no Debug artifacts' }
+$result.observed_counts=$timerObserved
+$script:timerVerifiedContext=[ordered]@{directory=[IO.Path]::GetFullPath($captures);observed=$timerObserved;ppms=$timerPpmEvidence;inputs=@(foreach ($path in $timerInputs) {[ordered]@{path=$path;sha256=(Get-FileHash -LiteralPath $path).Hash}})}

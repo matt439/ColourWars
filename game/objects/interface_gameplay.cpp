@@ -262,7 +262,7 @@ void InterfaceGameplay::draw_timer(DrawList& draw_list,
 		look.timer_shadow_colour, timer_scale,
 		0.0f, Vector2F::ZERO, 0.0f);
 
-	draw_list.draw_text(this->timer_font_, text, pos, look.timer_colour, timer_scale,
+	draw_list.draw_text(this->timer_font_, text, pos, CrudeDrawing::premultiplied(look.timer_colour), timer_scale,
 		0.0f, Vector2F::ZERO, 0.0f);
 }
 

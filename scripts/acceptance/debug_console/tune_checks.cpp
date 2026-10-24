@@ -43,6 +43,7 @@ namespace debug_console_acceptance
 #include "scripts/acceptance/debug_console/tune_hud_colour_checks.h"
 #include "scripts/acceptance/debug_console/tune_crack_and_figure_colour_checks.h"
 #include "scripts/acceptance/debug_console/tune_quiet_face_colour_checks.h"
+#include "scripts/acceptance/debug_console/tune_timer_colour_checks.h"
 
 	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
 	{
@@ -366,6 +367,7 @@ namespace debug_console_acceptance
 		check_crack_colour_tunes(game_directory);
 		check_limb_colour_tunes(game_directory);
 		check_quiet_face_colour_tunes(game_directory);
+		check_timer_colour_tunes(game_directory);
 		check_acting_colour_tunes(game_directory);
 		check_identity_colour_tunes(game_directory);
 
