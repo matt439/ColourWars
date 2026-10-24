@@ -128,6 +128,11 @@ namespace
 		// The retained HUD reads this opaque text on its closing-clock branch;
 		// full candidate validation preserves the reader's alpha-one contract.
 		{ "presentation.hud.closing_clock.text", TuneScope::live },
+        // The same borrowed closing panel reads these opaque materials per draw;
+        // beat geometry, shade, resources and the alpha-one reader stay intact.
+        { "presentation.hud.closing_clock.ink", TuneScope::live },
+        { "presentation.hud.closing_clock.paper", TuneScope::live },
+        { "presentation.hud.closing_clock.accent", TuneScope::live },
 		// The retained HUD reads this shared identity/HEALTH/PAINT foreground
 		// and identity-only shadow per draw; badge inks/fonts stay separate.
 		{ "presentation.hud.player_identity.colour", TuneScope::live },

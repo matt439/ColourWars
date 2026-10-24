@@ -71,6 +71,7 @@ function Write-ContactSheet {
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
                 ($_.Name -like 'keyboard-jump-*.ppm' -and $_.Name -notlike '*-context.ppm') -or
                 $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'combat-colour-*.ppm' -or $_.Name -like 'blocked-colour-*.ppm' -or $_.Name -like 'idle-drip-colour-*.ppm' -or $_.Name -like 'respawn-pen-*.ppm' -or $_.Name -like 'cursor-colour-*.ppm' -or $_.Name -like 'silhouette-colour-*.ppm' -or $_.Name -like 'reveal-colour-*.ppm' -or $_.Name -like 'cursor-material-*.ppm' -or $_.Name -like 'desktop-colour-*.ppm' -or $_.Name -like 'power-light-colour-*.ppm' -or $_.Name -like 'program-colour-*.ppm' -or $_.Name -like 'acting-colour-*.ppm' -or $_.Name -like 'glass-colour-*.ppm' -or $_.Name -like 'silhouette-body-colour-*.ppm' -or $_.Name -like 'scribble-colour-*.ppm' -or $_.Name -like 'hud-health-colour-*.ppm' -or $_.Name -like 'hud-track-colour-*.ppm' -or $_.Name -like 'hud-timer-colour-*.ppm' -or $_.Name -like 'hud-label-colour-*.ppm' -or $_.Name -like 'hud-timer-shadow-colour-*.ppm' -or $_.Name -like 'hud-closing-text-colour-*.ppm' -or $_.Name -like 'crack-colour-*.ppm' -or $_.Name -like 'limb-colour-*.ppm' -or $_.Name -like 'quiet-face-colour-*.ppm' -or $_.Name -like 'program-level-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or $_.Name -like 'competitive-winner-*.ppm' -or $_.Name -like 'contribution-team-*.ppm' -or $_.Name -like 'result-percentage-*.ppm' -or
+                $_.Name -like 'hud-closing-materials-*.ppm' -or
                 $_.Name -like 'stage-preview-background-colour-*.ppm' -or
                 $_.Name -like 'stage-count-*-detail.ppm' -or $_.Name -like 'stage-summary-*-detail.ppm' -or $_.Name -like 'landmark-*-detail.ppm' -or $_.Name -like 'menu-labels-*-detail.ppm' -or $_.Name -like 'weapon-tune-colours-*-detail.ppm' -or $_.Name -like 'team-tune-colours-*-detail.ppm' -or $_.Name -like 'team-focus-*-detail.ppm' -or $_.Name -like 'stick-readouts-*-detail.ppm' -or $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
@@ -239,6 +240,9 @@ function Write-ContactSheet {
         $hudTimerColours = @($images | Where-Object { $_.name -like 'hud-timer-colour-*' })
         Write-ContactSheetPages -Images $hudTimerColours -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-hud-timer-colour-contact'
+        $closingMaterialColours = @($images | Where-Object { $_.name -like 'hud-closing-materials-*' })
+        Write-ContactSheetPages -Images $closingMaterialColours -CellWidth 218 -CellHeight 148 `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-closing-mat'
         $stagePreviewBackgroundColours = @($images | Where-Object { $_.name -like 'stage-preview-background-colour-*' })
         Write-ContactSheetPages -Images $stagePreviewBackgroundColours -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-stage-preview-background-colour-contact'

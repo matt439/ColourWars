@@ -140,7 +140,7 @@ namespace debug_console_acceptance
 			presentation.opening().reveal_art.shade, presentation.opening().cursor_art.shade,
 			presentation.opening().cursor_art.shadow, presentation.opening().desktop_colour,
 			presentation.opening().monitor_art.power_light, presentation.opening().program_colour,
-			presentation.opening().face, presentation.opening().sweat, presentation.opening().glass_colour, presentation.opening().silhouette, presentation.opening().scribble, presentation.hud().health_colour, presentation.hud().meter_track_colour, presentation.opening().crack, presentation.figure().arm_colour, presentation.figure().hand_colour, presentation.figure().quiet.face_colour, presentation.hud().timer_colour, presentation.hud().timer_shadow_colour, presentation.hud().closing_clock.text, presentation.hud().player_identity_colour, presentation.hud().player_identity_shadow_colour, presentation.hud().player_identity_background_colour };
+			presentation.opening().face, presentation.opening().sweat, presentation.opening().glass_colour, presentation.opening().silhouette, presentation.opening().scribble, presentation.hud().health_colour, presentation.hud().meter_track_colour, presentation.opening().crack, presentation.figure().arm_colour, presentation.figure().hand_colour, presentation.figure().quiet.face_colour, presentation.hud().timer_colour, presentation.hud().timer_shadow_colour, presentation.hud().closing_clock.text, presentation.hud().player_identity_colour, presentation.hud().player_identity_shadow_colour, presentation.hud().player_identity_background_colour, presentation.hud().closing_clock.ink, presentation.hud().closing_clock.paper, presentation.hud().closing_clock.accent };
 	}
 #endif
 }

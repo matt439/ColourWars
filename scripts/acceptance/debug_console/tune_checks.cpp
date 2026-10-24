@@ -19,6 +19,7 @@
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/silhouette.h"
 #include "engine/assets/sprite_sheet_loader.h"
+#include "engine/audio/audio_resources.h"
 #include "engine/math/scalar.h"
 #include "engine/render/render_resources.h"
 #include "engine/render/sprite_font_file.h"

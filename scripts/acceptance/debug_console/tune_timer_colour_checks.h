@@ -1,8 +1,11 @@
-// Included in tune_checks.cpp's private namespace. Clock and HUD label
-// colours share retained-HUD checks; only closing text requires opacity.
+// Included in tune_checks.cpp's private namespace. Clock and HUD label/material
+// colours share retained-HUD checks; closing text and its selected panel materials require opacity.
 void check_timer_colour_tunes_for_field(const std::filesystem::path& game_directory, std::size_t index)
 {
-    const bool opaque = index == closing_clock_text_colour_index;
+    const bool closing_material = index == closing_clock_ink_colour_index ||
+        index == closing_clock_paper_colour_index || index == closing_clock_accent_colour_index;
+    const bool opaque = opaque_closing_colour_index(index);
+    const std::string sibling_word = closing_material ? "4C83B5FF" : "4C83B580";
     const bool label = index == hud_label_colour_index || index == hud_identity_shadow_colour_index;
     const bool shadow = index == hud_timer_shadow_colour_index || index == hud_identity_shadow_colour_index;
     const std::string saved_word = opaque ? "2060C0FF" : "2060C080";
@@ -10,7 +13,9 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const std::string saved_token = '"' + saved_word + '"';
     const std::string path = colour_paths[index];
     const std::string local = path.substr(std::string("presentation.").size());
-    const std::size_t sibling_index = label ?
+    const std::size_t sibling_index = closing_material ?
+        (index == closing_clock_ink_colour_index ? closing_clock_paper_colour_index :
+            index == closing_clock_paper_colour_index ? closing_clock_accent_colour_index : closing_clock_ink_colour_index) : label ?
         (index == hud_label_colour_index ? hud_identity_shadow_colour_index : hud_label_colour_index) :
         (index == hud_timer_colour_index ? hud_timer_shadow_colour_index : hud_timer_colour_index);
     const std::string sibling = colour_paths[sibling_index];
@@ -18,10 +23,12 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     {
         const std::string baseline = "{\r\n\"hud\":{\"timer\":{\"colour\":\"\\u003141414\","
             "\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"},"
-            "\"closing_clock\":{\"text\":\"\\u003141414\",\"paper\":\"FFF5DF\"},"
+            "\"closing_clock\":{\"text\":\"\\u003141414\",\"ink\":\"\\u003141414\",\"paper\":\"\\u0046FF5DF\",\"accent\":\"\\u0046FD34D\"},"
             "\"player_identity\":{\"colour\":\"\\u003141414\",\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\",\"background_colour\":\"FFFFFF\"}},"
             "\r\n\"number\":1\r\n}\r\n";
-        const std::string authored_token = shadow ? "\"\\u00300000022\"" : "\"\\u003141414\"";
+        const std::string authored_token = shadow ? "\"\\u00300000022\"" :
+            index == closing_clock_paper_colour_index ? "\"\\u0046FF5DF\"" :
+            index == closing_clock_accent_colour_index ? "\"\\u0046FD34D\"" : "\"\\u003141414\"";
         const JsonSpanDocument reference(baseline, "normal-timer-document-reference");
         TuneDocument document("presentation", baseline);
         const auto* leaf = document.find(local);
@@ -65,10 +72,12 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         }
     }
 
-    // Generic 50-path sweeps cover strict named/RGB/RGBA input, LF/CRLF
+    // Generic 54-path sweeps cover strict named/RGB/RGBA input, LF/CRLF
     // conflicts/force, atomic replacement and actual Presentation consumption.
     ScratchContent scratch(game_directory, label ?
         (shadow ? L"hud-identity-shadow-records" : L"hud-label-foreground-records") :
+        closing_material ? (index == closing_clock_ink_colour_index ? L"closing-clock-ink-records" :
+            index == closing_clock_paper_colour_index ? L"closing-clock-paper-records" : L"closing-clock-accent-records") :
         opaque ? L"closing-clock-text-records" :
         index == hud_timer_colour_index ? L"normal-timer-colour-records" : L"normal-timer-shadow-colour-records");
     GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
@@ -82,13 +91,26 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const std::string baseline = read_text(scratch.source / L"presentation.json");
     const std::string tuning_source = read_text(scratch.source / L"tuning.json");
     const std::string tuning_staged = read_text(scratch.staged / L"tuning.json");
-    labrador::RenderResources resources;
+    labrador::RenderResources resources; labrador::AudioResources complete_audio;
     std::vector<std::string> sheets{ original.sprite_sheet };
     if (original.sprite_sheet != "sprite_sheet_1") { sheets.push_back("sprite_sheet_1"); }
+    if (closing_material)
+    {
+        for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
+            { if (std::find(sheets.begin(), sheets.end(), name) == sheets.end()) { sheets.emplace_back(name); } }
+    }
     for (const auto& name : sheets)
         { resources.add_sprite_sheet(name, labrador::read_sprite_sheet((game_directory / L"textures" / (name + ".json")).string().c_str(), labrador::TextureHandle{})); }
     const std::array<std::string, 3> fonts{ original.meter_label_font, original.timer_font, original.player_identity_font };
-    for (const auto& name : fonts)
+    std::vector<std::string> loaded_fonts(fonts.begin(), fonts.end());
+    if (closing_material)
+    {
+        for (const char* name : { "gill_sans_ultra_bold_144", "gill_sans_mt_bold_24", "gill_sans_mt_bold_36",
+            "gill_sans_mt_bold_48", "gill_sans_mt_bold_72", "gill_sans_mt_bold_144", "courier_new_bold_16" })
+            { if (std::find(loaded_fonts.begin(), loaded_fonts.end(), name) == loaded_fonts.end()) { loaded_fonts.emplace_back(name); } }
+        complete_audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
+    }
+    for (const auto& name : loaded_fonts)
     {
         const auto file = labrador::read_sprite_font_file((game_directory / L"fonts" / (name + ".spritefont")).string());
         auto loaded = std::make_unique<labrador::Font>(labrador::TextureHandle{}, file.glyphs, file.line_spacing);
@@ -131,8 +153,8 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const auto unselected = [&]
     {
         return std::vector<labrador::Colour>{ look->paper.ink, look->paper.paper, look->paper.shade,
-            look->health_colour, look->meter_track_colour, look->closing_clock.ink,
-            look->closing_clock.paper, look->closing_clock.shade, look->closing_clock.accent,
+            look->health_colour, look->meter_track_colour,
+            look->closing_clock.shade,
             look->player_identity_background_colour,
             identity->ink_colour, identity->background_colour };
     };
@@ -154,6 +176,9 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     require(document != nullptr && original.timer_colour == labrador::Colour(20, 20, 20) &&
         original.timer_shadow_colour == labrador::Colour(0, 0, 0, 34) &&
         original.closing_clock.text == labrador::Colour(20, 20, 20) && original.closing_clock.text.a == 1.0f &&
+        original.closing_clock.ink == labrador::Colour(20, 20, 20) &&
+        original.closing_clock.paper == labrador::Colour(255, 245, 223) &&
+        original.closing_clock.accent == labrador::Colour(255, 211, 77) &&
         original.player_identity_colour == labrador::Colour(20, 20, 20) &&
         original.player_identity_shadow_colour == labrador::Colour(0, 0, 0, 34) &&
         held_measurements[0].x > 0.0f && held_measurements[1].x > 0.0f &&
@@ -169,7 +194,27 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             read_text(scratch.source / L"tuning.json") == tuning_source && read_text(scratch.staged / L"tuning.json") == tuning_staged &&
             !impl.in_match() && !impl.can_apply() && impl.request().empty(),
             "Timer commands retain the real HUD, borrowed HUD/identity records, unselected clock/identity materials and root badge colours/geometry and captured resource metadata without match work");
+        // No Application is attached: full-reader commands and separate direct
+        // complete-resource checks remain distinct evidence, with no native claim.
+        if (closing_material) { presentation.validate_resources(resources, complete_audio); }
     };
+    if (closing_material)
+    {
+        // Resource checks use real loaded metadata independently of TestDirector.
+        presentation.validate_resources(resources, complete_audio);
+        const JsonSpanDocument resource_reference(baseline, "closing-material-resource-reference");
+        const auto invalid_path = scratch.root / L"closing-material-missing-resource.json";
+        write_text(invalid_path, resource_reference.replaced(*resource_reference.find("menu_style.fill_frame"), "\"__missing_closing_frame__\""));
+        const Presentation invalid_resource(invalid_path.string().c_str());
+        bool refused_resource = false;
+        try { invalid_resource.validate_resources(resources, complete_audio); }
+        catch (const std::exception& error)
+            { refused_resource = std::string(error.what()).find("menu_style.fill_frame") != std::string::npos; }
+        require(refused_resource && document->current().text() == baseline && document->baseline().text() == baseline &&
+            document->edits().empty() && read_text(scratch.source / L"presentation.json") == baseline &&
+            read_text(scratch.staged / L"presentation.json") == baseline,
+            "Separate full-resource validation refuses a missing frame without altering live command documents or files"); unchanged();
+    }
     // No draw or private HUD internals are observed by this CPU fixture.
     // Actual normal/closing/identity/HEALTH/PAINT pixels and alpha are native-owned checks.
     std::srand(0x54494d45);const int next_random = std::rand();std::srand(0x54494d45);
@@ -196,8 +241,16 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
                 document->current().text() == held_current && document->baseline().text() == held_baseline &&
                 ledger() == held_edits && read_text(scratch.source / L"presentation.json") == baseline &&
                 read_text(scratch.staged / L"presentation.json") == baseline,
-                "Partial/zero closing-text alpha is refused atomically with live colours, exact documents, both ledger tokens and both files intact");unchanged();
+                "Partial/zero selected closing alpha is refused atomically with live colours, exact documents, both ledger tokens and both files intact");unchanged();
         }
+    }
+    if (closing_material)
+    {
+        const char* const equal_sibling_word = index == closing_clock_ink_colour_index ? "FFF5DF" :
+            index == closing_clock_paper_colour_index ? "FFD34D" : "141414";
+        expected[index] = initial[sibling_index];
+        require(impl.execute("tune " + path + ' ' + equal_sibling_word).ok,
+            "Opaque closing materials may equal their sibling; no new distinctness rule is introduced"); unchanged();
     }
     expected[index] = initial[index];
     require(impl.execute("tune.reset " + path).ok && document->edits().empty() && document->current().text() == baseline &&
@@ -218,9 +271,9 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
 
     expected[index] = labrador::Colour(pending_word);
     require(impl.execute("tune " + path + ' ' + pending_word).ok, "The saved timer baseline can be edited again");unchanged();
-    expected[sibling_index] = labrador::Colour("4C83B580");
-    require(impl.execute("tune " + sibling + " 4C83B580").ok && document->edits().size() == 2,
-        "The selected HUD colour and independent foreground/shadow sibling retain separate pending edits");unchanged();
+    expected[sibling_index] = labrador::Colour(sibling_word);
+    require(impl.execute("tune " + sibling + " " + sibling_word).ok && document->edits().size() == 2,
+        "The selected HUD colour and independent selected sibling retain separate pending edits");unchanged();
     expected[3] = labrador::Colour("789ABC");
     require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok && document->edits().size() == 3,
         "Selected HUD colour, its independent sibling and unrelated overlay have three pending ledger entries");unchanged();
@@ -238,7 +291,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     if (opaque)
     {
         for (const char* token : { "\"FFF5DF80\"", "\"FFF5DF00\"" })
-            { invalid_sources.push_back(saved_reference.replaced(*saved_reference.find("hud.closing_clock.paper"), token)); }
+            { invalid_sources.push_back(saved_reference.replaced(*saved_reference.find(closing_material ? "hud.closing_clock.text" : "hud.closing_clock.paper"), token)); }
     }
     for (const std::string& invalid_source : invalid_sources)
     {
@@ -251,7 +304,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
                 !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
                 !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
                 !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
-                "Ordinary/forced full-reader saves reject invalid external HUD geometry or partial/zero closing-paper alpha, restoring exact source and preserving staging/live/documents/three token pairs");unchanged();
+                "Ordinary/forced full-reader saves reject invalid external HUD geometry or partial/zero unedited opaque closing-neighbour alpha, restoring exact source and preserving staging/live/documents/three token pairs");unchanged();
         }
     }
     std::string invalid = invalid_sources.back();
@@ -262,7 +315,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     if (opaque)
     {
         // With the selected edit reset, invalid external selected alpha survives
-        // splicing of only the normal sibling and overlay and must fail the reader.
+        // splicing of only the independent sibling and overlay and must fail the reader.
         const std::string reset_current = document->current().text();
         const auto reset_ledger = ledger();
         for (const char* token : { "\"2060C080\"", "\"A532D600\"" })
@@ -277,7 +330,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
                     !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
                     !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
                     !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
-                    "Saving only sibling/overlay edits cannot adopt partial/zero external closing text, even with force; exact source/staging/documents/remaining token pairs survive");unchanged();
+                    "Saving only sibling/overlay edits cannot adopt partial/zero external selected closing colour, even with force; exact source/staging/documents/remaining token pairs survive");unchanged();
             }
         }
     }
@@ -286,22 +339,22 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         document->current().text() == saved && document->baseline().text() == saved &&
         read_text(scratch.staged / L"presentation.json") == saved && read_text(scratch.source / L"presentation.json") == invalid,
         "Resetting the remaining edit restores the saved timer baseline without writing external content");unchanged();
-    if (label)
+    if (label || closing_material)
     {
-        // Save both independently selected HUD text tokens in one valid merge.
-        // The source whitespace, all clocks, root badges and captured resources
-        // remain guarded separately from this foreground/shadow pair.
+        // Save both independently selected HUD colour tokens in one valid merge.
+        // The source whitespace, other clock colours, root badges and captured resources
+        // remain guarded separately from this selected colour pair.
         const std::string paired_external = "\r\n" + saved;
         write_text(scratch.source / L"presentation.json", paired_external);
         expected[index] = labrador::Colour(pending_word);
-        expected[sibling_index] = labrador::Colour("4C83B580");
+        expected[sibling_index] = labrador::Colour(sibling_word);
         require(impl.execute("tune " + path + ' ' + pending_word).ok &&
-            impl.execute("tune " + sibling + " 4C83B580").ok && document->edits().size() == 2,
-            "Both HUD label colours are independently pending before their combined private save");unchanged();
+            impl.execute("tune " + sibling + " " + sibling_word).ok && document->edits().size() == 2,
+            "Both HUD label/material colours are independently pending before their combined private save");unchanged();
         const JsonSpanDocument paired_reference(paired_external, "hud-label-paired-save-reference");
         const std::string first = paired_reference.replaced(*paired_reference.find(local), '"' + pending_word + '"');
         const JsonSpanDocument first_reference(first, "hud-label-paired-second-reference");
-        const std::string paired_saved = first_reference.replaced(*first_reference.find(sibling_local), "\"4C83B580\"");
+        const std::string paired_saved = first_reference.replaced(*first_reference.find(sibling_local), (std::string("\"") + sibling_word + "\""));
         require(impl.execute("tune.save presentation").ok && document->edits().empty() &&
             document->current().text() == paired_saved && document->baseline().text() == paired_saved &&
             read_text(scratch.source / L"presentation.json") == paired_saved &&
@@ -309,22 +362,22 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             colour_values(Presentation((scratch.source / L"presentation.json").string().c_str())) == expected &&
             !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
             !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
-            "One HUD label pair Save splices exactly two tokens, preserves external bytes and all unrelated values, loads and rebases both copies");unchanged();
+            "One HUD label/material pair Save splices exactly two tokens, preserves external bytes and all unrelated values, loads and rebases both copies");unchanged();
         expected[index] = labrador::Colour::red;
         require(impl.execute("tune " + path + " RED").ok && document->edits().size() == 1,
-            "A saved HUD label colour can be edited without changing its saved sibling");unchanged();
+            "A saved HUD label/material colour can be edited without changing its saved sibling");unchanged();
         expected[index] = labrador::Colour(pending_word);
         require(impl.execute("tune.reset " + path).ok && document->edits().empty() &&
             document->current().text() == paired_saved && document->baseline().text() == paired_saved &&
             read_text(scratch.source / L"presentation.json") == paired_saved &&
             read_text(scratch.staged / L"presentation.json") == paired_saved,
-            "A selected reset after paired Save uses its saved zero-alpha baseline and preserves the independent partial-alpha sibling");unchanged();
+            "A selected reset after paired Save uses its field-valid saved baseline and preserves the independent sibling");unchanged();
     }
     require(std::rand() == next_random, "HUD clock/label-colour tuning consumed gameplay RNG");
 }
 
 void check_timer_colour_tunes(const std::filesystem::path& game_directory)
 {
-    for (const std::size_t index : { hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index })
+    for (const std::size_t index : { hud_timer_colour_index, hud_timer_shadow_colour_index, closing_clock_text_colour_index, hud_label_colour_index, hud_identity_shadow_colour_index, closing_clock_ink_colour_index, closing_clock_paper_colour_index, closing_clock_accent_colour_index })
         { check_timer_colour_tunes_for_field(game_directory, index); }
 }
