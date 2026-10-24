@@ -390,12 +390,100 @@ Evidence root: `out/validation/crossfeed-home-loops-20261024/`, with Debug
 `home-loop-checkpoints.csv` and cross-build receipt `validation-results.json`.
 The earlier native clean/heavy pane checks remain a separate record.
 
-The next local slice is to qualify paid reciprocal firing in the CPU fixture,
-then compare one mirrored lower-approach pressure policy against these route
-controls. `Run::set_opponent_input` currently moves its additional players but
-does not run their weapon-launch phase; setting their fire input alone would
-not create an opposing-fire test. Follow the actual Level firing/contact order
-and observe both players' ammunition and health before drawing that conclusion.
+### Reciprocal firing and lower-approach pressure (2026-10-24)
+
+The CPU [fixture](../scripts/acceptance/crossfeed/fixtures.cpp) now runs the
+additional players' weapon phases after moving-projectile contacts and the
+primary player's launch, before Scene contact resolution. This follows
+`Level`'s firing order; mirrored teams still launch the subject first, rather
+than swapping player order or modelling simultaneous fire. Opponent weapon
+selection, after-movement aim and payment/emission counters are explicit;
+the existing counters retain their primary-player meaning.
+
+The [reciprocal qualification](../scripts/acceptance/crossfeed/reciprocal_checks.cpp)
+uses stationary players 130 units apart on the lower approach, Sprayer and
+Sniper, both directions and all four independent fire/no-fire combinations.
+Both weapons prepare for 90 ticks, outside the 150 active ticks. This exceeds
+Sniper's one-second cooldown despite the quantized timestep; 60 ticks does not.
+Each firing side must pay for real projectiles and reduce the other player's
+health; disabled fire must produce neither payment nor outgoing damage.
+Launch-contact retirement counts too: a paid Sniper hit need not leave a
+surviving projectile. Four separate controlled projectile-contact callbacks
+establish zero health between movement and launch, then the dead state next
+tick, and require no payment or launch from either guarded player order.
+These are launch guards, not measured lethal firing rates or respawn tests.
+
+The [opposed-loop case](../scripts/acceptance/crossfeed/opposed_loop_checks.cpp)
+retains the earlier 600-tick cold-spawn-zero routes, endpoints and downward
+subject aim. A cold stationary Sprayer occupies **our lower approach**, at
+canonical centre X=1150 on the lower floor (X=2450 for team B), rather than
+travelling from an opposing spawn. It tracks the subject's current centre
+after movement, with neither lead nor gravity compensation. Eighty trials
+cover all five subject tools, both routes, both teams and all four subject /
+opponent fire controls. Disabled-fire opponents remain present, so their
+body can intercept paint. Those controls differ from the earlier trials
+without an opponent.
+
+Both players' actual payments, reserve, health, observed net health decreases,
+lethal events and respawns are recorded at ticks 180/360/600 alongside team
+ownership, route checkpoints and remaining flight. Observed health loss sums
+positive net tick decreases; regeneration within a tick can hide some damage.
+Full-body clearance, the opponent's floor station, independent no-fire
+controls, conserved scored area and actual damaging pressure are checked.
+Live ownership can decrease. The separate tail releases both players' inputs,
+requires no additional paid shot and retires flight within 720 ticks.
+
+Advancing subject ownership at tick 600 (A / B, score units):
+
+| Subject tool | Opponent present, fire disabled | Opponent firing | Firing opponent's owned area |
+|---|---:|---:|---:|
+| Sprayer | 15,024 / 15,024 | 15,024 / 15,024 | 0 / 0 |
+| Sniper | 864 / 864 | 864 / 864 | 1,440 / 1,440 |
+| Roller | 22,368 / 22,944 | 22,368 / 22,944 | 0 / 0 |
+| Mister | 10,272 / 10,224 | 10,128 / 10,080 | 1,248 / 1,248 |
+| Bucket | 9,168 / 8,016 | 9,168 / 8,016 | 480 / 480 |
+
+All twenty advancing samples with opposing fire, including subject no-fire
+controls, first lose health at tick 98 and accumulate 0.60 observed loss.
+The firing subjects inflict 0.26 / 0.334 / 0.435 / 0.38 / 0.402 observed loss
+for Sprayer / Sniper / Roller / Mister / Bucket, respectively, in either
+direction. All advancing trials still reach four stopped endpoints and first
+stand on the plinth at tick 188. The subject's paid counts remain
+156 / 9 / 266 / 57 / 16; the firing opponent pays 156 shots.
+
+Home-loop subjects retain the earlier owned totals, reach ten stopped
+endpoints and take no damage in this sample. The firing opponent owns 1,440
+area; only home-loop Mister damages it (0.11 observed loss). Distant direct
+Sprayer aim can meet the floor before the player: this result does not qualify
+home safety. Even with opponent fire disabled, its body changes advancing
+paint totals relative to the historical absent-opponent control. Do not label
+that difference a consequence of opposing fire. Mister's small live/control
+difference is recorded without isolating individual contacts or repaint events.
+
+No active trial produces a lethal event or respawn. The route driver specifies
+restarting the drop and first endpoint on the input tick after respawn, with
+clock and paint retained, but these samples do not exercise that branch.
+The longest flight tail is 101 ticks and remains outside the active comparison.
+These observations establish reciprocal paid firing and this specific
+lower-approach threat; they establish no optimal aim, safe loop, side fairness
+or competitive route winner. Keep P3, weapon values and geometry.
+
+Both game/editor preset builds and the complete Crossfeed CPU cases pass.
+Debug/Release measurement logs are byte-identical; after excluding the new
+rows, all retained measurements match the preceding fixed-time-loop receipt.
+Current source hashes match the receipts and staged map/tuning/presentation
+hashes match source. Evidence root:
+`out/validation/crossfeed-opposed-loops-20261024/`, Debug
+`x64-debug/8a168917aeed4720b5172ffeacb8bbc7/`, Release
+`x64-release/5d0466e6d37944f39e9da7b31c4a899f/`; exports are
+`reciprocal-controls.csv`, `opposed-loop-checkpoints.csv`,
+`opposed-loop-settled.csv`, `comparison-at-600.csv` and
+`validation-results.json`. The prior native clean/heavy pane captures remain
+separate evidence; no geometry or runtime-content change required a new matrix.
+
+The next local slice is one alternate subject-aim policy on these same
+home/advancing routes and lower-approach controls, distinguishing retaliation
+from downward coverage before adding attacker movement or changing values.
 Attended spawn-pressure, balance, physical-pad and camera-recognition reviews
 remain open.
 

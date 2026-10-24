@@ -153,7 +153,12 @@ namespace crossfeed_acceptance
 
     void Run::require_clear(const std::string& context) const
     {
-        const RectangleF& body = this->player->rectangle();
+        this->require_clear(*this->player, context);
+    }
+
+    void Run::require_clear(const Player& subject, const std::string& context) const
+    {
+        const RectangleF& body = subject.rectangle();
         const RectangleF bounds = this->services.map.info.out_of_bounds_rectangle();
         require(body.left() >= bounds.left() - tolerance && body.right() <= bounds.right() + tolerance &&
             body.top() >= bounds.top() - tolerance && body.bottom() <= bounds.bottom() + tolerance,
@@ -161,7 +166,7 @@ namespace crossfeed_acceptance
         for (const auto& [surface, object] : this->structures)
         {
             if (surface->jump_through()) { continue; }
-            const auto overlap = narrow_phase(*this->player->shape(), *object->shape());
+            const auto overlap = narrow_phase(*subject.shape(), *object->shape());
             require(!overlap || overlap->penetration <= tolerance,
                 context + ": player intersects '" + surface->name + "' at tick " +
                 std::to_string(this->ticks) + " body=(" + fixed(body.x) + ',' + fixed(body.y) + ')');
@@ -172,7 +177,9 @@ namespace crossfeed_acceptance
     {
         ++this->ticks;
         this->player->set_player_input(actions);
-        require(this->passive_players.size() == this->passive_input_streams.size(),
+        require(this->passive_players.size() == this->passive_input_streams.size() &&
+            this->passive_players.size() == this->passive_weapon_aims.size() &&
+            this->passive_players.size() == this->passive_weapon_stats.size(),
             "Crossfeed opponent input streams lost their player association");
         for (size_t index = 0; index < this->passive_players.size(); ++index)
         {
@@ -245,6 +252,36 @@ namespace crossfeed_acceptance
         {
             ++this->emitted_objects;
             this->scene.add(std::move(projectile));
+        }
+        // Level launches in player order after all moving projectile contacts,
+        // before Scene::resolve. Additional players run the same weapon phase,
+        // including release, cooldown and recovery when their fire is absent.
+        for (size_t index = 0; index < this->passive_players.size(); ++index)
+        {
+            Player* opponent = this->passive_players[index];
+            if (this->passive_weapon_aims[index])
+            {
+                opponent->set_player_input(aimed(this->passive_weapon_aims[index](), opponent->input()));
+            }
+            const float opponent_ammo = opponent->weapon_ammo();
+            auto opponent_emitted = opponent->update_weapon_and_get_projectiles(dt, this->targets);
+            OpponentWeaponStats& stats = this->passive_weapon_stats[index];
+            if (opponent->weapon_ammo() < opponent_ammo)
+            {
+                ++stats.paid_events;
+                stats.paid_ticks.push_back(this->ticks);
+                if (stats.first_paid_tick < 0) { stats.first_paid_tick = this->ticks; }
+                const int created = opponent->primary_weapon().type() == WeaponType::mister ? 5 : 1;
+                require(opponent_emitted.size() <= static_cast<size_t>(created),
+                    "Crossfeed opponent paid-event object count exceeds the projectile builder contract");
+                stats.launch_retired_objects += created - static_cast<int>(opponent_emitted.size());
+            }
+            stats.minimum_ammo = std::min(stats.minimum_ammo, opponent->weapon_ammo());
+            for (auto& projectile : opponent_emitted)
+            {
+                ++stats.emitted_objects;
+                this->scene.add(std::move(projectile));
+            }
         }
         this->scene.resolve();
         this->player->end_contacts(this->scene.contacts());
@@ -333,22 +370,26 @@ namespace crossfeed_acceptance
         require(this->player->health() <= 0.0f, "Crossfeed damage fixture did not eliminate the player");
     }
 
-    Player* Run::add_opponent(const Vector2F& top_left)
+    Player* Run::add_opponent(const Vector2F& top_left, WeaponType weapon_type)
     {
         const PlayerTeam team = this->player->team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
         const RectangleF body(top_left, this->services.tuning.player().size);
         auto weapon = WeaponBuilder::build_weapon(&this->services.tuning, team, 1, 1, Colour::white,
-            WeaponType::sprayer, body.center(), &this->services.render, &this->services.audio,
+            weapon_type, body.center(), &this->services.render, &this->services.audio,
             &this->services.preferences, &this->services.presentation.tool_motion(),
             &this->services.presentation.weapon_feedback());
         Player* opponent = this->scene.add(std::make_unique<Player>(body, &this->services.tuning,
             &this->services.presentation.movement_feedback(), &this->services.presentation.combat_feedback(),
             &this->services.presentation.respawn_redraw(), &this->services.render, &this->services.audio,
-            &this->services.preferences, 1, team, WeaponType::sprayer, std::move(weapon), WeaponType::none,
+            &this->services.preferences, 1, team, weapon_type, std::move(weapon), WeaponType::none,
             Colour::white, Viewport{}, top_left));
         this->targets.push_back(opponent);
         this->passive_players.push_back(opponent);
         this->passive_input_streams.emplace_back();
+        this->passive_weapon_aims.emplace_back();
+        OpponentWeaponStats stats;
+        stats.minimum_ammo = opponent->weapon_ammo();
+        this->passive_weapon_stats.push_back(std::move(stats));
         this->scene.end_tick();
         return opponent;
     }
@@ -364,6 +405,28 @@ namespace crossfeed_acceptance
             }
         }
         throw std::runtime_error("Crossfeed input stream needs an opponent owned by this Run");
+    }
+
+    void Run::set_opponent_weapon_aim(Player* opponent, std::function<float()> aim)
+    {
+        for (size_t index = 0; index < this->passive_players.size(); ++index)
+        {
+            if (this->passive_players[index] == opponent)
+            {
+                this->passive_weapon_aims[index] = std::move(aim);
+                return;
+            }
+        }
+        throw std::runtime_error("Crossfeed aim stream needs an opponent owned by this Run");
+    }
+
+    const Run::OpponentWeaponStats& Run::opponent_weapon_stats(const Player* opponent) const
+    {
+        for (size_t index = 0; index < this->passive_players.size(); ++index)
+        {
+            if (this->passive_players[index] == opponent) { return this->passive_weapon_stats[index]; }
+        }
+        throw std::runtime_error("Crossfeed weapon stats need an opponent owned by this Run");
     }
 
     Vector2F standing_on(const Services& s, const Surface& surface, float centre_x)

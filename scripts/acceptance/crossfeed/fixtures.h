@@ -78,6 +78,16 @@ namespace crossfeed_acceptance
     // position comes from Player input, Scene contact resolution or respawn.
     struct Run
     {
+        struct OpponentWeaponStats
+        {
+            int paid_events = 0;
+            int emitted_objects = 0;
+            int launch_retired_objects = 0;
+            int first_paid_tick = -1;
+            std::vector<int> paid_ticks;
+            float minimum_ammo = 0.0f;
+        };
+
         // Receives the absolute Run tick before Scene::update. An empty stream
         // retains the earlier idle-opponent behaviour.
         using PlayerInputStream = std::function<PlayerInputData(int)>;
@@ -88,6 +98,8 @@ namespace crossfeed_acceptance
         std::vector<CollisionObject*> targets;
         std::vector<Player*> passive_players;
         std::vector<PlayerInputStream> passive_input_streams;
+        std::vector<std::function<float()>> passive_weapon_aims;
+        std::vector<OpponentWeaponStats> passive_weapon_stats;
         // Optional scripted tracking at the firing phase, after both players
         // have moved. Empty preserves the ordinary supplied input angle.
         std::function<float()> weapon_aim_after_movement;
@@ -128,12 +140,15 @@ namespace crossfeed_acceptance
         void tick(const PlayerInputData& actions = input());
         void settle(int count = 60);
         void require_clear(const std::string& context) const;
+        void require_clear(const Player& subject, const std::string& context) const;
         std::string support() const;
         float team_area(PlayerTeam team, const std::string& name = {}) const;
         float total_area() const;
         void kill();
-        Player* add_opponent(const Vector2F& top_left);
+        Player* add_opponent(const Vector2F& top_left, WeaponType weapon = WeaponType::sprayer);
         void set_opponent_input(Player* opponent, PlayerInputStream stream);
+        void set_opponent_weapon_aim(Player* opponent, std::function<float()> aim);
+        const OpponentWeaponStats& opponent_weapon_stats(const Player* opponent) const;
     };
 
     Vector2F standing_on(const Services& s, const Surface& surface, float centre_x);
@@ -145,10 +160,12 @@ namespace crossfeed_acceptance
     void tool_checks(Services& s);
     void combat_checks(Services& s);
     void pressure_checks(Services& s);
+    void reciprocal_checks(Services& s);
     void trajectory_checks(Services& s);
     void supply_checks(Services& s);
     void painting_checks(Services& s);
     void repaint_checks(Services& s);
     void home_loop_checks(Services& s);
+    void opposed_loop_checks(Services& s);
     void opening_checks(Services& s);
 }
