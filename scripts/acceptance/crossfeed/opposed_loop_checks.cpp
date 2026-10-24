@@ -10,7 +10,15 @@ namespace crossfeed_acceptance
         constexpr int tail_limit = 720;
 
         enum class SubjectAim { downward, opponent };
-        enum class OpponentMotion { stationary, walking };
+        enum class OpponentMotion { stationary, walking, spawn_walking };
+
+        bool walking(OpponentMotion motion) { return motion != OpponentMotion::stationary; }
+
+        const char* motion_prefix(OpponentMotion motion)
+        {
+            return motion == OpponentMotion::spawn_walking ? "spawn_walking_" :
+                (motion == OpponentMotion::walking ? "walking_" : "");
+        }
 
         const char* tool_name(WeaponType type)
         {
@@ -73,6 +81,9 @@ namespace crossfeed_acceptance
         {
             std::vector<std::array<float, 6>> trajectory;
             std::vector<std::array<float, 5>> opponent_trajectory;
+            // Only the authored-departure policy needs a Down input stream;
+            // old trajectory records and output remain unchanged.
+            std::vector<int> opponent_drop_trajectory;
             HealthObservation subject;
             HealthObservation opponent;
             int paid = 0;
@@ -86,6 +97,15 @@ namespace crossfeed_acceptance
             std::array<int, 2> opponent_first_endpoints{ -1, -1 };
             int opponent_route_resets = 0;
             float opponent_travel = 0.0f;
+            int opponent_lower_landing = -1;
+            int opponent_home_exit = -1;
+            int opponent_plinth_visit = -1;
+            int opponent_arrival_paid = -1;
+            float opponent_arrival_reserve = -1.0f;
+            float opponent_arrival_minimum_reserve = -1.0f;
+            std::array<float, 3> opponent_arrival_area{ -1.0f, -1.0f, -1.0f };
+            HealthObservation subject_at_opponent_arrival;
+            HealthObservation opponent_at_arrival;
             std::vector<int> paid_ticks;
             std::vector<int> opponent_paid_ticks;
             std::array<float, 4> ownership{};
@@ -106,21 +126,39 @@ namespace crossfeed_acceptance
             const Surface& home = services.map.named(right ? "spawn_a_floor" : "spawn_b_floor");
             const Surface& floor = services.map.named(right ? "floor_paint_a" : "floor_paint_b");
             const Surface& plinth = services.map.named("centre_plinth");
+            const bool from_spawn = motion == OpponentMotion::spawn_walking;
+            const auto enemy_spawns = right ? services.map.info.team_b_spawns() : services.map.info.team_a_spawns();
+            const Surface& opponent_home = services.map.named(right ? "spawn_b_floor" : "spawn_a_floor");
+            const Surface& opponent_lower = services.map.named(right ? "boundary_floor_b" : "boundary_floor_a");
+            const Surface& opponent_floor = services.map.named(right ? "floor_paint_b" : "floor_paint_a");
+            const Surface& first_ramp = services.map.named("approach_ramp_a");
+            const Surface& second_ramp = services.map.named("approach_ramp_b");
+            const RectangleF authored_opponent(enemy_spawns.at(0), services.tuning.player().size);
             Run run(services, spawns.at(0), team, type);
-            Player* opponent = run.add_opponent(standing_on(services, floor, x(1150.0f)), WeaponType::sprayer);
+            Player* opponent = run.add_opponent(from_spawn ? enemy_spawns.at(0) :
+                standing_on(services, floor, x(1150.0f)), WeaponType::sprayer);
             require(run.ticks == 0 && run.support() == home.name &&
                 !run.player->primary_weapon().ready_to_shoot() && !opponent->primary_weapon().ready_to_shoot() &&
                 approximately(run.player->weapon_ammo(), services.tuning.starting_ammo()) &&
                 approximately(opponent->weapon_ammo(), services.tuning.starting_ammo()),
                 "Crossfeed opposed loops did not start with cold weapons at their named positions");
+            if (from_spawn)
+            {
+                require(enemy_spawns.size() == 4 && opponent->rectangle() == authored_opponent &&
+                    opponent->spawn_rectangle() == authored_opponent &&
+                    approximately(opponent->rectangle().bottom(), opponent_home.rectangle.top()),
+                    "Crossfeed authored attacker did not start at its complete opposing spawn zero");
+            }
             run.death_expected = true;
             bool opponent_far_goal = false;
+            bool opponent_dropping = from_spawn;
+            bool opponent_station_reached = false;
             float opponent_input_x = 0.0f;
             run.set_opponent_input(opponent, [&](int)
             {
-                opponent_input_x = motion == OpponentMotion::walking ?
+                opponent_input_x = walking(motion) && !opponent_dropping ?
                     steer(*opponent, x(opponent_far_goal ? 1250.0f : 950.0f), services.tuning.player()) : 0.0f;
-                PlayerInputData actions = input(opponent_input_x);
+                PlayerInputData actions = input(opponent_input_x, false, false, opponent_dropping);
                 actions.primary_shoot = opponent_fire;
                 return actions;
             });
@@ -174,6 +212,43 @@ namespace crossfeed_acceptance
                 const bool just_respawned = previous == PlayerState::dead && opponent->state() == PlayerState::alive &&
                     opponent->rectangle() == opponent->spawn_rectangle() && opponent->velocity() == Vector2F::ZERO;
                 const float canonical_x = x(opponent->center().x);
+                if (from_spawn)
+                {
+                    if (just_respawned) { opponent_station_reached = false; }
+                    const RectangleF body = opponent->rectangle();
+                    require(opponent->spawn_rectangle() == authored_opponent &&
+                        canonical_x >= 942.0f && canonical_x <= x(authored_opponent.center().x) + 8.0f &&
+                        body.bottom() >= plinth.rectangle.top() - tolerance &&
+                        body.bottom() <= opponent_lower.rectangle.top() + tolerance,
+                        "Crossfeed authored attacker left its lower traversal corridor");
+                    if (opponent->state() == PlayerState::alive && opponent->health() > 0.0f &&
+                        supported(*opponent) && !just_respawned)
+                    {
+                        bool named_support = false;
+                        for (const Surface* surface : { &opponent_home, &opponent_lower, &opponent_floor,
+                            &floor, &plinth, &first_ramp, &second_ramp })
+                        {
+                            const bool horizontal = body.right() >= surface->rectangle.left() - tolerance &&
+                                body.left() <= surface->rectangle.right() + tolerance;
+                            const bool on_ramp = opponent->move_state() == PlayerMoveState::on_ramp_left ||
+                                opponent->move_state() == PlayerMoveState::on_ramp_right;
+                            named_support = named_support || (horizontal && (surface->ramp() ?
+                                on_ramp && body.bottom() >= surface->rectangle.top() - tolerance &&
+                                    body.bottom() <= surface->rectangle.bottom() + tolerance :
+                                approximately(body.bottom(), surface->rectangle.top())));
+                        }
+                        require(named_support, "Crossfeed authored attacker claimed support outside its named route");
+                    }
+                    if (opponent_station_reached)
+                    {
+                        require(canonical_x >= 942.0f && canonical_x <= 1258.0f &&
+                            body.left() >= floor.rectangle.left() - tolerance && body.right() <= floor.rectangle.right() + tolerance &&
+                            approximately(body.bottom(), floor.rectangle.top()) &&
+                            (opponent->state() != PlayerState::alive || opponent->health() <= 0.0f || supported(*opponent)),
+                            "Crossfeed authored attacker left the qualified station after arrival");
+                    }
+                    return;
+                }
                 require((motion == OpponentMotion::stationary ? approximately(canonical_x, 1150.0f) :
                     canonical_x >= 942.0f && canonical_x <= 1258.0f) &&
                     opponent->rectangle().left() >= floor.rectangle.left() - tolerance &&
@@ -205,24 +280,46 @@ namespace crossfeed_acceptance
                 check_opponent(opponent_state);
                 result.subject.observe(*run.player, before, state, tick);
                 result.opponent.observe(*opponent, opponent_before, opponent_state, tick);
-                if (motion == OpponentMotion::walking)
+                if (walking(motion))
                 {
+                    if (from_spawn) { result.opponent_drop_trajectory.push_back(opponent_dropping ? 1 : 0); }
                     result.opponent_trajectory.push_back({ opponent_input_x, opponent->center().x,
                         opponent->center().y, opponent->velocity().x, opponent->velocity().y });
                     opponent_min_x = std::min(opponent_min_x, opponent->center().x);
                     opponent_max_x = std::max(opponent_max_x, opponent->center().x);
                     if (opponent_state == PlayerState::dead && opponent->state() == PlayerState::alive)
                     {
-                        // Respawn returns to the constructed centre station.
-                        // Restart toward 950 next tick; do not count teleport distance.
+                        // Production chooses the construction spawn: either the
+                        // retained station or the real authored home. Never count
+                        // its teleport as input-driven horizontal travel.
                         opponent_far_goal = false;
+                        opponent_dropping = from_spawn;
                         ++result.opponent_route_resets;
                     }
                     else
                     {
                         result.opponent_travel += std::fabs(opponent->center().x - opponent_before_x);
                     }
-                    if (opponent->state() == PlayerState::alive && opponent->health() > 0.0f &&
+                    const RectangleF opponent_body = opponent->rectangle();
+                    const bool opponent_alive = opponent->state() == PlayerState::alive && opponent->health() > 0.0f;
+                    if (from_spawn && opponent_alive)
+                    {
+                        if (opponent_dropping && supported(*opponent) &&
+                            approximately(opponent_body.bottom(), opponent_lower.rectangle.top()))
+                        {
+                            opponent_dropping = false;
+                            if (result.opponent_lower_landing < 0) { result.opponent_lower_landing = tick; }
+                        }
+                        if (result.opponent_home_exit < 0 &&
+                            (right ? opponent_body.right() <= opponent_home.rectangle.left() :
+                                opponent_body.left() >= opponent_home.rectangle.right()))
+                        { result.opponent_home_exit = tick; }
+                        if (result.opponent_plinth_visit < 0 && supported(*opponent) &&
+                            approximately(opponent_body.bottom(), plinth.rectangle.top()) &&
+                            opponent_body.right() > plinth.rectangle.left() && opponent_body.left() < plinth.rectangle.right())
+                        { result.opponent_plinth_visit = tick; }
+                    }
+                    if (opponent_alive && !opponent_dropping &&
                         supported(*opponent) && opponent->velocity().x == 0.0f &&
                         std::fabs(opponent->center().x - x(opponent_far_goal ? 1250.0f : 950.0f)) <= 8.0f)
                     {
@@ -230,6 +327,21 @@ namespace crossfeed_acceptance
                         ++result.opponent_turns;
                         ++result.opponent_endpoint_counts[endpoint];
                         if (result.opponent_first_endpoints[endpoint] < 0) { result.opponent_first_endpoints[endpoint] = tick; }
+                        if (from_spawn && endpoint == 0)
+                        {
+                            opponent_station_reached = true;
+                            if (result.opponent_arrival_paid < 0)
+                            {
+                                const auto& stats = run.opponent_weapon_stats(opponent);
+                                result.opponent_arrival_paid = stats.paid_events;
+                                result.opponent_arrival_reserve = opponent->weapon_ammo();
+                                result.opponent_arrival_minimum_reserve = stats.minimum_ammo;
+                                const float other = run.team_area(enemy), own = run.team_area(team);
+                                result.opponent_arrival_area = { other, own, total - other - own };
+                                result.subject_at_opponent_arrival = result.subject;
+                                result.opponent_at_arrival = result.opponent;
+                            }
+                        }
                         opponent_far_goal = !opponent_far_goal;
                     }
                 }
@@ -268,7 +380,7 @@ namespace crossfeed_acceptance
                 if (tick == 180 || tick == 360 || tick == active_ticks)
                 {
                     const float own = run.team_area(team), other = run.team_area(enemy);
-                    std::cout << "MEASURE Crossfeed " << (motion == OpponentMotion::walking ? "walking_" : "") <<
+                    std::cout << "MEASURE Crossfeed " << motion_prefix(motion) <<
                         (aim == SubjectAim::downward ? "opposed_loop" : "opposed_aim_loop") <<
                         " tool=" << tool_name(type) <<
                         " team=" << (right ? 'a' : 'b') << " route=" << (advancing ? "advancing" : "home") <<
@@ -296,7 +408,7 @@ namespace crossfeed_acceptance
                             " verified_aim_ticks=" << verified_aim_ticks <<
                             " lead=none ballistic_compensation=none velocity_inheritance_compensation=none";
                     }
-                    if (motion == OpponentMotion::walking)
+                    if (walking(motion))
                     {
                         std::cout << " opponent_x=" << fixed(opponent->center().x) << " opponent_y=" << fixed(opponent->center().y) <<
                             " opponent_vx=" << fixed(opponent->velocity().x) << " opponent_vy=" << fixed(opponent->velocity().y) <<
@@ -310,9 +422,36 @@ namespace crossfeed_acceptance
                             " opponent_respawn_route_resets=" << result.opponent_route_resets <<
                             " opponent_travel=" << fixed(result.opponent_travel) <<
                             " opponent_active_min_x=" << fixed(opponent_min_x) << " opponent_active_max_x=" << fixed(opponent_max_x) <<
-                            " opponent_scope=constructed-1150-first-950-then-1250-mirrored-respawn-restarts-950";
+                            " opponent_scope=" << (from_spawn ?
+                                "authored-enemy-spawn0-Down-lower-crossing-first950-then1250-repeated-authored-respawn" :
+                                "constructed-1150-first-950-then-1250-mirrored-respawn-restarts-950");
                     }
-                    std::cout << " scope=" << (motion == OpponentMotion::walking ? "walking" : "stationary") <<
+                    if (from_spawn)
+                    {
+                        const bool arrived = result.opponent_arrival_paid >= 0;
+                        std::cout << " opponent_next_drop_input=" << opponent_dropping <<
+                            " opponent_lower_landing_tick=" << result.opponent_lower_landing <<
+                            " opponent_full_body_home_exit_tick=" << result.opponent_home_exit <<
+                            " opponent_first_supported_plinth_tick=" << result.opponent_plinth_visit <<
+                            " opponent_arrival_observed=" << arrived <<
+                            " opponent_arrival_paid_events=" << result.opponent_arrival_paid <<
+                            " opponent_arrival_cumulative_nominal_paid_cost=" << fixed(arrived ?
+                                static_cast<float>(result.opponent_arrival_paid) * services.tuning.weapon(WeaponType::sprayer).details.ammo_usage : -1.0f, 6) <<
+                            " opponent_arrival_reserve=" << fixed(result.opponent_arrival_reserve, 6) <<
+                            " opponent_arrival_minimum_reserve=" << fixed(result.opponent_arrival_minimum_reserve, 6) <<
+                            " opponent_arrival_global_owned_area=" << fixed(result.opponent_arrival_area[0]) <<
+                            " opponent_arrival_global_subject_area=" << fixed(result.opponent_arrival_area[1]) <<
+                            " opponent_arrival_global_neutral_area=" << fixed(result.opponent_arrival_area[2]) <<
+                            " subject_observed_loss_at_opponent_arrival=" << fixed(arrived ? result.subject_at_opponent_arrival.net_tick_loss : -1.0f, 4) <<
+                            " opponent_observed_loss_at_arrival=" << fixed(arrived ? result.opponent_at_arrival.net_tick_loss : -1.0f, 4) <<
+                            " subject_first_damage_tick_at_opponent_arrival=" << result.subject_at_opponent_arrival.first_loss_tick <<
+                            " opponent_first_damage_tick_at_arrival=" << result.opponent_at_arrival.first_loss_tick <<
+                            " opponent_respawns_at_arrival=" << (arrived ? result.opponent_at_arrival.respawns : -1) <<
+                            " arrival_snapshot_phase=after-both-weapons-and-Scene-resolution-through-first-supported-stopped950-tick" <<
+                            " arrival_cost_scope=cumulative-paid-events-times-authored-cost-not-net-reserve-spend";
+                    }
+                    std::cout << " scope=" << (from_spawn ? "authored-spawn-walking" :
+                        (motion == OpponentMotion::walking ? "walking" : "stationary")) <<
                         "-lower-approach-sprayer-current-centre-no-lead\n";
                     previous_own = own;
                     previous_enemy = other;
@@ -335,13 +474,32 @@ namespace crossfeed_acceptance
             require(result.lower_landing > 0 && (opponent_fire || (result.turns >= 3 &&
                 (!advancing || (result.home_exit > 0 && result.plinth_visit > 0)))),
                 "Crossfeed opposed loop missed its required unopposed route control");
-            if (motion == OpponentMotion::walking && !fire)
+            if (walking(motion) && !fire)
             {
                 require(result.opponent_turns >= 3 && result.opponent_endpoint_counts[0] > 0 &&
                     result.opponent_endpoint_counts[1] > 0 && result.opponent_first_endpoints[0] > 0 &&
                     result.opponent_first_endpoints[1] > result.opponent_first_endpoints[0] &&
                     result.opponent_travel > 600.0f && result.opponent_route_resets == 0,
                     "Crossfeed walking attacker no-subject-fire control did not complete its stopped out-and-back route");
+                if (from_spawn)
+                {
+                    // Spawn-to-near, near-to-far and far-to-near lose at most
+                    // five of the existing eight-unit endpoint tolerances.
+                    const float minimum_travel = std::fabs(x(authored_opponent.center().x) - 950.0f) +
+                        2.0f * (1250.0f - 950.0f) - 5.0f * 8.0f;
+                    require(result.opponent_lower_landing > 0 && result.opponent_home_exit > result.opponent_lower_landing &&
+                        result.opponent_plinth_visit > result.opponent_home_exit &&
+                        result.opponent_first_endpoints[0] > result.opponent_plinth_visit &&
+                        result.opponent_arrival_paid >= 0 && result.opponent_travel >= minimum_travel &&
+                        result.opponent_drop_trajectory.size() == static_cast<size_t>(active_ticks) && result.opponent_drop_trajectory.front() == 1 &&
+                        result.opponent_drop_trajectory.back() == 0,
+                        "Crossfeed authored attacker no-subject-fire control did not drop, cross the plinth and arrive by actual input");
+                    require(opponent_fire || (result.opponent_arrival_paid == 0 &&
+                        result.opponent_arrival_reserve >= services.tuning.starting_ammo() - tolerance &&
+                        result.opponent_arrival_minimum_reserve >= services.tuning.starting_ammo() - tolerance &&
+                        result.opponent_arrival_area[0] == 0.0f),
+                        "Crossfeed authored attacker no-fire arrival gained paint or spent reserve");
+                }
             }
             const float active_own = run.team_area(team), active_enemy = run.team_area(enemy);
             run.set_opponent_input(opponent, {});
@@ -359,7 +517,7 @@ namespace crossfeed_acceptance
             require(flying_objects(run) == 0, "Crossfeed opposed-loop flight tail exceeded its finite limit");
             result.ownership = { active_own, active_enemy, run.team_area(team), run.team_area(enemy) };
             result.tail = tail;
-            std::cout << "MEASURE Crossfeed " << (motion == OpponentMotion::walking ? "walking_" : "") <<
+            std::cout << "MEASURE Crossfeed " << motion_prefix(motion) <<
                 (aim == SubjectAim::downward ? "opposed_loop_settled" : "opposed_aim_loop_settled") <<
                 " tool=" << tool_name(type) << " team=" << (right ? 'a' : 'b') <<
                 " route=" << (advancing ? "advancing" : "home") << " fire=" << fire << " opponent_fire=" << opponent_fire <<
@@ -408,6 +566,10 @@ namespace crossfeed_acceptance
                         const Result aim_opponent = trial(services, type, team, advancing, false, true, SubjectAim::opponent, motion);
                         const Result aim_reciprocal = trial(services, type, team, advancing, true, true, SubjectAim::opponent, motion);
                         require(neither.opponent_trajectory == opponent.opponent_trajectory &&
+                            neither.opponent_drop_trajectory == opponent.opponent_drop_trajectory &&
+                            neither.opponent_lower_landing == opponent.opponent_lower_landing &&
+                            neither.opponent_home_exit == opponent.opponent_home_exit &&
+                            neither.opponent_plinth_visit == opponent.opponent_plinth_visit &&
                             neither.opponent_turns == opponent.opponent_turns &&
                             neither.opponent_endpoint_counts == opponent.opponent_endpoint_counts &&
                             neither.opponent_first_endpoints == opponent.opponent_first_endpoints,
@@ -432,8 +594,16 @@ namespace crossfeed_acceptance
             }
             require(trials == 80, "Crossfeed opposed-loop matrix changed its bounded trial count");
             require(aim_trials == 80, "Crossfeed alternate-aim matrix changed its bounded trial count");
-            require(advancing_damage_samples > 0,
+            require(motion == OpponentMotion::spawn_walking || advancing_damage_samples > 0,
                 "Crossfeed lower-approach pressure policy never caused observed health loss in an advancing sample");
+            if (motion == OpponentMotion::spawn_walking)
+            {
+                std::cout << "PASS Crossfeed authored-spawn walking opposed loops: 160 mirrored five-tool home/advancing trials, "
+                    "both subject aims, four fire controls, actual authored Down departure and ramp/plinth crossing, "
+                    "950/1250 stopped endpoints, cumulative arrival paint/payments/reserve and health clocks, "
+                    "matched no-subject-fire attacker travel and bounded released-flight tails; damage may be censored at 600\n";
+                return;
+            }
             if (motion == OpponentMotion::walking)
             {
                 std::cout << "PASS Crossfeed walking opposed loops: 160 mirrored five-tool home/advancing trials, both subject aims, "
@@ -455,5 +625,15 @@ namespace crossfeed_acceptance
             "players' movement/fire and checks clearance during braking. This policy does not model travel from an enemy spawn "
             "or establish route safety, optimal aim or competitive balance\n";
         matrix(OpponentMotion::walking);
+        std::cout << "NOTE Crossfeed authored-spawn walking opposed loops add 160 trials starting the cold Sprayer at its "
+            "opposing authored spawn zero. Down input reaches its own lower floor before real traversal over the central "
+            "ramps/plinth toward the retained 950/1250 stopped endpoints. Production respawn repeats that departure; "
+            "teleports are excluded from absolute horizontal travel. Prior 320 stationary/walking trials remain unchanged. "
+            "The first supported 950 stop snapshots cumulative global paint, nominal paid cost, reserve/minimum and damage "
+            "clocks after both weapon phases and Scene resolution through that tick. Pressure may occur before arrival; "
+            "arrival may remain unobserved at 600 under opposing fire. Nominal cost is not net reserve depletion after "
+            "regeneration or respawn. New travel requires no positive damage result and does not establish safety, "
+            "optimal aim or human balance. The tail releases both inputs, so a late respawn may stand at its authored home\n";
+        matrix(OpponentMotion::spawn_walking);
     }
 }

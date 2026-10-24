@@ -637,15 +637,79 @@ receipts and staged map/tuning/presentation match source. Evidence root:
 `validation-results.json`. Runtime content is unchanged; the existing native
 1-4P clean/heavy captures remain separate evidence.
 
-The next local slice starts the Sprayer at its opposing authored spawn zero
-instead of granting the lower-approach station. Drive its Down departure and
-lower crossing through actual input toward the same 950/1250 endpoints,
-mirrored by team, against the retained subject routes and aim policies.
-Keep the four fire controls, fixed checkpoints and released-flight tail;
-record arrival time, paint, payments and reserve consumed en route before
-interpreting pressure. Respawn should repeat that authored departure rather
-than restore the constructed attack station. Human arena/balance,
-physical-pad and camera-recognition acceptance remain open.
+### Authored-spawn lower-approach pressure (2026-10-24)
+
+The [opposed-loop case](../scripts/acceptance/crossfeed/opposed_loop_checks.cpp)
+adds 160 trials starting the cold Sprayer at its opposing authored spawn zero,
+canonical centre X=3544. Actual Down input, with no horizontal movement, reaches
+the opposing lower floor; ordinary Player input then crosses the ramps/plinth
+toward the retained 950/1250 stopped endpoints. During the active window, production
+respawn repeats that authored departure, excluding its teleport from travel. The preceding 320
+stationary/walking trials, both subject routes and aim policies, four fire
+controls, seed 2401027, subject-first launch order, 600 active ticks and released
+tail remain matched. No movement, geometry or weapon value changed.
+
+All 160 trials first stop near 950 at tick 246. The eighty subject-fire-disabled
+controls independently require actual departure and a stopped out-and-back:
+lower landing at 19, full-body home exit at 85, supported plinth at 156, first
+far stop at 299 and seven endpoints by 600. Actual horizontal travel is about
+4,557.1 units; complete attacker trajectories and Down histories match across
+its own fire control. Phase-sensitive bounds, named support, solid clearance
+and the authored respawn rectangle are checked throughout the traversal and
+tail; the old station-only guards remain unchanged for their original modes.
+
+Firing attackers have paid 145 shots at first arrival: cumulative nominal cost
+1.015, reserve/minimum 0.004998, below the Sprayer's 0.007 shot cost. This is not
+net reserve depletion: the measurement counts actual paid events while natural
+recovery remains active. The snapshot follows both weapon phases and Scene
+resolution through the arrival tick. Ownership is global, not paint restricted
+to the travel corridor. All arrivals are observed in this sample; the fixture
+retains explicit unobserved sentinels for a censored arrival.
+
+Advancing subjects with **both players firing**, at tick 600 (owned area A / B;
+observed loss sums positive net tick decreases and can hide concurrent healing):
+
+| Tool | Downward owned area | Opponent-aim owned area | Observed loss inflicted, downward -> opponent aim |
+|---|---:|---:|---:|
+| Sprayer | 16,080 / 16,080 | 13,488 / 13,536 | 0 -> 0.03 |
+| Sniper | 1,056 / 1,056 | 48 / 48 | 0.334 -> 1.002 |
+| Roller | 21,936 / 22,512 | 21,936 / 22,512 | 0.105 -> 0.105 |
+| Mister | 10,944 / 10,896 | 16,224 / 16,320 | 0.09 -> 0.40 |
+| Bucket | 9,936 / 9,264 | 5,664 / 6,624 | 0.402 -> 0.402 |
+
+These twenty advancing reciprocal samples first lose health at tick 180,
+before the stopped arrival and later than the constructed walking station's
+106. Each observes 0.03 loss and no subject death by 600. Aimed advancing Sniper
+kills the attacker once, with no active-window respawn; that observation is
+right-censored, not proof that respawning was disabled. Home subjects remain
+undamaged in this script. Neither lower loss nor a fixed home loop establishes
+route safety, side fairness, optimal firing or human balance. Keep P3 and the
+current weapon hypotheses.
+
+Both game/editor preset builds and complete Crossfeed CPU cases pass. Debug
+and Release logs are byte-identical. Filtering only the new authored-spawn
+NOTE/PASS/MEASURE rows reproduces the entire prior walking-case log text.
+The combined matrix has 480 trials, 1,440 active checkpoints and 480 settled
+rows, with 432 matched no-fire-or-Roller aim checkpoint pairs and 144 settled
+pairs. New alternate-aim trials record eight lethal events and four respawns
+across both players and all controls; new downward trials have none. The
+maximum tail remains 111 ticks, outside the active comparison. Source hashes
+and staged map/tuning/presentation match the receipts. Evidence root is
+`out/validation/crossfeed-spawn-pressure-20261024/`: Debug
+`x64-debug/677cc1ea774f4735a3f7016951a6077b/`, Release
+`x64-release/702d1a02d02d463ca58ab745c4976c66/`; exports are
+`opposed-loop-checkpoints.csv`, `opposed-loop-settled.csv`,
+`comparison-at-600.csv` and `validation-results.json`. Runtime content is
+unchanged, so existing native 1-4P clean/heavy captures remain separate evidence.
+
+The next local control withholds the travelling Sprayer's fire until its first
+actual supported stop near 950, then compares that policy with held fire during
+departure. Keep the same active clock, routes, aims and retained no-fire
+controls; report arrival reserve and subsequent paint, payments and damage.
+This separates a deliberately depleted arrival from pressure after reserving
+ammunition, without granting a station or extra time. It does not prescribe new
+tuning. Human arena/balance, physical-pad and camera-recognition acceptance
+remain open.
 
 ## Coupled movement and five-tool comparison (2026-10-20)
 

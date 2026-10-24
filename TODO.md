@@ -80,8 +80,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Compare attacker travel from opposing authored spawn zero against the retained pressure policies; spawn pressure, 1-4P/heavy-paint readability and human arena acceptance remain open. Preserve other maps. [Next](docs/polish-crossfeed.md#walking-lower-approach-pressure-2026-10-24). |
-| `POL#27` | OPEN | HIGH | L | Qualify the five-tool candidate with movement (`POL#3`): attacker travel and resource cost from an authored spawn, then human balance. Sniper reserve and Mister lifetime hypotheses remain open. [Pressure comparison](docs/polish-crossfeed.md#walking-lower-approach-pressure-2026-10-24), [requirements](docs/polish-plan.md#design-requirements). |
+| `POL#17` | OPEN | HIGH | XL | Compare arrival-gated Sprayer fire with held departure fire at fixed time; then spawn pressure, 1-4P/heavy-paint readability and human arena acceptance. Preserve other maps. [Next](docs/polish-crossfeed.md#authored-spawn-lower-approach-pressure-2026-10-24). |
+| `POL#27` | OPEN | HIGH | L | Separate travel firing from arrival reserve/pressure in the five-tool candidate, then human balance. Sniper reserve and Mister lifetime hypotheses remain open. [Next control](docs/polish-crossfeed.md#authored-spawn-lower-approach-pressure-2026-10-24). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after reference-arena acceptance; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
