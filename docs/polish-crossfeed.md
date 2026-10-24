@@ -323,6 +323,82 @@ and routes, home-loop travel incentives and attended spawn-pressure/balance
 observations still determine the next `POL#17` / `POL#27` iteration. They do
 not justify a tuning or geometry change by themselves.
 
+### Fixed-time home and advancing loops (2026-10-24)
+
+The [home-loop case](../scripts/acceptance/crossfeed/home_loop_checks.cpp)
+compares two neutral-floor painting policies over the same 600 active ticks
+(9.99996 seconds). Each starts cold at authored spawn zero, including the
+initial Down drop and travel in that budget. After landing on the lower floor,
+the home policy stops at centre X=120, then 500, and repeats; the advancing
+policy stops at 1150, then 2450, and repeats. Team B reflects these coordinates.
+There is no settling second before the first input. These are selected lower
+routes, not a search over all home floors, roofs, aim angles or optimal play.
+
+All five tools hold primary fire, including recovery and automatic resumption.
+Aim points downward toward the next endpoint; its horizontal direction can
+reverse on a small braking overshoot before the stopped endpoint changes.
+Forty trials cover both routes, all five tools and both teams, each
+with a matching no-fire control. They check identical active movement between
+fire/no-fire runs, actual lower landing, at least three stopped endpoints
+(first arrival followed by an out-and-back), full-body home containment and
+actual supported plinth contact on the advancing route. Every firing trial
+pays for paint; no-fire trials retain neutral ownership and full ammunition.
+Scored area stays constant and no opposing ownership appears.
+
+Owned area at the ten-second cutoff (A / B, in score units):
+
+| Tool | Lower home loop | Advancing lower loop | Paid shots, either route |
+|---|---:|---:|---:|
+| Sprayer | 6,192 / 6,192 | 16,080 / 16,080 | 156 |
+| Sniper | 1,920 / 1,920 | 1,152 / 1,152 | 9 |
+| Roller | 6,960 / 7,536 | 22,368 / 22,944 | 266 |
+| Mister | 6,960 / 6,960 | 12,528 / 12,480 | 57 |
+| Bucket | 6,000 / 6,000 | 10,560 / 9,936 | 16 |
+
+These totals include all ownership earned since spawn, including home paint
+before departure; they are not geographically clipped route-region scores.
+Object-level floor totals are labelled separately because an object may span
+home and approach. All firing and no-fire players land on the lower floor at
+tick 19. The advancing policy fully leaves home at tick 85, first stands on
+the plinth at tick 188 and reaches four stopped endpoints; the home policy
+reaches ten. Both directions share those timings in this sampled policy.
+
+Checkpoint intervals are 180, 180 and 240 ticks. During the last interval,
+Sprayer, Roller and Bucket add zero unique area on the home loop, while Sniper
+adds 816 and Mister 576. Every advancing trial adds area during that interval.
+Reserves at the cutoff match across routes and teams for each tool, ranging
+from 0.001331 to 0.033328; cumulative paid cost includes regeneration and is
+not starting-tank capacity. A separate release-all-input tail retires flight
+without adding another paid shot. Mister needs 25 home / 101 advancing ticks;
+the other tools have no flight remaining. None adds paint after this cutoff.
+
+Advancing yields more unique neutral paint for four tools under this aim and
+time budget; Sniper favours the shorter home loop. This is evidence about
+these scripts, not home-loop safety or competitive dominance. No live opponent
+fires, repaints, interrupts a route or causes a respawn. The direction-specific
+Roller, Mister and Bucket differences remain recorded rather than treated as
+side fairness acceptance. Keep P3, tool values and geometry pending opposition
+and alternate-aim observations.
+
+Both preset builds and their complete Crossfeed CPU cases pass. The forty
+loop trials produce 120 checkpoint rows and forty settled-flight rows; the
+complete Debug/Release measurement logs are byte-identical. Source hashes
+match the receipts, and staged map/tuning/presentation hashes match source.
+Evidence root: `out/validation/crossfeed-home-loops-20261024/`, with Debug
+`x64-debug/7f977b6e91a145928318a917ad4f442e/`, Release
+`x64-release/ffcdea574ccd43e68385d7e8c7682d62/`, checkpoint export
+`home-loop-checkpoints.csv` and cross-build receipt `validation-results.json`.
+The earlier native clean/heavy pane checks remain a separate record.
+
+The next local slice is to qualify paid reciprocal firing in the CPU fixture,
+then compare one mirrored lower-approach pressure policy against these route
+controls. `Run::set_opponent_input` currently moves its additional players but
+does not run their weapon-launch phase; setting their fire input alone would
+not create an opposing-fire test. Follow the actual Level firing/contact order
+and observe both players' ammunition and health before drawing that conclusion.
+Attended spawn-pressure, balance, physical-pad and camera-recognition reviews
+remain open.
+
 ## Coupled movement and five-tool comparison (2026-10-20)
 
 This comparison retains the six-object coverage from 2026-10-20. P3 movement

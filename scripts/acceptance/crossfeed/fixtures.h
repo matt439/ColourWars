@@ -149,5 +149,6 @@ namespace crossfeed_acceptance
     void supply_checks(Services& s);
     void painting_checks(Services& s);
     void repaint_checks(Services& s);
+    void home_loop_checks(Services& s);
     void opening_checks(Services& s);
 }
