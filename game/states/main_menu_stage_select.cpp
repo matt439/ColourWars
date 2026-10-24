@@ -278,7 +278,7 @@ void MainMenuStageSelect::init()
 		style.sprite_sheet, style.fill_frame, edge, resources, style.panel_edge_colour);
 	this->preview_background_ = std::make_unique<UiTexture>("preview_background",
 		style.sprite_sheet, style.fill_frame, preview, resources,
-		this->presentation().hud().player_identity_background_colour);
+		CrudeDrawing::premultiplied(this->presentation().hud().player_identity_background_colour));
 	this->stage_preview_ = std::make_unique<StagePreview>("stage_preview",
 		preview, this->data());
 	this->stage_name_ = std::make_unique<UiTextDropShadow>("stage_name",

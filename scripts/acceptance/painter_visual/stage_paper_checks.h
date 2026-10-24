@@ -140,7 +140,10 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const RectangleF card = stage_paper_surface_reference(list, *app.render_resources(), captured, refreshed, settings, random, locked, candidate_count, offset);
         require(card == expected_card, "Shared independent Stage surface differs from the full expected-text card union");
         const UiTexture preview_edge("independent-stage-edge", style.sprite_sheet, style.fill_frame, edge, app.render_resources(), locked ? live.selected : style.panel_edge_colour);
-        const UiTexture preview_back("independent-stage-pane", style.sprite_sheet, style.fill_frame, preview, app.render_resources(), captured.hud().player_identity_background_colour);
+        const auto& backing_colour = captured.hud().player_identity_background_colour;
+        const Colour backing_tint(backing_colour.r * backing_colour.a, backing_colour.g * backing_colour.a,
+            backing_colour.b * backing_colour.a, backing_colour.a);
+        const UiTexture preview_back("independent-stage-pane", style.sprite_sheet, style.fill_frame, preview, app.render_resources(), backing_tint);
         preview_edge.draw(list); preview_back.draw(list);
         StagePreview stage_preview("independent-actual-stage-preview", preview, &data); if (!random) { stage_preview.set_stage(stages[static_cast<size_t>(slot)].name); } stage_preview.draw(list);
         fill_sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x, menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
@@ -297,11 +300,20 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         auto& look = const_cast<MainMenuPresentation&>(malformed.main_menu());
         if (overlap) { look.stage_select.briefing.position.x = 1165.0f; look.stage_select.briefing_padding.x = 6.0f; }
         else { look.stage_box_size.y = 880.0f; }
-        malformed.validate_resources(*app.render_resources(), *app.audio_resources());
+        // The full reader rejects these deliberately malformed layouts before
+        // construction. Keep that check, then exercise the actual page guard
+        // directly with the same in-memory geometry and unchanged resources.
+        bool reader_rejected = false;
+        try { malformed.validate_resources(*app.render_resources(), *app.audio_resources()); }
+        catch (const std::runtime_error& error)
+        {
+            reader_rejected = std::string(error.what()).find("menu_text.stage.best_of_mode must keep the expanded briefing card inside the Stage paper and separate from the preview edge, including its retained artwork and shadow.") != std::string::npos;
+        }
+        require(reader_rejected, "Full reader accepted malformed Stage paper geometry or reported the wrong expanded-summary diagnostic");
         presentation = malformed; StateContext invalid_stack; bool rejected = false;
         try { invalid_stack.push(std::make_unique<MainMenuStageSelect>(&context)); }
         catch (const std::runtime_error& error) { rejected = std::string(error.what()).find(overlap ? "main_menu.stage_select.briefing: Stage Select paper must remain separate from the preview edge" : "main_menu.stage_box_size: Stage Select navigation must fit its paper") != std::string::npos; }
-        require(rejected, "Actual Stage paper accepted navigation overflow or text-padded preview overlap after resource validation, or reported the wrong diagnostic");
+        require(rejected, "Actual Stage paper accepted deliberately malformed navigation overflow or text-padded preview overlap, or reported the wrong constructor diagnostic");
     }
     presentation = original;
     require(records.good(), "Stage paper evidence write failed"); require(IsWindowVisible(static_cast<HWND>(app.window())) == FALSE && GetForegroundWindow() != static_cast<HWND>(app.window()), "Stage paper probe exposed or activated its hidden window");

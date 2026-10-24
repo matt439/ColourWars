@@ -132,6 +132,9 @@ namespace
 		// and identity-only shadow per draw; badge inks/fonts stay separate.
 		{ "presentation.hud.player_identity.colour", TuneScope::live },
 		{ "presentation.hud.player_identity.shadow_colour", TuneScope::live },
+		// Stage Select captures this backing tint when its preview widget is built;
+		// stable pages retain it until that screen is reopened.
+		{ "presentation.hud.player_identity.background_colour", TuneScope::next_screen },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

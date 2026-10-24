@@ -164,7 +164,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fifty audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fifty-one audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -329,7 +329,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-fifty audited colour paths below, can be read and changed while the game runs,
+fifty-one audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -376,7 +376,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These fifty existing string fields are supported; numeric path
+**Colours.** These fifty-one existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -439,6 +439,7 @@ The latest validation is recorded under
 | `presentation.hud.closing_clock.text` | live, opaque | Final-ten-positive-seconds clock text on applicable running draws; opaque named/RGB/RGBA-FF values retain the existing reader contract. |
 | `presentation.hud.player_identity.colour` | live | Shared foreground of the existing identity label and HEALTH/PAINT meter labels, on each applicable HUD draw; fonts remain captured. |
 | `presentation.hud.player_identity.shadow_colour` | live | Offset identity-label shadow drawn before its independent foreground; the meter labels have no shadow call. |
+| `presentation.hud.player_identity.background_colour` | next screen | Captured backing behind the Stage Select preview; a newly constructed page adopts it, while the gameplay HUD paper remains separate. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -673,9 +674,23 @@ identity strings, geometry, badge colours, meter fill/track and clocks keep
 their existing policy. Foreground alpha0 leaves the paper and current identity
 shadow, while the two meter labels contribute no selected ink. Shadow alpha0
 leaves paper and the later identity foreground. The distinct root badge ink/
-background remain opaque and independently supported. The unsupported nearby
-`hud.player_identity.background_colour` has a separately captured Stage Select
-preview consumer; it does not colour the HUD identity paper and is outside this pair.
+background remain opaque and independently supported. The separate
+`hud.player_identity.background_colour` preview backing is described below; it
+does not colour the HUD identity paper and is outside this pair.
+
+Stage Select captures `hud.player_identity.background_colour` into its preview
+backing UiTexture when the page is initialized. A new page adopts an edit;
+stable updates, stage cycling, ready/unready and resizing do not recapture the
+tint. Ready state can change the underlying filled preview-edge colour, so
+retention does not mean browse and ready frames have identical composites.
+
+The captured tint premultiplies base RGB once without a fade. Authored straight
+RGBA `121827EE` stays unchanged, but its nonblack translucent default now submits
+corrected RGB; old default pixel parity is not promised. Alpha0 contributes no
+selected RGB and exposes the current underlay. Random has no stage objects;
+real preview art draws later and can cover this backing. This field is neither
+a map tint nor gameplay HUD paper, and fonts, layout and stage values retain
+their existing policy.
 
 FigureAttachments borrows both `figure.arm_colour` and `figure.hand_colour`
 on each applicable procedural draw. Arm colour supplies four arguments:
@@ -754,7 +769,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the fifty colour strings listed above join numbers and booleans in `tune`.
+only the fifty-one colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1495,7 +1510,7 @@ as the game. In Release:
   engine declined input capture as game policy (report 9), so a per-key gate
   would be this client's own and is not built.
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the fifty listed colour fields above are
+  and inserting keys in `tune.save`: the fifty-one listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1504,13 +1519,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Fifty existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Fifty-one existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette body/ink/rim/shade and reveal
-ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack, HUD health/track and shared label foreground/identity shadow, normal timer foreground/shadow, opaque closing text and figure arm/hand and quiet blink face colours.
+ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack, HUD health/track and shared label foreground/identity shadow, captured Stage Select preview backing, normal timer foreground/shadow, opaque closing text and figure arm/hand and quiet blink face colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1538,6 +1553,58 @@ The local RapidJSON span reader and in-memory candidate validation
 (`labrador::parse_json`, engine report 12) already provide the required route.
 The engine declined to keep source spans, so the span reader and splice stay
 this tool's.
+
+Captured Stage Select preview backing increment (2026-10-24), **verified**:
+path 51, `presentation.hud.player_identity.background_colour`, has an exact
+`next_screen` classification. Stage Select captures one premultiplied tint at
+preview-background construction. Authored `121827EE` is unchanged; correcting
+its nonblack translucent RGB submission is an explicit behavior change. This
+field does not colour gameplay HUD paper or tint the map. Other values, art,
+layout, fonts, labels and stage data remain fixed.
+
+Both game/editor builds and all four Debug/Release `debug_console` and
+`story_audio` CPU cases pass on their first attempts, including Release
+developer-code exclusion. They cover actual reader/commands, complete candidate
+and resource validation, atomic refusal, exact save/reset/rebase/conflict/force
+and replay restrictions. Derived UiTexture metadata checks the capture model;
+the actual page evidence comes from the separate native leaf.
+
+Both selected native presets pass on their first attempts: Release has
+68 readbacks, 26 rows and 16 native 64 x 32 crops; Debug has 92/38/16. The crops
+cover 32,768 pixels and 98,512 P6 bytes per preset, with complete decoded PNG RGB
+and opaque-alpha checks. Four palettes cover Random/Crossfeed browsing and
+ready states. Eight wrong-straight/double controls produce 16,384 aggregate
+pixel inequalities. Explicit opaque-edge underlays are `445268` when browsing
+and `75EDD7` when ready; comparisons match those states. Retained pages keep
+their captured tint through updates, cycling and ready changes; actual
+Back-to-Weapon-to-Proceed reconstruction adopts the new tint. The Weapon
+transition row is a navigation observation without a raw colour oracle.
+
+Debug adds seven actual query/edit/reset/Save commands and 12 paired rendered
+observations, preserving retained-page capture and exact private one-token
+Save/rebase. These navigation fixtures use 63 menu updates and 249 device polls
+in Release, or 97/363 in combined Debug. Positive-time, Level/player/Scene and
+gameplay-weapon updates and game Saves remain zero.
+
+Targeted StagePaper and MenuText dependent checks pass in both presets. Two
+legacy preview-background references now independently premultiply their tint.
+An old malformed StagePaper case reached the stronger reader before its intended
+page rejection; both boundaries are now checked separately. That failure and a
+private wrapper's optional-metadata error after a native pass are preserved.
+Three completed dependent probes were reused by exact hashes. Only Release
+MenuText was retried after a deep-path capture-write failure; identical sources
+pass under a shorter output path. The original writer exposed no OS error.
+No production reader, geometry, values or equality tolerance was relaxed.
+
+Evidence is under `out/validation/stage-preview-background-colour-20261024/`,
+with final `validation-reconciliation-v4.json`. Nineteen shared raw files and
+16 PNG pairs match byte for byte across presets; 1,492 source pins, qualified
+producer hashes and the preserved a7a061f Release ZIP are reconciled. That ZIP
+predates these increments. Automated checks do not establish human preview
+contrast, C2 recognition/readability, comfort, arena balance, physical controls,
+listening, clean-PC or performance acceptance. `DBG#1` remains open. The next
+selected bounded group is opaque closing-clock ink/paper/accent; its preparation
+remains private.
 
 HUD label foreground and identity shadow increment (2026-10-24), **verified**:
 paths 49/50, `presentation.hud.player_identity.colour` and

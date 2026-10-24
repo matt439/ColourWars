@@ -7,17 +7,220 @@
 #include "game/debug/json_spans.h"
 #include "game/debug/tune_document.h"
 #include "game/debug/tune_scope.h"
+#include "game/objects/crude_drawing.h"
+#include "engine/assets/sprite_sheet_loader.h"
+#include "engine/audio/audio_resources.h"
+#include "engine/render/sprite_font_file.h"
+#include "engine/ui/widget.h"
 #include "engine/math/scalar.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <process.h>
+#include <cstdlib>
+#include <memory>
 
 // Live tuning in the menus: tune completion and the debug menu's tuning tree.
 namespace debug_console_acceptance
 {
 	namespace
 	{
+// CPU capture-chain evidence only: this test-derived public UiTexture is NOT
+// MainMenuStageSelect and does not prove that a retained/reopened page adopted.
+class StagePreviewCaptureProbe final : public labrador::UiTexture
+{
+public:
+    using labrador::UiTexture::UiTexture;
+    const labrador::Colour& captured_tint() const { return this->colour(); }
+    const labrador::SpriteSheet* captured_sheet() const { return this->sprite_sheet(); }
+    labrador::SpriteSheet::frame_handle captured_frame() const { return this->frame(); }
+};
+
+void check_stage_preview_background_colour_tunes(const std::filesystem::path& game_directory)
+{
+    const std::string path = "presentation.hud.player_identity.background_colour";
+    const std::string local = "hud.player_identity.background_colour";
+    {
+        const std::string escaped = "{\r\n\"hud\":{\"player_identity\":{\"background_colour\":\"\\u003121827EE\",\"font\":\"retained\"}},\"outside\":1\r\n}\r\n";
+        TuneDocument spans("presentation", escaped);
+        const auto* leaf = spans.find(local);
+        require(leaf != nullptr && spans.current().token(*leaf) == "\"\\u003121827EE\"" &&
+            spans.find("hud.player_identity.font") == nullptr, "The exact backing leaf preserves its nested escaped token while font remains unavailable");
+        spans.commit(spans.edited(*leaf, "\"2060C080\""), local);
+        require(spans.edits().size() == 1 && spans.edits().at(local).baseline_token == "\"\\u003121827EE\"" &&
+            spans.edits().at(local).current_token == "\"2060C080\"" && spans.reverted(local) == escaped,
+            "Backing span edits retain both exact ledger tokens and reset to escaped CRLF baseline bytes");
+        const std::string outside = "{\r\n\"hud\":{\"player_identity\":{\"background_colour\":\"\\u003121827EE\",\"font\":\"retained\"}},\"outside\":25\r\n}\r\n";
+        const std::string wanted = "{\r\n\"hud\":{\"player_identity\":{\"background_colour\":\"2060C080\",\"font\":\"retained\"}},\"outside\":25\r\n}\r\n";
+        const TuneSplice merged = spans.splice(outside, false);
+        require(merged.conflicts.empty() && merged.written == 1 && merged.text == wanted,
+            "A literal backing-only nested splice preserves unrelated external bytes and captured font text");
+    }
+    ScratchContent scratch(game_directory, L"stage-preview-backing-capture");
+    GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+    Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+    TestDirector test(tuning, presentation); auto& impl = test.impl;
+    impl.set_content_directories(scratch.source, scratch.staged);
+    const auto* const document = impl.tune_document("presentation");
+    const std::string baseline = read_text(scratch.source / L"presentation.json");
+    const std::string tuning_source = read_text(scratch.source / L"tuning.json");
+    const std::string tuning_staged = read_text(scratch.staged / L"tuning.json");
+    const HudPresentation* const hud = &presentation.hud();
+    const auto initial = colour_values(presentation); auto expected = initial;
+    const auto held_materials = std::array<labrador::Colour, 8>{ hud->paper.ink, hud->paper.paper, hud->paper.shade,
+        hud->closing_clock.ink, hud->closing_clock.paper, hud->closing_clock.shade, hud->closing_clock.accent,
+        presentation.main_menu().stage_select.unselected };
+    labrador::RenderResources render; labrador::AudioResources audio;
+    for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
+        { render.add_sprite_sheet(name, labrador::read_sprite_sheet((game_directory / "textures" / (std::string(name) + ".json")).string().c_str(), labrador::TextureHandle{})); }
+    const std::array<const char*, 7> font_names{ "gill_sans_ultra_bold_144", "gill_sans_mt_bold_24", "gill_sans_mt_bold_36",
+        "gill_sans_mt_bold_48", "gill_sans_mt_bold_72", "gill_sans_mt_bold_144", "courier_new_bold_16" };
+    for (const char* name : font_names)
+    {
+        const auto file = labrador::read_sprite_font_file((game_directory / "fonts" / (std::string(name) + ".spritefont")).string());
+        auto font = std::make_unique<labrador::Font>(labrador::TextureHandle{}, file.glyphs, file.line_spacing);
+        if (font->contains(U'?')) { font->set_stand_in(U'?'); }
+        render.add_font(name, std::move(font));
+    }
+    audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
+    // TestDirector has no Application: commands exercise the actual full reader,
+    // while resource validation below is a separate, direct public operation.
+    presentation.validate_resources(render, audio);
+    const std::string sheet_name = presentation.menu().sprite_sheet, frame_name = presentation.menu().fill_frame;
+    const auto* const sheet = render.sprite_sheet(sheet_name);
+    const auto frame = sheet->resolve_sprite_frame(frame_name);
+    const auto frame_source = sheet->sprite_frame(frame).source_rectangle();
+    const auto frame_origin = sheet->sprite_frame(frame).origin();
+    const auto font_handles = [&]
+    {
+        std::vector<labrador::FontHandle> result;
+        for (const char* name : font_names) { result.push_back(render.resolve_sprite_font(name)); }
+        return result;
+    };
+    const auto held_fonts = font_handles();
+    const mattmath::RectangleF rectangle(mattmath::Vector2F(150.0f, 330.0f), mattmath::Vector2F(1010.0f, 500.0f));
+    require(document != nullptr && impl.tune_token(path) == "\"121827EE\"" &&
+        hud->player_identity_background_colour == labrador::Colour(18, 24, 39, 238) &&
+        presentation.main_menu().stage_select.preview_position == rectangle.position() &&
+        presentation.main_menu().stage_select.preview_size == rectangle.size() &&
+        tune_scope_of(path) == TuneScope::next_screen,
+        "Stage preview backing retains authored121827EE, its existing rectangle and exact next-screen scope");
+    const labrador::Colour default_tint((18.0f / 255.0f) * (238.0f / 255.0f), (24.0f / 255.0f) * (238.0f / 255.0f),
+        (39.0f / 255.0f) * (238.0f / 255.0f), 238.0f / 255.0f);
+    const auto capture_widget_chain = [&]
+    {
+        return std::make_unique<StagePreviewCaptureProbe>("preview_background", sheet_name, frame_name, rectangle,
+            &render, CrudeDrawing::premultiplied(presentation.hud().player_identity_background_colour));
+    };
+    const auto retained = capture_widget_chain();
+    require(retained->captured_tint() == default_tint && default_tint != hud->player_identity_background_colour &&
+        default_tint != CrudeDrawing::premultiplied(default_tint),
+        "Literal default premultiplied channels distinguish the previous raw tint and a double multiplication; old default pixel parity is not claimed");
+    const auto metadata = [&](const StagePreviewCaptureProbe& widget)
+    {
+        require(widget.name() == "preview_background" && widget.rectangle() == rectangle && widget.bounds() == rectangle &&
+            !widget.hidden() && widget.captured_sheet() == sheet && widget.captured_frame() == frame &&
+            sheet->sprite_frame(frame).source_rectangle() == frame_source && sheet->sprite_frame(frame).origin() == frame_origin,
+            "Capture-chain tint edits retain widget name, bounds, visibility, sheet/frame and source metadata");
+    };
+    const auto unchanged = [&]
+    {
+        require(&presentation.hud() == hud && colour_values(presentation) == expected && font_handles() == held_fonts &&
+            presentation.menu().sprite_sheet == sheet_name && presentation.menu().fill_frame == frame_name &&
+            presentation.main_menu().stage_select.preview_position == rectangle.position() &&
+            presentation.main_menu().stage_select.preview_size == rectangle.size() &&
+            std::array<labrador::Colour, 8>{ hud->paper.ink, hud->paper.paper, hud->paper.shade,
+                hud->closing_clock.ink, hud->closing_clock.paper, hud->closing_clock.shade, hud->closing_clock.accent,
+                presentation.main_menu().stage_select.unselected } == held_materials &&
+            read_text(scratch.source / L"tuning.json") == tuning_source && read_text(scratch.staged / L"tuning.json") == tuning_staged &&
+            !impl.in_match() && !impl.can_apply() && impl.request().empty(),
+            "Backing commands preserve all root badge/normal HUD colours, other materials, resources, geometry, tuning and match ownership");
+        retained->update(0.0f); retained->update(1.0f / 60.0f); retained->update(1.0f);
+        require(retained->captured_tint() == default_tint, "Retained public UiTexture updates do not recapture the edited Presentation tint");
+        metadata(*retained); presentation.validate_resources(render, audio);
+    };
+    const auto resource_path = scratch.root / L"missing-preview-resource.json";
+    const JsonSpanDocument reference(baseline, "stage-preview-resource-reference");
+    write_text(resource_path, reference.replaced(*reference.find("menu_style.fill_frame"), "\"__missing_preview_fill__\""));
+    const Presentation missing_resource(resource_path.string().c_str());
+    bool resource_refused = false;
+    try { missing_resource.validate_resources(render, audio); }
+    catch (const std::exception& error) { resource_refused = std::string(error.what()).find("menu_style.fill_frame") != std::string::npos; }
+    require(resource_refused && document->current().text() == baseline && document->baseline().text() == baseline &&
+        document->edits().empty() && read_text(scratch.source / L"presentation.json") == baseline &&
+        read_text(scratch.staged / L"presentation.json") == baseline,
+        "Separate direct resource validation rejects a reader-valid missing frame without touching the live command documents or content copies"); unchanged();
+    std::srand(0x50525657); const int next_random = std::rand(); std::srand(0x50525657);
+    struct CaptureCase { const char* word; labrador::Colour raw, tint; };
+    const std::array<CaptureCase, 4> cases{ {
+        { "RED", { 255, 0, 0 }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { "a1B2c3", { 161, 178, 195 }, { 161.0f / 255.0f, 178.0f / 255.0f, 195.0f / 255.0f, 1.0f } },
+        { "2060C080", { 32, 96, 192, 128 }, { (32.0f / 255.0f) * (128.0f / 255.0f), (96.0f / 255.0f) * (128.0f / 255.0f),
+            (192.0f / 255.0f) * (128.0f / 255.0f), 128.0f / 255.0f } },
+        { "A532D600", { 165, 50, 214, 0 }, { 0.0f, 0.0f, 0.0f, 0.0f } } } };
+    for (const auto& value : cases)
+    {
+        expected[stage_preview_background_colour_index] = value.raw; impl.log().clear();
+        require(impl.execute("tune " + path + ' ' + value.word).ok && impl.execute("tune " + path).ok &&
+            impl.execute("tune.diff presentation").ok && log_contains(impl.log(), path + " = \"" + value.word + '"', DebugSeverity::info) &&
+            log_contains(impl.log(), path + "  \"121827EE\" -> \"" + value.word + "\"  [next screen]", DebugSeverity::info),
+            "Named/RGB/partial/zero backing edits remain valid, inspectable and explicitly next-screen in the actual command diff");
+        const auto fresh = capture_widget_chain(); metadata(*fresh);
+        require(fresh->captured_tint() == value.tint, "A fresh public widget-chain factory captures current straight RGBA with one conversion");
+        if (value.raw.a < 1.0f) { require(value.tint != value.raw, "Partial/zero nonblack input has a distinct raw-tint negative control"); }
+        if (value.raw.a > 0.0f && value.raw.a < 1.0f)
+            { require(value.tint != CrudeDrawing::premultiplied(value.tint), "Nonblack partial input distinguishes double multiplication"); }
+        require(read_text(scratch.source / L"presentation.json") == baseline && read_text(scratch.staged / L"presentation.json") == baseline,
+            "Unsaved backing commands leave both content copies untouched"); unchanged();
+    }
+    expected = initial;
+    require(impl.execute("tune.reset " + path).ok && document->edits().empty() && document->current().text() == baseline,
+        "Selected reset returns the exact original backing token without writing content"); unchanged();
+    expected[stage_preview_background_colour_index] = labrador::Colour(32, 96, 192, 128);
+    require(impl.execute("tune " + path + " 2060C080").ok, "A field-valid backing edit is pending for exact save/rebase");
+    const std::string external = "\r\n" + baseline;
+    const JsonSpanDocument save_reference(external, "stage-preview-backing-save-reference");
+    const std::string saved = save_reference.replaced(*save_reference.find(local), "\"2060C080\"");
+    write_text(scratch.source / L"presentation.json", external);
+    require(impl.execute("tune.save presentation").ok && document->current().text() == saved && document->baseline().text() == saved &&
+        document->edits().empty() && read_text(scratch.source / L"presentation.json") == saved && read_text(scratch.staged / L"presentation.json") == saved &&
+        colour_values(Presentation((scratch.source / L"presentation.json").string().c_str())) == expected,
+        "Backing Save changes exactly one literal token, preserves external bytes, reads back and rebases source/staging"); unchanged();
+    expected[stage_preview_background_colour_index] = labrador::Colour(165, 50, 214, 0);
+    require(impl.execute("tune " + path + " A532D600").ok, "The saved backing can be edited independently");
+    expected[3] = labrador::Colour(120, 154, 188);
+    require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok && document->edits().size() == 2,
+        "Backing and unrelated overlay retain independent edit entries"); unchanged();
+    expected[stage_preview_background_colour_index] = labrador::Colour(32, 96, 192, 128);
+    require(impl.execute("tune.reset " + path).ok && document->edits().size() == 1 && !document->edits().contains(local) &&
+        document->edits().contains("debug_overlay.colour"), "Selected backing reset preserves the overlay and its saved partial-alpha baseline"); unchanged();
+    expected[stage_preview_background_colour_index] = labrador::Colour(165, 50, 214, 0);
+    require(impl.execute("tune " + path + " A532D600").ok && document->edits().size() == 2, "Backing edit reapplies beside the overlay");
+    const auto ledger = [&]
+    {
+        std::vector<std::string> result;
+        for (const auto& [key, edit] : document->edits()) { result.push_back(key + '=' + edit.baseline_token + "->" + edit.current_token); }
+        return result;
+    };
+    const auto held_ledger = ledger(); const std::string held_current = document->current().text();
+    const JsonSpanDocument invalid_reference(saved, "stage-preview-backing-invalid-merge-reference");
+    const std::string invalid = invalid_reference.replaced(*invalid_reference.find("hud.paper.keyline_width"), "4.1");
+    write_text(scratch.source / L"presentation.json", invalid);
+    for (const char* command : { "tune.save presentation", "tune.save presentation force" })
+    {
+        require(!impl.execute(command).ok && document->current().text() == held_current && document->baseline().text() == saved &&
+            ledger() == held_ledger && document->edits().size() == 2 && read_text(scratch.source / L"presentation.json") == invalid &&
+            read_text(scratch.staged / L"presentation.json") == saved && !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+            !std::filesystem::exists(scratch.source / L"presentation.json.bak") && !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+            "Ordinary/forced invalid merged HUD geometry saves preserve exact files, live values and both ledger token pairs"); unchanged();
+    }
+    expected = initial; expected[stage_preview_background_colour_index] = labrador::Colour(32, 96, 192, 128);
+    require(impl.execute("tune.reset presentation").ok && document->edits().empty() && document->current().text() == saved &&
+        document->baseline().text() == saved && read_text(scratch.source / L"presentation.json") == invalid &&
+        read_text(scratch.staged / L"presentation.json") == saved, "Final reset restores the saved backing while preserving invalid external source"); unchanged();
+    require(std::rand() == next_random, "Backing tuning/capture metadata checks consumed gameplay RNG");
+}
+
 	std::size_t paged_row_index(DebugMenuModel& model, const std::string& label)
 	{
 		const std::vector<std::string> first_page = labels(model.rows());
@@ -41,6 +244,7 @@ namespace debug_console_acceptance
 
 	void check_tune_completion_and_menu(const std::filesystem::path& game_directory)
 	{
+		check_stage_preview_background_colour_tunes(game_directory);
 		ScratchContent scratch(game_directory, L"menu");
 		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
 		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
@@ -208,6 +412,38 @@ namespace debug_console_acceptance
 			colour_values(presentation) == identity_before &&
 			impl.tune_document("presentation")->current().text() == identity_text,
 			"Confirm inspects the exact background leaf without changing its sibling, pending edits or menu node");
+        const std::string preview_path = colour_paths[stage_preview_background_colour_index];
+        require(registry.complete("tune " + preview_path).line == "tune " + preview_path + " " &&
+            registry.complete("tune " + preview_path + " ").candidates == colour_choices,
+            "The exact captured preview colour completes as one leaf with literal colour choices");
+        DebugMenuModel preview_model(impl);
+        preview_model.confirm(row_index(preview_model.rows(), "tuning"));
+        preview_model.confirm(row_index(preview_model.rows(), "presentation"));
+        preview_model.confirm(paged_row_index(preview_model, "hud"));
+        preview_model.confirm(paged_row_index(preview_model, "player_identity"));
+        const std::size_t preview_row = paged_row_index(preview_model, "background_colour");
+        const std::string preview_token = impl.tune_token(preview_path);
+        const auto preview_before = colour_values(presentation);
+        const std::string preview_text = impl.tune_document("presentation")->current().text();
+        const std::string preview_title = preview_model.title();
+        rows = preview_model.rows();
+        require(rows[preview_row].kind == DebugMenuRow::Kind::inspect && rows[preview_row].enabled &&
+            rows[preview_row].value.find(preview_token) != std::string::npos &&
+            rows[preview_row].value.find("*next screen") != std::string::npos &&
+            rows[preview_row].value.find("(console)") != std::string::npos,
+            "The captured preview backing has an enabled read-only row marked next screen");
+        impl.log().clear();
+        preview_model.step(preview_row, 1); preview_model.step(preview_row, -1);
+        require(impl.log().lines().empty() && colour_values(presentation) == preview_before &&
+            impl.tune_document("presentation")->current().text() == preview_text,
+            "Preview inspect rows never invent numeric colour stepping");
+        require(preview_model.confirm(preview_row) == DebugMenuModel::Result::stay &&
+            preview_model.title() == preview_title &&
+            log_contains(impl.log(), "[menu] tune " + preview_path, DebugSeverity::echo) &&
+            log_contains(impl.log(), preview_path + " = " + preview_token, DebugSeverity::info) &&
+            colour_values(presentation) == preview_before &&
+            impl.tune_document("presentation")->current().text() == preview_text,
+            "Confirm only inspects the next-screen preview token and preserves the menu, values and document");
 	}
 }
 #endif

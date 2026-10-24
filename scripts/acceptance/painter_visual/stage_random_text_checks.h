@@ -172,8 +172,11 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         RectangleF edge = preview; edge.inflate(style.rule_height);
         UiTexture preview_edge("reference-preview-edge", style.sprite_sheet, style.fill_frame, edge,
             app.render_resources(), locked ? live.selected : style.panel_edge_colour);
+        const auto& backing_colour = snapshot.hud().player_identity_background_colour;
+        const Colour backing_tint(backing_colour.r * backing_colour.a, backing_colour.g * backing_colour.a,
+            backing_colour.b * backing_colour.a, backing_colour.a);
         UiTexture preview_background("reference-preview-background", style.sprite_sheet, style.fill_frame, preview,
-            app.render_resources(), snapshot.hud().player_identity_background_colour);
+            app.render_resources(), backing_tint);
         preview_edge.draw(list); preview_background.draw(list);
         StagePreview stage_preview("reference-stage-preview", preview, &data);
         if (!random) { stage_preview.set_stage("close_quarters"); }

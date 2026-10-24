@@ -28,8 +28,8 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
             document.current().token(*leaf) == authored_token &&
             document.find("hud.timer.font") == nullptr && document.find("hud.player_identity.font") == nullptr &&
-            document.find("hud.player_identity.background_colour") == nullptr && document.find(sibling_local) != nullptr,
-            "Each exact HUD clock/label colour is editable with its independently supported sibling; fonts and identity background stay unavailable");
+            document.find("hud.player_identity.background_colour") != nullptr && document.find(sibling_local) != nullptr,
+            "Each exact HUD clock/label colour is editable with its independently supported sibling; fonts stay unavailable and the separately captured preview backing is eligible");
         document.commit(document.edited(*leaf, saved_token), local);
         const std::string pending = document.current().text();const auto edit = document.edits().at(local);
         require(document.edits().size() == 1 && edit.baseline_token == authored_token &&
