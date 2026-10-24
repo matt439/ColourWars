@@ -132,10 +132,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited forty-eight colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited fifty colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly forty-eight authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly fifty authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -218,7 +218,7 @@ namespace debug_console_acceptance
 			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
 			"presentation.hud.meter_track_colour.r", "presentation.hud.meter_track_colour_extra",
 			"presentation.hud.sprite_sheet", "presentation.hud.fill_frame", "presentation.hud.meter_label_font",
-			"hud.timer.colour", "tuning.hud.timer.colour", "presentation.hud.timer.colour.r", "presentation.hud.timer.colour_extra", "presentation.hud.timer.colour.value", "presentation.hud.timer_colour", "hud.timer.shadow_colour", "tuning.hud.timer.shadow_colour", "presentation.hud.timer.shadow_colour.r", "presentation.hud.timer.shadow_colour_extra", "presentation.hud.timer.shadow_colour.value", "presentation.hud.timer_shadow_colour", "hud.closing_clock.text", "tuning.hud.closing_clock.text", "presentation.hud.closing_clock.text.r", "presentation.hud.closing_clock.text_extra", "presentation.hud.closing_clock.text.value", "presentation.hud.closing_clock_text", "presentation.hud.closing_clock.ink", "presentation.hud.closing_clock.paper", "presentation.hud.closing_clock.shade", "presentation.hud.closing_clock.accent", "presentation.hud.timer.font", "presentation.hud.player_identity.font" })
+			"hud.timer.colour", "tuning.hud.timer.colour", "presentation.hud.timer.colour.r", "presentation.hud.timer.colour_extra", "presentation.hud.timer.colour.value", "presentation.hud.timer_colour", "hud.timer.shadow_colour", "tuning.hud.timer.shadow_colour", "presentation.hud.timer.shadow_colour.r", "presentation.hud.timer.shadow_colour_extra", "presentation.hud.timer.shadow_colour.value", "presentation.hud.timer_shadow_colour", "hud.closing_clock.text", "tuning.hud.closing_clock.text", "presentation.hud.closing_clock.text.r", "presentation.hud.closing_clock.text_extra", "presentation.hud.closing_clock.text.value", "presentation.hud.closing_clock_text", "presentation.hud.closing_clock.ink", "presentation.hud.closing_clock.paper", "presentation.hud.closing_clock.shade", "presentation.hud.closing_clock.accent", "presentation.hud.timer.font", "hud.player_identity.colour", "tuning.hud.player_identity.colour", "presentation.hud.player_identity.colour.r", "presentation.hud.player_identity.colour_extra", "presentation.hud.player_identity.colour.value", "presentation.hud.player_identity_colour", "hud.player_identity.shadow_colour", "tuning.hud.player_identity.shadow_colour", "presentation.hud.player_identity.shadow_colour.r", "presentation.hud.player_identity.shadow_colour_extra", "presentation.hud.player_identity.shadow_colour.value", "presentation.hud.player_identity_shadow_colour", "presentation.hud.player_identity.background_colour", "presentation.hud.player_identity.font" })
 			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
@@ -380,7 +380,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All forty-eight colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All fifty colour strings have real Presentation consumers");
 		return checked;
 	}
 }

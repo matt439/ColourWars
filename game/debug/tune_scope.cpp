@@ -128,6 +128,10 @@ namespace
 		// The retained HUD reads this opaque text on its closing-clock branch;
 		// full candidate validation preserves the reader's alpha-one contract.
 		{ "presentation.hud.closing_clock.text", TuneScope::live },
+		// The retained HUD reads this shared identity/HEALTH/PAINT foreground
+		// and identity-only shadow per draw; badge inks/fonts stay separate.
+		{ "presentation.hud.player_identity.colour", TuneScope::live },
+		{ "presentation.hud.player_identity.shadow_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a

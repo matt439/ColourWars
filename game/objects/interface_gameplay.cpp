@@ -129,10 +129,10 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	draw_list.set_filter(TextureFilter::linear);
 	draw_list.draw_text(this->player_identity_font_, identity,
 		label_pos + look.player_identity_shadow_offset * scale,
-		look.player_identity_shadow_colour, scale,
+		CrudeDrawing::premultiplied(look.player_identity_shadow_colour), scale,
 		0.0f, Vector2F::ZERO, 0.0f);
 	draw_list.draw_text(this->player_identity_font_, identity, label_pos,
-		look.player_identity_colour, scale,
+		CrudeDrawing::premultiplied(look.player_identity_colour), scale,
 		0.0f, Vector2F::ZERO, 0.0f);
 
 	const float x_pos = resolution.x - resolution.x * look.right_margin;
@@ -228,7 +228,7 @@ void InterfaceGameplay::draw_meter(DrawList& draw_list,
 		Vector2F(0.0f, label_size.y + look.meter_label_gap * scale);
 	draw_list.set_filter(TextureFilter::linear);
 	draw_list.draw_text(this->meter_label_font_, label, label_position,
-		look.player_identity_colour, scale, 0.0f, Vector2F::ZERO, 0.0f);
+		CrudeDrawing::premultiplied(look.player_identity_colour), scale, 0.0f, Vector2F::ZERO, 0.0f);
 }
 void InterfaceGameplay::draw_timer(DrawList& draw_list,
 	const Vector2F& resolution, float timer, float scale, bool reduced_effects, bool clock_running) const
