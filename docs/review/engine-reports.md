@@ -210,9 +210,9 @@ hidden/not-foreground requirement as the regression check.
 
 # Closed
 
-Twenty-two reports, all answered. Fourteen were spent here in code. Eight
+Twenty-two reports, all answered. Fifteen were spent here in code. Seven
 spent nothing in code: 1 was fixed before it was filed; 9 and 10 were answered
-as document only and 14 was narrowed, and those three changed only comments and
+as document only, and those two changed only comments and
 docs; 15 was answered as document only, 17 changed only a manifest comment, 19
 needs more evidence and 21 was declined — an answer that leaves the workaround where it is still
 closes the report. Kept as outcomes rather than as
@@ -717,15 +717,15 @@ reach. GPU time, history, distributions, counters and an overlay were
 **declined**, and `REV#10`'s overlay stays deferred. AppTests feed the recorder
 synthetic time points; a null-preset loop case runs a real `Application`.
 
-**Spent: the documentation now; the new columns are `DBG#5`.** `debug_perf.h`,
-`debug-console.md` and `polish-frame-pacing.md` stop saying the engine exposes
-no frame statistics: `frame_timings()` has the begin_frame/submit/end_frame CPU
-split, and GPU, compositor and scan-out stay unmeasured because the engine
-declined GPU timing. `DBG#5` is unblocked and restated with its next step in
-`debug-console.md`'s Not done: pair the snapshot with the previous committed
-match frame by `frame`, add the three columns to the panel and to
-`perf.capture` as schema 2, and teach `analyze_frame_pacing.py`, which accepts
-only schema 1's exact fields, to read both. **Kept, and not replaced by the
+**Spent in two steps:** documentation in `07e4879`, then completed CPU-phase
+consumption in `7a1a4e8` (2026-10-24, `DBG#5`). The overlay and schema 2 capture
+pair each pending match sample with the exact completed Application frame;
+final publication is awaited before export, including target-one captures.
+The analyzer accepts both schemas and rejects incomplete engine pairing.
+[Frame-pacing qualification](../polish-frame-pacing.md#completed-engine-phase-pairing-2026-10-24)
+records the build, CPU, analyzer and hidden native evidence. GPU, compositor
+and scan-out stay unmeasured; engine phases are CPU wall time, not CPU busy
+time or a separate Present measurement. **Kept, and not replaced by the
 snapshot:** the match-draw QPC stopwatch (`begin_match_draw` to the top of
 `draw_status`), because the engine's `draw_time` also holds the debug panels and
 live console drawn after it, so swapping it would fold overlay cost into
@@ -1012,18 +1012,32 @@ list, so pixels are unchanged. `projected_miniature_quads(const Camera&)` keeps
 its parameter as the test seam it is. The draft and its null-renderer
 illustration are deleted.
 
-**Kept, and now `POL#29`:** the sequential overview/monitor walk in
-`miniature_view.cpp` and its `dynamic_cast<const Structure*>`,
-`Level::draw_miniature_world`'s view offset, the `scenery_` mirror and
-StagePreview's own walk. Deleting them means `Structure::draw` choosing the
-miniature art itself so that `Scene::draw` can draw those views, and this client
-chooses that art by path (overview, monitor, stage preview), not by zoom. A
-scale rule would switch 4-player gameplay panes to miniature strokes in a window
-under about 540 pixels tall. So the deletion needs a path-set mode flag (the
-engine's "a const flag set in update()") and moves those views onto Scene's
-fan-out and category order, which is the integration check the decision asks
-for. [polish-terrain.md](../polish-terrain.md#small-view-terrain-readability-2026-10-18)
-owns it.
+**Initially kept as `POL#29`:** the first spend of report 20 retained the
+sequential overview/monitor walk in `miniature_view.cpp`, its structure
+`dynamic_cast`, `Level::draw_miniature_world`'s view offset, the `scenery_` mirror
+and StagePreview's render-time dispatch. The camera accessors answered the
+engine mechanism; selecting miniature art by path remained the client's work.
+
+**Completed follow-up (2026-10-24):** ordinary
+`Structure::draw` selects the material painter from a path-set miniature flag.
+Level prepares the flag at construction, update/zero-dt transitions and the
+existing pre-draw layout refresh before Scene fan-out. Overview/monitor views
+then call `Scene::draw`, retiring the production manual traversal and borrowed
+scenery mirror. StagePreview marks new structures during selection and keeps
+its own supplied-list/pane traversal; it no longer dispatches structure drawing
+by a render-time cast. A small camera scale alone never selects miniature art.
+The unchanged explicit `draw_miniature` methods remain as the independent native
+probe oracle, rather than being claimed as deleted production APIs.
+[polish-terrain.md](../polish-terrain.md#small-view-terrain-readability-2026-10-18)
+owns the implementation and its completed order/cull/pixel qualification. The
+miniature checks include all five stages and an actual low-scale active Crossfeed
+counterexample; landmark/parallax checks retain four authored prop stages.
+Both game/editor builds, four terrain/paint CPU case runs and all six native
+mode/preset combinations pass. Original v3 Miniature/Landmark binaries and
+fresh v4 Parallax binaries retain separate provenance after a Parallax-only C2
+fixture correction; production inputs are identical. The reconciled receipts
+and retained initial fixture failures are under
+`out/validation/miniature-scene-20261024/`. Human acceptance remains open.
 
 **The prediction was wrong about what a reader would buy.** The draft said view
 context "could enable this client's normal world-slot projection" and left the
@@ -1571,15 +1585,20 @@ before had done for more than one, and none of them had been filed.
 | 11 | accepted, narrowed: the bare `SC_KEYMENU` is swallowed, no option | `0f3b283` | `bf01d5f` |
 | 12 | split: `parse_json` accepted, key enumeration a separate story (PI-20), spans declined | `3af746b` | `52b6aeb` |
 | 13 | accepted: `key_name` and `key_from_name` | `2851ad9` | `7041dc1` |
-| 14 | accepted, narrowed: CPU `frame_timings()`, GPU time declined | `7344610` | `07e4879`, docs; columns are `DBG#5` |
+| 14 | accepted, narrowed: CPU `frame_timings()`, GPU time declined | `7344610` | `07e4879`, docs; later CPU spend below |
 | 15 | document only: the template's mirror and a recipe; install is PI-11, undecided | `48fb236` | `c0691fd`, nothing in code |
 | 16 | accepted, widened to entering full screen | `7db3d5c` | `bf01d5f`, in part |
 | 17 | accepted, narrowed: client pixels kept under per-monitor v2; floor Windows 10 1607 | `dae6c87` | `bf01d5f`, a manifest comment |
 | 18 | document only: `UiText::set_hidden`; zero-alpha tint warned | `30cb06a` | `c657dd1` |
 | 19 | needs more evidence: two first-frame captures asked for | `cacf112` | `bf01d5f`, nothing in code; captures are `GAP#5.1` |
-| 20 | accepted, narrowed: `DrawList::camera()` and `viewport()` | `11ec1fc` | `c657dd1`, in part; the walk is `POL#29` |
+| 20 | accepted, narrowed: `DrawList::camera()` and `viewport()` | `11ec1fc` | `c657dd1`, in part; later Scene integration below |
 | 21 | declined: the action map stays the game's | `197aff1` | `7041dc1`, nothing in code |
 | 22 | accepted, narrowed: `SheetFrame`/`SheetStrip` pairs | `bec82f0` | `c657dd1` |
+
+**Later client spends (2026-10-24):** report 14's CPU columns landed in
+`7a1a4e8`; report 20's path-set Scene integration and native qualification are
+recorded in its dated follow-up above. These are later work, not claims about
+what the 2026-10-22 bump itself completed.
 
 **One source break, and it was report 13's own answer.** `labrador::key_name`
 made the unqualified `key_name(labrador::Key)` in `game/debug/debug_keys.cpp`
@@ -1592,16 +1611,17 @@ Windows 10 1607 as the load floor (17), F10 and a lone Alt no longer freezing a
 Release build in the system menu (11), and atomic name setters on
 `TextureObject` and `AnimationObject` (22).
 
-**What it left.** Spending 16 found report 23 (`27ec7e1`), the one live report
-now. 19 leaves this repository the two captures under `GAP#5.1`; 14 leaves
-`DBG#5`'s three columns; 20 leaves `POL#29`; 12's PI-20 and 15's PI-11 are
-engine stories with no row here, and 15's install half and 6's listener and
-voice cap are parked under
+**What that closing round left.** Spending 16 found report 23 (`27ec7e1`), then
+the one live report. Report 19 left this repository the two captures under
+`GAP#5.1`; 14 left `DBG#5`'s three columns; 20 left `POL#29`; 12's PI-20 and
+15's PI-11 were engine stories with no row here, and 15's install half and 6's
+listener and voice cap were parked under
 [What is deliberately not here](#what-is-deliberately-not-here). Every draft
-in `docs/engine-reports/` and every exhibit in `scripts/engine-reports/` is
+in `docs/engine-reports/` and every exhibit in `scripts/engine-reports/` was
 deleted, and both folders with them. The ledger's counts were reconciled after
 each closing commit (`a0e6f7e`, `ce1d20f`, `af9181f`, `532986e`) and once more
-in this one.
+in that commit. The live sections above record later client follow-ups; they do
+not reopen the answered engine reports.
 
 **Validation:** this commit built `x64-debug` and passed Debug consumer
 acceptance; the closing commits record their own.

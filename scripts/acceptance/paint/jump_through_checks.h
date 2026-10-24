@@ -79,7 +79,7 @@ namespace
         for (auto& player : players.build_players(settings, &info, colours, &render,
             &audio, &preferences, &viewports))
         { roster.push_back(scene->add(std::move(player))); }
-        Level level(std::move(scene), {}, std::move(roster), objects.build_viewport_dividers(&viewports),
+        Level level(std::move(scene), std::move(roster), objects.build_viewport_dividers(&viewports),
             colours, info.camera_bounds_rectangle(), info.zoom_out_start_bounds_rectangle(),
             info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation, L"One-way paint check",
             info.sound_bank_name(), info.music_name(), info.music_volume(), info.end_sting_name(),

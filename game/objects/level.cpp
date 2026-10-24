@@ -1,13 +1,13 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
 #include "game/input_slots.h"
+#include "game/objects/structure.h"
 
 using namespace mattmath;
 using namespace DirectX;
 using namespace labrador;
 
 Level::Level(std::unique_ptr<Scene> scene,
-	std::vector<GameObject*> scenery,
 	std::vector<Player*> players,
 	std::vector<std::unique_ptr<GameObject>> viewport_dividers,
 	const TeamColour& team_colours,
@@ -32,7 +32,6 @@ Level::Level(std::unique_ptr<Scene> scene,
 	std::vector<LevelStation> stations,
 	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings) :
 	scene_(std::move(scene)),
-	scenery_(std::move(scenery)),
 	players_(std::move(players)),
 	stations_(std::move(stations)),
 	viewport_dividers_(std::move(viewport_dividers)),
@@ -74,7 +73,6 @@ Level::Level(std::unique_ptr<Scene> scene,
 			drip = this->scene_->add(std::make_unique<IdleDrip>(
 				&presentation->idle_drip(type), render_resources, player->team_colour(),
 				static_cast<uint32_t>(this->idle_drips_.size()), preferences));
-			this->scenery_.push_back(drip);
 		}
 		this->idle_drips_.push_back(drip);
 	}
@@ -593,6 +591,20 @@ Camera Level::view_camera(int view) const
 
 void Level::refresh_views()
 {
+	// Match draw()'s paths, including the intro countdown and glass return.
+	// A small active pane still uses ordinary terrain. All mode writes happen
+	// before drawing; Scene's workers only read each shared structure.
+	const bool miniature = this->intro_showing() || this->reveal_showing() ||
+		(this->state_ != LevelState::start_countdown && this->state_ != LevelState::active);
+	// These existing stable targets include every structure and player, but no
+	// retiring projectile. This is mode configuration, not a draw-order mirror.
+	for (CollisionObject* object : this->projectile_targets_)
+	{
+		if (auto* structure = dynamic_cast<Structure*>(object))
+		{
+			structure->set_miniature(miniature);
+		}
+	}
 	this->scene_->clear_views();
 
 	if (this->intro_showing() || this->reveal_showing())

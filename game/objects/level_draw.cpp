@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
 #include "game/debug/debug_overlay_draw.h"
-#include "game/objects/miniature_view.h"
 #include "game/input_slots.h"
 
 using namespace mattmath;
@@ -40,28 +39,7 @@ void Level::draw(Renderer& renderer) const
 	else
 	{
 		// The overview draws only the world, with no gameplay overlays.
-		this->draw_miniature_world(renderer);
-	}
-}
-
-void Level::draw_miniature_world(Renderer& renderer, const Scene::ViewOverlay& overlay) const
-{
-	const int count = this->scene_->view_count();
-	if (count == 0) { return; }
-	const int offset = std::max(0, renderer.view_count() - 1);
-	renderer.set_view_count(offset + count);
-	// At most four cosmetic views, drawn sequentially. Scene remains the only
-	// owner of the normal gameplay fan-out. The pin's collision span mirrors
-	// its current render order; a native parity check guards that dependency.
-	// Miniature art is chosen by this path rather than by zoom, which is why
-	// this walk is not Scene::draw yet (POL#29).
-	for (int index = 0; index < count; ++index)
-	{
-		const Scene::View& view = this->scene_->view(index);
-		DrawList list = renderer.view(offset + index);
-		draw_miniature_view(list, view.camera, view.viewport, this->scenery_,
-			this->scene_->collision_objects());
-		if (overlay) { overlay(index, list); }
+		this->scene_->draw(renderer);
 	}
 }
 

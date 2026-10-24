@@ -52,7 +52,8 @@ std::vector<float> crossfeed_structure_state(const CrossfeedFixture& fixture)
 CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info,
     const GameTuning& tuning, const Presentation& presentation, const PlaySettings& preferences,
     int count, bool heavy, float duration, size_t& heavy_contacts,
-    const char* stage = "crossfeed", std::optional<WeaponType> attacker_tool = std::nullopt)
+    const char* stage = "crossfeed", std::optional<WeaponType> attacker_tool = std::nullopt,
+    OpeningMode opening = OpeningMode::off)
 {
     constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player, ScreenLayout::two_player,
         ScreenLayout::three_player, ScreenLayout::four_player };
@@ -75,11 +76,10 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
     const LevelObjectBuilder objects(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
     auto scene = std::make_unique<Scene>(app.thread_pool(), app.partitioner());
     scene->set_bounds(info.out_of_bounds_rectangle());
-    std::vector<GameObject*> scenery;
     for (auto& object : objects.build_non_collision_objects(info.non_collision_objects_json()))
-    { scenery.push_back(scene->add(std::move(object))); }
+    { scene->add(std::move(object)); }
     for (auto& shadow : objects.build_shadows(info.collision_objects_json()))
-    { scenery.push_back(scene->add(std::move(shadow))); }
+    { scene->add(std::move(shadow)); }
     CrossfeedFixture fixture;
     fixture.scene = scene.get();
     for (auto& object : objects.build_collision_objects(info.collision_objects_json(), colours))
@@ -104,12 +104,12 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
         app.audio_resources(), &preferences, app.viewport_manager()))
     { roster.push_back(scene->add(std::move(player))); }
     const std::string display = info.display_name();
-    fixture.level = std::make_unique<Level>(std::move(scene), std::move(scenery), std::move(roster),
+    fixture.level = std::make_unique<Level>(std::move(scene), std::move(roster),
         objects.build_viewport_dividers(app.viewport_manager()), colours, info.camera_bounds_rectangle(),
         info.zoom_out_start_bounds_rectangle(), info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation,
         std::wstring(display.begin(), display.end()), info.sound_bank_name(), info.music_name(), info.music_volume(),
         info.end_sting_name(), info.end_sting_volume(), app.resolution_manager(), app.viewport_manager(),
-        app.render_resources(), app.audio_resources(), &preferences, app.mouse(), info.stations(), OpeningMode::off, duration);
+        app.render_resources(), app.audio_resources(), &preferences, app.mouse(), info.stations(), opening, duration);
     require(fixture.level->player_count() == count, "Crossfeed native Level changed its requested player count");
     for (int view = 0; view < count; ++view)
     { require(fixture.level->player(view).player_num() == slots[static_cast<size_t>(view)], "Crossfeed native roster changed its view/input mapping"); }

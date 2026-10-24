@@ -38,7 +38,8 @@ void Structure::draw(DrawList& draw_list) const
 {
 	if (this->material_ != nullptr)
 	{
-		this->material_->paint(draw_list);
+		if (this->miniature_) { this->material_->paint_miniature(draw_list); }
+		else { this->material_->paint(draw_list); }
 		return;
 	}
 	this->TextureObject::draw(draw_list, this->sprite_rectangle_);

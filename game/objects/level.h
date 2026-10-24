@@ -63,7 +63,6 @@ class Level
 {
 public:
 	Level(std::unique_ptr<labrador::Scene> scene,
-		std::vector<labrador::GameObject*> scenery,
 		std::vector<Player*> players,
 		std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers,
 		const TeamColour& team_colours,
@@ -196,9 +195,6 @@ private:
 	std::unique_ptr<PlayerBadge> player_badge_;
 	std::vector<float> player_identity_remaining_;
 	std::unique_ptr<labrador::Scene> scene_ = nullptr;
-	// Scene owns these non-collision objects for the match. Mirror admission
-	// order for the miniature path (miniature_view.h); never cache retiring shots.
-	std::vector<labrador::GameObject*> scenery_;
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,
 	// so these pointers remain valid for the match.
@@ -417,8 +413,6 @@ private:
 	void update_opening(const std::vector<PlayerInputData>& player_inputs, float dt);
 	void add_intro_views();
 	void draw_intro(labrador::Renderer& renderer) const;
-	void draw_miniature_world(labrador::Renderer& renderer,
-		const labrador::Scene::ViewOverlay& overlay = {}) const;
 
 	// Advance the match state; update() refreshes views after every path returns.
 	void update_state(const std::vector<PlayerInputData>& player_inputs,

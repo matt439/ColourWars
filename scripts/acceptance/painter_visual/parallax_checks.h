@@ -145,6 +145,10 @@ ParallaxWorld parallax_world(Application& app, const LevelLoadedInfo& info,
 
 Frame parallax_frame(Application& app, const ParallaxWorld& world, const ParallaxPass& pass, size_t& rendered)
 {
+    // Every comparison remains an ordinary gameplay draw. The separate
+    // actual StagePreview/reference below selects miniature terrain.
+    configure_miniature_fixture(*world.actual.scene, false);
+    const auto before_modes = miniature_fixture_modes(*world.actual.scene);
     ParallaxPass visible = pass;
     if (world.preferences != nullptr && world.preferences->reduce_effects) { visible.reduced = true; }
     ++rendered; require(rendered <= 372, "Parallax prototype exceeded its approved readback budget");
@@ -199,7 +203,8 @@ Frame parallax_frame(Application& app, const ParallaxWorld& world, const Paralla
         }
     }
     Frame result = read(renderer);
-    require(before == landmark_world_state(world.actual) && std::rand() == expected_random,
+    require(before == landmark_world_state(world.actual) &&
+        before_modes == miniature_fixture_modes(*world.actual.scene) && std::rand() == expected_random,
         "Parallax drawing mutated object geometry, phase, paint ownership or gameplay RNG");
     return result;
 }
@@ -207,26 +212,45 @@ Frame parallax_frame(Application& app, const ParallaxWorld& world, const Paralla
 void parallax_views(Application& app, ParallaxWorld& world, const LevelLoadedInfo& info,
     const LandmarkStage& stage, const GameTuning& tuning, const Presentation& presentation, int count, int pose)
 {
+    const Vector2I resolution = app.resolution_manager()->resolution_ivec();
+    require((count == 1 || count == 4) &&
+        ((resolution.x == 1280 && resolution.y == 720) ||
+            (resolution.x == 1920 && resolution.y == 1080)) &&
+        presentation.camera().reference_height == 1080.0f &&
+        presentation.camera().minimum_world_width == 1280.0f,
+        "Parallax fixture changed its declared C2 camera profile or native layouts");
     app.viewport_manager()->set_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
     world.actual.scene->clear_views(); const PlayerCamera framing{};
     for (int view = 0; view < count; ++view)
     {
         const Viewport pane = app.viewport_manager()->player_viewport(view);
+        const RectangleI pixels = pane.pixel_rect();
+        const int divisor = count == 1 ? 1 : 2;
+        require(pixels.width == resolution.x / divisor && pixels.height == resolution.y / divisor &&
+            pane.width == static_cast<float>(pixels.width) && pane.height == static_cast<float>(pixels.height),
+            "Parallax fixture changed its exact whole-pixel gameplay pane");
+        // Current C2 law: full-window height, limited by physical pane width.
+        // Literal720p/1080p anchors are 1P2/3,1 and 4P1/2,3/4 respectively.
+        const float scale = std::min(static_cast<float>(resolution.y) / 1080.0f,
+            static_cast<float>(pixels.width) / 1280.0f);
+        const float literal_scale = resolution.y == 720 ?
+            (count == 1 ? 2.0f / 3.0f : 0.5f) : (count == 1 ? 1.0f : 0.75f);
+        require(scale == literal_scale, "Parallax expected C2 scale differs from its literal native anchors");
         const bool right = view % 2 != 0;
         // Pose 0 is an authored spawn; pose 1 is explicitly placed near a
         // landmark at the same gameplay zoom. Neither proves route reachability.
         const Vector2F focus = pose == 0 ?
             (right ? info.team_b_spawns().front() : info.team_a_spawns().front()) + tuning.player().size / 2.0f :
             Vector2F(stage.props[right ? 1 : 0].center().x, stage.props[right ? 1 : 0].bottom() - tuning.player().size.y / 2.0f);
-        const float scale = app.resolution_manager()->resolution_vec().y / presentation.camera().reference_height;
+        // Seed the previous camera with this scale too: an obsolete seed can
+        // bias the centre retained by the camera deadzone after a width clamp.
         const Camera previous(focus - pane.size() / (scale * 2.0f), scale);
-        const Camera camera = framing.follow(focus, pane, app.resolution_manager()->resolution_vec().y,
+        const Camera camera = framing.follow(focus, pane, static_cast<float>(resolution.y),
             presentation.camera(), previous, info.camera_bounds_rectangle());
-        require(camera.scale == scale, "Parallax fixture changed the game's full-screen-height camera scale");
+        require(camera.scale == scale, "Parallax fixture changed the game's C2 height/pane-width camera scale");
         world.actual.scene->add_view(pane, camera);
     }
 }
-
 size_t parallax_preserved(const Frame& baseline, const Frame& first, const Frame& second,
     const Frame& black, const Frame& white, bool prop)
 {
@@ -336,7 +360,7 @@ void parallax_preview(Application& app, Registry<LevelLoadedInfo>& levels, const
     ++rendered; renderer.begin_frame(); renderer.set_view_count(1); DrawList expected = renderer.view(0);
     expected.set_filter(TextureFilter::point); const Viewport pane(640, 180, 640, 360);
     const Camera camera = Camera::frame(levels.get(stage.name)->zoom_out_finish_bounds_rectangle(), pane);
-    draw_miniature_view(expected, camera, pane, clean.actual.scenery, clean.actual.scene->collision_objects());
+    draw_legacy_miniature_view(expected, camera, pane, clean.actual.scenery, clean.actual.scene->collision_objects());
     require(production.pixels == read(renderer).pixels, "Comparison fixture changed actual StagePreview's original static miniature path");
 }
 

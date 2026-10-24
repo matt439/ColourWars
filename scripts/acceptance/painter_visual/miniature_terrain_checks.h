@@ -332,17 +332,17 @@ void miniature_paint_matrix(Application& app, const Canvas& canvas, const GameTu
     }
 }
 
-Frame miniature_scene_frame(Application& app, const Scene& scene, bool adapted,
-    const std::vector<GameObject*>& scenery, bool unculled = false)
+Frame miniature_scene_reference(Application& app, const Scene& scene,
+    const std::vector<GameObject*>& scenery, bool unculled)
 {
     Renderer& renderer = *app.renderer(); renderer.begin_frame();
-    if (!adapted) { scene.draw(renderer); return read(renderer); }
     renderer.set_view_count(scene.view_count());
     for (int view = 0; view < scene.view_count(); ++view)
     {
         DrawList list = renderer.view(view); list.set_filter(TextureFilter::point);
         const Scene::View& pane = scene.view(view);
-        if (!unculled) { draw_miniature_view(list, pane.camera, pane.viewport, scenery, scene.collision_objects()); }
+        if (!unculled)
+        { draw_legacy_miniature_view(list, pane.camera, pane.viewport, scenery, scene.collision_objects()); }
         else
         {
             list.set_viewport(pane.viewport); list.set_camera(pane.camera);
@@ -355,6 +355,21 @@ Frame miniature_scene_frame(Application& app, const Scene& scene, bool adapted,
         }
     }
     return read(renderer);
+}
+
+Frame miniature_scene_frame(Application& app, const Scene& scene, bool adapted,
+    const std::vector<GameObject*>& scenery, bool unculled = false)
+{
+    if (unculled) { return miniature_scene_reference(app, scene, scenery, true); }
+    configure_miniature_fixture(scene, adapted);
+    const auto before_modes = miniature_fixture_modes(scene);
+    Renderer& renderer = *app.renderer(); renderer.begin_frame();
+    // Production owns the view fan-out, culling and scenery/collision order.
+    scene.draw(renderer);
+    const Frame frame = read(renderer);
+    require(before_modes == miniature_fixture_modes(scene),
+        "Scene drawing changed a path-selected structure miniature flag");
+    return frame;
 }
 
 void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Scene& scene,
@@ -380,7 +395,7 @@ void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& level
         scene.clear_views(); scene.add_view(pane,
             Camera::frame(levels.get(stage)->zoom_out_finish_bounds_rectangle(), pane));
         const Frame old = miniature_scene_frame(app, scene, false, scenery);
-        const Frame reference = miniature_scene_frame(app, scene, true, scenery);
+        const Frame reference = miniature_scene_reference(app, scene, scenery, false);
         const auto actual_frame = [&]()
         {
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
@@ -407,7 +422,12 @@ void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& level
         else if (size.x == 1280)
         { require(first_720.pixels == actual.pixels, "actual StagePreview changed after native resize return"); }
     }
-    require(changed > 0, "actual StagePreview never differed from disappearing-stroke legacy terrain");
+    // The original four stages remain visual-change discriminators. Crossfeed
+    // adds exact reference/repeat/resize coverage; its authored primer can mask
+    // the miniature strokes, and its larger preview scales use ordinary art.
+    // No general material rule requires every authored stage to change pixels.
+    if (std::string_view(stage) != "crossfeed")
+    { require(changed > 0, "actual StagePreview never differed from disappearing-stroke legacy terrain"); }
 }
 
 void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
@@ -416,7 +436,7 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
     size_t changed_overviews = 0;
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course" })
+    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed" })
     {
         const LevelLoadedInfo* info = levels.get(stage);
         Scene scene(app.thread_pool(), app.partitioner()); std::vector<GameObject*> scenery;
@@ -460,6 +480,8 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 std::srand(7091); const int expected_random = std::rand(); std::srand(7091);
                 const Frame old = miniature_scene_frame(app, scene, false, scenery);
                 const Frame fixed = miniature_scene_frame(app, scene, true, scenery);
+                require(fixed.pixels == miniature_scene_reference(app, scene, scenery, false).pixels,
+                    "Miniature Scene differs from the independent legacy painter/cull traversal");
                 require(fixed.pixels == miniature_scene_frame(app, scene, true, scenery).pixels,
                     "frozen real miniature terrain changed pixels");
                 require(fixed.pixels == miniature_scene_frame(app, scene, true, scenery, true).pixels,
@@ -490,7 +512,7 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 }
                 require(miniature_scene_frame(app, scene, false, scenery).pixels ==
                     miniature_scene_frame(app, scene, true, scenery).pixels,
-                    "native miniature traversal changed Scene painter order, culling or ordinary point pixels");
+                    "path-selected miniature Scene changed painter order, culling or ordinary point pixels");
                 records << "native-scene," << stage << ',' << count << ',' << size.x << ',' << size.y << ",0.5,0\n";
             }
         }
@@ -531,7 +553,7 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
     const std::filesystem::path& output, std::ofstream& records)
 {
     const NestedSaveProfile isolated(output / "miniature-story-profile");
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course" })
+    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed" })
     {
         for (const int count : { 1, 4 })
         {
@@ -651,9 +673,10 @@ void miniature_terrain_matrix(Application& app, Registry<LevelLoadedInfo>& level
     miniature_paint_matrix(app, canvas, tuning, presentation, preferences, output, records);
     miniature_stage_matrix(app, levels, tuning, presentation, preferences, output, records);
     miniature_story_matrix(app, builder, tuning, output, records);
+    miniature_path_checks(app, levels, tuning, presentation, preferences, output, records);
     require(records.good(), "miniature terrain comparison record write failed");
     std::cout << "PASS miniature terrain: independent exposed edge/masked seam/lit body/major ruler tick and ramp silhouette "
         "pixel oracles, legacy comparisons, actual owned paint overlay, exact native material and Scene parity; "
-        "all four arena 1P/4P overview/story contexts at720p/1080p/QHD, resize return, frozen state/RNG and Debug fingerprints. "
+        "all five shipped stage 1P/4P overview/story contexts at720p/1080p/QHD, resize return, frozen state/RNG and Debug fingerprints. "
         "Muted renderer evidence; human readability, physical pads and performance acceptance remain separate.\n";
 }

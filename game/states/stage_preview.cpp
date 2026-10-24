@@ -45,6 +45,15 @@ void StagePreview::set_stage(const std::string& stage)
 	}
 	auto collision_objects = builder.build_collision_objects(
 		level->collision_objects_json(), TeamColour{});
+	// This is a miniature by path, even when its scale reaches ordinary size.
+	// Configure only the new objects before replacing the previous selection.
+	for (const auto& object : collision_objects)
+	{
+		if (auto* structure = dynamic_cast<Structure*>(object.get()))
+		{
+			structure->set_miniature(true);
+		}
+	}
 	const RectangleF world_bounds = level->zoom_out_finish_bounds_rectangle();
 
 	this->objects_ = std::move(objects);
@@ -85,14 +94,7 @@ void StagePreview::draw(DrawList& draw_list) const
 	}
 	for (const auto& object : this->collision_objects_)
 	{
-		if (const auto* structure = dynamic_cast<const Structure*>(object.get()))
-		{
-			structure->draw_miniature(draw_list);
-		}
-		else
-		{
-			object->draw(draw_list);
-		}
+		object->draw(draw_list);
 	}
 
 	draw_list.set_viewport(fullscreen);

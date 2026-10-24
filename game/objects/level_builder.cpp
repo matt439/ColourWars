@@ -52,18 +52,17 @@ std::unique_ptr<Level>
 		this->partitioner_);
 
 	scene->set_bounds(load_info->out_of_bounds_rectangle());
-	std::vector<GameObject*> scenery;
 
 	for (std::unique_ptr<GameObject>& object :
 		this->level_object_builder_->build_non_collision_objects(
 			load_info->non_collision_objects_json()))
 	{
-		scenery.push_back(scene->add(std::move(object)));
+		scene->add(std::move(object));
 	}
 	for (std::unique_ptr<GameObject>& shadow :
 		this->level_object_builder_->build_shadows(load_info->collision_objects_json()))
 	{
-		scenery.push_back(scene->add(std::move(shadow)));
+		scene->add(std::move(shadow));
 	}
 
 	for (std::unique_ptr<labrador::CollisionObject>& object :
@@ -86,7 +85,6 @@ std::unique_ptr<Level>
 
 	return std::make_unique<Level>(
 		std::move(scene),
-		std::move(scenery),
 		std::move(players),
 		this->level_object_builder_->build_viewport_dividers(
 			this->viewport_manager_),

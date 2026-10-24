@@ -139,8 +139,10 @@ camera code is unchanged.
   `SetSquareMaterial` each work their drawing out once, at construction, into an
   immutable list of swatch quads. Ordinary drawing only replays it. The explicit
   miniature path projects that same drawing for each view without mutating it.
-  A `Structure` owns its material; `Structure::draw` paints it instead of the
-  stretched frame.
+  A `Structure` owns its material. Its ordinary virtual `draw` selects the normal
+  or miniature material painter from a prepared path flag; it uses the stretched
+  frame when no material is present. `StructurePaintable` calls that base painter
+  once before drawing its primer and paint overlays.
 - `StructurePaintable` overlays smooth white primer from its real scoring strips,
   then draws splashes, owned paint and runoff. Normal and miniature views share
   that face selection; the material's collision tag never decides paintability.
@@ -327,40 +329,82 @@ can survive after minor marks become unresolvable. No palette, atlas, collision 
 budget, gameplay camera or world-grid value changes.
 
 `TerrainMaterial::paint_miniature` reads the view's camera from the draw list
-(`DrawList::camera()`), which the caller has set. At one
-pixel per cell or above it calls the ordinary painting path. Smaller drawings
-use viewport-local integer rectangles and restore the caller's camera; their
-point sampler remains unchanged. Each paintable structure now draws its
-material, primer, splashes, owned paint and runoff in that order. Normal active and
-countdown gameplay continues through `Scene::draw`.
+(`DrawList::camera()`), which the caller has set. At one pixel per cell or above
+it calls the ordinary painting path. Smaller drawings use viewport-local integer
+rectangles and restore the caller's camera; their point sampler remains unchanged.
+Each paintable structure draws its material, primer, splashes, owned paint and
+runoff in that order, with the base material and paint overlay each drawn once.
 
-The miniature art is chosen by draw path, not by zoom: only the overview,
-monitor and stage-preview views ask for it. Level therefore still uses a small
-sequential traversal for overview/monitor views, retaining Scene's viewport,
-append offset, culling and scenery-before-collision order. Scene still owns
-every object. A borrowed scenery list includes shadows, idle drips and later
-debug station labels; live collision objects come from Scene. Its public
-collision span does not promise render order, so parity with the pin is a
-tested dependency. Engine [report 20](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context--accepted-narrowed-11ec1fc)
-was answered with `DrawList::camera()` and `viewport()`, so a structure's own
-`draw()` can now read its view; the camera parameter that used to be threaded
-into the miniature draw is gone.
+**`POL#29` integration (2026-10-24).** A `Structure`
+now owns an explicit miniature flag. Its ordinary virtual `draw` chooses the
+material painter directly, so overview and monitor rendering can call
+`Scene::draw` without a second client traversal. Scene owns the view append
+offset, scenery-before-collision order, culling and per-view fan-out, including
+the existing monitor overlay. The production `miniature_view` files and Level's
+borrowed scenery mirror are retired by this change; Scene continues owning the
+objects, including shadows, idle drips and debug station labels.
 
-**Next (`POL#29`):** draw the overview and monitor through `Scene::draw`.
-`Structure::draw` would call `paint_miniature` when a draw-mode flag, set by
-Level in `update()` while the overview or monitor shows, says so; never by
-camera scale alone: a scale rule would switch 4-player gameplay panes to
-miniature strokes in a window under about 540 pixels tall.
-That deletes `miniature_view`, the borrowed scenery mirror and the
-`dynamic_cast` dispatch here and in StagePreview. It moves these views onto
-Scene's fan-out and category order, so it needs the integration check the
-engine itself names: the miniature, landmark and parallax pixel oracles across
-the arenas at 1P and 4P, 720 and 1080.
+The flag is selected by path, never inferred from camera scale. Level prepares
+it for construction, zero-dt refreshes and state transitions: opening/reveal and
+overview paths use miniature art, while ordinary active/countdown paths use the
+authored drawing. The existing pre-draw `refresh_layout` preparation also
+refreshes the choice before Scene starts its workers. Drawing itself reads that
+choice through each view's own draw list and does not mutate shared object state.
+A small active four-player pane therefore remains an ordinary gameplay view.
 
-StagePreview uses the same miniature structure methods in its existing pane,
-with its existing camera and decorative object order. Drawing remains const
-and consumes no gameplay randomness. The current treatment is included in
-the author's 2026-10-20 stage approval below.
+StagePreview keeps its `UiWidget` traversal, supplied draw list, pane, camera
+restoration and decorative order. It marks newly built structures as miniature
+when the selected stage is prepared, then uses their ordinary virtual `draw`.
+It has no render-time structure dispatch. The explicit `Structure::draw_miniature`
+and `StructurePaintable::draw_miniature` methods remain unchanged as the native
+probe's independent old-path oracle; this change does not delete every legacy
+miniature API. Engine [report 20](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context--accepted-narrowed-11ec1fc)
+provides the view context without changing the virtual draw contract.
+
+The integration checks compare actual `Scene::draw` frames against the
+separate frozen legacy traversal, retaining order, append-offset, cull, material,
+paint-ownership, frozen state/RNG and Debug fingerprint oracles. Miniature terrain
+and story coverage explicitly includes Crossfeed alongside the four earlier
+stages at 1P/4P and 720p/1080p/QHD. Landmark and parallax coverage retains the four
+arenas with authored brush-pot/tape-roll placements; no Crossfeed prop coverage
+is implied. The parallax prototype remains local to the probe and the shipped
+backdrops remain static.
+
+A separate actual four-player Crossfeed Level checks eleven construction/story
+path states. Its three 320x480 readbacks compare ordinary active drawing,
+a deliberately wrong miniature flag and zero-dt restoration. Both builds measure
+`min(480/1080, 160/1280) = 0.125` in the physical 160x240 panes. The source-derived
+floor-bottom witness at local (32,211) is ordinary metal_dark `6E7275` versus
+miniature keyline `000000`. Forcing the wrong mode changes 607 pixels in each
+build; zero-dt restoration recovers exact pixels/state/paint/RNG and Debug
+fingerprints. Each run records eleven path rows, three counterexample rows,
+two zero-dt refreshes and 642 positive-time updates.
+
+**Qualification (2026-10-24).** Debug and Release game/editor builds and the
+`terrain` and `paint` CPU cases pass (four case runs). MiniatureTerrain,
+Landmark and Parallax native modes pass in both presets. MiniatureTerrain has
+459 CSV rows per preset, including all five stage previews and actual story
+contexts. Landmark/Parallax retain the four authored prop stages. Exact
+source/binary/content pins and per-mode receipts are reconciled in
+`out/validation/miniature-scene-20261024/validation-reconciliation-v4.json`.
+
+Miniature/Landmark retain their qualified v3 probe binaries. Fresh v4 Parallax
+probes use the accepted C2 height/pane-width scale before seeding the previous
+camera. That correction changes only the Parallax fixture's local view setup;
+the other components' executed source and all production producers remain
+unchanged. The first Miniature run exposed an inherited per-stage positive-delta
+assumption: Crossfeed's preview can match ordinary pixels, while all five exact
+references and the original four positive-delta guards remain. The first
+Parallax run exposed its stale height-only camera expectation. Both failed
+receipts and source-derived corrections are retained; no production values or
+pixel tolerances were changed to satisfy those fixtures.
+
+Previous dated evidence below remains the evidence for its own implementation.
+The existing Release ZIP predates this integration; no new package was produced
+by these checks. Renderer checks establish no human readability,
+comfort, balance, physical-pad, listening or uncontended-performance acceptance.
+The existing art treatment remains included in the author's 2026-10-20 stage
+approval below.
 
 Retained native-size crops from a 1280x720 window compare the Close Quarters
 Stage Select preview [before](images/polish-terrain/small-view-cq-legacy-720p.png)
@@ -416,7 +460,7 @@ these checks establish no listening, physical-pad or performance acceptance.
 
 ## Reusable static landmarks (2026-10-19)
 
-The kit adds a brush pot and tape roll, each used once in every current arena.
+The kit adds a brush pot and tape roll, each used once in the four arenas present on 2026-10-19.
 They are quiet background silhouettes in the existing backdrop roles, with
 `bg_line` outlines rather than the black edges that identify walkable terrain.
 There are no captions, team colours or new runtime types. Both use ordinary
@@ -436,7 +480,10 @@ The atlas appends a new shelf after the original 39 frames. Every old frame's
 coordinates and the full original 2048x596 texel region are retained; the
 expanded atlas is 2048x920. The recipe and generator remain the editable source,
 and the [lineup](../game/art/terrain/lineup.png) includes both silhouettes. The
-game, StagePreview and overview/monitor paths use the existing scenery walk.
+completed `POL#29` change keeps these objects static: game and overview/monitor
+views use Scene's scenery order, while StagePreview retains its supplied-list
+traversal. The dated placement and validation record here covers those four
+arenas; it does not add brush pots or tape rolls to Crossfeed.
 
 Validation on 2026-10-19: both builds and all 38 consumer CPU cases per preset
 pass under `/W4 /WX`. The terrain case checks actual DDS/frame resolution,

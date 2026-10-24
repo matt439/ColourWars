@@ -26,8 +26,12 @@ public:
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
-	// The same painter order, with strokes for the list's camera (DrawList::
-	// camera()), drawn only by the miniature views.
+	// Chosen by the caller's path during construction/update, never by zoom
+	// and never mutated while Scene renders its views on parallel workers.
+	void set_miniature(bool miniature) { this->miniature_ = miniature; }
+	bool miniature() const { return this->miniature_; }
+	// Explicit legacy painter retained for independent renderer references.
+	// Runtime views select their mode before calling the ordinary draw().
 	virtual void draw_miniature(labrador::DrawList& draw_list) const;
 	mattmath::RectangleF bounds() const override;
 
@@ -47,6 +51,7 @@ protected:
 	const mattmath::RectangleF& rectangle() const;
 	CollisionObjectType collision_type() const;
 private:
+	bool miniature_ = false;
 	CollisionObjectType collision_type_ =
 		CollisionObjectType::structure;
 	mattmath::RectangleF sprite_rectangle_ = mattmath::RectangleF::ZERO;

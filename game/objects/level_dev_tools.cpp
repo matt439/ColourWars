@@ -28,7 +28,6 @@ void Level::refresh_station_labels()
 				station.name, widen(station.name), look.font, station.position + look.offset,
 				this->render_resources_, CrudeDrawing::premultiplied(look.colour), hidden,
 				look.scale)));
-			this->scenery_.push_back(this->station_labels_.back());
 		}
 		// Admit them now, so a paused match shows them too. This runs between
 		// world updates, when every tick's own additions have been admitted

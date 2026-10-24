@@ -98,14 +98,20 @@ enum class LandmarkDraw { miniature, atlas, omitted, native };
 Frame landmark_frame(Application& app, const LandmarkWorld& world, const LandmarkStage& stage,
     const std::array<RectangleI, 2>& sources, LandmarkDraw mode, size_t& rendered)
 {
+    configure_miniature_fixture(*world.scene, mode != LandmarkDraw::native);
+    const auto before_modes = miniature_fixture_modes(*world.scene);
     ++rendered; Renderer& renderer = *app.renderer(); renderer.begin_frame();
-    if (mode == LandmarkDraw::native) { world.scene->draw(renderer); return read(renderer); }
+    if (mode == LandmarkDraw::native || mode == LandmarkDraw::miniature)
+    {
+        world.scene->draw(renderer); const Frame frame = read(renderer);
+        require(before_modes == miniature_fixture_modes(*world.scene),
+            "Landmark Scene draw changed path-selected miniature flags");
+        return frame;
+    }
     renderer.set_view_count(world.scene->view_count());
     for (int view = 0; view < world.scene->view_count(); ++view)
     {
         const Scene::View& pane = world.scene->view(view); DrawList list = renderer.view(view); list.set_filter(TextureFilter::point);
-        if (mode == LandmarkDraw::miniature)
-        { draw_miniature_view(list, pane.camera, pane.viewport, world.scenery, world.scene->collision_objects()); continue; }
         list.set_viewport(pane.viewport); list.set_camera(pane.camera);
         for (const GameObject* object : world.scenery)
         {
@@ -136,10 +142,13 @@ void landmark_views(Application& app, LandmarkWorld& world, const RectangleF& bo
 Frame landmark_frozen_scene(Application& app, const LandmarkWorld& world, const LandmarkStage& stage,
     const std::array<RectangleI, 2>& sources, size_t& rendered)
 {
+    configure_miniature_fixture(*world.scene, true);
+    const auto before_modes = miniature_fixture_modes(*world.scene);
     const auto before = landmark_world_state(world); std::srand(9721); const int expected = std::rand(); std::srand(9721);
     const Frame frame = landmark_frame(app, world, stage, sources, LandmarkDraw::miniature, rendered);
     require(frame.pixels == landmark_frame(app, world, stage, sources, LandmarkDraw::miniature, rendered).pixels &&
-        before == landmark_world_state(world) && std::rand() == expected, "Frozen landmark Scene draw changed pixels, geometry, paint ownership or RNG");
+        before == landmark_world_state(world) && before_modes == miniature_fixture_modes(*world.scene) &&
+        std::rand() == expected, "Frozen landmark Scene draw changed pixels, geometry, paint ownership, mode or RNG");
     return frame;
 }
 
