@@ -4,7 +4,7 @@
 	void check_crack_colour_tunes(const std::filesystem::path& game_directory)
 	{
 		// Named/RGB/RGBA, strict aliases, LF/CRLF saves/conflicts and type
-		// consumption reuse check_colour_tunes/check_tune_consumed's42-path loops.
+		// consumption reuse check_colour_tunes/check_tune_consumed's audited-path loops.
 		ScratchContent scratch(game_directory, L"crack-colour-records");
 		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
 		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
@@ -154,7 +154,7 @@
 	void check_limb_colour_tunes(const std::filesystem::path& game_directory)
 	{
 		// Generic named/RGB/RGBA/strict words, exact LF/CRLF saves/conflicts,
-		// force and actual reader consumption already cover all44 paths.
+		// force and actual reader consumption already cover all45 paths.
 		ScratchContent scratch(game_directory, L"limb-colour-records");
 		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
 		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());

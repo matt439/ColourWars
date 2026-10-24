@@ -58,7 +58,7 @@ public:
                 figure.height / look_->canvas_size.y);
             const mattmath::RectangleF target(figure.x + local.x * scale.x,
                 figure.y + local.y * scale.y, local.width * scale.x, local.height * scale.y);
-            this->fill(list, target, look_->quiet.face_colour);
+            this->fill(list, target, premultiplied(look_->quiet.face_colour));
             const float lid = look_->quiet.eyelid_height * scale.y;
             this->fill(list, mattmath::RectangleF(target.x,
                 target.y + (target.height - lid) / 2.0f, target.width, lid), premultiplied(look_->arm_colour));

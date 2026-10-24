@@ -157,6 +157,7 @@ namespace
 #include "scripts/acceptance/painter_visual/crack_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/limb_colour_fixture.h"
 #include "scripts/acceptance/painter_visual/limb_tune_colour_checks.h"
+#include "scripts/acceptance/painter_visual/quiet_face_tune_colour_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_ink_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_background_checks.h"
 #include "scripts/acceptance/painter_visual/player_identity_checks.h"
@@ -471,6 +472,10 @@ int wmain(int argc, wchar_t** argv)
             limb_tune_colour_checks(app, levels, tuning, presentation, content, output);
 #else
             std::cout << "PASS limb-tune-colours-only Release direct-consumer-only scope; no developer commands executed\n";
+#endif
+            quiet_face_colour_consumer_checks(app, presentation, output);
+#if COLOURWARS_DEV_TOOLS
+            quiet_face_tune_colour_checks(app, levels, tuning, presentation, content, output);
 #endif
             return 0;
         }

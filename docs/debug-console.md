@@ -164,7 +164,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of forty-four audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of forty-five audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -329,7 +329,7 @@ are refused (they would change the match outside the recorded input).
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
-forty-four audited colour paths below, can be read and changed while the game runs,
+forty-five audited colour paths below, can be read and changed while the game runs,
 by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
@@ -376,7 +376,7 @@ the live F9 feedback toggle.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
-**Colours.** These forty-four existing string fields are supported; numeric path
+**Colours.** These forty-five existing string fields are supported; numeric path
 wildcards do not make other strings editable. Use an engine colour name or
 six/eight hexadecimal digits, without a leading `#`. Names use the engine's
 case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
@@ -433,6 +433,7 @@ The latest validation is recorded under
 | `presentation.opening.crack` | live | Thin crack dabs on the next applicable Monitor front-details draw; tint edits preserve captured persona points and do not create or reroll cracks. |
 | `presentation.figure.arm_colour` | live | Procedural arms, outer hand squares and quiet blink lids on each applicable FigureAttachments draw; captured rest/sleeve layers retain their existing atlas tints. |
 | `presentation.figure.hand_colour` | live | Inner hand squares drawn after the tool and their arm-coloured borders on each applicable FigureAttachments draw. |
+| `presentation.figure.quiet.face_colour` | live | Eye paint-out on each applicable quiet blink draw; the later lid retains its independent arm colour, quiet timing and captured resources. |
 
 Team and Weapon tile colours retain their last visual refresh while drawing is
 frozen, the page is inactive or a claimed device is missing. Weapon body artwork,
@@ -628,15 +629,26 @@ on each applicable procedural draw. Arm colour supplies four arguments:
 blink lids, both segments of each arm, and outer hand squares; hand colour
 supplies their inner squares. Each selected argument premultiplies base RGBA
 once, without event fade, retaining authored BLACK/WHITE and repeated-dab order.
-Geometry, grips, resource capture and APIs stay fixed. Quiet face paint-out
-and captured rest-arm/sleeve layers retain their existing paths; those atlas
-layers still draw with their team/WHITE tints.
+Geometry, grips, resource capture and APIs stay fixed. The separately tuned
+quiet face paint-out is described below. Captured rest-arm/sleeve layers still
+draw with their team/WHITE atlas tints.
 
 Hand alpha0 exposes its earlier arm/tool underlayer; arm alpha0 leaves the
 other layers, including selected hand interiors and quiet face paint-out,
 intact. Direct attachment panels do not prove natural Player blink timing or
 integrated Player/tool/body/Level composition. Human art and comfort gates
 remain separate.
+
+Quiet blink face colour, `figure.quiet.face_colour`, is borrowed on each
+`FigureAttachments::draw_blink` call. Its base RGBA premultiplies once for
+the eye paint-out, before the independently arm-coloured lid. Authored WHITE
+is unchanged; alpha0 retains the underlying pixels outside that later lid.
+The existing quiet-enabled flag and Player blink/pose/Reduce Effects gates
+still decide when it is drawn. This field changes no quiet timing, geometry,
+captured resources or simulation. It is separate from `opening.acting.face`,
+which supplies the story eyes below. Direct blink panels establish neither
+natural Player blink timing nor full Player/Level visibility and human
+readability/comfort acceptance.
 
 FigureActing borrows both acting colours for each applicable draw. Only its
 face and sweat tints premultiply straight base RGBA once, without event fade;
@@ -689,7 +701,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-only the forty-four colour strings listed above join numbers and booleans in `tune`.
+only the forty-five colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -1430,7 +1442,7 @@ as the game. In Release:
   engine declined input capture as game policy (report 9), so a per-key gate
   would be this client's own and is not built.
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
-  and inserting keys in `tune.save`: the forty-four listed colour fields above are
+  and inserting keys in `tune.save`: the forty-five listed colour fields above are
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
@@ -1439,13 +1451,13 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Forty-four existing colour paths listed under [Live tuning](#live-tuning)
+**OPEN.** Forty-five existing colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and
 the blocked-shot highlight/keyline pair, the common idle-drip keyline,
 respawn pen colour, cursor ink/fill/shade/shadow, silhouette body/ink/rim/shade and reveal
-ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack, HUD health/track and figure arm/hand colours.
+ink/paper/shade, plus desktop, monitor power-light, program, acting face/sweat, glass, scribble, crack, HUD health/track and figure arm/hand and quiet blink face colours.
 More colour fields remain, along with arbitrary string/font edits and
 insertion of absent keys.
 
@@ -1454,7 +1466,9 @@ add that field explicitly and report when it is adopted: live, new objects,
 rebuild or next screen. Numeric path wildcards do not establish a colour's
 adoption scope. Keep the supported list tied to those audits rather than
 exposing arbitrary strings by their spelling. General string/font edits and
-missing-key insertion need their own scoped implementations.
+missing-key insertion need their own scoped implementations. Further consumer
+audits remain open: select an actual remaining field and its caller before
+implementation, rather than treating a string inventory as an exposure list.
 
 Every extension must validate the complete candidate through `Presentation`
 and its existing resource checks before applying it; a rejected edit changes
@@ -1471,6 +1485,42 @@ The local RapidJSON span reader and in-memory candidate validation
 (`labrador::parse_json`, engine report 12) already provide the required route.
 The engine declined to keep source spans, so the span reader and splice stay
 this tool's.
+
+Quiet blink face colour increment (2026-10-24), **verified**:
+path 45, `presentation.figure.quiet.face_colour`, reads live through existing
+FigureAttachments. The face fill is premultiplied once; the independently tinted
+arm-colour lid stays later in the draw order. Authored opaque WHITE, quiet timing,
+geometry, captured resources, input and simulation remain unchanged.
+
+Both game/editor builds and the Debug/Release `debug_console` and `story_audio`
+CPU cases pass, including Release developer-code exclusion. The 45-path sweep,
+escaped nested spans, exact two-token save/rebase and sibling-preserving resets
+are covered. An invalid merged eyelid/eye-height relationship is refused by
+ordinary and forced saves without changing source, staging, live state or the
+edit ledger; recording/replay restrictions remain enforced.
+
+The existing Limb native family retains all 43/44 checks and adds a separately
+counted direct quiet-face consumer. Shared face evidence is 38 readbacks,
+10 rows and ten 176x24 crops: four literal mirrored eyes, 128 RGBA pixels per
+case split into 64 face and 64 lid pixels, five face/arm palettes, two underlays,
+and eight negative references with 512 role-pixel inequalities. Null/disabled
+records, repeated draws, opaque-default parity, exterior pixels, resources and RNG stay
+guarded. Debug adds nine actual commands/states, 54 readbacks and 18 rows for
+the private face/arm Tune save and selected resets, with no game Save writes.
+
+Combined readback/row/crop totals are Debug **150/41/14** and Release
+**60/14/14**, including the unchanged legacy subtotals **58/13/4** and
+**22/4/4**. Calibration checks are 4,800 and 1,920; all fourteen shared PPMs are
+byte-identical between builds, and every PNG's decoded RGB matches its source.
+The old preparation-only Weapon calls remain separate: 20 Debug and 10 Release
+zero-dt calls, with no additional quiet-face preparation or observation updates.
+Both native first attempts pass. Exact source/build/probe/content/image pins
+are reconciled under `out/validation/quiet-face-colour-20261024/` in
+`validation-reconciliation-v1.json`; native run IDs are
+`bca67f7d000f4813a969ee1f6e799521` and `a3ace014888245378457d9d29d25af14`.
+This proves the retained direct consumer, not natural Player blink timing,
+full body artwork, 1-4P visibility, human comfort, hardware or performance.
+`DBG#1` remains open for another bounded actual-consumer audit.
 
 Figure arm/hand colour family (2026-10-21), **verified**:
 paths 43/44, `presentation.figure.arm_colour` and `presentation.figure.hand_colour`,

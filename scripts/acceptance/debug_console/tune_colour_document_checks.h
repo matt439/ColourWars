@@ -934,7 +934,7 @@
 			}
 		}
 		{
-			// Reuse44-path generic LF/CRLF saves, conflicts, force and reader
+			// Reuse45-path generic LF/CRLF saves, conflicts, force and reader
 			// consumption; this block covers only the pair's escaped/type/alias gap.
 			const std::string limb_baseline = "{\r\n\"figure\":{\"arm_colour\":\"\\u0042LACK\",\"hand_colour\":\"\\u0057HITE\","
 				"\"sprite_sheet\":\"captured\",\"rest_arms_frame\":\"rest\",\"sleeves_frame\":\"sleeves\",\"quiet\":{\"face_colour\":\"WHITE\"}},\r\n\"number\":1\r\n}\r\n";
@@ -947,8 +947,8 @@
 				const auto* limb_leaf = limb_document.find(limb_path);
 				require(limb_leaf != nullptr && limb_leaf->kind == JsonLeaf::Kind::string && limb_document.find(limb_sibling) != nullptr &&
 					limb_document.find("figure.sprite_sheet") == nullptr && limb_document.find("figure.rest_arms_frame") == nullptr &&
-					limb_document.find("figure.sleeves_frame") == nullptr && limb_document.find("figure.quiet.face_colour") == nullptr,
-					"Only the exact limb pair is string-editable; captured names and quiet face keep their existing policy");
+					limb_document.find("figure.sleeves_frame") == nullptr && limb_document.find("figure.quiet.face_colour") != nullptr,
+					"The exact limb pair and separately audited quiet face are editable; captured names remain unavailable");
 				limb_document.commit(limb_document.edited(*limb_leaf, "\"2060C080\""), limb_path);
 				const auto limb_edit = limb_document.edits().at(limb_path);const auto limb_pending = limb_document.current().text();
 				bool limb_bad_type = false;

@@ -72,6 +72,7 @@ function Complete-LimbTuneColourEvidence {
     $context.observed.png_pixels = 2457600
     $context.observed.png_rgb_bytes = 7372800
     $context.observed.png_complete = $true
+    Complete-QuietFaceColourEvidence -Directory $Directory
 }
 
 $limbSummaryPath=Join-Path $captures 'limb-colour-consumer-summary.json'
@@ -152,5 +153,6 @@ if($debug){
     foreach($path in @($tunePath,$tuneCsv,$transcript,$prefs)){$limbArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
     $limbObserved.developer_commands=$tune;$limbObserved.readbacks=58;$limbObserved.csv_rows=13;$limbObserved.calibration_pixel_checks=1856;$limbObserved.preparation_weapon_updates=20
 }elseif($limbSaving-ne0-or$limbSaved-ne0-or@(Get-ChildItem -LiteralPath $captures -Filter 'limb-colour-tune-*').Count){throw 'Release Limb proof must remain consumer-only without Debug artifacts/Saves'}
+. (Join-Path $PSScriptRoot 'verify-quiet-face-colour.ps1')
 $result.observed_counts=$limbObserved
 $script:limbVerifiedContext=[ordered]@{directory=[IO.Path]::GetFullPath($captures);observed=$limbObserved;ppms=$limbPpmEvidence;inputs=@(foreach($path in $limbInputs){[ordered]@{path=$path;sha256=(Get-FileHash -LiteralPath $path).Hash}})}

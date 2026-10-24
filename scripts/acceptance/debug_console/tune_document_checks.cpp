@@ -132,10 +132,10 @@ namespace debug_console_acceptance
 			{
 				++colour_count;
 				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
-					tune_colour_path(path), "Only the independently audited forty-four colours appear as string tune paths: " + path);
+					tune_colour_path(path), "Only the independently audited forty-five colours appear as string tune paths: " + path);
 			}
 		}
-		require(colour_count == colour_paths.size(), "Exactly forty-four authored colour strings are tunable");
+		require(colour_count == colour_paths.size(), "Exactly forty-five authored colour strings are tunable");
 		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
 			const std::string path = colour_paths[index];
@@ -212,7 +212,7 @@ namespace debug_console_acceptance
             "figure.arm_colour", "tuning.figure.arm_colour", "presentation.figure.arm_colour.r", "presentation.figure.arm_colour_extra",
             "figure.hand_colour", "tuning.figure.hand_colour", "presentation.figure.hand_colour.r", "presentation.figure.hand_colour_extra",
             "presentation.figure.sprite_sheet", "presentation.figure.rest_arms_frame", "presentation.figure.rest_arms_paint_frame",
-            "presentation.figure.sleeves_frame", "presentation.figure.sleeves_paint_frame", "presentation.figure.quiet.face_colour",
+            "presentation.figure.sleeves_frame", "presentation.figure.sleeves_paint_frame", "figure.quiet.face_colour", "tuning.figure.quiet.face_colour", "presentation.figure.quiet.face_colour.r", "presentation.figure.quiet.face_colour_extra", "presentation.figure.quiet.face_colour.value",
 			"presentation.opening.sticky_notes[0]", "presentation.opening.stickers[0]",
 			"hud.health_colour", "tuning.hud.health_colour", "presentation.hud.health_colour.r",
 			"presentation.hud.health_colour_extra", "hud.meter_track_colour", "tuning.hud.meter_track_colour",
@@ -380,7 +380,7 @@ namespace debug_console_acceptance
 				}
 			}
 		}
-		require(colours_checked == colour_paths.size(), "All forty-four colour strings have real Presentation consumers");
+		require(colours_checked == colour_paths.size(), "All forty-five colour strings have real Presentation consumers");
 		return checked;
 	}
 }

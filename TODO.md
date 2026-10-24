@@ -40,7 +40,7 @@ This is a selection guide, not another priority order; each owner defines a boun
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `DBG#1` | Audit and validate the next live colour consumer after arm/hand paths 43 and 44 | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
+| `DBG#1` | Audit one next existing colour consumer after quiet blink face path 45; select its adoption and alpha scope before implementation | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Crossfeed acceptance:** C2 identity/rear-threat recognition, 1-4P clean/heavy
@@ -165,7 +165,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#1` | OPEN | LOW | M | Extend colour tuning beyond forty-four audited fields; general string/font edits and missing-key insertion remain separate slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
+| `DBG#1` | OPEN | LOW | M | Audit and extend a selected existing colour consumer beyond forty-five audited paths; general string/font edits and missing-key insertion need separate scoped implementations. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#6` | DEFERRED | LOW | M | Scripts stop when the window loses focus; no run-while-inactive switch. |

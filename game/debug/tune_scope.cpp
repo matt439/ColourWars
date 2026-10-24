@@ -116,6 +116,9 @@ namespace
 		// hands; captured rest/sleeve layers, geometry and resources stay fixed.
 		{ "presentation.figure.arm_colour", TuneScope::live },
 		{ "presentation.figure.hand_colour", TuneScope::live },
+		// Existing FigureAttachments read this borrowed eye paint-out on each
+		// blink draw; lid ink, quiet timing and captured layers stay intact.
+		{ "presentation.figure.quiet.face_colour", TuneScope::live },
 	};
 
 	// First match wins; evidence is the reader of each value. "live" means a
