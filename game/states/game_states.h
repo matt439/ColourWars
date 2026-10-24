@@ -16,6 +16,7 @@
 #include "game/states/resume_audio.h"
 #include "game/states/results_audio.h"
 #include "game/states/match_start.h"
+#include "game/display_awake.h"
 
 // Stack shapes during a session:
 //
@@ -159,4 +160,8 @@ private:
 	int check_for_pause_input(
 		const std::vector<PlayerInputData>& player_inputs) const;
 	GameData* data() const;
+
+	// Last member: acquire after earlier members and clear on member unwind.
+	// Pause/focus/round changes keep this same GameLevel owner alive.
+	DisplayAwake display_awake_;
 };

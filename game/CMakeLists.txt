@@ -10,6 +10,7 @@ add_executable(ColourWars WIN32
     content_value.cpp
     controls_text.cpp
     directory_consts.cpp
+    display_awake.cpp
     drawable_text.cpp
     fatal_report.cpp
     game_data.cpp

@@ -321,8 +321,10 @@ The next acceptance work requires hardware and is still outstanding:
    missing-bank silent fallback separately.
 5. Relaunch and confirm saved settings; record device models, display layout,
    build revision and observed failures before choosing the next feature increment.
-6. Leave a pad-only series running past the display's sleep and screen-saver
-   timers once `ROAD#6` lands. Bring one non-XInput pad (DualSense, DualShock or
+6. Leave a pad-only series running past the configured display-idle timer and
+   observe display behaviour, then normal idle behaviour after leaving the match.
+   Observe screen-saver and user-requested Sleep behaviour separately; `ROAD#6`
+   changes neither policy. Bring one non-XInput pad (DualSense, DualShock or
    Switch Pro) without Steam Input, so the [XInput-only limit](#input-devices-and-seats)
    is observed rather than assumed.
 
@@ -337,15 +339,40 @@ audio-device loss to the [ledger](review/engine-reports.md#what-is-deliberately-
 
 ### Display sleep during a match (`ROAD#6`)
 
-**OPEN.** Neither tree calls `SetThreadExecutionState`, and Windows does not
-reliably count XInput as activity for its idle timer. A long series played only
-on pads can blank the screen or start a screen saver mid-round.
+**Implemented (2026-10-24).** Each `GameLevel` owns one `DisplayAwake`
+for its match/series lifetime. Construction attempts
+`ES_CONTINUOUS | ES_DISPLAY_REQUIRED` once; destruction sends
+`ES_CONTINUOUS` only after successful acquisition. Acquisition failure is
+nonfatal with no retry; clearing is one nonthrowing best-effort attempt.
+Pause, focus, restart and round transitions retain the same owner rather than
+refreshing the request per frame. Pause/settings/results overlays retain it
+until the `GameLevel` exits.
 
-Next step: `GameLevel` asks for `ES_CONTINUOUS | ES_DISPLAY_REQUIRED` on
-construction and restores `ES_CONTINUOUS` in its destructor, so only a match
-holds the display awake and the menus let it sleep. The window shell is the
-better long-term owner, so the ledger's not-here list records the workaround.
-Acceptance is item 6 above, in the `ROAD#2` session.
+This is a display-idle request only: no `ES_SYSTEM_REQUIRED`,
+`ES_AWAYMODE_REQUIRED` or screen-saver policy changes, and no override of
+user-requested Sleep or lid/power-button settings. The
+[client adapter](../game/display_awake.cpp) is the exhibit for the
+[parked shell-ownership ask](review/engine-reports.md#what-is-deliberately-not-here).
+
+Validation: Debug/Release configure, game/editor builds and engine include
+checks passed, as did the focused `display_awake`, `debug_console` and
+`story_audio` CPU cases in both presets. The injected CPU helper checks
+ownership/failure paths and synthetic containing-owner unwind; it proves no
+actual `GameLevel` constructor/init failure. Native recording passed nine
+lifecycle cases per preset, covering eight actual `GameLevel` constructions,
+five inits and one restart. Its fifteen events are recorded boolean intent,
+not observed Win32 flags or OS state; the probe makes zero real display
+requests. Scripted failed clearing proves an attempt and nonthrowing teardown,
+not a successful physical OS clear.
+
+From an x64 VS Developer shell, run `scripts/run-acceptance.ps1 -Preset x64-debug`
+(the suite includes the CPU case), and `scripts/check-display-awake.ps1 -Preset x64-debug`
+for the isolated lifecycle probe; repeat with `x64-release`. Qualified
+build/CPU/native receipts are under
+`out/validation/todo-loop-20261024/road6-prep/`. Physical pad-only display-timer
+and separate screen-saver observations remain item 6 above in `ROAD#2`.
+The existing `28ddd5f` Release ZIP predates ROAD6; no replacement package was
+produced for this increment.
 
 ### Per-seat accessibility toggles (`ROAD#7`)
 

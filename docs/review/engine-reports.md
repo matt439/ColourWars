@@ -1270,12 +1270,15 @@ still only reads.
   it, so there is no exhibit yet. The `ROAD#3` listening session observes the
   case. A report follows if that session shows it in ordinary play.
 
-- **Nothing keeps the display awake** (added 2026-10-24). Neither tree calls
-  `SetThreadExecutionState`, and pad input does not reliably reset Windows'
-  idle timer. `ROAD#6` makes the client call from `GameLevel`, so that a match
-  holds the display and the menus do not. The window shell is the more natural
-  owner, and once `ROAD#6` lands that call is the exhibit. It is small enough to
-  ride with another report.
+- **The display-idle owner is client-side** (added 2026-10-24).
+  `ROAD#6` now supplies the [client exhibit](../../game/display_awake.cpp):
+  one `GameLevel` owner attempts `ES_CONTINUOUS | ES_DISPLAY_REQUIRED` on
+  construction and clears with `ES_CONTINUOUS` on destruction only after
+  successful acquisition. Pause/focus/round changes retain that same owner;
+  clearing is best effort. It adds no system/away-mode request, screen-saver
+  policy or user-Sleep override. Physical timer observation remains `ROAD#2`.
+  The window shell is still the more natural owner. This stays parked and
+  unfiled, small enough to ride with another report.
 
 - **XInput is the only pad reader.** `engine/input/gamepad_reader.h` is one
   function wide, so a GameInput backend (DualSense, DualShock, Switch Pro
