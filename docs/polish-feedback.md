@@ -135,6 +135,22 @@ inspected. Evidence is under `out/validation/movement-bursts/` and
 do not establish human movement feel, crowded-match readability, listening or
 physical-controller acceptance.
 
+## Thicker keyline and the wider four-player route (2026-10-25)
+
+CI's Basic Render Driver and the RTX 5080 gave identical numbers for a
+regression the earlier run missed. With a one-unit keyline, the four-player
+720p mid-landing puff changed 244 pixels in view 1 but only 20 were readable,
+because the neutral fill is nearly the colour of the pale course floor.
+`movement_feedback.keyline_width` in `presentation.json` is now 2.0. The thicker
+black outline carries the cue on pale support, and every pane clears the 128
+changed / 64 readable minimum again in the Debug probe on CI.
+
+Four-player panes now frame at least 1280 world units. Team B's views start
+pinned to the arena's right edge, so a jump from a 170-unit inset barely panned
+(11.4 of the required 16 units in view 2). A 120-unit inset panned but failed a Team B
+landing check, so the route probe now starts Team B's jump 150 units in. Gameplay is unchanged; this only moves where the
+scripted check jumps.
+
 ## Reproduce the checks
 
 From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:

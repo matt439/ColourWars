@@ -7,7 +7,7 @@
 > nothing better.
 >
 > **One is live as an unfiled draft with an exhibit (23), found after the
-> engine's last answers. Twenty-two are closed** and kept below as one paragraph
+> engine's last answers. Twenty-three are closed** and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
@@ -71,6 +71,11 @@ commits, and they answered every live report, 6 and 9-22: each has a recorded
 decision and all fifteen are now [closed](#closed). One source break, from
 report 13's answer. See
 [What the 2026-10-22 bump changed](#what-the-2026-10-22-bump-changed).
+
+**Moved 2026-10-25 to upstream master `1e60fb2`** (`v0.2.0`). Fifteen commits,
+and one of them, `814f2ee`, answered report 24 the day it was drafted, without
+it being filed. See
+[What the 2026-10-25 bump changed](#what-the-2026-10-25-bump-changed).
 
 ## The rule that governs this file
 
@@ -237,7 +242,7 @@ hidden/not-foreground requirement as the regression check.
 
 # Closed
 
-Twenty-two reports, all answered. Fifteen were spent here in code. Seven
+Twenty-three reports, all answered. Sixteen were spent here in code. Seven
 spent nothing in code: 1 was fixed before it was filed; 9 and 10 were answered
 as document only, and those two changed only comments and
 docs; 15 was answered as document only, 17 changed only a manifest comment, 19
@@ -248,8 +253,9 @@ with it. The original bodies are in git — see
 [What the audit changed](#what-the-audit-changed) for reports 1–5, `a7da897`
 for 7 and 8, the parent of `487b8d2` for 13 and 21, `d9f1656` for 11, 16,
 17 and 19, the parent of `d1c6063` for 9, 10 and 14, the parent of
-`83544c2` for 18, 20 and 22, and the parents of `d647cf8`, `b4f2201` and
-`1553ba5` for 6, 12 and 15.
+`83544c2` for 18, 20 and 22, the parents of `d647cf8`, `b4f2201` and
+`1553ba5` for 6, 12 and 15, and the parent of the commit that moved the pin
+to `1e60fb2` for 24.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -1181,6 +1187,29 @@ not foresee the atomic name setters.
 
 ---
 
+## 24. ~~A Debug `AudioDevice` breaks into the debugger on a machine with no audio endpoint~~ — `814f2ee`
+
+Found 2026-10-25, when the Debug CI job's movement feedback probe and then
+its startup check died with `STATUS_BREAKPOINT` on a GitHub runner. A Debug
+`AudioDevice` passed DirectXTK's `AudioEngine_Debug`, which sets XAudio2's
+break mask to errors. With no audio endpoint, XAudio2 hit `int 3` twice while
+DirectXTK fell back to silence, and with no debugger attached that ended the
+process. The ask was a Debug device that does not break there: drop the flag,
+empty the break mask, or an opt-out. **Answered the same day, unfiled**, in
+"Keep a debug build running where there is no audio endpoint". The engine's
+own template startup check had found the same crash. The debug layer is now
+asked for only when `IsDebuggerPresent()`, so a Debug build without a
+debugger goes silent exactly as Release does. A parallel engine pull request
+from this repository, which kept the trace and emptied the break mask, was
+closed as superseded.
+
+**Spent:** the XAudio2 branch of `step_over_debug_break` in
+[movement_feedback_visual.cpp](../../scripts/acceptance/movement_feedback_visual.cpp)
+and its stdout count were deleted. The handler stays, because it makes any
+other debug-layer break report its stack instead of ending the probe
+silently. The Debug startup check now passes on a runner with no change on
+this side.
+
 # What is deliberately not here
 
 Re-checked 2026-08-15 against `6b5c0bd`; citations re-pointed 2026-09-17 at
@@ -1677,3 +1706,29 @@ not reopen the answered engine reports.
 
 **Validation:** this commit built `x64-debug` and passed Debug consumer
 acceptance; the closing commits record their own.
+
+# What the 2026-10-25 bump changed
+
+Moved from `19cf650` to upstream master at `1e60fb2`, `v0.2.0`: fifteen
+commits. One answered [report 24](#24-a-debug-audiodevice-breaks-into-the-debugger-on-a-machine-with-no-audio-endpoint--814f2ee).
+The rest are additive, or belong to the engine's template and website.
+
+Three silent changes reach this game, as the engine's `CHANGES.md` lists them
+under `v0.2.0`:
+
+- **A Debug build runs silent with no audio endpoint** unless a debugger is
+  attached (`814f2ee`), which is report 24's answer.
+- **A scene's collision objects keep the order they were added in**, through
+  retirement, and so draw in that order. Projectiles retire constantly here.
+  Both presets' consumer acceptance and the movement feedback
+  probe pass with the new order.
+- **A browser build defaults to the `gl` render backend.** That does not reach
+  a Windows build.
+
+The new names (`Camera`'s world point under a pixel, `StepTimer`'s
+`step_position`, the reserved `engine:white` texture, removing any object at
+the end of a tick) are not used here yet. No source break.
+
+**Validation:** the CI run on pull request #3 at this pin, `x64-debug` and
+`x64-release`: build, consumer acceptance, the movement feedback probe, the
+startup check and, in Release, the package.

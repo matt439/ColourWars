@@ -3,6 +3,11 @@
 #include "game/game_data.h"
 #include "game/input_slots.h"
 
+#include <dxgidebug.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+
+#include <atomic>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -26,6 +31,97 @@ namespace
         if (!condition) { throw std::runtime_error(message); }
     }
 
+    // A Debug engine asks its debug layers to break on error, and with no
+    // debugger attached a break is an uncaught STATUS_BREAKPOINT that ends the
+    // probe with nothing on stdout or stderr. Every break is stepped over and
+    // fails the next check, with its stack and the stored DXGI/D3D11 messages.
+    std::atomic<int> debug_breaks{ 0 };
+    struct DebugBreakStack { USHORT frames = 0; void* addresses[24] = {}; };
+    DebugBreakStack debug_break_stacks[4];
+
+    LONG CALLBACK step_over_debug_break(EXCEPTION_POINTERS* exception)
+    {
+        if (exception->ExceptionRecord->ExceptionCode != EXCEPTION_BREAKPOINT ||
+            *reinterpret_cast<const unsigned char*>(exception->ContextRecord->Rip) != 0xCC)
+        {
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
+        const int index = debug_breaks++;
+        if (index < static_cast<int>(std::size(debug_break_stacks)))
+        {
+            auto& stack = debug_break_stacks[index];
+            stack.frames = RtlCaptureStackBackTrace(0, static_cast<DWORD>(std::size(stack.addresses)),
+                stack.addresses, nullptr);
+        }
+        ++exception->ContextRecord->Rip;
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
+
+    std::string module_offset(void* address)
+    {
+        HMODULE module = nullptr;
+        char name[MAX_PATH] = "?";
+        if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                static_cast<LPCSTR>(address), &module) && module)
+        {
+            GetModuleFileNameA(module, name, MAX_PATH);
+        }
+        std::ostringstream text;
+        text << std::filesystem::path(name).filename().string() << "+0x" << std::hex
+            << (reinterpret_cast<uintptr_t>(address) - reinterpret_cast<uintptr_t>(module));
+        alignas(SYMBOL_INFO) char storage[sizeof(SYMBOL_INFO) + 256] = {};
+        auto* symbol = reinterpret_cast<SYMBOL_INFO*>(storage);
+        symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+        symbol->MaxNameLen = 255;
+        DWORD64 displacement = 0;
+        if (SymFromAddr(GetCurrentProcess(), reinterpret_cast<DWORD64>(address), &displacement, symbol))
+        {
+            text << '(' << symbol->Name << "+0x" << displacement << ')';
+        }
+        return text.str();
+    }
+
+    void require_no_debug_breaks(const char* where)
+    {
+        if (debug_breaks.load() == 0) { return; }
+        SymInitialize(GetCurrentProcess(), nullptr, TRUE);
+        std::cerr << "a debug layer broke " << debug_breaks.load() << " time(s) by " << where << '\n';
+        for (int index = 0; index < std::min(debug_breaks.load(), static_cast<int>(std::size(debug_break_stacks))); ++index)
+        {
+            std::cerr << "break " << index + 1 << ':';
+            const auto& stack = debug_break_stacks[index];
+            for (USHORT frame = 0; frame < stack.frames; ++frame)
+            {
+                std::cerr << ' ' << module_offset(stack.addresses[frame]);
+            }
+            std::cerr << '\n';
+        }
+        Microsoft::WRL::ComPtr<IDXGIInfoQueue> queue;
+        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(queue.GetAddressOf()))))
+        {
+            const UINT64 count = queue->GetNumStoredMessages(DXGI_DEBUG_ALL);
+            std::cerr << "debug layer: " << count << " stored DXGI/D3D11 message(s)\n";
+            for (UINT64 index = 0; index < count; ++index)
+            {
+                SIZE_T length = 0;
+                if (FAILED(queue->GetMessage(DXGI_DEBUG_ALL, index, nullptr, &length))) { continue; }
+                std::vector<char> storage(length);
+                auto* message = reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(storage.data());
+                if (SUCCEEDED(queue->GetMessage(DXGI_DEBUG_ALL, index, message, &length)))
+                {
+                    std::cerr << "debug layer: severity=" << message->Severity
+                        << " id=" << message->ID << ' ' << message->pDescription << '\n';
+                }
+            }
+        }
+        else
+        {
+            std::cerr << "debug layer: no DXGI info queue to read the messages from\n";
+        }
+        throw std::runtime_error("a debug layer broke");
+    }
+
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
 
@@ -41,9 +137,11 @@ namespace
         renderer.begin_frame();
         level.draw(renderer);
         renderer.submit();
+        require_no_debug_breaks("a frame's submit");
         const Vector2F size = renderer.back_buffer_size();
         Frame frame{ static_cast<int>(size.x), static_cast<int>(size.y), {} };
         renderer.read_back_buffer(frame.pixels);
+        require_no_debug_breaks("a back-buffer readback");
         require(frame.pixels.size() ==
             static_cast<size_t>(frame.width) * static_cast<size_t>(frame.height) * 4,
             "readback size mismatch");
@@ -217,6 +315,11 @@ namespace
                     // This settled course fixture gives every pane nearby
                     // takeoff/landing cues. Keep them visible into recovery;
                     // the upper bound above still protects the play area.
+                    if (changed < 128 || readable_pixels < 64)
+                    {
+                        std::cerr << stem << " view " << view + 1 << ": changed=" << changed
+                            << " readable=" << readable_pixels << '\n';
+                    }
                     require(changed >= 128 && readable_pixels >= 64,
                         "four-player 720p contact cues are too small or faint");
                 }
@@ -310,7 +413,10 @@ namespace
     // stops it short of the long gap and past the one-player scroll border.
     constexpr float route_release_past_lip = 170.0f;
     // Team B presses this far in from its runway's left end, releasing at once.
-    constexpr float route_team_b_jump_inset = 170.0f;
+    // Four-player panes now frame at least 1280 world units, so the camera
+    // starts pinned to the arena's right edge with a 512-unit scroll border;
+    // Team B has to run past 4912 (with its lead) before the view pans.
+    constexpr float route_team_b_jump_inset = 150.0f;
     constexpr float route_minimum_pan = 16.0f;
 
     void route_phase(Application& app, LevelBuilder& builder, Presentation& presentation,
@@ -427,6 +533,13 @@ namespace
                 if (runner.landing_tick >= 0)
                 {
                     const RectangleF& body = player.rectangle();
+                    if (!(grounded(player) &&
+                        std::abs(body.bottom() - runner.landing.top()) <= 0.05f &&
+                        body.left() >= runner.landing.left() && body.right() <= runner.landing.right()))
+                    {
+                        std::cerr << "route view " << index + 1 << " landed at left=" << body.left()
+                            << " right=" << body.right() << " bottom=" << body.bottom() << '\n';
+                    }
                     require(grounded(player) &&
                         std::abs(body.bottom() - runner.landing.top()) <= 0.05f &&
                         body.left() >= runner.landing.left() && body.right() <= runner.landing.right(),
@@ -497,6 +610,11 @@ namespace
             require(runner.takeoff_tick >= 0, "a route player never took off");
             require(runner.landing_tick >= 0, "a route player never landed");
             const Vector2F pan = runner.camera_max - runner.camera_min;
+            if (pan.x <= route_minimum_pan)
+            {
+                std::cerr << prefix << " view " << index + 1 << ": takeoff=" << runner.takeoff_tick
+                    << " landing=" << runner.landing_tick << " pan_x=" << pan.x << '\n';
+            }
             require(pan.x > route_minimum_pan, "a route view's camera did not pan horizontally");
             std::cout << "ROUTE " << prefix << " view=" << index + 1
                 << " takeoff=" << runner.takeoff_tick << " landing=" << runner.landing_tick
@@ -510,6 +628,9 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
+    // Keep whatever was printed if the process dies anyway.
+    std::cout << std::unitbuf;
+    AddVectoredExceptionHandler(1, step_over_debug_break);
     try
     {
         require(argc == 4 || argc == 5 || argc == 6,
@@ -557,6 +678,7 @@ int wmain(int argc, wchar_t** argv)
         options.visible = false;
         Application app(options);
         app.initialize();
+        require_no_debug_breaks("device creation");
         const auto& device = app.renderer()->device_info();
         const char* device_kind = "unknown";
         switch (device.kind)
@@ -708,6 +830,7 @@ int wmain(int argc, wchar_t** argv)
                 sequence_frames, count == 4 || one_player_route_sequences,
                 records, route_records);
         }
+        require_no_debug_breaks("the end of the run");
         require(records.good() && route_records.good(), "phase record write failed");
         std::cout << "PASS real LevelBuilder/Scene takeoff and landing; 1/4 views; "
             "720p/1080p/QHD; feedback on/off; paused redraw; moving aim-swept route in "
