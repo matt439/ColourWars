@@ -430,7 +430,10 @@ namespace
     // stops it short of the long gap and past the one-player scroll border.
     constexpr float route_release_past_lip = 170.0f;
     // Team B presses this far in from its runway's left end, releasing at once.
-    constexpr float route_team_b_jump_inset = 170.0f;
+    // Four-player panes now frame at least 1280 world units, so the camera
+    // starts pinned to the arena's right edge with a 512-unit scroll border;
+    // Team B has to run past 4912 (with its lead) before the view pans.
+    constexpr float route_team_b_jump_inset = 120.0f;
     constexpr float route_minimum_pan = 16.0f;
 
     void route_phase(Application& app, LevelBuilder& builder, Presentation& presentation,
