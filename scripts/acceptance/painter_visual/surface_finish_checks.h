@@ -96,7 +96,7 @@ void surface_finish_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     surface_finish_pixels(app, canvas, tuning, presentation, preferences, output, readbacks);
     std::ofstream records(output / "surface-finish.csv");
     records << "stage,players,paint,view,owned_fraction,camera_x,camera_y,scale,pane_x,pane_y,pane_width,pane_height\n";
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed" })
+    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
     {
         const LevelLoadedInfo& info = *levels.get(stage);
         std::vector<RectangleF> targets;
@@ -169,12 +169,12 @@ void surface_finish_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
             }
         }
     }
-    require(frames == 20 && panes == 50 && readbacks == 52 && updates < 7000 && records.good(),
+    require(frames == 24 && panes == 60 && readbacks == 60 && updates < 7000 && records.good(),
         "Surface finish native evidence missed its bounded frame, pane or update budget");
     std::ofstream summary(output / "surface-finish-summary.json");
-    summary << "{\"outcome\":\"passed\",\"full_frames\":20,\"pane_crops\":50,\"synthetic_crops\":2,\"readbacks\":52,\"level_updates\":" << updates <<
+    summary << "{\"outcome\":\"passed\",\"full_frames\":24,\"pane_crops\":60,\"synthetic_crops\":2,\"readbacks\":60,\"level_updates\":" << updates <<
         ",\"heavy_contacts\":" << contacts << "}\n";
     require(summary.good(), "Surface finish native summary write failed");
-    std::cout << "PASS surface finish: independent ruler/face/burial/corner pixels, all five real arenas clean/heavy 1P/4P, "
-        "20 native frames/50 pane crops, frozen state/RNG/fingerprint; controlled stations and paint contacts, no attended readability acceptance\n";
+    std::cout << "PASS surface finish: independent ruler/face/burial/corner pixels, all six selected real arenas clean/heavy 1P/4P, "
+        "24 native frames/60 pane crops, frozen state/RNG/fingerprint; controlled stations and paint contacts, no attended readability acceptance\n";
 }

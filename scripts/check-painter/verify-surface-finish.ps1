@@ -1,14 +1,14 @@
 # Exact bounded evidence for the focused surface finish fixture.
 $surfaceSummary = Get-Content -LiteralPath (Join-Path $captures 'surface-finish-summary.json') -Raw | ConvertFrom-Json
 $surfaceRows = @(Import-Csv -LiteralPath (Join-Path $captures 'surface-finish.csv'))
-if ($surfaceSummary.outcome -cne 'passed' -or $surfaceSummary.full_frames -ne 20 -or
-    $surfaceSummary.pane_crops -ne 50 -or $surfaceSummary.synthetic_crops -ne 2 -or
-    $surfaceSummary.readbacks -ne 52 -or $surfaceSummary.level_updates -le 0 -or
-    $surfaceSummary.level_updates -ge 7000 -or $surfaceSummary.heavy_contacts -le 0 -or $surfaceRows.Count -ne 50) {
+if ($surfaceSummary.outcome -cne 'passed' -or $surfaceSummary.full_frames -ne 24 -or
+    $surfaceSummary.pane_crops -ne 60 -or $surfaceSummary.synthetic_crops -ne 2 -or
+    $surfaceSummary.readbacks -ne 60 -or $surfaceSummary.level_updates -le 0 -or
+    $surfaceSummary.level_updates -ge 7000 -or $surfaceSummary.heavy_contacts -le 0 -or $surfaceRows.Count -ne 60) {
     throw 'Surface finish fixture exceeded or missed its bounded evidence counts.'
 }
 $surfaceExpected = @{}
-foreach ($stage in @('close_quarters', 'king_of_the_hill', 'turbulence', 'movement_course', 'crossfeed')) {
+foreach ($stage in @('close_quarters', 'king_of_the_hill', 'turbulence', 'movement_course', 'crossfeed', 'press_tower')) {
     foreach ($count in @(1, 4)) {
         foreach ($paint in @('clean', 'heavy')) {
             $stem = "surface-finish-$stage-$($count)p-$paint"
@@ -34,7 +34,7 @@ foreach ($stage in @('close_quarters', 'king_of_the_hill', 'turbulence', 'moveme
 }
 foreach ($count in @(1, 4)) { $surfaceExpected["surface-finish-board-$($count)p-detail.ppm"] = @(640, 360) }
 $surfaceFiles = @(Get-ChildItem -LiteralPath $captures -Filter '*.ppm' -File)
-if ($surfaceFiles.Count -ne 72 -or (($surfaceFiles.Name | Sort-Object) -join '|') -cne
+if ($surfaceFiles.Count -ne 86 -or (($surfaceFiles.Name | Sort-Object) -join '|') -cne
     (($surfaceExpected.Keys | Sort-Object) -join '|')) { throw 'Unexpected surface finish native capture set.' }
 foreach ($file in $surfaceFiles) {
     $size = $surfaceExpected[$file.Name]

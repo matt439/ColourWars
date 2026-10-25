@@ -197,17 +197,88 @@ current tuning, with no device or save:
 
 Scripted inputs establish feasibility, not comfort, pressure or balance.
 
+### Native inspection (`POL#32`)
+
+`scripts/check-painter.ps1 -PressTowerOnly` selects the dedicated `press-tower`
+probe and [verifier](../scripts/check-painter/verify-press-tower.ps1). Both
+presets' dedicated evidence is qualified, and the `-SurfaceFinishOnly` and
+`-MiniatureTerrainOnly` matrices now include Press Tower beside the previous
+five selected stages; their Debug/Release qualification is complete.
+
+The final required matrices completed at 2026-10-25 23:44:32 UTC on D3D11 /
+NVIDIA GeForce RTX 5080. Qualification used the `87593628` game baseline and
+pinned `1e60fb2` engine,
+with exact source/producer hashes and executed scopes retained in the receipt roots
+below. The final probe source is bound by `pol32-prep-v1/ready-v6.json`; earlier
+dedicated/surface receipts retain qualification for their unchanged executed paths.
+The Press Tower stage hash is
+`28C6D39D8E9A0596D93B7C73277B511275CC2D9830ACE45C14CAC44725554609`;
+gameplay content, movement, weapons and camera policy did not change in this
+test-only increment. All paths below are under
+`out/validation/todo-loop-20261025/`.
+
+- **Dedicated landings/exits:** per preset, two actual public-builder Levels
+  produced four full 1280x720 frames, sixteen unscaled 640x360 pane crops and
+  sixteen station/target/camera CSV rows, with eight frozen readbacks and 566
+  neutral updates. Stair stations and both crown-separated summit halves are
+  deliberately placed and settled; 25 direct projectile contacts establish the
+  controlled-heavy fixture. Each crop's RGB rows equal its whole-frame pane;
+  geometry, cameras, public/paint state and RNG are checked independently.
+  Debug also retains its replay fingerprint; Release labels it unavailable.
+  The configured input-slot identifiers are 3, 1, 2, 0, with alternating A/B
+  teams, the blue/orange palette and Sprayer/Sniper/Roller/Bucket in view order.
+  Inputs are neutral and audio muted; this records no physical-pad session.
+- **Surface finish:** passed in both presets. Each matrix retains
+  24 full frames, 60 native pane crops, two synthetic crops and 60 readbacks
+  across the six stages, clean and controlled-heavy at 720p in 1P/4P.
+  Independent per-face primer/sealed-edge and paint-order checks remain.
+- **Miniature terrain:** passed in both presets. All six stages
+  retain actual StagePreview and 1P/4P overview/story contexts at
+  720p/1080p/QHD, resize return, culling/order parity, frozen state/RNG and
+  Debug fingerprints, alongside independent thin-feature pixel oracles. Each
+  preset retains 523 CSV rows (64 for Press Tower), 67 lossless PPMs and 68
+  PNGs, including four contact pages.
+
+| Check | Preset | Result receipt |
+|---|---|---|
+| Dedicated native leaf | Debug | `pol32-native-v1/press-tower/x64-debug/42ad8259b96a44bd9cd7f4d202b0c398/result.json` (original wrapper failure; native checks passed) |
+| Derived Debug postprocessing | Debug | `pol32-postprocess-v5-debug/recovery-result.json` |
+| Dedicated native leaf | Release | `pol32-native-v5/press-tower/x64-release/9ec6d2ccc94d435e84dadae22730f3f6/result.json` |
+| Surface finish | Debug | `pol32-native-v5/surface-finish/x64-debug/7f64f07e9a764502a5801ee837ca94b6/result.json` |
+| Surface finish | Release | `pol32-native-v6/surface-finish/x64-release/24edce545fd14efba205aef8f1ec26e6/result.json` |
+| Miniature terrain | Debug | `pol32-native-v6/miniature-terrain/x64-debug/46ae6c340eac4996b0fb55023ad8915d/result.json` |
+| Miniature terrain | Release | `pol32-native-v6/miniature-terrain/x64-release/e22228c864d944bfb1530d3d7fdb5ca4/result.json` |
+
+Two initial failures remain part of the record. The first Debug dedicated
+native run and its verifier passed, then the wrapper failed because the contact
+sheet did not select the new filenames. A separate, hash-bound postprocessing
+recovery passed after adding the selector: all 31 original files and the
+original FAILED result remain unchanged. Recovery generated sixteen native
+PNGs and one 2624x1632 contact sheet, with no repeated native run or readback.
+Its independent review is `pol32-prep-v1/independent-recovery-review-v5-debug.json`.
+
+The first Debug miniature run
+(`pol32-native-v5/miniature-terrain/x64-debug/3f80daee5fba4fe3bfad27e1a8438735/`)
+failed a legacy-pixel-difference assertion after Press Tower's exact preview,
+repeat/RNG and resize checks passed. Press Tower's native preview pair was
+identical, as Crossfeed's was; every original arena retained a positive
+difference. The fixture now explicitly keeps that positive control on those
+four legacy arenas while all six still require exact reference/repeat/resize
+checks. No art or production rendering changed to satisfy the test.
+Fresh Debug and Release miniature runs passed with the corrected positive-control scope. The failed run and its source/evidence audit remain
+preserved; they are not relabeled as successful.
+
+These are controlled native inspection and renderer-integration results.
+They establish no attended readability, spawn pressure, summit value, route
+comfort, competitive balance, listening, physical-device or performance
+acceptance. Press Tower remains explicit-only and excluded from Random;
+`POL#31` and the support-art question below remain open.
+
 ## Open
 
 - Attended play on both sides and 1-4P (`POL#31`), including spawn pressure, the summit's
   value and the summit halves' feel. If the halves read as fiddly, narrow the
   crown to 24 (halves 148) and re-run the sightline and live-fire checks.
-- Native four-pane captures of the stair landings and hoist exits, clean and
-  heavily painted (`POL#32`). A `-PressTowerOnly` check-painter leaf and probe
-  mode (as Crossfeed's `-CrossfeedOnly` and `verify-crossfeed.ps1`) is the way
-  to get them; the surface-finish and miniature-terrain painter matrices do not
-  list Press Tower yet. Running the leaf needs the Windows GPU machine; writing
-  it does not.
 - Support art for the brief, above.
 - Spawn margins depend on the gantry ending at X 1000; shortening it to 940
   opens a standing summit line to X 405. Any geometry edit re-runs the checks.

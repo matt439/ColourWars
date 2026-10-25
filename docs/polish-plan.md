@@ -408,9 +408,9 @@ visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 
 **King of the Hill (2026-10-25):** the blockout is [Press Tower](polish-press-tower.md),
 a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
-which stays selectable and in Random. Its baseline acceptance case passes; attended play
-(`POL#31`), native four-pane captures (`POL#32`) and the brief's support art remain open there. Turbulence has
-not started.
+which stays selectable and in Random. Its baseline acceptance case and native four-pane
+captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
+support art remain open there. Turbulence has not started.
 
 The first new-map pass uses current movement and weapon values. Define required,
 optional and recovery routes independently from their input families. Reconcile

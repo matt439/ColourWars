@@ -59,6 +59,7 @@ function Write-ContactSheet {
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
                 $_.Name -like 'hidden-inspection-cq-*-native.ppm' -or
                 $_.Name -like 'hidden-inspection-crossfeed-*-native.ppm' -or
+                $_.Name -like 'hidden-inspection-press-tower-*-native.ppm' -or
                 $_.Name -like 'surface-finish-board-*-detail.ppm' -or
                 $_.Name -like 'identity-background-*-badges.ppm' -or
                 $_.Name -like 'drift-*-detail.ppm' -or $_.Name -like 'miniature-terrain-*-detail.ppm' -or
