@@ -617,6 +617,11 @@ namespace
             require(runner.takeoff_tick >= 0, "a route player never took off");
             require(runner.landing_tick >= 0, "a route player never landed");
             const Vector2F pan = runner.camera_max - runner.camera_min;
+            if (pan.x <= route_minimum_pan)
+            {
+                std::cerr << prefix << " view " << index + 1 << ": takeoff=" << runner.takeoff_tick
+                    << " landing=" << runner.landing_tick << " pan_x=" << pan.x << '\n';
+            }
             require(pan.x > route_minimum_pan, "a route view's camera did not pan horizontally");
             std::cout << "ROUTE " << prefix << " view=" << index + 1
                 << " takeoff=" << runner.takeoff_tick << " landing=" << runner.landing_tick

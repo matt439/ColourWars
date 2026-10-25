@@ -76,3 +76,8 @@ jobs:
         if: always()
         shell: pwsh
         run: Get-ChildItem out/validation/movement-feedback -Recurse -Include *.log,*.err,*.json,*.csv | ForEach-Object { "== $($_.FullName)"; Get-Content $_ -TotalCount 200 }
+
+      - name: Show team B route rows
+        if: always()
+        shell: pwsh
+        run: Get-ChildItem out/validation/movement-feedback -Recurse -Filter route.csv | ForEach-Object { Import-Csv $_ | Where-Object { $_.view -in '2','1' -and ([int]$_.tick % 5 -eq 0) } | Format-Table -AutoSize | Out-String -Width 200 }
