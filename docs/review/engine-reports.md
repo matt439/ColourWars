@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **One is live as an unfiled draft with an exhibit (23), found after the
+> **Two are live as unfiled drafts with exhibits (23, 24), found after the
 > engine's last answers. Twenty-two are closed** and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
@@ -156,8 +156,9 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | prepared and qualified locally 2026-10-24; upstream checked 02:24:30 UTC at pin `19cf650`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
+| 24 | A Debug `AudioDevice` breaks into the debugger on a machine with no audio endpoint | `step_over_debug_break` in [movement_feedback_visual.cpp](../../scripts/acceptance/movement_feedback_visual.cpp) | drafted 2026-10-25 against upstream master `6be26c9`; unfiled |
 
-Nothing else is outstanding, on either side, beyond report 23 below and the
+Nothing else is outstanding, on either side, beyond reports 23 and 24 below and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -232,6 +233,54 @@ when the window is hidden, matching `leave_fullscreen`.
 
 `SettingsProbeActivationGuard` and its five uses; each fixture keeps its
 hidden/not-foreground requirement as the regression check.
+
+---
+
+## 24. A Debug `AudioDevice` breaks into the debugger on a machine with no audio endpoint — **draft with exhibit**
+
+Found 2026-10-25 while finding out why the Debug CI job had failed at the
+movement feedback step on every run since that step was added. Checked
+against the pin `19cf650` and upstream master `6be26c9`, where the code is
+unchanged.
+
+### What happens
+
+`AudioDevice::AudioDevice` (`engine/audio/xaudio2/audio_device.cpp`) adds
+`AudioEngine_Debug` in `_DEBUG` builds. DirectXTK's `AudioEngine` then sets
+XAudio2's debug configuration to break on errors. On a machine with no audio
+endpoint, a GitHub-hosted Windows runner for one, XAudio2 logs two errors
+inside `AudioEngine::Impl::Reset` while DirectXTK goes on to fall back to
+silence, and each error is an `int 3`. Under a debugger that is a stop. With
+none attached the process dies with `STATUS_BREAKPOINT` (`-2147483645`)
+inside `Application::initialize`, before it has printed anything. Release is
+unaffected.
+
+The engine already treats a missing audio device as an ordinary condition:
+DirectXTK runs silent and the client's optional-bank fallback is built
+around it. Only the Debug break turns that condition into a crash.
+
+### Exhibit
+
+`step_over_debug_break` in
+[movement_feedback_visual.cpp](../../scripts/acceptance/movement_feedback_visual.cpp):
+a vectored exception handler that steps over every `int 3`. It counts the
+ones raised inside `XAudio2_9Redist.dll` and reports them on stdout. Any
+other break fails the probe with its stack and the stored DXGI/D3D11
+messages. Before it, the Debug CI job could not get past this step.
+
+### The ask
+
+A Debug `AudioDevice` that does not break when there is no endpoint. Either
+drop `AudioEngine_Debug`, or keep XAudio2's debug logging and leave its
+`BreakMask` empty (DirectXTK has no flag for that, so it would mean setting
+`XAUDIO2_DEBUG_CONFIGURATION` after construction), or let the client opt out
+through `ApplicationOptions`.
+
+### What an answer lets this repository delete
+
+The XAudio2 branch of `step_over_debug_break`. The handler itself can stay,
+because it is what makes a Direct3D debug-layer break report its cause
+instead of ending the probe silently.
 
 ---
 
