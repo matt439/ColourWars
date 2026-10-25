@@ -393,6 +393,28 @@ one a fixed Options choice still needs an enum entry and save key. Check each
 candidate pair against the arena art under deutan, protan and tritan simulation
 before shipping it.
 
+### Controller rumble (`ROAD#9`)
+
+**OPEN, 2026-10-25.** In a four-pad couch game rumble is the only private
+per-player channel: the screen and speakers are shared
+([gap audit F6](review/gap-audit.md)). The engine's `GamepadReader` exposes no
+vibration, so this is a client feature that also produces the exhibit for an
+engine report.
+
+1. **Client slice.** Short, distinct pulses for being hit, being eliminated,
+   a hard landing and a dry trigger, read from `tuning.json`. A per-seat On/Off
+   beside the stick settings, saved with them, default On. Bots, replays and the
+   keyboard seat never rumble. Pause, focus loss and the end of a match stop
+   every motor. The call is a direct `XInputSetState` on the seat's slot,
+   isolated in one file because it bypasses the engine's reader.
+2. **Report.** That one file is the exhibit for `GAP#F6`'s ask,
+   `Gamepads::set_vibration` with the `state()` slot contract, drafted in the
+   [ledger](review/engine-reports.md). Filing needs the author's authorisation.
+
+Acceptance is a CPU case over a fake vibration sink: which events pulse which
+seat, the per-seat setting and every stop condition. Feeling it needs pads
+(`ROAD#2`).
+
 ### Input devices and seats
 
 No rows. These are known limits, recorded so a later gap list does not file
@@ -821,10 +843,14 @@ no physical-pad, attended readability or performance acceptance.
 abstraction beyond the existing `OptionRow`; a list of unused toggle, slider,
 progress or modal types is not an implementation task.
 
-`GAP#D5` is **DEFERRED** to the `POL#17`/`POL#21` blockouts. Add rotated and
-moving structures behind the builder with a useful arena placement for each,
-and collision, support, paint and editor acceptance for that layout. Choose
-their placement during blockout rather than altering the geometry under style review.
+`GAP#D5` is **OPEN** with the Turbulence blockout (`POL#21`, 2026-10-25). Its
+brief, offset platforms and crossing routes that reward repositioning, is the
+first layout where a moving platform earns its place. Add rotated and moving
+structures behind the builder with a useful arena placement for each, and
+collision, support, paint and editor acceptance for that layout. Moving support
+needs the player to ride it, paint on it to stay owned by its face, and replays
+to stay deterministic. Choose placements during blockout rather than altering
+the geometry under style review; Crossfeed and Press Tower stay static.
 
 ## Presentation rate (`GAP#L9`)
 

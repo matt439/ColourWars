@@ -199,13 +199,15 @@ Scripted inputs establish feasibility, not comfort, pressure or balance.
 
 ## Open
 
-- Attended play on both sides and 1-4P, including spawn pressure, the summit's
+- Attended play on both sides and 1-4P (`POL#31`), including spawn pressure, the summit's
   value and the summit halves' feel. If the halves read as fiddly, narrow the
   crown to 24 (halves 148) and re-run the sightline and live-fire checks.
 - Native four-pane captures of the stair landings and hoist exits, clean and
-  heavily painted. A `-PressTowerOnly` check-painter leaf (as Crossfeed's) is
-  the way to get them; the surface-finish and miniature-terrain painter
-  matrices do not list Press Tower yet.
+  heavily painted (`POL#32`). A `-PressTowerOnly` check-painter leaf and probe
+  mode (as Crossfeed's `-CrossfeedOnly` and `verify-crossfeed.ps1`) is the way
+  to get them; the surface-finish and miniature-terrain painter matrices do not
+  list Press Tower yet. Running the leaf needs the Windows GPU machine; writing
+  it does not.
 - Support art for the brief, above.
 - Spawn margins depend on the gantry ending at X 1000; shortening it to 940
   opens a standing summit line to X 405. Any geometry edit re-runs the checks.

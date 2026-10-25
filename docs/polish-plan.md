@@ -293,6 +293,16 @@ review scale, fractional placement and rotation in motion.
 four-player views. Slow camera movement and aim sweeps remain stable and readable
 at 720p, 1080p and QHD. Record the supported scaling behaviour and any letterboxing.
 
+**Scaling policy not yet recorded (`POL#34`, 2026-10-25).** That last sentence
+is still open. Four-unit texels project to fractional screen sizes at 720p and
+QHD, and no snapping, integer-scale or letterboxing policy is accepted
+([playable kit](polish-playable-kit.md#visual-observations-and-remaining-decisions),
+[refinement](polish-refine.md#open-after-this-increment)). The local next step is
+a short record of what the camera and split-screen layout do today at 720p, 1080p
+and QHD, from the code and existing probe captures, with the candidate policies
+(leave fractional, snap the camera, integer texel scale with letterboxing) and
+their cost in 1/2/4-player panes. Choosing one is the author's call.
+
 **Workshop retirement validation (2026-10-15):** Debug and Release build and
 pass all 11 remaining consumer cases. Movement Course routes, movement feedback,
 story/redraw audio and replay determinism remain covered. The registry no longer
@@ -398,8 +408,8 @@ visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 
 **King of the Hill (2026-10-25):** the blockout is [Press Tower](polish-press-tower.md),
 a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
-which stays selectable and in Random. Its baseline acceptance case passes; attended play,
-native four-pane captures and the brief's support art remain open there. Turbulence has
+which stays selectable and in Random. Its baseline acceptance case passes; attended play
+(`POL#31`), native four-pane captures (`POL#32`) and the brief's support art remain open there. Turbulence has
 not started.
 
 The first new-map pass uses current movement and weapon values. Define required,
@@ -959,7 +969,9 @@ state is constructed. If the first shows a flash and the second cures it, the en
 preferred fix is its own (show after the first `end_frame`, no class-brush paint) and
 needs no client call. Those captures are this repository's to make (`GAP#5.1`).
 Re-measure with `perf` when the blockouts (`POL#17`, `POL#21`) add geometry: the
-build makes paint tiles for every paintable face.
+build makes paint tiles for every paintable face. `crossfeed` and `press_tower`
+are not in the table yet (`POL#33`): add their Debug in-game and Release rows
+the same way, and say whether either changes the no-loading-card conclusion.
 
 **Takeoff/landing production puffs implemented (2026-10-15, part of `POL#16`).**
 The [drawing and evidence](polish-feedback.md#paintexe-production-puffs-2026-10-15)
@@ -1544,6 +1556,18 @@ be added ahead of `POL#27`.
 
 The decision may be "no" for any of them. Record it here either way, so a later
 gap list reads the absence as intended.
+
+**Paint-underfoot prototype (`POL#36`, OPEN, 2026-10-25).** So the first lever
+can be decided by playing it rather than imagining it, build it behind a
+`tuning.json` switch that ships off. On your own colour: faster movement and
+faster ammunition recovery. On the enemy's: slower movement and no recovery.
+Each amount is a tuning number, and every number is zero or neutral while the
+switch is off, so shipped balance and `POL#27` evidence are unchanged. The
+console's `tune` turns it on for a match. Acceptance is a CPU case that checks
+the switch-off match is bit-identical to today's replay fingerprint, and that
+each effect follows the supporting structure's paint owner, with a driven pass
+across own, enemy and unpainted support. The prototype does not answer
+`POL#30`: the author does, after playing it.
 
 ### Let players learn by making a mess
 

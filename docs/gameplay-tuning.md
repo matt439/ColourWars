@@ -104,3 +104,42 @@ The remaining menu geometry and sheet choices are documented in
 [menu presentation](menu-presentation.md). The historical
 [gap audit](review/gap-audit.md#85-the-cjson-line-is-drawn-inconsistently) is unchanged;
 [TODO.md](../TODO.md) records open work.
+
+## Headless balance runner (`TOOL#1`, 2026-10-25)
+
+**OPEN.** The five-tool balance pass (`POL#27`) and the arena blockouts
+(`POL#21`) are judged today from a handful of attended matches and scripted
+feasibility cases. Both questions are statistical: does one tool win a stage
+too often, does one side's spawn hold more paint, does a route go unused. The
+pieces to answer them in bulk already exist. Levels build without a device (the
+acceptance cases and the §6 timing harness do it), the Debug
+[bots](debug-console.md#bots) are seeded and deterministic, and paint credit is
+per seat.
+
+The runner is a Debug-only console executable beside the acceptance cases. It
+builds a stage with no graphics or audio device, puts bots on every seat, steps
+the fixed 60 Hz simulation as fast as the CPU allows, and writes one CSV row per
+match: stage, seed, roster, tools, final paint share per team and seat,
+eliminations, time starved of ammunition, and paint by region and face direction
+(the measures the blockout docs already use). A sweep is stage x tool pairing x
+seed, with a summary per cell and its spread across seeds.
+
+Slices, in order:
+
+1. **Runner.** Device-free build, bots on all seats, CSV out, deterministic per
+   seed. Acceptance: the same seed reproduces the same row bit for bit, and a
+   short sweep on `crossfeed` completes inside the acceptance budget.
+2. **A `skirmish` bot.** `paint` and `chase` each play half the game. A bot that
+   paints, engages an opponent in range, retreats to refill and returns is the
+   minimum for the numbers to say anything about tools rather than bots. It
+   stays a developer tool: shipping AI opponents is outside the chosen scope
+   ([match scope](feature-roadmap.md#match-scope-decisions-2026-10-15)).
+3. **First report.** A sweep over `crossfeed` and `press_tower` with all five
+   tools, recorded in [polish-crossfeed.md](polish-crossfeed.md) and
+   [polish-press-tower.md](polish-press-tower.md) as evidence for `POL#27` and
+   `POL#31`.
+
+Bot results are evidence, not acceptance. They find outliers for an attended
+session to check; they never replace one, and a tuning change still goes
+through the author.
+
