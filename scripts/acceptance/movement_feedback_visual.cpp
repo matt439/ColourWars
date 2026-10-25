@@ -4,6 +4,8 @@
 #include "game/input_slots.h"
 
 #include <dxgidebug.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
 
 #include <atomic>
 #include <filesystem>
@@ -34,6 +36,8 @@ namespace
     // probe with nothing on stdout or stderr. Step over it instead, and fail
     // at the next check with the messages that caused it.
     std::atomic<int> debug_breaks{ 0 };
+    struct DebugBreakStack { USHORT frames = 0; void* addresses[24] = {}; };
+    DebugBreakStack debug_break_stacks[4];
 
     LONG CALLBACK step_over_debug_break(EXCEPTION_POINTERS* exception)
     {
@@ -42,27 +46,69 @@ namespace
         {
             return EXCEPTION_CONTINUE_SEARCH;
         }
-        ++debug_breaks;
+        const int index = debug_breaks++;
+        if (index < static_cast<int>(std::size(debug_break_stacks)))
+        {
+            auto& stack = debug_break_stacks[index];
+            stack.frames = RtlCaptureStackBackTrace(0, static_cast<DWORD>(std::size(stack.addresses)),
+                stack.addresses, nullptr);
+        }
         ++exception->ContextRecord->Rip;
         return EXCEPTION_CONTINUE_EXECUTION;
+    }
+
+    std::string module_offset(void* address)
+    {
+        HMODULE module = nullptr;
+        char name[MAX_PATH] = "?";
+        if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                static_cast<LPCSTR>(address), &module) && module)
+        {
+            GetModuleFileNameA(module, name, MAX_PATH);
+        }
+        std::ostringstream text;
+        text << std::filesystem::path(name).filename().string() << "+0x" << std::hex
+            << (reinterpret_cast<uintptr_t>(address) - reinterpret_cast<uintptr_t>(module));
+        alignas(SYMBOL_INFO) char storage[sizeof(SYMBOL_INFO) + 256] = {};
+        auto* symbol = reinterpret_cast<SYMBOL_INFO*>(storage);
+        symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+        symbol->MaxNameLen = 255;
+        DWORD64 displacement = 0;
+        if (SymFromAddr(GetCurrentProcess(), reinterpret_cast<DWORD64>(address), &displacement, symbol))
+        {
+            text << '(' << symbol->Name << "+0x" << displacement << ')';
+        }
+        return text.str();
     }
 
     void require_no_debug_breaks(const char* where)
     {
         if (debug_breaks.load() == 0) { return; }
+        SymInitialize(GetCurrentProcess(), nullptr, TRUE);
         std::cerr << "debug layer broke " << debug_breaks.load() << " time(s) by " << where << '\n';
+        for (int index = 0; index < std::min(debug_breaks.load(), static_cast<int>(std::size(debug_break_stacks))); ++index)
+        {
+            std::cerr << "break " << index + 1 << ':';
+            const auto& stack = debug_break_stacks[index];
+            for (USHORT frame = 0; frame < stack.frames; ++frame)
+            {
+                std::cerr << ' ' << module_offset(stack.addresses[frame]);
+            }
+            std::cerr << '\n';
+        }
         Microsoft::WRL::ComPtr<IDXGIInfoQueue> queue;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(queue.GetAddressOf()))))
         {
             const UINT64 count = queue->GetNumStoredMessages(DXGI_DEBUG_ALL);
+            std::cerr << "debug layer: " << count << " stored DXGI/D3D11 message(s)\n";
             for (UINT64 index = 0; index < count; ++index)
             {
                 SIZE_T length = 0;
                 if (FAILED(queue->GetMessage(DXGI_DEBUG_ALL, index, nullptr, &length))) { continue; }
                 std::vector<char> storage(length);
                 auto* message = reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(storage.data());
-                if (SUCCEEDED(queue->GetMessage(DXGI_DEBUG_ALL, index, message, &length)) &&
-                    message->Severity <= DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING)
+                if (SUCCEEDED(queue->GetMessage(DXGI_DEBUG_ALL, index, message, &length)))
                 {
                     std::cerr << "debug layer: severity=" << message->Severity
                         << " id=" << message->ID << ' ' << message->pDescription << '\n';
