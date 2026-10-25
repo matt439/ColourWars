@@ -8,10 +8,10 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     labels.pad = L"Port {pad}"; labels.keyboard_mouse = L"Keys"; labels.waiting = L"Join";
     labels.roster_row = L"{device} / {player}";
     auto& fonts = const_cast<MenuStyle&>(alternate.menu());
-    fonts.item_font = "gill_sans_mt_bold_36"; fonts.detail_font = "gill_sans_mt_bold_24";
+    fonts.item_font = "lato_black_36"; fonts.detail_font = "lato_black_24";
     auto& controls = const_cast<ControlsSettingsPresentation&>(alternate.controls_settings());
-    controls.item_font = "gill_sans_mt_bold_24"; controls.help_font = "courier_new_bold_16";
-    const_cast<ResultsMenuPresentation&>(alternate.results_menu()).contribution_font = "courier_new_bold_16";
+    controls.item_font = "lato_black_24"; controls.help_font = "courier_prime_bold_16";
+    const_cast<ResultsMenuPresentation&>(alternate.results_menu()).contribution_font = "courier_prime_bold_16";
     alternate.validate_resources(*app.render_resources(), *app.audio_resources());
     const NestedSaveProfile isolated(output / "menu-label-profile"); Save preferences;
     PlaySettings play = preferences.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;

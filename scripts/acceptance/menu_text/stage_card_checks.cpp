@@ -335,8 +335,8 @@ namespace menu_text_acceptance
                 UiTextDropShadow text(entry.key, source, font_name, point, &world.render,
                     entry.detail ? style.heading_colour : style.highlight, shadow_colour, shadow);
                 source = L"Changed after construction";
-                style.brand_font = "gill_sans_mt_bold_48";
-                style.detail_font = "gill_sans_mt_bold_48";
+                style.brand_font = "lato_black_48";
+                style.detail_font = "lato_black_48";
                 style.detail_shadow_offset = mattmath::Vector2F(10.0f, 10.0f);
                 style.shadow_colour = style.warning;
                 stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
@@ -357,9 +357,9 @@ namespace menu_text_acceptance
         const auto& stage = defaults.main_menu().stage_select;
         const auto solo_size = world.render.measure_text(world.render.resolve_sprite_font(defaults.menu().brand_font),
             defaults.menu_text().stage.solo_objective);
-        require(stage.briefing.position.x + stage.briefing_padding.x + solo_size.x + defaults.menu().detail_shadow_offset.x >
+        require(stage.briefing.position.x + stage.briefing_padding.x + solo_size.x + defaults.menu().detail_shadow_offset.x <=
             stage.briefing.position.x + stage.briefing.size.x,
-            "Shipped solo objective no longer demonstrates its preserved horizontal panel overhang");
+            "Shipped solo objective no longer fits inside its briefing panel");
         for (const bool negative : { false, true })
         {
             const auto authored = variants.load([&](rapidjson::Document& d)
@@ -378,6 +378,12 @@ namespace menu_text_acceptance
                 }
             });
             authored.validate_resources(world.render, world.audio);
+            const auto& authored_stage = authored.main_menu().stage_select;
+            const auto authored_size = world.render.measure_text(
+                world.render.resolve_sprite_font("menu_text_exact"), authored.menu_text().stage.goal);
+            require(authored_stage.briefing.position.x + authored_stage.briefing_padding.x + authored_size.x >
+                authored_stage.briefing.position.x + authored_stage.briefing.size.x,
+                "Authored briefing line no longer demonstrates an accepted horizontal panel overhang");
             check_widgets(authored);
         }
         const auto one_line = variants.load([](rapidjson::Document& d)

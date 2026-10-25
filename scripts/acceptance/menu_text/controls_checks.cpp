@@ -88,15 +88,24 @@ namespace menu_text_acceptance
             }
         }
         // World loads the shipped SpriteFontFile metrics without a graphics
-        // device. Alias those glyphs to distinguish this regression from the
-        // synthetic exact-boundary fonts registered below.
-        const Font* shipped_font = world.render.font(world.render.resolve_sprite_font("gill_sans_mt_bold_36"));
+        // device. The shipped face keeps its descenders inside its 58 line
+        // spacing, so its actions fit the 58-high row unscaled. The regression
+        // this guards came from a face whose descenders reached 62, so alias
+        // the shipped glyphs with g/j/p/q/y stretched to that depth, distinct
+        // from the synthetic exact-boundary fonts registered below.
+        const Font* shipped_font = world.render.font(world.render.resolve_sprite_font("lato_black_36"));
+        require(shipped_font->line_spacing() == 58.0f, "Shipped Controls action font changed its line spacing");
         std::vector<Glyph> shipped_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
             const Glyph* glyph = shipped_font->find(character);
             require(glyph != nullptr, "Shipped action regression font lacks a printable glyph");
-            shipped_glyphs.push_back(*glyph);
+            Glyph deep = *glyph;
+            if (character == U'g' || character == U'j' || character == U'p' || character == U'q' || character == U'y')
+            {
+                deep.subrect.height = static_cast<int>(62.0f - deep.y_offset);
+            }
+            shipped_glyphs.push_back(deep);
         }
         world.render.add_font("menu_controls_action_shipped", std::make_unique<Font>(TextureHandle{},
             std::move(shipped_glyphs), shipped_font->line_spacing()));
@@ -113,18 +122,21 @@ namespace menu_text_acceptance
         for (const MenuItem item : { MenuItem::keyboard_jump, MenuItem::apply })
         {
             const auto& copy = real_actions.menu_text().item(item);
+            const auto shipped = world.render.measure_text(world.render.resolve_sprite_font("lato_black_36"), copy);
+            require(shipped.y == 58.0f && shipped.y <= action_height,
+                "Shipped Controls action no longer fits its 58-high row unscaled");
             const auto raw = world.render.measure_text(action_font, copy);
-            require(raw == mattmath::Vector2F(item == MenuItem::keyboard_jump ? 355.0f : 139.0f, 62.0f) &&
+            require(raw == mattmath::Vector2F(shipped.x, 62.0f) &&
                 raw.y + real_controls.art.focus_padding.y * 2.0f == 78.0f &&
                 raw.y + real_controls.art.focus_padding.y * 2.0f > real_controls.layout.spacing.y,
-                "Shipped action regression no longer exercises the actual 62-high descenders in a 74-high row");
+                "Action regression no longer exercises 62-high descenders in a 74-high row");
             UiText text("shipped-action", copy, real_controls.item_font, real_controls.layout.position,
                 &world.render, real_controls.art.ink);
             const float scale = std::min({ 1.0f, action_width / raw.x, action_height / raw.y });
             text.set_scale(scale);
             require(scale == 58.0f / 62.0f && text.text() == copy && text.bounds().height == 58.0f &&
                 text.bounds().width == raw.x * scale,
-                "Shipped action did not retain its complete label with a uniform 58/62 fit");
+                "Deep-descender action did not retain its complete label with a uniform 58/62 fit");
         }
         std::vector<Glyph> action_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)

@@ -18,9 +18,9 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     text.pause_player_title = replacement_words[4]; text.controller_lost = replacement_words[5];
     text.all_connected = replacement_words[6]; text.teams_required = replacement_words[7];
     auto& replacement_style = const_cast<MenuStyle&>(replacement.menu());
-    replacement_style.heading_font = "gill_sans_mt_bold_48";
-    replacement_style.item_font = "gill_sans_mt_bold_24";
-    replacement_style.detail_font = "courier_new_bold_16";
+    replacement_style.heading_font = "lato_black_48";
+    replacement_style.item_font = "lato_black_24";
+    replacement_style.detail_font = "courier_prime_bold_16";
     replacement.validate_resources(*app.render_resources(), *app.audio_resources());
     Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;

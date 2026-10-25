@@ -277,11 +277,24 @@ namespace menu_text_acceptance
 
     void check_display_trial_text(Variants& variants, World& world)
     {
+        // The shipped item face keeps its descenders inside the line spacing,
+        // so a face whose g/j/p/q/y hang below it makes Keep the one tall row.
+        std::vector<Glyph> descender_glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            const bool descender = character == U'g' || character == U'j' || character == U'p' ||
+                character == U'q' || character == U'y';
+            descender_glyphs.push_back({ character, mattmath::RectangleI(0, 0, 8, descender ? 82 : 60),
+                0.0f, 0.0f, 0.0f });
+        }
+        world.render.add_font("menu_text_descender",
+            std::make_unique<Font>(TextureHandle{}, std::move(descender_glyphs), 74.21875f));
         const auto original = variants.load([](rapidjson::Document&) {});
-        const auto keep_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),
+        const auto keep_size = world.render.measure_text(world.render.resolve_sprite_font("menu_text_descender"),
             original.menu_text().item(MenuItem::keep));
         const auto tight_display = variants.load([](rapidjson::Document& d)
         {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_descender");
             d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(115.0f);
             d["menu_text"]["items"]["options"].SetString("Fit");
         });
@@ -289,7 +302,7 @@ namespace menu_text_acceptance
         require(keep_size.y == 82.0f && keep_size.y + tight_display.pause_menu().art.focus_padding.y * 2.0f >
             tight_display.pause_menu().layout.spacing.y && keep_size.y + tight_display.main_menu().setup_focus_padding.y * 2.0f <=
             tight_display.pause_menu().layout.spacing.y,
-            "Keep's real descender no longer distinguishes compact Display padding from ordinary Pause padding in a tight row");
+            "Keep's descender no longer distinguishes compact Display padding from ordinary Pause padding in a tight row");
         const auto distinct_pause_keyline = [](rapidjson::Document& d)
         {
             // Isolate card clearance from stock descenders in the setup rows

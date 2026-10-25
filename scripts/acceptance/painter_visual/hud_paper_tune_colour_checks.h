@@ -130,7 +130,7 @@ public:
             look_.meter_label_gap == 6 && look_.box_fill_border == .002f && identity_.enabled && identity_.ui_size == Vector2F(54, 42) && identity_.ui_gap == 12 &&
             identity_.background_colour == Colour::white && identity_.ink_colour == Colour::black &&
             look_.health_colour == Colour(118, 232, 181) && look_.meter_track_colour == Colour(184, 184, 184) &&
-            look_.meter_label_font == "gill_sans_mt_bold_24" && look_.timer_font == "gill_sans_mt_bold_48" && look_.player_identity_font == "gill_sans_mt_bold_36" &&
+            look_.meter_label_font == "lato_black_24" && look_.timer_font == "lato_black_48" && look_.player_identity_font == "lato_black_36" &&
             look_.sprite_sheet == "sprite_sheet_1" && look_.fill_frame == "pixel",
             "HUD paper source defaults, exact geometry, opaque overlays or resource names changed");
         const std::array<std::string, 3> names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };

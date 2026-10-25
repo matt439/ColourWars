@@ -65,7 +65,7 @@ namespace menu_text_acceptance
         const auto art = options_art(main);
         require(main.options_spacing == mattmath::Vector2F(540.0f, 100.0f) &&
             art.focus_padding == mattmath::Vector2F(28.0f, 7.0f) && art.shadow_offset == 2.0f &&
-            original.menu().item_font == "gill_sans_mt_bold_48",
+            original.menu().item_font == "lato_black_48",
             "Seven-row Options changed its reviewed compact geometry or existing item font");
         const auto normalized = variants.load([](rapidjson::Document& d)
         {
@@ -297,12 +297,15 @@ namespace menu_text_acceptance
         const auto options_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),
             original.menu_text().item(MenuItem::options));
         const float options_height = options_size.y + pause.art.focus_padding.y * 2.0f;
-        require(pause.layout.spacing.y == 120.0f && options_size.y == 82.0f && options_height == 118.0f,
-            "Pause Options lost its actual descender height or the authored two-pixel row clearance");
+        require(pause.layout.spacing.y == 120.0f && options_size.y == 77.0f &&
+            options_height <= pause.layout.spacing.y - 2.0f,
+            "Pause Options lost its measured height or the authored two-pixel minimum row clearance");
         const auto tight_options = variants.load([&](rapidjson::Document& d)
             { d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(options_height); });
         tight_options.validate_resources(world.render, world.audio);
-        variants.rejects("items.options", [&](rapidjson::Document& d)
+        // No shipped Pause item has ink below the line spacing, so every row
+        // is exactly options_height and the first row is the one rejected.
+        variants.rejects("items.resume", [&](rapidjson::Document& d)
         {
             d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(std::nextafter(options_height, 0.0f));
         }, &world);

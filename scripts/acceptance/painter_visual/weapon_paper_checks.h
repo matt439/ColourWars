@@ -225,8 +225,8 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
     }
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 }); std::ignore = app.renderer()->window_size_changed(1280, 720);
     Presentation old = original, next = original; const_cast<MenuText&>(old.menu_text()).headings[static_cast<size_t>(MenuHeading::weapons)] = L"Tools~"; const_cast<MenuText&>(next.menu_text()).headings[static_cast<size_t>(MenuHeading::weapons)] = L"Pick Tools";
-    auto& next_style = const_cast<MenuStyle&>(next.menu()); next_style.heading_font = "gill_sans_mt_bold_48"; next_style.detail_font = "gill_sans_mt_bold_24";
-    auto& next_look = const_cast<MainMenuPresentation&>(next.main_menu()); next_look.weapon_description_font = "courier_new_bold_16"; next_look.art.paper = Colour(0.90f, 0.95f, 0.98f); next_look.art.ink = Colour(0.04f, 0.09f, 0.17f); next_look.art.focus_ink = Colour(0.02f, 0.05f, 0.10f);
+    auto& next_style = const_cast<MenuStyle&>(next.menu()); next_style.heading_font = "lato_black_48"; next_style.detail_font = "lato_black_24";
+    auto& next_look = const_cast<MainMenuPresentation&>(next.main_menu()); next_look.weapon_description_font = "courier_prime_bold_16"; next_look.art.paper = Colour(0.90f, 0.95f, 0.98f); next_look.art.ink = Colour(0.04f, 0.09f, 0.17f); next_look.art.focus_ink = Colour(0.02f, 0.05f, 0.10f);
     next_look.weapon_description_colour = next_look.art.ink; next_look.weapon_select.unselected = Colour(0.8f, 0.9f, 1.0f); next_look.weapon_select.selected = Colour(0.7f, 1.0f, 0.8f);
     next_look.weapon_select_art.sheet = "menu_paint"; next_look.weapon_select_art.fill_frame = "backdrop";
     for (auto& choice : next_look.weapon_select_art.choices) { choice = { L"Study", "backdrop", "", "" }; } next_look.weapon_descriptions.fill(L"Edited tool description");

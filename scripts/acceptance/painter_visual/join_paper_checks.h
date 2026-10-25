@@ -268,7 +268,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     const_cast<MenuText&>(old.menu_text()).headings[static_cast<size_t>(MenuHeading::join_players)] = L"Join~ Players";
     const_cast<MenuText&>(next.menu_text()).headings[static_cast<size_t>(MenuHeading::join_players)] = L"Gather Players";
     auto& next_style = const_cast<MenuStyle&>(next.menu());
-    next_style.heading_font = "gill_sans_mt_bold_48"; next_style.item_font = "gill_sans_mt_bold_36"; next_style.detail_font = "gill_sans_mt_bold_24";
+    next_style.heading_font = "lato_black_48"; next_style.item_font = "lato_black_36"; next_style.detail_font = "lato_black_24";
     auto& next_art = const_cast<MainMenuPresentation&>(next.main_menu()).art;
     next_art.paper = Colour(0.90f, 0.95f, 0.98f); next_art.ink = Colour(0.04f, 0.09f, 0.17f);
     next_art.focus_ink = Colour(0.02f, 0.04f, 0.09f); next_art.disabled_ink = Colour(0.30f, 0.32f, 0.36f);
@@ -298,7 +298,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             std::string& font; std::string original;
             ~RestoreJoinDetailFont() { this->font = this->original; }
         } restore_font{ live_style.detail_font, live_style.detail_font };
-        live_style.detail_font = "gill_sans_mt_bold_144";
+        live_style.detail_font = "lato_black_144";
         MenuLevelSettings invalid_settings; invalid_settings.set_player_count(1); invalid_settings.begin_input_claims(input_slots::keyboard_and_mouse);
         MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext invalid_context(&data, &invalid_input, &invalid_settings); StateContext invalid_stack;

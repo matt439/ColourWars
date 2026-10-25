@@ -63,7 +63,7 @@
             $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
             $expectedValue = if ($newCopy) { $sessionResultNewValues[$row.session] }
                 elseif ($oldCopy) { $sessionResultOldValues[$row.session] } else { $sessionResultDefaultValues[$row.session] }
-            $expectedFont = if ($newCopy) { 'session_result_braces' } else { 'gill_sans_mt_bold_36' }
+            $expectedFont = if ($newCopy) { 'session_result_braces' } else { 'lato_black_36' }
             if ($row.width -ne $expectedWidth -or $row.height -ne $expectedHeight -or
                 $row.best_of -ne $expectedState[0] -or $row.complete -ne $expectedState[1] -or
                 $row.round -ne $expectedState[2] -or $row.a_wins -ne $expectedState[3] -or $row.b_wins -ne $expectedState[4] -or

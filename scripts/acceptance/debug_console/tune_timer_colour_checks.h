@@ -115,8 +115,8 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     std::vector<std::string> loaded_fonts(fonts.begin(), fonts.end());
     if (complete_resources)
     {
-        for (const char* name : { "gill_sans_ultra_bold_144", "gill_sans_mt_bold_24", "gill_sans_mt_bold_36",
-            "gill_sans_mt_bold_48", "gill_sans_mt_bold_72", "gill_sans_mt_bold_144", "courier_new_bold_16" })
+        for (const char* name : { "bowlby_one_144", "lato_black_24", "lato_black_36",
+            "lato_black_48", "lato_black_72", "lato_black_144", "courier_prime_bold_16" })
             { if (std::find(loaded_fonts.begin(), loaded_fonts.end(), name) == loaded_fonts.end()) { loaded_fonts.emplace_back(name); } }
         complete_audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
     }

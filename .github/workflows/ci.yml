@@ -123,7 +123,8 @@ jobs:
             'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'build-info.txt',
             'sounds/paint_exe.json', 'sounds/paint_exe.xwb',
             'licenses/paint_exe/PROVENANCE.md', 'licenses/paint_exe/CC0-1.0.txt',
-            'licenses/paint_exe/runtime-bank.json') {
+            'licenses/paint_exe/runtime-bank.json', 'licenses/fonts/Lato-OFL.txt',
+            'licenses/fonts/BowlbyOne-OFL.txt', 'licenses/fonts/CourierPrime-OFL.txt') {
             if (-not (Test-Path -LiteralPath (Join-Path $package $required))) {
               throw "Package is missing $required"
             }

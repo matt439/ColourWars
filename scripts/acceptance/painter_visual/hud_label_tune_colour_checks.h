@@ -31,8 +31,8 @@ public:
     {
         require(look_.player_identity_colour == Colour(20, 20, 20) &&
             look_.player_identity_shadow_colour == Colour(0, 0, 0, 34) &&
-            look_.player_identity_font == "gill_sans_mt_bold_36" && look_.meter_label_font == "gill_sans_mt_bold_24" &&
-            look_.timer_font == "gill_sans_mt_bold_48" && look_.player_identity_reference_width == 1920 &&
+            look_.player_identity_font == "lato_black_36" && look_.meter_label_font == "lato_black_24" &&
+            look_.timer_font == "lato_black_48" && look_.player_identity_reference_width == 1920 &&
             look_.reference_height == 1080 && look_.player_identity_offset == Vector2F(.03f, .05f) &&
             look_.player_identity_padding == Vector2F(16, 10) && look_.player_identity_shadow_offset == Vector2F(2, 2) &&
             look_.right_margin == .19f && look_.health_top_margin == .09f && look_.ammo_top_margin == .17f &&

@@ -76,9 +76,9 @@
                 $expectedValue = if ($newCopy) { $resultPercentageNewValues[$literalKey] }
                     elseif ($oldCopy) { $resultPercentageOldValues[$literalKey] } else { $resultPercentageDefaultValues[$literalKey] }
                 $expectedFont = if ($row.role -ceq 'winner') {
-                    if ($newCopy) { 'result_percentage_item_caret' } else { 'gill_sans_mt_bold_48' }
+                    if ($newCopy) { 'result_percentage_item_caret' } else { 'lato_black_48' }
                 }
-                else { if ($newCopy) { 'result_percentage_detail_caret' } else { 'gill_sans_mt_bold_36' } }
+                else { if ($newCopy) { 'result_percentage_detail_caret' } else { 'lato_black_36' } }
                 $expectedRevealed = if ($row.fixture -ceq 'competitive' -or $row.case -ceq 'solo-b-ready') { 'true' } else { 'false' }
                 $expectedDetails = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed')) { 'false' } else { 'true' }
                 $expectedProceed = if ($row.case -in @('legacy-initial', 'legacy-fill-crossed', 'legacy-details',
@@ -93,7 +93,7 @@
                 $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
                 $expectedValue = if ($newCopy) { $resultPercentageMonitorNewValues[$row.role] }
                     elseif ($oldCopy) { $resultPercentageMonitorOldValues[$row.role] } else { $resultPercentageMonitorDefaultValues[$row.role] }
-                $expectedFont = if ($newCopy) { 'result_percentage_monitor_caret' } else { 'gill_sans_ultra_bold_144' }
+                $expectedFont = if ($newCopy) { 'result_percentage_monitor_caret' } else { 'bowlby_one_144' }
                 $expectedRevealed = 'true'; $expectedDetails = 'true'; $expectedProceed = 'false'; $expectedVisible = 'true'
             }
             if ($row.width -cne $expectedWidth -or $row.height -cne $expectedHeight -or

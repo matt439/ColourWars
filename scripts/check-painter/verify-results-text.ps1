@@ -38,7 +38,7 @@
             'heading' = 'Score {2}'; 'contribution' = 'Owned {area}'; 'proceed' = 'Proceed {B}'
         }
         $resultsTextDefaultFonts = @{
-            'heading' = 'gill_sans_mt_bold_72'; 'contribution' = 'gill_sans_mt_bold_24'; 'proceed' = 'gill_sans_mt_bold_36'
+            'heading' = 'lato_black_72'; 'contribution' = 'lato_black_24'; 'proceed' = 'lato_black_36'
         }
         $resultsTextNewFonts = @{
             'heading' = 'results_text_heading_letters'; 'contribution' = 'results_text_contribution_letters'

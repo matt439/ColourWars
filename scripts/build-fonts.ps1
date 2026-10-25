@@ -4,7 +4,7 @@ param(
     # under game/content/ is touched.
     [switch] $Update,
     # Regenerate only these recipe entries (file names), for example
-    # -Only courier_new_bold_16.spritefont.
+    # -Only courier_prime_bold_16.spritefont.
     [string[]] $Only = @(),
     # The most BC2 blocks (4x4 texels, 16 bytes each) a regenerated texture
     # may differ in and still be 'equivalent'. The noise seen so far is two
@@ -17,10 +17,11 @@ Add-Type -AssemblyName System.Drawing
 
 # Regenerates the runtime sprite fonts from game/art/sources/fonts/fonts.json
 # with the tracked MakeSpriteFont, and compares each result with the atlas in
-# game/content/fonts/. Optional and machine-dependent, like the audio tools:
-# the faces are the machine's installed fonts, and both Gill Sans faces come
-# with Microsoft Office, so neither builds nor CI run this. Builds check only
-# the atlas headers (cmake/check_sprite_fonts.cmake).
+# game/content/fonts/. The faces are the OFL files beside the recipe, but
+# MakeSpriteFont reads only installed fonts, so any face that is missing is
+# installed for the current user (no elevation) before the run. Neither builds
+# nor CI run this; builds check only the atlas headers
+# (cmake/check_sprite_fonts.cmake).
 #
 # Each atlas reports one of:
 #   identical   - byte for byte the tracked file;
@@ -37,8 +38,29 @@ $tool = Join-Path $repo $recipe.tool
 $contentFonts = Join-Path $repo 'game/content/fonts'
 if (-not (Test-Path -LiteralPath $tool -PathType Leaf)) { throw "MakeSpriteFont is missing: $tool" }
 
-$installed = @((New-Object System.Drawing.Text.InstalledFontCollection).Families |
-    ForEach-Object { $_.Name })
+function Get-InstalledFaces {
+    return @((New-Object System.Drawing.Text.InstalledFontCollection).Families |
+        ForEach-Object { $_.Name })
+}
+
+# A per-user install is a copy into %LOCALAPPDATA%\Microsoft\Windows\Fonts and a
+# value under HKCU's Fonts key, which GDI+ reads like a machine-wide font.
+$installed = Get-InstalledFaces
+$faceDir = Split-Path -Parent $recipePath
+$userFonts = Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Fonts'
+$userFontKey = 'HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts'
+foreach ($font in $recipe.fonts) {
+    if ($installed -contains $font.face) { continue }
+    $source = Join-Path $faceDir $font.face_file
+    if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "Face file is missing: $source" }
+    [System.IO.Directory]::CreateDirectory($userFonts) | Out-Null
+    $target = Join-Path $userFonts $font.face_file
+    Copy-Item -LiteralPath $source -Destination $target -Force
+    New-ItemProperty -Path $userFontKey -Name "$($font.face_file) (TrueType)" -Value $target `
+        -PropertyType String -Force | Out-Null
+    Write-Host "installed $($font.face_file) for the current user"
+    $installed = Get-InstalledFaces
+}
 $region = '0x{0:X2}-0x{1:X2}' -f [int]$recipe.character_region.first, [int]$recipe.character_region.last
 
 function Read-SpriteFont([string] $Path) {
@@ -70,11 +92,14 @@ try {
     foreach ($font in $recipe.fonts) {
         if ($Only.Count -gt 0 -and $Only -notcontains $font.file) { continue }
         if ($installed -notcontains $font.face) {
-            throw "Face '$($font.face)' ($($font.face_file)) is not installed, so $($font.file) cannot be regenerated on this machine. Gill Sans faces ship with Microsoft Office; GDI+ would otherwise substitute a different face silently."
+            throw "Face '$($font.face)' ($($font.face_file)) is not installed, so $($font.file) cannot be regenerated: installing it for the current user did not register the family name. GDI+ would otherwise substitute a different face silently."
         }
         $output = Join-Path $work $font.file
         $arguments = @($font.face, $output, "/FontSize:$($font.size)", "/FontStyle:$($font.style)",
             "/CharacterRegion:$region", "/TextureFormat:$($recipe.texture_format)")
+        if ($font.PSObject.Properties['line_spacing_adjust']) {
+            $arguments += "/LineSpacing:$($font.line_spacing_adjust)"
+        }
         $log = & $tool @arguments
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $output -PathType Leaf)) {
             throw "MakeSpriteFont failed for $($font.file):`n$($log -join "`n")"

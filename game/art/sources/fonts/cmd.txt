@@ -1,2 +1,2 @@
 From the repository root (historical example, not a recipe for the shipped fonts):
-game\art\tools\MakeSpriteFont.exe "Courier New" game\art\sources\fonts\myfile.spritefont /FontSize:32 /FontStyle:Bold
+game\art\tools\MakeSpriteFont.exe "Courier Prime" game\art\sources\fonts\myfile.spritefont /FontSize:32 /FontStyle:Bold

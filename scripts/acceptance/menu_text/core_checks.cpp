@@ -278,7 +278,7 @@ namespace menu_text_acceptance
             normalized.menu_text().solo_practice_hint == expected,
             "Shared menu text did not normalize punctuation/NBSP while preserving authored outer spaces");
         normalized.validate_resources(world.render, world.audio);
-        const SpriteFontFile font = read_sprite_font_file((content / "fonts/gill_sans_mt_bold_24.spritefont").string());
+        const SpriteFontFile font = read_sprite_font_file((content / "fonts/lato_black_24.spritefont").string());
         auto glyphs = font.glyphs;
         const auto removed = std::remove_if(glyphs.begin(), glyphs.end(),
             [](const Glyph& glyph) { return glyph.character == U'~'; });

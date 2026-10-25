@@ -45,7 +45,7 @@
             $expectedEnabled = if ($expectedSavedFullscreen -eq 'true') { 'false' } else { 'true' }
             $expectedFont = if ($caseIndex -ge 8 -and $caseIndex -le 10) { 'resolution_tall_tilde' }
                 elseif (($caseIndex -ge 11 -and $caseIndex -le 17) -or
-                    ($caseIndex -ge 19 -and $caseIndex -le 23)) { 'resolution_numeric_shift' } else { 'gill_sans_mt_bold_48' }
+                    ($caseIndex -ge 19 -and $caseIndex -le 23)) { 'resolution_numeric_shift' } else { 'lato_black_48' }
             $expectedFit = if ($caseIndex -in @(8, 9)) { 'width_then_height' } elseif ($caseIndex -eq 10) { 'height' }
                 elseif ($caseIndex -in @(11, 12, 14)) { 'width' }
                 elseif ($caseIndex -in @(13, 15, 16, 17)) { 'reset' } else { 'none' }

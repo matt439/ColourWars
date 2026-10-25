@@ -4,13 +4,13 @@
             "kind": "font",
             "directory": "./fonts/",
             "names": [
-                "gill_sans_ultra_bold_144",
-                "gill_sans_mt_bold_24",
-                "gill_sans_mt_bold_36",
-                "gill_sans_mt_bold_48",
-                "gill_sans_mt_bold_72",
-                "gill_sans_mt_bold_144",
-                "courier_new_bold_16"
+                "bowlby_one_144",
+                "lato_black_24",
+                "lato_black_36",
+                "lato_black_48",
+                "lato_black_72",
+                "lato_black_144",
+                "courier_prime_bold_16"
             ]
         },
         {

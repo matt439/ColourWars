@@ -75,13 +75,21 @@ track, bank or timestamp-based reuse supplies the replacement bank.
 
 ### Fonts
 
-`game/content/fonts/` holds compiled `.spritefont` files built from installed
-fonts (Gill Sans MT and Gill Sans Ultra Bold, which ship with Microsoft Office,
-and Courier New, which ships with Windows) with Microsoft's `MakeSpriteFont`,
-by the recipe in `game/art/sources/fonts/fonts.json`. The compiled glyph
-atlases are redistributed here on the same footing as any other game asset
-built from a licensed font; the fonts themselves are not included and are not
-ColourWars' to license.
+`game/content/fonts/` holds compiled `.spritefont` atlases built with
+Microsoft's `MakeSpriteFont`, by the recipe in
+`game/art/sources/fonts/fonts.json`, from three fonts under the SIL Open Font
+License 1.1. The font files are in `game/art/sources/fonts/` and their licences
+in `game/art/sources/fonts/licenses/`; the release carries the licences in
+`licenses/fonts/`.
+
+- Lato Black - Copyright (c) 2010-2014 by tyPoland Lukasz Dziedzic, with
+  Reserved Font Name "Lato".
+- Bowlby One - Copyright (c) 2011 by vernon adams, with Reserved Font Names
+  "Bowlby", "Bowlby One" and "Bowlby One SC".
+- Courier Prime - Copyright 2015 The Courier Prime Project Authors.
+
+The atlases are unmodified renderings of these fonts; the OFL permits bundling
+them with software. They are not ColourWars' to license under MIT.
 
 ### Menu artwork
 

@@ -73,8 +73,8 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
     labrador::RenderResources render; labrador::AudioResources audio;
     for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
         { render.add_sprite_sheet(name, labrador::read_sprite_sheet((game_directory / "textures" / (std::string(name) + ".json")).string().c_str(), labrador::TextureHandle{})); }
-    const std::array<const char*, 7> font_names{ "gill_sans_ultra_bold_144", "gill_sans_mt_bold_24", "gill_sans_mt_bold_36",
-        "gill_sans_mt_bold_48", "gill_sans_mt_bold_72", "gill_sans_mt_bold_144", "courier_new_bold_16" };
+    const std::array<const char*, 7> font_names{ "bowlby_one_144", "lato_black_24", "lato_black_36",
+        "lato_black_48", "lato_black_72", "lato_black_144", "courier_prime_bold_16" };
     for (const char* name : font_names)
     {
         const auto file = labrador::read_sprite_font_file((game_directory / "fonts" / (std::string(name) + ".spritefont")).string());

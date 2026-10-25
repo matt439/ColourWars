@@ -264,7 +264,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     alternate_look.team_select.selected = Colour(1.0f, 0.30f, 0.20f);
     alternate_look.team_select.unselected = Colour(0.70f, 0.80f, 1.0f);
     auto& alternate_style = const_cast<MenuStyle&>(alternate.menu());
-    alternate_style.heading_font = "gill_sans_mt_bold_48"; alternate_style.detail_font = "gill_sans_mt_bold_24";
+    alternate_style.heading_font = "lato_black_48"; alternate_style.detail_font = "lato_black_24";
     const_cast<MenuText&>(alternate.menu_text()).headings[static_cast<size_t>(MenuHeading::teams)] = L"Choose crews";
     alternate.validate_resources(*app.render_resources(), *app.audio_resources());
     presentation = alternate; compare("assignment-before-refresh-retains-colours", {}, false, false, &original);

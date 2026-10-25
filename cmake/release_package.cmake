@@ -58,6 +58,11 @@ install(FILES "${PROJECT_SOURCE_DIR}/external/labrador/LICENSE"
     DESTINATION licenses RENAME Labrador-LICENSE.txt)
 install(FILES "${PROJECT_SOURCE_DIR}/external/labrador/NOTICE"
     DESTINATION licenses RENAME Labrador-NOTICE.txt)
+install(FILES
+    "${PROJECT_SOURCE_DIR}/game/art/sources/fonts/licenses/Lato-OFL.txt"
+    "${PROJECT_SOURCE_DIR}/game/art/sources/fonts/licenses/BowlbyOne-OFL.txt"
+    "${PROJECT_SOURCE_DIR}/game/art/sources/fonts/licenses/CourierPrime-OFL.txt"
+    DESTINATION licenses/fonts)
 install(FILES "${PROJECT_SOURCE_DIR}/external/rapidjson/license.txt"
     DESTINATION licenses RENAME rapidjson-LICENSE.txt)
 install(FILES "${directxtk_DIR}/copyright"

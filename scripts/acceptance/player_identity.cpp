@@ -62,9 +62,9 @@ namespace
                 this->render.add_sprite_sheet(sheet, read_sprite_sheet(
                     (content / "textures" / (std::string(sheet) + ".json")).string().c_str(), TextureHandle{}));
             }
-            for (const char* font : { "gill_sans_ultra_bold_144", "gill_sans_mt_bold_24",
-                "gill_sans_mt_bold_36", "gill_sans_mt_bold_48", "gill_sans_mt_bold_72",
-                "gill_sans_mt_bold_144", "courier_new_bold_16" })
+            for (const char* font : { "bowlby_one_144", "lato_black_24",
+                "lato_black_36", "lato_black_48", "lato_black_72",
+                "lato_black_144", "courier_prime_bold_16" })
             {
                 const SpriteFontFile file = read_sprite_font_file(
                     (content / "fonts" / (std::string(font) + ".spritefont")).string());

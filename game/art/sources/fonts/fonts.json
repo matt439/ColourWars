@@ -3,7 +3,8 @@
     "The recipe for the seven runtime atlases in game/content/fonts/.",
     "scripts/build-fonts.ps1 runs game/art/tools/MakeSpriteFont.exe once per entry and compares the result with the tracked atlas; -Update writes it over.",
     "cmake/check_sprite_fonts.cmake reads the tracked atlases' headers against this file on every build, and needs neither the tool nor the faces.",
-    "The faces are the machine's installed fonts, not files in this repository: Courier New ships with Windows; both Gill Sans faces ship with Microsoft Office.",
+    "The faces are the OFL files beside this recipe (face_file), licences in licenses/. MakeSpriteFont reads only installed fonts, so build-fonts.ps1 installs them for the current user first.",
+    "line_spacing_adjust is MakeSpriteFont's additive /LineSpacing. It rounds each face's own spacing to a value float sums keep exact (a whole pixel; 239.25 for Bowlby One, whose own 300.75 is mostly vertical-metric headroom and whose two-line title wordmark is laid out on the 239.25 of the face it replaced): 57.6 drifts when added to a position and subtracted back.",
     "character_region is the range game/drawable_text.h accepts; widening it is a locale decision (GAP#L11), not a regeneration."
   ],
   "tool": "game/art/tools/MakeSpriteFont.exe",
@@ -12,19 +13,19 @@
   "texture_format": "CompressedMono",
   "dxgi_format": 74,
   "fonts": [
-    { "file": "courier_new_bold_16.spritefont", "face": "Courier New", "face_file": "courbd.ttf", "size": 16, "style": "Bold",
-      "texture": { "width": 128, "height": 144 }, "line_spacing": 24.166666 },
-    { "file": "gill_sans_mt_bold_24.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 24, "style": "Bold",
-      "texture": { "width": 256, "height": 168 }, "line_spacing": 37.109375 },
-    { "file": "gill_sans_mt_bold_36.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 36, "style": "Bold",
-      "texture": { "width": 512, "height": 172 }, "line_spacing": 55.6640625 },
-    { "file": "gill_sans_mt_bold_48.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 48, "style": "Bold",
-      "texture": { "width": 512, "height": 300 }, "line_spacing": 74.21875 },
-    { "file": "gill_sans_mt_bold_72.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 72, "style": "Bold",
-      "texture": { "width": 1024, "height": 324 }, "line_spacing": 111.328125 },
-    { "file": "gill_sans_mt_bold_144.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 144, "style": "Bold",
-      "texture": { "width": 2048, "height": 616 }, "line_spacing": 222.65625 },
-    { "file": "gill_sans_ultra_bold_144.spritefont", "face": "Gill Sans Ultra Bold", "face_file": "GILSANUB.TTF", "size": 144, "style": "Regular",
-      "texture": { "width": 2048, "height": 852 }, "line_spacing": 239.25 }
+    { "file": "courier_prime_bold_16.spritefont", "face": "Courier Prime", "face_file": "CourierPrime-Bold.ttf", "size": 16, "style": "Bold", "line_spacing_adjust": 0.041666,
+      "texture": { "width": 128, "height": 152 }, "line_spacing": 24 },
+    { "file": "lato_black_24.spritefont", "face": "Lato Black", "face_file": "Lato-Black.ttf", "size": 24, "style": "Regular", "line_spacing_adjust": -0.4,
+      "texture": { "width": 256, "height": 176 }, "line_spacing": 38 },
+    { "file": "lato_black_36.spritefont", "face": "Lato Black", "face_file": "Lato-Black.ttf", "size": 36, "style": "Regular", "line_spacing_adjust": 0.4,
+      "texture": { "width": 512, "height": 180 }, "line_spacing": 58 },
+    { "file": "lato_black_48.spritefont", "face": "Lato Black", "face_file": "Lato-Black.ttf", "size": 48, "style": "Regular", "line_spacing_adjust": 0.2,
+      "texture": { "width": 512, "height": 300 }, "line_spacing": 77 },
+    { "file": "lato_black_72.spritefont", "face": "Lato Black", "face_file": "Lato-Black.ttf", "size": 72, "style": "Regular", "line_spacing_adjust": -0.2,
+      "texture": { "width": 1024, "height": 328 }, "line_spacing": 115 },
+    { "file": "lato_black_144.spritefont", "face": "Lato Black", "face_file": "Lato-Black.ttf", "size": 144, "style": "Regular", "line_spacing_adjust": -0.4,
+      "texture": { "width": 2048, "height": 640 }, "line_spacing": 230 },
+    { "file": "bowlby_one_144.spritefont", "face": "Bowlby One", "face_file": "BowlbyOne-Regular.ttf", "size": 144, "style": "Regular",
+      "line_spacing_adjust": -61.5, "texture": { "width": 2048, "height": 860 }, "line_spacing": 239.25 }
   ]
 }

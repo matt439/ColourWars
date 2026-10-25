@@ -197,7 +197,7 @@ int main(int argc, char** argv)
 
         RenderResources render;
         add_monospace(render);
-        for (const char* name : { "gill_sans_mt_bold_24", "courier_new_bold_16" })
+        for (const char* name : { "lato_black_24", "courier_prime_bold_16" })
         {
             const SpriteFontFile file = read_sprite_font_file(
                 (content / "fonts" / (std::string(name) + ".spritefont")).string());

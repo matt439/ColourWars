@@ -54,9 +54,9 @@
       "selection_inset_fraction": 0.04
     },
     "fonts": {
-      "heading": "gill_sans_mt_bold_72",
-      "item": "gill_sans_mt_bold_48",
-      "detail": "gill_sans_mt_bold_36"
+      "heading": "lato_black_72",
+      "item": "lato_black_48",
+      "detail": "lato_black_36"
     },
     "shadow": {
       "colour": "BLACK",
@@ -78,7 +78,7 @@
       "panel_shadow_offset": { "x": 12.0, "y": 16.0 },
       "scrim_colour": "080F1AC9",
       "brand_position": { "x": 150.0, "y": 48.0 },
-      "brand_font": "gill_sans_mt_bold_24",
+      "brand_font": "lato_black_24",
       "footer_y": 960.0,
       "rule_height": 2.0,
       "icon_padding": { "x": 6.0, "y": 6.0 }
@@ -342,16 +342,16 @@
     "options_value_x": 820.0,
     "options_status_position": { "x": 820.0, "y": 885.0 },
     "credits": {
-      "font": "gill_sans_mt_bold_24",
+      "font": "lato_black_24",
       "heading_position": { "x": 180.0, "y": 80.0 },
       "position": { "x": 180.0, "y": 240.0 },
       "back_position": { "x": 180.0, "y": 840.0 },
-      "text": "ColourWars - Matt Harding\nBuilt with the Labrador engine (MIT).\nMicrosoft - DirectX Tool Kit, DirectXTex, DirectXMath and XAudio2Redist (MIT).\nMicrosoft content tools - XWBTool, MakeSpriteFont and texconv (MIT).\nRapidJSON - THL A29 Limited, a Tencent company, and Milo Yip (MIT).\nCollision routines - Christer Ericson, Real-Time Collision Detection (2005).\nFonts - compiled Gill Sans MT and Courier New glyphs; font files are not included.\nMenu artwork - generated for ColourWars with OpenAI image generation.\n\nAccepted replacement audio sources (CC0):\nJoseph SARDIN / BigSoundBank; OwlishMedia / owlstorm; unkleceeg;\nMateusz Dabrowski / FreePats; Versilian Studios LLC / VCSL.\nOriginal audio arrangements and production code - authored with Codex (MIT).\nFull notices, source credits and licence terms: NOTICE, LICENSE and licenses/\ninside the release folder. Legacy commercial audio is not distributed."
+      "text": "ColourWars - Matt Harding\nBuilt with the Labrador engine (MIT).\nMicrosoft - DirectX Tool Kit, DirectXTex, DirectXMath and XAudio2Redist (MIT).\nMicrosoft content tools - XWBTool, MakeSpriteFont and texconv (MIT).\nRapidJSON - THL A29 Limited, a Tencent company, and Milo Yip (MIT).\nCollision routines - Christer Ericson, Real-Time Collision Detection (2005).\nFonts - Lato, Bowlby One and Courier Prime (SIL Open Font License 1.1).\nMenu artwork - generated for ColourWars with OpenAI image generation.\n\nAccepted replacement audio sources (CC0):\nJoseph SARDIN / BigSoundBank; OwlishMedia / owlstorm; unkleceeg;\nMateusz Dabrowski / FreePats; Versilian Studios LLC / VCSL.\nOriginal audio arrangements and production code - authored with Codex (MIT).\nFull notices, source credits and licence terms: NOTICE, LICENSE and licenses/\ninside the release folder. Legacy commercial audio is not distributed."
     },
     "fonts": {
-      "title": "gill_sans_ultra_bold_144",
-      "announcement": "gill_sans_mt_bold_144",
-      "weapon_description": "gill_sans_mt_bold_24"
+      "title": "bowlby_one_144",
+      "announcement": "lato_black_144",
+      "weapon_description": "lato_black_24"
     },
     "build_id_y": 880.0,
     "backgrounds": {
@@ -404,7 +404,7 @@
       "name_position": { "x": 150.0, "y": 245.0 },
       "navigation_position": { "x": 150.0, "y": 865.0 },
       "record_y": 874.0,
-      "record_font": "gill_sans_mt_bold_24",
+      "record_font": "lato_black_24",
       "briefing": {
         "position": { "x": 1230.0, "y": 245.0 },
         "size": { "x": 540.0, "y": 665.0 },
@@ -447,8 +447,8 @@
     "controls_position": { "x": 1120.0, "y": 210.0 },
     "controls_size": { "x": 620.0, "y": 700.0 },
     "status_position": { "x": 220.0, "y": 888.0 },
-    "item_font": "gill_sans_mt_bold_36",
-    "help_font": "gill_sans_mt_bold_24",
+    "item_font": "lato_black_36",
+    "help_font": "lato_black_24",
     "stick_preview": {
       "raw_movement": { "position": { "x": 1120.0, "y": 315.0 }, "size": { "x": 620.0, "y": 24.0 } },
       "movement_response": { "position": { "x": 1120.0, "y": 395.0 }, "size": { "x": 620.0, "y": 24.0 } },
@@ -541,7 +541,7 @@
     },
     "contribution_position": { "x": 480.0, "y": 635.0 },
     "contribution_spacing": 45.0,
-    "contribution_font": "gill_sans_mt_bold_24",
+    "contribution_font": "lato_black_24",
     "fill": {
       "track_colour": "B8B8B8",
       "box_size": { "x": 700.0, "y": 120.0 },
@@ -576,7 +576,7 @@
     "y is 990 of the 1080 the menus are authored in."
   ],
   "prompt_bar": {
-    "font": "gill_sans_mt_bold_24",
+    "font": "lato_black_24",
     "position": { "x": 150.0, "y": 990.0 },
     "colour": "D4DEEC",
     "shadow_colour": "BLACK",
@@ -592,7 +592,7 @@
       "keyline_width": 2.0,
       "shadow_offset": 4.0
     },
-    "meter_label_font": "gill_sans_mt_bold_24",
+    "meter_label_font": "lato_black_24",
     "meter_track_colour": "B8B8B8",
     "meter_label_gap": 6.0,
     "reference_height": 1080.0,
@@ -609,7 +609,7 @@
     "sprite_sheet": "sprite_sheet_1",
     "fill_frame": "pixel",
     "timer": {
-      "font": "gill_sans_mt_bold_48",
+      "font": "lato_black_48",
       "offset": { "x": 0.0, "y": 0.05 },
       "shadow_offset": { "x": 2.0, "y": 2.0 },
       "colour": "141414",
@@ -629,7 +629,7 @@
       "beat_duration": 0.18
     },
     "player_identity": {
-      "font": "gill_sans_mt_bold_36",
+      "font": "lato_black_36",
       "offset": { "x": 0.03, "y": 0.05 },
       "shadow_offset": { "x": 2.0, "y": 2.0 },
       "colour": "141414",
@@ -956,7 +956,7 @@
     "cursor_size": 0.045,
     "preview_strength": 0.6,
     "figure_grey": "B4B4B4",
-    "percent_font": "gill_sans_ultra_bold_144",
+    "percent_font": "bowlby_one_144",
     "percent_height": 0.11,
     "reveal_art": {
       "_comment": "Coverage stays hidden until the reveal click. Card dimensions are fractions of its height; detached ticks use the existing click age and Reduce effects keeps the settled card.",
@@ -1003,7 +1003,7 @@
   },
 
   "debug_overlay": {
-    "font": "courier_new_bold_16",
+    "font": "courier_prime_bold_16",
     "font_scale": 1.0,
     "line_spacing": 18.0,
     "position": { "x": 0.0, "y": 0.0 },
@@ -1012,7 +1012,7 @@
     "shadow_offset": { "x": 1.0, "y": 1.0 },
     "shadow_scale": 1.0,
     "station_label": {
-      "font": "courier_new_bold_16",
+      "font": "courier_prime_bold_16",
       "scale": 1.0,
       "offset": { "x": 0.0, "y": -76.0 },
       "colour": "YELLOW"

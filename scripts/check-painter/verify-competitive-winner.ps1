@@ -70,7 +70,7 @@
             $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
             $expectedValue = if ($newCopy) { $competitiveWinnerNewValues[$row.session] }
                 elseif ($oldCopy) { $competitiveWinnerOldValues[$row.session] } else { $competitiveWinnerDefaultValues[$row.session] }
-            $expectedFont = if ($newCopy) { 'competitive_winner_braces' } else { 'gill_sans_mt_bold_48' }
+            $expectedFont = if ($newCopy) { 'competitive_winner_braces' } else { 'lato_black_48' }
             if ($row.width -ne $expectedWidth -or $row.height -ne $expectedHeight -or
                 $row.players -ne $expectedState[0] -or $row.best_of -ne $expectedState[1] -or
                 $row.target -ne $expectedState[2] -or $row.complete -ne $expectedState[3] -or

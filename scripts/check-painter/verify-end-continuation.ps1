@@ -61,7 +61,7 @@
             $expectedFocus = if ($row.case -eq 'legacy-secondary') { '1' } else { '0' }
             $expectedPending = if ($row.case -eq 'pending-music') { 'true' } else { 'false' }
             $newCopy = $row.case -in @('reopened-new', 'retained-new', 'resized-1080', 'resized-720')
-            $expectedFont = if ($newCopy) { 'end_continuation_numeric_letters' } else { 'gill_sans_mt_bold_48' }
+            $expectedFont = if ($newCopy) { 'end_continuation_numeric_letters' } else { 'lato_black_48' }
             $expectedValue = if ($newCopy) { $endContinuationNewValues[$row.session] }
                 elseif ($row.case -in @('old-primary', 'retained-old', 'pending-music')) { $endContinuationOldValues[$row.session] }
                 else { $endContinuationLegacyValues[$row.session] }

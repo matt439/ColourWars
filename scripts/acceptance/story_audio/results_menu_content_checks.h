@@ -14,7 +14,7 @@ namespace
 			menu.session_score_y == 340.0f && menu.session_result_y == 405.0f &&
 			menu.proceed_y == 880.0f &&
 			menu.contribution_position == mattmath::Vector2F(480.0f, 635.0f) &&
-			menu.contribution_spacing == 45.0f && menu.contribution_font == "gill_sans_mt_bold_24",
+			menu.contribution_spacing == 45.0f && menu.contribution_font == "lato_black_24",
 			"Shipped results text placement was not retained by the presentation reader");
 		require(menu.art.ink == Colour("1B1C20") && menu.art.paper == Colour("F0F0ED") &&
 			menu.art.shade == Colour("00000035") && menu.art.focus_fill == Colour("D5D5CF") &&

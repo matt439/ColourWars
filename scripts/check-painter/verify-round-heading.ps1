@@ -63,7 +63,7 @@
             $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
             $expectedValue = if ($newCopy) { $roundHeadingNewValues[$row.session] }
                 elseif ($oldCopy) { $roundHeadingOldValues[$row.session] } else { $roundHeadingDefaultValues[$row.session] }
-            $expectedFont = if ($newCopy) { 'round_heading_caret' } else { 'gill_sans_mt_bold_72' }
+            $expectedFont = if ($newCopy) { 'round_heading_caret' } else { 'lato_black_72' }
             $expectedScore = if ($row.session -eq 'single') { 'Wins: A 1 - B 0  |  First to 1' }
                 else { 'Wins: A 0 - B 0  |  First to 2' }
             $expectedOutcome = if ($row.session -eq 'single') { 'Team A wins the series!' }

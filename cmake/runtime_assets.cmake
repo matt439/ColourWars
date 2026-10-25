@@ -5,13 +5,13 @@ set(COLOURWARS_RUNTIME_ASSETS
     manifest.json
     tuning.json
     presentation.json
-    fonts/courier_new_bold_16.spritefont
-    fonts/gill_sans_mt_bold_24.spritefont
-    fonts/gill_sans_mt_bold_36.spritefont
-    fonts/gill_sans_mt_bold_48.spritefont
-    fonts/gill_sans_mt_bold_72.spritefont
-    fonts/gill_sans_mt_bold_144.spritefont
-    fonts/gill_sans_ultra_bold_144.spritefont
+    fonts/courier_prime_bold_16.spritefont
+    fonts/lato_black_24.spritefont
+    fonts/lato_black_36.spritefont
+    fonts/lato_black_48.spritefont
+    fonts/lato_black_72.spritefont
+    fonts/lato_black_144.spritefont
+    fonts/bowlby_one_144.spritefont
     textures/sprite_sheet_1.dds
     textures/sprite_sheet_1.json
     textures/painter.dds

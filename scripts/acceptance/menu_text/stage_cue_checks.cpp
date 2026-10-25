@@ -71,8 +71,8 @@ namespace menu_text_acceptance
                     style.unhighlight, style.shadow_colour, captured_shadow);
                 text.set_text(source);
                 source = L"Changed after set_text";
-                style.brand_font = "gill_sans_mt_bold_48";
-                style.detail_font = "gill_sans_mt_bold_48";
+                style.brand_font = "lato_black_48";
+                style.detail_font = "lato_black_48";
                 stage.navigation_position += mattmath::Vector2F(40.0f, 40.0f);
                 stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
                 if (!entry.hint)
@@ -368,7 +368,7 @@ namespace menu_text_acceptance
                 source = L"Changed after set_text";
                 const auto expected = mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured),
                     mattmath::RectangleF(point + shadow, measured));
-                style.detail_font = "gill_sans_mt_bold_24";
+                style.detail_font = "lato_black_24";
                 style.detail_shadow_offset = mattmath::Vector2F(10.0f, 10.0f);
                 stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
                 status.set_text(retained);

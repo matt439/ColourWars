@@ -66,7 +66,7 @@
             $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
             $expectedValue = if ($newCopy) { $contributionTeamNewValues[$rowNumber] }
                 elseif ($oldCopy) { $contributionTeamOldValues[$rowNumber] } else { $contributionTeamDefaultValues[$rowNumber] }
-            $expectedFont = if ($newCopy) { 'contribution_team_braces' } else { 'gill_sans_mt_bold_24' }
+            $expectedFont = if ($newCopy) { 'contribution_team_braces' } else { 'lato_black_24' }
             if ($row.width -ne $expectedWidth -or $row.height -ne $expectedHeight -or
                 $row.device_slot -ne $expectedState[0] -or $row.paint_owner -ne $expectedState[1] -or
                 $row.team -cne $expectedState[2] -or $row.percentage_literal -cne $expectedState[3] -or

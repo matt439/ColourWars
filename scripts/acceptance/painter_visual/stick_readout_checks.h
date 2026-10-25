@@ -10,7 +10,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     words.raw_movement = L"Raw left {value}%"; words.movement_response = L"Output move {value}%";
     words.aim_inactive = L"Stick X = {raw_x}%\nStick Y = {raw_y}%\nAim idle\nHollow = raw\nSolid = aim";
     words.aim_active = L"Stick X = {raw_x}%\nStick Y = {raw_y}%\nDirection X = {aim_x}%\nDirection Y = {aim_y}%\nHollow = raw\nSolid = aim";
-    const_cast<ControlsSettingsPresentation&>(replacement.controls_settings()).help_font = "courier_new_bold_16";
+    const_cast<ControlsSettingsPresentation&>(replacement.controls_settings()).help_font = "courier_prime_bold_16";
     replacement.validate_resources(*app.render_resources(), *app.audio_resources());
     const NestedSaveProfile isolated(output / "stick-readout-profile");
     const auto save_path = output / "stick-readout-profile/ColourWars/save_data.json";

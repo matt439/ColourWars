@@ -42,7 +42,7 @@ public:
             look_.closing_clock.beat_duration == .18f && look_.player_identity_padding == Vector2F(16, 10) &&
             look_.timer_offset == Vector2F(0, .05f) && look_.timer_reference_width == 1920 &&
             look_.player_identity_reference_width == 1920 && look_.reference_height == 1080 &&
-            look_.timer_font == "gill_sans_mt_bold_48" && look_.sprite_sheet == "sprite_sheet_1" && look_.fill_frame == "pixel",
+            look_.timer_font == "lato_black_48" && look_.sprite_sheet == "sprite_sheet_1" && look_.fill_frame == "pixel",
             "Closing materials require the declared authored colours, clock geometry and source resources");
         const std::array<std::string, 3> names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };
         for (size_t i = 0; i < names.size(); ++i)

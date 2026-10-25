@@ -66,7 +66,7 @@
             $oldCopy = $row.case -in @('old-primary', 'retained-old', 'old-1080', 'old-return720')
             $expectedValue = if ($newCopy) { $seriesScoreNewValues[$row.session] }
                 elseif ($oldCopy) { $seriesScoreOldValues[$row.session] } else { $seriesScoreDefaultValues[$row.session] }
-            $expectedFont = if ($newCopy) { 'series_score_caret' } else { 'gill_sans_mt_bold_36' }
+            $expectedFont = if ($newCopy) { 'series_score_caret' } else { 'lato_black_36' }
             if ($row.width -ne $expectedWidth -or $row.height -ne $expectedHeight -or
                 $row.best_of -ne $expectedState[0] -or $row.target -ne $expectedState[1] -or
                 $row.complete -ne $expectedState[2] -or $row.round -ne $expectedState[3] -or

@@ -812,7 +812,7 @@ Two required `menu_text.confirmations` strings supply the existing questions:
 They use the same normalized, nonblank, single-line content rules as the other
 plain menu strings. Startup checks the actual `menu_style.fonts.detail` glyphs
 and requires finite, positive measured bounds. The shipped font remains
-`gill_sans_mt_bold_36`.
+`lato_black_36`.
 
 Questions keep their plain, unscaled drawing style. Their actual glyph rectangle
 is centered horizontally within the full 1920 by 1080 design area at
@@ -877,7 +877,7 @@ Three required `menu_text.end` strings supply the existing completion headings:
 
 The normalized, nonblank, single-line content rules apply. Startup checks the
 actual `menu_style.fonts.heading` glyphs and finite, positive measured bounds.
-The shipped heading font remains `gill_sans_mt_bold_72`.
+The shipped heading font remains `lato_black_72`.
 
 Headings keep their plain, unscaled drawing style. Their actual glyph rectangle
 is centered horizontally within the full 1920 by 1080 design area at
@@ -915,9 +915,9 @@ Nine required `menu_text.items` roles supply the existing settings labels:
 
 Both pages reuse `menu_text.items.apply` and `menu_text.items.back`, at Controls
 rows 6/7 and Pad Sticks rows 3/4. All thirteen uses draw plain text with
-`controls_settings.item_font`, shipped as `gill_sans_mt_bold_36`. This is a
-separate context from `menu_style.fonts.item` (`gill_sans_mt_bold_48`) and from
-the shared heading font (`gill_sans_mt_bold_72`). Shared Apply/Back labels are
+`controls_settings.item_font`, shipped as `lato_black_36`. This is a
+separate context from `menu_style.fonts.item` (`lato_black_48`) and from
+the shared heading font (`lato_black_72`). Shared Apply/Back labels are
 checked in each font and page where they appear.
 
 The normalized, nonblank, single-line rules apply. Startup checks actual font
@@ -954,7 +954,7 @@ connection and live readout strings use the separate
 ### Controls / audio and Pad Sticks help
 
 The required `menu_text.help` object supplies three fixed strings. All use
-`controls_settings.help_font`, shipped as `gill_sans_mt_bold_24`; they do not use
+`controls_settings.help_font`, shipped as `lato_black_24`; they do not use
 the separate controls item font or shared menu detail font.
 
 | Key | Use |
@@ -1065,7 +1065,7 @@ messages:
 Each field follows the shared normalized, nonblank, single-line text rules.
 These are complete display messages, with no placeholders or runtime
 formatting. Options uses `prompt_bar.font`; Controls and Pad Sticks use
-`controls_settings.help_font`. Both fonts ship as `gill_sans_mt_bold_24` but
+`controls_settings.help_font`. Both fonts ship as `lato_black_24` but
 remain separate contexts. Controls and Pad Sticks share the font and placement
 of `active_save_failed`.
 
@@ -1114,8 +1114,8 @@ The required `menu_text.values` object supplies three existing setting values:
 | `random` | `Random` | Options Team palette's random choice; Stage Select's Random display name |
 
 Each value follows the shared normalized, nonblank, single-line rules. Options
-values use `menu_style.fonts.item`, shipped as `gill_sans_mt_bold_48`; Controls
-values use `controls_settings.item_font`, shipped as `gill_sans_mt_bold_36`.
+values use `menu_style.fonts.item`, shipped as `lato_black_48`; Controls
+values use `controls_settings.item_font`, shipped as `lato_black_36`.
 Startup checks actual font glyphs and finite, positive raw and fitted bounds in
 each applicable context. The shared On/Off strings are checked in both fonts.
 The nine settings contexts are Options On/Off at row 1 and Random at row 2,
@@ -1173,7 +1173,7 @@ is added. The same string continues to supply Options' random team-palette
 choice, with its separate `OptionRow` fit.
 
 The Stage Select name uses `menu_style.fonts.item`, shipped as
-`gill_sans_mt_bold_48`, and the existing `UiTextDropShadow` style. Its raw bounds
+`lato_black_48`, and the existing `UiTextDropShadow` style. Its raw bounds
 are the union of the actual font's text bounds at zero and those same bounds
 translated by `menu_style.shadow.item_offset`. The existing width-only fit is
 `min(1, main_menu.stage_select.preview_size.x / raw_width)`. Text and shadow use
@@ -1215,7 +1215,7 @@ Two required `menu_text.stage` strings supply the existing selection status:
 | `locked_status` | `ARENA LOCKED` | Confirmed stage choice |
 
 The shared normalized, nonblank, single-line content rules apply. Status text
-uses `menu_style.fonts.detail`, shipped as `gill_sans_mt_bold_36`, with the
+uses `menu_style.fonts.detail`, shipped as `lato_black_36`, with the
 existing `UiTextDropShadow` style and no fitting scale. Startup checks actual
 font glyphs and finite, positive measured text and union sizes. The text starts
 at `main_menu.stage_select.briefing.position` plus `briefing_padding` plus six
@@ -1272,7 +1272,7 @@ Most painted surface wins.
 ```
 
 All four roles use the actual `menu_style.chrome.brand_font`, shipped as
-`gill_sans_mt_bold_24`, and the existing unscaled `UiTextDropShadow` style with
+`lato_black_24`, and the existing unscaled `UiTextDropShadow` style with
 `menu_style.shadow.detail_offset`. Startup checks actual font glyphs and finite,
 positive measured text and union sizes. A role's text rectangle starts at the
 briefing position plus padding plus its row multiplied by `briefing.spacing`;
@@ -1286,13 +1286,13 @@ The panel and union sizes must be finite and positive, and positions and
 shadow offsets must be finite. These roles keep their unscaled bounds without
 shrinking or upscaling.
 
-The shipped solo objective measures 524 pixels wide including its shadow, from
-x = 1262 to 1786. It extends 16 pixels beyond the briefing panel's right edge at
-1770. The horizontal design-area boundary preserves this existing wording and
-layout.
+The shipped solo objective measures 488 pixels wide including its shadow, from
+x = 1262 to 1750, inside the briefing panel's right edge at 1770. It overhung
+that edge by 16 pixels in the face the shipped fonts replaced, and the
+horizontal design-area boundary still accepts an overhang like it.
 
-The paper artwork above encloses this overhang with pen/shadow clearance while
-retaining the logical briefing rectangle and existing fitting budget.
+The paper artwork above encloses any such overhang with pen/shadow clearance
+while retaining the logical briefing rectangle and existing fitting budget.
 
 Each page takes the four roles from its captured `MenuText` and chooses the
 same solo or multiplayer objective during construction. The briefing widgets
@@ -1314,7 +1314,7 @@ Two more required `menu_text.stage` strings supply the fixed mode labels:
 | `single_match_mode` | `SINGLE MATCH` | Multiple players with best-of equal to one |
 
 Both use the normalized, nonblank, single-line rules. They retain the actual
-`menu_style.fonts.detail`, shipped as `gill_sans_mt_bold_36`, and the unscaled
+`menu_style.fonts.detail`, shipped as `lato_black_36`, and the unscaled
 `UiTextDropShadow` style. The text starts at the briefing position plus padding
 plus `briefing.spacing`, and its shadow has the same size at that position plus
 `menu_style.shadow.detail_offset`. Startup checks the actual font glyphs and
@@ -1362,7 +1362,7 @@ Confirm to lock your choice.
 ```
 
 Random navigation uses the actual `menu_style.fonts.detail`, shipped as
-`gill_sans_mt_bold_36`, and the unscaled `UiTextDropShadow` style at
+`lato_black_36`, and the unscaled `UiTextDropShadow` style at
 `main_menu.stage_select.navigation_position`. Its signed shadow uses
 `menu_style.shadow.detail_offset`. Startup checks actual font glyphs and finite,
 positive measured text and union sizes, with finite positions and shadow
@@ -1374,7 +1374,7 @@ with either the full briefing panel or the preview rectangle expanded by
 its unscaled text and shadow without automatic wrapping or fitting.
 
 The hints use the actual `menu_style.chrome.brand_font`, shipped as
-`gill_sans_mt_bold_24`, at the briefing position plus padding plus seven times
+`lato_black_24`, at the briefing position plus padding plus seven times
 `briefing.spacing`. Their existing width-only fit measures the union of the
 raw text rectangle at zero and the same rectangle translated by the signed
 detail shadow offset. The width budget is

@@ -208,7 +208,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     open(4); painter_scripted_pads::states[3].connected = false; tick(); missing = true; compare("missing-recovery", original, L"Team Select");
     tap(0, GamepadButton::b); require(frame().pixels == destination(false).pixels, "Missing Team player rescue failed its Count route");
     Presentation old = original, next = original; const_cast<MenuText&>(old.menu_text()).headings[static_cast<size_t>(MenuHeading::teams)] = L"Teams~"; const_cast<MenuText&>(next.menu_text()).headings[static_cast<size_t>(MenuHeading::teams)] = L"Pick Teams";
-    auto& next_style = const_cast<MenuStyle&>(next.menu()); next_style.heading_font = "gill_sans_mt_bold_48"; next_style.detail_font = "gill_sans_mt_bold_24";
+    auto& next_style = const_cast<MenuStyle&>(next.menu()); next_style.heading_font = "lato_black_48"; next_style.detail_font = "lato_black_24";
     auto& next_look = const_cast<MainMenuPresentation&>(next.main_menu()); next_look.art.paper = Colour(0.90f, 0.95f, 0.98f); next_look.art.focus_fill = Colour(0.80f, 0.85f, 0.90f); next_look.art.ink = Colour(0.04f, 0.09f, 0.17f);
     next_look.team_select.unselected = Colour(0.70f, 0.80f, 1.0f); next_look.team_select.selected = Colour(1.0f, 0.30f, 0.20f);
     next_look.team_select_sheet = "menu_paint"; next_look.team_select_frames.fill("backdrop"); next_look.team_select_selected_frames.fill("backdrop"); next_look.team_warning_position += Vector2F(4.0f, 0.0f);

@@ -24,7 +24,7 @@
                 "with player_input.cpp and a copy in a data file would drift.",
                 "y is a fraction of the screen height, under the countdown."
             ],
-            "font": "gill_sans_mt_bold_24",
+            "font": "lato_black_24",
             "colour": "WHITE_SMOKE",
             "shadow_colour": "BLACK",
             "shadow_offset": { "x": 2.0, "y": 2.0 },
