@@ -179,7 +179,6 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F6` | BLOCKED | LOW | S | Rumble (`set_vibration`, capabilities): the exhibit is `ROAD#9`'s isolated XInput file; draft once it lands, filing needs authorisation. The FPS half was answered by report 14 (`Application::frame_timings`). |
 | `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
-| `ENG#24` | DECISION | LOW | S | Debug `AudioDevice` breaks with no audio endpoint; the movement feedback probe steps over XAudio2's breaks. Author authorization to file remains. [Report](docs/review/engine-reports.md#24-a-debug-audiodevice-breaks-into-the-debugger-on-a-machine-with-no-audio-endpoint--draft-with-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

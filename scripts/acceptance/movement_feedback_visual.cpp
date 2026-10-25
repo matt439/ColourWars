@@ -33,16 +33,9 @@ namespace
 
     // A Debug engine asks its debug layers to break on error, and with no
     // debugger attached a break is an uncaught STATUS_BREAKPOINT that ends the
-    // probe with nothing on stdout or stderr. Every break is stepped over.
-    //
-    // XAudio2's are expected: the Debug AudioEngine sets XAudio2's break mask
-    // to errors, and a machine with no audio endpoint (every CI runner) breaks
-    // twice creating it before DirectXTK falls back to silence. The probe is
-    // muted and claims nothing about audio, so those are counted and reported
-    // on stdout. Any other break fails the next check, with its stack and the
-    // stored DXGI/D3D11 messages.
+    // probe with nothing on stdout or stderr. Every break is stepped over and
+    // fails the next check, with its stack and the stored DXGI/D3D11 messages.
     std::atomic<int> debug_breaks{ 0 };
-    std::atomic<int> audio_debug_breaks{ 0 };
     struct DebugBreakStack { USHORT frames = 0; void* addresses[24] = {}; };
     DebugBreakStack debug_break_stacks[4];
 
@@ -52,16 +45,6 @@ namespace
             *reinterpret_cast<const unsigned char*>(exception->ContextRecord->Rip) != 0xCC)
         {
             return EXCEPTION_CONTINUE_SEARCH;
-        }
-        HMODULE module = nullptr;
-        if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                static_cast<LPCWSTR>(exception->ExceptionRecord->ExceptionAddress), &module) &&
-            module != nullptr && module == GetModuleHandleW(L"XAudio2_9Redist.dll"))
-        {
-            ++audio_debug_breaks;
-            ++exception->ContextRecord->Rip;
-            return EXCEPTION_CONTINUE_EXECUTION;
         }
         const int index = debug_breaks++;
         if (index < static_cast<int>(std::size(debug_break_stacks)))
@@ -136,7 +119,7 @@ namespace
         {
             std::cerr << "debug layer: no DXGI info queue to read the messages from\n";
         }
-        throw std::runtime_error("a debug layer other than XAudio2's broke");
+        throw std::runtime_error("a debug layer broke");
     }
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
@@ -696,11 +679,6 @@ int wmain(int argc, wchar_t** argv)
         Application app(options);
         app.initialize();
         require_no_debug_breaks("device creation");
-        if (audio_debug_breaks.load() > 0)
-        {
-            std::cout << "AUDIO debug breaks stepped over: " << audio_debug_breaks.load()
-                << " (XAudio2 found no usable endpoint; the probe is muted)\n";
-        }
         const auto& device = app.renderer()->device_info();
         const char* device_kind = "unknown";
         switch (device.kind)

@@ -147,9 +147,8 @@ changed / 64 readable minimum again in the Debug probe on CI.
 
 Four-player panes now frame at least 1280 world units. Team B's views start
 pinned to the arena's right edge, so a jump from a 170-unit inset barely panned
-(11.4 of the required 16 units in view 2). A 120-unit inset panned but landed one
-Team B player off the runway, so the route probe now starts Team B's jump 150
-units in. Gameplay is unchanged; this only moves where the
+(11.4 of the required 16 units in view 2). A 120-unit inset panned but failed a Team B
+landing check, so the route probe now starts Team B's jump 150 units in. Gameplay is unchanged; this only moves where the
 scripted check jumps.
 
 ## Reproduce the checks

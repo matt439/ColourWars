@@ -6,8 +6,8 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Two are live as unfiled drafts with exhibits (23, 24), found after the
-> engine's last answers. Twenty-two are closed** and kept below as one paragraph
+> **One is live as an unfiled draft with an exhibit (23), found after the
+> engine's last answers. Twenty-three are closed** and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
@@ -71,6 +71,11 @@ commits, and they answered every live report, 6 and 9-22: each has a recorded
 decision and all fifteen are now [closed](#closed). One source break, from
 report 13's answer. See
 [What the 2026-10-22 bump changed](#what-the-2026-10-22-bump-changed).
+
+**Moved 2026-10-25 to upstream master `1e60fb2`** (`v0.2.0`). Fifteen commits,
+and one of them, `814f2ee`, answered report 24 the day it was drafted, without
+it being filed. See
+[What the 2026-10-25 bump changed](#what-the-2026-10-25-bump-changed).
 
 ## The rule that governs this file
 
@@ -156,9 +161,8 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | prepared and qualified locally 2026-10-24; upstream checked 02:24:30 UTC at pin `19cf650`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
-| 24 | A Debug `AudioDevice` breaks into the debugger on a machine with no audio endpoint | `step_over_debug_break` in [movement_feedback_visual.cpp](../../scripts/acceptance/movement_feedback_visual.cpp) | drafted 2026-10-25 against upstream master `6be26c9`; unfiled |
 
-Nothing else is outstanding, on either side, beyond reports 23 and 24 below and the
+Nothing else is outstanding, on either side, beyond report 23 below and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -236,57 +240,9 @@ hidden/not-foreground requirement as the regression check.
 
 ---
 
-## 24. A Debug `AudioDevice` breaks into the debugger on a machine with no audio endpoint — **draft with exhibit**
-
-Found 2026-10-25 while finding out why the Debug CI job had failed at the
-movement feedback step on every run since that step was added. Checked
-against the pin `19cf650` and upstream master `6be26c9`, where the code is
-unchanged.
-
-### What happens
-
-`AudioDevice::AudioDevice` (`engine/audio/xaudio2/audio_device.cpp`) adds
-`AudioEngine_Debug` in `_DEBUG` builds. DirectXTK's `AudioEngine` then sets
-XAudio2's debug configuration to break on errors. On a machine with no audio
-endpoint, a GitHub-hosted Windows runner for one, XAudio2 logs two errors
-inside `AudioEngine::Impl::Reset` while DirectXTK goes on to fall back to
-silence, and each error is an `int 3`. Under a debugger that is a stop. With
-none attached the process dies with `STATUS_BREAKPOINT` (`-2147483645`)
-inside `Application::initialize`, before it has printed anything. Release is
-unaffected.
-
-The engine already treats a missing audio device as an ordinary condition:
-DirectXTK runs silent and the client's optional-bank fallback is built
-around it. Only the Debug break turns that condition into a crash.
-
-### Exhibit
-
-`step_over_debug_break` in
-[movement_feedback_visual.cpp](../../scripts/acceptance/movement_feedback_visual.cpp):
-a vectored exception handler that steps over every `int 3`. It counts the
-ones raised inside `XAudio2_9Redist.dll` and reports them on stdout. Any
-other break fails the probe with its stack and the stored DXGI/D3D11
-messages. Before it, the Debug CI job could not get past this step.
-
-### The ask
-
-A Debug `AudioDevice` that does not break when there is no endpoint. Either
-drop `AudioEngine_Debug`, or keep XAudio2's debug logging and leave its
-`BreakMask` empty (DirectXTK has no flag for that, so it would mean setting
-`XAUDIO2_DEBUG_CONFIGURATION` after construction), or let the client opt out
-through `ApplicationOptions`.
-
-### What an answer lets this repository delete
-
-The XAudio2 branch of `step_over_debug_break`. The handler itself can stay,
-because it is what makes a Direct3D debug-layer break report its cause
-instead of ending the probe silently.
-
----
-
 # Closed
 
-Twenty-two reports, all answered. Fifteen were spent here in code. Seven
+Twenty-three reports, all answered. Sixteen were spent here in code. Seven
 spent nothing in code: 1 was fixed before it was filed; 9 and 10 were answered
 as document only, and those two changed only comments and
 docs; 15 was answered as document only, 17 changed only a manifest comment, 19
@@ -298,7 +254,8 @@ with it. The original bodies are in git — see
 for 7 and 8, the parent of `7041dc1` for 13 and 21, `a0e6f7e` for 11, 16,
 17 and 19, the parent of `07e4879` for 9, 10 and 14, the parent of
 `c657dd1` for 18, 20 and 22, and the parents of `759d2e1`, `52b6aeb` and
-`c0691fd` for 6, 12 and 15.
+`c0691fd` for 6, 12 and 15, and the parent of the commit that moved the pin
+to `1e60fb2` for 24.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -1230,6 +1187,29 @@ not foresee the atomic name setters.
 
 ---
 
+## 24. ~~A Debug `AudioDevice` breaks into the debugger on a machine with no audio endpoint~~ — `814f2ee`
+
+Found 2026-10-25, when the Debug CI job's movement feedback probe and then
+its startup check died with `STATUS_BREAKPOINT` on a GitHub runner. A Debug
+`AudioDevice` passed DirectXTK's `AudioEngine_Debug`, which sets XAudio2's
+break mask to errors. With no audio endpoint, XAudio2 hit `int 3` twice while
+DirectXTK fell back to silence, and with no debugger attached that ended the
+process. The ask was a Debug device that does not break there: drop the flag,
+empty the break mask, or an opt-out. **Answered the same day, unfiled**, in
+"Keep a debug build running where there is no audio endpoint". The engine's
+own template startup check had found the same crash. The debug layer is now
+asked for only when `IsDebuggerPresent()`, so a Debug build without a
+debugger goes silent exactly as Release does. A parallel engine pull request
+from this repository, which kept the trace and emptied the break mask, was
+closed as superseded.
+
+**Spent:** the XAudio2 branch of `step_over_debug_break` in
+[movement_feedback_visual.cpp](../../scripts/acceptance/movement_feedback_visual.cpp)
+and its stdout count were deleted. The handler stays, because it makes any
+other debug-layer break report its stack instead of ending the probe
+silently. The Debug startup check now passes on a runner with no change on
+this side.
+
 # What is deliberately not here
 
 Re-checked 2026-08-15 against `6b5c0bd`; citations re-pointed 2026-09-17 at
@@ -1726,3 +1706,29 @@ not reopen the answered engine reports.
 
 **Validation:** this commit built `x64-debug` and passed Debug consumer
 acceptance; the closing commits record their own.
+
+# What the 2026-10-25 bump changed
+
+Moved from `19cf650` to upstream master at `1e60fb2`, `v0.2.0`: fifteen
+commits. One answered [report 24](#24-a-debug-audiodevice-breaks-into-the-debugger-on-a-machine-with-no-audio-endpoint--814f2ee).
+The rest are additive, or belong to the engine's template and website.
+
+Three silent changes reach this game, as the engine's `CHANGES.md` lists them
+under `v0.2.0`:
+
+- **A Debug build runs silent with no audio endpoint** unless a debugger is
+  attached (`814f2ee`), which is report 24's answer.
+- **A scene's collision objects keep the order they were added in**, through
+  retirement, and so draw in that order. Projectiles retire constantly here.
+  Both presets' consumer acceptance and the movement feedback
+  probe pass with the new order.
+- **A browser build defaults to the `gl` render backend.** That does not reach
+  a Windows build.
+
+The new names (`Camera`'s world point under a pixel, `StepTimer`'s
+`step_position`, the reserved `engine:white` texture, removing any object at
+the end of a tick) are not used here yet. No source break.
+
+**Validation:** the CI run on pull request #3 at this pin, `x64-debug` and
+`x64-release`: build, consumer acceptance, the movement feedback probe, the
+startup check and, in Release, the package.
