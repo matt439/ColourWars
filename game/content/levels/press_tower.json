@@ -1,0 +1,1008 @@
+{
+    "format": 1,
+    "_comment": [
+        "Press Tower: a printworks King of the Hill, mirrored about X 1800; design and validation: docs/polish-press-tower.md.",
+        "Required route: drop from home and walk up ramp_a, across the raised press bed and down ramp_b. Every higher route is optional.",
+        "The press head is the summit: from it a holder sees both home roofs and gantries but no floor, bed, frame or spawn body.",
+        "Optional climbs are the stair (four 80-unit taps or held jumps) and the hoist (bed to frame to shoulder, two held jumps, then a tap).",
+        "Ramps support players but pass paint. Rulers are one-way supports, solid to projectiles; press_base is covered and never scores.",
+        "Interior dressing only: works wall, skylights, roof truss and hanging signs; no sun, clouds or hills.",
+        "Explicit-only, excluded from Random until attended arena acceptance. King of the Hill's original file is kept unchanged beside it.",
+        "Reuses accepted King of the Hill audio and icon; this does not create a new cue or claim listening acceptance."
+    ],
+    "display_name": "Press Tower",
+    "include_in_random": false,
+    "icon_frame": "stage_king_of_the_hill",
+    "sound": {
+        "sound_bank_name": "paint_exe",
+        "music_name": "music.king_of_the_hill",
+        "music_volume": 0.65,
+        "end_sting_name": "music.end_sting.king_of_the_hill",
+        "end_sting_volume": 0.65
+    },
+    "spawn_locations": {
+        "team_a": [
+            {
+                "x": 30,
+                "y": 1000
+            },
+            {
+                "x": 150,
+                "y": 1000
+            },
+            {
+                "x": 270,
+                "y": 1000
+            },
+            {
+                "x": 390,
+                "y": 1000
+            }
+        ],
+        "team_b": [
+            {
+                "x": 3518,
+                "y": 1000
+            },
+            {
+                "x": 3398,
+                "y": 1000
+            },
+            {
+                "x": 3278,
+                "y": 1000
+            },
+            {
+                "x": 3158,
+                "y": 1000
+            }
+        ]
+    },
+    "stations": [
+        {
+            "name": "press_head_a",
+            "x": 1684,
+            "y": 680
+        },
+        {
+            "name": "press_head_b",
+            "x": 1864,
+            "y": 680
+        },
+        {
+            "name": "crown",
+            "x": 1774,
+            "y": 620
+        },
+        {
+            "name": "press_bed",
+            "x": 1774,
+            "y": 1080
+        },
+        {
+            "name": "shoulder_a",
+            "x": 1534,
+            "y": 760
+        },
+        {
+            "name": "shoulder_b",
+            "x": 2014,
+            "y": 760
+        },
+        {
+            "name": "frame_a",
+            "x": 1534,
+            "y": 920
+        },
+        {
+            "name": "frame_b",
+            "x": 2014,
+            "y": 920
+        },
+        {
+            "name": "stair_3_a",
+            "x": 1374,
+            "y": 760
+        },
+        {
+            "name": "stair_3_b",
+            "x": 2174,
+            "y": 760
+        },
+        {
+            "name": "stair_2_a",
+            "x": 1214,
+            "y": 840
+        },
+        {
+            "name": "stair_2_b",
+            "x": 2334,
+            "y": 840
+        },
+        {
+            "name": "gantry_a",
+            "x": 734,
+            "y": 840
+        },
+        {
+            "name": "gantry_b",
+            "x": 2814,
+            "y": 840
+        },
+        {
+            "name": "catwalk_a",
+            "x": 894,
+            "y": 1000
+        },
+        {
+            "name": "catwalk_b",
+            "x": 2654,
+            "y": 1000
+        },
+        {
+            "name": "yard_a",
+            "x": 1214,
+            "y": 1160
+        },
+        {
+            "name": "yard_b",
+            "x": 2334,
+            "y": 1160
+        }
+    ],
+    "level_bounds": {
+        "out_of_bounds": {
+            "x": -100,
+            "y": -100,
+            "width": 3800,
+            "height": 1900
+        },
+        "camera_bounds": {
+            "x": 0,
+            "y": 380,
+            "width": 3600,
+            "height": 1000
+        },
+        "zoom_out_start_bounds": {
+            "x": 0,
+            "y": 380,
+            "width": 1920,
+            "height": 1080
+        },
+        "zoom_out_finish_bounds": {
+            "x": 0,
+            "y": 380,
+            "width": 3600,
+            "height": 1000
+        }
+    },
+    "collision_objects": [
+        {
+            "name": "boundary_wall_left",
+            "type": "Structure",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": -80,
+                "y": 0,
+                "width": 80,
+                "height": 1680
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "GAINSBORO"
+        },
+        {
+            "name": "boundary_wall_right",
+            "type": "Structure",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3600,
+                "y": 0,
+                "width": 80,
+                "height": 1680
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "GAINSBORO"
+        },
+        {
+            "name": "floor_home_a",
+            "type": "StructurePaintable",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0,
+                "y": 1280,
+                "width": 520,
+                "height": 400
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "floor_yard_a",
+            "type": "StructurePaintable",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 520,
+                "y": 1280,
+                "width": 800,
+                "height": 400
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "press_base",
+            "type": "Structure",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1320,
+                "y": 1280,
+                "width": 960,
+                "height": 400
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "GAINSBORO"
+        },
+        {
+            "name": "floor_yard_b",
+            "type": "StructurePaintable",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2280,
+                "y": 1280,
+                "width": 800,
+                "height": 400
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "floor_home_b",
+            "type": "StructurePaintable",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3080,
+                "y": 1280,
+                "width": 520,
+                "height": 400
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "home_floor_a",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0,
+                "y": 1120,
+                "width": 520,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "home_roof_a",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0,
+                "y": 960,
+                "width": 520,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "catwalk_a",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 520,
+                "y": 1120,
+                "width": 480,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "gantry_a",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 520,
+                "y": 960,
+                "width": 480,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "stair_1_a",
+            "type": "StructurePaintable",
+            "material": "pencil",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1000,
+                "y": 1040,
+                "width": 160,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "stair_2_a",
+            "type": "StructurePaintable",
+            "material": "pencil",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1160,
+                "y": 960,
+                "width": 160,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "stair_3_a",
+            "type": "StructurePaintable",
+            "material": "pencil",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1320,
+                "y": 880,
+                "width": 160,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "frame_a",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1480,
+                "y": 1040,
+                "width": 160,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "shoulder_a",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1480,
+                "y": 880,
+                "width": 160,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "home_floor_b",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3080,
+                "y": 1120,
+                "width": 520,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "home_roof_b",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3080,
+                "y": 960,
+                "width": 520,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "catwalk_b",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2600,
+                "y": 1120,
+                "width": 480,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "gantry_b",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2600,
+                "y": 960,
+                "width": 480,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "stair_1_b",
+            "type": "StructurePaintable",
+            "material": "pencil",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2440,
+                "y": 1040,
+                "width": 160,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "stair_2_b",
+            "type": "StructurePaintable",
+            "material": "pencil",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2280,
+                "y": 960,
+                "width": 160,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "stair_3_b",
+            "type": "StructurePaintable",
+            "material": "pencil",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2120,
+                "y": 880,
+                "width": 160,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "frame_b",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1960,
+                "y": 1040,
+                "width": 160,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "shoulder_b",
+            "type": "StructurePaintable",
+            "material": "ruler",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1960,
+                "y": 880,
+                "width": 160,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "press_bed",
+            "type": "StructurePaintable",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1480,
+                "y": 1200,
+                "width": 640,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "press_head",
+            "type": "StructurePaintable",
+            "material": "paint_tin",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1640,
+                "y": 800,
+                "width": 320,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "press_crown",
+            "type": "StructurePaintable",
+            "material": "eraser",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1780,
+                "y": 740,
+                "width": 40,
+                "height": 60
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "ramp_a",
+            "type": "StructureRamp",
+            "material": "set_square",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "ramp_right_200_100",
+            "triangle": {
+                "x1": 1320,
+                "y1": 1280,
+                "x2": 1480,
+                "y2": 1280,
+                "x3": 1480,
+                "y3": 1200
+            },
+            "collision_type": "STRUCTURE_RAMP_RIGHT",
+            "colour": "GAINSBORO"
+        },
+        {
+            "name": "ramp_b",
+            "type": "StructureRamp",
+            "material": "set_square",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "ramp_right_200_100",
+            "triangle": {
+                "x1": 2280,
+                "y1": 1280,
+                "x2": 2120,
+                "y2": 1280,
+                "x3": 2120,
+                "y3": 1200
+            },
+            "collision_type": "STRUCTURE_RAMP_LEFT",
+            "colour": "GAINSBORO"
+        }
+    ],
+    "non_collision_objects": [
+        {
+            "name": "works_wall",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_bg_far",
+            "rectangle": {
+                "x": 0,
+                "y": 380,
+                "width": 3600,
+                "height": 1000
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "skylight_1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "rectangle": {
+                "x": 200,
+                "y": 400,
+                "width": 200,
+                "height": 48
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "skylight_2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "rectangle": {
+                "x": 800,
+                "y": 400,
+                "width": 200,
+                "height": 48
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "skylight_3",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "rectangle": {
+                "x": 1400,
+                "y": 400,
+                "width": 200,
+                "height": 48
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "skylight_4",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "rectangle": {
+                "x": 2000,
+                "y": 400,
+                "width": 200,
+                "height": 48
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "skylight_5",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "rectangle": {
+                "x": 2600,
+                "y": 400,
+                "width": 200,
+                "height": 48
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "skylight_6",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "rectangle": {
+                "x": 3200,
+                "y": 400,
+                "width": 200,
+                "height": 48
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_truss",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_bg_line",
+            "rectangle": {
+                "x": 0,
+                "y": 460,
+                "width": 3600,
+                "height": 8
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "tower_backwall",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_bg_mid",
+            "rectangle": {
+                "x": 1480,
+                "y": 700,
+                "width": 640,
+                "height": 500
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "sign_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_prop_accent",
+            "rectangle": {
+                "x": 600,
+                "y": 700,
+                "width": 160,
+                "height": 56
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "sign_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_prop_accent",
+            "rectangle": {
+                "x": 2840,
+                "y": 700,
+                "width": 160,
+                "height": 56
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "hanger_a1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_metal_dark",
+            "rectangle": {
+                "x": 608,
+                "y": 468,
+                "width": 8,
+                "height": 232
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "hanger_a2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_metal_dark",
+            "rectangle": {
+                "x": 744,
+                "y": 468,
+                "width": 8,
+                "height": 232
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "hanger_b1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_metal_dark",
+            "rectangle": {
+                "x": 2984,
+                "y": 468,
+                "width": 8,
+                "height": 232
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "hanger_b2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_metal_dark",
+            "rectangle": {
+                "x": 2848,
+                "y": 468,
+                "width": 8,
+                "height": 232
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "brush_pot",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "brush_pot",
+            "rectangle": {
+                "x": 132,
+                "y": 644,
+                "width": 256,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "tape_roll",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "tape_roll",
+            "rectangle": {
+                "x": 1672,
+                "y": 652,
+                "width": 256,
+                "height": 160
+            },
+            "colour": "WHITE"
+        }
+    ]
+}

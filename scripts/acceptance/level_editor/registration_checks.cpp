@@ -161,7 +161,7 @@ namespace level_editor_acceptance
                 // existing last stage, and one literal path before the first
                 // runtime list's closing line. Every other byte must survive.
                 std::string expected_manifest = manifest;
-                const std::string last = "\"crossfeed\"";
+                const std::string last = "\"press_tower\"";
                 const std::size_t name = expected_manifest.rfind(last);
                 require(name != std::string::npos, "The registration manifest fixture needs its last shipped stage");
                 expected_manifest.insert(name + last.size(), "," + newline + "                \"acceptance_arena\"");

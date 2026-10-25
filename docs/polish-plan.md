@@ -396,6 +396,12 @@ build the blockout in the editor, then measure routes, paint by region, spawn
 approaches and side swaps as Crossfeed did. Use supported structures, platforms, ramps and
 visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 
+**King of the Hill (2026-10-25):** the blockout is [Press Tower](polish-press-tower.md),
+a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
+which stays selectable and in Random. Its baseline acceptance case passes; attended play,
+native four-pane captures and the brief's support art remain open there. Turbulence has
+not started.
+
 The first new-map pass uses current movement and weapon values. Define required,
 optional and recovery routes independently from their input families. Reconcile
 paint by region and face direction, and measure real firing / escape windows.

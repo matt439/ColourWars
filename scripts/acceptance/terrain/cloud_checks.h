@@ -24,9 +24,14 @@ namespace
 	void check_shipped_clouds(World& world, const LevelObjectBuilder& builder,
 		const JsonValue& decorations, const std::string& stage)
 	{
-		// Crossfeed deliberately uses a small static backdrop while its combat
-		// geometry is evaluated. The other arenas retain their drift contract.
+		// Crossfeed deliberately keeps the small static backdrop it was
+		// accepted with as the reference arena. The other sky arenas retain
+		// their drift contract.
 		const bool static_backdrop = stage == "crossfeed";
+		// Press Tower is an interior: a works wall under a roof, no sky. It
+		// must stay cloudless and motionless rather than be held to either
+		// sky contract; every other stage is unaffected.
+		const bool interior = stage == "press_tower";
 		int expected_random = 0;
 		if (static_backdrop)
 		{
@@ -36,9 +41,9 @@ namespace
 		}
 		world.preferences.reduce_effects = false;
 		const auto first = builder.build_non_collision_objects(decorations);
-		if (static_backdrop) { world.preferences.reduce_effects = true; }
+		if (static_backdrop || interior) { world.preferences.reduce_effects = true; }
 		const auto restarted = builder.build_non_collision_objects(decorations);
-		if (static_backdrop) { world.preferences.reduce_effects = false; }
+		if (static_backdrop || interior) { world.preferences.reduce_effects = false; }
 		require(first.size() == decorations.size() && restarted.size() == decorations.size(),
 			stage + ": decoration count changed");
 		size_t clouds = 0;
@@ -49,6 +54,14 @@ namespace
 			const JsonValue json = decorations.at(index);
 			const bool is_cloud = json.string("frame_name").starts_with("cloud_");
 			auto* cloud = dynamic_cast<DriftingVisual*>(first[index].get());
+			if (interior)
+			{
+				require(!json.has("drift") && cloud == nullptr &&
+					dynamic_cast<DriftingVisual*>(restarted[index].get()) == nullptr,
+					stage + " " + json.string("name") + ": interior scenery gained drift");
+				clouds += is_cloud ? 1 : 0;
+				continue;
+			}
 			if (static_backdrop)
 			{
 				const std::string where = stage + " " + json.string("name");
@@ -124,6 +137,10 @@ namespace
 			require(std::rand() == expected_random,
 				stage + ": static backdrop construction/update consumed gameplay randomness");
 			world.preferences.reduce_effects = false;
+		}
+		else if (interior)
+		{
+			require(clouds == 0, stage + ": an interior needs zero cloud visuals");
 		}
 		else
 		{

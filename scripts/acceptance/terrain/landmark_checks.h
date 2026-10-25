@@ -41,7 +41,8 @@ namespace
 			{"king_of_the_hill", {2376.0f, 4356.0f}, {3368.0f, 4516.0f}, 20, 22, "castle_background"},
 			{"turbulence", {1488.0f, 5016.0f}, {4256.0f, 5176.0f}, 17, 24, "hill_7"},
 			{"close_quarters", {1792.0f, 4652.0f}, {3952.0f, 4812.0f}, 17, 24, "hill_7"},
-			{"crossfeed", {1672.0f, 564.0f}, {2260.0f, 892.0f}, 6, 8, "hill_b"}
+			{"crossfeed", {1672.0f, 564.0f}, {2260.0f, 892.0f}, 6, 8, "hill_b"},
+			{"press_tower", {132.0f, 644.0f}, {1672.0f, 652.0f}, 15, 17, "hanger_b2"}
 		};
 		const auto found = std::find_if(std::begin(expected), std::end(expected),
 			[&](const Expected& entry) { return stage == entry.stage; });

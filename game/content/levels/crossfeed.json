@@ -5,11 +5,11 @@
         "Required route: drop from home and walk over the central ramp/plinth. Higher routes are optional.",
         "Ramps support players but pass paint. Home floors and roofs are one-way player supports, solid to projectiles.",
         "Ordinary exposed ground and platform tops accept paint, including one-way home and upper supports; ramps remain the traversal exception.",
-        "Excluded from Random pending movement/weapon iteration and attended arena acceptance.",
+        "Accepted by the author as the reference arena on 2026-10-25 and included in Random at the author's request.",
         "Reuses accepted Close Quarters audio; this does not create a new cue or claim listening acceptance."
     ],
     "display_name": "Crossfeed",
-    "include_in_random": false,
+    "include_in_random": true,
     "icon_frame": "stage_close_quarters",
     "sound": {
         "sound_bank_name": "paint_exe",

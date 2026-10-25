@@ -39,6 +39,11 @@ public:
             const auto* info = levels.get(name); require(info != nullptr, "Preview backing needs shipped arena metadata");
             stages_.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
         }
+        // Accepted Crossfeed is now in Random. This fixture still needs one
+        // excluded and one eligible record, so it holds Crossfeed's copy
+        // excluded; the captured pages and pixels are those it always read.
+        require(stages_[0].include_in_random, "Preview backing expected accepted Crossfeed to be eligible for Random");
+        stages_[0].include_in_random = false;
         require(stages_[0].display_name == "Crossfeed" && !stages_[0].include_in_random && stages_[1].include_in_random &&
             random_stage_indices(stages_) == std::vector<size_t>{ 1 } &&
             levels.get("crossfeed")->zoom_out_finish_bounds_rectangle() == RectangleF(0, 500, 3600, 880),

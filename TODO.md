@@ -21,7 +21,9 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 2. **New map (done 2026-10-25):** the author accepted [Crossfeed](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25)
    as the reference arena. Preserve the earlier CQ experiment as a comparison.
 3. **Now, the other arenas (`POL#21`):** apply the Crossfeed process to King of the Hill and
-   Turbulence, keeping the current P3/five-tool values as the baseline.
+   Turbulence, keeping the current P3/five-tool values as the baseline. The King of the Hill
+   blockout is [Press Tower](docs/polish-press-tower.md) (explicit-only, beside the preserved
+   original); Crossfeed is now in Random at the author's request.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
@@ -87,7 +89,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 |---|---|---|---|---|
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | OPEN | MED | XL | King of the Hill and Turbulence blockouts, now that Crossfeed is the accepted reference; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
+| `POL#21` | OPEN | MED | XL | Arena blockouts after the accepted Crossfeed reference: [Press Tower](docs/polish-press-tower.md) (King of the Hill brief) has its baseline case and awaits attended play, native four-pane captures and support art; Turbulence, an optional 1v1 CQ variant and side-swap qualification remain. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
 ## Audio replacement

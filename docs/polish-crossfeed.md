@@ -3,9 +3,10 @@
 Authored 2026-10-20 after the [combat-map research](level-design-research.md).
 This is the new-map deliverable requested by the author, distinct from the
 preserved [CQ draft](polish-close-quarters.md). The existing arenas remain
-available. Crossfeed is explicitly selectable but excluded from Random while
-its layout, movement and five tools are evaluated. The author accepted it as
-the reference arena on 2026-10-25 ([acceptance](#author-arena-acceptance-2026-10-25)).
+available. Crossfeed was explicitly selectable but excluded from Random while
+its layout, movement and five tools were evaluated. The author accepted it as
+the reference arena on 2026-10-25 ([acceptance](#author-arena-acceptance-2026-10-25))
+and asked for it in Random; it is now a Random candidate.
 
 ## Question and research transfer
 
@@ -836,8 +837,12 @@ The session did not cover these, so they stay open: spawn pressure, C2 identity
 and rear-threat recognition, and 1-4P clean/heavy readability carry into the
 reference-match finish review (`POL#24`). A full five-tool balance and resource
 review remains `POL#27`, and the pad half of movement remains `POL#3`. The input
-device and player count were not stated; this machine has no pad. Crossfeed
-stays excluded from Random until the author decides otherwise.
+device and player count were not stated; this machine has no pad. The author
+then asked for Crossfeed in Random, so `crossfeed.json` sets
+`"include_in_random": true` and the `stage_selection` acceptance case now
+requires it among the Random candidates. Press Tower
+([polish-press-tower.md](polish-press-tower.md)) took its place as the
+explicit-only stage under evaluation.
 
 ## Coupled movement and five-tool comparison (2026-10-20)
 

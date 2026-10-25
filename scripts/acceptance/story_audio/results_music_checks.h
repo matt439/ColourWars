@@ -462,7 +462,8 @@ namespace
 			{ "close_quarters", "music.close_quarters", "music.end_sting.close_quarters" },
 			{ "king_of_the_hill", "music.king_of_the_hill", "music.end_sting.king_of_the_hill" },
 			{ "turbulence", "music.turbulence", "music.end_sting.turbulence" },
-			{ "crossfeed", "music.close_quarters", "music.end_sting.close_quarters" }
+			{ "crossfeed", "music.close_quarters", "music.end_sting.close_quarters" },
+			{ "press_tower", "music.king_of_the_hill", "music.end_sting.king_of_the_hill" }
 		};
 		for (const ArenaSounds& arena : arenas)
 		{

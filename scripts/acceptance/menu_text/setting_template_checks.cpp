@@ -7,7 +7,7 @@ namespace menu_text_acceptance
     void check_setting_duration_content(Variants& variants, World& world, const std::filesystem::path& content)
     {
         Registry<LevelLoadedInfo> levels("Duration acceptance level"); StageList stages;
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed" })
+        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed", "press_tower" })
         {
             auto info = std::make_unique<LevelLoadedInfo>((content / "levels" / (std::string(name) + ".json")).string().c_str());
             info->validate(); stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });

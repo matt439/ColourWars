@@ -272,6 +272,7 @@ try {
     $result.staged_content_hashes = @(
         'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json',
         'levels/close_quarters.json', 'levels/king_of_the_hill.json', 'levels/turbulence.json', 'levels/crossfeed.json',
+        'levels/press_tower.json',
         'textures/painter.dds', 'textures/painter.json',
         'textures/weapon_paint.dds', 'textures/weapon_paint.json',
         'textures/terrain.dds', 'textures/terrain.json' |

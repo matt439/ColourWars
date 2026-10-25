@@ -29,6 +29,7 @@ set(COLOURWARS_RUNTIME_ASSETS
     levels/close_quarters.json
     levels/movement_course.json
     levels/crossfeed.json
+    levels/press_tower.json
     sounds/paint_exe.json
     sounds/paint_exe.xwb
 )

@@ -2,6 +2,7 @@
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -57,6 +58,8 @@ namespace
 		StageList stages;
 		bool course_found = false;
 		bool crossfeed_found = false;
+		bool press_tower_found = false;
+		size_t crossfeed_index = 0;
 		size_t defaulted_arenas = 0;
 		for (size_t group = 0; group < assets.size(); ++group)
 		{
@@ -78,7 +81,13 @@ namespace
 				if (name == "crossfeed")
 				{
 					crossfeed_found = true;
-					require(!info.include_in_random(), "Crossfeed must require an explicit stage choice while provisional");
+					crossfeed_index = stages.size() - 1;
+					require(info.include_in_random(), "Accepted Crossfeed must be eligible for Random");
+				}
+				if (name == "press_tower")
+				{
+					press_tower_found = true;
+					require(!info.include_in_random(), "Press Tower must require an explicit stage choice while provisional");
 				}
 				const labrador::JsonDocument source = labrador::read_json_file(path.c_str());
 				if (!source.root().has("include_in_random"))
@@ -88,15 +97,17 @@ namespace
 				}
 			}
 		}
-		require(course_found && crossfeed_found && defaulted_arenas >= 3,
-			"Acceptance needs the explicit course and Crossfeed plus the three unchanged existing arenas");
+		require(course_found && crossfeed_found && press_tower_found && defaulted_arenas >= 3,
+			"Acceptance needs the explicit course and Press Tower, eligible Crossfeed and the three unchanged existing arenas");
 		const std::vector<size_t> candidates = random_stage_indices(stages);
 		require(!candidates.empty(), "Shipped content needs eligible match arenas");
+		require(std::find(candidates.begin(), candidates.end(), crossfeed_index) != candidates.end(),
+			"Shipped Random selection omitted accepted Crossfeed");
 		for (size_t draw = 0; draw < candidates.size(); ++draw)
 		{
 			const size_t index = random_stage_index(stages, draw);
 			require(index == candidates[draw] && stages[index].include_in_random &&
-				stages[index].name != "movement_course" && stages[index].name != "crossfeed",
+				stages[index].name != "movement_course" && stages[index].name != "press_tower",
 				"Shipped Random selection admitted an explicit-only stage");
 		}
 		std::cout << "Shipped stage selection: " << stages.size() << " explicit stages; "
@@ -141,7 +152,7 @@ int main(int argc, char** argv)
 		check_mapping();
 		check_shipped_stages(argv[1]);
 		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
-		std::cout << "PASS stage selection: explicit course and Crossfeed, eligible Random mapping, defaults and rejection guards.\n";
+		std::cout << "PASS stage selection: explicit course and Press Tower, Crossfeed in Random, eligible Random mapping, defaults and rejection guards.\n";
 		return 0;
 	}
 	catch (const std::exception& error)
