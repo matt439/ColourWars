@@ -75,4 +75,4 @@ jobs:
       - name: Show probe output
         if: always()
         shell: pwsh
-        run: Get-ChildItem out/validation/movement-feedback -Recurse -Include *.log,*.err,*.json | ForEach-Object { "== $($_.FullName)"; Get-Content $_ -TotalCount 200 }
+        run: Get-ChildItem out/validation/movement-feedback -Recurse -Include *.log,*.err,*.json,*.csv | ForEach-Object { "== $($_.FullName)"; Get-Content $_ -TotalCount 200 }

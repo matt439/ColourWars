@@ -332,6 +332,11 @@ namespace
                     // This settled course fixture gives every pane nearby
                     // takeoff/landing cues. Keep them visible into recovery;
                     // the upper bound above still protects the play area.
+                    if (changed < 128 || readable_pixels < 64)
+                    {
+                        std::cerr << stem << " view " << view + 1 << ": changed=" << changed
+                            << " readable=" << readable_pixels << '\n';
+                    }
                     require(changed >= 128 && readable_pixels >= 64,
                         "four-player 720p contact cues are too small or faint");
                 }
