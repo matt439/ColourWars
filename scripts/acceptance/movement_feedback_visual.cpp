@@ -3,6 +3,9 @@
 #include "game/game_data.h"
 #include "game/input_slots.h"
 
+#include <dxgidebug.h>
+
+#include <atomic>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -26,6 +29,53 @@ namespace
         if (!condition) { throw std::runtime_error(message); }
     }
 
+    // A Debug device breaks on every debug-layer error. With no debugger
+    // attached that break is an uncaught STATUS_BREAKPOINT, which ends the
+    // probe with nothing on stdout or stderr. Step over it instead, and fail
+    // at the next check with the messages that caused it.
+    std::atomic<int> debug_breaks{ 0 };
+
+    LONG CALLBACK step_over_debug_break(EXCEPTION_POINTERS* exception)
+    {
+        if (exception->ExceptionRecord->ExceptionCode != EXCEPTION_BREAKPOINT ||
+            *reinterpret_cast<const unsigned char*>(exception->ContextRecord->Rip) != 0xCC)
+        {
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
+        ++debug_breaks;
+        ++exception->ContextRecord->Rip;
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
+
+    void require_no_debug_breaks(const char* where)
+    {
+        if (debug_breaks.load() == 0) { return; }
+        std::cerr << "debug layer broke " << debug_breaks.load() << " time(s) by " << where << '\n';
+        Microsoft::WRL::ComPtr<IDXGIInfoQueue> queue;
+        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(queue.GetAddressOf()))))
+        {
+            const UINT64 count = queue->GetNumStoredMessages(DXGI_DEBUG_ALL);
+            for (UINT64 index = 0; index < count; ++index)
+            {
+                SIZE_T length = 0;
+                if (FAILED(queue->GetMessage(DXGI_DEBUG_ALL, index, nullptr, &length))) { continue; }
+                std::vector<char> storage(length);
+                auto* message = reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(storage.data());
+                if (SUCCEEDED(queue->GetMessage(DXGI_DEBUG_ALL, index, message, &length)) &&
+                    message->Severity <= DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING)
+                {
+                    std::cerr << "debug layer: severity=" << message->Severity
+                        << " id=" << message->ID << ' ' << message->pDescription << '\n';
+                }
+            }
+        }
+        else
+        {
+            std::cerr << "debug layer: no DXGI info queue to read the messages from\n";
+        }
+        throw std::runtime_error("the D3D11 debug layer reported an error");
+    }
+
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
 
@@ -41,9 +91,11 @@ namespace
         renderer.begin_frame();
         level.draw(renderer);
         renderer.submit();
+        require_no_debug_breaks("a frame's submit");
         const Vector2F size = renderer.back_buffer_size();
         Frame frame{ static_cast<int>(size.x), static_cast<int>(size.y), {} };
         renderer.read_back_buffer(frame.pixels);
+        require_no_debug_breaks("a back-buffer readback");
         require(frame.pixels.size() ==
             static_cast<size_t>(frame.width) * static_cast<size_t>(frame.height) * 4,
             "readback size mismatch");
@@ -510,6 +562,9 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
+    // Keep whatever was printed if the process dies anyway.
+    std::cout << std::unitbuf;
+    AddVectoredExceptionHandler(1, step_over_debug_break);
     try
     {
         require(argc == 4 || argc == 5 || argc == 6,
@@ -557,6 +612,7 @@ int wmain(int argc, wchar_t** argv)
         options.visible = false;
         Application app(options);
         app.initialize();
+        require_no_debug_breaks("device creation");
         const auto& device = app.renderer()->device_info();
         const char* device_kind = "unknown";
         switch (device.kind)
@@ -708,6 +764,7 @@ int wmain(int argc, wchar_t** argv)
                 sequence_frames, count == 4 || one_player_route_sequences,
                 records, route_records);
         }
+        require_no_debug_breaks("the end of the run");
         require(records.good() && route_records.good(), "phase record write failed");
         std::cout << "PASS real LevelBuilder/Scene takeoff and landing; 1/4 views; "
             "720p/1080p/QHD; feedback on/off; paused redraw; moving aim-swept route in "
