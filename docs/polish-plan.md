@@ -172,6 +172,9 @@ working baseline for the next iteration, not a permanent freeze on art or tuning
    observations identify a layout issue. Fit the approved kit and inspect
    1-4P/heavy-paint composition. Reference-arena acceptance follows actual play;
    then apply the process to the other arenas (`POL#21`). Values remain provisional.
+   **The author accepted Crossfeed as the reference arena on 2026-10-25**
+   ([record](polish-crossfeed.md#author-arena-acceptance-2026-10-25)); its
+   unreviewed spawn-pressure and readability checks move to `POL#24`.
 
 UI artwork follows the gameplay style, as before. Audio, release and engine
 work are outside this sequence and keep their own rows.
@@ -353,7 +356,7 @@ preserved earlier experiment with driven-route and exposed-paint evidence.
 The author's clarified deliverable is an original **new map** informed by
 [research](level-design-research.md), followed by coupled movement / weapon
 tuning. Passing CQ routes do not establish suitable spacing, density, inputs
-or weapon scale. Attended matches and reference-arena acceptance remain open.
+or weapon scale. Crossfeed, not CQ, is the accepted reference arena (2026-10-25).
 
 ### Design requirements
 
@@ -386,9 +389,11 @@ maps already provide them. All three retain the painted-surface match rules.
 | Turbulence | Offset platforms and crossing routes that reward movement and repositioning. Mix short engagements with exposed crossings and recoverable lower routes. | An industrial loading yard: ducts, vents, stacked supplies, overhead structures, distant machinery and layered sky. Decorative machinery does not imply new wind or hazard mechanics. |
 
 These briefs predate the author's research-first / new-map clarification.
-Preserve the existing maps and CQ draft; establish the original new map first.
-Iterate until actual two- and four-player matches support the reference arena's
-route and pacing goals, then revisit these other identities. Use supported structures, platforms, ramps and
+Preserve the existing maps and CQ draft. With Crossfeed accepted as the reference
+arena (2026-10-25), `POL#21` takes King of the Hill and Turbulence through the
+same process: write a short brief per layout against the research criteria,
+build the blockout in the editor, then measure routes, paint by region, spawn
+approaches and side swaps as Crossfeed did. Use supported structures, platforms, ramps and
 visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 
 The first new-map pass uses current movement and weapon values. Define required,

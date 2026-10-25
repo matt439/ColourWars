@@ -18,15 +18,13 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 **Order** ([research and design criteria](docs/level-design-research.md)):
 1. **Research before values:** use the recorded primary sources, concrete level examples and
    ColourWars-specific hypotheses to define required, optional and recovery routes.
-2. **Qualify the new map (`POL#17`):** use the original [Crossfeed baseline](docs/polish-crossfeed.md)
-   and its measured routes, paint budget, spawn approaches, firing breaks and individual panes
-   to direct the coupled pass. Preserve the earlier CQ experiment as a comparison.
-3. **Qualify the coupled candidate (`POL#3`, `POL#27`):** use the recorded Crossfeed comparison and
-   resized Movement Course for keyboard/pad observations, camera warning and all five tool roles.
-   Sniper supply and Mister lifetime remain hypotheses. Iterate geometry when an observation concerns
-   a route; re-check 1-4P and heavy paint after changes.
-4. **Then the other arenas:** `POL#21`, after reference-arena acceptance; the finish review
-   and fresh-player observations (`POL#24`) still gate wider art production.
+2. **New map (done 2026-10-25):** the author accepted [Crossfeed](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25)
+   as the reference arena. Preserve the earlier CQ experiment as a comparison.
+3. **Now, the other arenas (`POL#21`):** apply the Crossfeed process to King of the Hill and
+   Turbulence, keeping the current P3/five-tool values as the baseline.
+4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
+   recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
+   review and fresh-player observations (`POL#24`) still gate wider art production.
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
@@ -43,10 +41,9 @@ This is a selection guide, not another priority order; each owner defines a boun
 | `DBG#1` | No further unattended field selected; additional consumer audits are optional if selected | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
-- **Crossfeed acceptance:** C2 identity/rear-threat recognition, 1-4P clean/heavy
-  readability, five-tool pressure/resource tradeoffs and arena acceptance
-  (`POL#3`, `POL#17`, `POL#27`). The arrival-gated CPU control is complete;
-  the author's positive movement feedback remains the P3 baseline.
+- **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
+  recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
+  five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
 - **Unborrowed Splatoon mechanics:** paint underfoot, a painting-charged special and a
   splat tally, each yes or no, with or after `POL#27` (`POL#30`).
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
@@ -67,7 +64,7 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#17`/`POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
 
@@ -77,7 +74,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | DECISION | MED | M | Retain the author's positive P3 movement baseline. Attended C2 identity/rear-threat recognition, five-tool/input-margin and physical-pad review remain; preserve legacy climbs. [Playtest](docs/polish-crossfeed.md#playtest-and-paint-coverage-iteration-2026-10-24), [course](docs/polish-movement-course.md). |
+| `POL#3` | DECISION | MED | M | Retain the author's positive P3 movement baseline. Attended C2 identity/rear-threat recognition, input-margin and physical-pad review remain; preserve legacy climbs. [Acceptance](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25), [course](docs/polish-movement-course.md). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -88,10 +85,9 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | DECISION | HIGH | XL | Attended Crossfeed spawn pressure, 1-4P clean/heavy readability and arena acceptance remain after the qualified arrival-fire control. Preserve other maps. [Evidence and review](docs/polish-crossfeed.md#arrival-gated-authored-spawn-fire-2026-10-24). |
-| `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains after separating travel fire from arrival pressure. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence and review](docs/polish-crossfeed.md#arrival-gated-authored-spawn-fire-2026-10-24). |
+| `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after reference-arena acceptance; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
+| `POL#21` | OPEN | MED | XL | King of the Hill and Turbulence blockouts, now that Crossfeed is the accepted reference; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
 ## Audio replacement
@@ -117,7 +113,7 @@ here.
 | `ROAD#1` | DECISION | MED | S | Run the extracted Release ZIP on a clean Windows 10/11 x64 machine. Needs one. |
 | `ROAD#2` | DECISION | MED | M | Physical-pad sessions: 2P and 4P on every stage and weapon; join, unplug/replug, pause, focus, fullscreen/resize, series draws, rematch, relaunch; a long soak past the display timers; one non-XInput pad. Needs pads. |
 | `ROAD#4` | DEFERRED | LOW | M | A pad that returns in a different XInput slot cannot reclaim its player mid-match. Deferred until it proves inconvenient. [First increment](docs/feature-roadmap.md#first-increment-explicit-joining-and-reconnect-pause). |
-| `POL#24` | BLOCKED | MED | M | The finish review and fresh-player observations on the reference match; the gate before production widens. Waits on the reference arena (`POL#17`). |
+| `POL#24` | DECISION | MED | M | The finish review and fresh-player observations on the Crossfeed reference match, including its spawn pressure and 1-4P clean/heavy readability; the gate before production widens. [Process](docs/polish-plan.md#7-acceptance-and-delivery). |
 | `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
 | `GAP#7.6` | DEFERRED | LOW | S | Replace the stock `directx.ico` in the later UI/release-art pass using the approved style; the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
 
@@ -149,7 +145,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
-| `GAP#D5` | DEFERRED | MED | M | Add rotated/moving builder structures and useful arena placements during `POL#17`/`POL#21` blockouts; qualify collision, support and paint. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
+| `GAP#D5` | DEFERRED | MED | M | Add rotated/moving builder structures and useful arena placements during the `POL#21` blockouts; qualify collision, support and paint. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
 
 ## Engine reports
 

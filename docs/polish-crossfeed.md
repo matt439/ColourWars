@@ -4,8 +4,8 @@ Authored 2026-10-20 after the [combat-map research](level-design-research.md).
 This is the new-map deliverable requested by the author, distinct from the
 preserved [CQ draft](polish-close-quarters.md). The existing arenas remain
 available. Crossfeed is explicitly selectable but excluded from Random while
-its layout, movement and five tools are evaluated. Reference-arena acceptance
-is still open.
+its layout, movement and five tools are evaluated. The author accepted it as
+the reference arena on 2026-10-25 ([acceptance](#author-arena-acceptance-2026-10-25)).
 
 ## Question and research transfer
 
@@ -823,6 +823,21 @@ Exports under `owner-analysis-v1/`: `facts.json`, `gated-checkpoints.csv`,
 `acceptance-v2/{x64-debug,x64-release}/crossfeed-run.log` in the parent evidence
 root. Baseline is `crossfeed-spawn-pressure-20261024/x64-debug/677cc1ea774f4735a3f7016951a6077b/run.log`.
 
+
+### Author arena acceptance (2026-10-25)
+
+After the ordinary-floor paint candidate, the author played Crossfeed and
+reports that it "feels pretty good" and that "paintable surfaces are obvious
+now", answering the 2026-10-24 coverage complaint. They tried several of the
+five tools and **accepted Crossfeed as the reference arena**. That closes the
+arena-acceptance part of `POL#17` and opens `POL#21`.
+
+The session did not cover these, so they stay open: spawn pressure, C2 identity
+and rear-threat recognition, and 1-4P clean/heavy readability carry into the
+reference-match finish review (`POL#24`). A full five-tool balance and resource
+review remains `POL#27`, and the pad half of movement remains `POL#3`. The input
+device and player count were not stated; this machine has no pad. Crossfeed
+stays excluded from Random until the author decides otherwise.
 
 ## Coupled movement and five-tool comparison (2026-10-20)
 
