@@ -128,7 +128,7 @@ state; [acceptance.json](acceptance.json) is the current acceptance record.
 
 ## Acceptance and remaining integration
 
-The accepted set is the production committed in `104cfd0`. The catalogue,
+The accepted set is the production committed in `5c0a286`. The catalogue,
 provenance and listening page read its acceptance record; changing any master,
 adding or removing a cue makes regenerated output pending review again.
 The existing game bindings, story pop/sigh/chair cues, per-beat countdown/GO,

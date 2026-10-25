@@ -859,7 +859,7 @@ P2 adds two ammunition-cost changes and a mist lifetime limit; P3 changes hold
 acceleration to preserve legacy access. P3 changes seven tuning entries from
 P0, alongside the separate controller correction below. P0 reuses the baseline
 values with that current controller, rather than running the historical
-`f74bc49` binary. No foreign game's constants are used.
+`fd5a6e9` binary. No foreign game's constants are used.
 
 | Profile | Player gravity | Launch velocity | Hold acceleration | Hold time | Sniper cost | Mister cost | Mist lifetime |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -1316,9 +1316,9 @@ are retained. The first editor run was denied canonical access to its private
 registration repository by the sandbox; both presets passed with the required
 filesystem access. Both retries used unchanged game code.
 
-### Historical unchanged-value baseline at `f74bc49`
+### Historical unchanged-value baseline at `fd5a6e9`
 
-This record describes the baseline committed in `f74bc49`; its numeric tuning,
+This record describes the baseline committed in `fd5a6e9`; its numeric tuning,
 controller coverage and retained native captures precede the coupled P1/P2/P3 changes above.
 
 The unchanged-value baseline uses 95-unit tap rise, 207.472-unit held rise and
@@ -1371,7 +1371,7 @@ per tank. A missed tick can recover automatically under continued held input;
 it does not imply a forced manual release.
 
 The baseline verification receipts retain revision, dirty-tree state and source
-hashes; numeric tuning was unchanged at the `f74bc49` checkpoint:
+hashes; numeric tuning was unchanged at the `fd5a6e9` checkpoint:
 
 - Both game presets built under `/W4 /WX`. All 40 consumer cases passed in
   each configuration. Debug's `playable-v1/acceptance/x64-debug/` is completed

@@ -8,7 +8,7 @@ rules are accepted as of 2026-10-15. Initial braking, released-aim and route
 policies (`POL#4`) and stronger takeoff/landing puffs (`POL#5`) are implemented;
 their values remain tunable. Production artwork, movement-feel and arena
 acceptance remain open.
-Direction agreed on 2026-10-08. Source baseline: game revision `13e9960`.
+Direction agreed on 2026-10-08. Source baseline: game revision `9d35ad1`.
 
 First increment: resolution-independent camera framing, configurable jump buffering
 and ledge grace, and an explicitly selectable Movement Course (excluded from Random).

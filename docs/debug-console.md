@@ -1655,7 +1655,7 @@ timer panels: 898,584 pixels and 2,696,022 P6 bytes per preset. A bounded montag
 of those panels was reviewed for artifact QA; the closing region has no
 exported crop or human acceptance claim. Reconciliation passes all 1,498
 frozen source pins, eleven prior fixtures, qualified producer/result hashes
-and the preserved a7a061f ZIP. Twenty-two shared raw files and eighteen PNG
+and the preserved 4795ca4 ZIP. Twenty-two shared raw files and eighteen PNG
 pairs are byte-identical between presets. Independent PNG CRC/filter decoding
 also confirms full RGB parity with each PPM payload.
 
@@ -1663,7 +1663,7 @@ Evidence is under `out/validation/hud-paper-colours-20261024/` in
 `native-result-v1.json` and `validation-reconciliation-v1.json`.
 There were no native runtime failures or runtime source corrections.
 
-The preserved a7a061f ZIP predates these changes. Human contrast/readability,
+The preserved 4795ca4 ZIP predates these changes. Human contrast/readability,
 comfort, C2 recognition, arena/weapon balance, physical controls, listening,
 clean-PC and performance acceptance remain open. `DBG#1` remains open.
 No further unattended field is selected. A new automated slice requires a
@@ -1729,7 +1729,7 @@ Calibration totals are 2,176 pixel checks in Release and 2,976 in Debug.
 Every observation update, input poll and game Save counter remains zero.
 Evidence is under `out/validation/closing-shade-colour-20261024/`, with
 `validation-reconciliation-v1.json`. All 1,496 frozen source pins, nine prior
-fixtures, qualified producer/result hashes and the preserved a7a061f ZIP
+fixtures, qualified producer/result hashes and the preserved 4795ca4 ZIP
 reconcile. Existing evidence remains intact; qualified core producers were
 reused for the native probes without repeating game builds.
 
@@ -1802,7 +1802,7 @@ The preview51 and timer46-48 bodies remain unchanged. Thirteen shared raw files
 and nine PNG pairs match byte for byte between presets. Native probes reuse the
 qualified core producers without repeating game builds.
 
-The preserved a7a061f Release ZIP predates these changes. Human urgency,
+The preserved 4795ca4 Release ZIP predates these changes. Human urgency,
 contrast/readability, comfort, C2 recognition, arena/weapon balance, physical
 controls, listening, clean-PC and performance acceptance remain open.
 `DBG#1` stays open. Closing shade remains unsupported; reassess its bounded
@@ -1855,7 +1855,7 @@ No production reader, geometry, values or equality tolerance was relaxed.
 Evidence is under `out/validation/stage-preview-background-colour-20261024/`,
 with final `validation-reconciliation-v4.json`. Nineteen shared raw files and
 16 PNG pairs match byte for byte across presets; 1,492 source pins, qualified
-producer hashes and the preserved a7a061f Release ZIP are reconciled. That ZIP
+producer hashes and the preserved 4795ca4 Release ZIP are reconciled. That ZIP
 predates these increments. Automated checks do not establish human preview
 contrast, C2 recognition/readability, comfort, arena balance, physical controls,
 listening, clean-PC or performance acceptance. `DBG#1` remains open. The next
@@ -1923,7 +1923,7 @@ letter analysis was separately retracted before this fixture was prepared;
 it did not invalidate the prior numeric clock evidence.
 
 Evidence is under `out/validation/hud-label-colours-20261024/`.
-The preserved a7a061f Release ZIP predates the clock and HUD-label increments.
+The preserved 4795ca4 Release ZIP predates the clock and HUD-label increments.
 Hidden checks establish no natural Level sequence, arbitrary label/layout/
 scale, small-pane readability, C2 identity/rear-threat recognition or comfort,
 physical controls, listening, clean-PC or performance acceptance.
@@ -1977,7 +1977,7 @@ unchanged producer hashes. Copied whole-HUD comparisons establish adoption;
 the same-font reference does not independently test engine font rasterization.
 
 Evidence is under `out/validation/closing-clock-text-colour-20261024/`.
-The preserved a7a061f Release ZIP predates these clock increments. Hidden HUD
+The preserved 4795ca4 Release ZIP predates these clock increments. Hidden HUD
 checks establish no natural Level sequence, human clock/C2/arena readability
 or comfort, physical-pad, listening, clean-PC or performance acceptance.
 `DBG#1` remains open with further actual consumers selected by audit.
@@ -2024,7 +2024,7 @@ with unchanged producer hashes, and compiled fresh native probes. Source review 
 label before launch; it required no producer, oracle or tolerance change.
 
 Evidence is under `out/validation/hud-timer-shadow-colour-20261024/`.
-The preserved a7a061f Release ZIP predates both normal-clock increments.
+The preserved 4795ca4 Release ZIP predates both normal-clock increments.
 Automated HUD checks establish no natural Level sequence, human clock/arena
 readability or comfort, physical-pad, listening, clean-PC or performance
 acceptance. `DBG#1` remains open with further consumers selected by audit.
@@ -2068,7 +2068,7 @@ the unchanged oracle and exact tolerances passed in fresh native-v2 runs.
 Qualified game/editor and CPU producers were reused by hashes.
 
 Evidence is under `out/validation/hud-timer-colour-20261024/`. The preserved
-clean a7a061f Release ZIP predates this increment. Automated checks establish
+clean 4795ca4 Release ZIP predates this increment. Automated checks establish
 neither human clock readability/comfort nor attended Crossfeed, physical-pad,
 listening, clean-PC or performance acceptance. `DBG#1` remains open.
 

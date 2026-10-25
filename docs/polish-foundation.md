@@ -1,6 +1,6 @@
 # First polish increment: camera and movement foundation
 
-Implemented on 2026-10-08 against game revision `96079bc`, using the existing
+Implemented on 2026-10-08 against game revision `2387736`, using the existing
 Labrador pin. This begins sections 1–2 of [the polish plan](polish-plan.md).
 It does not close either section's visual or playtest exit condition.
 The display and movement baseline below records that first increment. The

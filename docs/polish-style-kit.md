@@ -6,7 +6,7 @@ and source links below describe that earlier revision; use Git history to
 reproduce it. Retained images and clips remain evidence of the study. Current
 art rules are in [polish plan ?1](polish-plan.md#1-establish-the-art-and-display-rules).
 
-Third polish increment, begun on 2026-10-08 from `66787f2`, using the existing
+Third polish increment, begun on 2026-10-08 from `1387a76`, using the existing
 Labrador pin. It turns the [workshop reference](polish-style-reference.md) into
 an editable native-grid composition for section 1 of [the plan](polish-plan.md).
 It does not approve the style, replace the gameplay artwork, or author an arena.

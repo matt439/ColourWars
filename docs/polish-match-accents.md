@@ -80,7 +80,7 @@ fallback with its single expected diagnostic. All startup runs close gracefully.
 Evidence is under `out/validation/closing/`, with final build/consumer logs at
 `out/validation/closing-{build,acceptance}-x64-{debug,release}.log` and consumer
 case results in `out/acceptance/<preset>/`. Renderer receipts identify baseline
-`cd69f1f` plus working changes, the pinned engine, device and staged content.
+`6452c98` plus working changes, the pinned engine, device and staged content.
 Menus, cards, stage preview, the remaining HUD, pause, results and accepted-arena
 treatment remain open under `POL#16`.
 

@@ -71,7 +71,7 @@ with its single expected diagnostic. All startup runs close gracefully.
 Evidence is under `out/validation/countdown/`, with build/consumer logs at
 `out/validation/countdown-{build,acceptance}-{debug,release}.log` and consumer
 case results under `out/acceptance/<preset>/`. The renderer receipts identify
-baseline `33c058d` plus working changes, the pinned engine, device and exact
+baseline `1509c34` plus working changes, the pinned engine, device and exact
 staged content. [Closing/reveal accents](polish-match-accents.md) have since
 landed; the remaining interface treatment stays open under `POL#16`.
 
