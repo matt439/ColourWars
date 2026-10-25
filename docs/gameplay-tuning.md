@@ -143,3 +143,79 @@ Bot results are evidence, not acceptance. They find outliers for an attended
 session to check; they never replace one, and a tuning change still goes
 through the author.
 
+### Device-free runner core (2026-10-25)
+
+The first runner slice is implemented. `scripts/run-balance.ps1` compiles a
+Debug-only console beside the acceptance cases, using the actual game objects.
+It loads manifest resources as CPU metadata with null texture handles and silent
+banks, builds real `Level` instances and supplies `BotDriver` input to every
+seat. It creates no `Application`, graphics/audio device or physical input reader.
+
+From an x64 VS Developer shell:
+
+```powershell
+scripts/run-balance.ps1 -Stage crossfeed,press_tower -Seed 0,17 -Players 2 -Tools sniper,sniper -Duration 20
+```
+
+Stages and seeds form the sweep dimensions; tool order and the A/B/A/B roster
+are fixed for each invocation. One to four players are supported. Tools default
+to Sprayer per seat and the bot defaults to `paint`; the existing `idle`, `walk`,
+`jump` and `chase` behaviours are also available. `-OutputDirectory` chooses a
+fresh evidence directory and `-Csv` chooses a new CSV path. Existing CSVs and
+run directories are refused. `-SkipBuild` is for an already current Debug build;
+the tool itself is always freshly compiled. Run metadata pins source/data,
+executable, arguments and CSV bytes separately from the deterministic rows.
+
+The 67-column CSV schema records stage, seed, roster/tools, requested duration,
+actual active ticks and the fixed-step bits, raw team/seat paint areas, final
+health/ammunition and a gameplay fingerprint. Team/seat `share_of_painted`
+uses the painted-area denominator; `coverage_of_arena` uses all scoring area,
+including neutral tiles. Zero denominators yield zero. Seat paint credit uses
+`paint_owners::index(player_num, view)`, so device-less bots retain distinct owners.
+Unused seats retain `none` labels, paint owner `-1` and zero-valued measures.
+
+Ammunition starvation is sampled at the real active-input seam, after the bot
+chooses input and before that world step: an alive, positive-health player's
+actual full-shot readiness is `empty`. It is not an `ammo == 0` test.
+`fire_starved_ticks` separately requires attempted fire; a refilling bot may have
+zero such ticks. `observed_death_edges` counts sampled alive-to-dead state edges,
+not credited eliminations. It can miss a terminal lethal health crossing whose
+death-state transition would occur after time-up, so it is a lower bound.
+
+Each match resets the seeded RNG and builds a fresh Level and bot driver. The
+step is the existing replay convention, `TicksPerSecond / 60` (166666 ticks),
+converted to float; the runner stops at the first real time-up/zoom-out transition.
+Rows use classic locale, stable numeric precision and UTF-8/LF bytes, with no
+wall-clock timing. Reproduction is qualified on the same build/data/machine and
+step, rather than promised across toolchains. A bounded step ceiling rejects a
+configuration that cannot finish instead of spinning indefinitely.
+
+Validation: four nontrivial CPU self-check matches cover same-seed whole-row byte
+identity, two/four-player owner mapping, seed zero/uint32 maximum and a short
+Crossfeed sweep, plus CLI refusals and Unicode CSV/no-overwrite publication.
+The public launcher completed a four-row Crossfeed/Press Tower, seed 0/17,
+20-second Sniper control: each row had at least 1201 active ticks, the eight
+seat samples totalled 2394 empty-readiness ticks, and all final ammunition values
+were positive. Same-order replay produced identical complete CSV bytes; reversing
+stage and seed order preserved all four complete rows by key. Existing
+`debug_console` and `press_tower` CPU cases passed in Debug and Release.
+Receipts are in `out/validation/todo-loop-20261025/tool1-core-v1/`,
+`tool1-qualification-v1/` and `tool1-order-v1/`.
+
+Native UTF-8 log decoding is scoped to this runner and restores the caller's
+console encoding. A separate Unicode-path launcher control preserved the exact
+prior CSV row and printed the real path correctly; both the helper and launcher
+restored code page 437 after execution. This corrected only diagnostic decoding;
+the earlier CSV files and match results remain valid. The supplemental receipt
+is in `out/validation/todo-loop-20261025/tool1-encoding-v1/`.
+
+`scripts/run-acceptance.ps1 -Preset x64-debug -Cases balance_runner` runs the
+bounded self-checks. The default Debug suite includes them; Release rejects this
+developer-only case. Case selection is validated before building, and
+`-CompileOnly` lets the launcher reuse the compiler/object linkage without
+pretending the self-checks ran during compilation.
+
+**Still open in TOOL#1:** credited eliminations, final region/face-owned paint,
+the `skirmish` bot and the first full five-tool report. The short control above
+qualifies the pipeline, not tool balance or human acceptance. No tuning value or
+shipping opponent behaviour changes in this slice.

@@ -200,7 +200,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `TOOL#1` | OPEN | HIGH | L | Headless balance runner: device-free seeded bot matches, a `skirmish` bot, CSV of paint share, eliminations and starvation per stage x tool x seed; first sweep on Crossfeed and Press Tower for `POL#27`/`POL#31`. [Scope](docs/gameplay-tuning.md#headless-balance-runner-tool1-2026-10-25). |
+| `TOOL#1` | OPEN | HIGH | L | Complete credited-elimination and region/face metrics, add the `skirmish` bot, then sweep Crossfeed/Press Tower across all five tools for `POL#27`/`POL#31`. [Scope](docs/gameplay-tuning.md#headless-balance-runner-tool1-2026-10-25). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
 ## Areas with no open rows

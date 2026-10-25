@@ -3,11 +3,35 @@ param(
     [ValidateSet('x64-debug', 'x64-release')]
     [string] $Preset = 'x64-debug',
     [switch] $SkipBuild,
-    [string] $OutputDirectory
+    [string] $OutputDirectory,
+    [string[]] $Cases,
+    [switch] $CompileOnly
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+$acceptanceCases = @('display_awake', 'action_bindings', 'input_bindings', 'keyboard_jump_capture', 'ammo', 'settings', 'match_records', 'remembered_setup', 'stick_settings', 'paint', 'camera_framing', 'view_shake', 'movement', 'movement_contact', 'combat_feedback', 'tool_motion', 'weapon_feedback', 'aim_marker', 'player_identity', 'blocked_shot', 'idle_drip', 'quiet_character', 'stage_selection', 'team_palette', 'team_selection', 'menu_navigation',
+        'movement_course', 'cq_blockout', 'crossfeed', 'press_tower', 'resume_countdown', 'debug_console', 'story_audio', 'level_format', 'fatal_report', 'gameplay_tuning', 'menu_presentation', 'weapon_catalog', 'menu_text', 'menu_focus_motion', 'display_trial', 'tunnelling', 'text_wrap', 'terrain')
+$availableCases = @($acceptanceCases) + @('balance_runner')
+$selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
+    if (-not $Cases) { throw 'Cases must contain at least one case name.' }
+    @($Cases | ForEach-Object {
+        if ([string]::IsNullOrWhiteSpace($_)) { throw 'Cases must contain nonempty names.' }
+        $_.ToLowerInvariant()
+    })
+} else {
+    @($acceptanceCases) + @(if ($Preset -eq 'x64-debug') { 'balance_runner' })
+}
+foreach ($case in $selectedCases) {
+    if ($case -notin $availableCases) { throw "Unknown acceptance case: $case" }
+    if ($case -eq 'balance_runner' -and $Preset -ne 'x64-debug') {
+        throw 'balance_runner is a Debug-only developer tool.'
+    }
+}
+if (@($selectedCases | Select-Object -Unique).Count -ne @($selectedCases).Count) {
+    throw 'Select each acceptance case once.'
+}
 
 function Invoke-Logged {
     param(
@@ -67,7 +91,7 @@ try {
         Write-Host "Configure and build $Preset; logs: $evidence"
         Invoke-Logged -Command 'cmake' -Arguments @('--preset', $Preset) `
             -LogPath (Join-Path $evidence 'configure.log')
-        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset) `
+        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--parallel', '1') `
             -LogPath (Join-Path $evidence 'build.log')
     }
 
@@ -155,8 +179,7 @@ try {
     # DLL imports still resolve from the same staged folder as the game.
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
-    foreach ($case in 'display_awake', 'action_bindings', 'input_bindings', 'keyboard_jump_capture', 'ammo', 'settings', 'match_records', 'remembered_setup', 'stick_settings', 'paint', 'camera_framing', 'view_shake', 'movement', 'movement_contact', 'combat_feedback', 'tool_motion', 'weapon_feedback', 'aim_marker', 'player_identity', 'blocked_shot', 'idle_drip', 'quiet_character', 'stage_selection', 'team_palette', 'team_selection', 'menu_navigation',
-        'movement_course', 'cq_blockout', 'crossfeed', 'press_tower', 'resume_countdown', 'debug_console', 'story_audio', 'level_format', 'fatal_report', 'gameplay_tuning', 'menu_presentation', 'weapon_catalog', 'menu_text', 'menu_focus_motion', 'display_trial', 'tunnelling', 'text_wrap', 'terrain') {
+    foreach ($case in $selectedCases) {
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
         if ($case -eq 'story_audio') {
             # The real game objects use the engine's audio seam unchanged.
@@ -191,12 +214,22 @@ try {
         Write-Host "Compile acceptance: $case ($Preset)"
         Invoke-Logged -Command $cache.CMAKE_CXX_COMPILER -Arguments @("@$responseFile") `
             -LogPath (Join-Path $evidence "$case-build.log")
+        if ($CompileOnly) { continue }
         $caseArguments = @($gameDirectory)
         if ($case -eq 'level_format') { $caseArguments += $repo }
-        Invoke-Logged -Command $executable -Arguments $caseArguments `
-            -LogPath (Join-Path $evidence "$case-run.log") -ShowOutput
+        # The new console tool emits UTF-8 paths; scope native decoding only
+        # to that executable and restore the caller even after a refusal.
+        $previousNativeEncoding = [Console]::OutputEncoding
+        try {
+            if ($case -eq 'balance_runner') { [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false) }
+            Invoke-Logged -Command $executable -Arguments $caseArguments `
+                -LogPath (Join-Path $evidence "$case-run.log") -ShowOutput
+        } finally {
+            if ($case -eq 'balance_runner') { [Console]::OutputEncoding = $previousNativeEncoding }
+        }
     }
-    Write-Host "PASS acceptance ($Preset). Evidence: $evidence"
+    $operation = if ($CompileOnly) { 'compilation' } else { 'acceptance' }
+    Write-Host "PASS $operation ($Preset). Evidence: $evidence"
 }
 finally {
     $env:PATH = $previousPath
