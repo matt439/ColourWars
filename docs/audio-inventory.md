@@ -1,6 +1,6 @@
 # Audio inventory and sound direction
 
-Status: inventory taken on 2026-10-14 at `2f052b9`, for
+Status: inventory taken on 2026-10-14 at `a2ed92a`, for
 [polish plan §5](polish-plan.md#5-replace-the-entire-audio-set) and TODO row
 `POL#20`. The author accepted the sound direction in
 [section 5](#5-sound-direction-accepted) on 2026-10-14; their other answers are in
@@ -78,7 +78,7 @@ retired.
 | 9 | `slide_whistle_up` (:13) | 1.992 s | `match.sounds.zoom_out` (`tuning.json:28`). Started at time-up (`level.cpp:194-195`), hard-stopped when `match.zoom_out` (2.0 s, `tuning.json:5`) ends (`level.cpp:207`). Paused and resumed with the level (`Level::pause_audio`/`resume`, `level_audio.cpp`) | E | Replace with `match.time_up` and `match.glass_out` |
 | 10 | `smash_countdown` (:14) | 5.375 s | `match.sounds.countdown` (`tuning.json:27`). Played once when the countdown starts (`level.cpp:155-156`) | W | Retire. The name suggests audio taken from another game, and the wave is longer than the 3.0 s countdown (`tuning.json:4`). Replace with `match.count_beat` and `match.go` |
 | 11 | `SplittingFireWood` (:15) | 0.124 s | `player.sounds.damage` (`tuning.json:100`), throttled by `damage_sound_delay` 0.25 s (`tuning.json:97`), played in `Player::on_projectile_contact` (`player.cpp`) | W | Replace with `player.hurt` |
-| 12 | `Steamboat` (:16) | 122.7 s, 21.6 MB | **None.** It was the level music until `64c501b` (2023-12-23). Only the stale cue sheet names it (`sounds/sound list.txt:48`, `sound_bank_1/cmd.txt:9`) | none | Retire with no replacement. Delete it from `waves` so the recipe stops compiling it (`cmake/build_wave_bank.cmake:49-56`) |
+| 12 | `Steamboat` (:16) | 122.7 s, 21.6 MB | **None.** It was the level music until `58e0c90` (2023-12-23). Only the stale cue sheet names it (`sounds/sound list.txt:48`, `sound_bank_1/cmd.txt:9`) | none | Retire with no replacement. Delete it from `waves` so the recipe stops compiling it (`cmake/build_wave_bank.cmake:49-56`) |
 | 13 | `ThunderCrack` (:17) | 3.347 s | `player.sounds.respawn` (`tuning.json:103`), played in `Player::respawn` (`player.cpp`) | W | Replace with `player.respawn` (and `player.redraw`, new) |
 | 14 | `Top_Of_The_Morning` (:18) | 148.0 s, 26.1 MB, peaks at 0.0 dBFS | `main_menu.music` at volume 0.03 (`presentation.json:111`). Looped by `MenuPage::play_music` (`menu_page.cpp:294-298`) from every main-menu page's `init()`, and stopped at `main_menu_stage_select.cpp:56` and, for a debug start, `main_menu.cpp:22` | L (music) | Retire. Its source is unknown, and it may be the fourth commercial track. Replace with `music.menu` |
 | 15 | `UI_Clicks01` (:19) | 0.122 s | `menu_style.sounds.confirm` (`presentation.json:50`); `pause_menu.window_open_sound` (`presentation.json:145`); `match.sounds.click` (`tuning.json:30`, reveal click at `level_intro.cpp:360`) | W | Replace with three cues: `ui.confirm`, `ui.pause_open`, `match.reveal_click` |
@@ -581,7 +581,7 @@ repository-author recording is claimed for the sourced pop, sigh or chair.
 **Author acceptance:** in response to the explicit request to name revisions or
 accept the complete set for POL#23 integration, with the listening page and
 1/2/4-player mixes linked, the author replied **"sounds good"** on 2026-10-14.
-All 103 masters from `104cfd0`, covering 85 cue groups including the three story
+All 103 masters from `5c0a286`, covering 85 cue groups including the three story
 cues, are accepted; no revisions were requested. The
 [acceptance record](../game/audio/paint_exe/acceptance.json) binds this response to
 their exact hashes. Regenerated catalogues show acceptance only while those

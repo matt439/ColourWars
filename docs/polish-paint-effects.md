@@ -168,6 +168,6 @@ single expected diagnostic. The player's real save is never opened.
 Evidence is under `out/validation/runoff/`, `out/acceptance/<preset>/` and
 `out/validation/runoff-{build,acceptance,visual}-x64-{debug,release}.log`.
 Final renderer run IDs are Debug `59bf1b10d53e402fb11cf3296d0efd0a` and
-Release `13666037379046308b1bef2bdd8ffc4d`; receipts record baseline `3262636`
+Release `13666037379046308b1bef2bdd8ffc4d`; receipts record baseline `b633a9a`
 plus the working changes and the unchanged engine pin. `POL#16` remains open
 for the remaining arena/interface treatment in the polish plan.

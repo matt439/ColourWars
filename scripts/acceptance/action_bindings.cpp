@@ -84,7 +84,7 @@ namespace
 			before.connected && value <= threshold && previous > threshold, before.connected && previous > threshold };
 	}
 
-	// Independent expected mappings from frozen commit 9de4ad4 PlayerInput and
+	// Independent expected mappings from frozen commit 10e4942 PlayerInput and
 	// MenuInput. Literal physical controls below never come from ActionBindings.
 	std::vector<Key> legacy_game_keys(GameAction action)
 	{

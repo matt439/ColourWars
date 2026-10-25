@@ -606,7 +606,7 @@ Receipts and source archives are under `out/validation/parallax-prototype/`.
 The initial compile failure and its source are retained: value-initializing the
 fixture's `PlayerCamera` fixes MSVC's `/WX` uninitialized-const warning; both
 presets then pass. Game code, content, executables and staged presentation are
-unchanged from the verified Arena-count batch (`c701d76`). Its two game builds,
+unchanged from the verified Arena-count batch (`76a607a`). Its two game builds,
 38 CPU cases per preset and two isolated accepted-bank/DPI-v2 startups are
 retained baseline evidence, not newly rerun checks for this probe-only change.
 

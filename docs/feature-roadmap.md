@@ -371,7 +371,7 @@ for the isolated lifecycle probe; repeat with `x64-release`. Qualified
 build/CPU/native receipts are under
 `out/validation/todo-loop-20261024/road6-prep/`. Physical pad-only display-timer
 and separate screen-saver observations remain item 6 above in `ROAD#2`.
-The existing `28ddd5f` Release ZIP predates ROAD6; no replacement package was
+The existing `0bd8f45` Release ZIP predates ROAD6; no replacement package was
 produced for this increment.
 
 ### Per-seat accessibility toggles (`ROAD#7`)
