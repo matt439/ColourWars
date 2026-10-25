@@ -9,6 +9,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# The jobs only read the repository and upload artifacts.
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

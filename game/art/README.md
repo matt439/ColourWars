@@ -3,7 +3,7 @@
 The accepted Paint.exe art rules are in the
 [polish plan](../../docs/polish-plan.md#1-establish-the-art-and-display-rules).
 The author's [accepted round-2 study](references/style-board/index.html)
-([original artifact](https://claude.ai/artifact/9J5kQgRMvVtXPe6r6cJ7vP))
+([original artifact](https://claude.ai/artifact/9J5kQgRMvVtXPe6r6cJ7vP), a private Claude artifact)
 is the reference for Zoom 400% values, Tool Props terrain, airbrush shadows,
 black paint keylines and figure E with teammate head accents; the figure has
 since been rebuilt from parts with no teammate mark ([painter](painter/README.md)).

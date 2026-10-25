@@ -3,7 +3,7 @@
 `painter.json` is the editable production drawing. Its `.`, `K`, `W` and `T`
 cells mean transparent, black, white and team mask. A cell is 4x4 texels. The
 drawing is the author's 2026-10-18 build from the
-[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq): an
+[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) (a private Claude artifact): an
 ear-stub head, a backwards team cap, tall dot eyes, a smirk, centred overalls
 with team straps, short team sleeves with white hands and tube legs, with no
 teammate mark ([art rules](../../../docs/polish-plan.md#1-establish-the-art-and-display-rules)).

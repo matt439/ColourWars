@@ -209,7 +209,7 @@ confirmed round-2 choices are:
 | Figures and teammate identity | Variant E, rebuilt from parts on 2026-10-18 with no teammate accent (below) |
 
 These names refer to the [round-2 visual study](../game/art/references/style-board/index.html)
-([original artifact](https://claude.ai/artifact/9J5kQgRMvVtXPe6r6cJ7vP)),
+([original artifact](https://claude.ai/artifact/9J5kQgRMvVtXPe6r6cJ7vP), a private Claude artifact),
 supplied by the author on 2026-10-15 and retained with the
 [production sources](../game/art/README.md). The names do not specify numeric colours, sprite dimensions or
 finished assets. The workshop kit and its pixel-grid choices remain historical
@@ -227,7 +227,7 @@ The author chose the greys-plus-muted-hues family, **Muted Day**, on 2026-10-18;
 the palette below settles the earlier mockup question.
 
 **Figure and level palette chosen by the author on 2026-10-18.** In the
-[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) the author
+[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) (a private Claude artifact) the author
 picked this build, each part a few strokes in Windows 98 Paint:
 
 | Slot | Part | Drawing |

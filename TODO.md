@@ -53,8 +53,7 @@ This is a selection guide, not another priority order; each owner defines a boun
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
 - **Report filing:** the guarded resize request and example (`ENG#23`) are
-  prepared and locally qualified. Filing needs separate author authorization;
-  the current task forbids external report filing.
+  prepared and locally qualified. Filing needs separate author authorization.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 

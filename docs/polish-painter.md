@@ -143,7 +143,7 @@ also includes every action in all five hues and 28-pixel authoring samples.
 ## The author's build (2026-10-18)
 
 The author rebuilt the figure from parts in the
-[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) and chose
+[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) (a private Claude artifact) and chose
 the Muted Day level palette ([art rules](polish-plan.md#1-establish-the-art-and-display-rules)):
 an ear-stub head, a backwards team cap, tall dot eyes, a smirk, centred overalls
 with team straps, short team sleeves with white hands, and the existing tube

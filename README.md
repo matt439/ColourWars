@@ -155,8 +155,7 @@ git clone --recurse-submodules https://github.com/matt439/ColourWars.git
 
 If you already cloned without it: `git submodule update --init --recursive`.
 
-Labrador is public, so the submodule needs no credentials of its own — this
-repository is the private half.
+Labrador is public, so the submodule needs no credentials of its own.
 
 ### Prerequisites
 
@@ -386,7 +385,7 @@ old sources were copied in by hand), and they carry fonts and code that are not
 ColourWars' to redistribute, so they are kept in a private archive rather than
 on a branch here.
 
-`matt439/ChromaClash` holds the middle name's history.
+The middle name's history is in `matt439/ChromaClash`, which is not public.
 
 The game is a *client*, and it is held to a client's standard rather than the
 engine's. Labrador's PHILOSOPHY governs the engine's own code and everything it

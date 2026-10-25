@@ -370,14 +370,24 @@ FodyWeavers.xsd
 *.wav
 *.xwb
 *.mp3
+*.ogg
+*.flac
 # POL#22 replacement production sources and masters are redistributable.
 # Publish only the accepted runtime bank; keep private legacy banks ignored.
 !/game/content/sounds/paint_exe.xwb
 !/game/audio/paint_exe/**/*.wav
 !/game/audio/paint_exe/**/*.mp3
+!/game/audio/paint_exe/**/*.ogg
+!/game/audio/paint_exe/**/*.flac
 # CMake out-of-source build tree
 out/
 
 # Claude Code's scratch git worktrees. Scoped to worktrees/ rather than the
 # whole of .claude/, so project-level settings can still be committed.
 .claude/worktrees/
+.claude/settings.local.json
+CMakeUserPresets.json
+.vscode/
+.idea/
+*.dmp
+*.mdmp

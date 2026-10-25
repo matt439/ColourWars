@@ -22,7 +22,8 @@ SOFTWARE.
 
 --------------------------------------------------------------------------
 
-This licence covers the engine, the sample, the paint-shooter's source and the
-documentation. It does not cover everything in the working tree: see NOTICE for
-third-party code carried here, and for the content that is deliberately not
-distributed.
+This licence covers ColourWars' own source code, content and documentation.
+The Labrador engine at external/labrador is a separate project with its own
+LICENSE and NOTICE. This licence does not cover everything in the working tree:
+see NOTICE for the third-party code, fonts, audio and tools carried here, and
+for the content that is deliberately not distributed.

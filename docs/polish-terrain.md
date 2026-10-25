@@ -5,7 +5,7 @@ its stage approval and future work. The art rules it follows are the accepted
 [Paint.exe rules](polish-plan.md#1-establish-the-art-and-display-rules) (Tool Props
 terrain, airbrush shadows, Zoom 400%) and the author's Muted Day palette. The picture
 it was built to is the world the author chose that palette in, in the
-[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq): drawn
+[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) (a private Claude artifact): drawn
 stationery on tiled ground, airbrush speckle under floating platforms, and a crude
 drawing of hills, trees, a house, clouds, a sun and birds behind.
 

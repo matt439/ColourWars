@@ -36,9 +36,36 @@ Three build tools are retained in this repository:
 - `game/art/tools/MakeSpriteFont.exe` — the sprite-font compiler.
 - `game/art/tools/texconv.exe` — the texture converter.
 
-Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 Source: https://github.com/microsoft/DirectXTK and
 https://github.com/microsoft/DirectXTex
+
+`game/directx.ico`, the executable's icon, is the stock icon from Microsoft's
+DirectX Visual Studio project templates
+(https://github.com/walbourn/directx-vs-templates), under the same licence.
+It is a placeholder until the release-art pass (TODO.md, GAP#7.6).
+
+    The MIT License (MIT)
+
+    Copyright (c) Microsoft Corporation.
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to permit
+    persons to whom the Software is furnished to do so, subject to the
+    following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+    NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+    USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Replacement audio production set (CC0 sources)
 
@@ -91,11 +118,19 @@ in `game/art/sources/fonts/licenses/`; the release carries the licences in
 The atlases are unmodified renderings of these fonts; the OFL permits bundling
 them with software. They are not ColourWars' to license under MIT.
 
-### Menu artwork
+### Generated artwork
 
-`game/art/sources/textures/menu_paint.png` is original artwork generated for
-ColourWars using OpenAI image generation. The matching `.dds` is a lossless
-RGBA conversion used at runtime in `game/content/textures/`;
-`menu_paint.json` defines its sprite frame.
-The release includes the DDS and frame definition, while the PNG is retained
-as the source artwork.
+Three images in this repository are original artwork generated for ColourWars
+using OpenAI image generation; each carries a C2PA provenance record saying so.
+
+- `game/art/sources/textures/menu_paint.png` - the menu artwork. The matching
+  `.dds` is a lossless RGBA conversion used at runtime in
+  `game/content/textures/`, and `menu_paint.json` defines its sprite frame.
+  The release includes the DDS and frame definition, while the PNG is retained
+  as the source artwork.
+- `game/art/weapon_paint_source.png` - the first weapon drawing, retained as
+  historical authoring material with `weapon_paint_prompt.txt`. The runtime
+  weapon sheet is built from the hand-authored vector source instead
+  (`game/art/weapons/`).
+- `game/art/polish/workshop-reference.png` - a style reference, with its
+  prompt beside it. It is not shipped.

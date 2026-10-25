@@ -137,11 +137,11 @@ display, load and build metadata separately when using this direct route.
 
 ## Shared-load diagnostic record (2026-10-15)
 
-**Measurement support verified; baseline not accepted.** TradingCardCollection
+**Measurement support verified; baseline not accepted.** Another project's
 test work was authorized concurrently on this PC. Host load was not isolated or
 controlled. No other ColourWars build/test ran during the three captures.
 
-Recorded machine: MATTPC, Windows 11 Pro build 26200, Ryzen 9 9950X3D
+Recorded machine: Windows 11 Pro build 26200, Ryzen 9 9950X3D
 (16 cores/32 logical processors), OS-reported 63.6 GiB RAM, selected D3D11
 NVIDIA GeForce RTX 5080, driver 32.0.16.1692. The pool used 1–32 threads.
 The actual client was 1280×720, windowed and hidden; native visibility was false,
