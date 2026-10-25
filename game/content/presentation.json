@@ -758,7 +758,7 @@
     "step": { "duration": 0.20, "spread": 18.0, "lift": 12.0, "particle_size": 8.0 },
     "skid": { "duration": 0.28, "spread": 32.0, "lift": 18.0, "particle_size": 12.0 },
     "keyline": "000000",
-    "keyline_width": 1.0
+    "keyline_width": 2.0
   },
 
   "tool_motion": {
