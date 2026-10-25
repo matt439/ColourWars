@@ -23,7 +23,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 3. **Now, the other arenas (`POL#21`):** apply the Crossfeed process to King of the Hill and
    Turbulence, keeping the current P3/five-tool values as the baseline. The King of the Hill
    blockout is [Press Tower](docs/polish-press-tower.md) (explicit-only, beside the preserved
-   original); Crossfeed is now in Random at the author's request.
+   original; attended play is `POL#31`); Crossfeed is now in Random at the author's request.
+   Turbulence is the next blockout.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
@@ -40,9 +41,13 @@ This is a selection guide, not another priority order; each owner defines a boun
 
 | id | next implementation slice | owner |
 |---|---|---|
+| `POL#32` | A `-PressTowerOnly` painter leaf and probe mode, and Press Tower in the surface-finish and miniature-terrain matrices | [Press Tower, Open](docs/polish-press-tower.md#open) |
+| `POL#33` | Time `crossfeed` and `press_tower` level builds into the existing `perf` table | [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment) |
+| `POL#34` | Record today's 720p/1080p/QHD scaling behaviour and the candidate policies for the author | [§1](docs/polish-plan.md#1-establish-the-art-and-display-rules) |
 | `DBG#1` | No further unattended field selected; additional consumer audits are optional if selected | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
+- **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
 - **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
   recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
   five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
@@ -66,6 +71,8 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#34` | OPEN | MED | M | Display scaling: record what 720p/1080p/QHD and 1/2/4-player panes do today and the candidate snapping, integer-scale and letterboxing policies; the choice is the author's. [§1](docs/polish-plan.md#1-establish-the-art-and-display-rules). |
+| `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
 
 ## Feel and feedback
 
@@ -88,7 +95,9 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 |---|---|---|---|---|
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | OPEN | MED | XL | Arena blockouts after the accepted Crossfeed reference: [Press Tower](docs/polish-press-tower.md) (King of the Hill brief) has its baseline case and awaits attended play, native four-pane captures and support art; Turbulence, an optional 1v1 CQ variant and side-swap qualification remain. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
+| `POL#21` | OPEN | MED | XL | Arena blockouts after the accepted Crossfeed reference: Turbulence is next, then an optional 1v1 CQ variant and side-swap qualification. [Press Tower](docs/polish-press-tower.md) (King of the Hill brief) is built; its play and captures are `POL#31`/`POL#32`, support art remains. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
+| `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
+| `POL#32` | OPEN | LOW | M | Press Tower native four-pane captures: add a `-PressTowerOnly` check-painter leaf and probe mode, and list it in the surface-finish and miniature-terrain matrices. Running it needs the GPU machine. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
 ## Audio replacement
@@ -115,6 +124,7 @@ here.
 | `ROAD#2` | DECISION | MED | M | Physical-pad sessions: 2P and 4P on every stage and weapon; join, unplug/replug, pause, focus, fullscreen/resize, series draws, rematch, relaunch; a long soak past the display timers; one non-XInput pad. Needs pads. |
 | `ROAD#4` | DEFERRED | LOW | M | A pad that returns in a different XInput slot cannot reclaim its player mid-match. Deferred until it proves inconvenient. [First increment](docs/feature-roadmap.md#first-increment-explicit-joining-and-reconnect-pause). |
 | `POL#24` | DECISION | MED | M | The finish review and fresh-player observations on the Crossfeed reference match, including its spawn pressure and 1-4P clean/heavy readability; the gate before production widens. [Process](docs/polish-plan.md#7-acceptance-and-delivery). |
+| `POL#33` | OPEN | LOW | S | Add `crossfeed` and `press_tower` to the level-build timing table with `perf` and the Release harness; Windows only. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
 | `GAP#7.6` | DEFERRED | LOW | S | Replace the stock `directx.ico` in the later UI/release-art pass using the approved style; the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
 

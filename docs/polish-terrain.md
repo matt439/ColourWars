@@ -619,11 +619,15 @@ working art baseline for the next phase. It does not freeze the kit or establish
 final quality, and records no particular device, play session or test result.
 The retained parallax comparison recommends keeping the current static backdrop.
 
-- Close Quarters' own backdrop and fitting the kit to its blockout remain in
-  `POL#17`, with composition/readability rechecked for `POL#24`.
+- Close Quarters' own backdrop and fitting the kit to its blockout were left
+  with `POL#17`, which closed when the author accepted Crossfeed as the
+  reference arena (2026-10-25). Close Quarters is now preserved as a
+  comparison, so its own backdrop is not planned; it returns under `POL#16`
+  only if Close Quarters is taken forward.
 - Per-arena palette, composition and production remain in `POL#16`/`POL#21`.
-- Signage and captioned Paint-artefact jokes still need the author's wording;
-  further room life remains open to iteration.
+- Signage and captioned Paint-artefact jokes still need the author's wording
+  (`POL#35`, deferred to the `POL#16` production pass); further room life
+  remains open to iteration.
 - Physical-controller, audio and performance acceptance retain their separate
   owners.
 
