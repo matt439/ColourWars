@@ -324,10 +324,12 @@ demonstrating engine usage, know which of the two you are pointing at.
 
 ## History
 
-Two disjoint histories, deliberately:
+`master` runs back to 2023-12-19 — the ArtAttack repository's history filtered
+to the game's side of the split. Most of it is under `ArtAttack/` rather than
+`game/`; use `git log --follow` to cross the rename.
 
-- **`master`** runs back to 2023-12-19 — the ArtAttack repository's history
-  filtered to the game's side of the split. Most of it is under `ArtAttack/`
-  rather than `game/`; use `git log --follow` to cross the rename.
-- **`original-2022`** is the first 119 commits (2022-12-30 to 2023-10-10),
-  unmodified, sharing no ancestor with `master`.
+The first 119 commits (2022-12-30 to 2023-10-10) share no ancestor with
+`master` and are deliberately not published: they carry Microsoft fonts and
+third-party code that are not ColourWars' to redistribute. They used to be the
+`original-2022` branch and now live only in the private
+`matt439/ColourWars-2022-archive`. Do not push them back here.

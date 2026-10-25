@@ -375,18 +375,16 @@ leading it: the executable was `ArtAttackGame.exe` and the engine namespace
 `artattack::` for six days after the split, and both were swept afterwards, on
 each side of it.
 
-There are two disjoint histories in it, and that is deliberate:
+`master` runs back to 2023-12-19. That is the ArtAttack repository's history,
+filtered to the game's side of the split. Most of it is under `ArtAttack/`
+rather than `game/`, because the rename to `game/` came late; `git log
+--follow` crosses it.
 
-- **`master`** runs back to 2023-12-19. That is the ArtAttack repository's
-  history, filtered to the game's side of the split. Most of it is under
-  `ArtAttack/` rather than `game/`, because the rename to `game/` came late;
-  `git log --follow` crosses it.
-- **`original-2022`** is the first 119 commits, 2022-12-30 to 2023-10-10,
-  exactly as they were. They share no ancestor with `master`: the ArtAttack
-  repository was started fresh and the old sources were copied in by hand
-  ("starting the process of adding all of my old source files back"), so
-  there is no commit to graft onto. The branch is the honest way to keep
-  them — reachable, unmodified, and not pretending to be an ancestor.
+The first 119 commits, 2022-12-30 to 2023-10-10, are not published. They share
+no ancestor with `master` (the ArtAttack repository was started fresh and the
+old sources were copied in by hand), and they carry fonts and code that are not
+ColourWars' to redistribute, so they are kept in a private archive rather than
+on a branch here.
 
 `matt439/ChromaClash` holds the middle name's history.
 
