@@ -80,4 +80,4 @@ jobs:
       - name: Show team B route rows
         if: always()
         shell: pwsh
-        run: Get-ChildItem out/validation/movement-feedback -Recurse -Filter route.csv | ForEach-Object { Import-Csv $_ | Where-Object { $_.view -in '2','1' -and ([int]$_.tick % 5 -eq 0) } | Format-Table -AutoSize | Out-String -Width 200 }
+        run: Get-ChildItem out/validation/movement-feedback -Recurse -Filter route.csv | ForEach-Object { Import-Csv $_ | Where-Object { $_.players -eq '4' -and $_.view -in '2','4' -and ([int]$_.tick % 5 -eq 0) } | Format-Table -AutoSize | Out-String -Width 200 }

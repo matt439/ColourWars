@@ -433,7 +433,7 @@ namespace
     // Four-player panes now frame at least 1280 world units, so the camera
     // starts pinned to the arena's right edge with a 512-unit scroll border;
     // Team B has to run past 4912 (with its lead) before the view pans.
-    constexpr float route_team_b_jump_inset = 120.0f;
+    constexpr float route_team_b_jump_inset = 150.0f;
     constexpr float route_minimum_pan = 16.0f;
 
     void route_phase(Application& app, LevelBuilder& builder, Presentation& presentation,
@@ -550,6 +550,13 @@ namespace
                 if (runner.landing_tick >= 0)
                 {
                     const RectangleF& body = player.rectangle();
+                    if (!(grounded(player) &&
+                        std::abs(body.bottom() - runner.landing.top()) <= 0.05f &&
+                        body.left() >= runner.landing.left() && body.right() <= runner.landing.right()))
+                    {
+                        std::cerr << "route view " << index + 1 << " landed at left=" << body.left()
+                            << " right=" << body.right() << " bottom=" << body.bottom() << '\n';
+                    }
                     require(grounded(player) &&
                         std::abs(body.bottom() - runner.landing.top()) <= 0.05f &&
                         body.left() >= runner.landing.left() && body.right() <= runner.landing.right(),
