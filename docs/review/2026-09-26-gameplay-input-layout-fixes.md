@@ -1,6 +1,6 @@
 # Gameplay, input and countdown review fixes, 2026-09-26
 
-The three findings from the review of game revision `fa513d4` are addressed.
+The three findings from the review of game revision `32ff364` are addressed.
 
 - Flying paint checks eligible enemies between the player and muzzle, removing
   the sniper's close-range blind spot. Cover wins simultaneous impacts, and

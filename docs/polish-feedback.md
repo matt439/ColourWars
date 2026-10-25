@@ -1,7 +1,7 @@
 # Movement feedback
 
 Second polish increment, implemented on 2026-10-08 after the camera/movement
-foundation (`fbd45dc`), using the existing Labrador pin. It advances sections 1–2
+foundation (`b69d085`), using the existing Labrador pin. It advances sections 1–2
 of [the plan](polish-plan.md) alongside a retained
 [workshop style candidate](polish-style-reference.md). The author requested the
 timing/intensity decision be implemented now on 2026-10-15 (`POL#5`), with later

@@ -6,7 +6,7 @@ and source links below describe that earlier revision; use Git history to
 reproduce it. Retained images and clips remain evidence of the study. Current
 art rules are in [polish plan ?1](polish-plan.md#1-establish-the-art-and-display-rules).
 
-Fourth polish increment, implemented on 2026-10-08 from `4409f1a`, using the
+Fourth polish increment, implemented on 2026-10-08 from `a84155c`, using the
 unchanged Labrador pin. It advances the next task in [the polish plan](polish-plan.md):
 animated team masks, coordinated tool attachments and same-team identity in the
 actual Movement Course. This is an explicitly selected comparison, not final art,

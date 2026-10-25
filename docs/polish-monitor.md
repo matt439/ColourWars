@@ -75,7 +75,7 @@ Evidence is under `out/acceptance/<preset>/` and
 | Debug | `dc595cfe6cff428a99dd3114333d5d47` |
 | Release | `c272fdac6b7340618f47e2bea2cbd122` |
 
-Their `result.json` files record baseline `0480c18` plus working changes, the
+Their `result.json` files record baseline `2b5e0a2` plus working changes, the
 pinned engine, device, scope and staged content hashes. Full-frame monitor
 review sheets are separate from the painter's native-size crop sheets.
 
@@ -142,5 +142,5 @@ silent fallback separately. All runs close gracefully and use isolated saves.
 Evidence is under `out/validation/foreground-scenes/`: visual Debug run
 `d397d94b4eba4e79bc8233f7f71a74e0`, Release run
 `1c181c8900344623b3368044deb44450`, startup records and `release/result.json`.
-The visual result files identify baseline `4bb35b3` plus working changes and
+The visual result files identify baseline `4537e84` plus working changes and
 the exact staged content. This increment keeps the remaining `POL#16` work open.

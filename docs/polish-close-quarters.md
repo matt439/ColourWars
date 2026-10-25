@@ -176,7 +176,7 @@ collision.
 ## Verification and remaining acceptance
 
 The first increment was validated on 2026-10-20 in the working tree based on
-`4852c6f`; receipts retain the source hashes and dirty-tree state. Evidence root:
+`938440e`; receipts retain the source hashes and dirty-tree state. Evidence root:
 `out/validation/cq-blockout-20261020/0fb186ee-4deb-406d-acf7-35bb8c8cbbac/`.
 
 - Debug and Release built under `/W4 /WX`. All 39 consumer cases passed in

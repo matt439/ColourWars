@@ -66,7 +66,7 @@ explorations. Under `engine/` only a comment in `engine/CMakeLists.txt`
 changed, so nothing closed and no citation here moved; both presets, consumer
 acceptance and the startup check pass on the new pin.
 
-**Moved 2026-10-22 to upstream master `19cf650`**, in `15cdfc1`. Fifteen
+**Moved 2026-10-22 to upstream master `19cf650`**, in `6a5d83c`. Fifteen
 commits, and they answered every live report, 6 and 9-22: each has a recorded
 decision and all fifteen are now [closed](#closed). One source break, from
 report 13's answer. See
@@ -250,11 +250,11 @@ needs more evidence and 21 was declined — an answer that leaves the workaround
 closes the report. Kept as outcomes rather than as
 reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
-[What the audit changed](#what-the-audit-changed) for reports 1–5, `f81e937`
-for 7 and 8, the parent of `7041dc1` for 13 and 21, `a0e6f7e` for 11, 16,
-17 and 19, the parent of `07e4879` for 9, 10 and 14, the parent of
-`c657dd1` for 18, 20 and 22, and the parents of `759d2e1`, `52b6aeb` and
-`c0691fd` for 6, 12 and 15, and the parent of the commit that moved the pin
+[What the audit changed](#what-the-audit-changed) for reports 1–5, `a7da897`
+for 7 and 8, the parent of `487b8d2` for 13 and 21, `d9f1656` for 11, 16,
+17 and 19, the parent of `d1c6063` for 9, 10 and 14, the parent of
+`83544c2` for 18, 20 and 22, the parents of `d647cf8`, `b4f2201` and
+`1553ba5` for 6, 12 and 15, and the parent of the commit that moved the pin
 to `1e60fb2` for 24.
 
 ## 1. ~~`StateContext` never empties its stack~~
@@ -281,7 +281,7 @@ ask: the engine **makes the edge** rather than documenting its absence, because
 every client would otherwise write the same remembered `bool`; and
 `StateContext::active()` came with it, for the case an edge cannot reach.
 
-**Spent** in `2857160`. All three exhibits deleted:
+**Spent** in `b6b9561`. All three exhibits deleted:
 `GameData::window_has_foreground()`, `GameLevel::match_has_the_foreground()`
 and its `window_active_` member, and `MainMenuTitle::update`'s poll (the page's
 hook is `update_page` now).
@@ -302,7 +302,7 @@ Asked for a registered-but-unpickable entry with a third colour, skipped by
 `Activation` — `none`/`ran`/`refused` — which was **a source break here**, five
 call sites.
 
-**Spent** in `705ac11`. Mode Select registers its three unbuilt modes and
+**Spent** in `c7944a9`. Mode Select registers its three unbuilt modes and
 switches them off; Player Count greys rows against the live pad count and turns
 `refused` into the warning line it used to raise by hand.
 
@@ -327,7 +327,7 @@ became a `UiWidget`, so a compound widget is just a class deriving from it.
 `UiObject::set_colour` became a virtual no-op so a container can forward paint
 to children it knows only as `UiObject*`.
 
-**Spent** in `f078ef5`. `PromptBar` derives instead of composing, losing four
+**Spent** in `0028ec8`. `PromptBar` derives instead of composing, losing four
 forwarders and a second `hidden` flag; `OptionRow : UiContainer` gives the
 options page rows, turning `adjust_focused_value` from one arm per row into a
 `dynamic_cast` and a call.
@@ -349,7 +349,7 @@ the report's sharpest argument — `text_encoding.h` promises U+FFFD and U+FFFD
 is in no atlas, so the documented graceful path led into the throw it was
 written to avoid — as the reason rather than as decoration.
 
-**Spent** in `2dab258`, and `drawable_text` stayed, as predicted. Question
+**Spent** in `9dc5e2b`, and `drawable_text` stayed, as predicted. Question
 marks in a weapon description are a worse outcome for *this* game than refusing
 to start: the text is authored content with one build, so a wrong character is
 always a mistake and never a runtime condition to degrade through.
@@ -707,7 +707,7 @@ already the enumerator spellings, so no save changes meaning; acceptance now
 also pins them to `labrador::key_name`. `debug_keys` lost its enum-order
 arithmetic and about fifty hand-written names: an explicit bindable list is
 named by the engine, `debug_keys::key_name` is gone (and with it the
-unqualified call the pin bump `15cdfc1` had to qualify), and `parse` also takes
+unqualified call the pin bump `6a5d83c` had to qualify), and `parse` also takes
 the engine's token. `keyboard_jump_collision` looks the chord up directly
 instead of round-tripping through two name tables. The standalone draft and
 exhibit are deleted.
@@ -750,8 +750,8 @@ reach. GPU time, history, distributions, counters and an overlay were
 **declined**, and `REV#10`'s overlay stays deferred. AppTests feed the recorder
 synthetic time points; a null-preset loop case runs a real `Application`.
 
-**Spent in two steps:** documentation in `07e4879`, then completed CPU-phase
-consumption in `7a1a4e8` (2026-10-24, `DBG#5`). The overlay and schema 2 capture
+**Spent in two steps:** documentation in `d1c6063`, then completed CPU-phase
+consumption in `364f8cc` (2026-10-24, `DBG#5`). The overlay and schema 2 capture
 pair each pending match sample with the exact completed Application frame;
 final publication is awaited before export, including target-one captures.
 The analyzer accepts both schemas and rejects incomplete engine pairing.
@@ -1222,7 +1222,7 @@ still only reads.
 
 - **Who owns a resolution-independent world height.** This entry used to say
   `CameraTools` never sets a scale, so a 4K player saw nine times the world a
-  720p player did. That stopped being true here, not in the engine: `fbd45dc`
+  720p player did. That stopped being true here, not in the engine: `b69d085`
   added `PlayerCamera::follow` (`game/objects/player_camera.cpp`), which sets
   `scale` from the screen height over `presentation.json`'s
   `camera.reference_height` of 1080 and passes the visible rectangle in world
@@ -1340,7 +1340,7 @@ still only reads.
   speed cap. The step it uses is `SIMULATION_HZ` (`game/simulation.h`), the
   same value `main.cpp` passes to the engine as `target_fps`. The row that
   asked for the check also said "the sniper's 2000 u/s already exceeds it",
-  but that has been stale since `70efadf` added `Projectile::resolve_sweep`.
+  but that has been stale since `9604211` added `Projectile::resolve_sweep`.
   Every projectile kind except the roller tests its whole path each step, and
   the roller never moves (`is_swept`, `projectile_type.h`). The `tunnelling`
   acceptance case fires a jet at the 5000 u/s cap at a 10-unit slab, a case
@@ -1362,7 +1362,7 @@ They described engine code at `8e43d72` and cited it by line — `focus.cpp:118-
 forty-three commits have moved every one of those. They were originally kept
 "because the reasoning is what the engine's fix agreed with", and that value
 was banked when the fixes landed and were consumed. They are in git at
-`a728f42` and one `git show` away.
+`a694f78` and one `git show` away.
 
 **Kept, in one paragraph each:** what was asked, what shipped, which commit
 spent it, and — the part worth keeping longest — **what each prediction got
@@ -1640,7 +1640,7 @@ window file, report 12's check location and its "not a write" framing, report
 **What this repository had already answered.** The camera entry under
 [What is deliberately not here](#what-is-deliberately-not-here) described a
 4K player seeing nine times the world. `PlayerCamera` has fixed a 1080-unit
-world height since `fbd45dc`; the entry is now the narrower ownership question.
+world height since `b69d085`; the entry is now the narrower ownership question.
 
 **Validation:** `x64-debug` and `x64-release` reconfigured and built under
 `/W4 /WX`; consumer acceptance passed on both, `check-startup` passed on both,
@@ -1650,7 +1650,7 @@ playback was exercised.
 
 # What the 2026-10-22 bump changed
 
-Moved from `0c15f34` to upstream master at `19cf650` in `15cdfc1`: fifteen
+Moved from `0c15f34` to upstream master at `19cf650` in `6a5d83c`: fifteen
 commits, and every one of them about this repository. The first, `cacf112`,
 records Labrador's decision on each of the fifteen live reports in its
 `docs/review/colourwars-reports/` (a table in the README and one file per
@@ -1660,31 +1660,31 @@ before had done for more than one, and none of them had been filed.
 
 | # | Decision | Engine commit | Spent here |
 |---|---|---|---|
-| 6 | accepted, narrowed: named sound groups; master bus, fades, ducking, listener and voice cap declined | `19cf650` | `759d2e1` |
-| 9 | document only: a root `State` is the per-frame observer; capture declined | `f1e5244` | `07e4879`, docs only |
-| 10 | document only: the redraw is the supported capture | `ac58ca1` | `07e4879`, docs only |
-| 11 | accepted, narrowed: the bare `SC_KEYMENU` is swallowed, no option | `0f3b283` | `bf01d5f` |
-| 12 | split: `parse_json` accepted, key enumeration a separate story (PI-20), spans declined | `3af746b` | `52b6aeb` |
-| 13 | accepted: `key_name` and `key_from_name` | `2851ad9` | `7041dc1` |
-| 14 | accepted, narrowed: CPU `frame_timings()`, GPU time declined | `7344610` | `07e4879`, docs; later CPU spend below |
-| 15 | document only: the template's mirror and a recipe; install is PI-11, undecided | `48fb236` | `c0691fd`, nothing in code |
-| 16 | accepted, widened to entering full screen | `7db3d5c` | `bf01d5f`, in part |
-| 17 | accepted, narrowed: client pixels kept under per-monitor v2; floor Windows 10 1607 | `dae6c87` | `bf01d5f`, a manifest comment |
-| 18 | document only: `UiText::set_hidden`; zero-alpha tint warned | `30cb06a` | `c657dd1` |
-| 19 | needs more evidence: two first-frame captures asked for | `cacf112` | `bf01d5f`, nothing in code; captures are `GAP#5.1` |
-| 20 | accepted, narrowed: `DrawList::camera()` and `viewport()` | `11ec1fc` | `c657dd1`, in part; later Scene integration below |
-| 21 | declined: the action map stays the game's | `197aff1` | `7041dc1`, nothing in code |
-| 22 | accepted, narrowed: `SheetFrame`/`SheetStrip` pairs | `bec82f0` | `c657dd1` |
+| 6 | accepted, narrowed: named sound groups; master bus, fades, ducking, listener and voice cap declined | `19cf650` | `d647cf8` |
+| 9 | document only: a root `State` is the per-frame observer; capture declined | `f1e5244` | `d1c6063`, docs only |
+| 10 | document only: the redraw is the supported capture | `ac58ca1` | `d1c6063`, docs only |
+| 11 | accepted, narrowed: the bare `SC_KEYMENU` is swallowed, no option | `0f3b283` | `a1238ee` |
+| 12 | split: `parse_json` accepted, key enumeration a separate story (PI-20), spans declined | `3af746b` | `b4f2201` |
+| 13 | accepted: `key_name` and `key_from_name` | `2851ad9` | `487b8d2` |
+| 14 | accepted, narrowed: CPU `frame_timings()`, GPU time declined | `7344610` | `d1c6063`, docs; later CPU spend below |
+| 15 | document only: the template's mirror and a recipe; install is PI-11, undecided | `48fb236` | `1553ba5`, nothing in code |
+| 16 | accepted, widened to entering full screen | `7db3d5c` | `a1238ee`, in part |
+| 17 | accepted, narrowed: client pixels kept under per-monitor v2; floor Windows 10 1607 | `dae6c87` | `a1238ee`, a manifest comment |
+| 18 | document only: `UiText::set_hidden`; zero-alpha tint warned | `30cb06a` | `83544c2` |
+| 19 | needs more evidence: two first-frame captures asked for | `cacf112` | `a1238ee`, nothing in code; captures are `GAP#5.1` |
+| 20 | accepted, narrowed: `DrawList::camera()` and `viewport()` | `11ec1fc` | `83544c2`, in part; later Scene integration below |
+| 21 | declined: the action map stays the game's | `197aff1` | `487b8d2`, nothing in code |
+| 22 | accepted, narrowed: `SheetFrame`/`SheetStrip` pairs | `bec82f0` | `83544c2` |
 
 **Later client spends (2026-10-24):** report 14's CPU columns landed in
-`7a1a4e8`; report 20's path-set Scene integration and native qualification are
+`364f8cc`; report 20's path-set Scene integration and native qualification are
 recorded in its dated follow-up above. These are later work, not claims about
 what the 2026-10-22 bump itself completed.
 
 **One source break, and it was report 13's own answer.** `labrador::key_name`
 made the unqualified `key_name(labrador::Key)` in `game/debug/debug_keys.cpp`
-ambiguous through argument-dependent lookup; `15cdfc1` qualified the call to
-build at the new pin, and `7041dc1` then deleted the client function the
+ambiguous through argument-dependent lookup; `6a5d83c` qualified the call to
+build at the new pin, and `487b8d2` then deleted the client function the
 qualification pointed at. The engine's `CHANGES.md` now says in its preamble
 that a new free function taking an engine type can break a game this way.
 Three silent changes reach this game and are recorded under their reports:
@@ -1692,7 +1692,7 @@ Windows 10 1607 as the load floor (17), F10 and a lone Alt no longer freezing a
 Release build in the system menu (11), and atomic name setters on
 `TextureObject` and `AnimationObject` (22).
 
-**What that closing round left.** Spending 16 found report 23 (`27ec7e1`), then
+**What that closing round left.** Spending 16 found report 23 (`cc1a0c6`), then
 the one live report. Report 19 left this repository the two captures under
 `GAP#5.1`; 14 left `DBG#5`'s three columns; 20 left `POL#29`; 12's PI-20 and
 15's PI-11 were engine stories with no row here, and 15's install half and 6's
@@ -1700,7 +1700,7 @@ listener and voice cap were parked under
 [What is deliberately not here](#what-is-deliberately-not-here). Every draft
 in `docs/engine-reports/` and every exhibit in `scripts/engine-reports/` was
 deleted, and both folders with them. The ledger's counts were reconciled after
-each closing commit (`a0e6f7e`, `ce1d20f`, `af9181f`, `532986e`) and once more
+each closing commit (`d9f1656`, `6400ffa`, `83885f4`, `7505a4a`) and once more
 in that commit. The live sections above record later client follow-ups; they do
 not reopen the answered engine reports.
 

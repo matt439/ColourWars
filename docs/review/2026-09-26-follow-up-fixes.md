@@ -1,6 +1,6 @@
 # Follow-up review fixes, 2026-09-26
 
-All five findings from the broad review of game revision `70efadf` are
+All five findings from the broad review of game revision `9604211` are
 addressed. The engine pin and the game's OOP design are unchanged.
 
 - Player grounding now records actual support from floors, ramps and accepted
