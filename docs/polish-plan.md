@@ -1557,6 +1557,18 @@ be added ahead of `POL#27`.
 The decision may be "no" for any of them. Record it here either way, so a later
 gap list reads the absence as intended.
 
+**Paint-underfoot prototype (`POL#36`, OPEN, 2026-10-25).** So the first lever
+can be decided by playing it rather than imagining it, build it behind a
+`tuning.json` switch that ships off. On your own colour: faster movement and
+faster ammunition recovery. On the enemy's: slower movement and no recovery.
+Each amount is a tuning number, and every number is zero or neutral while the
+switch is off, so shipped balance and `POL#27` evidence are unchanged. The
+console's `tune` turns it on for a match. Acceptance is a CPU case that checks
+the switch-off match is bit-identical to today's replay fingerprint, and that
+each effect follows the supporting structure's paint owner, with a driven pass
+across own, enemy and unpainted support. The prototype does not answer
+`POL#30`: the author does, after playing it.
+
 ### Let players learn by making a mess
 
 The game already has weapon descriptions, controls cards and timed solo practice
