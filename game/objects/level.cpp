@@ -347,6 +347,23 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 	this->refresh_views();
 }
 
+std::vector<SlotRumbleEvents> Level::take_rumble_events()
+{
+	std::vector<SlotRumbleEvents> result;
+	// Complete allocation before consuming any player's pending flags.
+	result.reserve(this->players_.size());
+	for (Player* player : this->players_)
+	{
+		result.push_back({ player->player_num(), player->take_rumble_events() });
+	}
+	return result;
+}
+
+void Level::clear_rumble_events() noexcept
+{
+	for (Player* player : this->players_) { player->clear_rumble_events(); }
+}
+
 void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 	float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal)
 {

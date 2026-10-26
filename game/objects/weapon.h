@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/play_settings.h"
+#include "game/rumble_events.h"
 
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
@@ -82,6 +83,8 @@ public:
 		float dt, float ammo_regen_multiplier = 1.0f);
 
 	float ammo() const;
+	RumbleEvents take_rumble_events() noexcept;
+	void clear_rumble_events() noexcept;
 	// The same strict cooldown and full-shot paint gate used by firing.
 	// Player invokes it only while the player can act.
 	bool ready_to_shoot() const;
@@ -267,6 +270,7 @@ private:
 	// stop_sounds() is const because it changes presentation, not gameplay.
 	mutable bool loop_playing_ = false;
 	bool empty_warned_ = false;
+	RumbleEvents pending_rumble_;
 	float empty_repeat_remaining_ = 0.0f;
 	bool awaiting_recovery_ = false;
 	bool cooldown_feedback_pending_ = false;

@@ -5,6 +5,9 @@
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
+#include <filesystem>
+
+namespace rumble_acceptance { void check_callers(const std::filesystem::path& content); }
 
 namespace
 {
@@ -342,10 +345,11 @@ namespace
     static_assert(!std::is_copy_constructible_v<Rumble> && !std::is_move_constructible_v<Rumble>);
 }
 
-int main()
+int wmain(int argc, wchar_t* argv[])
 {
     try
     {
+        require(argc == 2, "rumble <content>");
         events_and_expiry();
         overlap_and_retrigger();
         sparse_slots_and_keyboard();
@@ -353,10 +357,11 @@ int main()
         session_gates_and_stops();
         invalid_inputs_are_atomic();
         silent_and_boundary_profiles();
+        rumble_acceptance::check_callers(std::filesystem::absolute(argv[1]));
         std::cout << "PASS rumble pulse policy: four event intents, independent expiry/retrigger and bounded overlap, "
             "sparse physical slots, keyboard/bot/replay/disabled/disconnected gates, pause/focus/match/destructor stops, "
-            "no stale resume and atomic invalid-input rejection. Fake sink only; no native motors, saved settings, "
-            "gameplay callers or physical feel acceptance.\n";
+            "no stale resume and atomic invalid-input rejection. Fake sink only; no native motors, "
+            "GameLevel output or physical feel acceptance.\n";
         return 0;
     }
     catch (const std::exception& error)

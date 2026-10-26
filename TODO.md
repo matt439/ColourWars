@@ -52,7 +52,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 |---|---|---|
 | `POL#21` | Qualify Turbulence's five-tool pressure/recovery stations and native clean/heavy composition; supported movers and scored slopes follow their capability checks | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
 | `GAP#D5` | Add envelope-aware editor authoring and round trips for the qualified runtime-loaded horizontal mover; useful placements and scored slopes follow | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
-| `ROAD#9` | Add saved per-slot rumble On/Off, authored pulse values and actual gameplay callers to the qualified policy; isolated native hook follows | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
+| `ROAD#9` | Expose saved per-slot rumble On/Off and consume gameplay intents through a gated GameLevel owner; isolated native hook follows | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
 | `GAP#4.2` | Expose the saved per-slot A/B/X/Y Jump choices through a scoped Pad Jump page and accurate controls help; qualify pages and replay adoption | [Bindings](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:

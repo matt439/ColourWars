@@ -206,6 +206,10 @@ public:
 	bool input_jump_held() const;
 	PlayerMoveState move_state() const;
     int player_num() const;
+    // Drain after completed gameplay/contact work, even when output is gated.
+    // The equipped weapon's dry-trigger event joins this player's events.
+    RumbleEvents take_rumble_events() noexcept;
+    void clear_rumble_events() noexcept;
 
 	bool showing_debug() const;
 
@@ -343,6 +347,7 @@ private:
     const PlayerTuning& player_tuning() const;
 
     std::unique_ptr<Weapon> primary_ = nullptr;
+    RumbleEvents pending_rumble_;
 
     // Health and respawn delay are initialized from tuning in the constructor.
     float health_ = 0.0f;

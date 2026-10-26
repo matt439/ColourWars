@@ -333,6 +333,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
                 }
                 if (this->support_impact_speed_ >= this->movement_feedback_look_->landing_min_speed)
                 {
+                    this->pending_rumble_.hard_landing = true;
                     this->start_action(PlayerAnimationState::landing);
                 }
             }
@@ -797,6 +798,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
 
     if (damage > 0.0f && this->health_ > 0.0f && this->state_ == PlayerState::alive)
     {
+        this->pending_rumble_.hit = true;
         this->start_action(PlayerAnimationState::hurt);
         this->combat_feedback_.hurt();
         if (this->preferences_->view_shake_enabled()) { this->view_shake_.hurt(); }
@@ -855,6 +857,7 @@ void Player::update(float dt)
         this->reset_jump_input();
         this->set_move_state(PlayerMoveState::in_air);
         this->start_action(PlayerAnimationState::elimination);
+        this->pending_rumble_.elimination = true;
         this->combat_feedback_.eliminate(this->rectangle_);
         if (this->preferences_->view_shake_enabled()) { this->view_shake_.eliminate(); }
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
@@ -1309,6 +1312,7 @@ const PlayerTuning& Player::player_tuning() const
 
 void Player::place_at(const Vector2F& top_left)
 {
+    this->clear_rumble_events();
     this->clear_carrier();
     this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     this->view_shake_.clear();
@@ -1336,6 +1340,20 @@ void Player::place_at(const Vector2F& top_left)
     this->hit_ceiling_this_tick_ = false;
     MovingObject::set_rotation(0.0f);
     MovingObject::set_velocity(Vector2F::ZERO);
+}
+
+RumbleEvents Player::take_rumble_events() noexcept
+{
+    RumbleEvents result = this->pending_rumble_;
+    result.merge(this->primary_->take_rumble_events());
+    this->pending_rumble_ = {};
+    return result;
+}
+
+void Player::clear_rumble_events() noexcept
+{
+    this->pending_rumble_ = {};
+    this->primary_->clear_rumble_events();
 }
 
 void Player::force_respawn()

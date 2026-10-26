@@ -6,6 +6,7 @@
 #include "game/objects/weapon_details.h"
 #include "game/objects/weapon_type.h"
 #include "game/sound_reference.h"
+#include "game/rumble.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
 #include "engine/render/colour.h"
@@ -330,6 +331,7 @@ public:
 	const MatchTuning& match() const;
 	const PaintTuning& paint() const;
 	const PlayerTuning& player() const;
+	const RumbleProfile& rumble() const;
 
 	// Shared across every weapon: how fast ammo comes back, and how much of it
 	// a weapon starts with.
@@ -355,6 +357,7 @@ private:
 	MatchTuning match_;
 	PaintTuning paint_;
 	PlayerTuning player_;
+	RumbleProfile rumble_{};
 
 	float ammo_regen_delay_ = 0.0f;
 	float ammo_regen_rate_ = 0.0f;

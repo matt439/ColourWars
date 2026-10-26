@@ -192,6 +192,20 @@ namespace
             {
             }
 
+            // Physical-slot association matches pad_sticks. Each missing or
+            // malformed entry independently retains its default On value.
+            try
+            {
+                const JsonValue slots = root.array("pad_rumble");
+                const size_t count = std::min(slots.size(), data.play.pad_rumble.size());
+                for (size_t slot = 0; slot < count; ++slot)
+                {
+                    try { data.play.pad_rumble[slot] = slots.at(slot).boolean("enabled"); }
+                    catch (const std::runtime_error&) {}
+                }
+            }
+            catch (const std::runtime_error&) {}
+
             const auto read_switch = [&root](const char* key, bool& destination)
             {
                 try
@@ -220,6 +234,16 @@ namespace
                 writer.integer(settings.movement_deadzone);
                 writer.key("aim_deadzone");
                 writer.integer(settings.aim_deadzone);
+                writer.end_object();
+            }
+            writer.end_array();
+            writer.key("pad_rumble");
+            writer.begin_array();
+            for (const bool enabled : data.play.pad_rumble)
+            {
+                writer.begin_object();
+                writer.key("enabled");
+                writer.boolean(enabled);
                 writer.end_object();
             }
             writer.end_array();

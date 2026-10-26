@@ -417,6 +417,7 @@ void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
         {
             this->play_feedback_sound(this->empty_sound_, feedback.empty);
             if (this->feedback_ != nullptr) { this->feedback_->empty(); }
+            this->pending_rumble_.dry_fire = true;
             this->empty_warned_ = true;
             // Retain the limit across brief recoveries while fire stays held.
             // A long update emits at most one warning, never a queued burst.
@@ -725,11 +726,24 @@ void Weapon::reset_ammo(bool reset_feedback)
 	this->awaiting_recovery_ = false;
 	if (reset_feedback)
 	{
+		this->clear_rumble_events();
 		this->reset_motion();
 		this->empty_warned_ = false;
 		this->empty_repeat_remaining_ = 0.0f;
 		this->cooldown_feedback_pending_ = false;
 	}
+}
+
+RumbleEvents Weapon::take_rumble_events() noexcept
+{
+	const RumbleEvents result = this->pending_rumble_;
+	this->pending_rumble_ = {};
+	return result;
+}
+
+void Weapon::clear_rumble_events() noexcept
+{
+	this->pending_rumble_ = {};
 }
 
 ProjectileBuilder* Weapon::projectile_builder() const

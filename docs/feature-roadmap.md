@@ -429,12 +429,29 @@ The `rumble` fake-sink case passed in Debug and Release, covering all four
 events, overlap/expiry/repetition, sparse slots, keyboard/bot/replay/disabled
 and disconnected suppression, every stop condition and invalid-input atomicity.
 Receipts are under `out/validation/overnight-20261026/` (`runtime` and `release`).
-This policy has no native adapter, saved setting or gameplay caller yet; its
-test values are not authored cue tuning or a physical-feel result.
+The policy test values are not authored cue tuning or a physical-feel result.
+
+**Data and event intents implemented, 2026-10-26.** `PlaySettings.pad_rumble`
+holds four default-On slot flags; the save writes `pad_rumble` as four
+`{"enabled": bool}` records, recovering missing/malformed entries independently.
+Four named pulse records now live in `tuning.json` with contextual finite/range
+validation. Their values are provisional until physical-pad review.
+
+Actual nonfatal damage, the once-only elimination transition, the existing hard
+landing decision and the rate-limited empty-trigger warning emit coalescing
+feedback flags. Player merges its weapon's flags; Level drains them with each
+player's physical input slot. Placement/respawn and explicit discard clear them.
+There is no hardware call in those gameplay objects and no GameLevel output yet.
+
+Debug/Release `rumble`, `settings` and `gameplay_tuning` pass, including actual
+callers, sparse slots, frozen/spawn/cooldown/immune controls, save recovery and
+failure, and exact gameplay/RNG/Debug-fingerprint invariance while draining.
+`combat_feedback`, `weapon_feedback` and `movement_contact` also pass in both
+presets. Phase-2 receipts are under `out/validation/overnight-20261026/phase2/`.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Settings and gameplay callers | Add the saved per-slot On/Off and authored pulse values, then connect actual hit, elimination, hard-landing and dry-trigger callers. Check sparse/reordered rosters, unrelated settings, default/recovered saves and disabled slots. Bots, replays and the keyboard seat must produce no motor output. |
+| Settings page and match owner | Expose saved On/Off beside per-slot stick settings, and consume actual event intents through a GameLevel-owned policy with all lifecycle gates. Check pending/Apply/Back, sparse/reordered slots, unrelated settings and stale-event discard. Bots, replays and the keyboard seat must produce no motor output. |
 | Native hook and report exhibit | Put the slot-to-`XInputSetState` call and its stop path in one isolated file; unavailable/disconnected hardware must remain harmless. Qualify the callers with the fake sink, then draft `GAP#F6` with that file as the exhibit after rechecking the engine API. Filing still needs separate author authorization. |
 
 Do not close the physical feel review with fake-sink results. The native hook

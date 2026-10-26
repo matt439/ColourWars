@@ -140,6 +140,20 @@ namespace
 		return input;
 	}
 
+	RumbleProfile read_rumble(const JsonValue& root)
+	{
+		const JsonValue json = root.object("rumble");
+		RumbleProfile profile;
+		constexpr const char* names[]{ "hit", "elimination", "hard_landing", "dry_fire" };
+		for (size_t index = 0; index < profile.size(); ++index)
+		{
+			const JsonValue pulse = json.object(names[index]);
+			profile[index] = { { read_unit(pulse, "low_frequency"), read_unit(pulse, "high_frequency") },
+				read_number_in(pulse, "duration", 0.0f, maximum_rumble_pulse_seconds) };
+		}
+		return profile;
+	}
+
 	MatchTuning read_match(const JsonValue& root)
 	{
 		const JsonValue json = root.object("match");
@@ -635,6 +649,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 	this->match_ = read_match(root);
 	this->paint_ = read_paint(root);
 	this->player_ = read_player(root);
+	this->rumble_ = read_rumble(root);
 
 	const JsonValue weapons = root.object("weapons");
 	this->ammo_regen_delay_ = read_non_negative(weapons, "ammo_regen_delay");
@@ -704,6 +719,11 @@ const InputTuning& GameTuning::input() const
 const PlayerTuning& GameTuning::player() const
 {
 	return this->player_;
+}
+
+const RumbleProfile& GameTuning::rumble() const
+{
+	return this->rumble_;
 }
 
 float GameTuning::ammo_regen_delay() const

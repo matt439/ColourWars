@@ -399,6 +399,61 @@ namespace
 
     // The shared content-value reads (game/content_value.h) and the
     // cross-field rules written at the end of each reader.
+    void check_rumble_tuning(Fixtures& fixtures, const GameTuning& defaults)
+    {
+        constexpr const char* names[]{ "hit", "elimination", "hard_landing", "dry_fire" };
+        const RumbleProfile expected{ RumblePulse{ { 0.35f, 0.55f }, 0.10f },
+            RumblePulse{ { 0.80f, 0.40f }, 0.25f }, RumblePulse{ { 0.40f, 0.15f }, 0.08f },
+            RumblePulse{ { 0.0f, 0.25f }, 0.04f } };
+        for (size_t event = 0; event < expected.size(); ++event)
+        {
+            const RumblePulse& actual = defaults.rumble()[event];
+            require(actual.motors.low_frequency == expected[event].motors.low_frequency &&
+                actual.motors.high_frequency == expected[event].motors.high_frequency &&
+                actual.duration_seconds == expected[event].duration_seconds,
+                "Named rumble data was assigned to the wrong event or motor");
+        }
+        fixtures.rejects("rumble", "rumble", [](rapidjson::Document& d) { d.RemoveMember("rumble"); });
+        for (const char* name : names)
+        {
+            fixtures.rejects("rumble", name, [&](rapidjson::Document& d) { d["rumble"].RemoveMember(name); });
+            fixtures.rejects("rumble", name, [&](rapidjson::Document& d) { d["rumble"][name].SetBool(false); });
+            for (const char* field : { "low_frequency", "high_frequency", "duration" })
+            {
+                fixtures.rejects(name, field, [&](rapidjson::Document& d) { d["rumble"][name].RemoveMember(field); });
+                fixtures.rejects(name, field, [&](rapidjson::Document& d) { d["rumble"][name][field].SetNull(); });
+                fixtures.rejects(name, field, [&](rapidjson::Document& d)
+                    { d["rumble"][name][field].SetString("0.5", d.GetAllocator()); });
+                for (const double invalid : { -0.01, 1.01, 1e100 })
+                {
+                    fixtures.rejects(name, field, [&](rapidjson::Document& d)
+                        { d["rumble"][name][field].SetDouble(invalid); });
+                }
+            }
+        }
+        for (const float boundary : { 0.0f, 1.0f })
+        {
+            const GameTuning edges = fixtures.load([&](rapidjson::Document& d)
+            {
+                for (const char* name : names)
+                {
+                    d["rumble"][name]["low_frequency"].SetFloat(boundary);
+                    d["rumble"][name]["high_frequency"].SetFloat(boundary);
+                    d["rumble"][name]["duration"].SetFloat(boundary);
+                }
+            });
+            for (const RumblePulse& pulse : edges.rumble())
+            {
+                require(pulse.motors.low_frequency == boundary && pulse.motors.high_frequency == boundary &&
+                    pulse.duration_seconds == boundary, "Rumble zero/maximum boundary was rejected or changed");
+            }
+            require(edges.starting_ammo() == defaults.starting_ammo() &&
+                edges.player().x_acceleration == defaults.player().x_acceleration &&
+                edges.weapon(WeaponType::sprayer).details.ammo_usage == defaults.weapon(WeaponType::sprayer).details.ammo_usage,
+                "Rumble data changed unrelated gameplay tuning");
+        }
+    }
+
     void check_shared_bounds(Fixtures& fixtures)
     {
         const auto at = [](rapidjson::Document& d, const std::vector<const char*>& path) -> rapidjson::Value&
@@ -515,8 +570,9 @@ int main(int argc, char** argv)
         check_live_assignment(world, defaults, custom);
         check_validation(fixtures);
         check_shared_bounds(fixtures);
+        check_rumble_tuning(fixtures, defaults);
         std::cout << "PASS gameplay tuning: exact legacy roller/mist/integrator parity, real custom values, "
-            "stable live borrowed records, strict boundaries and contextual rejection.\n";
+            "stable live borrowed records, strict boundaries, named rumble data and contextual rejection.\n";
         return 0;
     }
     catch (const std::exception& error)

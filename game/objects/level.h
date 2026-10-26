@@ -116,6 +116,11 @@ public:
 	// logic step (the Debug bots and replays); null in Release.
 	void update(const std::vector<PlayerInputData>& player_inputs, float dt,
 		SeatInputFilter* seats = nullptr);
+	// Feedback intents, retaining each Player's physical slot. Drain once after
+	// a completed tick, including blocked bot/replay/keyboard events; this never
+	// changes simulation/RNG state. A lifecycle stop may explicitly discard them.
+	std::vector<SlotRumbleEvents> take_rumble_events();
+	void clear_rumble_events() noexcept;
 
 	// Refresh size-dependent presentation before rendering, even when a menu
 	// covers the match. Called on the main thread, before render workers start.
