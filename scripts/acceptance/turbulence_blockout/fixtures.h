@@ -60,6 +60,7 @@ namespace turbulence_blockout_acceptance
         Scene scene{ nullptr, nullptr };
         Player* player = nullptr;
         Player* target_player = nullptr;
+        PlayerInputData target_input = input();
         std::vector<std::pair<const Surface*, CollisionObject*>> structures;
         std::vector<CollisionObject*> targets;
         int ticks = 0;
@@ -90,6 +91,7 @@ namespace turbulence_blockout_acceptance
     void routes(Services& services);
     void public_load(Services& services, const std::filesystem::path& content);
     void tools(Services& services, const std::filesystem::path& output);
+    void escape_trials(Services& services, const std::filesystem::path& output);
     int tool_stations(Services& services, const std::filesystem::path& output);
     int useful_stations(Services& services, const std::filesystem::path& output);
     struct ToolThreatSummary

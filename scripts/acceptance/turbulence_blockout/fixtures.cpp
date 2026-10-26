@@ -134,7 +134,7 @@ namespace turbulence_blockout_acceptance
     {
         ++this->ticks;
         this->player->set_player_input(actions);
-        if (this->target_player != nullptr) { this->target_player->set_player_input(input()); }
+        if (this->target_player != nullptr) { this->target_player->set_player_input(this->target_input); }
         this->scene.update(dt);
         for (CollisionObject* object : this->scene.collision_objects())
         {

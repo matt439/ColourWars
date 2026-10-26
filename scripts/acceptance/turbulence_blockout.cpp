@@ -7,12 +7,13 @@ int main(int argc, char** argv)
     using namespace turbulence_blockout_acceptance;
     try
     {
-        require(argc == 2 || (argc == 3 && std::string_view(argv[2]) == "--tools"),
-            "turbulence_blockout <content directory> [--tools]");
+        require(argc == 2 || (argc == 3 && (std::string_view(argv[2]) == "--tools" || std::string_view(argv[2]) == "--escape")),
+            "turbulence_blockout <content directory> [--tools|--escape]");
         Services services(argv[1]);
         if (argc == 3)
         {
-            tools(services, std::filesystem::absolute(argv[0]).parent_path());
+            if (std::string_view(argv[2]) == "--tools") { tools(services, std::filesystem::absolute(argv[0]).parent_path()); }
+            else { escape_trials(services, std::filesystem::absolute(argv[0]).parent_path()); }
             return 0;
         }
         geometry(services, std::filesystem::absolute(argv[0]).parent_path());
@@ -21,7 +22,7 @@ int main(int argc, char** argv)
         std::cout << "PASS Turbulence static skeleton: production object loader, mirrored geometry, "
             "independent face/region score, public 1/4-player LevelBuilder loads, eight spawns/respawns, "
             "jump-free required walking and driven optional/recovery edges. "
-            "Mover/rotation, five-tool pressure, native framing, attended play and pad acceptance remain open\n";
+            "Tool/escape and native composition use separate focused modes; mover/rotation, attended play and pad acceptance remain open\n";
         return 0;
     }
     catch (const std::exception& error)

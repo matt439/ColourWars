@@ -304,10 +304,59 @@ still reach both as the union of seven separately aimed pulses. A paid Mister
 pulse can contain several projectiles, so this is neither a same-instant coverage
 test nor universal safety evidence. The recorded spawn/pressure questions remain.
 
-Next, add moving/jumping attack and defender escape/counterfire samples before
-selecting mover placements. The paired
-useful-role extension is qualified in Release here; no extended Debug run is
-implied.
+**Single-pulse defender escape samples, 2026-10-26 (Release).** The separate
+`turbulence_blockout <staged-game-directory> --escape` mode passes 60 fresh-scene
+trials: the same 20 mirrored lower/upper roles, each with an idle defender,
+ordinary retreat, or one jump plus retreat. Actors are constructed once; initial
+bodies, health, ready ammunition and fixed aim agree across each role's three
+policies. The stationary attacker pays for one trigger update, then releases;
+the defender begins its policy on that same update. No actor is repositioned
+after construction, and the attacker does not track the moving target.
+
+The 13,692 updates comprise 2,892 neutral warmup updates and 10,800 observation
+updates. Warmup is 45 updates per trial, or 61 for Sniper to become ready; all
+trials then run 180 updates, with no additional flight tail needed within the
+180-update tail cap. The following first-health-loss counts start at the paid
+trigger, after readiness, and reproduce on both sides. Each cell is
+idle / retreat / jump-retreat; `miss` means no measured health loss in that
+bounded trial, not universal evasion.
+
+| Tool | Lower first-health-loss updates | Upper first-health-loss updates |
+|---|---|---|
+| Sprayer | 15 / 19 / miss | 5 / 5 / 5 |
+| Sniper | 8 / 8 / 8 | 2 / 2 / 2 |
+| Roller | miss / miss / miss | miss / miss / miss |
+| Mister | 52 / miss / miss | 13 / 28 / miss |
+| Bucket | 24 / 33 / miss | 1 / 1 / 1, paid launch contact |
+
+Across the 20 roles, idle policies have 16 hits / 4 misses, ordinary retreat
+14 / 6, and jump-retreat 8 / 12. Bucket's six upper-policy trials damage the
+target during paid launch contact, with no surviving projectile; they are not
+flight-time observations. Roller remains stationary here and misses at the
+initial separation; the earlier paired role separately qualifies its ordinary
+closing movement. Every defender remains alive and ends supported. Ordinary
+upper retreat moves 74 units before the centre baffle stops it; jump-retreat
+passes over that baffle and ends on the far home floor. Lower retreats end on
+ground. All attackers naturally recover full reserve during the observation
+window, after paying for their single pulse.
+
+Receipts are under
+`out/validation/overnight-20261026/phase6/escape-final/x64-release/`:
+`turbulence-escape.csv` has 60 rows, with exact warmup/core/tail counts, actual
+health, body/support, takeoff and ammunition observations;
+`turbulence-escape-summary.json` records the policy totals. First health loss
+is the damage event. `first_observed_box_overlap_update` samples actual launch
+and post-contact poses; it can omit swept-through or retired contacts and does
+not measure continuous arrival or a warning interval. These real moving-target
+rows remain distinct from the older virtual target-volume arrivals.
+
+The fixed aims and one repeated seed control this comparison, rather than
+sample an aiming or randomness distribution. Simultaneous scripted reaction
+does not establish human warning time, and a single pulse does not establish
+survival under persistent fire or counterfire. Moving/jumping attacker and
+counterfire samples remain before selecting mover placements. The paired
+useful-role and defender-escape extensions are qualified in Release here; no
+extended Debug run is implied.
 
 **Static native composition qualified, 2026-10-26.**
 `check-painter.ps1 -TurbulenceBlockoutOnly` passes in Debug and Release at
@@ -342,9 +391,10 @@ Player. Reconcile paint and sampled five-tool pressure with side/loadout swaps,
 captures must show the receiving surface and first escape before commitment,
 including moving approaches, preview and ending views.
 
-These checks establish construction, routes, score geography and the recorded
-near-receiver tool samples and bounded native composition. Opposed five-tool
-pressure and mover/rotation placement remain open.
+These checks establish construction, routes, score geography, the recorded
+near-receiver tool and single-pulse defender samples, and bounded native
+composition. Broader opposed five-tool pressure and mover/rotation placement
+remain open.
 Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `GAP#D5`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.
