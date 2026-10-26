@@ -3,6 +3,7 @@
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/level_object_builder.h"
 #include "game/objects/player.h"
+#include "game/objects/projectile.h"
 #include "game/objects/weapon_builder.h"
 #include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
@@ -14,6 +15,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <span>
 
@@ -58,11 +60,18 @@ namespace turbulence_blockout_acceptance
         Scene scene{ nullptr, nullptr };
         Player* player = nullptr;
         std::vector<std::pair<const Surface*, CollisionObject*>> structures;
+        std::vector<CollisionObject*> targets;
         int ticks = 0;
         int takeoffs = 0;
+        int paid_events = 0;
+        int last_paid_tick = -1;
+        int emitted_objects = 0;
+        float minimum_ammo = 0.0f;
         bool death_expected = false;
+        std::function<void(std::span<const std::unique_ptr<Projectile>>)> on_weapon_launch;
+        std::function<void()> after_scene_contacts;
         Run(Services& services, const Vector2F& position, PlayerTeam team = PlayerTeam::a,
-            float initial_velocity = 0.0f);
+            float initial_velocity = 0.0f, WeaponType weapon = WeaponType::sprayer);
         void tick(const PlayerInputData& actions = input());
         void settle(int ticks = 45);
         std::string support() const;
@@ -78,4 +87,7 @@ namespace turbulence_blockout_acceptance
     void geometry(Services& services, const std::filesystem::path& output);
     void routes(Services& services);
     void public_load(Services& services, const std::filesystem::path& content);
+    void tools(Services& services, const std::filesystem::path& output);
+    int tool_stations(Services& services, const std::filesystem::path& output);
+    int tool_threats(Services& services, const std::filesystem::path& output);
 }

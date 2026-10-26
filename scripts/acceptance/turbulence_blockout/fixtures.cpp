@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_blockout/fixtures.h"
 #include "engine/math/triangle.h"
+#include "game/objects/collision_object_type.h"
 
 namespace turbulence_blockout_acceptance
 {
@@ -64,23 +65,29 @@ namespace turbulence_blockout_acceptance
         throw std::runtime_error("Missing Turbulence surface " + name);
     }
 
-    Run::Run(Services& with, const Vector2F& position, PlayerTeam team, float initial_velocity) : services(with)
+    Run::Run(Services& with, const Vector2F& position, PlayerTeam team, float initial_velocity, WeaponType tool) : services(with)
     {
         this->scene.set_bounds(with.info.out_of_bounds_rectangle());
         auto built = with.builder.build_collision_objects(with.info.collision_objects_json(), with.colours);
         require(built.size() == with.surfaces.size(), "Builder changed the Turbulence object count");
         for (std::size_t index = 0; index < built.size(); ++index)
-        { this->structures.emplace_back(&with.surfaces[index], this->scene.add(std::move(built[index]))); }
+        {
+            CollisionObject* object = this->scene.add(std::move(built[index]));
+            this->structures.emplace_back(&with.surfaces[index], object);
+            this->targets.push_back(object);
+        }
         const RectangleF body(position, with.tuning.player().size);
         auto weapon = WeaponBuilder::build_weapon(&with.tuning, team, 0, 0, Colour::white,
-            WeaponType::sprayer, body.center(), &with.render, &with.audio, &with.preferences,
+            tool, body.center(), &with.render, &with.audio, &with.preferences,
             &with.presentation.tool_motion(), &with.presentation.weapon_feedback());
         this->player = this->scene.add(std::make_unique<Player>(body, &with.tuning,
             &with.presentation.movement_feedback(), &with.presentation.combat_feedback(),
             &with.presentation.respawn_redraw(), &with.render, &with.audio, &with.preferences,
-            0, team, WeaponType::sprayer, std::move(weapon), WeaponType::none, Colour::white,
+            0, team, tool, std::move(weapon), WeaponType::none, Colour::white,
             Viewport{}, position, Vector2F(initial_velocity, 0.0f)));
         this->scene.end_tick();
+        this->targets.push_back(this->player);
+        this->minimum_ammo = this->player->weapon_ammo();
         this->require_clear();
     }
 
@@ -105,13 +112,26 @@ namespace turbulence_blockout_acceptance
         ++this->ticks;
         this->player->set_player_input(actions);
         this->scene.update(dt);
+        for (CollisionObject* object : this->scene.collision_objects())
+        {
+            if (is_projectile(to_collision_type(object->tag())))
+            { dynamic_cast<Projectile&>(*object).resolve_movement_contacts(this->targets); }
+        }
+        const float before = this->player->weapon_ammo();
+        auto emitted = this->player->update_weapon_and_get_projectiles(dt, this->targets);
+        if (this->player->weapon_ammo() < before) { ++this->paid_events; this->last_paid_tick = this->ticks; }
+        if (this->on_weapon_launch) { this->on_weapon_launch(emitted); }
+        for (auto& projectile : emitted)
+        { ++this->emitted_objects; this->scene.add(std::move(projectile)); }
         this->scene.resolve();
         this->player->end_contacts(this->scene.contacts());
         this->player->update_weapon_position();
         this->player->update_prev_rectangle();
+        if (this->after_scene_contacts) { this->after_scene_contacts(); }
         this->scene.end_tick();
         require(this->death_expected || this->player->state() == PlayerState::alive, "Unexpected route death");
         this->require_clear();
+        this->minimum_ammo = std::min(this->minimum_ammo, this->player->weapon_ammo());
         for (const auto& effect : this->player->movement_feedback().effects())
         { if (effect.age == 0.0f && effect.kind == MovementFeedbackKind::takeoff) { ++this->takeoffs; } }
     }

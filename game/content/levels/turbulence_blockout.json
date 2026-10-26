@@ -468,11 +468,11 @@
     ],
     "non_collision_objects": [
         {
-            "name": "background",
+            "name": "paper_sky",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "colour": "D3D3D3",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "colour": "WHITE",
             "rectangle": {
                 "x": -100.0,
                 "y": -100.0,

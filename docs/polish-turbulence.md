@@ -222,12 +222,43 @@ also pass, retaining the actual sparse slots, team-local spawns, screen layout,
 unchanged 181-update count-in, 12 active updates and exact neutral score.
 
 Receipts are under `out/validation/overnight-20261026/phase2/`, in
-`remaining/x64-debug/` and `release/x64-release/`. The next slice measures five-tool spawn/receiver
-pressure, real firing/recovery windows and native composition. Add movers only
+`remaining/x64-debug/` and `release/x64-release/`. Add movers only
 after runtime/schema, public replay
 rebuild and editor round-trip support; add scored sloping solids only after
 their separate collision/paint contract is qualified. Keep a before/after
 route and budget record for those additions.
+
+**Explicit five-tool measurements, 2026-10-26.** The separate Release
+`turbulence_blockout <staged-game-directory> --tools` mode passes 20 mirrored
+lower-bed/crossover firing, ordinary retreat and natural refill trials, plus
+280 paid directed pulses from 40 standing holders. It uses actual weapons,
+projectile contacts and ammunition, with 7,690 station updates and 8,356 threat
+updates. The fast default case remains the static geometry/route check; the
+larger matrix is opt-in. When invoking its executable directly, include the
+staged game directory on `PATH` for its runtime DLLs.
+
+Receipts in `out/validation/overnight-20261026/phase4/turbulence/x64-release/`
+include 60 station-phase rows, 280 pulse rows, 40 holder summaries and
+`turbulence-tools-summary.json`. The candidate's geographic X-band partition
+is now available to the balance metrics; the station CSV instead labels its
+separate object-role budget explicitly. Its paper backdrop is provisional,
+without cloud or landmark acceptance; collision and scored geometry are unchanged.
+
+These samples expose questions rather than settle pressure. From each lower
+bed, Sniper's seven separately aimed shots collectively reach both departure
+regions. Upper-approach Sniper samples reach spawn bodies 3/4 and Mister reaches
+body 4. The centre-baffle Sniper reaches the opposite receiver. These are swept
+projectile-box arrivals before retirement, without victim damage, simultaneous
+coverage or a universal spawn-safety claim.
+
+The station bursts pay for nearby paint and all refill during the shot-free
+retreat/recovery window. Sprayer, Sniper and Bucket bursts at the sampled downward
+angles have no surviving projectile after launch contact, so they do not yet
+establish a useful receiver-contest shot. Revise those station aim/positions to
+measure the intended contest, compare single-shot departure coverage and escape
+time, then add moving/jumping attack samples. Do not change weapon tuning to
+make this exploratory fixture report a better result. Native composition remains
+the other immediate slice.
 
 Drive both directions, failed routes and mover phases/reversals with the real
 Player. Reconcile paint and sampled five-tool pressure with side/loadout swaps,
@@ -235,8 +266,9 @@ Player. Reconcile paint and sampled five-tool pressure with side/loadout swaps,
 captures must show the receiving surface and first escape before commitment,
 including moving approaches, preview and ending views.
 
-These static checks establish construction, routes and score geography only.
-Five-tool pressure, mover/rotation placement and native framing remain open.
+These checks establish construction, routes, score geography and the recorded
+tool samples. Useful five-tool pressure, mover/rotation placement and native
+framing remain open.
 Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `GAP#D5`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.

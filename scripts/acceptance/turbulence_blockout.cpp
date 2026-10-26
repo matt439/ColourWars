@@ -1,13 +1,20 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_blockout/fixtures.h"
+#include <string_view>
 
 int main(int argc, char** argv)
 {
     using namespace turbulence_blockout_acceptance;
     try
     {
-        require(argc == 2, "turbulence_blockout <content directory>");
+        require(argc == 2 || (argc == 3 && std::string_view(argv[2]) == "--tools"),
+            "turbulence_blockout <content directory> [--tools]");
         Services services(argv[1]);
+        if (argc == 3)
+        {
+            tools(services, std::filesystem::absolute(argv[0]).parent_path());
+            return 0;
+        }
         geometry(services, std::filesystem::absolute(argv[0]).parent_path());
         public_load(services, std::filesystem::path(argv[1]));
         routes(services);

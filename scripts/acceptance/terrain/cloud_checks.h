@@ -32,8 +32,20 @@ namespace
 		// must stay cloudless and motionless rather than be held to either
 		// sky contract; every other stage is unaffected.
 		const bool interior = stage == "press_tower";
+		// Turbulence's provisional static skeleton has only the approved paper
+		// backing. Clouds and landmark dressing belong to its later art/framing
+		// slice; it is cloudless for that reason, rather than an interior.
+		const bool paper_blockout = stage == "turbulence_blockout";
+		if (paper_blockout)
+		{
+			require(decorations.size() == 1 && decorations.at(0).string("name") == "paper_sky" &&
+				decorations.at(0).string("sheet_name") == "terrain" &&
+				decorations.at(0).string("frame_name") == "swatch_paper" &&
+				decorations.at(0).string("colour") == "WHITE",
+				stage + ": provisional blockout needs exactly its approved untinted paper backing");
+		}
 		int expected_random = 0;
-		if (static_backdrop)
+		if (static_backdrop || paper_blockout)
 		{
 			std::srand(8357);
 			expected_random = std::rand();
@@ -41,9 +53,9 @@ namespace
 		}
 		world.preferences.reduce_effects = false;
 		const auto first = builder.build_non_collision_objects(decorations);
-		if (static_backdrop || interior) { world.preferences.reduce_effects = true; }
+		if (static_backdrop || interior || paper_blockout) { world.preferences.reduce_effects = true; }
 		const auto restarted = builder.build_non_collision_objects(decorations);
-		if (static_backdrop || interior) { world.preferences.reduce_effects = false; }
+		if (static_backdrop || interior || paper_blockout) { world.preferences.reduce_effects = false; }
 		require(first.size() == decorations.size() && restarted.size() == decorations.size(),
 			stage + ": decoration count changed");
 		size_t clouds = 0;
@@ -62,7 +74,7 @@ namespace
 				clouds += is_cloud ? 1 : 0;
 				continue;
 			}
-			if (static_backdrop)
+			if (static_backdrop || paper_blockout)
 			{
 				const std::string where = stage + " " + json.string("name");
 				auto* visual = dynamic_cast<Visual*>(first[index].get());
@@ -141,6 +153,13 @@ namespace
 		else if (interior)
 		{
 			require(clouds == 0, stage + ": an interior needs zero cloud visuals");
+		}
+		else if (paper_blockout)
+		{
+			require(clouds == 0, stage + ": provisional paper-only blockout gained cloud art");
+			require(std::rand() == expected_random,
+				stage + ": static blockout scenery construction/update consumed gameplay randomness");
+			world.preferences.reduce_effects = false;
 		}
 		else
 		{

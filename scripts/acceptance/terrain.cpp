@@ -325,7 +325,7 @@ int main(int argc, char** argv)
 		std::cout << "PASS terrain: " << stages << " stages fully materialled, every drawing inside "
 			"its collision shape and deterministic, shadows under real undersides, untinted "
 			"backdrops on paper, shared sealed finishes clipped to exposed faces, quantized miniature silhouettes, "
-			"two native-size static landmarks per arena with stable bounds/RNG/reduction, "
+			"qualified native-size static landmarks with stable bounds/RNG/reduction, a paper-only provisional blockout, "
 			"bounded deterministic cloud drift with live reduction, and material/drift/camera refusals.\n";
 		return 0;
 	}

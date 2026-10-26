@@ -262,6 +262,28 @@ namespace balance_regions
             require_near(capacity(cross_tail, 0), 100); require_near(capacity(press_tail, 7), 100);
             const auto whole = stage_partition("other_stage", mattmath::RectangleF(0, 0, 30, 20));
             require(whole.name == "whole_arena" && whole.bands.size() == 1, "Generic stage lost its explicit whole-arena fallback");
+            const LevelLoadedInfo yard(labrador::path_to_utf8(content / "levels/turbulence_blockout.json").c_str());
+            yard.validate();
+            const auto turbulence = stage_partition("turbulence_blockout", yard.out_of_bounds_rectangle());
+            const std::array<double, 6> yard_cuts{ 0, 600, 1100, 2900, 3400, 4000 };
+            const std::array<const char*, 5> yard_names{ "home_a", "approach_a", "contest", "approach_b", "home_b" };
+            require(turbulence.name == "x_band" && turbulence.bands.size() == yard_names.size(),
+                "Turbulence must expose geographic bands rather than a whole-arena or object-role label");
+            require_near(turbulence.top, yard.out_of_bounds_rectangle().top(), 0);
+            require_near(turbulence.bottom, yard.out_of_bounds_rectangle().bottom(), 0);
+            for (std::size_t index = 0; index < yard_names.size(); ++index)
+            {
+                require(turbulence.bands[index].name == yard_names[index], "Turbulence geographic band name changed");
+                require_near(turbulence.bands[index].left, yard_cuts[index], 0);
+                require_near(turbulence.bands[index].right, yard_cuts[index + 1], 0);
+            }
+            const std::array yard_edges{ rectangle(-10, 0, 20, 10, 200), rectangle(590, 0, 20, 10, 200),
+                rectangle(1090, 0, 20, 10, 200), rectangle(2890, 0, 20, 10, 200),
+                rectangle(3390, 0, 20, 10, 200), rectangle(3990, 0, 20, 10, 200) };
+            const Measurement yard_split(yard_edges, roster(), turbulence);
+            require_near(capacity(yard_split, 0), 200); require_near(capacity(yard_split, 1), 200);
+            require_near(capacity(yard_split, 2), 200); require_near(capacity(yard_split, 3), 200);
+            require_near(capacity(yard_split, 4), 200); require_near(capacity(yard_split, 5), 200);
         }
     }
     void self_tests(const std::filesystem::path& content)
