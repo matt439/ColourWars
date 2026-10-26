@@ -32,6 +32,12 @@ public:
 	std::vector<std::unique_ptr<labrador::GameObject>>
 		build_shadows(const labrador::JsonValue& collision_objects) const;
 
+	// Borrow only the real collision owners that will enter the Scene. Their
+	// pointees outlive these shadows; moving anchors never cast a static shadow.
+	std::vector<std::unique_ptr<labrador::GameObject>>
+		build_moving_shadows(const labrador::JsonValue& collision_objects,
+			const std::vector<std::unique_ptr<labrador::CollisionObject>>& objects) const;
+
 	std::vector<std::unique_ptr<labrador::GameObject>>
 		build_viewport_dividers(const labrador::ViewportManager* viewport_manager) const;
 

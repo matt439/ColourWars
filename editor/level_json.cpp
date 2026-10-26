@@ -255,6 +255,10 @@ namespace colourwars_editor
                 fail("Every level object must be a JSON object.");
             }
             const std::string type = string(object, "type");
+            if (object.HasMember("motion"))
+            {
+                fail("Moving structures are supported by the game but cannot yet be edited safely here (motion).");
+            }
             if (string(object, "sheet_name").empty() || string(object, "frame_name").empty())
             {
                 fail("Sprite sheet and frame names must not be empty.");

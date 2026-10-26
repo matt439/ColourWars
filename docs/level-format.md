@@ -107,7 +107,7 @@ does not use it for lookup, collision or uniqueness.
 | Array | `type` | Allowed `collision_type` | Geometry and extra fields |
 |---|---|---|---|
 | `collision_objects` | `Structure` | `STRUCTURE`, `STRUCTURE_JUMP_THROUGH` | Rectangle; optional `material`. Fixed solid or jump-through terrain; no scoring paint. |
-| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE`, `STRUCTURE_JUMP_THROUGH` | Rectangle plus all four `paintable_faces` booleans; optional `material`. Fixed paint-scoring solid or jump-through terrain. |
+| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE`, `STRUCTURE_JUMP_THROUGH` | Rectangle plus all four `paintable_faces` booleans; optional `material` and horizontal `motion`. Paint-scoring solid or jump-through terrain. |
 | `collision_objects` | `StructureRamp` | `STRUCTURE_RAMP_RIGHT`, `STRUCTURE_RAMP_LEFT` | `triangle` with six coordinates; optional `material`. Fixed ramp collision; no scoring paint. |
 | `non_collision_objects` | `Visual` | None is read | Rectangle; optional `drift`. Decorative art with no collision or score; backdrop props use sheet `terrain`. |
 
@@ -126,6 +126,48 @@ Width and height must be finite and positive; for TLBR, `right > left` and
 the runtime ignores `rectangle_tlbr`, even if that ignored field is malformed.
 The schema preserves that precedence. Neither encoding accepts anchor names,
 relative positions or a layout expression.
+
+### Horizontal paintable motion
+
+A flat `StructurePaintable` may add:
+
+```json
+"motion": { "type": "horizontal", "travel_x": 120, "period": 6.4, "phase": 0.25 }
+```
+
+The rectangle is the **leftmost anchor**, rather than the initial world pose.
+The body travels right by `travel_x`, then returns along the same horizontal
+path. `period` is the complete round trip in seconds. `phase` is a fraction of
+that trip: 0 is the left endpoint departing right, 0.5 is the right endpoint
+departing left, and 0.25 starts halfway to the right endpoint. The initial pose
+is used by gameplay, culling and the stage preview; paint and credit stay on
+the object's local faces. Omission retains the original static object path.
+
+All four fields are required. Travel must be finite and positive and reach a
+distinct representable endpoint. The full period must span at least two fixed
+simulation steps (currently 1/30 second); phase must remain in [0,1) after float
+conversion. The anchor and endpoint must have finite, positive represented
+edges. Both solid and jump-through paintables are supported. Motion on plain
+structures, ramps or visuals, another motion `type`, and `axis`, `travel_y` or
+`rotation` in the record are errors. Other unknown keys remain ignored metadata,
+as elsewhere in format 1; they do not add motion capabilities.
+
+This is the existing horizontal triangular mover, with its existing safety
+limits. On actual Level admission the entire platform envelope and expanded
+standing corridor must lie inside Scene bounds and clear every other structure
+over its complete path. The actual player dimensions/rates must leave safe
+relative displacement at the fixed step. Two individually valid records can
+therefore still fail when combined into a stage. The schema and startup object
+validation alone cannot establish this scene-level contract.
+
+Moving anchors do not permanently bury static paint or terrain edges and do
+not leave a static airbrush shadow. A material-bearing moving platform casts
+the existing translated shadow tied to the actual Scene-owned mover.
+
+Editor authoring is a later `GAP#D5` milestone: the editor currently refuses
+documents containing `motion`, rather than permitting unsafe edits whose
+preview would omit the travel envelope. No shipped arena uses this field yet;
+public-loader replay qualification and useful arena placement remain separate.
 
 A ramp reads `triangle` instead of either rectangle:
 

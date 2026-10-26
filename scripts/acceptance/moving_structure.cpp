@@ -12,13 +12,14 @@ int wmain(int argc, wchar_t* argv[])
         moving_structure_acceptance::require(!world.tuning.player().paint_underfoot.enabled,
             "POL36 prototype must continue to ship disabled");
         moving_structure_acceptance::check_motion(world);
+        moving_structure_acceptance::check_loader(world);
         moving_structure_acceptance::check_paint(world);
         moving_structure_acceptance::check_support(world);
         moving_structure_acceptance::check_projectiles(world);
         moving_structure_acceptance::check_draw_cpu(world);
         moving_structure_acceptance::check_replay(world);
         std::cout << "PASS horizontal moving structure CPU checks: motion/owned paint/support/projectile/bounds; "
-            "actual renderer pixels, builder/editor/map and human acceptance remain separate\n";
+            "runtime loader construction qualified; actual renderer pixels, public replay/editor/map and human acceptance remain separate\n";
 #if COLOURWARS_DEV_TOOLS
         std::cout << "Debug manual replay checks completed; public new-kind rebuild remains separate\n";
 #else

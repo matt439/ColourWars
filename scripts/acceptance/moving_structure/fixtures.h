@@ -357,6 +357,7 @@ namespace moving_structure_acceptance
     };
 
     void check_motion(World& world);
+    void check_loader(World& world);
     void check_paint(World& world);
     void check_support(World& world);
     void check_projectiles(World& world);

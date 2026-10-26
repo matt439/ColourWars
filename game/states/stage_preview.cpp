@@ -45,6 +45,10 @@ void StagePreview::set_stage(const std::string& stage)
 	}
 	auto collision_objects = builder.build_collision_objects(
 		level->collision_objects_json(), TeamColour{});
+	for (auto& shadow : builder.build_moving_shadows(level->collision_objects_json(), collision_objects))
+	{
+		objects.push_back(std::move(shadow));
+	}
 	// This is a miniature by path, even when its scale reaches ordinary size.
 	// Configure only the new objects before replacing the previous selection.
 	for (const auto& object : collision_objects)

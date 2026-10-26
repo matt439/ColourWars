@@ -142,6 +142,21 @@
             },
             "additionalProperties": true
         },
+        "motion": {
+            "description": "Horizontal triangular translation of a flat paintable from its left anchor; period is the full round trip in seconds and phase is cycles. Float representability and scene/player admission remain runtime checks. Unknown metadata is ignored; axis, travel_y and rotation are unsupported requests.",
+            "type": "object",
+            "required": ["type", "travel_x", "period", "phase"],
+            "properties": {
+                "type": { "enum": ["horizontal"] },
+                "travel_x": { "type": "number", "minimum": 0, "exclusiveMinimum": true },
+                "period": { "type": "number", "minimum": 0.03333333333333333 },
+                "phase": { "type": "number", "minimum": 0, "maximum": 1, "exclusiveMaximum": true },
+                "axis": { "not": {} },
+                "travel_y": { "not": {} },
+                "rotation": { "not": {} }
+            },
+            "additionalProperties": true
+        },
         "object_common": {
             "type": "object",
             "required": ["type", "sheet_name", "frame_name", "colour"],
@@ -150,10 +165,12 @@
                 "sheet_name": { "type": "string" },
                 "frame_name": { "type": "string" },
                 "colour": { "$ref": "#/definitions/colour" },
-                "drift": { "$ref": "#/definitions/drift" }
+                "drift": { "$ref": "#/definitions/drift" },
+                "motion": { "$ref": "#/definitions/motion" }
             },
             "dependencies": {
-                "drift": { "properties": { "type": { "enum": ["Visual"] } } }
+                "drift": { "properties": { "type": { "enum": ["Visual"] } } },
+                "motion": { "properties": { "type": { "enum": ["StructurePaintable"] } } }
             },
             "additionalProperties": true
         },

@@ -3,6 +3,8 @@
 #include "engine/math/triangle.h"
 #include "game/objects/airbrush_shadow.h"
 #include "game/objects/drifting_visual.h"
+#include "game/objects/translating_structure_paintable.h"
+#include "game/objects/translated_airbrush_shadow.h"
 #include "game/paint_face_geometry.h"
 #include <cmath>
 #include <initializer_list>
@@ -136,6 +138,30 @@ namespace
 			": '" + name + "' is not a collision type");
 	}
 
+	HorizontalMotionSpec decode_motion(const JsonValue& object, const RectangleF& anchor)
+	{
+		const JsonValue motion = object.object("motion");
+		if (motion.string("type") != "horizontal")
+		{
+			throw std::runtime_error(motion.where() + ": only 'horizontal' motion is supported");
+		}
+		for (const char* key : { "axis", "travel_y", "rotation" })
+		{
+			if (motion.has(key))
+			{
+				throw std::runtime_error(motion.where() + ": unsupported motion field '" + key + "'");
+			}
+		}
+		const HorizontalMotionSpec result{ anchor, motion.number("travel_x"),
+			motion.number("period"), motion.number("phase") };
+		try { HorizontalMotion::validate_spec(result); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(motion.where() + ": " + error.what());
+		}
+		return result;
+	}
+
 	// Allowed collision tags for each object type.
 	CollisionObjectType collision_type_of(const JsonValue& json,
 		const std::string& object_type,
@@ -224,6 +250,10 @@ std::unique_ptr<CollisionObject>
 		throw std::runtime_error(json.where() + ": drift belongs only on decorative Visual entries");
 	}
 	const std::string type = json.string("type");
+	if (json.has("motion") && type != "StructurePaintable")
+	{
+		throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
+	}
 	if (type == "Structure")
 	{
 		const CollisionObjectType collision_type = collision_type_of(json, type,
@@ -261,6 +291,18 @@ std::unique_ptr<CollisionObject>
 		faces.top = faces_json.boolean("top");
 		faces.right = faces_json.boolean("right");
 		faces.bottom = faces_json.boolean("bottom");
+
+		if (json.has("motion"))
+		{
+			const HorizontalMotionSpec motion = decode_motion(json, rectangle);
+			return std::make_unique<TranslatingStructurePaintable>(
+				json.string("sheet_name"), json.string("frame_name"), motion,
+				this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
+				collision_type, team_colours, faces, colour_of(json), Vector2F::ZERO,
+				SpriteFlip::none, 0.0f,
+				material_of(json, collision_type, rectangle, {}, context.mirror_x,
+					this->render_resources_));
+		}
 
 		return std::make_unique<StructurePaintable>(
 			json.string("sheet_name"),
@@ -327,6 +369,10 @@ std::unique_ptr<CollisionObject>
 std::unique_ptr<GameObject>
 	LevelObjectBuilder::build_non_collision_object(const JsonValue& json) const
 {
+	if (json.has("motion"))
+	{
+		throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
+	}
 	const std::string type = json.string("type");
 	if (type == "Visual")
 	{
@@ -370,6 +416,9 @@ LevelObjectBuilder::StageContext
 	{
 		const JsonValue object = json.at(index);
 		const std::string type = object.string("type");
+		// A moving anchor must not permanently bury a static scoring face or outline.
+		// Its complete travel/standing envelope is checked by Level admission.
+		if (object.has("motion")) { continue; }
 		if (type == "Structure" || type == "StructurePaintable")
 		{
 			const RectangleF rectangle = decode_rectangle(object);
@@ -413,6 +462,7 @@ std::vector<std::unique_ptr<GameObject>>
 	{
 		const JsonValue object = json.at(index);
 		const std::string type = object.string("type");
+		if (object.has("motion")) { continue; }
 		if (!object.has("material") || (type != "Structure" && type != "StructurePaintable"))
 		{
 			continue;
@@ -432,6 +482,32 @@ std::vector<std::unique_ptr<GameObject>>
 		{
 			shadows.push_back(std::make_unique<AirbrushShadow>(
 				low, high, rectangle.bottom(), this->render_resources_));
+		}
+	}
+	return shadows;
+}
+
+std::vector<std::unique_ptr<GameObject>>
+	LevelObjectBuilder::build_moving_shadows(const JsonValue& json,
+		const std::vector<std::unique_ptr<CollisionObject>>& objects) const
+{
+	if (json.size() != objects.size())
+	{
+		throw std::invalid_argument("Moving shadows require the same constructed collision objects.");
+	}
+	std::vector<std::unique_ptr<GameObject>> shadows;
+	for (size_t index = 0; index < objects.size(); ++index)
+	{
+		const auto* mover = dynamic_cast<const TranslatingStructurePaintable*>(objects[index].get());
+		if (mover == nullptr || !json.at(index).has("material")) { continue; }
+		const RectangleF anchor = mover->motion_state().spec.anchor;
+		if (anchor.width > anchor.height && anchor.height < shadow_caster_limit)
+		{
+			try { shadows.push_back(std::make_unique<TranslatedAirbrushShadow>(*mover, this->render_resources_)); }
+			catch (const std::exception& error)
+			{
+				throw std::runtime_error(json.at(index).where() + ": motion shadow: " + error.what());
+			}
 		}
 	}
 	return shadows;
@@ -480,6 +556,18 @@ void LevelObjectBuilder::validate_objects(const JsonValue& collision_objects,
 		}
 	}
 	build_shadows(collision_objects);
+	// Only the new path retains temporary owners while checking composed
+	// shadows. Static validation keeps its original construction/destruction order.
+	bool moving = false;
+	for (size_t index = 0; index < collision_objects.size(); ++index)
+	{
+		moving |= collision_objects.at(index).has("motion");
+	}
+	if (moving)
+	{
+		const auto objects = build_collision_objects(collision_objects, colours);
+		build_moving_shadows(collision_objects, objects);
+	}
 }
 
 std::vector<std::unique_ptr<GameObject>>
