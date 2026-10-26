@@ -214,7 +214,9 @@ void KeyboardJumpMenu::update_capture()
 
 void KeyboardJumpMenu::apply()
 {
-	const bool saved = this->save()->set_input_bindings_and_save(this->selection_);
+	InputBindings current = this->save()->input_bindings();
+	current.keyboard_jump = this->selection_.keyboard_jump;
+	const bool saved = this->save()->set_input_bindings_and_save(current);
 	this->refresh_values();
 	this->play_wave(this->confirm_sound_);
 	this->set_status(saved ? this->text().keyboard_jump.saved_status :

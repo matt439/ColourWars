@@ -52,7 +52,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 | `POL#21` | Author and reopen Turbulence's explicit-only static skeleton against its route/spawn/paint brief; supported movers and scored slopes follow their capability checks | [Brief](docs/polish-turbulence.md#next-slice-and-acceptance-still-owed) |
 | `GAP#D5` | Qualify fresh public-loader replay rebuilds for the runtime-loaded horizontal mover; editor authoring follows | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 | `ROAD#9` | Add saved per-slot rumble On/Off, authored pulse values and actual gameplay callers to the qualified policy; isolated native hook follows | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
-| `GAP#4.2` | Per-slot gameplay Jump choice from A/B/X/Y, retaining LT and the existing menu controls; model/save/evaluator first | [Bindings](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42) |
+| `GAP#4.2` | Expose the saved per-slot A/B/X/Y Jump choices through a scoped Pad Jump page and accurate controls help; qualify pages and replay adoption | [Bindings](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
@@ -151,7 +151,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#8` | DEFERRED | LOW | S | More team palette pairs, each checked under colour-vision simulation; later UI art pass. [Scope](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | OPEN | MED | M | Per-seat controller rumble for hits, eliminations, hard landings and dry fire, with a saved On/Off; bots, replays and pause never rumble. Feeling it needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
-| `GAP#4.2` | OPEN | MED | L | Per-slot pad Jump choice A/B/X/Y, retaining LT and menu controls; model/save/evaluator, then page/help and qualification. Broader rebinding remains unscoped. [Scope](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42). |
+| `GAP#4.2` | OPEN | MED | L | Add page/help and integration/replay qualification for the saved per-slot A/B/X/Y Jump choices, retaining LT and menu controls. Broader rebinding remains unscoped. [Scope](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |

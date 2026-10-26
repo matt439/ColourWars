@@ -68,6 +68,15 @@ namespace
         { Key::y, "y", L"Y" }, { Key::z, "z", L"Z" }, { Key::space, "space", L"Space" }
     }};
 
+    struct ExpectedButton { GamepadButton button; const char* name; const wchar_t* label; };
+    constexpr std::array<ExpectedButton, 4> expected_buttons{{
+        { GamepadButton::a, "a", L"A" }, { GamepadButton::b, "b", L"B" },
+        { GamepadButton::x, "x", L"X" }, { GamepadButton::y, "y", L"Y" }
+    }};
+
+    uint16_t button_bit(GamepadButton button)
+    { return uint16_t(1u << static_cast<unsigned int>(button)); }
+
     bool conflicting(Key key) { return key == Key::a || key == Key::d || key == Key::s; }
 
     std::vector<Key> expected_game_keys(GameAction action, Key jump)
@@ -85,7 +94,7 @@ namespace
         }
     }
 
-    void require_mapping(const ActionBindings& actual, Key jump)
+    void require_mapping(const ActionBindings& actual, Key jump, GamepadButton pad_jump = GamepadButton::a)
     {
         require(game_action_count == 8 && menu_action_count == 4 && menu_direction_count == 4,
             "Input binding test surface changed without its explicit physical-control oracle");
@@ -97,7 +106,7 @@ namespace
                     std::vector<MouseButton>{ MouseButton::left } : std::vector<MouseButton>{}),
                 "Effective bindings changed another gameplay keyboard/mouse action");
             std::vector<GamepadButton> buttons;
-            if (action == GameAction::jump) { buttons = { GamepadButton::a }; }
+            if (action == GameAction::jump) { buttons = { pad_jump }; }
             if (action == GameAction::pause) { buttons = { GamepadButton::start }; }
             if (action == GameAction::debug) { buttons = { GamepadButton::back }; }
             if (action == GameAction::skip_intro) { buttons = { GamepadButton::a, GamepadButton::b, GamepadButton::start }; }
@@ -215,6 +224,67 @@ namespace
             "Menu-only W/R aliases incorrectly prevented Jump binding or stopped working");
     }
 
+    void check_pad_domain_and_mapping(const InputTuning& tuning)
+    {
+        InputBindings preferences{ Key::j };
+        for (GamepadButton button : preferences.pad_jump)
+        { require(button == GamepadButton::a, "Missing per-pad Jump choices must default to A"); }
+        for (const auto& expected : expected_buttons)
+        {
+            require(pad_jump_button_supported(expected.button) && input_button_name(expected.button) == expected.name &&
+                input_button_label(expected.button) == expected.label && input_button_from_name(expected.name) == expected.button,
+                "Pad Jump domain, canonical token or label differs from A/B/X/Y");
+            for (int slot = 0; slot < input_slots::pad_count; ++slot)
+            {
+                preferences.pad_jump[slot] = expected.button;
+                const ActionBindings effective = effective_action_bindings(preferences, slot);
+                require_mapping(effective, Key::j, expected.button);
+                GamepadState before; before.connected = true;
+                GamepadState now = before; now.buttons = button_bit(expected.button);
+                const auto press = game_action(effective, GameAction::jump, now, before, tuning);
+                const auto hold = game_action(effective, GameAction::jump, now, now, tuning);
+                const auto release = game_action(effective, GameAction::jump, before, now, tuning);
+                require(press.pressed && press.held && !press.released && hold.held && !hold.pressed &&
+                    release.released && !release.held && !release.pressed,
+                    "Selected face button lost physical press/hold/release semantics");
+                before = now; now.left_trigger = 1.0f;
+                require(game_action(effective, GameAction::jump, now, before, tuning).pressed ==
+                    (tuning.trigger_jump_threshold < 1.0f), "Selected face button suppressed independent LT crossing");
+                if (expected.button != GamepadButton::a)
+                {
+                    now = {}; now.connected = true; now.buttons = button_bit(GamepadButton::a);
+                    before = {}; before.connected = true;
+                    require(!game_action(effective, GameAction::jump, now, before, tuning).held &&
+                        !game_action(effective, GameAction::jump, now, before, tuning).pressed,
+                        "Selected non-A Jump retained the former A source");
+                }
+            }
+        }
+        for (GamepadButton button : { GamepadButton::left_shoulder, GamepadButton::right_shoulder,
+            GamepadButton::left_stick, GamepadButton::right_stick, GamepadButton::start, GamepadButton::back,
+            GamepadButton::dpad_up, GamepadButton::dpad_down, GamepadButton::dpad_left, GamepadButton::dpad_right,
+            static_cast<GamepadButton>(65535) })
+        {
+            require(!pad_jump_button_supported(button), "Non-face pad Jump button was supported");
+            rejects([&] { input_button_name(button); }, "Unsupported button acquired a canonical token");
+            rejects([&] { input_button_label(button); }, "Unsupported button acquired a help label");
+            InputBindings invalid = preferences; invalid.pad_jump[2] = button;
+            rejects([&] { invalid.validate(); }, "Unsupported per-slot Jump choice validated");
+            rejects([&] { effective_action_bindings(invalid, 0); }, "Invalid other-slot choice escaped binding validation");
+        }
+        for (std::string_view token : { "", "A", "B", "X", "Y", " a", "a ", "start", "left", "lt", "jump" })
+        { rejects([&] { input_button_from_name(token); }, "Noncanonical pad Jump token was accepted"); }
+        rejects([] { input_button_from_name(std::string_view("b\0alias", 7)); }, "Embedded-null pad token was accepted");
+        for (int slot : { -1, input_slots::pad_count, 99 })
+        {
+            bool rejected = false;
+            try { effective_action_bindings(preferences, slot); }
+            catch (const std::out_of_range&) { rejected = true; }
+            require(rejected, "Out-of-range physical pad slot was accepted");
+        }
+        require_mapping(default_action_bindings(), Key::space);
+    }
+
     bool same_input(const PlayerInputData& a, const PlayerInputData& b)
     {
         return a.connected == b.connected && a.x_movement == b.x_movement && a.jump_pressed == b.jump_pressed &&
@@ -317,6 +387,73 @@ namespace
         rejects([&] { h.player.player_inputs(); }, "Borrowed invalid preference silently replaced the cached mapping");
         h.bindings.keyboard_jump = Key::j; std::ignore = h.desktop();
         require_mapping(default_action_bindings(), Key::space);
+    }
+
+    void check_actual_pad_reader(const char* content)
+    {
+        ReaderHarness h(content);
+        for (int slot = 0; slot < input_slots::pad_count; ++slot)
+        {
+            for (const auto& expected : expected_buttons)
+            {
+                binding_test_pads::states = {}; std::ignore = h.sample();
+                h.bindings.pad_jump[slot] = expected.button;
+                auto& pad = binding_test_pads::states[slot];
+                pad.connected = true; pad.buttons = button_bit(expected.button);
+                auto all = h.sample();
+                require(all[slot].jump_held && !all[slot].jump_pressed,
+                    "First/reconnect poll invented a selected-face Jump edge");
+                pad.buttons = 0; std::ignore = h.sample();
+                pad.buttons = button_bit(expected.button); all = h.sample();
+                require(all[slot].jump_held && all[slot].jump_pressed,
+                    "Actual reader did not use the selected physical slot's face button");
+                all = h.sample(); require(all[slot].jump_held && !all[slot].jump_pressed,
+                    "Held selected face repeated its Jump edge");
+                pad.left_trigger = 1.0f; all = h.sample();
+                require(all[slot].jump_pressed == (h.tuning.input().trigger_jump_threshold < 1.0f),
+                    "Actual reader lost independent LT alias crossing while a selected face was held");
+                h.reader.suspend(); all = h.sample();
+                require(!all[slot].connected && !all[slot].jump_held && !all[slot].jump_pressed,
+                    "Suspended pad leaked selected-face held/press state");
+                h.reader.resume(); all = h.sample();
+                require(all[slot].jump_held && !all[slot].jump_pressed,
+                    "Resuming a held custom pad binding invented a Jump edge");
+            }
+        }
+        binding_test_pads::states = {}; std::ignore = h.sample();
+        h.bindings.pad_jump = { GamepadButton::x, GamepadButton::b, GamepadButton::a, GamepadButton::y };
+        auto& second = binding_test_pads::states[1]; auto& fourth = binding_test_pads::states[3];
+        second.connected = fourth.connected = true; std::ignore = h.sample();
+        second.buttons = button_bit(GamepadButton::b); fourth.buttons = button_bit(GamepadButton::y);
+        auto all = h.sample();
+        // A roster may request [slot 3, keyboard, slot 1]; reader output must
+        // still address the physical slots, with no compaction over holes.
+        const std::array<int, 3> roster{ 3, input_slots::keyboard_and_mouse, 1 };
+        require(all[roster[0]].jump_pressed && all[roster[2]].jump_pressed &&
+            !all[0].connected && !all[2].connected && all[roster[1]].connected,
+            "Sparse/reordered roster selection changed physical binding identity");
+        second.buttons |= button_bit(GamepadButton::x); std::ignore = h.sample(); std::ignore = h.sample();
+        h.bindings.pad_jump[1] = GamepadButton::x; all = h.sample();
+        require(all[1].jump_held && !all[1].jump_pressed,
+            "Adopting an already held new face button invented a Jump edge");
+        second.buttons = button_bit(GamepadButton::b); all = h.sample();
+        require(!all[1].jump_held && !all[1].jump_pressed,
+            "A former face button stayed active after slot remapping");
+        second.buttons |= button_bit(GamepadButton::x); all = h.sample();
+        require(all[1].jump_pressed && !all[3].jump_pressed && all[3].jump_held,
+            "Fresh mapped face press was lost or another physical slot was remapped");
+        ResumeCountdown countdown; countdown.begin(0.5f); countdown.filter_inputs(all);
+        require(!all[1].jump_pressed && all[1].jump_held, "Resume filter lost mapped pad Jump hold/edge policy");
+        require(countdown.advance(0.5f), "Mapped pad resume fixture did not complete");
+        all = h.sample(); countdown.filter_inputs(all);
+        require(!all[1].jump_pressed && all[1].jump_held, "Held mapped pad escaped resume release gate");
+        second.buttons = 0; all = h.sample(); countdown.filter_inputs(all);
+        second.buttons = button_bit(GamepadButton::x); all = h.sample(); countdown.filter_inputs(all);
+        require(all[1].jump_pressed, "Fresh mapped pad press failed to rearm after resume release");
+        h.bindings.pad_jump[0] = GamepadButton::start;
+        rejects([&] { h.player.player_inputs(); }, "Invalid disconnected-slot preference escaped actual reader validation");
+        h.bindings.pad_jump[0] = GamepadButton::a;
+        binding_test_pads::states = {}; std::ignore = h.sample();
     }
 
     void check_actual_resume(const char* content)
@@ -428,7 +565,8 @@ namespace
             "Input-binding save/recovery changed independent remembered match choices");
     }
 
-    void require_schema(const std::string& bytes, const char* name)
+    void require_schema(const std::string& bytes, const char* name,
+        const std::array<GamepadButton, input_slots::pad_count>& expected_pad = InputBindings{}.pad_jump)
     {
         rapidjson::Document document; document.Parse(bytes.data(), bytes.size());
         require(!document.HasParseError() && document.IsObject() && document.HasMember("save_version") &&
@@ -436,9 +574,21 @@ namespace
             document.HasMember("input_bindings") && document["input_bindings"].IsObject(),
             "Save did not write the explicit version-3 independent binding schema");
         const auto& section = document["input_bindings"];
-        require(section.MemberCount() == 1 && section.HasMember("keyboard_jump") && section["keyboard_jump"].IsString() &&
+        require(section.MemberCount() == 2 && section.HasMember("keyboard_jump") && section["keyboard_jump"].IsString() &&
             std::string_view(section["keyboard_jump"].GetString(), section["keyboard_jump"].GetStringLength()) == name,
             "Save binding section did not contain exactly its canonical physical Jump token");
+        require(section.HasMember("pad_jump") && section["pad_jump"].IsArray() &&
+            section["pad_jump"].Size() == input_slots::pad_count,
+            "Save did not write all four stable physical-slot Jump choices");
+        for (size_t slot = 0; slot < expected_pad.size(); ++slot)
+        {
+            const auto found = std::find_if(expected_buttons.begin(), expected_buttons.end(),
+                [&](const ExpectedButton& button) { return button.button == expected_pad[slot]; });
+            require(found != expected_buttons.end(), "Schema oracle was given an unsupported pad choice");
+            const auto& actual = section["pad_jump"][static_cast<rapidjson::SizeType>(slot)];
+            require(actual.IsString() && std::string_view(actual.GetString(), actual.GetStringLength()) == found->name,
+                "Save pad Jump choices did not retain canonical tokens and physical slot order");
+        }
     }
 
     void check_save_schema_and_recovery(const IsolatedSaveDirectory& directory)
@@ -578,6 +728,85 @@ namespace
         require_schema(directory.contents(), "w");
     }
 
+    void check_pad_save(const IsolatedSaveDirectory& directory, const char* content)
+    {
+        const std::array<GamepadButton, 4> selected{ GamepadButton::b, GamepadButton::x, GamepadButton::y, GamepadButton::a };
+        Save save = load(directory, "{\"keyboard_jump\":\"j\",\"pad_jump\":[\"b\",\"x\",\"y\",\"a\"]}");
+        require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pad_jump == selected,
+            "Independent per-slot Jump preferences did not load in physical slot order");
+        require_independent(save);
+        require(save.save_to_file(), "Per-slot Jump preferences did not save");
+        require_schema(directory.contents(), "j", selected);
+        Save reread; reread.load_save_file(); require(reread.input_bindings() == save.input_bindings(),
+            "Per-slot Jump preferences did not round trip");
+        SaveData reset = save.save_data(); InputBindingsSection{}.reset(reset);
+        require(reset.input_bindings == InputBindings{}, "Input section reset failed to restore default keyboard and every pad slot");
+
+        for (const char* broken : { "null", "false", "7", "[]", "{}", "\"unknown\"", "\"B\"", "\"lt\"", "\"b\\u0000alias\"" })
+        {
+            save = load(directory, "{\"keyboard_jump\":\"j\",\"pad_jump\":[\"b\"," + std::string(broken) + ",\"y\",\"x\"]}");
+            const std::array<GamepadButton, 4> recovered{ GamepadButton::b, GamepadButton::a, GamepadButton::y, GamepadButton::x };
+            require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pad_jump == recovered,
+                "Malformed pad choice discarded valid keyboard or another slot's choice");
+            require_independent(save);
+        }
+        for (const char* broken : { "null", "false", "7", "\"b\"", "{}" })
+        {
+            save = load(directory, "{\"keyboard_jump\":\"j\",\"pad_jump\":" + std::string(broken) + "}");
+            require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pad_jump == InputBindings{}.pad_jump,
+                "Malformed pad array discarded valid keyboard or failed to use per-slot defaults");
+        }
+        for (const char* keyboard : { "", "\"keyboard_jump\":\"a\",", "\"keyboard_jump\":false," })
+        {
+            save = load(directory, "{" + std::string(keyboard) + "\"pad_jump\":[\"x\",\"y\",\"b\"]}");
+            const std::array<GamepadButton, 4> recovered{ GamepadButton::x, GamepadButton::y, GamepadButton::b, GamepadButton::a };
+            require(save.input_bindings().keyboard_jump == Key::space && save.input_bindings().pad_jump == recovered,
+                "Malformed/missing keyboard or short pad array discarded independently valid pad choices");
+        }
+        save = load(directory, "{\"keyboard_jump\":\"j\",\"pad_jump\":[\"b\",\"x\",\"y\",\"a\",false]}");
+        require(save.input_bindings().pad_jump == selected, "Unknown extra slot discarded known physical-slot preferences");
+        const InputBindings* borrowed = &save.input_bindings(); const std::string bytes = directory.contents();
+        InputBindings invalid = *borrowed; invalid.pad_jump[2] = GamepadButton::start;
+        rejects([&] { save.set_input_bindings_and_save(invalid); }, "Invalid pad setter did not validate before mutation");
+        require(&save.input_bindings() == borrowed && borrowed->pad_jump == selected && directory.contents() == bytes &&
+            !std::filesystem::exists(directory.temporary_path()), "Rejected pad setter mutated active choices, disk or staging state");
+        for (bool replacement_failure : { false, true })
+        {
+            save = load(directory, "{\"keyboard_jump\":\"j\"}"); const std::string previous = directory.contents();
+            InputBindings candidate = save.input_bindings(); candidate.pad_jump = selected;
+            if (replacement_failure)
+            {
+                const ReplacementLock lock(directory.save_path());
+                require(!save.set_input_bindings_and_save(candidate), "Locked pad preference replacement unexpectedly succeeded");
+            }
+            else
+            {
+                require(std::filesystem::create_directory(directory.temporary_path()), "Cannot block own pad save staging path");
+                require(!save.set_input_bindings_and_save(candidate), "Blocked pad preference staging unexpectedly succeeded");
+                require(std::filesystem::remove(directory.temporary_path()), "Cannot remove own pad save staging blocker");
+            }
+            require(save.input_bindings() == candidate && directory.contents() == previous &&
+                !std::filesystem::exists(directory.temporary_path()), "Failed pad write rolled back active preferences or damaged disk bytes");
+            ReaderHarness h(content);
+            PlayerInput actual(&h.pads, &h.keyboard, &h.mouse, &h.tuning, &h.play, &save.input_bindings());
+            auto& pad = binding_test_pads::states[2]; pad.connected = true; std::ignore = h.sample();
+            pad.buttons = button_bit(GamepadButton::y); std::ignore = h.sample();
+            require(actual.player_inputs()[2].jump_pressed, "Save-borrowing reader ignored pad choice kept active after write failure");
+            Save previous_disk; previous_disk.load_save_file();
+            require(previous_disk.input_bindings().pad_jump == InputBindings{}.pad_jump,
+                "Failed pad persistence damaged reloadable previous choices");
+            require(save.set_input_bindings_and_save(candidate), "Pad preference retry failed after removing real IO blocker");
+            require_schema(directory.contents(), "j", selected); require_independent(save);
+        }
+        auto play = save.play_settings(); play.music_volume = 81;
+        require(save.set_play_settings_and_save(play) && save.input_bindings().pad_jump == selected &&
+            save.set_display_settings_and_save(ScreenResolution::s_3840_2160, false, TeamColourPair::blue_orange),
+            "Unrelated settings save overwrote per-slot Jump choices");
+        Save final; final.load_save_file();
+        require(final.input_bindings().keyboard_jump == Key::j && final.input_bindings().pad_jump == selected,
+            "Independent display/play save did not preserve keyboard and per-slot Jump preferences");
+    }
+
     void check_relaunch(const char* content, std::string_view mode, const std::filesystem::path& profile)
     {
         require(mode == "relaunch-write" || mode == "relaunch-read", "Unknown input-binding relaunch mode");
@@ -622,14 +851,17 @@ int main(int argc, char** argv)
         if (argc == 4) { check_relaunch(argv[1], argv[2], std::filesystem::path(argv[3])); return EXIT_SUCCESS; }
         require(argc == 2, "Usage: input_bindings.exe <content> [relaunch-write|relaunch-read <private profile root>]");
         const GameTuning tuning((std::filesystem::path(argv[1]) / "tuning.json").string().c_str());
-        check_domain_and_mapping(tuning.input()); check_actual_reader(argv[1]); check_actual_resume(argv[1]);
+        check_domain_and_mapping(tuning.input()); check_pad_domain_and_mapping(tuning.input());
+        check_actual_reader(argv[1]); check_actual_pad_reader(argv[1]); check_actual_resume(argv[1]);
         const IsolatedSaveDirectory directory; check_save_schema_and_recovery(directory);
         check_save_validation_failures_and_independence(directory, argv[1]);
+        check_pad_save(directory, argv[1]);
         std::cout << "PASS input bindings: independent 27-key names/labels/domain, A/D/S conflicts and W/R aliases, "
             "isolated effective Jump with fixed menu/intro/pad controls; real readers, repeated snapshots/focus/remapping, "
             "held-J ResumeCountdown release gating, version-0/1/2 migration/version-3/future known sections, malformed-section isolation, "
             "validation before mutation, real staged-write/replacement failures with active-before-write preference and retry, "
-            "independent Settings/Controls/display/records/remembered saves; GUID-isolated profile, no window/device\n";
+            "independent Settings/Controls/display/records/remembered saves; per-slot A/B/X/Y with retained LT, local recovery, "
+            "sparse-slot/remap/reconnect/resume and failed-pad-save checks; GUID-isolated profile, no window/device\n";
         return EXIT_SUCCESS;
     }
     catch (const std::exception& error)

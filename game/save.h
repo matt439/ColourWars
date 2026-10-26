@@ -32,6 +32,8 @@ public:
 	// and nested sections ("records") beside the same flat preference keys.
 	// 2 adds the independent nested "last_match" setup; older saves omit it.
 	// 3 adds independent keyboard Jump preferences under "input_bindings".
+	// Its optional pad_jump array adds per-slot face choices; absent entries
+	// retain A without changing existing version-3 preference meanings.
 	static constexpr int version = 3;
 
 	Save() = default;

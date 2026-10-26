@@ -812,13 +812,29 @@ unbound-Jump option or trigger reassignment in this increment.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Model, save and evaluator | Extend the independent input preferences with four validated face-button choices and stable save tokens. Missing choices retain A; define local recovery for malformed choices without discarding keyboard Jump or unrelated settings. Actual `PlayerInput` must use the selected slot's effective binding. Check all four choices, sparse/reordered rosters, save/load/reset, failed writes and held input during adoption. |
 | Page and controls help | Add a Pad Jump child with slot and face-button selectors, current-slot defaults, Apply and Back. Pending edits stay local until Apply; closing discards them. Save only this page's scope. Its help names the selected slot's Jump button and retained LT alias; shared Controls help points to the per-pad choice instead of promising A for every pad. Keep menu controls explicit and unchanged. Validate actual font bounds and page ownership from main-menu and paused routes. |
 | Integration and replay | Exercise actual readers and pages with scripted snapshots: the former button is neutral after remapping, LT crossing while the face button is held still presses Jump, and first poll/reconnect/focus/resume produce no invented edge. Check Apply/Back and per-slot isolation, then record/play through the existing post-mapping `PlayerInputData` route with different saved choices. |
 
-The first stopping point is the model/save/evaluator slice. It can be qualified
-without physical hardware; no new engine input API or rebinding artwork is
-needed. Synthetic devices establish mapping behavior. Physical-pad comfort
+**Model/save/evaluator implemented, 2026-10-26.** `InputBindings.pad_jump`
+holds four physical-slot choices and writes canonical `a`/`b`/`x`/`y` tokens
+under the existing version-3 `input_bindings` section. Missing/malformed slots
+recover independently to A while valid keyboard and other pad choices survive.
+The actual `PlayerInput` caches each slot's effective binding, retaining LT and
+source-level engine edges when a saved choice changes during held input.
+Keyboard Jump Apply merges its key into the latest preferences so it cannot
+overwrite newer pad choices.
+
+Debug/Release game builds and `input_bindings`, `action_bindings`,
+`keyboard_jump_capture`, `settings`, `remembered_setup` and `resume_countdown`
+passed. Coverage includes all choices/slots, sparse slots, LT alias edges,
+held adoption, suspend/reconnect/resume, local save recovery, failed writes,
+reset and unrelated preferences. Receipts are under
+`out/validation/overnight-20261026/` (`input` and `release`). The page/help and
+public replay checks remain the next slices; saved choices are usable by the
+reader but not yet exposed through a pad-settings page.
+
+The next stopping point is the page/help slice. No new engine input API or
+rebinding artwork is needed. Synthetic devices establish mapping behavior. Physical-pad comfort
 remains `ROAD#2`, and attended readability, balance and hardware acceptance stay
 open.
 
