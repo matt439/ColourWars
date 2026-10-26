@@ -57,7 +57,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Qualify lower-approach underside cover/paint on the explicit-only slab candidate | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
+| `POL#21` | Verify the local Release package and record the remaining attended Turbulence questions | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).

@@ -612,6 +612,32 @@ without attended readability, balance, physical-pad or performance acceptance.
 Receipts: `out/validation/overnight-20261026/phase17/slab-native/`, Release
 `7601c0dc393645e9bd48ae8bec2ea0c7`, Debug `817d052a0b6f4947901f64828ededb8f`.
 
+**Lower-approach underside control, 2026-10-26 (Debug and Release).** Four
+fresh public Levels compare both sides with the solid slab and with only that
+slab replaced by an existing unscored, paint-pass ramp sharing its support
+segment. The actual editor saves/reopens each variant and preserves the
+original 22 objects and opposite slab. Legal source spawns put the Sniper on
+the lower bed; one public defender placement after count-in establishes the
+upper station before sixty readiness updates. Each scene then observes one
+paid upward pulse for 180 updates. Total updates are 1,684, with four setup
+placements and none after readiness; earned access is not claimed.
+
+The solid protects the player above: health stays 1, while the pulse owns
+48.844513 of local underside area on each side and no other face. First paint
+is update 6 on A and 5 on B; this one-update asymmetry is retained. In the
+paint-pass controls, the same paid pulse first damages the player at update 7,
+leaving 0.666 health, and owns no surface. Actual ready poses match within
+0.002 world units, with the same health, reserve, aim and step. All sources
+recover full reserve and all projectiles retire within the observation.
+
+This supplies the brief's local scored-underside/cover role from below. The
+two geometries have different score budgets; this is a controlled interception
+comparison, without normalized efficiency, tracking, sustained counterfire,
+opposed survival or human-balance claims. Outcomes, faces and complete pose
+receipts are byte-identical between these Debug/Release runs, without a general
+cross-build determinism claim. Receipts: `out/validation/overnight-20261026/phase17/lower-tools/`,
+Release `turbulence-slab-tools-5100`, Debug `turbulence-slab-tools-2908`.
+
 **Public driven Roller comparison, 2026-10-26 (Debug and Release).**
 The optional `turbulence_slab_routes` case passes eight fresh public Levels:
 slab/composite, both mirrored sides and both walking directions. Private
