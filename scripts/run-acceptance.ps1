@@ -286,7 +286,15 @@ try {
         if ($Result.Failure) { $failures.Add("$($Result.Case): $($Result.Failure)") }
     }
 
-    $parallelSpecs = @($specs | Where-Object { -not $_.Utf8 })
+    # Start the longest cases first so none of them is left running alone at
+    # the end; the order is from CI timings, slowest first.
+    $longestFirst = @('crossfeed', 'menu_text', 'press_tower', 'debug_console', 'story_audio',
+        'movement_course', 'menu_presentation', 'movement', 'cq_blockout', 'balance_regions',
+        'paint_surfaces', 'moving_structure', 'paint_underfoot', 'weapon_catalog')
+    $parallelSpecs = @($specs | Where-Object { -not $_.Utf8 } | Sort-Object {
+        $rank = [array]::IndexOf($longestFirst, $_.Case)
+        if ($rank -lt 0) { $longestFirst.Count } else { $rank }
+    }, { [array]::IndexOf($selectedCases, $_.Case) })
     $serialSpecs = @($specs | Where-Object { $_.Utf8 })
     if ($Parallel -gt 1) {
         # A runspace pool rather than ForEach-Object -Parallel, so this also
