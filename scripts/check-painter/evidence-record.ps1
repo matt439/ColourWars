@@ -33,7 +33,20 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($PressTowerOnly) {
+if ($TurbulenceBlockoutOnly) {
+    $result.scope = 'turbulence-blockout-only'
+    $result.stage = 'turbulence_blockout'
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('lower-upper-approaches', 'immediate-supported-reversal', 'home-exits', 'controlled-clean-heavy-paint', 'actual-runtime-overview', 'actual-stage-preview', 'native-crop-rgb-parity', 'frozen-state-rng-debug-fingerprint')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result.inputs = 'Ten actual Levels own Scenes assembled with production object/player builders; the public LevelBuilder loading path is separately qualified by CPU acceptance. Sparse-slot PlayerInputData drives eighteen lower/upper approach ticks after controlled placement and six settle ticks, plus six walking home-exit ticks. Direct ProjectileSpray contacts establish controlled heavy paint. The normal GamepadReader remains linked; no physical-input or completed-route claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Exactly twenty-one native720p full frames, fifty-one unscaled native crops/CSV rows and forty-three readbacks cover 1/2/3/4-player lower/upper approaches, 4P home exits, two actual short-match overviews and one isolated actual StagePreview. Ten Level builds and at most8000 updates; measured heavy paint exceeds99percent. Each gameplay pane keeps its full player, whole-body landing patch and immediate source-supported reversal patch inside its actual Scene camera. Upper reversal and home-ground patches retain an eight-world-unit support cap; eventual lower drops are outside the upper-reversal warning claim. Actual Scene view counts/cameras/viewports, staged patch geometry and full-frame/crop RGB parity are checked. Paired clean/heavy actor motion matches and every gameplay pane has visible paint difference. Repeated Level draws preserve observed public/paint/geometry state, views, pixels, RNG and Debug fingerprints; StagePreview checks pixels, widget bounds and RNG only. Human readability/reaction timing, completed routes, gameplay pressure, balance, movers, slopes, physical pads, listening, performance and arena acceptance remain open.'
+}
+elseif ($PressTowerOnly) {
     $result.scope = 'press-tower-only'
     $result.stage = 'press_tower'
     $result.player_counts = @(4)

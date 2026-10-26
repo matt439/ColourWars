@@ -25,7 +25,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    blockout is [Press Tower](docs/polish-press-tower.md) (explicit-only, beside the preserved
    original; attended play is `POL#31`); Crossfeed is now in Random at the author's request.
    Turbulence's [static candidate](docs/polish-turbulence.md) is explicit-only;
-   five-tool pressure and native composition are next.
+   near-receiver tool trials and static native composition are qualified;
+   moving/jumping pressure, escape windows and useful mover placements are next.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
@@ -51,7 +52,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Qualify Turbulence's five-tool pressure/recovery stations and native clean/heavy composition; supported movers and scored slopes follow their capability checks | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
+| `POL#21` | Qualify Turbulence's moving/jumping pressure and defender escape windows, then useful movers and supported scored slopes | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
 | `GAP#D5` | Justify useful Turbulence mover placements and the smallest static scored slope through route, paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -105,7 +106,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 |---|---|---|---|---|
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | OPEN | MED | XL | Qualify [Turbulence Yard](docs/polish-turbulence.md) pressure, composition and capability placements; optional 1v1 CQ and side swaps follow. [Press Tower](docs/polish-press-tower.md) still needs attended play (`POL#31`) and support art. |
+| `POL#21` | OPEN | MED | XL | Qualify [Turbulence Yard](docs/polish-turbulence.md) opposed pressure and capability placements; optional 1v1 CQ and side swaps follow. [Press Tower](docs/polish-press-tower.md) still needs attended play (`POL#31`) and support art. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 

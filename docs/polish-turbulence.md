@@ -304,10 +304,37 @@ still reach both as the union of seven separately aimed pulses. A paid Mister
 pulse can contain several projectiles, so this is neither a same-instant coverage
 test nor universal safety evidence. The recorded spawn/pressure questions remain.
 
-Next, add moving/jumping attack and defender escape/counterfire samples, and
-inspect native composition before selecting mover placements. The paired
+Next, add moving/jumping attack and defender escape/counterfire samples before
+selecting mover placements. The paired
 useful-role extension is qualified in Release here; no extended Debug run is
-implied. Native composition remains the other immediate slice.
+implied.
+
+**Static native composition qualified, 2026-10-26.**
+`check-painter.ps1 -TurbulenceBlockoutOnly` passes in Debug and Release at
+1280x720: 21 full frames, 51 native pane crops/CSV rows, 43 readbacks and ten
+actual Levels per preset. The 3,258 Level updates include 300 scripted approach
+updates after controlled placements. All 1/2/3/4-player lower/upper approaches
+have clean/heavy pairs; four-player home departures, two actual short-match
+overviews and an actual isolated StagePreview supplement them. The Levels use
+production object/player builders; public `LevelBuilder` loads remain covered
+by the separate CPU case.
+
+Each gameplay pane contains the whole player, a whole-body landing patch and
+an immediate supported reversal patch. Upper source-return and home-ground
+patches include eight world units of the support cap; upper-return captures do
+not claim that the eventual lower-bed drop is visible. CSV metadata comes from
+the actual Scene camera/viewport/view count. The post-run verifier reconstructs
+staged patch geometry, validates the bounded inventory and compares every crop
+RGB row with its full frame. Controlled heavy paint covers all scored tiles;
+clean/heavy actor positions and velocities agree. Repeated Level draws preserve
+observed public/paint/geometry state, actual views, pixels, RNG and Debug
+fingerprints. StagePreview checks only repeated pixels, widget bounds and RNG.
+
+Receipts: `out/validation/overnight-20261026/phase5/turbulence-native/`.
+Representative two/four-player upper and heavy-paint images were visually
+inspected. These are controlled hidden native captures, without attended
+readability, reaction-time, completed-route, balance, hardware-pad, listening
+or performance acceptance. The paper-only backdrop remains provisional.
 
 Drive both directions, failed routes and mover phases/reversals with the real
 Player. Reconcile paint and sampled five-tool pressure with side/loadout swaps,
@@ -316,8 +343,8 @@ captures must show the receiving surface and first escape before commitment,
 including moving approaches, preview and ending views.
 
 These checks establish construction, routes, score geography and the recorded
-near-receiver tool samples. Opposed five-tool pressure, mover/rotation placement and native
-framing remain open.
+near-receiver tool samples and bounded native composition. Opposed five-tool
+pressure and mover/rotation placement remain open.
 Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `GAP#D5`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.

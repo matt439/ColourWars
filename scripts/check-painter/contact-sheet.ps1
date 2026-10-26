@@ -62,6 +62,7 @@ function Write-ContactSheet {
                 $_.Name -like 'hidden-inspection-cq-*-native.ppm' -or
                 $_.Name -like 'hidden-inspection-crossfeed-*-native.ppm' -or
                 $_.Name -like 'hidden-inspection-press-tower-*-native.ppm' -or
+                $_.Name -like 'hidden-inspection-turbulence-blockout-*-native.ppm' -or
                 $_.Name -like 'surface-finish-board-*-detail.ppm' -or
                 $_.Name -like 'identity-background-*-badges.ppm' -or
                 $_.Name -like 'drift-*-detail.ppm' -or $_.Name -like 'miniature-terrain-*-detail.ppm' -or
