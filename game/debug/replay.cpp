@@ -7,12 +7,17 @@
 #include "engine/core/file_path.h"
 #include "game/debug/match_plan.h"
 #include "game/debug/tune_document.h"
+#include "game/objects/horizontal_motion.h"
+#include <algorithm>
+#include <bit>
+#include <cmath>
 #include <charconv>
 #include <chrono>
 #include <cstdio>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 
 namespace
@@ -79,6 +84,179 @@ namespace
 		}
 		return bits;
 	}
+    // Strict schema1 helpers are separate from the unchanged legacy codec.
+    std::string motion_hex32(std::uint32_t value)
+    {
+        char buffer[9] = {}; std::snprintf(buffer, sizeof(buffer), "%08x", value); return buffer;
+    }
+    std::string motion_hex64(std::uint64_t value)
+    {
+        char buffer[17] = {};
+        std::snprintf(buffer, sizeof(buffer), "%016llx", static_cast<unsigned long long>(value)); return buffer;
+    }
+    template<class Integer> Integer motion_hex(const std::string& text, std::size_t width,
+        const std::filesystem::path& path)
+    {
+        Integer value = 0;
+        const bool digits = std::all_of(text.begin(), text.end(), [](char c)
+        { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); });
+        if (text.size() != width || !digits || !parse_hex(text, value))
+        { fail(path, "horizontal_motion requires exact " + std::to_string(width) + "-hex-digit fields"); }
+        return value;
+    }
+    template<std::size_t N> std::array<std::uint32_t, N> motion_array(
+        const labrador::JsonValue& entry, const char* key, const std::filesystem::path& path)
+    {
+        const auto values = entry.array(key);
+        if (values.size() != N) { fail(path, std::string("horizontal_motion '") + key + "' cardinality"); }
+        std::array<std::uint32_t, N> result{};
+        for (std::size_t index = 0; index < N; ++index)
+        { result[index] = motion_hex<std::uint32_t>(values.at(index).as_string(), 8, path); }
+        return result;
+    }
+    template<std::size_t N> void write_motion_array(std::ostream& out, const std::array<std::uint32_t, N>& values)
+    {
+        out << "[";
+        for (std::size_t index = 0; index < N; ++index)
+        { out << (index == 0 ? " " : ", ") << quoted(motion_hex32(values[index])); }
+        out << " ]";
+    }
+    void validate_motion(const MatchFingerprint::HorizontalTerrainPrint& terrain,
+        std::size_t roster, std::size_t final_seats, const std::filesystem::path& path)
+    {
+        const auto bounded = [&](std::size_t count)
+        {
+            if (count > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
+            { fail(path, "horizontal_motion count exceeds int32 range"); }
+        };
+        bounded(terrain.structures.size()); bounded(terrain.carriers.size());
+        if (terrain.structures.empty()) { fail(path, "horizontal_motion structures must be nonempty"); }
+        if (roster < 1 || roster > 4 || terrain.carriers.size() != roster || terrain.carriers.size() != final_seats)
+        { fail(path, "horizontal_motion carrier count must match setup and final seats"); }
+        for (std::size_t index = 0; index < terrain.structures.size(); ++index)
+        {
+            const auto& value = terrain.structures[index];
+            if (value.id != index + 1) { fail(path, "horizontal_motion IDs must be canonical 1..N order"); }
+            const auto finite = [&](std::uint32_t field)
+            { if (!std::isfinite(float_from_bits(field))) { fail(path, "horizontal_motion float must be finite"); } };
+            for (const auto field : value.spec) { finite(field); }
+            for (const auto field : value.offsets) { finite(field); }
+            for (const auto field : value.pose) { finite(field); }
+            HorizontalMotionSpec spec;
+            spec.anchor = { float_from_bits(value.spec[0]), float_from_bits(value.spec[1]),
+                float_from_bits(value.spec[2]), float_from_bits(value.spec[3]) };
+            spec.travel_x = float_from_bits(value.spec[4]);
+            spec.period_seconds = float_from_bits(value.spec[5]); spec.initial_phase = float_from_bits(value.spec[6]);
+            try { HorizontalMotion::validate_spec(spec); }
+            catch (const std::exception& error) { fail(path, "horizontal_motion spec: " + std::string(error.what())); }
+            const double phase = std::bit_cast<double>(value.phase);
+            if (!std::isfinite(phase) || phase < 0.0 || phase >= 1.0)
+            { fail(path, "horizontal_motion phase must be finite in [0,1)"); }
+            if (value.direction != (phase < 0.5 ? 1 : -1))
+            { fail(path, "horizontal_motion direction disagrees with phase"); }
+            for (std::size_t frame = 0; frame < 2; ++frame)
+            {
+                const float offset = float_from_bits(value.offsets[frame * 2]);
+                if (offset < 0.0f || offset > spec.travel_x || float_from_bits(value.offsets[frame * 2 + 1]) != 0.0f)
+                { fail(path, "horizontal_motion offset outside horizontal travel"); }
+                mattmath::RectangleF pose = spec.anchor;
+                if (offset != 0.0f) { pose.x += offset; }
+                const std::uint32_t expected[] = { bits_from_float(pose.x), bits_from_float(pose.y),
+                    bits_from_float(pose.width), bits_from_float(pose.height) };
+                for (std::size_t field = 0; field < 4; ++field)
+                { if (value.pose[frame * 4 + field] != expected[field])
+                  { fail(path, "horizontal_motion pose disagrees with exact offset/spec"); } }
+                if (!std::isfinite(pose.right()) || !(pose.right() > pose.left()) ||
+                    !std::isfinite(pose.bottom()) || !(pose.bottom() > pose.top()))
+                { fail(path, "horizontal_motion pose has unrepresentable edges"); }
+            }
+            const double ratio = phase <= 0.5 ? phase * 2.0 : (1.0 - phase) * 2.0;
+            const float current = static_cast<float>(static_cast<double>(spec.travel_x) * ratio);
+            if (value.offsets[2] != bits_from_float(current))
+            { fail(path, "horizontal_motion current offset disagrees with phase"); }
+            bounded(value.tiles.size());
+            int previous_face = -1;
+            float previous_start = 0.0f;
+            for (const auto& tile : value.tiles)
+            {
+                if (tile.face < 0 || tile.face > 3 || tile.team < 0 || tile.team > 2)
+                { fail(path, "horizontal_motion tile enum out of range"); }
+                finite(tile.area);
+                if (float_from_bits(tile.area) < 0.0f) { fail(path, "horizontal_motion tile area must be nonnegative"); }
+                for (const auto field : tile.corners) { finite(field); }
+                const float start = float_from_bits(tile.corners[tile.face < 2 ? 0 : 1]);
+                if (tile.face < previous_face || (tile.face == previous_face && start < previous_start))
+                { fail(path, "horizontal_motion local tiles must retain face/tile source order"); }
+                previous_face = tile.face; previous_start = start;
+            }
+        }
+        for (const auto id : terrain.carriers)
+        { if (id > terrain.structures.size()) { fail(path, "horizontal_motion carrier references unknown ID"); } }
+    }
+    void write_motion(std::ostream& out, const MatchFingerprint::HorizontalTerrainPrint& terrain)
+    {
+        out << ",\n    \"horizontal_motion\": { \"schema\": 1, \"structures\": [";
+        for (std::size_t index = 0; index < terrain.structures.size(); ++index)
+        {
+            const auto& value = terrain.structures[index];
+            out << (index == 0 ? "\n" : ",\n") << "      { \"id\": " << value.id << ", \"spec\": ";
+            write_motion_array(out, value.spec);
+            out << ", \"phase\": " << quoted(motion_hex64(value.phase)) << ", \"direction\": " << value.direction;
+            out << ", \"offsets\": "; write_motion_array(out, value.offsets);
+            out << ", \"pose\": "; write_motion_array(out, value.pose); out << ", \"tiles\": [";
+            for (std::size_t tile_index = 0; tile_index < value.tiles.size(); ++tile_index)
+            {
+                const auto& tile = value.tiles[tile_index];
+                out << (tile_index == 0 ? "\n" : ",\n") << "        { \"face\": " << tile.face <<
+                    ", \"team\": " << tile.team << ", \"owner\": " << tile.owner <<
+                    ", \"area\": " << quoted(motion_hex32(tile.area)) << ", \"corners\": ";
+                write_motion_array(out, tile.corners); out << " }";
+            }
+            out << (value.tiles.empty() ? "] }" : "\n      ] }");
+        }
+        out << "\n    ], \"carriers\": [";
+        for (std::size_t seat = 0; seat < terrain.carriers.size(); ++seat)
+        { out << (seat == 0 ? " " : ", ") << "{ \"motion_id\": " << terrain.carriers[seat] << " }"; }
+        out << " ] }";
+    }
+    MatchFingerprint::HorizontalTerrainPrint read_motion(const labrador::JsonValue& entry,
+        std::size_t roster, std::size_t final_seats, const std::filesystem::path& path)
+    {
+        if (entry.integer("schema") != 1) { fail(path, "horizontal_motion schema must be 1"); }
+        MatchFingerprint::HorizontalTerrainPrint terrain;
+        const auto structures = entry.array("structures");
+        for (std::size_t index = 0; index < structures.size(); ++index)
+        {
+            const auto source = structures.at(index);
+            MatchFingerprint::HorizontalStructurePrint value;
+            const int id = source.integer("id");
+            if (id <= 0) { fail(path, "horizontal_motion ID must be positive int32"); }
+            value.id = static_cast<std::uint32_t>(id);
+            value.spec = motion_array<7>(source, "spec", path);
+            value.phase = motion_hex<std::uint64_t>(source.string("phase"), 16, path);
+            value.direction = source.integer("direction");
+            value.offsets = motion_array<4>(source, "offsets", path); value.pose = motion_array<8>(source, "pose", path);
+            const auto tiles = source.array("tiles");
+            for (std::size_t tile_index = 0; tile_index < tiles.size(); ++tile_index)
+            {
+                const auto sample = tiles.at(tile_index);
+                MatchFingerprint::HorizontalTilePrint tile;
+                tile.face = sample.integer("face"); tile.team = sample.integer("team"); tile.owner = sample.integer("owner");
+                tile.area = motion_hex<std::uint32_t>(sample.string("area"), 8, path);
+                tile.corners = motion_array<8>(sample, "corners", path); value.tiles.push_back(tile);
+            }
+            terrain.structures.push_back(std::move(value));
+        }
+        const auto carriers = entry.array("carriers");
+        for (std::size_t seat = 0; seat < carriers.size(); ++seat)
+        {
+            const int id = carriers.at(seat).integer("motion_id");
+            if (id < 0) { fail(path, "horizontal_motion carrier ID must be nonnegative int32"); }
+            terrain.carriers.push_back(static_cast<std::uint32_t>(id));
+        }
+        validate_motion(terrain, roster, final_seats, path); return terrain;
+    }
+
 }
 
 // ---------------------------------------------------------------------------
@@ -237,6 +415,10 @@ std::string replay_name(std::string_view requested)
 
 void ReplayFile::write(const std::filesystem::path& path) const
 {
+    if (this->final_print.horizontal_motion)
+    { validate_motion(*this->final_print.horizontal_motion, this->settings.player_settings().size(),
+        this->final_print.seats.size(), path); }
+
 	std::ostringstream out;
 	out << "{\n";
 	out << "  \"version\": " << format_version << ",\n";
@@ -333,7 +515,16 @@ void ReplayFile::write(const std::filesystem::path& path) const
         }
         out << " }";
 	}
+    if (print.horizontal_motion)
+    {
+        out << (print.seats.empty() ? "]" : "\n    ]");
+        write_motion(out, *print.horizontal_motion);
+        out << "\n";
+    }
+    else
+    {
 	out << (print.seats.empty() ? "]\n" : "\n    ]\n");
+    }
 	out << "  }\n}\n";
 
 	std::error_code error;
@@ -534,6 +725,10 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
         }
 		print.seats.push_back(seat);
 	}
+    if (last.has("horizontal_motion"))
+    { print.horizontal_motion = read_motion(last.object("horizontal_motion"),
+        seats.size(), print.seats.size(), path); }
+
 	return file;
 }
 

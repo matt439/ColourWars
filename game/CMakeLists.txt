@@ -118,6 +118,9 @@ add_executable(ColourWars WIN32
     objects/stage.cpp
     objects/structure.cpp
     objects/structure_paintable.cpp
+    objects/horizontal_motion.cpp
+    objects/translating_structure_paintable.cpp
+    objects/translated_airbrush_shadow.cpp
     objects/terrain_material.cpp
     objects/terrain_material_drawings.cpp
     objects/team_colour.cpp

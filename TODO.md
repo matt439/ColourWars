@@ -31,8 +31,9 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 
 5. **Feeding the above (`GAP#D5`):** the first headless five-tool report
    is recorded in the arena owners; attended decisions remain above. The default-off
-   paint-underfoot prototype is available for `POL#30`; Turbulence is next for
-   moving and rotated structures.
+   paint-underfoot prototype is available for `POL#30`. The manual horizontal mover
+   is qualified; Turbulence still needs builder/editor integration, useful placements
+   and rotated structures ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
@@ -160,7 +161,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
-| `GAP#D5` | OPEN | MED | L | Rotated and moving builder structures, placed in the Turbulence blockout (`POL#21`): riding, support, face-owned paint, editor and deterministic replays. Crossfeed and Press Tower stay static. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
+| `GAP#D5` | OPEN | MED | L | Integrate the horizontal mover with the builder/editor and public replay rebuild; add rotated structures and useful Turbulence placements with layout acceptance (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
 
 ## Engine reports
 

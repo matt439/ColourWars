@@ -221,7 +221,8 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
     }
     this->on_structure_contact(other, normal, penetration);
 }
-void Player::end_contacts(std::span<const Contact> contacts)
+void Player::end_contacts(std::span<const Contact> contacts,
+    std::span<const HorizontalSupportRef> supports)
 {
     // A projected slope can touch without penetrating, so dispatch may have
     // no manifold to resolve. Retain that support only if later wall/ceiling
@@ -392,7 +393,12 @@ void Player::end_contacts(std::span<const Contact> contacts)
     {
         this->underfoot_support_team_ = this->gameplay_support_team();
     }
-    const float resolved_x = this->rectangle_.x - this->movement_start_x_;
+    if (!supports.empty()) { this->choose_carrier(contacts, supports); }
+    // Static movement retains its exact original subtraction. Involuntary
+    // carry changes world pose, never personal footsteps or tool locomotion.
+    const float resolved_x = this->movement_carried_x_ == 0.0f ?
+        this->rectangle_.x - this->movement_start_x_ :
+        (this->rectangle_.x - this->movement_start_x_) - this->movement_carried_x_;
     // Separation from a wall or an overlapping spawn is not walked distance.
     const float distance = resolved_x * this->movement_requested_x_ > 0.0f ?
         std::min(std::abs(resolved_x), std::abs(this->movement_requested_x_)) : 0.0f;
@@ -435,6 +441,109 @@ void Player::end_contacts(std::span<const Contact> contacts)
     this->hit_ceiling_this_tick_ = false;
     this->support_impact_speed_ = 0.0f;
     this->paint_supports_.clear();
+    this->resolved_flat_supports_.clear();
+}
+
+void Player::remember_flat_support(const CollisionObject& other)
+{
+    if (const auto* support = dynamic_cast<const Structure*>(&other))
+    { this->resolved_flat_supports_.push_back(support); }
+}
+
+void Player::clear_carrier() noexcept
+{
+    this->carrier_id_ = 0;
+    this->prepared_carrier_.reset();
+    this->resolved_flat_supports_.clear();
+    // Do not erase this tick's applied carry before feedback subtracts it.
+}
+
+HorizontalMotionId Player::carrier_id() const { return this->carrier_id_; }
+
+void Player::prepare_carrier_step(std::optional<HorizontalCarryStep> step) noexcept
+{
+    if (!step || step->id == 0 || step->id != this->carrier_id_)
+    {
+        this->clear_carrier();
+        return;
+    }
+    this->prepared_carrier_ = *step;
+}
+
+void Player::apply_carrier(float dt)
+{
+    if (!(dt > 0.0f) || !this->prepared_carrier_) { return; }
+    const HorizontalCarryStep step = *this->prepared_carrier_;
+    this->prepared_carrier_.reset();
+    const bool flat = this->move_state() == PlayerMoveState::on_ground ||
+        this->move_state() == PlayerMoveState::on_drop_down_ground;
+    const float overlap = std::min(this->rectangle_.right(), step.previous_top.right()) -
+        std::max(this->rectangle_.left(), step.previous_top.left());
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f || !flat ||
+        step.id != this->carrier_id_ || !(overlap > 0.0f) ||
+        !feet_at(this->rectangle_, step.previous_top.top()))
+    {
+        this->clear_carrier();
+        return;
+    }
+    const float before = this->rectangle_.x;
+    this->rectangle_.offset(step.displacement_x, 0.0f);
+    this->movement_carried_x_ = this->rectangle_.x - before;
+}
+
+void Player::choose_carrier(std::span<const Contact> contacts,
+    std::span<const HorizontalSupportRef> supports)
+{
+    const bool flat = this->move_state() == PlayerMoveState::on_ground ||
+        this->move_state() == PlayerMoveState::on_drop_down_ground;
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
+        !flat || !this->supported_this_tick_)
+    {
+        this->clear_carrier();
+        return;
+    }
+    const HorizontalSupportRef* best = nullptr;
+    float best_overlap = -1.0f;
+    for (const HorizontalSupportRef& candidate : supports)
+    {
+        if (candidate.surface == nullptr) { continue; }
+        const CollisionObjectType type = to_collision_type(candidate.surface->tag());
+        if (type != CollisionObjectType::structure &&
+            type != CollisionObjectType::structure_paintable &&
+            type != CollisionObjectType::structure_jump_through) { continue; }
+        bool measured_top = false;
+        for (const Contact& contact : contacts)
+        {
+            Vector2F normal;
+            const CollisionObject* other = nullptr;
+            if (contact.a == this) { other = contact.b; normal = contact.normal; }
+            else if (contact.b == this) { other = contact.a; normal = -contact.normal; }
+            if (other == candidate.surface && normal.y > 0.0f &&
+                std::abs(normal.y) >= std::abs(normal.x)) { measured_top = true; break; }
+        }
+        const bool resolved_top = std::find(this->resolved_flat_supports_.begin(),
+            this->resolved_flat_supports_.end(), candidate.surface) != this->resolved_flat_supports_.end();
+        if (!measured_top && !resolved_top) { continue; }
+        const RectangleF surface = candidate.surface->shape()->bounding_box();
+        const float overlap = std::min(this->rectangle_.right(), surface.right()) -
+            std::max(this->rectangle_.left(), surface.left());
+        if (!(overlap > 0.0f) || !feet_at(this->rectangle_, surface.top())) { continue; }
+        if (candidate.motion != 0 && candidate.motion == this->carrier_id_)
+        {
+            this->prepared_carrier_.reset();
+            return; // Still valid established carrier wins before overlap ties.
+        }
+        const bool static_first = best != nullptr && candidate.motion == 0 && best->motion != 0;
+        const bool same_kind = best != nullptr && (candidate.motion == 0) == (best->motion == 0);
+        if (best == nullptr || overlap > best_overlap ||
+            (overlap == best_overlap && (static_first || (same_kind && candidate.order < best->order))))
+        {
+            best = &candidate;
+            best_overlap = overlap;
+        }
+    }
+    this->carrier_id_ = best == nullptr ? 0 : best->motion;
+    this->prepared_carrier_.reset();
 }
 
 PlayerTeam Player::gameplay_support_team() const
@@ -565,6 +674,7 @@ void Player::on_structure_contact(const CollisionObject& other,
         }
         this->set_move_state(normal.y > 0.0f ?
             PlayerMoveState::on_ground : PlayerMoveState::on_ceiling);
+        if (normal.y > 0.0f) { this->remember_flat_support(other); }
     }
     else
     {
@@ -640,6 +750,7 @@ void Player::on_jump_through_contact(const CollisionObject& other)
             std::min(this->rectangle_.right(), other_rect.right())) / 2.0f, other_rect.top() };
         this->set_move_state(PlayerMoveState::on_drop_down_ground);
         this->supported_this_tick_ = true;
+        this->remember_flat_support(other);
     }
 }
 
@@ -662,7 +773,10 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
     const bool vulnerable = this->state_ == PlayerState::alive && this->health_ > 0.0f;
     this->health_ -= damage;
     if (this->health_ <= 0.0f)
-    { this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none; }
+    {
+        this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
+        this->clear_carrier();
+    }
     if (vulnerable && this->health_ <= 0.0f)
     {
         // Capture the fatal contact now: the dead state arrives next update.
@@ -715,8 +829,10 @@ void Player::update(float dt)
     }
     this->projected_ramp_support_ = false;
     this->paint_supports_.clear();
+    this->resolved_flat_supports_.clear();
     this->movement_audio_dt_ = dt;
     this->movement_start_x_ = this->rectangle_.x;
+    this->movement_carried_x_ = 0.0f;
     this->movement_previous_velocity_ = this->velocity().x;
     this->movement_requested_x_ = 0.0f;
     // Age old cues before movement can emit new ones; every new event is drawn
@@ -991,6 +1107,9 @@ void Player::update_movement(float dt)
         this->do_jump(dt);
 	}
 
+    // Accepted jump/drop has already released support. A rider receives the
+    // platform's world displacement before its own unchanged integration.
+    this->apply_carrier(dt);
     const Vector2F displacement = MovingObject::velocity() * dt;
     this->movement_requested_x_ = displacement.x;
     this->rectangle_.offset(displacement.x, displacement.y);
@@ -1070,6 +1189,7 @@ void Player::do_jump(float dt)
 
 void Player::start_jump()
 {
+    this->clear_carrier();
     this->ramp_support_.reset();
     this->projected_ramp_support_ = false;
     this->start_action(PlayerAnimationState::taking_off);
@@ -1123,6 +1243,7 @@ void Player::clear_view_shake() { this->view_shake_.clear(); }
 
 void Player::reset_jump_input()
 {
+    this->clear_carrier();
     this->jump_buffer_remaining_ = 0.0f;
     this->ledge_grace_remaining_ = 0.0f;
     this->jump_waiting_for_release_ = true;
@@ -1188,6 +1309,7 @@ const PlayerTuning& Player::player_tuning() const
 
 void Player::place_at(const Vector2F& top_left)
 {
+    this->clear_carrier();
     this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     this->view_shake_.clear();
     this->quiet_character_.reset();
@@ -1224,6 +1346,7 @@ void Player::force_respawn()
 
 void Player::kill()
 {
+    this->clear_carrier();
     this->health_ = 0.0f;
     this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     this->quiet_character_.reset();

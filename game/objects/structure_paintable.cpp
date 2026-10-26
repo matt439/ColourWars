@@ -153,7 +153,23 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 
 	const Projectile& projectile = dynamic_cast<const Projectile&>(other);
 	const RectangleF splash = other.shape()->bounding_box();
+	this->paint_from_projectile(projectile, splash, team);
+}
 
+void StructurePaintable::paint_from_projectile(const Projectile& projectile,
+	const RectangleF& splash)
+{
+	const CollisionLayer other_layer = projectile.layer();
+	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
+		other_layer != collision_layers::PROJECTILE_TEAM_B) { return; }
+	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
+		PlayerTeam::a : PlayerTeam::b;
+	this->paint_from_projectile(projectile, splash, team);
+}
+
+void StructurePaintable::paint_from_projectile(const Projectile& projectile,
+	const RectangleF& splash, PlayerTeam team)
+{
 	bool tile_painted = false;
 	bool tile_captured = false;
 
@@ -390,6 +406,23 @@ PlayerTeam StructurePaintable::top_paint_team(float x) const
 		const int index = std::min(static_cast<int>((x - strip.origin) / strip.pitch),
 			strip.count - 1);
 		return this->paint_tiles_[static_cast<size_t>(strip.begin + index)].team();
+	}
+	return PlayerTeam::none;
+}
+
+PlayerTeam StructurePaintable::top_paint_team_translated(float world_x, float offset_x) const
+{
+	for (const PaintStrip& strip : this->paint_strips_)
+	{
+		if (!strip.top) { continue; }
+		for (int index = 0; index < strip.count; ++index)
+		{
+			const PaintTile& tile = this->paint_tiles_[static_cast<size_t>(strip.begin + index)];
+			const RectangleF rectangle = tile.bounds();
+			const float left = offset_x == 0.0f ? rectangle.left() : rectangle.left() + offset_x;
+			const float right = offset_x == 0.0f ? rectangle.right() : rectangle.right() + offset_x;
+			if (world_x >= left && world_x < right) { return tile.team(); }
+		}
 	}
 	return PlayerTeam::none;
 }

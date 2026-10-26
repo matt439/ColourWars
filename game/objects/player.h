@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/objects/horizontal_motion.h"
+
 #include "game/play_settings.h"
 #include "game/paint_owners.h"
 
@@ -161,7 +163,11 @@ public:
 
     // Finish the contact phase after dispatch. Measured contacts retain adjacent
     // support candidates whose callbacks an earlier separation made redundant.
-    void end_contacts(std::span<const labrador::Contact> contacts = {});
+    void end_contacts(std::span<const labrador::Contact> contacts = {},
+        std::span<const HorizontalSupportRef> supports = {});
+    // Level supplies a copied established-carrier step before Scene updates.
+    void prepare_carrier_step(std::optional<HorizontalCarryStep> step) noexcept;
+    HorizontalMotionId carrier_id() const;
     const MovementFeedback& movement_feedback() const;
     const CombatFeedback& combat_feedback() const;
     const QuietCharacter& quiet_character() const;
@@ -308,6 +314,9 @@ private:
         const mattmath::RectangleF& body) const;
     // Borrowed only for this contact phase; query after every paint callback.
     std::vector<const StructurePaintable*> paint_supports_;
+    // Successful flat resolving callbacks can differ from measured normals
+    // at one-way edges. These borrows end with the current contact phase.
+    std::vector<const Structure*> resolved_flat_supports_;
     struct PaintedSupport
     {
         labrador::Colour colour;
@@ -317,6 +326,17 @@ private:
     PlayerTeam gameplay_support_team() const;
     float underfoot_speed_multiplier() const;
     float underfoot_ammo_multiplier() const;
+    // Only an immutable Level identity crosses contact phases; no borrowed
+    // structure/contact pointer survives end_contacts. The step is consumed
+    // before personal integration; applied distance is reset each update.
+    HorizontalMotionId carrier_id_ = 0;
+    std::optional<HorizontalCarryStep> prepared_carrier_;
+    float movement_carried_x_ = 0.0f;
+    void clear_carrier() noexcept;
+    void apply_carrier(float dt);
+    void remember_flat_support(const labrador::CollisionObject& other);
+    void choose_carrier(std::span<const labrador::Contact> contacts,
+        std::span<const HorizontalSupportRef> supports);
     PlayerTeam underfoot_support_team_ = PlayerTeam::none;
     PlayerTeam underfoot_step_team_ = PlayerTeam::none;
 

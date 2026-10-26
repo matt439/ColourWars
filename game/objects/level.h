@@ -58,6 +58,7 @@ enum class LevelState
 // Scene owns and steps the objects; Level keeps borrowed player pointers
 // and supplies the views and game-specific overlays.
 struct InputBindings;
+class TranslatingStructurePaintable;
 
 class Level
 {
@@ -159,6 +160,8 @@ public:
 	// order. Faces overlap independently at corners; do not union their areas.
 	// Source indices are snapshot-local, not authored object names or replay IDs.
 	std::vector<PaintSurfaceSample> paint_surfaces() const;
+    bool has_horizontal_motion() const;
+    std::vector<HorizontalStructureState> horizontal_structure_states() const;
 
 	// Developer tools. Present in every build; only Debug builds call them,
 	// between world updates. `view` indexes players_ (see below).
@@ -198,7 +201,22 @@ private:
 	std::unique_ptr<BlockedShotFeedback> blocked_shot_feedback_;
 	std::unique_ptr<PlayerBadge> player_badge_;
 	std::vector<float> player_identity_remaining_;
-	std::unique_ptr<labrador::Scene> scene_ = nullptr;
+    std::unique_ptr<labrador::Scene> scene_ = nullptr;
+    // Admitted fixed movers explicitly refuse retirement. These borrows live
+    // for this Level; no terrain add/remove API is exposed after admission.
+    std::vector<TranslatingStructurePaintable*> horizontal_structures_;
+    std::vector<HorizontalSupportRef> horizontal_supports_;
+    struct HorizontalFrame
+    {
+        std::vector<HorizontalPreparedStep> motions;
+        std::vector<std::optional<HorizontalCarryStep>> carriers;
+    };
+    void admit_horizontal_structures();
+    void validate_horizontal_admission() const;
+    void validate_horizontal_budget(const HorizontalFrame* prepared) const;
+    HorizontalFrame prepare_horizontal_frame(float dt) const;
+    void commit_horizontal_frame(const HorizontalFrame& prepared) noexcept;
+    void publish_horizontal_zero() noexcept;
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,
 	// so these pointers remain valid for the match.
@@ -420,10 +438,10 @@ private:
 
 	// Advance the match state; update() refreshes views after every path returns.
 	void update_state(const std::vector<PlayerInputData>& player_inputs,
-		float dt, SeatInputFilter* seats);
+		float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal = nullptr);
 
 	void update_level_logic(const std::vector<PlayerInputData>& player_inputs,
-		float dt, SeatInputFilter* seats);
+		float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal = nullptr);
 
 	// Apply input by each player's device slot, not by their position in
 	// players_, then let `seats` (if any) see or replace it per view.

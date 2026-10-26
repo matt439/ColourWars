@@ -3,6 +3,7 @@
 #include "game/objects/player_team.h"
 #include "game/objects/projectile_type.h"
 #include "game/objects/blocked_shot_contact.h"
+#include "game/objects/horizontal_motion.h"
 #include "game/tuning.h"
 #include "engine/render/animation_object.h"
 #include "engine/core/moving_object.h"
@@ -11,6 +12,7 @@
 #include "engine/render/colour.h"
 #include <span>
 #include <optional>
+#include <vector>
 
 class PaintAudio;
 
@@ -69,6 +71,9 @@ public:
 	// Rollers keep their one-step, multiple-contact behaviour.
 	void resolve_movement_contacts(
 		std::span<labrador::CollisionObject* const> objects);
+	// Completed moving Roller contacts suppress only duplicate endpoint paint.
+	// IDs are Level-local values, never borrowed collision-object pointers.
+	bool moving_paint_completed(HorizontalMotionId id) const;
 	// Cosmetic results accumulate across both contact callbacks and all surfaces
 	// touched by a roller. Flush only after that contact batch is complete.
 	void note_paint_contact(bool painted, bool captured) const;
@@ -114,11 +119,20 @@ private:
 	std::optional<BlockedShotContact> blocked_contact_;
 	mutable bool wet_contact_ = false;
 	mattmath::RectangleF previous_rectangle_ = mattmath::RectangleF::ZERO;
+	// One complete target span consumes each positive actual projectile update.
+	bool moving_contact_ready_ = false;
+	std::vector<HorizontalMotionId> moving_paint_completed_;
+
 
 	void resolve_sweep(const mattmath::RectangleF& start,
 		const mattmath::RectangleF& finish,
 		std::span<labrador::CollisionObject* const> objects, bool launch);
 
+    void resolve_translating_contacts(const mattmath::RectangleF& start,
+        const mattmath::RectangleF& finish,
+        std::span<labrador::CollisionObject* const> objects, bool moving_ready);
+    void resolve_rolling_translating_contacts(
+        std::span<labrador::CollisionObject* const> objects);
 	int player_num_ = -1;
 	labrador::Colour team_colour_ = labrador::Colour::gray;
 	ProjectileType type_ = ProjectileType::spray;

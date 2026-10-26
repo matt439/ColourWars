@@ -10,6 +10,7 @@ void Level::build_opening_frame(RenderResources* render_resources)
 {
 	// Admit the builder's pending objects before the first frame is drawn.
 	this->scene_->end_tick();
+	this->admit_horizontal_structures();
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
 		if (!is_projectile(to_collision_type(object->tag())))

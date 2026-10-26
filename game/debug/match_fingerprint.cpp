@@ -5,8 +5,11 @@
 #include "game/debug/match_fingerprint.h"
 #include "game/debug/tune_document.h"
 #include "game/objects/level.h"
+#include "game/objects/horizontal_motion.h"
 #include <bit>
 #include <cstdio>
+#include <limits>
+#include <stdexcept>
 
 namespace
 {
@@ -23,6 +26,116 @@ namespace
 		std::snprintf(buffer, sizeof(buffer), "%.9g", static_cast<double>(float_from_bits(bits)));
 		return buffer;
 	}
+    std::uint32_t motion_count(std::size_t count)
+    {
+        if (count > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
+        { throw std::length_error("Horizontal fingerprint count exceeds schema1 int32 range"); }
+        return static_cast<std::uint32_t>(count);
+    }
+
+    void append_motion(MatchFingerprint& print, const Level& level, std::uint64_t& hash)
+    {
+        if (!level.has_horizontal_motion()) { return; }
+        MatchFingerprint::HorizontalTerrainPrint terrain;
+        const auto states = level.horizontal_structure_states();
+        if (states.empty()) { throw std::logic_error("Admitted horizontal motion has no structures"); }
+        for (const HorizontalStructureState& state : states)
+        {
+            MatchFingerprint::HorizontalStructurePrint structure;
+            structure.id = state.id;
+            const auto& spec = state.motion.spec;
+            structure.spec = { bits_from_float(spec.anchor.x), bits_from_float(spec.anchor.y),
+                bits_from_float(spec.anchor.width), bits_from_float(spec.anchor.height),
+                bits_from_float(spec.travel_x), bits_from_float(spec.period_seconds),
+                bits_from_float(spec.initial_phase) };
+            structure.phase = std::bit_cast<std::uint64_t>(state.motion.phase);
+            structure.direction = state.motion.direction;
+            structure.offsets = { bits_from_float(state.motion.previous_offset.x),
+                bits_from_float(state.motion.previous_offset.y), bits_from_float(state.motion.current_offset.x),
+                bits_from_float(state.motion.current_offset.y) };
+            structure.pose = { bits_from_float(state.previous_bounds.x), bits_from_float(state.previous_bounds.y),
+                bits_from_float(state.previous_bounds.width), bits_from_float(state.previous_bounds.height),
+                bits_from_float(state.current_bounds.x), bits_from_float(state.current_bounds.y),
+                bits_from_float(state.current_bounds.width), bits_from_float(state.current_bounds.height) };
+            for (const PaintSurfaceSample& sample : state.local_paint)
+            {
+                MatchFingerprint::HorizontalTilePrint tile;
+                tile.face = static_cast<int>(sample.face); tile.team = static_cast<int>(sample.team);
+                tile.owner = sample.paint_owner; tile.area = bits_from_float(sample.scored_area);
+                for (std::size_t corner = 0; corner < sample.corners.size(); ++corner)
+                {
+                    tile.corners[corner * 2] = bits_from_float(sample.corners[corner].x);
+                    tile.corners[corner * 2 + 1] = bits_from_float(sample.corners[corner].y);
+                }
+                structure.tiles.push_back(tile);
+            }
+            terrain.structures.push_back(std::move(structure));
+        }
+        for (int view = 0; view < level.player_count(); ++view)
+        { terrain.carriers.push_back(level.player(view).carrier_id()); }
+        hash = fnv1a("colourwars-horizontal-terrain-1", hash);
+        hash = mix(hash, motion_count(terrain.structures.size()));
+        for (const auto& structure : terrain.structures)
+        {
+            hash = mix(hash, structure.id);
+            for (const auto value : structure.spec) { hash = mix(hash, value); }
+            hash = mix(hash, static_cast<std::uint32_t>(structure.phase));
+            hash = mix(hash, static_cast<std::uint32_t>(structure.phase >> 32));
+            hash = mix(hash, static_cast<std::uint32_t>(structure.direction));
+            for (const auto value : structure.offsets) { hash = mix(hash, value); }
+            for (const auto value : structure.pose) { hash = mix(hash, value); }
+            hash = mix(hash, motion_count(structure.tiles.size()));
+            for (const auto& tile : structure.tiles)
+            {
+                hash = mix(hash, static_cast<std::uint32_t>(tile.face));
+                hash = mix(hash, static_cast<std::uint32_t>(tile.team));
+                hash = mix(hash, static_cast<std::uint32_t>(tile.owner));
+                hash = mix(hash, tile.area);
+                for (const auto value : tile.corners) { hash = mix(hash, value); }
+            }
+        }
+        hash = mix(hash, motion_count(terrain.carriers.size()));
+        for (const auto id : terrain.carriers) { hash = mix(hash, id); }
+        print.horizontal_motion = std::move(terrain);
+    }
+
+    std::string motion_difference(const MatchFingerprint::HorizontalTerrainPrint& expected,
+        const MatchFingerprint::HorizontalTerrainPrint& actual)
+    {
+        if (expected.structures.size() != actual.structures.size())
+        { return "horizontal motion structure count differs"; }
+        for (std::size_t index = 0; index < expected.structures.size(); ++index)
+        {
+            const auto& e = expected.structures[index]; const auto& a = actual.structures[index];
+            const std::string prefix = "horizontal motion " + std::to_string(index + 1) + " ";
+            if (e.id != a.id) { return prefix + "id differs"; }
+            const char* specs[] = { "anchor x", "anchor y", "width", "height", "travel", "period", "initial phase" };
+            for (std::size_t field = 0; field < e.spec.size(); ++field)
+            { if (e.spec[field] != a.spec[field]) { return prefix + "spec " + specs[field] + " differs"; } }
+            if (e.phase != a.phase) { return prefix + "phase differs"; }
+            if (e.direction != a.direction) { return prefix + "direction differs"; }
+            const char* offsets[] = { "previous x", "previous y", "current x", "current y" };
+            for (std::size_t field = 0; field < e.offsets.size(); ++field)
+            { if (e.offsets[field] != a.offsets[field]) { return prefix + "offset " + offsets[field] + " differs"; } }
+            for (std::size_t field = 0; field < e.pose.size(); ++field)
+            { if (e.pose[field] != a.pose[field]) { return prefix + "pose field " + std::to_string(field) + " differs"; } }
+            if (e.tiles.size() != a.tiles.size()) { return prefix + "local tile count differs"; }
+            for (std::size_t tile_index = 0; tile_index < e.tiles.size(); ++tile_index)
+            {
+                const auto& et = e.tiles[tile_index]; const auto& at = a.tiles[tile_index];
+                const std::string tile = prefix + "local tile " + std::to_string(tile_index) + " ";
+                if (et.face != at.face) { return tile + "face differs"; }
+                if (et.team != at.team) { return tile + "team differs"; }
+                if (et.owner != at.owner) { return tile + "raw owner differs"; }
+                if (et.area != at.area) { return tile + "area differs"; }
+                for (std::size_t corner = 0; corner < et.corners.size(); ++corner)
+                { if (et.corners[corner] != at.corners[corner]) { return tile + "corner " + std::to_string(corner) + " differs"; } }
+            }
+        }
+        if (expected.carriers != actual.carriers) { return "horizontal motion seat carrier differs"; }
+        return {};
+    }
+
 }
 
 float float_from_bits(std::uint32_t bits)
@@ -86,6 +199,9 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
 		hash = mix(hash, bits_from_float(area));
 	}
 	hash = mix(hash, static_cast<std::uint32_t>(print.level_state));
+    // All static/POL36 hash operations above retain their original order. The
+    // Level owns completed-boundary scratch overwrite/consume invariants.
+    append_motion(print, level, hash);
 	print.hash = hash;
 	return print;
 }
@@ -145,6 +261,14 @@ std::string MatchFingerprint::difference(const MatchFingerprint& expected,
 		return "level state " + std::to_string(actual.level_state) + " != " +
 			std::to_string(expected.level_state);
 	}
+    if (expected.horizontal_motion.has_value() != actual.horizontal_motion.has_value())
+    { return "horizontal motion domain presence differs"; }
+    if (expected.horizontal_motion)
+    {
+        const std::string difference = motion_difference(*expected.horizontal_motion, *actual.horizontal_motion);
+        if (!difference.empty()) { return difference; }
+    }
+
 	if (expected.hash != actual.hash)
 	{
 		return "per-slot paint (hash " + hex64(actual.hash) + " != " + hex64(expected.hash) + ")";

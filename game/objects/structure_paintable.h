@@ -37,7 +37,9 @@ struct PaintRunoffVisual
 	mattmath::RectangleF bead = mattmath::RectangleF::ZERO;
 };
 
-class StructurePaintable final : public Structure, public PaintableObject
+class Projectile;
+
+class StructurePaintable : public Structure, public PaintableObject
 {
 public:
 	StructurePaintable() = delete;
@@ -78,11 +80,20 @@ public:
 		std::size_t source_index = 0) const override;
 	// Ownership directly under a confirmed top-support contact. Tile intervals
 	// are half open, so a seam has one answer; side/bottom paint never counts.
-	PlayerTeam top_paint_team(float x) const;
+	virtual PlayerTeam top_paint_team(float x) const;
 	std::optional<labrador::Colour> top_paint_colour(float x) const;
-	std::vector<PaintRunoffVisual> runoff_visuals() const;
+	virtual std::vector<PaintRunoffVisual> runoff_visuals() const;
+
+protected:
+	// Compare published translated tile edges directly: float translation is
+	// not generally invertible at binade boundaries.
+	PlayerTeam top_paint_team_translated(float world_x, float offset_x) const;
+	void paint_from_projectile(const Projectile& projectile,
+		const mattmath::RectangleF& splash);
 
 private:
+	void paint_from_projectile(const Projectile& projectile,
+		const mattmath::RectangleF& splash, PlayerTeam team);
 	void draw_paint(labrador::DrawList& draw_list) const;
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
 	TeamColour team_colours_ = TeamColour();

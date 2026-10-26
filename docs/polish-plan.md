@@ -497,7 +497,10 @@ visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
 which stays selectable and in Random. Its baseline acceptance case and native four-pane
 captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
-support art remain open there. Turbulence has not started.
+support art remain open there. The Turbulence layout has not started; its first
+horizontal-moving capability is qualified separately in the
+[roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26). Builder/editor,
+rotation and useful placements remain open, and the existing arenas stay static.
 
 The first new-map pass uses current movement and weapon values. Define required,
 optional and recovery routes independently from their input families. Reconcile
@@ -1736,8 +1739,9 @@ use its starting support for that step; later airborne steps are neutral.
 Vertical motion, health, paid-shot costs, cooldowns and simulation `dt` retain
 the existing rules. Enemy recovery suppression leaves the normal delay clocks
 running. Place, death, respawn and disabled updates clear the terrain context.
-Current support geometry is static and axis aligned; future moving/rotated
-structures require pose-aware world-to-local top queries (`GAP#D5`).
+Top sampling also supports the manually constructed horizontal mover: it uses
+published world tile edges so rounded translation cannot lose a half-open edge.
+Rotated support and public moving-stage construction remain `GAP#D5` work.
 
 To try the stored amounts in Debug, without saving content:
 
