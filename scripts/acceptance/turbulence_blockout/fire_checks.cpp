@@ -73,7 +73,7 @@ namespace turbulence_blockout_acceptance
         }
     }
 
-    int tool_threats(Services& services, const std::filesystem::path& output)
+    ToolThreatSummary tool_threats(Services& services, const std::filesystem::path& output)
     {
         check_sweep_oracle();
         std::ofstream csv(output / "turbulence-directed-threats.csv"), holders(output / "turbulence-threat-holders.csv");
@@ -81,10 +81,11 @@ namespace turbulence_blockout_acceptance
         csv << std::setprecision(std::numeric_limits<float>::max_digits10);
         csv << "target_team,attacker_team,tool,holder,holder_x,holder_feet,aim_target,angle,paid_events,"
             "surviving_launches,aimed_target_arrived,aimed_first_tick,spawn_arrival_mask,lower_departure_arrived,"
-            "upper_departure_arrived,opposite_receiver_arrived,scope\n";
+            "upper_departure_arrived,both_departures_same_pulse,opposite_receiver_arrived,scope\n";
         holders << "target_team,tool,holder,paid_pulses,surviving_launches,spawn_arrival_mask,lower_departure_arrived,"
-            "upper_departure_arrived,both_departures_sampled,opposite_receiver_arrived,updates,scope\n";
+            "upper_departure_arrived,both_departures_sampled,single_pulse_both_departures,opposite_receiver_arrived,updates,scope\n";
         int total_updates = 0, holder_count = 0, pulse_count = 0;
+        ToolThreatSummary summary;
         std::array<int, 5> tool_launches{};
         for (std::size_t tool_index = 0; tool_index < concrete_tools.size(); ++tool_index)
         {
@@ -156,7 +157,7 @@ namespace turbulence_blockout_acceptance
                     for (int tick = 0; flying(run) && tick < 600; ++tick) { run.tick(); }
                     require(!flying(run), "Directed threat flight exceeded its finite ten-second tail");
                     require(run.paid_events == 7 && run.ticks <= 1500, "Directed holder exceeded pulse/update budget");
-                    int spawn_mask = 0, launches = 0;
+                    int spawn_mask = 0, launches = 0, both_departure_pulses = 0;
                     std::array<bool, 7> union_arrivals{};
                     for (std::size_t aim = 0; aim < pulses.size(); ++aim)
                     {
@@ -168,22 +169,29 @@ namespace turbulence_blockout_acceptance
                             if (target < 4 && pulse.first_tick[target] >= 0) { mask |= 1 << target; }
                         }
                         spawn_mask |= mask; launches += pulse.launches;
+                        // One paid trigger event may emit several projectiles.
+                        // This joins its arrivals, not their contact times or damage.
+                        const bool both_same_pulse = pulse.first_tick[4] >= 0 && pulse.first_tick[5] >= 0;
+                        both_departure_pulses += both_same_pulse ? 1 : 0;
                         csv << (target_a ? 'a' : 'b') << ',' << (target_a ? 'b' : 'a') << ',' << tool_name(tool) << ',' <<
                             support << ',' << run.player->center().x << ',' << run.player->rectangle().bottom() << ',' <<
                             volumes[aim].name << ',' << pulse.angle << ",1," << pulse.launches << ',' <<
                             (pulse.first_tick[aim] >= 0) << ',' << pulse.first_tick[aim] << ',' << mask << ',' <<
-                            (pulse.first_tick[4] >= 0) << ',' << (pulse.first_tick[5] >= 0) << ',' << (pulse.first_tick[6] >= 0) <<
+                            (pulse.first_tick[4] >= 0) << ',' << (pulse.first_tick[5] >= 0) << ',' << both_same_pulse << ',' <<
+                            (pulse.first_tick[6] >= 0) <<
                             ",sampled-moving-box-arrival-no-victim-damage\n";
                         ++pulse_count;
                     }
                     holders << (target_a ? 'a' : 'b') << ',' << tool_name(tool) << ',' << support << ",7," << launches << ',' <<
                         spawn_mask << ',' << union_arrivals[4] << ',' << union_arrivals[5] << ',' <<
-                        (union_arrivals[4] && union_arrivals[5]) << ',' << union_arrivals[6] << ',' << run.ticks <<
+                        (union_arrivals[4] && union_arrivals[5]) << ',' << both_departure_pulses << ',' << union_arrivals[6] << ',' << run.ticks <<
                         ",seven-directed-aims-no-universal-safety-claim\n";
                     std::cout << "MEASURE Turbulence threat target_team=" << (target_a ? 'a' : 'b') << " tool=" <<
                         tool_name(tool) << " holder=" << support << " launches=" << launches << " spawn_mask=" << spawn_mask <<
                         " lower=" << union_arrivals[4] << " upper=" << union_arrivals[5] << " receiver=" << union_arrivals[6] << '\n';
                     tool_launches[tool_index] += launches;
+                    summary.single_pulse_both_departures += both_departure_pulses;
+                    summary.holder_union_both_departures += union_arrivals[4] && union_arrivals[5] ? 1 : 0;
                     total_updates += run.ticks; ++holder_count;
                 }
             }
@@ -195,6 +203,7 @@ namespace turbulence_blockout_acceptance
             "Directed threat receipt/count inventory differs");
         std::cout << "PASS 280 actual paid directed pulses from 40 standing holders: launch/movement/contact boxes observed "
             "before retirement; arrival masks are sampled geometry threats, not victim damage or universal spawn safety\n";
-        return total_updates;
+        summary.updates = total_updates;
+        return summary;
     }
 }

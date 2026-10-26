@@ -107,10 +107,34 @@ namespace turbulence_blockout_acceptance
         }
     }
 
+    Player& Run::add_target(const Vector2F& position, PlayerTeam team)
+    {
+        require(this->target_player == nullptr && this->ticks == 0, "A single real target is constructed before the first tick");
+        const RectangleF body(position, this->services.tuning.player().size);
+        require(this->services.info.out_of_bounds_rectangle().contains(body), "Real target body leaves the authored arena");
+        for (const auto& [surface, object] : this->structures)
+        {
+            if (surface->one_way()) { continue; }
+            const auto hit = narrow_phase(body, *object->shape());
+            require(!hit || hit->penetration <= tolerance, "Real target starts inside " + surface->name);
+        }
+        auto weapon = WeaponBuilder::build_weapon(&this->services.tuning, team, 1, 1, Colour::white,
+            WeaponType::sprayer, body.center(), &this->services.render, &this->services.audio, &this->services.preferences,
+            &this->services.presentation.tool_motion(), &this->services.presentation.weapon_feedback());
+        this->target_player = this->scene.add(std::make_unique<Player>(body, &this->services.tuning,
+            &this->services.presentation.movement_feedback(), &this->services.presentation.combat_feedback(),
+            &this->services.presentation.respawn_redraw(), &this->services.render, &this->services.audio, &this->services.preferences,
+            1, team, WeaponType::sprayer, std::move(weapon), WeaponType::none, Colour::white, Viewport{}, position));
+        this->targets.push_back(this->target_player);
+        this->scene.end_tick();
+        return *this->target_player;
+    }
+
     void Run::tick(const PlayerInputData& actions)
     {
         ++this->ticks;
         this->player->set_player_input(actions);
+        if (this->target_player != nullptr) { this->target_player->set_player_input(input()); }
         this->scene.update(dt);
         for (CollisionObject* object : this->scene.collision_objects())
         {
@@ -127,6 +151,12 @@ namespace turbulence_blockout_acceptance
         this->player->end_contacts(this->scene.contacts());
         this->player->update_weapon_position();
         this->player->update_prev_rectangle();
+        if (this->target_player != nullptr)
+        {
+            this->target_player->end_contacts(this->scene.contacts());
+            this->target_player->update_weapon_position();
+            this->target_player->update_prev_rectangle();
+        }
         if (this->after_scene_contacts) { this->after_scene_contacts(); }
         this->scene.end_tick();
         require(this->death_expected || this->player->state() == PlayerState::alive, "Unexpected route death");

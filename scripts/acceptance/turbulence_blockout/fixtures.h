@@ -59,6 +59,7 @@ namespace turbulence_blockout_acceptance
         Services& services;
         Scene scene{ nullptr, nullptr };
         Player* player = nullptr;
+        Player* target_player = nullptr;
         std::vector<std::pair<const Surface*, CollisionObject*>> structures;
         std::vector<CollisionObject*> targets;
         int ticks = 0;
@@ -72,6 +73,7 @@ namespace turbulence_blockout_acceptance
         std::function<void()> after_scene_contacts;
         Run(Services& services, const Vector2F& position, PlayerTeam team = PlayerTeam::a,
             float initial_velocity = 0.0f, WeaponType weapon = WeaponType::sprayer);
+        Player& add_target(const Vector2F& position, PlayerTeam team);
         void tick(const PlayerInputData& actions = input());
         void settle(int ticks = 45);
         std::string support() const;
@@ -89,5 +91,12 @@ namespace turbulence_blockout_acceptance
     void public_load(Services& services, const std::filesystem::path& content);
     void tools(Services& services, const std::filesystem::path& output);
     int tool_stations(Services& services, const std::filesystem::path& output);
-    int tool_threats(Services& services, const std::filesystem::path& output);
+    int useful_stations(Services& services, const std::filesystem::path& output);
+    struct ToolThreatSummary
+    {
+        int updates = 0;
+        int single_pulse_both_departures = 0;
+        int holder_union_both_departures = 0;
+    };
+    ToolThreatSummary tool_threats(Services& services, const std::filesystem::path& output);
 }

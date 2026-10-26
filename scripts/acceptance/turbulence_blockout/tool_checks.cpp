@@ -65,7 +65,7 @@ namespace turbulence_blockout_acceptance
                 run.player->rectangle().bottom() << ',' << run.support() << ',' << held.total;
             for (const auto value : held.faces) { csv << ',' << value; }
             for (const auto value : held.roles) { csv << ',' << value; }
-            csv << ",object-role-not-geographic-x-band,paid-fire-and-ordinary-retreat-not-balance-acceptance\n";
+            csv << ",object-role-not-geographic-x-band,local-floor-paint-baseline-not-useful-contest-claim\n";
         }
     }
 
@@ -122,21 +122,26 @@ namespace turbulence_blockout_acceptance
             }
         }
         csv.close(); require(csv.good() && trials == 20, "Tool station receipt/trial inventory differs");
-        std::cout << "PASS 20 mirrored five-tool lower/upper paid painting, ordinary retreat and natural recovery trials\n";
+        std::cout << "PASS 20 mirrored five-tool lower/upper local-floor painting, ordinary retreat and natural recovery baselines\n";
         return updates;
     }
 
     void tools(Services& services, const std::filesystem::path& output)
     {
         const int station_updates = tool_stations(services, output);
-        const int threat_updates = tool_threats(services, output);
-        require(station_updates <= 28000 && threat_updates <= 60000, "Tool matrix exceeded its finite update budget");
+        const int useful_updates = useful_stations(services, output);
+        const ToolThreatSummary threats = tool_threats(services, output);
+        require(station_updates <= 28000 && useful_updates <= 36000 && threats.updates <= 60000,
+            "Tool matrix exceeded its finite update budget");
         std::ofstream summary(output / "turbulence-tools-summary.json");
         summary << "{\"outcome\":\"passed\",\"scope\":\"turbulence-explicit-tools\",\"station_trials\":20,"
             "\"standing_holders\":40,\"directed_pulses\":280,\"station_updates\":" << station_updates <<
-            ",\"threat_updates\":" << threat_updates << ",\"human_acceptance\":false,\"target_damage_measured\":false}\n";
+            ",\"useful_role_trials\":20,\"useful_role_updates\":" << useful_updates << ",\"threat_updates\":" << threats.updates <<
+            ",\"single_pulse_both_departures\":" << threats.single_pulse_both_departures <<
+            ",\"holder_union_both_departures\":" << threats.holder_union_both_departures <<
+            ",\"human_acceptance\":false,\"useful_target_first_damage_measured\":true,\"threat_volume_damage_measured\":false}\n";
         summary.close(); require(summary.good(), "Cannot flush bounded tool summary");
-        std::cout << "PASS explicit Turbulence --tools: actual five-tool flight/paint/ammo and measured station "
-            "recovery; sampled arrival envelopes only, no victim damage or universal spawn/balance acceptance\n";
+        std::cout << "PASS explicit Turbulence --tools: actual target first-health loss, intended receiver painting and "
+            "station recovery; directed threat volumes remain arrival samples without victim damage/universal safety/balance acceptance\n";
     }
 }

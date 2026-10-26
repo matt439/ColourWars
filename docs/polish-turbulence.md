@@ -254,11 +254,60 @@ coverage or a universal spawn-safety claim.
 The station bursts pay for nearby paint and all refill during the shot-free
 retreat/recovery window. Sprayer, Sniper and Bucket bursts at the sampled downward
 angles have no surviving projectile after launch contact, so they do not yet
-establish a useful receiver-contest shot. Revise those station aim/positions to
-measure the intended contest, compare single-shot departure coverage and escape
-time, then add moving/jumping attack samples. Do not change weapon tuning to
-make this exploratory fixture report a better result. Native composition remains
-the other immediate slice.
+establish a useful receiver-contest shot. Retain these rows as the local-floor
+paint baseline; the separate controls below qualify useful near-receiver work.
+Do not change weapon tuning to make an exploratory fixture report a better result.
+
+**Paired useful-role controls, 2026-10-26 (Release).** Twenty pairs add 9,026
+updates with unchanged geometry and tuning. Each pair first constructs a real
+opposing Player on the intended receiver and stops at its first health loss,
+before an elimination. A fresh, independent scene then measures painting of the
+unoccupied receiver's top, ordinary retreat and natural refill. The victim is
+never moved after construction; the painting/recovery run does not claim to
+continue that encounter or measure survival under return fire.
+
+The lower source is bed A/B at mirrored centre X=1420; the target stands at
+mirrored X=1780 on central ground. Its paint region is ground X=1740-2260. The upper
+source is crossover A/B at mirrored X=1670; the near target stands at mirrored X=1840 on
+the same crossover half. Its paint region is X=1780-1940 on A, mirrored to
+X=2060-2220 on B. These are near-receiver samples, not an across-crown duel.
+Tools use distinct contact/painting aims, and the Roller closes through ordinary
+movement rather than being treated as a ranged tool.
+
+| Tool | Lower / upper first-health-loss updates | Lower / upper settled receiver-top area |
+|---|---:|---:|
+| Sprayer | 15 / 5 | 240 / 240 |
+| Sniper | 24 / 18 | 288 / 288 |
+| Roller | 43 / 23 | 864 / 1,296 |
+| Mister | 52 / 13 | 336 / 144 |
+| Bucket | 24 / 1 | 1,248 / 1,248 |
+
+Both sides reproduce these values. The update counts begin after 45 settling
+updates and include weapon readiness/cooldown; they are not pure flight times.
+Bucket's upper first hit occurs during paid launch contact, with no projectile
+surviving that contact. Its separate painting run still reaches the intended
+receiver. Mister's lower receiver has no paint at trigger release, then 336 held
+area by retreat arrival, retaining the distinction between release and settled
+paint. The ordinary retreats take 62-89 updates. Reserve at arrival spans
+0.5833-1.0; every painting run reaches full reserve after 180 further quiet
+updates. The target-first-contact and unoccupied painting controls do not measure
+opposed retreat, damage per tank or competitive weapon value.
+
+Receipts are under
+`out/validation/overnight-20261026/phase5/turbulence-useful/x64-release/`:
+`turbulence-useful-stations.csv` has 20 paired rows, alongside the retained 60
+local-paint phase rows, 280 directed pulse rows and 40 holder summaries. The
+updated summary distinguishes actual first-health-loss measurements from the
+older virtual target-volume arrivals. Across the same 280 paid pulses, **zero
+individual pulses reach both departure regions**; two Sniper holder summaries
+still reach both as the union of seven separately aimed pulses. A paid Mister
+pulse can contain several projectiles, so this is neither a same-instant coverage
+test nor universal safety evidence. The recorded spawn/pressure questions remain.
+
+Next, add moving/jumping attack and defender escape/counterfire samples, and
+inspect native composition before selecting mover placements. The paired
+useful-role extension is qualified in Release here; no extended Debug run is
+implied. Native composition remains the other immediate slice.
 
 Drive both directions, failed routes and mover phases/reversals with the real
 Player. Reconcile paint and sampled five-tool pressure with side/loadout swaps,
@@ -267,7 +316,7 @@ captures must show the receiving surface and first escape before commitment,
 including moving approaches, preview and ending views.
 
 These checks establish construction, routes, score geography and the recorded
-tool samples. Useful five-tool pressure, mover/rotation placement and native
+near-receiver tool samples. Opposed five-tool pressure, mover/rotation placement and native
 framing remain open.
 Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `GAP#D5`, `POL#3`, `POL#24`, `POL#27`
