@@ -126,8 +126,8 @@ CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) builds both presets,
 runs consumer acceptance and checks startup. Acceptance runs four cases at a
 time (`-Parallel 4`); on pull requests the Debug job leaves out `crossfeed`,
 `press_tower`, `menu_text` and `debug_console` (`-ExcludeCases`), which take
-minutes each under Debug's checked iterators, so a pull request finishes in
-about five minutes. Release runs them on every pull request and a push to
+minutes each under Debug's checked iterators (with them, Debug acceptance
+alone took 27 minutes). Release runs them on every pull request and a push to
 `master` runs the full Debug suite. Debug startup is required; Release
 may skip only the exact missing-hardware-adapter diagnostic because its engine
 build has no software fallback. Content failures, crashes and other startup
