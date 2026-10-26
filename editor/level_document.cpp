@@ -10,6 +10,7 @@
 
 #include "editor/content_catalog.h"
 #include "editor/level_json.h"
+#include "editor/horizontal_authoring.h"
 #include "game/level_format.h"
 #include <rapidjson/pointer.h>
 
@@ -181,6 +182,7 @@ namespace colourwars_editor
     {
         Document document;
         std::filesystem::path path;
+        std::filesystem::path motion_tuning;
         std::vector<std::string> history;
         std::size_t history_index = 0;
         std::string saved;
@@ -190,7 +192,7 @@ namespace colourwars_editor
             Document candidate;
             candidate.CopyFrom(document, candidate.GetAllocator());
             operation(candidate);
-            validate_document(candidate);
+            validate_document(candidate, motion_tuning);
             if (candidate == document) { return; }
             const std::string snapshot = json_text(candidate);
             if (snapshot == history[history_index]) { return; }
@@ -204,7 +206,12 @@ namespace colourwars_editor
         }
     };
 
-    LevelDocument::LevelDocument() : impl_(std::make_unique<Impl>()) { create(); }
+    LevelDocument::LevelDocument() : LevelDocument(std::filesystem::path{}) {}
+    LevelDocument::LevelDocument(const std::filesystem::path& motion_tuning) : impl_(std::make_unique<Impl>())
+    {
+        impl_->motion_tuning = motion_tuning;
+        create();
+    }
     LevelDocument::~LevelDocument() = default;
 
     void LevelDocument::create()
@@ -231,8 +238,9 @@ namespace colourwars_editor
                 "rectangle":{"x":-200,"y":-200,"width":3400,"height":1800}}]
         })");
         document.AddMember("format", level_format::current, document.GetAllocator());
-        validate_document(document);
+        validate_document(document, impl_->motion_tuning);
         auto next = std::make_unique<Impl>();
+        next->motion_tuning = impl_->motion_tuning;
         next->history.push_back(json_text(document));
         next->document.Swap(document);
         impl_.swap(next);
@@ -251,10 +259,11 @@ namespace colourwars_editor
         try
         {
             document = parse(text);
-            validate_document(document);
+            validate_document(document, impl_->motion_tuning);
         }
         catch (const std::exception& error) { fail(source + error.what()); }
         auto next = std::make_unique<Impl>();
+        next->motion_tuning = impl_->motion_tuning;
         next->path = path;
         next->saved = json_text(document);
         next->history.push_back(next->saved);
@@ -264,7 +273,7 @@ namespace colourwars_editor
 
     void LevelDocument::save(const std::filesystem::path& path)
     {
-        validate_document(impl_->document);
+        validate_document(impl_->document, impl_->motion_tuning);
         if (path.empty()) { fail("Choose a level file before saving."); }
         if (std::filesystem::exists(path) && !std::filesystem::is_regular_file(path))
         {
@@ -408,6 +417,15 @@ namespace colourwars_editor
         });
     }
 
+    std::optional<MotionGuide> LevelDocument::motion_guide(const Entry& entry,
+        const std::optional<Rect>& preview) const
+    {
+        if (entry.kind != EntryKind::collision) { return std::nullopt; }
+        const Json& object = entry_json(impl_->document, entry);
+        if (!object.HasMember("motion")) { return std::nullopt; }
+        return horizontal_motion_guide(object, load_motion_player_size(impl_->motion_tuning), preview);
+    }
+
     std::vector<Property> LevelDocument::properties(const Entry& entry) const
     {
         const Json& value = entry_json(impl_->document, entry);
@@ -429,6 +447,16 @@ namespace colourwars_editor
             append_properties(metadata, "", result);
         }
         else { append_properties(value, "", result); }
+        if (entry.kind == EntryKind::collision && value.HasMember("motion"))
+        {
+            for (Property& property : result)
+            {
+                if (property.path == "motion/type") { property.label = "motion/type (horizontal)"; }
+                else if (property.path == "motion/travel_x") { property.label = "motion/travel_x (world units)"; }
+                else if (property.path == "motion/period") { property.label = "motion/period (round-trip seconds)"; }
+                else if (property.path == "motion/phase") { property.label = "motion/phase (cycles [0,1))"; }
+            }
+        }
         if (entry.kind == EntryKind::collision && value.HasMember("collision_type") &&
             value["collision_type"].IsString())
         {
@@ -518,8 +546,9 @@ namespace colourwars_editor
                 const bool visual = type == "Visual";
                 const bool ramp_right = type == "StructureRampRight";
                 const bool ramp_left = type == "StructureRampLeft";
-                const bool paintable = type == "StructurePaintable";
-                const bool jump = type == "StructureJumpThrough";
+                const bool moving = type == "MovingPaintable" || type == "MovingJumpThrough";
+                const bool paintable = type == "StructurePaintable" || moving;
+                const bool jump = type == "StructureJumpThrough" || type == "MovingJumpThrough";
                 if (!visual && !ramp_right && !ramp_left && !paintable && !jump && type != "Structure")
                 {
                     fail("Unknown object palette entry: " + type);
@@ -549,12 +578,12 @@ namespace colourwars_editor
                 if (!visual)
                 {
                     const char* collision = ramp_right ? "STRUCTURE_RAMP_RIGHT" : (ramp_left ?
-                        "STRUCTURE_RAMP_LEFT" : (paintable ? "STRUCTURE_PAINTABLE" :
-                            (jump ? "STRUCTURE_JUMP_THROUGH" : "STRUCTURE")));
+                        "STRUCTURE_RAMP_LEFT" : (jump ? "STRUCTURE_JUMP_THROUGH" :
+                            (paintable ? "STRUCTURE_PAINTABLE" : "STRUCTURE")));
                     value.AddMember("collision_type", Json(collision, allocator), allocator);
                     // Each kind starts drawn as its usual terrain-atlas material.
                     const char* material = ramp_left || ramp_right ? "set_square" :
-                        (paintable ? "pencil" : (jump ? "ruler" : "ground"));
+                        (jump ? "ruler" : (paintable ? "pencil" : "ground"));
                     value.AddMember("material", Json(material, allocator), allocator);
                 }
                 if (paintable)
@@ -565,6 +594,15 @@ namespace colourwars_editor
                         faces.AddMember(Json(face, allocator), Json(true), allocator);
                     }
                     value.AddMember("paintable_faces", faces, allocator);
+                }
+                if (moving)
+                {
+                    Json motion(rapidjson::kObjectType);
+                    motion.AddMember("type", "horizontal", allocator);
+                    motion.AddMember("travel_x", 120.0, allocator);
+                    motion.AddMember("period", 6.4, allocator);
+                    motion.AddMember("phase", 0.0, allocator);
+                    value.AddMember("motion", motion, allocator);
                 }
             }
             Json& objects = entry_array(document, added.kind);
@@ -589,8 +627,28 @@ namespace colourwars_editor
             if (entry.kind == EntryKind::collision || entry.kind == EntryKind::decoration)
             {
                 Rect rectangle = this->rectangle(entry);
-                rectangle.x += 50.0;
-                rectangle.y += 50.0;
+                if (value.HasMember("motion"))
+                {
+                    // A copy retains horizontal travel/phase and moves down by
+                    // the whole source body plus standing corridor, not +50
+                    // into the original sweep. Final validation checks all
+                    // other geometry and bounds before publishing the copy.
+                    const auto source = decode_horizontal_motion(value);
+                    const auto player = load_motion_player_size(impl_->motion_tuning);
+                    const auto source_path = horizontal_motion_contract::path(source);
+                    auto copy = source;
+                    copy.anchor.y += copy.anchor.height + player.height;
+                    for (int adjustment = 0; adjustment < 4; ++adjustment)
+                    {
+                        const auto standing = horizontal_motion_contract::standing(
+                            horizontal_motion_contract::path(copy), player.width, player.height);
+                        if (standing.top >= source_path.bottom) { break; }
+                        copy.anchor.y = std::nextafter(static_cast<float>(static_cast<double>(copy.anchor.y) +
+                            source_path.bottom - standing.top), std::numeric_limits<float>::infinity());
+                    }
+                    rectangle.y = copy.anchor.y;
+                }
+                else { rectangle.x += 50.0; rectangle.y += 50.0; }
                 move_shape(value, rectangle);
                 if (value.HasMember("name") && value["name"].IsString())
                 {
@@ -623,6 +681,7 @@ namespace colourwars_editor
     {
         if (!can_undo()) { return false; }
         Document previous = parse(impl_->history[impl_->history_index - 1]);
+        validate_document(previous, impl_->motion_tuning);
         impl_->document.Swap(previous);
         --impl_->history_index;
         return true;
@@ -632,6 +691,7 @@ namespace colourwars_editor
     {
         if (!can_redo()) { return false; }
         Document next = parse(impl_->history[impl_->history_index + 1]);
+        validate_document(next, impl_->motion_tuning);
         impl_->document.Swap(next);
         ++impl_->history_index;
         return true;
@@ -645,7 +705,7 @@ namespace colourwars_editor
 
     std::vector<std::string> LevelDocument::validate() const
     {
-        try { validate_document(impl_->document); }
+        try { validate_document(impl_->document, impl_->motion_tuning); }
         catch (const std::exception& error) { return { error.what() }; }
         return {};
     }

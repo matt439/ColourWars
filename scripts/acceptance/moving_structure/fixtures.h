@@ -364,4 +364,5 @@ namespace moving_structure_acceptance
     void check_draw_cpu(World& world);
     void check_replay(World& world);
     void check_public_replay(World& world);
+    void check_editor_save(World& world);
 }

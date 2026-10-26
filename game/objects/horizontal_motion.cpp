@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/horizontal_motion.h"
 #include "game/simulation.h"
+#include "game/horizontal_motion_contract.h"
 #include <cmath>
 #include <stdexcept>
 
@@ -8,37 +9,16 @@ using namespace mattmath;
 
 namespace
 {
-    void require_rectangle(const RectangleF& rectangle)
+    horizontal_motion_contract::Spec contract_spec(const HorizontalMotionSpec& spec)
     {
-        if (!std::isfinite(rectangle.x) || !std::isfinite(rectangle.y) ||
-            !std::isfinite(rectangle.width) || !std::isfinite(rectangle.height) ||
-            !(rectangle.width > 0.0f) || !(rectangle.height > 0.0f) ||
-            !std::isfinite(rectangle.right()) || !std::isfinite(rectangle.bottom()) ||
-            !(rectangle.right() > rectangle.left()) || !(rectangle.bottom() > rectangle.top()))
-        {
-            throw std::invalid_argument("Horizontal motion requires finite representable positive rectangle edges.");
-        }
+        return { { spec.anchor.x, spec.anchor.y, spec.anchor.width, spec.anchor.height },
+            spec.travel_x, spec.period_seconds, spec.initial_phase };
     }
 }
 
 void HorizontalMotion::validate_spec(const HorizontalMotionSpec& spec)
 {
-    require_rectangle(spec.anchor);
-    if (!std::isfinite(spec.travel_x) || !(spec.travel_x > 0.0f) ||
-        !std::isfinite(spec.period_seconds) ||
-        static_cast<double>(spec.period_seconds) < 2.0 * static_cast<double>(SECONDS_PER_STEP) ||
-        !std::isfinite(spec.initial_phase) ||
-        !(spec.initial_phase >= 0.0f && spec.initial_phase < 1.0f))
-    {
-        throw std::invalid_argument("Horizontal motion needs positive finite travel, period >= two simulation steps and phase in [0,1).");
-    }
-    RectangleF finish = spec.anchor;
-    finish.x = spec.anchor.x + spec.travel_x;
-    require_rectangle(finish);
-    if (!(finish.x > spec.anchor.x))
-    {
-        throw std::invalid_argument("Horizontal motion travel must reach a distinct representable endpoint.");
-    }
+    horizontal_motion_contract::validate_spec(contract_spec(spec));
 }
 
 void HorizontalMotion::validate_dt(float dt)
@@ -66,8 +46,7 @@ HorizontalMotionState HorizontalMotion::state() const
 
 float HorizontalMotion::offset_at(const HorizontalMotionSpec& spec, double phase)
 {
-    const double ratio = phase <= 0.5 ? phase * 2.0 : (1.0 - phase) * 2.0;
-    return static_cast<float>(static_cast<double>(spec.travel_x) * ratio);
+    return horizontal_motion_contract::offset_at(contract_spec(spec), phase);
 }
 
 RectangleF HorizontalMotion::at_offset(const HorizontalMotionSpec& spec, float offset)

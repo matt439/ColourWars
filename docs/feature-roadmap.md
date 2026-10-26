@@ -1014,14 +1014,14 @@ the production object builder; missing motion retains the static constructor.
 The [format contract](level-format.md#horizontal-paintable-motion) records the
 field limits and the separate scene/player admission checks. Movers no longer
 act as permanent static paint/material occluders; matches and stage previews
-compose translated shadows from their actual mover owners. The editor refuses
-motion until its envelope-aware authoring support lands.
+compose translated shadows from their actual mover owners. Envelope-aware
+editor authoring is recorded below.
 
 Debug/Release game/editor builds, `level_format`, `moving_structure`,
 `paint_surfaces`, `terrain`, `stage_selection` and editor document acceptance
 passed. Tests cover malformed records, authored phase, deterministic fresh object
 construction, admission refusal, moving shadow ownership and static occlusion;
-they do not yet exercise a public `LevelBuilder` replay rebuild. Receipts are
+that increment did not exercise a public `LevelBuilder` replay rebuild. Receipts are
 under `out/validation/overnight-20261026/` (`runtime`, `release`, editor logs).
 
 **Public rebuild/replay qualified, 2026-10-26.** The `moving_structure` case
@@ -1040,14 +1040,41 @@ production `ReplayRecorder`/`ReplayPlayer` with the public builder; DebugDirecto
 command/restart adapters and native/human acceptance are separate. The existing
 legacy-byte/hash checks also pass. Release excludes the developer replay path.
 
+**Editor authoring and round trips qualified, 2026-10-26.** The
+[editor contract](level-editor.md#moving-structure-authoring-gapd5) now supports
+solid and one-way movers, anchor/property edits, safe duplication, undo/redo
+and saved round trips while preserving unknown metadata and rectangle/TLBR
+precedence. Source `player.size` supplies the complete standing corridor; mover
+documents require an explicit tuning-file context. The editor and runtime share
+an engine-free field/envelope contract with the existing arithmetic and messages.
+Actual-player rate/displacement checks remain in `Level`.
+
+The canvas shows the anchor, initial-phase body, complete travel and expanded
+standing corridor. Motion paint is counted once in anchor space; changing phase
+only translates scoring-guide locations, including across fractional float
+boundaries. The actual editor model is included in `moving_structure` acceptance:
+its saved stage loads through `LevelBuilder` with local paint/material checks,
+and Debug records/rebuilds 180 exact updates with carry, paid local-face credit
+and terminal RNG. Document checks cover both collision kinds, transactional
+geometry edits, duplication, metadata, changed source sizes and scoring.
+
+Current-source editor builds/document checks and `moving_structure` passed in
+Debug and Release after the fractional-area correction. Debug includes the
+180-update editor-save replay and 720-update solid/one-way public replays;
+Release explicitly excludes developer replay. Receipts are under
+`out/validation/overnight-20261026/phase4/` (`editor-*` and `mover/`).
+The continuous editor strip sum and gameplay's float tile aggregation have
+separate rounding; qualification checks phase invariance within each and
+reconciles the published tile areas. This implementation does not close native
+composition, attended editor/play, physical-pad or Turbulence acceptance.
+
 **Remaining implementation, in dependency order:**
 
 | milestone | bounded scope and acceptance |
 |---|---|
-| 3. Editor authoring and round trip | Add the [moving-structure authoring contract](level-editor.md#moving-structure-authoring-gapd5): preserve existing records, edit supported motion fields and show the complete travel envelope. Save/reopen/build the same fixture with the same motion and diagnostics; existing static stages must round-trip unchanged. |
 | 4. Smallest useful static rotated structure | Use the [Turbulence blockout brief](polish-plan.md#turbulence-blockout-work-pol21) to select one useful fixed orientation and footprint, then define its collision/support and local-face paint contract before implementing it. Qualify builder/editor round trips, projectile contacts, scoring, art/culling/shadow alignment and the required route. This is static geometry; arbitrary rotating or combined moving/rotating bodies are outside the slice. |
 
-Milestone 3 is the next local implementation step. Keep each milestone bounded
+The static rotated contract and useful placements are next. Keep each milestone bounded
 and preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
 useful placements and route/side-swap qualification; attended arena acceptance

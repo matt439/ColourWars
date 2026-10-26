@@ -164,9 +164,11 @@ Moving anchors do not permanently bury static paint or terrain edges and do
 not leave a static airbrush shadow. A material-bearing moving platform casts
 the existing translated shadow tied to the actual Scene-owned mover.
 
-Editor authoring is a later `GAP#D5` milestone: the editor currently refuses
-documents containing `motion`, rather than permitting unsafe edits whose
-preview would omit the travel envelope. No shipped arena uses this field yet;
+The [editor](level-editor.md#moving-structure-authoring-gapd5) now exposes solid
+and one-way horizontal paintables, anchor/motion fields and full travel/standing
+guides. Its document model requires explicit source `tuning.json` context for
+player size and validates envelope edits transactionally. Both-preset document
+and editor-save/public-loader checks pass. No shipped arena uses this field yet;
 public-loader record/play reconstruction is CPU-qualified in the
 `moving_structure` acceptance case. Useful arena placement and native/human
 acceptance remain separate.

@@ -33,8 +33,9 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 5. **Feeding the above (`GAP#D5`):** the first headless five-tool report
    is recorded in the arena owners; attended decisions remain above. The default-off
    paint-underfoot prototype is available for `POL#30`. Runtime horizontal motion
-   and public-loader replay are qualified; Turbulence still needs editor authoring, useful placements
-   and rotated structures ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
+   and public-loader replay, editor authoring and saved-stage round trips are qualified;
+   useful Turbulence placements and rotated structures remain
+   ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
@@ -51,7 +52,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 | id | next implementation slice | owner |
 |---|---|---|
 | `POL#21` | Qualify Turbulence's five-tool pressure/recovery stations and native clean/heavy composition; supported movers and scored slopes follow their capability checks | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
-| `GAP#D5` | Add envelope-aware editor authoring and round trips for the qualified runtime-loaded horizontal mover; useful placements and scored slopes follow | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
+| `GAP#D5` | Justify useful Turbulence mover placements and the smallest static scored slope through route, paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 | `ROAD#9` | Expose saved per-slot rumble On/Off and consume gameplay intents through a gated GameLevel owner; isolated native hook follows | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -165,7 +166,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
-| `GAP#D5` | OPEN | MED | L | Add editor authoring for the qualified runtime-loaded horizontal mover; add rotated structures and useful Turbulence placements with layout acceptance (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
+| `GAP#D5` | OPEN | MED | L | Add useful Turbulence movers and static rotated geometry with route, paint and layout acceptance (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
 
 ## Engine reports
 

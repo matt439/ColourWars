@@ -19,8 +19,9 @@ int wmain(int argc, wchar_t* argv[])
         moving_structure_acceptance::check_draw_cpu(world);
         moving_structure_acceptance::check_replay(world);
         moving_structure_acceptance::check_public_replay(world);
+        moving_structure_acceptance::check_editor_save(world);
         std::cout << "PASS horizontal moving structure CPU checks: motion/owned paint/support/projectile/bounds; "
-            "runtime loader construction qualified; actual renderer pixels, editor/map and human acceptance remain separate\n";
+            "runtime/editor-save construction qualified; actual renderer pixels, arena placement and human acceptance remain separate\n";
 #if COLOURWARS_DEV_TOOLS
         std::cout << "Debug manual and public LevelBuilder replay checks completed\n";
 #else

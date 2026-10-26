@@ -536,7 +536,7 @@ namespace colourwars_editor
             if (!frames) fail("Incomplete sprite-sheet catalog: " + name);
         for (const auto& [name, effects] : catalog.sound_effects)
             if (!effects) fail("Incomplete sound-bank catalog: " + name);
-        LevelDocument document;
+        LevelDocument document(content / "tuning.json");
         document.load(result.stage);
         const std::vector<std::string> unresolved = document.unresolved_resources(catalog);
         if (!unresolved.empty()) fail("Stage resource validation failed: " + unresolved.front());

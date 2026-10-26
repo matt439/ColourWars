@@ -33,7 +33,8 @@ namespace colourwars_editor
         Rect object_rectangle(const Json& value);
         // The materials a collision tag may carry, comma-separated, empty for none.
         std::string allowed_materials(std::string_view collision_type);
-        void validate_document(const Document& document);
+        void validate_document(const Document& document,
+            const std::filesystem::path& motion_tuning = {});
         Document parse(std::string_view text);
         std::string json_text(const Json& value);
     }

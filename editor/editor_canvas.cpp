@@ -77,7 +77,19 @@ namespace colourwars_editor
     {
         const bool selected = selection_ && same_entry(*selection_, item.entry);
         const Rect rectangle = selected && dragging_ ? drag_preview_ : item.rectangle;
-        RECT screen = screen_rect(rectangle);
+        auto motion = item.motion;
+        if (motion && selected && dragging_)
+        {
+            try { motion = document_.motion_guide(item.entry, drag_preview_); }
+            catch (const std::exception&) { motion.reset(); }
+        }
+        if (motion)
+        {
+            outline(dc, screen_rect(motion->travel_envelope), RGB(131, 190, 236), 1, PS_DASH);
+            outline(dc, screen_rect(motion->standing_envelope), RGB(240, 197, 95), 1, PS_DOT);
+            outline(dc, screen_rect(motion->anchor), RGB(220, 225, 230), 1, PS_DASH);
+        }
+        RECT screen = screen_rect(motion ? motion->initial_pose : rectangle);
         const auto value = [&item](const std::string& key) -> std::string {
             const std::map<std::string, std::string>::const_iterator found = item.values.find(key);
             return found == item.values.end() ? "" : found->second;
@@ -139,6 +151,7 @@ namespace colourwars_editor
         }
         if (selected)
         {
+            if (motion) { screen = screen_rect(motion->anchor); }
             outline(dc, screen, RGB(255, 255, 255), 2);
             if (!is_spawn(item.entry))
                 fill(dc, RECT{screen.right - 5, screen.bottom - 5, screen.right + 6, screen.bottom + 6}, RGB(255, 255, 255));
@@ -170,6 +183,11 @@ namespace colourwars_editor
         std::optional<Rect> region;
         if (selection_ && selection_->kind != EntryKind::level)
             region = dragging_ ? drag_preview_ : document_.rectangle(*selection_);
+        if (selection_ && !dragging_)
+        {
+            for (const DrawItem& item : draw_items_)
+                if (same_entry(item.entry, *selection_) && item.motion) { region = item.motion->initial_pose; break; }
+        }
         if (region && selection_ && is_spawn(*selection_) && blockout_tuning_)
         {
             region->width = blockout_tuning_->player_width;
@@ -191,6 +209,8 @@ namespace colourwars_editor
         summary << std::fixed; summary.precision(1);
         summary << L"Scoring area " << scoring_area(scoring_faces_) << L" units squared";
         if (region) summary << L"  |  In selection " << scoring_area(scoring_faces_, region);
+        if (std::any_of(draw_items_.begin(), draw_items_.end(), [](const DrawItem& item) { return item.motion.has_value(); }))
+            summary << L"  |  Movers at initial phase";
         std::wostringstream tap_label, held_label;
         if (measured)
         {
@@ -268,6 +288,12 @@ namespace colourwars_editor
                 }
                 InflateRect(&rectangle, 3, 3);
                 if (PtInRect(&rectangle, point)) return item->entry;
+                if (item->motion)
+                {
+                    rectangle = screen_rect(item->motion->initial_pose);
+                    InflateRect(&rectangle, 3, 3);
+                    if (PtInRect(&rectangle, point)) return item->entry;
+                }
             }
         }
         return std::nullopt;

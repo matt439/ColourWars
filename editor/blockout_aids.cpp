@@ -1,6 +1,7 @@
 #include "editor/blockout_aids.h"
 #include "editor/level_json.h"
 #include "game/paint_face_geometry.h"
+#include "editor/horizontal_authoring.h"
 
 #include <algorithm>
 #include <cmath>
@@ -87,6 +88,7 @@ namespace colourwars_editor
         {
             const std::string type = level_json::string(object, "type");
             if (type != "Structure" && type != "StructurePaintable") continue;
+            if (object.HasMember("motion")) continue;
             obstacles.push_back(paint_rectangle(object));
         }
         std::vector<ScoringFace> result;
@@ -96,6 +98,13 @@ namespace colourwars_editor
             const level_json::Json& object = objects[static_cast<rapidjson::SizeType>(entry.index)];
             if (level_json::string(object, "type") != "StructurePaintable") continue;
             const PaintFaceRectangle rect = paint_rectangle(object);
+            const bool moving = object.HasMember("motion");
+            float offset = 0.0f;
+            if (moving)
+            {
+                const auto spec = decode_horizontal_motion(object);
+                offset = horizontal_motion_contract::offset_at(spec, spec.initial_phase);
+            }
             const float x = rect.left, y = rect.top, right = rect.right, bottom = rect.bottom;
             const level_json::Json& faces = level_json::member(object, "paintable_faces");
             for (int face = 0; face < 4; ++face)
@@ -105,12 +114,18 @@ namespace colourwars_editor
                 const bool along_x = face < 2, leading = face % 2 == 0;
                 const float edge = along_x ? (leading ? y : bottom) : (leading ? x : right);
                 const float thickness = static_cast<float>(tuning.paint_thickness);
+                const std::span<const PaintFaceRectangle> blockers = moving ?
+                    std::span<const PaintFaceRectangle>{} : std::span<const PaintFaceRectangle>(obstacles);
                 for (const std::pair<float, float>& interval : exposed_paint_intervals(
-                    along_x ? x : y, along_x ? right : bottom, edge, along_x, leading, obstacles))
+                    along_x ? x : y, along_x ? right : bottom, edge, along_x, leading, blockers))
                 {
-                    const Rect strip = along_x
+                    Rect strip = along_x
                         ? Rect{interval.first, leading ? edge : edge - thickness, interval.second - interval.first, thickness}
                         : Rect{leading ? edge : edge - thickness, interval.first, thickness, interval.second - interval.first};
+                    // Runtime owns anchor-space scored areas. Translate only
+                    // the displayed location: deriving a new width from world
+                    // endpoints changes score when float spacing changes.
+                    if (moving && offset != 0.0f) { strip.x = static_cast<float>(strip.x) + offset; }
                     result.push_back({entry, strip, along_x, leading});
                 }
             }

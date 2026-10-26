@@ -1,5 +1,6 @@
 #include "editor/level_json.h"
 #include "game/level_format.h"
+#include "editor/horizontal_authoring.h"
 
 #include <rapidjson/error/en.h>
 #include <rapidjson/prettywriter.h>
@@ -257,7 +258,8 @@ namespace colourwars_editor
             const std::string type = string(object, "type");
             if (object.HasMember("motion"))
             {
-                fail("Moving structures are supported by the game but cannot yet be edited safely here (motion).");
+                try { decode_horizontal_motion(object); }
+                catch (const std::exception& error) { fail(std::string("motion: ") + error.what()); }
             }
             if (string(object, "sheet_name").empty() || string(object, "frame_name").empty())
             {
@@ -335,7 +337,7 @@ namespace colourwars_editor
 
     namespace level_json
     {
-        void validate_document(const Document& document)
+        void validate_document(const Document& document, const std::filesystem::path& motion_tuning)
         {
             if (!document.IsObject()) { fail("A level must be a JSON object."); }
             // Missing format is legacy version 1. Reject newer or malformed
@@ -416,6 +418,7 @@ namespace colourwars_editor
             {
                 validate_object(object, false);
             }
+            validate_motion_geometry(document, motion_tuning);
         }
 
         Document parse(std::string_view text)

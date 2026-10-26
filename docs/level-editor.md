@@ -49,7 +49,8 @@ moves or scales all three vertices together. Spawn markers can be moved;
 their boxes use `player.size` from source `game/content/tuning.json`.
 
 Use the palette to add paintable platforms, solid structures, jump-through
-platforms, left/right ramps and decorative visuals. Team spawns and the four
+platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),
+left/right ramps and decorative visuals. Team spawns and the four
 bounds rectangles are also selectable and editable. The level entry exposes
 the stage name, menu icon and sound settings. New levels use the replacement
 `paint_exe` bank, `music.close_quarters` and its matching ending sting. Omit both
@@ -124,7 +125,8 @@ level or the player's save. A missing or invalid aid file displays a diagnostic.
 
 - **Cyan edges** show exposed scoring faces. Flat structures, including
   jump-through platforms, bury faces reached from their outward side. Ramps and
-  decorations do not. The editor and game share the interval calculation in
+  decorations do not. Moving anchors never become permanent static blockers;
+  their own scoring faces stay local to the body. The editor and game share the interval calculation in
   `game/paint_face_geometry.h`. With aids off, cyan shows authored faces instead.
 - **Scoring area** shows the whole level and the part inside the selected
   rectangle. Select an object or one of the bounds rectangles to choose a
@@ -132,6 +134,9 @@ level or the player's save. A missing or invalid aid file displays a diagnostic.
   strips using current `paint.thickness`, in world units squared. Corners and
   overlapping strips contribute separately, as in runtime scoring. It measures
   available scoring surface, without assigning teams or predicting reachability.
+  Movers appear at their initial phase, labelled in the summary. Their local
+  strip dimensions and area are measured before translating the displayed
+  positions, so changing phase does not change the available score.
   During a drag, measurements and scoring edges wait for the committed drop.
 - **Purple/gold boxes** show the recorded tap/held jump envelope in both
   directions from the top centre of the selected geometry, or the feet of a
@@ -283,25 +288,64 @@ bounds and ramps. Document acceptance does not establish those play qualities.
 
 ## Moving-structure authoring (`GAP#D5`)
 
-**Planned implementation, scoped 2026-10-26.** The qualified horizontal mover
-cannot yet be authored or round-tripped here. Its first dependency is the
-[runtime JSON/schema contract](feature-roadmap.md#horizontal-movement-capability-2026-10-26);
-this is part of `GAP#D5`, separate from the attended `ED#5` review.
+**Implemented 2026-10-26; final targeted qualification pending.** The palette's
+**Moving paintable block** and **Moving paintable platform** create the existing
+solid and jump-through horizontal paintables. They write `StructurePaintable`
+with the optional [motion record](level-format.md#horizontal-paintable-motion),
+using `pencil` and `ruler` materials respectively. No new motion kind is added.
 
-After that contract lands, add the supported paintable mover to the palette and
-document model. Expose the anchor rectangle, horizontal travel, period and initial
-phase that the runtime actually accepts. Draw its anchor and travel envelope as
-editor guides; preview guides do not establish simulated collision or riding.
-Define move/resize/duplicate semantics so editing an anchor cannot silently
-change the intended path or create an unsafe envelope.
+The rectangle is the **leftmost anchor**. Dragging, nudging, resizing and exact
+coordinate edits change that anchor; horizontal travel remains an absolute
+distance and the period and phase remain unchanged. The inspector exposes
+`motion/type` (`horizontal`), `motion/travel_x` in world units,
+`motion/period` in round-trip seconds and `motion/phase` in cycles [0,1).
+New movers start at travel 120, period 6.4 and phase 0 as editable authoring
+defaults, not an accepted arena placement or balance choice.
 
-The bounded exit is add/select/edit, undo/redo and save/reopen of an authored
-mover, preserving unknown metadata and unrelated source fields. Invalid edits
-must preserve the last valid document and undo history, with named diagnostics.
-Keep the runtime's solid/one-way paintable limits and rejection of blocking
-geometry intersecting the mover or standing envelope. Check the saved fixture
-through production `LevelBuilder`, including material/paint ownership and
-replay reconstruction; editor acceptance alone does not prove it plays.
+The filled body shows its initial phase. A white dashed outline marks the
+anchor, blue dashes the complete travel envelope, and gold dots the expanded
+standing corridor. Selection and resize handles edit the anchor; clicking the
+initial body also selects that object. **F** frames the complete travel and
+standing guides. Drag guides are provisional until the drop commits. These
+are geometry guides, without simulated riding or a route-feasibility claim.
+
+**Ctrl+D** retains motion, material and unknown metadata and places the copy
+below the original's complete body/standing corridor. It does not use the
+ordinary object's overlapping 50-unit offset. If the new envelope leaves Scene
+bounds or intersects another structure, duplication is refused. Anchor, motion,
+static-geometry and bounds edits validate the complete candidate before changing
+the document or undo/redo branch. Save/reopen retains unknown root, object and
+motion metadata, rectangle/TLBR encoding and ignored alternative geometry.
+
+The application supplies source `game/content/tuning.json` for player size;
+the registration helper supplies the same repository context. Tools using the
+document API pass that path to `LevelDocument(tuning_path)`. The default
+constructor still works for static documents, but cannot load or add a mover
+without this explicit context. Mover validation rereads current `player.size`
+and shares the runtime's float field, travel and standing-envelope arithmetic
+through the engine-free `game/horizontal_motion_contract.h`. Changes to source
+size can therefore invalidate a formerly usable corridor, including an undo
+candidate. No guessed player size is substituted.
+
+The complete platform and standing envelopes must lie inside Scene bounds and
+clear the other flat/ramp structures and mover paths. Full actual-player
+rate/displacement admission remains authoritative in production `LevelBuilder`;
+passing editor geometry validation does not qualify that budget or gameplay.
+Scoring diagnostics keep mover dimensions and area in anchor space and translate
+only guide locations, including at fractional float boundaries. Gameplay's
+per-tile float accumulation can round differently from continuous editor strips;
+neither total changes merely because initial phase changes.
+
+The document checks cover both palette kinds, properties, phase/standing guides,
+transactional rejection, anchor move/resize, duplication, undo/redo, changed
+source dimensions, metadata/TLBR preservation and save/reopen. The CPU
+`moving_structure` case compiles the actual editor model and passes its saved
+stage through production `LevelBuilder`, with material/scoring checks and Debug
+Recorder/Player reconstruction. Debug/Release editor builds, document checks and
+`moving_structure` passed after the fractional-area fix. Debug includes 180
+exact editor-save replay updates; Release explicitly excludes developer replay.
+Receipts: `out/validation/overnight-20261026/phase4/` (`editor-*` and `mover/`).
+No new GUI, native-pixel or human acceptance is claimed here.
 
 Static rotated structures get their own fields, guides and round-trip checks
 only after the placement-driven runtime contract is defined. No arbitrary
