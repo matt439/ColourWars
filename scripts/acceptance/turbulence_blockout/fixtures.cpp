@@ -147,6 +147,16 @@ namespace turbulence_blockout_acceptance
         if (this->on_weapon_launch) { this->on_weapon_launch(emitted); }
         for (auto& projectile : emitted)
         { ++this->emitted_objects; this->scene.add(std::move(projectile)); }
+        if (this->target_player != nullptr && this->target_weapon_updates)
+        {
+            const float target_before = this->target_player->weapon_ammo();
+            auto target_emitted = this->target_player->update_weapon_and_get_projectiles(dt, this->targets);
+            if (this->target_player->weapon_ammo() < target_before)
+            { ++this->target_paid_events; this->target_last_paid_tick = this->ticks; }
+            if (this->on_target_weapon_launch) { this->on_target_weapon_launch(target_emitted); }
+            for (auto& projectile : target_emitted)
+            { ++this->target_emitted_objects; this->scene.add(std::move(projectile)); }
+        }
         this->scene.resolve();
         this->player->end_contacts(this->scene.contacts());
         this->player->update_weapon_position();

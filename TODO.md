@@ -52,7 +52,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Qualify Turbulence's moving-attacker and counterfire samples before useful mover selection; supported scored slopes follow | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
+| `POL#21` | Qualify useful Turbulence mover placements against the recorded static routes, pressure and native baseline; supported scored slopes follow | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
 | `GAP#D5` | Justify useful Turbulence mover placements and the smallest static scored slope through route, paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:

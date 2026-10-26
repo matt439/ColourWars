@@ -61,6 +61,12 @@ namespace turbulence_blockout_acceptance
         Player* player = nullptr;
         Player* target_player = nullptr;
         PlayerInputData target_input = input();
+        // Existing route/tool/escape modes leave this off. Exchange opts in
+        // before warmup and updates both weapons in the Level's roster order.
+        bool target_weapon_updates = false;
+        int target_paid_events = 0;
+        int target_last_paid_tick = -1;
+        int target_emitted_objects = 0;
         std::vector<std::pair<const Surface*, CollisionObject*>> structures;
         std::vector<CollisionObject*> targets;
         int ticks = 0;
@@ -71,6 +77,7 @@ namespace turbulence_blockout_acceptance
         float minimum_ammo = 0.0f;
         bool death_expected = false;
         std::function<void(std::span<const std::unique_ptr<Projectile>>)> on_weapon_launch;
+        std::function<void(std::span<const std::unique_ptr<Projectile>>)> on_target_weapon_launch;
         std::function<void()> after_scene_contacts;
         Run(Services& services, const Vector2F& position, PlayerTeam team = PlayerTeam::a,
             float initial_velocity = 0.0f, WeaponType weapon = WeaponType::sprayer);
@@ -92,6 +99,7 @@ namespace turbulence_blockout_acceptance
     void public_load(Services& services, const std::filesystem::path& content);
     void tools(Services& services, const std::filesystem::path& output);
     void escape_trials(Services& services, const std::filesystem::path& output);
+    void exchange_trials(Services& services, const std::filesystem::path& output);
     int tool_stations(Services& services, const std::filesystem::path& output);
     int useful_stations(Services& services, const std::filesystem::path& output);
     struct ToolThreatSummary

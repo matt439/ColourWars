@@ -7,13 +7,15 @@ int main(int argc, char** argv)
     using namespace turbulence_blockout_acceptance;
     try
     {
-        require(argc == 2 || (argc == 3 && (std::string_view(argv[2]) == "--tools" || std::string_view(argv[2]) == "--escape")),
-            "turbulence_blockout <content directory> [--tools|--escape]");
+        require(argc == 2 || (argc == 3 && (std::string_view(argv[2]) == "--tools" ||
+            std::string_view(argv[2]) == "--escape" || std::string_view(argv[2]) == "--exchange")),
+            "turbulence_blockout <content directory> [--tools|--escape|--exchange]");
         Services services(argv[1]);
         if (argc == 3)
         {
             if (std::string_view(argv[2]) == "--tools") { tools(services, std::filesystem::absolute(argv[0]).parent_path()); }
-            else { escape_trials(services, std::filesystem::absolute(argv[0]).parent_path()); }
+            else if (std::string_view(argv[2]) == "--escape") { escape_trials(services, std::filesystem::absolute(argv[0]).parent_path()); }
+            else { exchange_trials(services, std::filesystem::absolute(argv[0]).parent_path()); }
             return 0;
         }
         geometry(services, std::filesystem::absolute(argv[0]).parent_path());

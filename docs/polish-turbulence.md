@@ -353,10 +353,78 @@ rows remain distinct from the older virtual target-volume arrivals.
 The fixed aims and one repeated seed control this comparison, rather than
 sample an aiming or randomness distribution. Simultaneous scripted reaction
 does not establish human warning time, and a single pulse does not establish
-survival under persistent fire or counterfire. Moving/jumping attacker and
-counterfire samples remain before selecting mover placements. The paired
-useful-role and defender-escape extensions are qualified in Release here; no
-extended Debug run is implied.
+survival under persistent fire. The defender-escape mode itself has no
+counterfire; the separate bounded exchange below adds that comparison. The
+paired useful-role and defender-escape extensions are qualified in Release
+here; no extended Debug run is implied.
+
+**Moving attack and single-pulse counterfire comparison, 2026-10-26 (Release).**
+`turbulence_blockout <staged-game-directory> --exchange` passes 60 experimental
+trials plus 20 fresh matched standing controls. Each of the same 20 roles has
+an ordinary inward-walking attacker, a jump-plus-walk attacker, and a stationary
+attacker against an ordinarily retreating defender who fires one actual Sprayer
+pulse toward the initial attacker. The moving-attack trials keep the defender
+idle. Every attacker pays for one trigger update and releases; the counterfire
+defender also pays once and releases. The opt-in guest-weapon seam is enabled
+for all exchange/control scenes, neutral during readiness, and disabled by
+default for the earlier modes. Both inputs request their shots on the same
+update, with actual weapon work in the production roster's attacker-then-defender
+order. This does not measure simultaneous dispatch or input latency.
+
+The 80 scenes use 18,256 updates: 3,856 neutral readiness/settling updates and
+14,400 observation updates. Warmup is again 45 updates, or 61 for Sniper; every
+scene observes 180 updates with no extra flight tail. The hard bounds remain
+360 updates per scene, a 40-update optional flight tail and 21,600 updates for
+the whole comparison. All 80 attacker pulses and 20 defender pulses are paid,
+with no lethal stops or counterfire suppressed by elimination. Those terminal
+stop/suppression branches therefore remain unexercised. Initial bodies,
+health, ready reserves, fixed aims and one repeated seed match each standing
+control. Actual projectile paint-owner/birth observations and first health loss
+remain separate from sampled launch/post-contact box overlaps.
+
+First defender-health-loss updates below begin at the paid trigger, after
+warmup, and reproduce on both sides. Cells show lower / upper; `miss` retains
+the bounded no-health-loss outcome.
+
+| Tool | Standing control | Walking attacker | Jump-walking attacker | Retreating counterfire defender |
+|---|---|---|---|---|
+| Sprayer | 15 / 5 | 14 / 4 | 14 / 4 | 19 / 5 |
+| Sniper | 8 / 2 | 8 / 2 | 8 / 2 | 8 / 2 |
+| Roller | miss / miss | miss / miss | miss / miss | miss / miss |
+| Mister | 52 / 13 | 40 / 10 | 40 / 10 | miss / 28 |
+| Bucket | 24 / 1 | 24 / 1 | 25 / 1 | 33 / 1 |
+
+The standing, walking and jump-walking families each hit 16 of 20 defenders;
+the counterfire family hits 14 of 20. These totals conceal differences: lower
+Mister leaves 0.99 defender health after walking fire and 0.98 after jump-walking
+fire, while its upper counterfire defender ends at 0.97. The Roller pulse is
+paid at the initial separation and released before the walk closes; it misses
+in every family. Its separately qualified closing role still uses its own
+input sequence. The lower defender's Sprayer counterpulse misses the original
+attacker in all ten trials. The upper counterpulse hits the original attacker
+at update 5 in all ten trials, leaving 0.99 health, across all five attacker
+tools. In particular, Bucket's upper paid-launch hit at update 1 is nonfatal;
+the defender still pays for its counterpulse in that update. No timing in this
+matrix is a human warning or reaction interval.
+
+Every actor remains alive and both participants end with full reserve. Lower
+walking/jump-walking attackers end supported on ground; upper walking attackers
+move 244 units before the baffle stops them. All ten upper jump-walking attackers
+are still airborne at observation update 180, despite their projectiles having
+retired. Those rows measure moving fire, without completed landing or recovery
+qualification. Counterfire defenders reproduce the earlier ordinary-retreat
+positions, including the upper 74-unit baffle stop.
+
+Receipts in `out/validation/overnight-20261026/phase7/exchange/x64-release/`
+include `turbulence-exchange.csv` (60 experiment rows),
+`turbulence-exchange-controls.csv` (20 controls) and
+`turbulence-exchange-summary.json`. The bounded moving-fire/counterfire sample
+family is now complete for this static comparison. Sustained fire, tracking,
+other aiming/randomness distributions and attended opposed balance remain
+unqualified; these results do not choose a global weapon advantage or establish
+safe recovery under return fire. No additional pressure mode is required before
+the next bounded mover-placement comparison. This extension is qualified in
+Release here; no Debug exchange run is implied.
 
 **Static native composition qualified, 2026-10-26.**
 `check-painter.ps1 -TurbulenceBlockoutOnly` passes in Debug and Release at
@@ -392,9 +460,9 @@ captures must show the receiving surface and first escape before commitment,
 including moving approaches, preview and ending views.
 
 These checks establish construction, routes, score geography, the recorded
-near-receiver tool and single-pulse defender samples, and bounded native
-composition. Broader opposed five-tool pressure and mover/rotation placement
-remain open.
+near-receiver tool, single-pulse defender and bounded moving-fire/counterfire
+samples, and bounded native composition. Sustained/tracking opposed pressure,
+attended balance and mover/rotation placement remain open.
 Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `GAP#D5`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.
