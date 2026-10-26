@@ -283,8 +283,10 @@ Every new match ran 3601 active ticks. The primary four-row Skirmish CSV
 repeated byte-for-byte, and its reversed-order rows matched all 81 fields by
 key. The previous four-row, 20-second
 two-Sniper `paint` control retained its entire 81-column CSV bytes.
-These six new controls cover the tools across different rosters; the full
-comparative report and attended balance decisions remain open.
+These six new controls cover the tools across different rosters. The full
+comparative report was still open at this qualification; the
+[first five-tool report](#first-five-tool-report-2026-10-26) below completes it.
+Attended balance decisions remain open.
 
 The first Debug qualification stopped because an old CLI negative still
 expected registered `skirmish` to be rejected. That failed run remains under

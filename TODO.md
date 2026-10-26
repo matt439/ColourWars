@@ -39,16 +39,20 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Supporting implementation choices.** The current environment kit, small-view treatment
+**Local implementation choices.** The current environment kit, small-view treatment
 and static landmarks are approved for this stage. The retained parallax comparison
-recommends keeping the shipped arenas static. The following supporting work can proceed locally
-when it does not compete with the blockout work.
-This is a selection guide, not another priority order; each owner defines a bounded first slice.
+recommends keeping the shipped arenas static. These local slices advance the blockout
+or provide supporting work when it does not compete with it.
+This is a selection guide, not another priority order; each owner defines stopping points
+and dependencies. The first two rows feed the current blockout aim; the others can proceed
+without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `ROAD#9` | Per-seat controller rumble through one isolated `XInputSetState` file, which becomes `GAP#F6`'s exhibit | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
-| `DBG#1` | No further unattended field selected; additional consumer audits are optional if selected | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
+| `POL#21` | Write Turbulence's route, spawn and regional paint brief; justify mover/rotation placements before choosing geometry | [Blockout work](docs/polish-plan.md#turbulence-blockout-work-pol21) |
+| `GAP#D5` | Expose the qualified horizontal mover through runtime JSON/schema validation; public replay rebuild and editor authoring follow | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
+| `ROAD#9` | Define and qualify rumble pulse policy with a fake sink; settings/callers and the isolated native hook follow | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
+| `GAP#4.2` | Per-slot gameplay Jump choice from A/B/X/Y, retaining LT and the existing menu controls; model/save/evaluator first | [Bindings](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
@@ -147,7 +151,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#8` | DEFERRED | LOW | S | More team palette pairs, each checked under colour-vision simulation; later UI art pass. [Scope](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | OPEN | MED | M | Per-seat controller rumble for hits, eliminations, hard landings and dry fire, with a saved On/Off; bots, replays and pause never rumble. Feeling it needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
-| `GAP#4.2` | UNSCOPED | MED | L | Define the next bounded action/pad rebinding slice; keyboard Jump is implemented and validated. Rebinding artwork remains a later UI pass. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
+| `GAP#4.2` | OPEN | MED | L | Per-slot pad Jump choice A/B/X/Y, retaining LT and menu controls; model/save/evaluator, then page/help and qualification. Broader rebinding remains unscoped. [Scope](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
@@ -185,7 +189,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#1` | OPEN | LOW | M | Fifty-eight colour paths are qualified; further consumer audits are optional if selected. General string/font edits and missing-key insertion need separate scoped implementations. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
+| `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#6` | DEFERRED | LOW | M | Scripts stop when the window loses focus; no run-while-inactive switch. |

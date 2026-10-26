@@ -281,6 +281,33 @@ No here keeps the editor open. Rebuild
 and play a saved stage to check collisions, paintable faces, spawns, camera
 bounds and ramps. Document acceptance does not establish those play qualities.
 
+## Moving-structure authoring (`GAP#D5`)
+
+**Planned implementation, scoped 2026-10-26.** The qualified horizontal mover
+cannot yet be authored or round-tripped here. Its first dependency is the
+[runtime JSON/schema contract](feature-roadmap.md#horizontal-movement-capability-2026-10-26);
+this is part of `GAP#D5`, separate from the attended `ED#5` review.
+
+After that contract lands, add the supported paintable mover to the palette and
+document model. Expose the anchor rectangle, horizontal travel, period and initial
+phase that the runtime actually accepts. Draw its anchor and travel envelope as
+editor guides; preview guides do not establish simulated collision or riding.
+Define move/resize/duplicate semantics so editing an anchor cannot silently
+change the intended path or create an unsafe envelope.
+
+The bounded exit is add/select/edit, undo/redo and save/reopen of an authored
+mover, preserving unknown metadata and unrelated source fields. Invalid edits
+must preserve the last valid document and undo history, with named diagnostics.
+Keep the runtime's solid/one-way paintable limits and rejection of blocking
+geometry intersecting the mover or standing envelope. Check the saved fixture
+through production `LevelBuilder`, including material/paint ownership and
+replay reconstruction; editor acceptance alone does not prove it plays.
+
+Static rotated structures get their own fields, guides and round-trip checks
+only after the placement-driven runtime contract is defined. No arbitrary
+rotation, lift or crush editor is implied. Human GUI handling and saved-stage
+play remain `ED#5`; Turbulence route/readability acceptance remains `POL#21`.
+
 ## Registration assistance (`ED#4`)
 
 `ColourWarsRegisterStage` previews and explicitly registers a level already

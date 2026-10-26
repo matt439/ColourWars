@@ -1597,7 +1597,10 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN.** Fifty-eight existing colour paths listed under [Live tuning](#live-tuning)
+**DEFERRED (readiness audit, 2026-10-26).** No additional field/caller is selected;
+resume when an implementation task needs one. General string/font edits and
+missing-key insertion must first get their own bounded scope. The existing
+fifty-eight colour paths listed under [Live tuning](#live-tuning)
 support read, validated apply, diff, reset and save: the initial seven, both
 readiness colours on Team Select and Weapon Select, the weapon-feedback pair,
 the opaque player-identity ink/background pair, the combat-feedback pair and

@@ -415,6 +415,18 @@ Acceptance is a CPU case over a fake vibration sink: which events pulse which
 seat, the per-seat setting and every stop condition. Feeling it needs pads
 (`ROAD#2`).
 
+The local work has three stopping points; each leaves a reviewable increment.
+
+| slice | deliverable and acceptance |
+|---|---|
+| Pulse policy and fake sink | Define bounded motor amplitudes, durations and deterministic overlap behavior for the four existing events. Drive a fake sink through pulse expiry, repeated events, pause, focus loss, disconnect, match exit and destruction; no native motor calls are needed for this slice. |
+| Settings and gameplay callers | Add the saved per-slot On/Off and authored pulse values, then connect actual hit, elimination, hard-landing and dry-trigger callers. Check sparse/reordered rosters, unrelated settings, default/recovered saves and disabled slots. Bots, replays and the keyboard seat must produce no motor output. |
+| Native hook and report exhibit | Put the slot-to-`XInputSetState` call and its stop path in one isolated file; unavailable/disconnected hardware must remain harmless. Qualify the callers with the fake sink, then draft `GAP#F6` with that file as the exhibit after rechecking the engine API. Filing still needs separate author authorization. |
+
+Do not close the physical feel review with fake-sink results. The native hook
+does not require a pad to build, and the queued implementation does not claim
+that its four candidate pulses feel distinct or comfortable.
+
 ### Input devices and seats
 
 No rows. These are known limits, recorded so a later gap list does not file
@@ -607,8 +619,10 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 ## Action bindings (`GAP#4.2`)
 
 **Default evaluators and keyboard Jump rebinding are implemented and validated.**
-**Remaining scope: UNSCOPED (`GAP#4.2`).** Broader action and Pad 1-4 rebinding
-need their own bounded slices, as described below.
+**Next slice: OPEN (`GAP#4.2`), Pad 1-4 Jump face-button selection.** The face
+button defaults to A; the existing LT alias remains alongside every choice.
+Broader action and trigger rebinding remain unscoped; the bounded contract is
+[below](#pad-jump-face-button-slice-gap42).
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
@@ -767,13 +781,38 @@ Evidence is under `out/validation/crossfeed-20261020/keyboard-jump-v1/`, includi
 implementation checks establish no human comfort/readability, physical-pad,
 listening, balance, hardware-baseline or performance acceptance.
 
-**Remaining scope.** Broader action and Pad 1-4 rebinding still need their own
-bounded slices. Future profiles follow the existing XInput-slot preferences,
-not player numbers or physical-device identity. Pad movement, aim and drop
-remain analog reader behavior. Rebinding artwork belongs to the later UI pass
-using the approved gameplay style. Physical-pad comfort remains `ROAD#2`, and
-human readability, comfort, balance and hardware acceptance stay open. This
-keyboard slice does not close `GAP#4.2`.
+### Pad Jump face-button slice (`GAP#4.2`)
+
+**OPEN, scoped 2026-10-26.** The next local increment lets each XInput slot
+choose A, B, X or Y as its gameplay Jump face button, default A. LT remains an
+independent Jump source with the existing live threshold and alias-edge rules.
+Use a discrete choice rather than a new pad-capture interaction. The existing
+Pad 1-4 selector and pending/Apply/Back flow establish the menu pattern; retain
+the approved presentation treatment.
+
+Profiles belong to XInput slots, not player/view indices or physical-device
+identity. Only gameplay Jump changes: menu A/B/X, intro skipping, Start pause,
+Back debug, RT shooting, sticks and analog drop retain their current mappings.
+A face button's menu role is not a gameplay binding conflict. There is no
+unbound-Jump option or trigger reassignment in this increment.
+
+| slice | deliverable and acceptance |
+|---|---|
+| Model, save and evaluator | Extend the independent input preferences with four validated face-button choices and stable save tokens. Missing choices retain A; define local recovery for malformed choices without discarding keyboard Jump or unrelated settings. Actual `PlayerInput` must use the selected slot's effective binding. Check all four choices, sparse/reordered rosters, save/load/reset, failed writes and held input during adoption. |
+| Page and controls help | Add a Pad Jump child with slot and face-button selectors, current-slot defaults, Apply and Back. Pending edits stay local until Apply; closing discards them. Save only this page's scope. Its help names the selected slot's Jump button and retained LT alias; shared Controls help points to the per-pad choice instead of promising A for every pad. Keep menu controls explicit and unchanged. Validate actual font bounds and page ownership from main-menu and paused routes. |
+| Integration and replay | Exercise actual readers and pages with scripted snapshots: the former button is neutral after remapping, LT crossing while the face button is held still presses Jump, and first poll/reconnect/focus/resume produce no invented edge. Check Apply/Back and per-slot isolation, then record/play through the existing post-mapping `PlayerInputData` route with different saved choices. |
+
+The first stopping point is the model/save/evaluator slice. It can be qualified
+without physical hardware; no new engine input API or rebinding artwork is
+needed. Synthetic devices establish mapping behavior. Physical-pad comfort
+remains `ROAD#2`, and attended readability, balance and hardware acceptance stay
+open.
+
+**Remaining scope after this slice: UNSCOPED.** Other keyboard actions, pad
+actions and trigger choices still need separate contracts. Rebinding artwork
+belongs to the later UI pass using the approved gameplay style. Neither the
+completed keyboard slice nor this bounded pad slice closes the broader
+`GAP#4.2` capability.
 
 Labrador declined the action-evaluation request (engine report 21, formerly
 `GAP#F2`) in `197aff1`: evaluating a binding table is the action map, which its
@@ -899,11 +938,22 @@ without a failure diagnostic and is **not qualified**; it is not repeated here.
 The full Press Tower balance case was not run for this increment. Their bounded
 static identity controls above pass; this is no new balance or performance claim.
 
-**Remaining:** builder schema/validation and editor round trips, a useful
-Turbulence placement and public loader/replay rebuild, rotated structures and
-their support/paint contract, then the arena's route/side-swap and attended play
-acceptance. No shipped arena uses the new mover yet. `GAP#D5` and `POL#21` stay
-open; human/device gates and provisional weapon balance stay unchanged.
+**Remaining implementation, in dependency order:**
+
+| milestone | bounded scope and acceptance |
+|---|---|
+| 1. Runtime JSON and diagnostics | Define and load an explicit horizontal-motion record for the existing axis-aligned triangular path on solid or jump-through flat paintables: finite representable anchor, positive travel to a distinct endpoint, period of at least two simulation steps and phase in [0,1). Missing motion preserves static behavior. Reject malformed/unsupported motion with a stage/object diagnostic; retain the finite-rate, displacement, lifetime and open-support-corridor admission restrictions. Check malformed records and unchanged static fixtures before adding an arena placement. |
+| 2. Public builder and replay rebuild | Construct the existing mover through `LevelObjectBuilder`/`LevelBuilder`, then record and replay a fresh public-loader stage. Check stable admission IDs, authored initial phase, seeded rebuilds, local-face paint/credit, rider release, zero-step/reversal behavior and fresh-build fingerprints; the manual factory qualification above does not substitute for this path. |
+| 3. Editor authoring and round trip | Add the [moving-structure authoring contract](level-editor.md#moving-structure-authoring-gapd5): preserve existing records, edit supported motion fields and show the complete travel envelope. Save/reopen/build the same fixture with the same motion and diagnostics; existing static stages must round-trip unchanged. |
+| 4. Smallest useful static rotated structure | Use the [Turbulence blockout brief](polish-plan.md#turbulence-blockout-work-pol21) to select one useful fixed orientation and footprint, then define its collision/support and local-face paint contract before implementing it. Qualify builder/editor round trips, projectile contacts, scoring, art/culling/shadow alignment and the required route. This is static geometry; arbitrary rotating or combined moving/rotating bodies are outside the slice. |
+
+Milestone 1 is the next local implementation step. Keep each milestone bounded
+and preserve the existing hierarchy and static arithmetic. The
+[Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
+useful placements and route/side-swap qualification; attended arena acceptance
+remains a separate gate. No shipped arena uses the new mover yet. `GAP#D5` and
+`POL#21` stay open; human/device gates and provisional weapon balance stay
+unchanged.
 
 ## Presentation rate (`GAP#L9`)
 

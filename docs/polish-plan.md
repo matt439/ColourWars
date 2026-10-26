@@ -425,11 +425,11 @@ Use a small movement course to compare the baseline with candidate changes:
 - Prototype takeoff and landing effects on the actual movement events, so their
   timing can be judged alongside input response before final artwork and audio.
 
-**Current sequence (author, 2026-10-20):** improve the Close Quarters layout with
-the existing camera framing and measured movement baseline first. Once the initial level pass is
-playable, tune movement on that layout and the course, then make small level and
-movement adjustments from play observations. The course supplies measurements
-and comparisons for that process.
+**Current sequence:** Crossfeed is the accepted reference arena (2026-10-25).
+Keep its P3/five-tool baseline while building the other arena blockouts; tune movement
+and weapons together from specific route and play observations. The course
+supplies measurements and comparisons, while C2 recognition and physical-pad
+review remain `POL#3`. Follow the [development order](#development-order-2026-10-17).
 
 Measure the resulting jump envelope and travel speed. Use those measurements
 when placing platforms; the old movement note is not a level-design specification.
@@ -481,7 +481,7 @@ maps already provide them. All three retain the painted-surface match rules.
 
 | Arena | Play identity to develop | Environment direction |
 |---|---|---|
-| Close Quarters | A compact loop of connected rooms, a central contest and a useful upper or lower bypass. Frequent encounters with space to disengage; sheltered spawn approaches. First reference arena. | Paint workshop and supply warehouse: shelving, tanks, workbenches, timber, pipes, loading doors and distant work areas. |
+| Close Quarters | A compact loop of connected rooms, a central contest and a useful upper or lower bypass. Frequent encounters with space to disengage; sheltered spawn approaches. Preserved comparison draft. | Paint workshop and supply warehouse: shelving, tanks, workbenches, timber, pipes, loading doors and distant work areas. |
 | King of the Hill | A central elevated structure approached from both sides and more than one height. High-ground control trades off against lower paint routes and flank exposure. The name does not introduce a hill-scoring mode. | A printworks or workshop tower: supports, gantries, stairs represented by supported geometry, hanging signs, skylights and distant roof structures. |
 | Turbulence | Offset platforms and crossing routes that reward movement and repositioning. Mix short engagements with exposed crossings and recoverable lower routes. | An industrial loading yard: ducts, vents, stacked supplies, overhead structures, distant machinery and layered sky. Decorative machinery does not imply new wind or hazard mechanics. |
 
@@ -502,6 +502,34 @@ horizontal-moving capability is qualified separately in the
 [roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26). Builder/editor,
 rotation and useful placements remain open, and the existing arenas stay static.
 
+### Turbulence blockout work (`POL#21`)
+
+**OPEN, scoped 2026-10-26.** This is the next layout, beside the preserved
+`turbulence.json`. Use the recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
+and current P3/five-tool values. The first brief can proceed while the
+[moving-structure work](feature-roadmap.md#horizontal-movement-capability-2026-10-26)
+is implemented; Press Tower play does not block it.
+
+| Slice | Concrete result and stopping point | Dependency |
+|---|---|---|
+| Route and score brief | Name required, optional and recovery connections, their input families, four full-body spawns per side and two distinct departures. Budget paint by region/face, identify exposed crossings and useful retreat space. Explain the route choice earned by each proposed mover and static rotated structure. | Ready now; no new tuning or art required. |
+| First playable layout | Author a new explicit-only stage through the editor, with Random disabled. Retain a static route skeleton while capabilities land, then place the supported mover and rotated geometry. Reopen the saved level and load it through the game. | Brief; production builder/editor support for each new object. |
+| Route, paint and tool qualification | Drive representative edges both ways with the real Player, including starting speeds, input margins, misses and mover phases/reversals. Reconcile regional/face paint, mirrored spawn threats and all five tools' firing/recovery windows; record side/loadout swaps and residual hypotheses. | Playable layout; production loader/replay qualification for movers. |
+| Native composition screen | Retain 1/2/3/4-view clean/heavy captures, moving approaches, landing/escape visibility, reversals and stage preview/ending views. Fix observed framing/content failures before handing over play questions. | Qualified layout and representative paint states. |
+
+Keep each slice independently reviewable, with its brief, changed content and
+evidence in a Turbulence owner record when authoring begins. Preserve the current
+arenas, CQ draft and Crossfeed baseline. The qualified mover is horizontal only;
+do not introduce lifts, crushing corridors, wind or moving rotation as incidental
+blockout work. If a useful placement needs a different capability, record that
+requirement before widening the implementation.
+
+Automated route and capture results establish feasibility and composition only.
+Attended both-side 1-4P play must still answer pressure, crossing comfort and
+balance before this layout is accepted; record that gate in the arena owner and
+TODO when the candidate is ready. `POL#3`, `POL#24`, `POL#27` and physical-pad
+acceptance stay open.
+
 The first new-map pass uses current movement and weapon values. Define required,
 optional and recovery routes independently from their input families. Reconcile
 paint by region and face direction, and measure real firing / escape windows.
@@ -515,9 +543,10 @@ Retain a short route, spawn and paint-distribution brief for each accepted layou
 
 ## 4. Finish one arena, character and action chain
 
-Take the accepted Close Quarters blockout to finished presentation with one
-character design and the sprayer and roller. Other weapons remain available for
-gameplay checks while their visual treatment follows later.
+Take the accepted Crossfeed reference through the finish review with the
+approved character and all five tool treatments. The implemented production
+passes below are the working baseline; wider arena art remains after `POL#21`
+and the attended finish gate (`POL#24`).
 
 ### Environment and background
 
@@ -537,8 +566,8 @@ used. Check the arena both clean and heavily painted with every team palette.
 
 The kit is part of the current approved art baseline
 ([development order](#development-order-2026-10-17)): materials, props and
-background layers follow the art rules, and are fitted to Close Quarters as
-its layout develops.
+background layers follow the art rules, and are fitted to accepted layouts as
+their blockout and finish gates are met.
 
 **First increment implemented 2026-10-18 (part of `POL#9`).** The
 [Tool Props terrain kit](polish-terrain.md) draws every collision object in the
@@ -583,7 +612,7 @@ The [five-tool production pass](polish-tools.md) implements `POL#8`: distinct
 Paint.exe designs, aligned paint masks and grips, paid-shot pressure recovery,
 hose motion, supported roller rotation/lift/settle, bucket slosh/handle motion
 and a detached cosmetic mist tail. The current-arena style review is complete;
-re-check Close Quarters' composition as `POL#17` develops and during `POL#24`.
+re-check Crossfeed's composition during `POL#24`, then each newly accepted arena.
 The projectile, contact and quiet-detail increments below extend
 that treatment without changing the match simulation.
 
@@ -1452,8 +1481,8 @@ minimal explanation. All three arenas and all five weapons meet the same standar
 
 ## 7. Acceptance and delivery
 
-The reference milestone comprises Close Quarters' redesigned layout and detailed
-environment, one coherent animated character, sprayer and roller artwork, stable
+The reference milestone uses accepted Crossfeed, the approved environment and
+animated character, all five tool treatments, stable
 camera framing, movement polish and complete paint/damage/respawn feedback, taken
 from setup through results. Include jump/landing/contact effects and replacement
 audio for that complete experience, the idle muzzle drip, tool settling, character
@@ -2013,11 +2042,11 @@ the teammate who made space for others to paint.
 
 ### Order the experiments by what they can teach
 
-First try readiness/identity cues with movement polish, and recovery pockets and
-painting choices in the Close Quarters blockout. Next try resume/rematch handling
-during the complete-match pass. Build the optional
-workshop and individual input settings once fresh-player observations identify
-the most useful lessons and comfort changes. Use before/after sessions to decide
+Review the implemented readiness/identity cues, movement and recovery choices in
+the Crossfeed reference match, then measure the other arena blockouts. Include
+resume/rematch handling in the complete-match pass. Build the optional workshop
+once fresh-player observations identify the most useful lessons; follow the
+separately scoped input-setting work in the roadmap. Use before/after sessions to decide
 what earns its place; these candidates do not displace the agreed art, audio,
 movement or level-design work.
 
