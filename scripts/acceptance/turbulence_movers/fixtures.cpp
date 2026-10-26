@@ -2,6 +2,7 @@
 #include "scripts/acceptance/turbulence_movers/fixtures.h"
 #include "engine/math/triangle.h"
 #include "engine/collision/narrow_phase.h"
+#include "game/objects/fixed_slab_geometry.h"
 
 namespace turbulence_movers_acceptance
 {
@@ -126,6 +127,15 @@ namespace turbulence_movers_acceptance
                 const auto t = object.object("triangle");
                 shape = std::make_unique<TriangleRightAxisAligned>(t.number("x1"), t.number("y1"),
                     t.number("x2"), t.number("y2"), t.number("x3"), t.number("y3"));
+            }
+            else if (object.string("type") == "FixedSlabPaintable")
+            {
+                const auto slab = object.object("slab");
+                const auto rise = slab.string("rise");
+                require(rise == "left" || rise == "right", "Trial slab has an unsupported fixed rise");
+                const FixedSlabGeometry geometry({ { slab.number("x"), slab.number("y") },
+                    rise == "right" ? FixedSlabRise::right : FixedSlabRise::left });
+                shape = std::make_unique<RectangleRotated>(geometry.shape());
             }
             else
             {

@@ -57,7 +57,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Compare fixed slabs' useful pressure/paint placement with the retained shoulder composite | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
+| `POL#21` | Stage the qualified fixed-slab comparison as an explicit-only candidate and qualify its ending views | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).

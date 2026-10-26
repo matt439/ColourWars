@@ -486,8 +486,8 @@ Debug compilation and the existing six-control Release `--tools` regression
 pass; the extended Debug comparison was not run. All eight source arenas and
 tuning remain unchanged. The composite remains isolated and unregistered.
 Its qualified route, flat underside and paint role do not establish a scored
-diagonal walking face or rotated-slab equivalence. The fixed-slab core below
-now supplies that distinct shape; useful placement comparison remains next.
+diagonal walking face or rotated-slab equivalence. The fixed-slab core and
+four-geometry comparison below now qualify that distinct local role.
 
 **Fixed scored-slab core, 2026-10-26 (Debug and Release).** The isolated trial appends two
 `FixedSlabPaintable` objects to the unchanged twenty-two-object mover stage:
@@ -628,6 +628,56 @@ rejects `--replay`. This qualifies the standalone public factory with its
 explicit priming; it does not qualify unmodified DebugDirector cold playback,
 cross-build determinism or human acceptance. The bounded `GAP#D5` capability
 work is complete; arena selection and pressure remain `POL#21`.
+
+**Four-geometry station comparison, 2026-10-26 (Release).** The optional
+`turbulence_slopes <content> <shoulder.json> --comparison <slab.json>` form
+adds the fixed slab to the same existing station family. Eighty fresh public
+Levels use 32,720 updates, 120 pre-readiness placements and eighty paid single
+pulses. Initial source/defender poses, health, ready reserves and fixed aims
+match across static, mover, composite and slab geometries. No participant
+tracks, moves after setup or fires a second pulse.
+
+Both sides reproduce unchanged target-health results at the opposed crossover:
+Sniper first damages at update 7, leaving 0.666 health; Mister at 48, leaving
+0.98. Sprayer, stationary Roller and Bucket cause no health loss in the
+180-update observation. Each geometry has four health-hit scenes and eight
+scenes with any owned paint out of ten; all ten fresh solo scenes gain some
+paint. These totals include source-floor paint and do not imply receiver hits.
+
+For the fresh solo family, the fixed aim `(1320,880)` lies **below the slab
+body**, while it is the composite shoe's top. The new slab intercepts paint
+before that point. Settled owned areas below reproduce on both sides:
+
+| Tool | Composite total | Slab total | Slab local top |
+|---|---:|---:|---:|
+| Sprayer | 240 | 48.787 | 48.787 |
+| Sniper | 288 | 48.787 | 48.787 |
+| Roller | 624 | 624 | 0 |
+| Mister | 624 | 243.935 | 243.935 |
+| Bucket | 1,152 | 96.787 | 48.787 |
+
+Bucket also paints 48 on the slab's exposed end cap. None of these station
+samples paints its underside. Stationary Roller paints the original floor;
+its separately qualified walking role above is different. Opposed Sprayer,
+Mister and Bucket samples paint slab-top areas of 48.787 / 97.574 / 48.787,
+replacing their earlier crossover paint without improving the sampled health
+result. This is a changed local paint/cover role, without a global advantage
+or normalized efficiency claim.
+
+The CSV distinguishes optional shoe and slab-local sources, all four local
+faces, absent-source `0/-1` values and raw-slot credit. The slab's authoritative
+tile sum is 173,350.512451; the runtime float aggregation is separately
+reconciled at 173,350.5. Neither is substituted for the other. Source content,
+tuning and both private candidates remain unchanged.
+
+Receipts: `out/validation/overnight-20261026/phase14/comparison/x64-release/turbulence-slopes-40872/`.
+The original three-geometry CSV and summary remain byte-identical to their
+earlier receipts. Release default mover/composite routes and the six Sniper
+controls pass; Debug compilation passes. The extended four-geometry Debug
+matrix was not run. Public snapshots and the terminal RNG witness do not
+establish complete trajectories, opposed survival or human balance. The next
+slice stages the qualified slab comparison explicitly and checks ending views;
+it remains outside Random and outside attended arena acceptance.
 
 ## Tool and recovery hypotheses
 
