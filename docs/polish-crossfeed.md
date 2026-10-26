@@ -1222,6 +1222,81 @@ during the experiment. The selected values are now explicit in
 `game/content/presentation.json`; full consumer and native verification is
 recorded with the completed candidate below.
 
+## First headless five-tool report (2026-10-26)
+
+These are 125 native 2P A/B, 60-second Skirmish matches for this arena within
+the completed 250-match `TOOL#1` report: all 25 ordered five-tool pairs at fixed
+seeds **0, 1, 17, 42, 2026**. No gameplay value changed. The
+[shared method and evidence](gameplay-tuning.md#first-five-tool-report-2026-10-26)
+records the clean `817a3686` source, executable and receipts. The full 25-cell
+matrix, raw five values for every measure, medians and literal min/max ranges
+remain in `tool1-first-report-native-v1/analysis/pair-summary.csv` under
+`out/validation/todo-loop-20261025/`.
+
+The five equal-tool controls below show **team A's final share of painted area**,
+not arena coverage. Values are percentages rounded to two decimals, in the seed
+order above; full precision is retained in the CSV. They are a readable subset,
+not a tool ranking or an isolated test of map-side fairness.
+
+| Same tool on A and B | A share: five seeds (%) | Median [min, max] (%) |
+|---|---|---|
+| Sprayer | 60.64, 54.39, 40.33, 51.08, 41.15 | 51.08 [40.33, 60.64] |
+| Sniper | 49.44, 44.94, 46.34, 47.06, 43.58 | 46.34 [43.58, 49.44] |
+| Roller | 63.20, 47.37, 33.51, 42.66, 61.42 | 47.37 [33.51, 63.20] |
+| Mister | 54.60, 53.39, 63.16, 49.46, 43.51 | 53.39 [43.51, 63.16] |
+| Bucket | 47.72, 57.82, 50.00, 42.33, 47.77 | 47.77 [42.33, 57.82] |
+
+**Mixed-pair observations and questions for `POL#27`.** Sniper A against Sprayer
+held 7.20 [5.93, 8.16]% of painted area while credited
+eliminations were 1 [0, 1]. With the tools swapped, Sniper B held
+9.65 [5.90, 10.19]% and credited 1 [1, 2]. Its empty-readiness/alive
+fraction as A was 11.08 [8.78, 12.22]%; that measure is actual full-shot
+affordability, not ammunition equal to zero. Does deliberate human aim and
+refill timing make the elimination/held-paint trade useful? This retains the
+existing Sniper-reserve question; it does not establish that reserve needs a buff.
+
+Roller versus Bucket held 70.07 [53.49, 73.05]% as A and
+74.65 [68.57, 81.40]% as B. Mister versus Bucket held
+63.02 [53.48, 68.31]% as A and 66.17 [56.65, 73.46]% as B.
+Bring connected Roller painting, Bucket arcs and Mister's delayed repainting to
+the existing attended tool/resource review. Sprayer against Roller held
+44.16 [29.98, 56.86]% as A; the reverse order left Sprayer B at
+43.57 [34.35, 52.63]%. These spreads give concrete opposition cases without
+selecting a winner, changing tool costs or attributing the result to a route.
+
+**Centre X-band final paint.** This is X=1400-2200 across the full Y=-100-1800
+partition, not an isolated mixer, route or capture zone. The table is both teams'
+combined painted fraction of the authoritative scoring area on each authored/
+local face, median [min, max] across the same five seeds. Its denominator differs
+from the team share above.
+
+| Same-tool match | Authored top coverage (%) | Authored bottom coverage (%) |
+|---|---|---|
+| Sprayer | 97.24 [93.79, 99.31] | 35.71 [2.86, 51.43] |
+| Sniper | 14.48 [9.31, 22.76] | 10.00 [0.00, 21.43] |
+| Roller | 73.10 [57.24, 87.93] | 1.43 [0.00, 2.86] |
+| Mister | 89.31 [72.07, 91.72] | 47.14 [40.00, 84.29] |
+| Bucket | 72.76 [64.14, 98.28] | 0.00 [0.00, 54.29] |
+
+Mister's centre-band bottom coverage and Roller's near-zero bottom coverage make
+underside access a useful attended comparison; they do not show who travelled
+under the mixer or how long a player controlled it. Bucket's bottom median is
+zero despite nonzero outcomes in two seeds. Inspect repeatable aiming and
+repainting opportunities before drawing a route-use conclusion. Complete per-match
+region/face areas and their denominators are in `region-face-observations.csv`;
+`region-face-summary.csv` retains the five-seed fractions, including null when a
+denominator is zero, beside the pair summary.
+
+Ordered tool swaps retain seat-specific RNG and conditional bot decisions;
+they do not mirror random trajectories or isolate terrain from seat/tool/policy
+interactions. Skirmish has no line-of-sight, route planner or ballistic-intercept
+solver. Five prespecified seeds describe these runs; they provide no population,
+significance or human-acceptance result. Held paint is not time held, visits,
+route occupancy, spawn pressure or hill control. Keep the existing values for
+attended review rather than retuning automatically from these bot observations.
+`POL#27` remains the attended balance/resource gate; this report does not change
+the author's arena acceptance, C2/pad or finish-review gates.
+
 ## Verification record
 
 ### Selected C2 framing and identity ink (2026-10-20)

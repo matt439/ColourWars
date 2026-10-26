@@ -107,14 +107,13 @@ The remaining menu geometry and sheet choices are documented in
 
 ## Headless balance runner (`TOOL#1`, 2026-10-25)
 
-**OPEN.** The five-tool balance pass (`POL#27`) and the arena blockouts
-(`POL#21`) are judged today from a handful of attended matches and scripted
-feasibility cases. Both questions are statistical: does one tool win a stage
-too often, does one side's spawn hold more paint, does a route go unused. The
-pieces to answer them in bulk already exist. Levels build without a device (the
-acceptance cases and the §6 timing harness do it), the Debug
-[bots](debug-console.md#bots) are seeded and deterministic, and paint credit is
-per seat.
+**First report complete (2026-10-26).** The runner, Skirmish policy, paired final
+paint metrics and first fixed 250-match report are implemented and recorded below.
+They provide descriptive evidence for the five-tool balance pass (`POL#27`) and
+arena reviews (`POL#21`, `POL#31`), which still require attended decisions. Levels
+build without a device, the Debug [bots](debug-console.md#bots) are seeded and
+deterministic, and paint credit is per seat. Final paint can expose a question
+about an arena or tool; it does not measure whether a route was used.
 
 The runner is a Debug-only console executable beside the acceptance cases. It
 builds a stage with no graphics or audio device, puts bots on every seat, steps
@@ -134,10 +133,11 @@ Slices, in order:
    minimum for the numbers to say anything about tools rather than bots. It
    stays a developer tool: shipping AI opponents is outside the chosen scope
    ([match scope](feature-roadmap.md#match-scope-decisions-2026-10-15)).
-3. **First report.** A sweep over `crossfeed` and `press_tower` with all five
-   tools, recorded in [polish-crossfeed.md](polish-crossfeed.md) and
-   [polish-press-tower.md](polish-press-tower.md) as evidence for `POL#27` and
-   `POL#31`.
+3. **First report (complete 2026-10-26).** All 25 ordered tool pairs on
+   `crossfeed` and `press_tower`, five fixed seeds each: 250 matches, with the
+   findings in [Crossfeed](polish-crossfeed.md#first-headless-five-tool-report-2026-10-26)
+   and [Press Tower](polish-press-tower.md#first-headless-five-tool-report-2026-10-26)
+   as descriptive evidence for `POL#27` and `POL#31`.
 
 Bot results are evidence, not acceptance. They find outliers for an attended
 session to check; they never replace one, and a tuning change still goes
@@ -453,7 +453,67 @@ failures. The actual integrated controls above passed. These are measurement and
 publication checks, not a statistical five-tool report, cross-machine replay
 promise, physical-device/listening pass or author balance/arena acceptance.
 
-**Still open in TOOL#1:** the first full five-tool report (the planned 250-match
-Crossfeed/Press Tower grid). The short controls and qualified metrics do not
-establish tool balance or human acceptance. No tuning value or shipping opponent
-behaviour changes in this slice.
+### First five-tool report (2026-10-26)
+
+The fixed first `TOOL#1` report is complete on clean `817a3686`, with no gameplay
+or tuning changes: **250 distinct native matches**, two arenas times all 25
+ordered pairs of Sprayer/Sniper/Roller/Mister/Bucket times seeds **0, 1, 17, 42,
+2026**. Every match is 2P A/B, 60 seconds, using the existing Skirmish policy.
+One serial native job per ordered pair produced ten matches (both arenas and all
+five seeds). The first driver invocation deliberately paused after one successful job/
+ten matches; resume verified and retained it, then ran the remaining 24 jobs.
+There was no duplicated first job or failed native match. All 25 jobs exited 0,
+with no builds and no task-owned native processes left in the completion receipt.
+
+The arena owners contain the descriptive findings and questions:
+[Crossfeed](polish-crossfeed.md#first-headless-five-tool-report-2026-10-26) and
+[Press Tower](polish-press-tower.md#first-headless-five-tool-report-2026-10-26).
+They show all five equal-tool controls with raw five values, medians and literal
+ranges, plus mixed-tool and region/face examples. The complete 50 ordered stage/
+pair cells remain available, not just those examples. Five chosen deterministic
+seeds are not independent population samples; ranges are observed minima/maxima,
+not confidence intervals. No significance, side-fairness, optimal-tool or human
+balance claim follows. Swaps combine side, seat RNG, tool and conditional bot
+behavior. Skirmish still has no line-of-sight, route or ballistic-intercept solver.
+
+The retained native analysis contains all 250 `match-observations.csv` rows,
+300 measure rows in `pair-summary.csv`, 5,600 `region-face-summary.csv` rows and
+30 `side-swap-summary.csv` rows, with full raw five values and denominators.
+There are 12,278 source companion rows. `report.md` gives the complete 50-cell
+paint-share/elimination/empty-readiness view; `analysis.json` and the copied raw
+inputs retain the exact machine-readable result. Region/face paint is final held
+area. In particular, centre/crown are full-height fixed X bands (Y=-100-1800),
+not route, summit, time-held or hill-capture measures. Zero final paint cannot
+establish non-use, camping or spawn pressure.
+
+Unknown/uncredited paint-owner sample area and outside-partition sample paintable
+area were each zero in this report. Separately, every match recorded zero
+uncredited projectile lethals; that is a death-provenance counter, not paint
+ownership. Sample-double and runtime-float authorities remain separate. The
+recorded sample-minus-runtime paintable areas were 0 or 0.0000457763671875,
+reflecting source/tile addition rounding; sampled painted-area differences were
+zero. The main score is not corrected to match the sample denominator.
+`sample-runtime-authority.csv` retains both authorities and allocation tolerances;
+those tolerances are numeric reconciliation bounds, not balance thresholds.
+Null fractions for zero denominators remain null rather than invented coverage.
+
+Evidence root: `out/validation/todo-loop-20261025/tool1-first-report-native-v1/`.
+The executable SHA256 remains
+`226DC4F0AD84731F132736EF5CA8FB0663490A19616FC4654F1AE937E47FE9B5`.
+`driver-completion.json` is SHA256
+`C4E9E20EB6974C2D244394964D711353857F44362B2C20FD02E57FD14C4C4406`;
+`inputs-native-v1.json` is
+`BD574C87DEE148E12FD6B33BFD992844F72E64DA5355BC8850DAB3066C040647`;
+`analysis-result.json` is
+`15FB49D74E63F49427BCDBA10C488A73C116DC9A294588550F1D8F17D640E488`.
+The input manifest binds each actual command/exit receipt and paired CSV hashes;
+the analysis receipt pins all 61 analysis artifacts. The analyzer validates
+supplied bytes/declarations; the driver/job receipts establish actual execution.
+The deliberate pause and completed job receipts remain preserved.
+The independent actual-data/protocol review is `independent-actual-review-v1.json`,
+SHA256 `5C89F9A5C460EAAB0E03E04C14925520F675DF4ED04B8D14EC67F6B66FFD61E1`.
+
+This completes the finite `TOOL#1` scope. `POL#27` and `POL#31` remain attended
+decisions; the report neither authorizes retuning nor accepts a new bot opponent.
+`POL#36` remains its separately selected paint-underfoot prototype, using a future
+explicit switch-off comparison; no such mechanic was enabled in this baseline.

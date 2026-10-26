@@ -174,6 +174,79 @@ show what reads.
 - **Sprayer:** pressure along the stair diagonal and onto a hoist climber
   surfacing at the shoulder.
 
+## First headless five-tool report (2026-10-26)
+
+These are 125 native 2P A/B, 60-second Skirmish matches for this arena within
+the completed 250-match `TOOL#1` report: all 25 ordered five-tool pairs at fixed
+seeds **0, 1, 17, 42, 2026**. No gameplay value changed. The
+[shared method and evidence](gameplay-tuning.md#first-five-tool-report-2026-10-26)
+records the clean `817a3686` source, executable and receipts. The full 25-cell
+matrix, raw five values for every measure, medians and literal min/max ranges
+remain in `tool1-first-report-native-v1/analysis/pair-summary.csv` under
+`out/validation/todo-loop-20261025/`.
+
+The five equal-tool controls below show **team A's final share of painted area**,
+not arena coverage. Values are percentages rounded to two decimals, in the seed
+order above; full precision is retained in the CSV. They are a readable subset,
+not a tool ranking or an isolated test of map-side fairness.
+
+| Same tool on A and B | A share: five seeds (%) | Median [min, max] (%) |
+|---|---|---|
+| Sprayer | 50.45, 50.36, 45.11, 49.95, 44.85 | 49.95 [44.85, 50.45] |
+| Sniper | 56.67, 49.48, 57.14, 55.41, 58.68 | 56.67 [49.48, 58.68] |
+| Roller | 48.29, 55.63, 69.29, 51.07, 49.93 | 51.07 [48.29, 69.29] |
+| Mister | 52.08, 52.77, 57.08, 54.38, 58.58 | 54.38 [52.08, 58.58] |
+| Bucket | 53.32, 54.11, 53.88, 51.52, 51.97 | 53.32 [51.52, 54.11] |
+
+**Mixed-pair observations and questions for `POL#27` / `POL#31`.** Sniper A
+against Sprayer held 7.81 [6.48, 9.21]% of painted area and credited
+3 [1, 4] eliminations; swapped Sniper B held 7.12 [5.75, 13.61]%
+and credited 2 [1, 3]. Does deliberate summit/gantry aiming make that
+elimination/held-paint trade useful? Bot aim, supply withdrawal and visibility
+limits remain part of this observation; it is not a Sniper retuning decision.
+
+Roller against Bucket held 63.02 [61.28, 73.52]% as A and
+74.63 [52.29, 81.38]% as B; Mister against Bucket held
+58.56 [55.35, 67.86]% as A and 66.14 [53.93, 67.04]% as B.
+Test low walkable painting against real Bucket arcs and attended bed pressure.
+The observations do not establish R2 use or bed control. Sprayer A against
+Roller held 44.93 [28.02, 66.29]%; Roller A in the reverse order held
+44.04 [37.34, 60.42]%. Both orders and their broad spreads belong in the
+existing attended comparison. Mister's same-tool A share stayed above 50% in
+these five seeds, but that sign alone does not isolate a map-side effect.
+
+**Crown X-band final paint.** X=1640-1960 spans the full Y=-100-1800 partition.
+It includes scoring surfaces throughout that vertical band, not just the summit;
+it is not a hill-capture or summit-occupation measure. Values below are both
+teams' combined painted fraction of the scoring area on each authored/local
+face, median [min, max], using sample-double denominators rather than team share.
+
+| Same-tool match | Authored top coverage (%) | Authored bottom coverage (%) |
+|---|---|---|
+| Sprayer | 50.00 [50.00, 50.00] | 2.50 [2.50, 2.50] |
+| Sniper | 15.62 [3.75, 25.00] | 1.25 [1.25, 1.25] |
+| Roller | 28.12 [18.75, 34.38] | 2.50 [2.50, 2.50] |
+| Mister | 41.88 [41.88, 45.62] | 2.50 [2.50, 2.50] |
+| Bucket | 45.62 [38.12, 48.75] | 8.75 [1.25, 10.00] |
+
+The repeated 50% Sprayer top coverage and low bottom coverage describe final
+paint only. They do not prove that bots reached, held or ignored either summit
+half. The preserved raw five values and side-order contrasts in
+`region-face-summary.csv` and `side-swap-summary.csv` are questions for the
+already-required summit-value/half-width session, not instructions to alter the
+crown geometry.
+
+Ordered tool swaps retain seat-specific RNG and conditional bot decisions;
+they do not mirror random trajectories or isolate terrain from seat/tool/policy
+interactions. Skirmish has no line-of-sight, route planner or ballistic-intercept
+solver. Five prespecified seeds describe these runs; they provide no population,
+significance or human-acceptance result. Held paint is not time held, visits,
+route occupancy, spawn pressure or hill control. Keep the existing values for
+attended review rather than retuning automatically from these bot observations.
+`POL#31` still requires both sides and 1-4P attended play, including spawn pressure,
+summit value and whether the halves feel fiddly. Support art and the explicit-only
+stage policy remain unchanged.
+
 ## Evidence
 
 [scripts/acceptance/press_tower.cpp](../scripts/acceptance/press_tower.cpp) and

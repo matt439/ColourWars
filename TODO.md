@@ -29,8 +29,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
 
-5. **Feeding the above (`TOOL#1`, `POL#36`, `GAP#D5`):** a headless bot runner turns
-   five-tool and spawn questions into numbers before attended play; a switch-off
+5. **Feeding the above (`POL#36`, `GAP#D5`):** the first headless five-tool report
+   is recorded in the arena owners; attended decisions remain above. A switch-off
    paint-underfoot prototype lets `POL#30` be decided by playing it; Turbulence brings
    the first moving and rotated structures.
 
@@ -197,7 +197,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `TOOL#1` | OPEN | HIGH | L | Run the first 250-match Crossfeed/Press Tower five-tool report for `POL#27`/`POL#31`. [Scope](docs/gameplay-tuning.md#headless-balance-runner-tool1-2026-10-25). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
 ## Areas with no open rows
