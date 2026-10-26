@@ -1018,17 +1018,18 @@ Measure loading pauses before choosing transition behaviour. Preserve the delibe
 withholding of live coverage percentages so the ending remains a reveal.
 
 <a id="level-build-pause-measured-2026-10-17"></a>
-**Level build pause measured (2026-10-17, `GAP#5.1` step 0).** The audit's freeze
+**Level build pause measured (2026-10-17, refreshed 2026-10-26; `GAP#5.1` step 0,
+`POL#33` complete).** The audit's freeze
 (no frame between stage select's last draw and the match's first,
 [gap-audit 5.1](review/gap-audit.md#51-every-screen-change-is-a-hard-cut-and-the-level-build-freezes-on-the-last-menu-frame))
-is now timed. Debug's [`perf`](debug-console.md#perf) prints `build <ms>  <stage>  <n>P`:
+is timed as construction, before the match's first draw. Debug's
+[`perf`](debug-console.md#perf) prints `build <ms>  <stage>  <n>P`:
 wall time from the end of the director's `before_level_build` to the top of
-`after_level_build`, which is the layout plus `LevelBuilder::build_level`. Release
-has no console, so its figures come from a one-off harness (not kept). It links the
-Release game objects and times `build_level` on the device-free content the
-acceptance cases build with: 7 builds per stage and count, 3 runs. The same harness
-in Debug reads about 10% under the in-game Debug figures, so building without a
-device leaves nothing material out. Milliseconds, Ryzen 9 9950X3D:
+`after_level_build`, which includes viewport layout plus `LevelBuilder::build_level`.
+Release has no console; the device-free harness links the actual Release game
+objects and times only `build_level`. The first four rows retain the 2026-10-17
+results, whose one-off Release harness was not kept. The last two rows are fresh
+2026-10-26 measurements. Milliseconds on the Ryzen 9 9950X3D:
 
 | stage | Debug in game, 1P | Debug in game, 4P | Release, 1P | Release, 4P |
 |---|---|---|---|---|
@@ -1036,14 +1037,77 @@ device leaves nothing material out. Milliseconds, Ryzen 9 9950X3D:
 | `close_quarters` | 3.6-3.7 | 3.6-4.0 | 0.8-0.9 | 0.7-1.0 |
 | `king_of_the_hill` | 7.7-7.8 | 8.1-15.0 | 1.5-2.0 | 1.5-1.9 |
 | `turbulence` | 8.6-8.8 | 8.7 | 1.7-2.4 | 1.7-2.2 |
+| `crossfeed` | 5.1-5.5 | 5.4-6.3 | 0.6698-0.8756 | 0.6698-0.8916 |
+| `press_tower` | 6.1-6.5 | 6.3-6.4 | 0.7542-0.9467 | 0.7453-0.9854 |
 
-Debug is the first build and two `restart`s
-(`+stage <s> +players <n> +wait frames 3 +perf +restart ...`); the 15.0 is a first
-build. Release is min-max over 21 builds. Every Release build fits well inside one
-60 Hz frame, even on a machine several times slower, and Debug drops at most one
-frame. The "many frames" freeze is not there, so no loading card is needed. Not
-in these numbers is the match's first draw after the build, which `perf` treats as
-an interval start. What remains of `GAP#5.1` is the hard cut itself: a transition
+**Refresh method and scope.** Each new Debug cell is one actual game launch,
+first build plus two `restart`s, with `+wait frames 3 +perf +status` after each
+build and a graceful `quit`. Its three ordered build/status blocks confirmed the
+stage, count and actual roster. All four launches were requested hidden; sampled
+window observations were hidden, nonforeground and 1920x1080. They used fresh,
+isolated muted saves, without input synthesis or forced activation. These are
+unattended in-game construction samples, not visible-play or frame-pacing captures.
+`perf` displays 0.1 ms precision. In first/restart/restart order, Crossfeed was
+5.5/5.1/5.3 ms at 1P and 6.3/5.6/5.4 ms at 4P; Press Tower was 6.5/6.2/6.1 ms
+at 1P and 6.4/6.3/6.4 ms at 4P.
+
+Release retains every raw QPC interval: seven builds in each of three separate
+processes per stage/count, 21 samples per cell and 84 in total. Resource metadata
+setup, viewport layout, old-Level destruction, validation and CSV output are
+outside the timed call; null texture handles and silent banks create no render or
+audio device. Debug also excludes old-Level destruction and resource setup, but
+includes layout. Both exclude the first draw. Fixed settings are seed 0,
+1920x1080, Blue/Orange, all Sprayers, alternating A/B teams, keyboard first and
+idle remaining seats. The 1P opening is off; 4P uses full on the first build and
+quick on restarts. The private harness is `/MD /DNDEBUG /O2`, using the accepted
+CPU resource seam and the existing Release objects; the original unretained
+harness's internal setup is not claimed to be identical.
+
+The first Release Crossfeed 1P process exited 0 with seven valid rows, a PASS
+acknowledgement and empty stderr. Its wrapper then failed on an empty-stderr
+`.Trim()` before CSV qualification and its immediate post-run quiet check. The
+failed receipt is preserved in `pol33-release-native-v1`; a versioned wrapper
+independently qualified those seven rows and ran only the remaining 11 processes
+(77 new intervals). Pre-run quiet passed for the recovered cell, but its immediate
+post-run quiet check did not execute. A later clean scan is not retroactive
+evidence of past conditions. The other 11 processes passed their pre/post quiet
+guards. This procedural limitation accompanies the retained samples; it is not a
+game or build failure.
+
+**Source and evidence pins.** The measured checkout was `e5dac2bd` plus five
+pending, already-tested game API changes: `game/objects/level.cpp`, `level.h`,
+`paintable_object.h`, `structure_paintable.cpp` and `structure_paintable.h`.
+It was not a clean-HEAD measurement. The matching acceptance driver/probes make
+15 pending paths in total, fully listed and hashed in the private manifests.
+The prior game/editor and acceptance qualification remains recorded at `c030c054`
+plus that same pending foundation; intervening commits through `e5dac2bd` change
+only documentation. Labrador was `1e60fb26c4fdfcd1582c35c6862d8a06cc4c9b09`.
+The Debug game SHA256 is
+`B17E39A820D253950D2C620426EF0E46D24461699AB79BF295B4F3FA2AAEB17A`;
+the Release timing executable is
+`C0A10B18DAEC45D48401349F9C7D595D1607F8E3FDB259ADA3020C6827F84EC7`.
+All 162 explicitly linked Release objects/libraries, staged assets, source and
+producers are pinned in
+`out/validation/todo-loop-20261025/pol33-prep-v1/pins-v1.json`
+(SHA256 `98AAF12B9DC2FE42DB2294E75382AA7F749B420B419244DF1D4D0B55F979F183`).
+The source-only preparation, recovery, original failed receipt, 12 Release process
+CSVs and four Debug transcripts remain under that validation root in
+`pol33-prep-v1`, `pol33-recovery-v2`, `pol33-release-native-v1`,
+`pol33-release-resume-v2`, `pol33-debug-hidden-v2` and `pol33-debug-more-v2`.
+The checked aggregate is `pol33-release-resume-v2/summary-v2.json`, SHA256
+`6D830522FC4D5875889C5B3C9E759C6D447F99EF57EEB75082D6A60933FB4CE8`;
+it hashes all contributing receipts/CSVs/transcripts and retains the recovery
+limitation.
+
+**Loading-card reassessment.** Neither new blockout changes the construction-only
+conclusion on this machine: the largest new Release interval is 0.9854 ms and the
+largest Debug build interval is 6.5 ms, each below one 60 Hz interval (16.67 ms).
+These build durations do not establish dropped-frame counts, first-draw or startup
+behavior, a supported hardware baseline, or performance on slower machines. They
+do not create a construction-time reason for a loading card. Attended visible
+performance and gameplay acceptance remain separate gates.
+
+What remains of `GAP#5.1` is the hard cut itself: a transition
 look in the Paint.exe language (a fade, a wipe, a redraw or a deliberate cut) is UI
 art for a later pass using the approved gameplay style. Separately, the startup
 window is thought to show a blank client area during the asset walk (about 53 ms in
@@ -1055,10 +1119,9 @@ captures, recorded with commit and date: a default-visible `x64-release` launch 
 state is constructed. If the first shows a flash and the second cures it, the engine's
 preferred fix is its own (show after the first `end_frame`, no class-brush paint) and
 needs no client call. Those captures are this repository's to make (`GAP#5.1`).
-Re-measure with `perf` when the blockouts (`POL#17`, `POL#21`) add geometry: the
-build makes paint tiles for every paintable face. `crossfeed` and `press_tower`
-are not in the table yet (`POL#33`): add their Debug in-game and Release rows
-the same way, and say whether either changes the no-loading-card conclusion.
+Re-measure with `perf` when later blockouts (`POL#17`, `POL#21`) add geometry: the
+build makes paint tiles for every paintable face. The Crossfeed and Press Tower
+refresh above completes `POL#33`; the first-draw, startup and human gates stay open.
 
 **Takeoff/landing production puffs implemented (2026-10-15, part of `POL#16`).**
 The [drawing and evidence](polish-feedback.md#paintexe-production-puffs-2026-10-15)
