@@ -60,6 +60,16 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
 		{
 			hash = mix(hash, value);
 		}
+        const PlayerPaintUnderfootState underfoot = player.paint_underfoot_state();
+        seat.paint_underfoot = underfoot.enabled;
+        if (underfoot.enabled)
+        {
+            seat.support_paint_team = static_cast<int>(underfoot.support_team);
+            seat.step_paint_team = static_cast<int>(underfoot.step_team);
+            hash = fnv1a("colourwars-underfoot-state-1", hash);
+            hash = mix(hash, static_cast<std::uint32_t>(seat.support_paint_team));
+            hash = mix(hash, static_cast<std::uint32_t>(seat.step_paint_team));
+        }
 		print.seats.push_back(seat);
 	}
 	const LevelEndInfo info = level.level_end_info();
@@ -114,6 +124,11 @@ std::string MatchFingerprint::difference(const MatchFingerprint& expected,
 			return seat + "move state " + std::to_string(a.move_state) + " != " +
 				std::to_string(e.move_state);
 		}
+        if (e.paint_underfoot != a.paint_underfoot ||
+            (e.paint_underfoot && (e.support_paint_team != a.support_paint_team || e.step_paint_team != a.step_paint_team)))
+        {
+            return seat + "paint-underfoot enabled/support/step differs";
+        }
 		if (e.alive != a.alive)
 		{
 			return seat + (a.alive != 0 ? "alive" : "dead") + " (recorded " +

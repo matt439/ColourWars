@@ -29,10 +29,10 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
 
-5. **Feeding the above (`POL#36`, `GAP#D5`):** the first headless five-tool report
-   is recorded in the arena owners; attended decisions remain above. A switch-off
-   paint-underfoot prototype lets `POL#30` be decided by playing it; Turbulence brings
-   the first moving and rotated structures.
+5. **Feeding the above (`GAP#D5`):** the first headless five-tool report
+   is recorded in the arena owners; attended decisions remain above. The default-off
+   paint-underfoot prototype is available for `POL#30`; Turbulence is next for
+   moving and rotated structures.
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
@@ -101,7 +101,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
 | `POL#21` | OPEN | MED | XL | Arena blockouts after accepted Crossfeed: Turbulence next, then optional 1v1 CQ and side-swap qualification. [Press Tower](docs/polish-press-tower.md) has native captures; attended play (`POL#31`) and support art remain. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
-| `POL#36` | OPEN | MED | L | Paint-underfoot prototype behind a `tuning.json` switch that ships off: speed and recovery on your colour, slowdown on the enemy's, so `POL#30` is decided by play. Switch-off matches stay bit-identical. [POL#30](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 

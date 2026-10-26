@@ -25,6 +25,10 @@ struct MatchFingerprint
 		std::uint32_t respawn = 0;
 		int move_state = 0;
 		int alive = 0;
+        // Optional active-prototype state. Off records/hashes retain the legacy bytes.
+        bool paint_underfoot = false;
+        int support_paint_team = 0;
+        int step_paint_team = 0;
 	};
 
 	int updates = 0;

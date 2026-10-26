@@ -10,6 +10,7 @@
 #include "game/debug/tune_scope.h"
 #include "game/directory_consts.h"
 #include "engine/render/text_encoding.h"
+#include "engine/core/file_path.h"
 #include <bit>
 #include <cstdint>
 #include <optional>
@@ -118,6 +119,22 @@ namespace debug_console_acceptance
 			read.checkpoints[0].hash == 0xfeedfacecafebeefull &&
 			MatchFingerprint::difference(file.final_print, read.final_print).empty() &&
 			read.final_print.hash == 99, "A replay file round-trips");
+        // The optional active state round-trips; disabled files retain exactly
+        // the legacy encoding and contain no prototype-only fields.
+        const std::string legacy_encoding = read_text(path);
+        file.final_print.seats[0].paint_underfoot = true;
+        file.final_print.seats[0].support_paint_team = static_cast<int>(PlayerTeam::a);
+        file.final_print.seats[0].step_paint_team = static_cast<int>(PlayerTeam::b);
+        file.write(path);
+        const ReplayFile active = ReplayFile::read(path);
+        require(active.final_print.seats[0].paint_underfoot &&
+            active.final_print.seats[0].support_paint_team == static_cast<int>(PlayerTeam::a) &&
+            active.final_print.seats[0].step_paint_team == static_cast<int>(PlayerTeam::b) &&
+            MatchFingerprint::difference(file.final_print, active.final_print).empty(),
+            "Active underfoot state did not survive actual replay encoding/decoding");
+        file.final_print.seats[0].paint_underfoot = false;
+        file.write(path);
+        require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
 		const std::vector<MenuPlayerSettings> seats = read.settings.player_settings();
 		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
@@ -391,6 +408,15 @@ namespace debug_console_acceptance
 			"god, respawn, tune, tune.save, tune.reset and bot are refused while a replay runs");
 		require(log_contains(log, "tune.save: replaying 'cpu' would diverge", DebugSeverity::error),
 			"tune.save says why");
+        const std::string underfoot_before = impl.tune_document("tuning")->current().text();
+        const auto underfoot_edits = impl.tune_document("tuning")->edits().size();
+        require(impl.execute("tune tuning.player.paint_underfoot.enabled").ok &&
+            !impl.execute("tune tuning.player.paint_underfoot.enabled on").ok &&
+            !impl.execute("tune tuning.player.paint_underfoot.own_speed_multiplier 1.2").ok &&
+            !impl.execute("tune.reset tuning.player.paint_underfoot.enabled").ok &&
+            impl.tune_document("tuning")->current().text() == underfoot_before &&
+            impl.tune_document("tuning")->edits().size() == underfoot_edits && !tuning.player().paint_underfoot.enabled,
+            "Replay allowed underfoot mutation/reset or changed live data/ledger while refusing it");
 		const std::string replayed_presentation = impl.tune_document("presentation")->current().text();
 		require(impl.execute("tune presentation.debug_overlay.station_label.colour").ok &&
 			!impl.execute("tune presentation.debug_overlay.station_label.colour ABCDEF").ok &&
@@ -520,6 +546,48 @@ namespace debug_console_acceptance
 		const int matched_before = count_of_lines(log, "replay cpu: MATCH");
 		drive(director, fresh, dt, 4000, [&] { return !impl.playing() || impl.level_updates() >= length; });
 		require(count_of_lines(log, "replay cpu: MATCH") == matched_before + 1, "and it matches");
+        // Exercise actual active Level fingerprints and record/play with the
+        // experimental switch on. This remains a CPU determinism check.
+        // A completed replay retains its input player until explicitly stopped;
+        // recording correctly refuses that attached player, even after MATCH.
+        const DebugStatus stopped_trial_replay = impl.execute("play stop");
+        require(stopped_trial_replay.ok && !impl.playing(),
+            "Cannot release the completed replay before active recording: " + stopped_trial_replay.message);
+        require(impl.execute("pause off").ok && impl.execute("tune tuning.player.paint_underfoot.enabled on").ok,
+            "Cannot enable the isolated active replay prototype");
+        const std::string trial_name = "pol36_active_" + std::to_string(_getpid());
+        const DebugStatus trial_record = impl.execute("record " + trial_name + " 600");
+        require(trial_record.ok, "Cannot queue actual active-prototype recording: " + trial_record.message);
+        drive(director, fresh, dt, 2000, [&] { return impl.recording(); });
+        require(impl.recording(), "Active recording did not start after its fresh build");
+        bool consumed_owned_step = false;
+        drive(director, fresh, dt, 2000, [&]
+        {
+            if (fresh.level)
+            {
+                for (int seat = 0; seat < fresh.level->player_count(); ++seat)
+                {
+                    const auto effect = fresh.level->player(seat).paint_underfoot_state();
+                    consumed_owned_step |= effect.enabled && effect.step_team != PlayerTeam::none;
+                }
+            }
+            return !impl.recording();
+        });
+        require(!impl.recording() && consumed_owned_step, "Active replay control never consumed a nonneutral step_team");
+        const std::filesystem::path trial_path = std::filesystem::path(labrador::widen(
+            directory_consts::replay_directory())) / labrador::path_from_utf8(trial_name + ".json");
+        const ReplayFile trial = ReplayFile::read(trial_path);
+        require(trial.updates == 600 && !trial.final_print.seats.empty() &&
+            std::all_of(trial.final_print.seats.begin(), trial.final_print.seats.end(),
+                [](const MatchFingerprint::Seat& seat) { return seat.paint_underfoot; }),
+            "Actual active fingerprints omitted their future-affecting effect state");
+        require(impl.execute("play " + trial_name).ok && director.before_match_update(fresh, dt) && impl.playing(),
+            "Cannot build actual active-prototype replay");
+        drive(director, fresh, dt, 4000, [&] { return !impl.playing() || impl.level_updates() >= 600; });
+        require(log_contains(log, "replay " + trial_name + ": MATCH (600 updates", DebugSeverity::info),
+            "Actual active-prototype replay diverged");
+        require(impl.execute("tune.reset tuning.player.paint_underfoot.enabled").ok && !tuning.player().paint_underfoot.enabled,
+            "Active replay fixture did not restore the default-off switch");
 		director.detach_match(fresh);
 		impl.execute("bot off");
 		impl.execute("seed off");

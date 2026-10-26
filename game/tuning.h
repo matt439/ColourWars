@@ -200,8 +200,19 @@ struct PlayerMovementSounds
 	float skid_repeat_delay = 0.0f;
 };
 
+// Experimental POL36 mechanics. Missing old content stays disabled/neutral.
+// Trial amounts require attended POL30/POL27 acceptance.
+struct PaintUnderfootTuning
+{
+    bool enabled = false;
+    float own_speed_multiplier = 1.0f;
+    float own_ammo_regen_multiplier = 1.0f;
+    float enemy_speed_multiplier = 1.0f;
+    float enemy_ammo_regen_multiplier = 1.0f;
+};
 struct PlayerTuning
 {
+	PaintUnderfootTuning paint_underfoot;
 	mattmath::Vector2F size = { 0.0f, 0.0f };
 	mattmath::Vector2F max_velocity = { 0.0f, 0.0f };
 

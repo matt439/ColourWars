@@ -325,7 +325,13 @@ void ReplayFile::write(const std::filesystem::path& path) const
 			", \"vy\": " << quoted(hex32(seat.vy)) << ", \"health\": " << quoted(hex32(seat.health)) <<
 			", \"ammo\": " << quoted(hex32(seat.ammo)) << ", \"respawn\": " <<
 			quoted(hex32(seat.respawn)) << ", \"move_state\": " << seat.move_state <<
-			", \"alive\": " << seat.alive << " }";
+			", \"alive\": " << seat.alive;
+        if (seat.paint_underfoot)
+        {
+            out << ", \"paint_underfoot\": { \"support_team\": " << seat.support_paint_team <<
+                ", \"step_team\": " << seat.step_paint_team << " }";
+        }
+        out << " }";
 	}
 	out << (print.seats.empty() ? "]\n" : "\n    ]\n");
 	out << "  }\n}\n";
@@ -516,6 +522,16 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 		seat.respawn = hex_field(entry, "respawn", path);
 		seat.move_state = entry.integer("move_state");
 		seat.alive = entry.integer("alive");
+        if (entry.has("paint_underfoot"))
+        {
+            const labrador::JsonValue effect = entry.object("paint_underfoot");
+            seat.paint_underfoot = true;
+            seat.support_paint_team = effect.integer("support_team");
+            seat.step_paint_team = effect.integer("step_team");
+            if (seat.support_paint_team < 0 || seat.support_paint_team > 2 ||
+                seat.step_paint_team < 0 || seat.step_paint_team > 2)
+            { fail(path, "paint_underfoot teams must be a, b or neutral enum values"); }
+        }
 		print.seats.push_back(seat);
 	}
 	return file;

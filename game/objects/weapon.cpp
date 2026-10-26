@@ -265,15 +265,18 @@ std::vector<std::unique_ptr<Projectile>>
     const Vector2F& player_center,
     const Vector2F& player_velocity,
     bool player_facing_right,
-    float dt)
+    float dt, float ammo_regen_multiplier)
 {
+    if (!std::isfinite(ammo_regen_multiplier) || ammo_regen_multiplier < 0.0f ||
+        (ammo_regen_multiplier != 1.0f && !std::isfinite(this->tuning_->ammo_regen_rate() * ammo_regen_multiplier)))
+    { throw std::invalid_argument("Ammunition recovery multiplier must produce a finite nonnegative rate"); }
     this->update_movement_and_rotation(input, player_center,
 		player_velocity, player_facing_right);
 
     if (this->feedback_ != nullptr) { this->feedback_->update(dt); }
 
     const bool shot = this->check_if_shooting_and_ammo_update(input, player_center,
-        player_velocity, dt);
+        player_velocity, dt, ammo_regen_multiplier);
     this->update_motion(shot, dt);
     if (shot && dt > 0.0f && std::isfinite(dt) && this->feedback_ != nullptr)
     {
@@ -294,7 +297,7 @@ bool Weapon::check_if_shooting_and_ammo_update(
     PlayerInputData input,
     const Vector2F& /*player_center*/,
     const Vector2F& /*player_velocity*/,
-    float dt)
+    float dt, float ammo_regen_multiplier)
 {
     const bool ok_to_shoot = input.primary_shoot;
     const bool affordable_before = this->can_afford_shot();
@@ -323,7 +326,15 @@ bool Weapon::check_if_shooting_and_ammo_update(
     if (this->ammo_timer() >= this->tuning_->ammo_regen_delay())
     {
         const float max_ammo = this->tuning_->starting_ammo();
-        this->alter_ammo(this->tuning_->ammo_regen_rate() * dt);
+        if (ammo_regen_multiplier == 1.0f)
+        {
+            // Preserve the original expression/order for neutral and direct callers.
+            this->alter_ammo(this->tuning_->ammo_regen_rate() * dt);
+        }
+        else if (ammo_regen_multiplier > 0.0f)
+        {
+            this->alter_ammo((this->tuning_->ammo_regen_rate() * ammo_regen_multiplier) * dt);
+        }
         if (this->ammo() > max_ammo)
         {
             this->set_ammo(max_ammo);

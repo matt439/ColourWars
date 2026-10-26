@@ -3053,3 +3053,37 @@ an attended/dedicated runner model with explicit focus ownership and retained
 failure evidence. Scope CI integration only after that model is demonstrated;
 a hidden launch or synthetic CPU input check does not qualify the foreground
 workflow. Existing CPU acceptance and startup/editor CI checks remain in place.
+## Experimental paint underfoot (`POL#36`)
+
+The prototype is disabled in shipped tuning. In an isolated Debug match:
+
+```
+tune tuning.player.paint_underfoot.enabled
+tune tuning.player.paint_underfoot.enabled on
+tune tuning.player.paint_underfoot.enabled off
+```
+
+The stored opt-in trial factors are own speed `1.10`, own ammunition recovery
+`1.25`, enemy speed `0.85`, and enemy recovery `0`. Their full paths are
+`tuning.player.paint_underfoot.own_speed_multiplier`,
+`tuning.player.paint_underfoot.own_ammo_regen_multiplier`,
+`tuning.player.paint_underfoot.enemy_speed_multiplier`, and
+`tuning.player.paint_underfoot.enemy_ammo_regen_multiplier`. They are live
+numeric fields; `tune.reset` restores file tokens. Do not use `tune.save` for an
+unattended experiment. There is no new special, damage, health or jump boost.
+
+A completed confirmed static top contact is sampled at the foot center by team,
+then used consistently by movement and ammunition on the following physics step.
+Conflicting owned overlaps are neutral. Air, ramps, walls, ceilings and reset or
+dead players do not retain terrain context. Capture credit and colour palettes
+do not select the effect. See the [owner's timing and geometry contract](polish-plan.md#experimental-underfoot-prototype).
+
+Enabled replay fingerprints include the latched/frozen team context and the
+optional seat fields; disabled fingerprints/seat bytes keep the legacy form.
+Tuning text still participates in content-hash refusal even when its switch is
+off. An old recording made from different tuning text remains refused unless
+the existing explicit force policy is used. Gameplay identity is established
+separately by the frozen old-build/direct-input and report controls, not by
+weakening those guards. The [owner](polish-plan.md#experimental-underfoot-prototype)
+records the completed CPU, Release, disabled-identity and real-Application checks
+and their observation limits. Human `POL#27`/`POL#30`/`POL#31` decisions remain open.

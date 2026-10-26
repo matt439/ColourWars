@@ -1690,12 +1690,10 @@ borrow as constraints on maps, but nothing records whether that absence is a
 decision. A 2026-10-24 review named three. Each changes balance, so none should
 be added ahead of `POL#27`.
 
-- **Paint underfoot.** Standing on paint does nothing: no speed or ammunition
-  recovery on your own colour, no slowdown or damage on the enemy's, and
-  ammunition regenerates on a timer alone. This is the largest unexplored lever
-  for making territory matter during the round instead of only at the count.
-  The hook exists: the player already tracks the paintable structures
-  supporting it.
+- **Paint underfoot.** Shipped tuning keeps movement and ammunition recovery
+  independent of paint. The default-off trial below lets the author judge whether
+  own-colour speed/recovery and enemy-colour slowdown should make territory
+  matter during the round. It adds no paint damage.
 - **A special charged by painting.** There are five primaries and nothing else.
   Splatoon uses a special to answer "why keep painting when nobody is here".
   The arena briefs currently answer that with geometry alone.
@@ -1707,17 +1705,94 @@ be added ahead of `POL#27`.
 The decision may be "no" for any of them. Record it here either way, so a later
 gap list reads the absence as intended.
 
-**Paint-underfoot prototype (`POL#36`, OPEN, 2026-10-25).** So the first lever
-can be decided by playing it rather than imagining it, build it behind a
-`tuning.json` switch that ships off. On your own colour: faster movement and
-faster ammunition recovery. On the enemy's: slower movement and no recovery.
-Each amount is a tuning number, and every number is zero or neutral while the
-switch is off, so shipped balance and `POL#27` evidence are unchanged. The
-console's `tune` turns it on for a match. Acceptance is a CPU case that checks
-the switch-off match is bit-identical to today's replay fingerprint, and that
-each effect follows the supporting structure's paint owner, with a driven pass
-across own, enemy and unpainted support. The prototype does not answer
-`POL#30`: the author does, after playing it.
+**Paint-underfoot prototype (`POL#36`, implemented 2026-10-26).** The default-off
+trial is available for an isolated Debug match through `tune`. Implementation
+does not answer `POL#30`: the author decides whether to keep the mechanic and
+its amounts after playing it with or after `POL#27`. Shipped tuning keeps the
+current P3/five-tool baseline.
+
+#### Experimental underfoot prototype
+
+`player.paint_underfoot.enabled` ships `false`. The inactive stored trial
+factors are friendly horizontal speed `1.10`, friendly ammunition recovery
+`1.25`, enemy horizontal speed `0.85`, and enemy recovery `0`. These amounts
+are experimental hypotheses for attended play, not accepted balance. A missing
+old `paint_underfoot` block remains disabled with neutral factors; a present
+block requires all five typed fields and finite usable derived rates.
+
+Gameplay reads the actual team's paint, independently of capture-credit owner,
+input slot and palette. At the completed contact phase, a living supported
+player samples its final foot center on an exposed static top face. The surface
+and tile intervals are half open; duplicate candidates have no effect, neutral
+answers are ignored, and conflicting owned overlaps resolve to neutral in either
+contact order. Only team values survive the phase. Cosmetic dust keeps its
+existing adjacent-edge colour rule.
+
+That completed snapshot controls the next physics step's horizontal initial
+speed, acceleration, release braking and cap through one factor. The same frozen
+class reaches the later weapon update as a recovery-only factor. Entering or
+repainting support therefore takes effect on the following step. A takeoff may
+use its starting support for that step; later airborne steps are neutral.
+Vertical motion, health, paid-shot costs, cooldowns and simulation `dt` retain
+the existing rules. Enemy recovery suppression leaves the normal delay clocks
+running. Place, death, respawn and disabled updates clear the terrain context.
+Current support geometry is static and axis aligned; future moving/rotated
+structures require pose-aware world-to-local top queries (`GAP#D5`).
+
+To try the stored amounts in Debug, without saving content:
+
+```
+tune tuning.player.paint_underfoot.enabled on
+```
+
+To restore shipped behavior:
+
+```
+tune tuning.player.paint_underfoot.enabled off
+```
+
+All multiplier leaves are live numeric tunes. Invalid schema, derived overflow
+and unsafe enabled stage displacement must be refused. Stage validation uses
+the maximum friendly boost, including momentum retained after leaving paint.
+A replay records the future-affecting support/step context only while enabled;
+disabled hashes and replay seat serialization retain the legacy form. Replay
+content-hash and step-size guards remain in force.
+
+Qualification recorded on 2026-10-26, under
+`out/validation/todo-loop-20261025`:
+
+- **Debug:** 15 qualified cases, including actual-object support, movement,
+  recovery, schema, tuning and replay checks. The enabled 600-update record/play
+  proof is compiled throwing assertions plus the fresh console's exit 0. Its
+  temporary tape and in-memory `MATCH` line were cleaned, not independently
+  inspected after exit.
+- **Release:** 13 original positive cases, including developer-tool exclusion,
+  plus fresh same-executable ammo exit 0 with all six PASS lines. The original
+  blank ammo log remains preserved and unexplained. A separate plain-environment
+  observation exited 3221225781 before output; the versioned observation with
+  the runtime DLL path supplied the explicit ammo proof, without rebuilding.
+- **Disabled identity:** the exact frozen old-API source, freshly linked to new
+  Debug producers, matches all three complete CSVs for each of two content
+  variants (old block absent and shipped switch off): 20 directed cases and
+  24,000 updates per variant. Four selected old report controls also match all
+  eight whole main/companion files: 34 matches and 1,610 companion rows. This is
+  bounded public-state/fingerprint, input and terminal-RNG evidence, not a new
+  250-match report or proof over every possible match.
+- **Real Application:** the hidden v3 run exited 0 after safe on/off and path/full
+  reset controls. Unsafe live enable and an unsafe enabled multiplier edit were
+  refused with the actual stage-displacement diagnostic; getter token maps and
+  complete edit ledgers stayed unchanged on each refusal. Source, staged and
+  private runtime disk hashes stayed unchanged. These observations complement
+  the CPU case's exact document-text and ledger-count checks, together with the reviewed validate-before-commit ordering; they do not
+  expose the real process's complete internal tuning-document bytes.
+
+The earlier private v2 real-Application route omitted six DDS textures and
+failed during asset loading before commands, then reached its wrapper deadline.
+Its failed result and missing-`sprite_sheet_1.dds` stderr remain preserved; v3
+corrected the private runtime inventory without a game rebuild or guard change.
+The Debug, Release recovery, off-state and real-Application receipts retain
+these scopes and failures. Human acceptance of the mechanic, its trial factors
+and `POL#27`/`POL#30`/`POL#31` remains open.
 
 ### Let players learn by making a mess
 

@@ -42,6 +42,14 @@ struct PlayerLethalProjectiles
     bool operator==(const PlayerLethalProjectiles&) const = default;
 };
 
+// Owned values only: contact pointers never escape their completed phase.
+struct PlayerPaintUnderfootState
+{
+    bool enabled = false;
+    PlayerTeam support_team = PlayerTeam::none;
+    PlayerTeam step_team = PlayerTeam::none;
+    bool operator==(const PlayerPaintUnderfootState&) const = default;
+};
 enum class PlayerState
 {
     alive,
@@ -207,6 +215,7 @@ public:
     PlayerState state() const;
 
     PlayerTeam team() const;
+    PlayerPaintUnderfootState paint_underfoot_state() const;
 
     float respawn_timer() const;
     // How far the redraw at the spawn has come: 0 at death, 1 at respawn.
@@ -305,6 +314,11 @@ private:
         mattmath::Vector2F position;
     };
     std::optional<PaintedSupport> painted_support() const;
+    PlayerTeam gameplay_support_team() const;
+    float underfoot_speed_multiplier() const;
+    float underfoot_ammo_multiplier() const;
+    PlayerTeam underfoot_support_team_ = PlayerTeam::none;
+    PlayerTeam underfoot_step_team_ = PlayerTeam::none;
 
     const PlayerTuning& player_tuning() const;
 
