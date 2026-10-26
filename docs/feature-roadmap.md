@@ -997,14 +997,13 @@ no physical-pad, attended readability or performance acceptance.
 abstraction beyond the existing `OptionRow`; a list of unused toggle, slider,
 progress or modal types is not an implementation task.
 
-`GAP#D5` is **OPEN** with the Turbulence blockout (`POL#21`, 2026-10-25). Its
-brief, offset platforms and crossing routes that reward repositioning, is the
-first layout where a moving platform earns its place. Add rotated and moving
-structures behind the builder with a useful arena placement for each, and
-collision, support, paint and editor acceptance for that layout. Moving support
-needs the player to ride it, paint on it to stay owned by its face, and replays
-to stay deterministic. Choose placements during blockout rather than altering
-the geometry under style review; Crossfeed and Press Tower stay static.
+`GAP#D5` is **complete for the selected bounded capability** (2026-10-26).
+The [qualification below](#horizontal-movement-capability-2026-10-26) covers
+horizontal movers and mirrored fixed scored slabs through runtime/editor
+construction, collision/support, local paint, public routes/replay and native
+composition. Their useful placements remain explicit-only Turbulence
+comparisons; attended selection and balance are `POL#21`. Arbitrary moving
+rotation is outside this contract. Crossfeed and Press Tower stay static.
 
 ### Horizontal movement capability (2026-10-26)
 

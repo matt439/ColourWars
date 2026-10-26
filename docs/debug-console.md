@@ -3075,9 +3075,10 @@ The stored opt-in trial factors are own speed `1.10`, own ammunition recovery
 numeric fields; `tune.reset` restores file tokens. Do not use `tune.save` for an
 unattended experiment. There is no new special, damage, health or jump boost.
 
-A completed confirmed axis-aligned top contact is sampled at the foot center by team,
-then used consistently by movement and ammunition on the following physics step.
-Conflicting owned overlaps are neutral. Air, ramps, walls, ceilings and reset or
+A completed confirmed flat top contact is sampled at the foot center by team;
+the selected fixed scored slabs use their actual support corner in the local
+top frame. The result is used consistently by movement and ammunition on the following physics step.
+Conflicting owned overlaps are neutral. Air, unscored ramps, walls, ceilings and reset or
 dead players do not retain terrain context. Capture credit and colour palettes
 do not select the effect. See the [owner's timing and geometry contract](polish-plan.md#experimental-underfoot-prototype).
 
@@ -3093,7 +3094,7 @@ and their observation limits. Human `POL#27`/`POL#30`/`POL#31` decisions remain 
 
 ## Horizontal moving-state replay boundary
 
-A manually constructed Level with horizontal movers appends an optional
+A Level with horizontal movers appends an optional
 `final.horizontal_motion` object to replay format 3; its schema is 1. Stable
 mover IDs, exact specification/phase/direction/offset and pose bits, ordered local
 face ownership/scored areas and seat-ordered carrier IDs contribute to the
@@ -3106,6 +3107,9 @@ The Debug `moving_structure` acceptance case records and plays 240 real updates
 through Recorder/Player on two independently constructed seeded Levels, checks
 all four checkpoints, final state and terminal RNG, and rejects malformed tapes.
 Existing static encodings remain byte-identical in the retained old/new controls.
-There is no public builder kind, console spawn command or stage-loader rebuild
-for movers yet; ordinary `play` cannot reconstruct this manual fixture. See the
-[capability and remaining integration](feature-roadmap.md#horizontal-movement-capability-2026-10-26).
+Public builder/editor construction and seeded stage-loader rebuilds are now
+qualified in the [capability record](feature-roadmap.md#horizontal-movement-capability-2026-10-26).
+The 240-update case above remains a manual fixture; ordinary `play` cannot
+reconstruct that unregistered fixture. The separate public Turbulence route
+proofs use decoded stage/setup/seed factories, with their exact countdown and
+playback limits recorded in the [arena owner](polish-turbulence.md).

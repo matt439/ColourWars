@@ -59,8 +59,11 @@ normal startup `46df4757ebe34d9395d85f67d44e48b2` and missing-bank startup
 `8858146359f545ac8692a542a1f97e4e`. ZIP SHA256:
 `278AD46FCC97D6B179DA004717EFC9628BB4B71C1410776F9D83A1B40D8BC779`.
 This is local delivery evidence; clean-machine acceptance remains `ROAD#1`.
-The focused checks and probes above passed; the full consumer suite was not
-rerun as a whole. No attended balance, physical-pad, listening or performance
+The focused checks and probes above passed. A subsequent exhaustion audit ran
+the 25 previously unrun existing Release cases once, serially; all passed.
+All 54 default Release cases now have passing session receipts, reconciled in
+`out/validation/overnight-20261026/phase19/cumulative-release-receipts.json`.
+The full Debug suite was not rerun. No attended balance, physical-pad, listening or performance
 acceptance is implied.
 
 ## Question and research transfer

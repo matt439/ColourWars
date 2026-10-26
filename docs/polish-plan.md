@@ -1768,7 +1768,7 @@ block requires all five typed fields and finite usable derived rates.
 
 Gameplay reads the actual team's paint, independently of capture-credit owner,
 input slot and palette. At the completed contact phase, a living supported
-player samples its final foot center on an exposed static top face. The surface
+player samples its final foot center on an exposed flat top face. The surface
 and tile intervals are half open; duplicate candidates have no effect, neutral
 answers are ignored, and conflicting owned overlaps resolve to neutral in either
 contact order. Only team values survive the phase. Cosmetic dust keeps its
@@ -1782,9 +1782,13 @@ use its starting support for that step; later airborne steps are neutral.
 Vertical motion, health, paid-shot costs, cooldowns and simulation `dt` retain
 the existing rules. Enemy recovery suppression leaves the normal delay clocks
 running. Place, death, respawn and disabled updates clear the terrain context.
-Top sampling also supports the manually constructed horizontal mover: it uses
-published world tile edges so rounded translation cannot lose a half-open edge.
-Rotated support and public moving-stage construction remain `GAP#D5` work.
+Top sampling also supports horizontal movers: it uses published world tile
+edges so rounded translation cannot lose a half-open edge. The selected fixed
+scored slabs sample the actual support corner in the slab's local top frame.
+That bounded rotated support and public moving-stage construction are now
+qualified in the [completed capability record](feature-roadmap.md#horizontal-movement-capability-2026-10-26).
+Arbitrary moving rotation remains outside the contract; the mechanic still
+needs the author's `POL#30` decision.
 
 To try the stored amounts in Debug, without saving content:
 
