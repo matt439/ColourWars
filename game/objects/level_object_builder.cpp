@@ -4,8 +4,12 @@
 #include "game/objects/airbrush_shadow.h"
 #include "game/objects/drifting_visual.h"
 #include "game/objects/translating_structure_paintable.h"
+#include "game/objects/fixed_slab_paintable.h"
+#include "game/objects/fixed_slab_shadow.h"
 #include "game/objects/translated_airbrush_shadow.h"
 #include "game/paint_face_geometry.h"
+#include "game/fixed_slab_paint_geometry.h"
+#include "engine/collision/narrow_phase.h"
 #include <cmath>
 #include <initializer_list>
 
@@ -126,6 +130,7 @@ namespace
 		{
 			return CollisionObjectType::structure_paintable;
 		}
+		if (name == "STRUCTURE_FIXED_SLAB") { return CollisionObjectType::structure_fixed_slab; }
 		if (name == "STRUCTURE_RAMP_RIGHT")
 		{
 			return CollisionObjectType::structure_ramp_right;
@@ -162,6 +167,32 @@ namespace
 		return result;
 	}
 
+	FixedSlabSpec decode_slab(const JsonValue& object)
+	{
+		for (const char* field : { "motion", "drift", "rotation", "rectangle", "rectangle_tlbr", "triangle" })
+		{
+			if (object.has(field))
+			{ throw std::runtime_error(object.where() + ": fixed slabs do not support '" + field + "'"); }
+		}
+		if (object.string("material") != "eraser")
+		{ throw std::runtime_error(object.where() + ": fixed slabs require the eraser material"); }
+		const JsonValue slab = object.object("slab");
+		for (const char* field : { "width", "height", "thickness", "angle", "rotation", "motion" })
+		{
+			if (slab.has(field))
+			{ throw std::runtime_error(slab.where() + ": unsupported fixed slab field '" + field + "'"); }
+		}
+		const std::string rise = slab.string("rise");
+		if (rise != "left" && rise != "right")
+		{ throw std::runtime_error(slab.where() + ": rise must be 'left' or 'right'"); }
+		const FixedSlabSpec spec{ { slab.number("x"), slab.number("y") },
+			rise == "right" ? FixedSlabRise::right : FixedSlabRise::left };
+		try { (void)FixedSlabGeometry(spec); }
+		catch (const std::invalid_argument& error)
+		{ throw std::runtime_error(slab.where() + ": " + error.what()); }
+		return spec;
+	}
+
 	// Allowed collision tags for each object type.
 	CollisionObjectType collision_type_of(const JsonValue& json,
 		const std::string& object_type,
@@ -184,7 +215,8 @@ namespace
 namespace
 {
 	// The faces of `rectangle` nothing in `flat` covers (paint_face_geometry.h).
-	TerrainFaces exposed_faces(const RectangleF& rectangle, std::span<const RectangleF> flat)
+	TerrainFaces exposed_faces(const RectangleF& rectangle, std::span<const RectangleF> flat,
+		std::span<const PaintPolygon> slabs = {})
 	{
 		std::vector<PaintFaceRectangle> obstacles;
 		obstacles.reserve(flat.size());
@@ -201,13 +233,20 @@ namespace
 			rectangle.left(), false, true, obstacles);
 		faces.right = exposed_paint_intervals(rectangle.top(), rectangle.bottom(),
 			rectangle.right(), false, false, obstacles);
+		if (!slabs.empty())
+		{
+			faces.top = clip_paint_polygons(faces.top, { 0.0, rectangle.top() }, { 1.0, 0.0 }, slabs);
+			faces.bottom = clip_paint_polygons(faces.bottom, { 0.0, rectangle.bottom() }, { 1.0, 0.0 }, slabs);
+			faces.left = clip_paint_polygons(faces.left, { rectangle.left(), 0.0 }, { 0.0, 1.0 }, slabs);
+			faces.right = clip_paint_polygons(faces.right, { rectangle.right(), 0.0 }, { 0.0, 1.0 }, slabs);
+		}
 		return faces;
 	}
 
 	// An optional Tool Props material; absent keeps the stretched frame.
 	std::unique_ptr<const TerrainMaterial> material_of(const JsonValue& json,
 		CollisionObjectType type, const Shape& shape, std::span<const RectangleF> flat,
-		float mirror_x, RenderResources* render_resources)
+		float mirror_x, RenderResources* render_resources, std::span<const PaintPolygon> slabs = {})
 	{
 		if (!json.has("material"))
 		{
@@ -216,7 +255,7 @@ namespace
 		try
 		{
 			return TerrainMaterial::make(json.string("material"), type, shape,
-				exposed_faces(shape.bounding_box(), flat), mirror_x, render_resources);
+				exposed_faces(shape.bounding_box(), flat, slabs), mirror_x, render_resources);
 		}
 		catch (const std::invalid_argument& error)
 		{
@@ -254,6 +293,16 @@ std::unique_ptr<CollisionObject>
 	{
 		throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
 	}
+	if (type == "FixedSlabPaintable")
+	{
+		(void)collision_type_of(json, type, { CollisionObjectType::structure_fixed_slab });
+		const FixedSlabSpec spec = decode_slab(json);
+		const JsonValue face = json.object("paintable_faces");
+		const PaintableFaces faces{ face.boolean("left"), face.boolean("top"),
+			face.boolean("right"), face.boolean("bottom") };
+		return std::make_unique<FixedSlabPaintable>(spec, this->render_resources_, this->audio_resources_,
+			this->preferences_, this->paint_, team_colours, faces, context.flat);
+	}
 	if (type == "Structure")
 	{
 		const CollisionObjectType collision_type = collision_type_of(json, type,
@@ -275,7 +324,7 @@ std::unique_ptr<CollisionObject>
 			SpriteFlip::none,
 			0.0f,
 			material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
-				this->render_resources_));
+				this->render_resources_, context.slabs));
 	}
 	if (type == "StructurePaintable")
 	{
@@ -323,7 +372,7 @@ std::unique_ptr<CollisionObject>
 			SpriteFlip::none,
 			0.0f,
 			material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
-				this->render_resources_));
+				this->render_resources_, context.slabs), context.slabs);
 	}
 	if (type == "StructureRamp")
 	{
@@ -433,6 +482,22 @@ LevelObjectBuilder::StageContext
 			context.solid.push_back(TriangleRightAxisAligned(t.number("x1"), t.number("y1"),
 				t.number("x2"), t.number("y2"), t.number("x3"), t.number("y3")).bounding_box());
 		}
+		else if (type == "FixedSlabPaintable")
+		{
+			const FixedSlabGeometry geometry(decode_slab(object));
+			PaintPolygon polygon;
+			for (std::size_t corner = 0; corner < polygon.size(); ++corner)
+			{
+				const Vector2F point = geometry.shape().points()[corner];
+				polygon[corner] = { point.x, point.y };
+			}
+			const FixedSlabSpec& spec = geometry.spec();
+			const float dy = spec.rise == FixedSlabRise::right ? -80.0f : 80.0f;
+			const Vector2F inward = geometry.inward_normal();
+			context.slabs.push_back(canonical_slab_paint_polygon(polygon,
+				{ spec.top_left.x, spec.top_left.y }, { spec.top_left.x + 160.0f, spec.top_left.y + dy },
+				{ inward.x, inward.y }));
+		}
 	}
 	context.mirror_x = (left + right) / 2.0f;
 	return context;
@@ -450,6 +515,19 @@ std::vector<std::unique_ptr<CollisionObject>>
 		collision_objects.push_back(
 			build_collision_object(json.at(index), team_colours, context));
 	}
+	// This bounded shape supports clipping against existing flat terrain.
+	// Intersecting slabs need a separate shared-boundary/credit contract.
+	for (size_t index = 0; index < collision_objects.size(); ++index)
+	{
+		const auto* slab = dynamic_cast<const FixedSlabPaintable*>(collision_objects[index].get());
+		if (slab == nullptr) { continue; }
+		for (size_t previous = 0; previous < index; ++previous)
+		{
+			const auto* other = dynamic_cast<const FixedSlabPaintable*>(collision_objects[previous].get());
+			if (other != nullptr && narrow_phase(*slab->shape(), *other->shape()))
+			{ throw std::runtime_error(json.at(index).where() + ": intersecting fixed slabs are unsupported"); }
+		}
+	}
 	return collision_objects;
 }
 
@@ -463,6 +541,13 @@ std::vector<std::unique_ptr<GameObject>>
 		const JsonValue object = json.at(index);
 		const std::string type = object.string("type");
 		if (object.has("motion")) { continue; }
+		if (type == "FixedSlabPaintable")
+		{
+			const auto owner = this->build_collision_object(object, TeamColour{}, context);
+			const auto& slab = dynamic_cast<const FixedSlabPaintable&>(*owner);
+			shadows.push_back(std::make_unique<FixedSlabShadow>(slab.geometry(), slab.exposed_bottom(), this->render_resources_));
+			continue;
+		}
 		if (!object.has("material") || (type != "Structure" && type != "StructurePaintable"))
 		{
 			continue;
@@ -477,8 +562,11 @@ std::vector<std::unique_ptr<GameObject>>
 		{
 			obstacles.push_back({ other.left(), other.top(), other.right(), other.bottom() });
 		}
-		for (const auto& [low, high] : exposed_paint_intervals(rectangle.left(),
-			rectangle.right(), rectangle.bottom(), true, false, obstacles))
+		const auto exposed = exposed_paint_intervals(rectangle.left(),
+			rectangle.right(), rectangle.bottom(), true, false, obstacles);
+		const auto intervals = context.slabs.empty() ? exposed : clip_paint_polygons(exposed,
+			{ 0.0, rectangle.bottom() }, { 1.0, 0.0 }, context.slabs);
+		for (const auto& [low, high] : intervals)
 		{
 			shadows.push_back(std::make_unique<AirbrushShadow>(
 				low, high, rectangle.bottom(), this->render_resources_));
@@ -556,12 +644,13 @@ void LevelObjectBuilder::validate_objects(const JsonValue& collision_objects,
 		}
 	}
 	build_shadows(collision_objects);
-	// Only the new path retains temporary owners while checking composed
-	// shadows. Static validation keeps its original construction/destruction order.
+	// Only the new paths retain temporary owners for composed admission.
+	// Legacy static validation keeps its construction/destruction order.
 	bool moving = false;
 	for (size_t index = 0; index < collision_objects.size(); ++index)
 	{
-		moving |= collision_objects.at(index).has("motion");
+		moving |= collision_objects.at(index).has("motion") ||
+			collision_objects.at(index).string("type") == "FixedSlabPaintable";
 	}
 	if (moving)
 	{

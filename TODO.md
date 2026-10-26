@@ -26,7 +26,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    original; attended play is `POL#31`); Crossfeed is now in Random at the author's request.
    Turbulence's [static and mover comparisons](docs/polish-turbulence.md) are
    explicit-only; bounded moving fire, escape, mover routes/replay/native
-   composition and a local paint angle are qualified. Scored slopes are next;
+   composition and a local paint angle are qualified. The fixed scored-slab
+   core passes both presets; its native composition and useful placement are next;
    opposed balance and attended value remain open.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
@@ -37,7 +38,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    paint-underfoot prototype is available for `POL#30`. Runtime horizontal motion
    and public-loader replay, editor authoring and saved-stage round trips are qualified;
    the Turbulence mover comparison qualifies a local paint role; fixed scored
-   slopes remain
+   slabs now have both-preset core/editor/public-load checks, with native and useful-placement
+   qualification remaining
    ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
@@ -54,8 +56,8 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Define and qualify one fixed scored slab's collision and local-face contract before comparing its placement with the retained shoulder composite | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
-| `GAP#D5` | Qualify the smallest useful static scored slope through support, projectile, local-paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
+| `POL#21` | Qualify fixed slabs' native composition and useful pressure/paint placement against the retained shoulder composite | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
+| `GAP#D5` | Qualify the fixed scored slabs' native layout and useful Turbulence role after core/editor/public-load checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
@@ -169,7 +171,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
-| `GAP#D5` | OPEN | MED | L | Add useful Turbulence movers and static rotated geometry with route, paint and layout acceptance (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
+| `GAP#D5` | OPEN | MED | L | Qualify fixed scored slabs' native composition and useful Turbulence placement against the retained composite (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
 
 ## Engine reports
 

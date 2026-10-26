@@ -1,8 +1,11 @@
 #include "game/pch.h"
 #include "game/objects/projectile.h"
 #include "game/objects/translating_structure_paintable.h"
+#include "game/objects/fixed_slab_paintable.h"
 #include "game/objects/paint_audio.h"
 #include "engine/collision/narrow_phase.h"
+#include <array>
+#include <limits>
 
 using namespace DirectX;
 using namespace mattmath;
@@ -71,6 +74,32 @@ namespace
              (origin.x >= obstacle.right() && finish.left() >= obstacle.right()) ||
              (origin.y <= obstacle.top() && finish.bottom() <= obstacle.top()) ||
              (origin.y >= obstacle.bottom() && finish.top() >= obstacle.bottom()));
+    }
+
+    bool launch_leaves_slab(const RectangleF& start, const RectangleF& finish,
+        const FixedSlabGeometry& slab)
+    {
+        // Retain the launch exemption only when a volume overlapping behind
+        // the origin leaves the SAME separating side. A clear finish on the
+        // far side crossed solid cover and must still collide.
+        if (!slab.overlaps(start)) { return false; }
+        const std::array<Vector2F, 4> axes{ Vector2F(1, 0), Vector2F(0, 1),
+            slab.tangent(), slab.inward_normal() };
+        for (const Vector2F& axis : axes)
+        {
+            const auto dot = [&axis](const Vector2F& p)
+            { return static_cast<double>(p.x) * axis.x + static_cast<double>(p.y) * axis.y; };
+            double low = std::numeric_limits<double>::infinity(), high = -low;
+            for (const auto& p : slab.shape().points())
+            { const double v = dot(p); low = std::min(low, v); high = std::max(high, v); }
+            const double middle = dot(finish.center());
+            const double radius = std::abs(static_cast<double>(axis.x)) * finish.width / 2.0 +
+                std::abs(static_cast<double>(axis.y)) * finish.height / 2.0;
+            const double origin = dot(start.center());
+            if ((origin <= low && middle + radius <= low) ||
+                (origin >= high && middle - radius >= high)) { return true; }
+        }
+        return false;
     }
 
     RectangleF rectangle_between(const RectangleF& start,
@@ -369,6 +398,19 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
             }
             continue;
         }
+        if (const auto* slab = dynamic_cast<const FixedSlabPaintable*>(object))
+        {
+            const auto hit = slab->geometry().sweep(start, finish);
+            if (hit && hit->positive_overlap && (hit->entry < closest_entry ||
+                (hit->entry == closest_entry && obstruction != nullptr &&
+                    obstruction->layer() != collision_layers::STRUCTURE)))
+            {
+                obstruction = object;
+                moving_obstruction = nullptr;
+                closest_entry = hit->entry;
+            }
+            continue;
+        }
         const auto interval = sweep_interval(start, finish, object->shape()->bounding_box());
         if (interval && (interval->first < closest_entry ||
             (interval->first == closest_entry && structure && obstruction != nullptr &&
@@ -440,6 +482,12 @@ void Projectile::resolve_sweep(const RectangleF& start,
     const RectangleF& finish, std::span<CollisionObject* const> objects,
     bool launch)
 {
+    if (std::any_of(objects.begin(), objects.end(), [](const CollisionObject* object)
+        { return to_collision_type(object->tag()) == CollisionObjectType::structure_fixed_slab; }))
+    {
+        this->resolve_fixed_slab_sweep(start, finish, objects, launch);
+        return;
+    }
     CollisionObject* obstruction = nullptr;
     std::pair<float, float> closest{ 1.0f, 1.0f };
     for (CollisionObject* object : objects)
@@ -500,6 +548,78 @@ void Projectile::resolve_sweep(const RectangleF& start,
     }
 }
 
+void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
+    const RectangleF& finish, std::span<CollisionObject* const> objects, bool launch)
+{
+    // Only scenes containing the new geometry enter this selection path.
+    // The legacy rectangle participants still compute their original float
+    // intervals; slab intervals retain double precision through ordering.
+    CollisionObject* obstruction = nullptr;
+    FixedSlabPaintable* winning_slab = nullptr;
+    FixedSlabSweep winning_hit;
+    double closest = 1.0;
+    for (CollisionObject* object : objects)
+    {
+        const bool structure = object->layer() == collision_layers::STRUCTURE;
+        if ((launch && this->type_ == ProjectileType::rolling && !structure) ||
+            object->for_deletion() || !layers_collide(this->layer(), this->mask(), object->layer(), object->mask()))
+        { continue; }
+        auto* slab = dynamic_cast<FixedSlabPaintable*>(object);
+        std::optional<double> entry;
+        std::optional<FixedSlabSweep> hit;
+        if (slab != nullptr)
+        {
+            if (launch && launch_leaves_slab(start, finish, slab->geometry())) { continue; }
+            hit = slab->geometry().sweep(start, finish);
+            if (hit && hit->positive_overlap) { entry = hit->entry; }
+        }
+        else
+        {
+            const RectangleF obstacle = object->shape()->bounding_box();
+            if (launch && structure && launch_leaves_overlap(start, finish, obstacle)) { continue; }
+            if (const auto interval = sweep_interval(start, finish, obstacle)) { entry = interval->first; }
+        }
+        if (entry && (*entry < closest || (*entry == closest && structure && obstruction != nullptr &&
+            obstruction->layer() != collision_layers::STRUCTURE)))
+        {
+            closest = *entry;
+            obstruction = object;
+            winning_slab = slab;
+            if (hit) { winning_hit = *hit; }
+        }
+    }
+    if (obstruction == nullptr) { return; }
+    if (winning_slab == nullptr)
+    {
+        CollisionObject* target = obstruction;
+        this->resolve_sweep(start, finish, std::span<CollisionObject* const>(&target, 1), launch);
+        return;
+    }
+    const double edge_travel = std::max({ std::abs(static_cast<double>(finish.left()) - start.left()),
+        std::abs(static_cast<double>(finish.right()) - start.right()),
+        std::abs(static_cast<double>(finish.top()) - start.top()),
+        std::abs(static_cast<double>(finish.bottom()) - start.bottom()) });
+    const double inset = edge_travel > 0.0 ? 0.01 / edge_travel : 0.0;
+    const auto at = [&](double fraction)
+    {
+        const auto between = [fraction](float a, float b)
+        { return static_cast<float>(static_cast<double>(a) + (static_cast<double>(b) - a) * fraction); };
+        return RectangleF(between(start.x, finish.x), between(start.y, finish.y),
+            between(start.width, finish.width), between(start.height, finish.height));
+    };
+    RectangleF response = at(winning_hit.entry + std::min(inset, (winning_hit.exit - winning_hit.entry) / 2.0));
+    if (!winning_slab->geometry().overlaps(response))
+    { response = at((winning_hit.entry + winning_hit.exit) / 2.0); }
+    if (!winning_slab->geometry().overlaps(response))
+    { throw std::runtime_error("Fixed slab impact has no representable overlapping response rectangle"); }
+    this->set_rectangle(response);
+    const auto contact = narrow_phase(*winning_slab->shape(), *this->shape());
+    const Vector2F normal = contact ? contact->normal : winning_hit.normal_to_rectangle;
+    const float penetration = contact ? contact->penetration : 0.0f;
+    winning_slab->on_contact(*this, normal, penetration);
+    this->on_contact(*winning_slab, -normal, penetration);
+}
+
 void Projectile::on_contact(const CollisionObject& other,
     const Vector2F& normal, float /*penetration*/)
 {
@@ -514,7 +634,19 @@ void Projectile::on_contact(const CollisionObject& other,
         const Vector2F center = this->shape()->bounding_box().center();
         Vector2F point(std::clamp(center.x, cover.left(), cover.right()),
             std::clamp(center.y, cover.top(), cover.bottom()));
-        if (std::abs(normal.x) >= std::abs(normal.y))
+        if (const auto* slab = dynamic_cast<const FixedSlabPaintable*>(&other))
+        {
+            const auto& geometry = slab->geometry();
+            Vector2F local = geometry.to_local(center);
+            local.x = std::clamp(local.x, 0.0f, geometry.length());
+            local.y = std::clamp(local.y, 0.0f, FixedSlabGeometry::normal_thickness);
+            const float along = normal.dot(geometry.tangent());
+            const float across = normal.dot(geometry.inward_normal());
+            if (std::abs(along) > std::abs(across)) { local.x = along > 0.0f ? 0.0f : geometry.length(); }
+            else { local.y = across > 0.0f ? 0.0f : FixedSlabGeometry::normal_thickness; }
+            point = geometry.to_world(local);
+        }
+        else if (std::abs(normal.x) >= std::abs(normal.y))
         {
             point.x = normal.x > 0.0f ? cover.left() : cover.right();
         }

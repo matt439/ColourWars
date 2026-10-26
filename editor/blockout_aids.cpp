@@ -1,7 +1,9 @@
 #include "editor/blockout_aids.h"
 #include "editor/level_json.h"
 #include "game/paint_face_geometry.h"
+#include "game/fixed_slab_paint_geometry.h"
 #include "editor/horizontal_authoring.h"
+#include "editor/slab_authoring.h"
 
 #include <algorithm>
 #include <cmath>
@@ -37,6 +39,52 @@ namespace colourwars_editor
             const float width = static_cast<float>(number(rect, "right")) - x;
             const float height = static_cast<float>(number(rect, "bottom")) - y;
             return {x, y, x + width, y + height};
+        }
+
+        std::vector<std::pair<float, float>> slab_intervals(const SlabGeometry& slab,
+            bool along_x, bool leading, std::span<const PaintFaceRectangle> obstacles)
+        {
+            return exposed_slab_paint_edge(slab.paint_corners, along_x ? slab.length : 24.0f,
+                along_x, leading, obstacles);
+        }
+
+        double polygon_area(const std::vector<PaintPoint>& polygon)
+        {
+            double twice = 0;
+            for (std::size_t i = 0; i < polygon.size(); ++i)
+            {
+                const auto& a = polygon[i]; const auto& b = polygon[(i + 1) % polygon.size()];
+                twice += a.x * b.y - a.y * b.x;
+            }
+            return std::abs(twice) / 2.0;
+        }
+
+        double polygon_region_area(const PaintPolygon& polygon, const Rect& region)
+        {
+            std::vector<PaintPoint> points(polygon.begin(), polygon.end());
+            for (int side = 0; side < 4 && !points.empty(); ++side)
+            {
+                const bool x_axis = side < 2, leading = side % 2 == 0;
+                const double edge = x_axis ? (leading ? region.x : region.x + region.width)
+                    : (leading ? region.y : region.y + region.height);
+                const auto component = [x_axis](const PaintPoint& point) { return x_axis ? point.x : point.y; };
+                const auto inside = [&](const PaintPoint& point)
+                { return leading ? component(point) >= edge : component(point) <= edge; };
+                std::vector<PaintPoint> next;
+                for (std::size_t i = 0; i < points.size(); ++i)
+                {
+                    const auto& a = points[i]; const auto& b = points[(i + 1) % points.size()];
+                    const bool ai = inside(a), bi = inside(b);
+                    if (ai) { next.push_back(a); }
+                    if (ai != bi)
+                    {
+                        const double fraction = (edge - component(a)) / (component(b) - component(a));
+                        next.push_back({ a.x + (b.x - a.x) * fraction, a.y + (b.y - a.y) * fraction });
+                    }
+                }
+                points = std::move(next);
+            }
+            return polygon_area(points);
         }
     }
 
@@ -84,9 +132,11 @@ namespace colourwars_editor
         const level_json::Document json = level_json::parse(document.serialize());
         const level_json::Json& objects = level_json::array(json, "collision_objects");
         std::vector<PaintFaceRectangle> obstacles;
+        std::vector<PaintPolygon> slabs;
         for (const level_json::Json& object : objects.GetArray())
         {
             const std::string type = level_json::string(object, "type");
+            if (type == "FixedSlabPaintable") { slabs.push_back(decode_slab(object).paint_corners); continue; }
             if (type != "Structure" && type != "StructurePaintable") continue;
             if (object.HasMember("motion")) continue;
             obstacles.push_back(paint_rectangle(object));
@@ -96,6 +146,32 @@ namespace colourwars_editor
         {
             if (entry.kind != EntryKind::collision) continue;
             const level_json::Json& object = objects[static_cast<rapidjson::SizeType>(entry.index)];
+            if (level_json::string(object, "type") == "FixedSlabPaintable")
+            {
+                const auto slab = decode_slab(object);
+                const auto& faces = level_json::member(object, "paintable_faces");
+                const float thickness = static_cast<float>(tuning.paint_thickness);
+                if (!(thickness > 0.0f && thickness <= 12.0f))
+                    throw std::runtime_error("Fixed slab paint thickness must fit its normal thickness.");
+                for (int face = 0; face < 4; ++face)
+                {
+                    const char* names[] = { "top", "bottom", "left", "right" };
+                    if (!level_json::member(faces, names[face]).GetBool()) { continue; }
+                    const bool along_x = face < 2, leading = face % 2 == 0;
+                    const float edge = along_x ? (leading ? 0.0f : 24.0f) : (leading ? 0.0f : slab.length);
+                    for (const auto& [begin, end] : slab_intervals(slab, along_x, leading, obstacles))
+                    {
+                        const float x = along_x ? begin : (leading ? edge : edge - thickness);
+                        const float y = along_x ? (leading ? edge : edge - thickness) : begin;
+                        const float width = along_x ? end - begin : thickness;
+                        const float height = along_x ? thickness : end - begin;
+                        const PaintPolygon polygon{ slab.to_world(x, y), slab.to_world(x + width, y),
+                            slab.to_world(x + width, y + height), slab.to_world(x, y + height) };
+                        result.push_back({ entry, Rect{ x, y, width, height }, along_x, leading, polygon });
+                    }
+                }
+                continue;
+            }
             if (level_json::string(object, "type") != "StructurePaintable") continue;
             const PaintFaceRectangle rect = paint_rectangle(object);
             const bool moving = object.HasMember("motion");
@@ -116,8 +192,12 @@ namespace colourwars_editor
                 const float thickness = static_cast<float>(tuning.paint_thickness);
                 const std::span<const PaintFaceRectangle> blockers = moving ?
                     std::span<const PaintFaceRectangle>{} : std::span<const PaintFaceRectangle>(obstacles);
-                for (const std::pair<float, float>& interval : exposed_paint_intervals(
-                    along_x ? x : y, along_x ? right : bottom, edge, along_x, leading, blockers))
+                const auto exposed = exposed_paint_intervals(
+                    along_x ? x : y, along_x ? right : bottom, edge, along_x, leading, blockers);
+                const auto clipped = moving || slabs.empty() ? exposed : clip_paint_polygons(exposed,
+                    along_x ? PaintPoint{ 0, edge } : PaintPoint{ edge, 0 },
+                    along_x ? PaintPoint{ 1, 0 } : PaintPoint{ 0, 1 }, slabs);
+                for (const std::pair<float, float>& interval : clipped)
                 {
                     Rect strip = along_x
                         ? Rect{interval.first, leading ? edge : edge - thickness, interval.second - interval.first, thickness}
@@ -140,6 +220,13 @@ namespace colourwars_editor
         {
             const Rect& strip = face.strip;
             double width = strip.width, height = strip.height;
+            if (face.polygon && region)
+            {
+                const std::vector<PaintPoint> whole(face.polygon->begin(), face.polygon->end());
+                const double physical = polygon_area(whole);
+                if (physical > 0) { result += width * height * polygon_region_area(*face.polygon, *region) / physical; }
+                continue;
+            }
             if (region)
             {
                 width = std::max(0.0, std::min(strip.x + width, region->x + region->width) - std::max(strip.x, region->x));

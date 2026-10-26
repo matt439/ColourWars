@@ -10,6 +10,7 @@
 #include "engine/audio/sound_bank.h"
 #include "engine/render/colour.h"
 #include "game/tuning.h"
+#include "game/paint_polygon_geometry.h"
 #include <span>
 #include <optional>
 #include <vector>
@@ -62,7 +63,8 @@ public:
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f,
-		std::unique_ptr<const TerrainMaterial> material = nullptr);
+		std::unique_ptr<const TerrainMaterial> material = nullptr,
+		std::span<const PaintPolygon> paint_polygons = {});
 	// Its tiles borrow splash_clips_, so it stays where it was built.
 	StructurePaintable(const StructurePaintable&) = delete;
 	StructurePaintable& operator=(const StructurePaintable&) = delete;
@@ -138,7 +140,8 @@ private:
 
 	// Build tiles and record the strips used by on_contact for candidate lookup.
 	std::vector<PaintTile> generate_paint_tiles(
-		std::span<const mattmath::RectangleF> paint_obstacles);
+		std::span<const mattmath::RectangleF> paint_obstacles,
+		std::span<const PaintPolygon> paint_polygons);
 
 
 };

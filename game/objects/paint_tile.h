@@ -11,6 +11,8 @@
 
 #include <array>
 
+class FixedSlabGeometry;
+
 // PaintTuning's splash clips, resolved once against a RenderResources: the
 // clip a tile is built with, and the one each ProjectileType restarts it on.
 // Tuning is read before any sheet exists, so these live beside it, not in it.
@@ -50,6 +52,9 @@ public:
 	// Draws with the given tint without storing it. See TextureObject::draw_with.
 	void draw_with_colour(labrador::DrawList& draw_list,
 		const labrador::Colour& colour) const;
+	// Rigid local-frame submission; never changes this shared animation object.
+	void draw_with_colour_rigid(labrador::DrawList& draw_list,
+		const labrador::Colour& colour, const FixedSlabGeometry& geometry) const;
 
 	mattmath::RectangleF bounds() const override;
 private:
@@ -58,6 +63,7 @@ private:
 	float frame_time_ = 0.0f;
 	int frame_count_ = 0;
 	bool active_ = false;
+	labrador::RenderResources::SheetStrip rigid_clip_;
 	// Reads frame_time_, frame_count_ and the origin from the current clip.
 	void read_clip(labrador::RenderResources::SheetStrip clip);
 };
@@ -87,6 +93,10 @@ public:
 	// preventing a neighbouring tile's splash from covering another team's tint.
 	void draw_splash(labrador::DrawList& draw_list) const;
 	void draw_surface(labrador::DrawList& draw_list) const;
+	void draw_splash_rigid(labrador::DrawList& draw_list,
+		const FixedSlabGeometry& geometry) const;
+	void draw_surface_rigid(labrador::DrawList& draw_list,
+		const FixedSlabGeometry& geometry) const;
 	void update(float dt) override;
 	float area() const;
 	PlayerTeam team() const;

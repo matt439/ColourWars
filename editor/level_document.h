@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include "game/paint_polygon_geometry.h"
 
 namespace colourwars_editor
 {
@@ -66,6 +67,8 @@ namespace colourwars_editor
         Rect rectangle(const Entry& entry) const;
         std::optional<MotionGuide> motion_guide(const Entry& entry,
             const std::optional<Rect>& preview = std::nullopt) const;
+        std::optional<PaintPolygon> slab_guide(const Entry& entry,
+            const std::optional<Rect>& preview = std::nullopt) const;
         void set_rectangle(const Entry& entry, const Rect& rectangle);
         std::vector<Property> properties(const Entry& entry) const;
         void set_property(const Entry& entry, const std::string& path,
@@ -73,7 +76,7 @@ namespace colourwars_editor
 
         // Palette: Structure, StructureJumpThrough, StructurePaintable,
         // MovingPaintable, MovingJumpThrough, StructureRampRight,
-        // StructureRampLeft, Visual, SpawnA, SpawnB.
+        // StructureRampLeft, FixedSlabRight, FixedSlabLeft, Visual, SpawnA, SpawnB.
         Entry add_object(const std::string& type, const Rect& rectangle);
         Entry duplicate(const Entry& entry);
         void erase(const Entry& entry);

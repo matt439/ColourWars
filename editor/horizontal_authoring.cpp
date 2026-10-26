@@ -1,4 +1,5 @@
 #include "editor/horizontal_authoring.h"
+#include "editor/slab_authoring.h"
 
 #include <algorithm>
 #include <array>
@@ -35,6 +36,12 @@ namespace colourwars_editor
 
     motion::Rectangle motion_rectangle(const Json& object)
     {
+        if (string(object, "type") == "FixedSlabPaintable")
+        {
+            const auto rectangle = decode_slab(object).bounds();
+            return { static_cast<float>(rectangle.x), static_cast<float>(rectangle.y),
+                static_cast<float>(rectangle.width), static_cast<float>(rectangle.height) };
+        }
         if (string(object, "type") == "StructureRamp")
         {
             const Json& triangle = member(object, "triangle");

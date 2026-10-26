@@ -1113,7 +1113,38 @@ separate rounding; qualification checks phase invariance within each and
 reconciles the published tile areas. This implementation does not close native
 composition, attended editor/play, physical-pad or Turbulence acceptance.
 
-**Remaining implementation, in dependency order:**
+**Fixed scored-slab core qualified in Debug and Release, 2026-10-26.**
+`FixedSlabPaintable` adds one fixed 160-horizontal/80-rise footprint with
+24-unit normal thickness, mirrored left/right. It retains the game's
+`Structure`/`PaintableObject` hierarchy. The separate Player support path uses
+the real top segment; caps and underside stay solid. Actual Scene courses
+cover driven joins, stops, jumping, both contact orders, repeated uphill
+ceiling stops without creep, reversal and recovery. Legacy static arithmetic
+remains on its existing paths.
+
+Flying paint selects the actual first impact using four-axis swept SAT for
+the current linearly changing projectile boxes. Empty AABB corners, diffusion,
+launch departure versus crossing, and enemy/cover ordering are qualified.
+Paint ownership and credit stay in local tiles; published world quads carry
+their authoritative local areas. A shared checked canonical adjacency helper
+prevents OBB reconstruction drift from creating buried-face score, while
+retaining real authored gaps. The editor exposes the
+[same bounded contract](level-editor.md#fixed-scored-slab-authoring-gapd5),
+with transactional edits, save/reopen and reciprocal polygon face clipping.
+
+Both game/editor builds, the full editor document/hidden-window checks and
+`fixed_slab` pass. Per preset, the case includes 18 actual Scene courses over 3,684 updates,
+560 independent SAT probes, real projectile/credit controls, fresh public
+1/4-player loads over 386 updates and seven paired editor/runtime refusals.
+The isolated 24-object trial preserves all 22 mover-trial objects and remains
+unregistered. Twelve focused existing cases also pass in both presets: movement/contact,
+paint surfaces/underfoot, movers, blocked shots, tunnelling, terrain, format,
+stage selection, lethal provenance and ammunition. Receipts are under
+`out/validation/overnight-20261026/phase11/` (`slab-v4`, `regression`) and the
+editor receipts linked above. New slab CPU receipts are `slab-v4/x64-debug/fixed-slab-29548`
+and `regression/x64-release/fixed-slab-35444`.
+
+**Remaining qualification, in dependency order:**
 
 The explicit-only `turbulence_mover_trial` now uses the authored pair beside
 the preserved static arena. Both-preset route and native composition checks,
@@ -1124,9 +1155,9 @@ sampled phases; the other tools retain different static/moving tradeoffs.
 
 | milestone | bounded scope and acceptance |
 |---|---|
-| 4. Smallest useful static rotated structure | Use the [Turbulence blockout brief](polish-plan.md#turbulence-blockout-work-pol21) to select one useful fixed orientation and footprint, then define its collision/support and local-face paint contract before implementing it. Qualify builder/editor round trips, projectile contacts, scoring, art/culling/shadow alignment and the required route. This is static geometry; arbitrary rotating or combined moving/rotating bodies are outside the slice. |
+| 4. Smallest useful static rotated structure | Qualify the implemented fixed slabs' native 1/2/3/4-pane composition, art/culling/shadow alignment and useful Turbulence placement against the retained composite, including the intended weapon/paint role. Keep public load checks distinct from full public driven-route/replay evidence. Arbitrary or combined moving/rotating bodies are outside the slice. |
 
-The static scored-slope contract and its useful placement are next. Keep each milestone bounded
+Native composition and the static scored slope's useful placement are next. Keep each milestone bounded
 and preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
 useful placements and route/side-swap qualification; attended arena acceptance

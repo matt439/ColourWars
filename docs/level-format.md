@@ -321,6 +321,52 @@ both pairs. The optional missing-bank substitution remains supported: an absent
 bank becomes silent and cannot establish whether named cues exist in the real
 bank. See the [audio inventory](audio-inventory.md).
 
+## Fixed scored slabs
+
+`FixedSlabPaintable` is a bounded static solid: a 160-unit horizontal span,
+80-unit rise and **24-unit normal thickness**. It accepts the two mirrored
+orientations below, rather than arbitrary angles, sizes or moving rotation.
+
+```json
+{
+    "type": "FixedSlabPaintable",
+    "name": "shoulder_a",
+    "collision_type": "STRUCTURE_FIXED_SLAB",
+    "material": "eraser",
+    "slab": { "x": 1240, "y": 880, "rise": "right" },
+    "paintable_faces": { "left": true, "top": true, "right": true, "bottom": true }
+}
+```
+
+`x,y` names the **leftmost endpoint of the top walking edge**. `right` ends
+at `(x+160,y-80)`; `left` ends at `(x+160,y+80)`. Both endpoints must remain
+finite game floats within -65,536 to 65,536 and retain the fixed footprint
+after conversion. The dedicated eraser treatment resolves its own resources;
+this type does not require the ordinary sprite sheet, frame or colour fields.
+Unknown metadata survives editor round trips. Motion, drift, arbitrary rotation,
+alternate rectangle/triangle geometry and slab size/thickness requests are
+refused. Intersecting slabs need a separate shared-boundary contract and are
+refused; ordinary flat terrain can meet or overlap their ends.
+
+The top is supported by its actual sloping segment. End caps and underside
+remain solid; the existing paint-pass ramps keep their original behavior.
+Flying paint uses four-axis continuous contact selection, including growing
+rectangular projectile volumes and mixed static/moving cover. Paint tiles live
+in the slab's local frame. Score uses their authoritative local areas, while
+public surface samples publish transformed corners. Friendly repaint retains
+credit and enemy capture transfers it. Exposed faces are clipped against actual
+flat terrain; reciprocal flat faces use the slab polygon, never its bounding
+box. Adjacency uses the authored top endpoints and normal extrusion, correcting
+only OBB reconstruction drift within four coordinate float ULPs. Obstacle
+coordinates and real authored gaps are preserved; larger corrections fail.
+The collider and published tile corners retain their represented OBB pose.
+The slab's material, paint, splash, culling and static underside shadow
+follow that fixed frame. Sloped gravity runoff has no separate policy yet.
+
+The editor offers both fixed orientations, actual outline/top-edge guides,
+translation and rise edits. Resize is refused. These contracts do not qualify
+a placement's routes, competitive value, native composition or attended play.
+
 ## Stations and validation limits
 
 Optional stations are `{ "name": "centre", "x": 1474, "y": 1075 }` entries for

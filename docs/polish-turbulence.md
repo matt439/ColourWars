@@ -12,7 +12,7 @@ capability and placement checks below.
 The separate explicit-only [mover comparison](../game/content/levels/turbulence_mover_trial.json)
 adds the qualified horizontal pair beside that preserved skeleton. It is a
 playable blockout comparison, with its measured local role below; attended
-balance and the fixed scored-slope slice remain open.
+balance and fixed scored-slope placement/native qualification remain open.
 
 ## Question and research transfer
 
@@ -485,10 +485,46 @@ Debug compilation and the existing six-control Release `--tools` regression
 pass; the extended Debug comparison was not run. All eight source arenas and
 tuning remain unchanged. The composite remains isolated and unregistered.
 Its qualified route, flat underside and paint role do not establish a scored
-diagonal walking face or rotated-slab equivalence. The next implementation
-slice defines and qualifies one fixed scored slab's support, projectile and
-local-face contract before comparing its useful placement with this retained
-composite. No further pressure family is needed before that geometry work.
+diagonal walking face or rotated-slab equivalence. The fixed-slab core below
+now supplies that distinct shape; useful placement comparison remains next.
+
+**Fixed scored-slab core, 2026-10-26 (Debug and Release).** The isolated trial appends two
+`FixedSlabPaintable` objects to the unchanged twenty-two-object mover stage:
+A top edge `(1240,880)` to `(1400,800)`, mirrored to B `(2600,800)` to
+`(2760,880)`, each with 24-unit normal thickness. The body is solid to players
+and paint, and its walking face itself scores. This is the bounded fixed
+[capability contract](feature-roadmap.md#horizontal-movement-capability-2026-10-26),
+not a claim that it outperforms the ramp-plus-flat-shoe composite.
+
+Both game/editor builds and `fixed_slab` pass. Per preset, eighteen actual Scene courses
+run 3,684 updates through mirrored driven joins, mid-slope rest/jump, solid
+end caps/undersides, both object orders, pinched-ceiling stops and recovery.
+Separate actual-object controls cover local score and raw-slot credit,
+inverse-quad paint contact, diagonal Jet traversal, growing Spray/Mister
+boxes, launch departure/crossing and nearest enemy/cover selection. The
+geometry controls include 560 independent SAT probes. Exact buried-cap zero
+and real small-gap score remain distinct checks.
+
+The actual editor authors, saves and reopens the private 24-object trial.
+Fresh public 1/4-player Levels per preset complete the full count-in and twelve neutral
+updates each, totalling 386 updates; seven malformed/unsupported records are
+refused by both editor and runtime. Every original object, spawn and retained
+metadata stays unchanged. The actual scored total is 173,350.512451, against
+an independent analytic 173,350.513456; local face areas, not world AABBs,
+own the score. Receipts are under
+`out/validation/overnight-20261026/phase11/slab-v4/x64-debug/fixed-slab-29548/`.
+The Release receipt is `phase11/regression/x64-release/fixed-slab-35444/`
+under the same validation root.
+All eight source stages and tuning remain unchanged; this slab trial is not
+registered. The full editor suite/hidden-window checks and twelve
+focused existing consumer cases also pass in both presets.
+
+The separate Scene courses do not establish
+a full public-loader driven route or replay. Native slab composition, settled
+five-tool pressure/paint comparison, the Roller's connected walking-paint role
+and attended value remain unqualified. The next slice checks native layout
+and the intended useful placement against the retained composite before
+selecting geometry. `POL#21` and `GAP#D5` remain open.
 
 ## Tool and recovery hypotheses
 

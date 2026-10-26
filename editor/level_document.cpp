@@ -11,6 +11,7 @@
 #include "editor/content_catalog.h"
 #include "editor/level_json.h"
 #include "editor/horizontal_authoring.h"
+#include "editor/slab_authoring.h"
 #include "game/level_format.h"
 #include <rapidjson/pointer.h>
 
@@ -109,6 +110,8 @@ namespace colourwars_editor
 
         void move_shape(Json& object, const Rect& rectangle)
         {
+            if (string(object, "type") == "FixedSlabPaintable")
+            { move_slab(object, rectangle); return; }
             if (string(object, "type") == "StructureRamp")
             {
                 const Rect old = object_rectangle(object);
@@ -426,6 +429,19 @@ namespace colourwars_editor
         return horizontal_motion_guide(object, load_motion_player_size(impl_->motion_tuning), preview);
     }
 
+    std::optional<PaintPolygon> LevelDocument::slab_guide(const Entry& entry,
+        const std::optional<Rect>& preview) const
+    {
+        if (entry.kind != EntryKind::collision) { return std::nullopt; }
+        const Json& object = entry_json(impl_->document, entry);
+        if (string(object, "type") != "FixedSlabPaintable") { return std::nullopt; }
+        if (!preview) { return decode_slab(object).corners; }
+        Document candidate;
+        candidate.CopyFrom(object, candidate.GetAllocator());
+        move_slab(candidate, *preview);
+        return decode_slab(candidate).corners;
+    }
+
     std::vector<Property> LevelDocument::properties(const Entry& entry) const
     {
         const Json& value = entry_json(impl_->document, entry);
@@ -466,7 +482,8 @@ namespace colourwars_editor
             const std::string allowed = allowed_materials(string(value, "collision_type"));
             const auto existing = std::find_if(result.begin(), result.end(),
                 [](const Property& property) { return property.path == "material"; });
-            if (existing != result.end()) { existing->label = "material (" + allowed + ")"; }
+            if (existing != result.end()) { existing->label = "material (" +
+                (string(value, "type") == "FixedSlabPaintable" ? "eraser" : allowed) + ")"; }
             else if (!allowed.empty())
             {
                 result.push_back({ "material", "material (" + allowed + ")", "", false, false });
@@ -540,6 +557,24 @@ namespace colourwars_editor
                 added.kind = type == "SpawnA" ? EntryKind::spawn_a : EntryKind::spawn_b;
                 value.AddMember("x", rectangle.x, allocator);
                 value.AddMember("y", rectangle.y, allocator);
+            }
+            else if (type == "FixedSlabRight" || type == "FixedSlabLeft")
+            {
+                // The palette position is the left top-edge endpoint. Width
+                // and height are deliberately not authored for this fixed shape.
+                added.kind = EntryKind::collision;
+                value.AddMember("name", Json(type.c_str(), allocator), allocator);
+                value.AddMember("type", "FixedSlabPaintable", allocator);
+                value.AddMember("collision_type", "STRUCTURE_FIXED_SLAB", allocator);
+                value.AddMember("material", "eraser", allocator);
+                Json slab(rapidjson::kObjectType);
+                slab.AddMember("x", rectangle.x, allocator); slab.AddMember("y", rectangle.y, allocator);
+                slab.AddMember("rise", Json(type == "FixedSlabRight" ? "right" : "left", allocator), allocator);
+                value.AddMember("slab", slab, allocator);
+                Json faces(rapidjson::kObjectType);
+                for (const char* face : { "left", "top", "right", "bottom" })
+                    faces.AddMember(Json(face, allocator), Json(true), allocator);
+                value.AddMember("paintable_faces", faces, allocator);
             }
             else
             {
@@ -647,6 +682,13 @@ namespace colourwars_editor
                             source_path.bottom - standing.top), std::numeric_limits<float>::infinity());
                     }
                     rectangle.y = copy.anchor.y;
+                }
+                else if (string(value, "type") == "FixedSlabPaintable")
+                {
+                    // A 50/50 offset leaves mirrored 24-normal-thick slabs
+                    // overlapped. Put this fixed shape below its whole body;
+                    // validation still refuses a collision with another slab.
+                    rectangle.x += 50.0; rectangle.y += rectangle.height + 50.0;
                 }
                 else { rectangle.x += 50.0; rectangle.y += 50.0; }
                 move_shape(value, rectangle);
@@ -758,6 +800,15 @@ namespace colourwars_editor
                 {
                     const Json& object = objects[index];
                     const std::string where = object_label(object, index) + ": ";
+                    if (string(object, "type") == "FixedSlabPaintable")
+                    {
+                        const auto terrain = sheet_of("terrain");
+                        if (terrain == catalog.sprite_frames.end())
+                            result.push_back(where + "fixed slab material needs sprite sheet terrain.");
+                        else if (terrain->second && !terrain->second->contains("swatch_eraser_fill"))
+                            result.push_back(where + "fixed slab material needs terrain frame swatch_eraser_fill.");
+                        continue;
+                    }
                     const std::string sheet = string(object, "sheet_name");
                     const std::string frame = string(object, "frame_name");
                     const auto frames = sheet_of(sheet);

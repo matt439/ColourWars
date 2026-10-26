@@ -94,6 +94,14 @@ namespace colourwars_editor
             const std::map<std::string, std::string>::const_iterator found = item.values.find(key);
             return found == item.values.end() ? "" : found->second;
         };
+        auto slab = item.slab;
+        if (slab && selected && dragging_)
+        {
+            // Provisional drags can leave the bounded authoring range. Keep
+            // the last valid outline; committed edits still fail atomically.
+            try { slab = document_.slab_guide(item.entry, drag_preview_); }
+            catch (const std::exception&) {}
+        }
         if (item.entry.kind == EntryKind::bounds)
         {
             if (!show_bounds_ && !selected) return;
@@ -125,6 +133,30 @@ namespace colourwars_editor
             {
                 outline(dc, screen, RGB(91, 109, 127), 1, PS_DOT);
             }
+            else if (slab)
+            {
+                POINT points[4];
+                for (std::size_t index = 0; index < slab->size(); ++index)
+                    points[index] = screen_point((*slab)[index].x, (*slab)[index].y);
+                HBRUSH brush = CreateSolidBrush(RGB(114, 133, 149));
+                HGDIOBJ old_brush = SelectObject(dc, brush), old_pen = SelectObject(dc, GetStockObject(NULL_PEN));
+                Polygon(dc, points, 4);
+                SelectObject(dc, old_brush); SelectObject(dc, old_pen); DeleteObject(brush);
+                for (int index = 0; index < 4; ++index)
+                    line(dc, points[index].x, points[index].y, points[(index + 1) % 4].x,
+                        points[(index + 1) % 4].y, RGB(40, 49, 60));
+                // The thick gold line is the actual support segment; the body
+                // and underside retain the collider's normal extrusion.
+                line(dc, points[0].x, points[0].y, points[1].x, points[1].y, RGB(240, 197, 95), 2);
+                if (!show_blockout_)
+                {
+                    const char* faces[] = { "top", "right", "bottom", "left" };
+                    for (int index = 0; index < 4; ++index)
+                        if (value(std::string("paintable_faces/") + faces[index]) == "true")
+                            line(dc, points[index].x, points[index].y, points[(index + 1) % 4].x,
+                                points[(index + 1) % 4].y, RGB(87, 230, 204), 2);
+                }
+            }
             else if (ramp)
             {
                 const bool left = value("collision_type") == "STRUCTURE_RAMP_LEFT";
@@ -153,7 +185,7 @@ namespace colourwars_editor
         {
             if (motion) { screen = screen_rect(motion->anchor); }
             outline(dc, screen, RGB(255, 255, 255), 2);
-            if (!is_spawn(item.entry))
+            if (!is_spawn(item.entry) && !slab)
                 fill(dc, RECT{screen.right - 5, screen.bottom - 5, screen.right + 6, screen.bottom + 6}, RGB(255, 255, 255));
         }
     }
@@ -173,6 +205,16 @@ namespace colourwars_editor
             // measurements until the geometry and diagnostics agree again.
             if (dragging_) break;
             const Rect& strip = face.strip;
+            if (face.polygon)
+            {
+                const std::size_t a_index = face.along_x ? (face.leading ? 0 : 3) : (face.leading ? 0 : 1);
+                const std::size_t b_index = face.along_x ? (face.leading ? 1 : 2) : (face.leading ? 3 : 2);
+                const auto& polygon = *face.polygon;
+                const POINT a = screen_point(polygon[a_index].x, polygon[a_index].y);
+                const POINT b = screen_point(polygon[b_index].x, polygon[b_index].y);
+                line(dc, a.x, a.y, b.x, b.y, RGB(87, 230, 204), 2);
+                continue;
+            }
             const double x = strip.x + (!face.along_x && !face.leading ? strip.width : 0.0);
             const double y = strip.y + (face.along_x && !face.leading ? strip.height : 0.0);
             const POINT a = screen_point(x, y);
@@ -277,6 +319,20 @@ namespace colourwars_editor
             for (std::vector<DrawItem>::const_reverse_iterator item = draw_items_.rbegin(); item != draw_items_.rend(); ++item)
             {
                 if (item->entry.kind != kind) continue;
+                if (item->slab)
+                {
+                    const double x = view_x_ + point.x / zoom_, y = view_y_ + point.y / zoom_;
+                    bool inside = true;
+                    for (std::size_t index = 0; index < item->slab->size(); ++index)
+                    {
+                        const auto& a = (*item->slab)[index];
+                        const auto& b = (*item->slab)[(index + 1) % item->slab->size()];
+                        if ((b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x) < 0.0)
+                        { inside = false; break; }
+                    }
+                    if (inside) { return item->entry; }
+                    continue;
+                }
                 RECT rectangle = screen_rect(item->rectangle);
                 if (is_spawn(item->entry))
                 {
@@ -342,7 +398,8 @@ namespace colourwars_editor
             if (!apply_pending()) return 0;
             SetFocus(canvas_);
             resizing_ = false;
-            if (selection_ && selection_->kind != EntryKind::level && !is_spawn(*selection_))
+            if (selection_ && selection_->kind != EntryKind::level && !is_spawn(*selection_) &&
+                !document_.slab_guide(*selection_))
             {
                 const RECT rectangle = screen_rect(document_.rectangle(*selection_));
                 resizing_ = std::abs(point.x - rectangle.right) <= 9 && std::abs(point.y - rectangle.bottom) <= 9;

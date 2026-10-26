@@ -84,6 +84,9 @@ add_executable(ColourWars WIN32
     objects/reveal_art.cpp
     objects/debug_text.cpp
     objects/figure_acting.cpp
+    objects/fixed_slab_geometry.cpp
+    objects/fixed_slab_paintable.cpp
+    objects/fixed_slab_shadow.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
     objects/level_audio.cpp

@@ -1,6 +1,7 @@
 #include "editor/level_json.h"
 #include "game/level_format.h"
 #include "editor/horizontal_authoring.h"
+#include "editor/slab_authoring.h"
 
 #include <rapidjson/error/en.h>
 #include <rapidjson/prettywriter.h>
@@ -97,6 +98,7 @@ namespace colourwars_editor
 
         Rect object_rectangle(const Json& value)
         {
+            if (string(value, "type") == "FixedSlabPaintable") { return decode_slab(value).bounds(); }
             if (string(value, "type") == "StructureRamp")
             {
                 const Json& triangle = member(value, "triangle");
@@ -256,6 +258,12 @@ namespace colourwars_editor
                 fail("Every level object must be a JSON object.");
             }
             const std::string type = string(object, "type");
+            if (type == "FixedSlabPaintable")
+            {
+                if (!collision) { fail("A fixed slab is collision geometry, not decoration."); }
+                validate_slab(object);
+                return;
+            }
             if (object.HasMember("motion"))
             {
                 try { decode_horizontal_motion(object); }
@@ -418,6 +426,7 @@ namespace colourwars_editor
             {
                 validate_object(object, false);
             }
+            validate_slab_pairs(document);
             validate_motion_geometry(document, motion_tuning);
         }
 

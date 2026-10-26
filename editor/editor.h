@@ -36,6 +36,7 @@ namespace colourwars_editor
         Rect rectangle;
         std::map<std::string, std::string> values;
         std::optional<MotionGuide> motion;
+        std::optional<PaintPolygon> slab;
     };
 
     class Editor

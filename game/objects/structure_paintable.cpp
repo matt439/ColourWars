@@ -38,7 +38,8 @@ StructurePaintable::StructurePaintable(
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth,
-	std::unique_ptr<const TerrainMaterial> material) :
+	std::unique_ptr<const TerrainMaterial> material,
+	std::span<const PaintPolygon> paint_polygons) :
 	Structure(sheet_name, frame_name, sprite_rectangle,
 		std::move(collision_shape),
 		render_resources, collision_type, color, rotation, origin,
@@ -51,7 +52,7 @@ StructurePaintable::StructurePaintable(
 		runoff_sheet_(render_resources->resolve_sprite_sheet(paint->sheet)),
 		runoff_frame_(render_resources->sprite_sheet(this->runoff_sheet_)->resolve_sprite_frame(paint->frame))
 {
-	this->paint_tiles_ = this->generate_paint_tiles(paint_obstacles);
+	this->paint_tiles_ = this->generate_paint_tiles(paint_obstacles, paint_polygons);
 	// Preview construction shares this path. Cue names are validated at startup;
 	// match playback is owned by Level's PaintAudio across every surface.
 	(void)audio_resources;
@@ -334,7 +335,8 @@ void StructurePaintable::draw_runoff(DrawList& draw_list, const PaintStrip& stri
 }
 
 std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
-    std::span<const RectangleF> paint_obstacles)
+    std::span<const RectangleF> paint_obstacles,
+    std::span<const PaintPolygon> paint_polygons)
 {
     std::vector<PaintTile> paint_tiles;
     this->paint_strips_.clear();
@@ -384,8 +386,11 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
             }
         };
 
-        for (const std::pair<float, float>& interval :
-            exposed_paint_intervals(low, high, edge, along_x, leading, obstacles))
+        const auto exposed = exposed_paint_intervals(low, high, edge, along_x, leading, obstacles);
+        const auto intervals = paint_polygons.empty() ? exposed : clip_paint_polygons(exposed,
+            along_x ? PaintPoint{ 0.0, edge } : PaintPoint{ edge, 0.0 },
+            along_x ? PaintPoint{ 1.0, 0.0 } : PaintPoint{ 0.0, 1.0 }, paint_polygons);
+        for (const std::pair<float, float>& interval : intervals)
             append_strip(interval.first, interval.second);
     };
 

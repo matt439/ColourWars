@@ -56,7 +56,8 @@
                 "oneOf": [
                     { "$ref": "#/definitions/structure" },
                     { "$ref": "#/definitions/paintable" },
-                    { "$ref": "#/definitions/ramp" }
+                    { "$ref": "#/definitions/ramp" },
+                    { "$ref": "#/definitions/fixed_slab" }
                 ]
             }
         },
@@ -263,6 +264,46 @@
                     }
                 }
             ]
+        },
+        "fixed_slab": {
+            "description": "One fixed scored slab: 160-unit horizontal span, 80-unit rise and 24-unit normal thickness. slab.x/y is the endpoint with smaller X. It has a dedicated eraser material and no sprite or arbitrary rotation vocabulary.",
+            "type": "object",
+            "required": ["type", "collision_type", "material", "slab", "paintable_faces"],
+            "properties": {
+                "type": { "enum": ["FixedSlabPaintable"] },
+                "collision_type": { "enum": ["STRUCTURE_FIXED_SLAB"] },
+                "material": { "enum": ["eraser"] },
+                "slab": {
+                    "type": "object",
+                    "required": ["x", "y", "rise"],
+                    "properties": {
+                        "x": { "type": "number", "minimum": -65536, "maximum": 65376 },
+                        "y": { "type": "number", "minimum": -65536, "maximum": 65536 },
+                        "rise": { "enum": ["left", "right"] },
+                        "width": { "not": {} }, "height": { "not": {} },
+                        "angle": { "not": {} }, "rotation": { "not": {} },
+                        "thickness": { "not": {} }, "motion": { "not": {} }
+                    },
+                    "oneOf": [
+                        { "properties": { "rise": { "enum": ["right"] }, "y": { "minimum": -65456 } } },
+                        { "properties": { "rise": { "enum": ["left"] }, "y": { "maximum": 65456 } } }
+                    ],
+                    "additionalProperties": true
+                },
+                "paintable_faces": {
+                    "type": "object",
+                    "required": ["left", "top", "right", "bottom"],
+                    "properties": {
+                        "left": { "type": "boolean" }, "top": { "type": "boolean" },
+                        "right": { "type": "boolean" }, "bottom": { "type": "boolean" }
+                    },
+                    "additionalProperties": true
+                },
+                "motion": { "not": {} }, "drift": { "not": {} },
+                "rotation": { "not": {} }, "rectangle": { "not": {} },
+                "rectangle_tlbr": { "not": {} }, "triangle": { "not": {} }
+            },
+            "additionalProperties": true
         },
         "visual": {
             "allOf": [

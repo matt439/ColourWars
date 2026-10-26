@@ -75,7 +75,7 @@ namespace colourwars_editor
         palette_ = control(WC_COMBOBOXW, L"Object to add", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, palette);
         const wchar_t* names[] = {L"Paintable block", L"Solid block", L"Jump-through platform",
             L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn",
-            L"Moving paintable block", L"Moving paintable platform"};
+            L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left"};
         for (const wchar_t* name : names) SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
         SendMessageW(palette_, CB_SETCURSEL, 0, 0);
         toolbar_.push_back(control(L"BUTTON", L"+ Add", WS_TABSTOP, add_object));
@@ -188,6 +188,7 @@ namespace colourwars_editor
                     item.values[property.path.starts_with('/') ? property.path.substr(1) : property.path] = property.value;
                 try { item.motion = document_.motion_guide(entry); }
                 catch (const std::exception& exception) { blockout_error_ = wide(exception.what()); }
+                item.slab = document_.slab_guide(entry);
                 if (blockout_tuning_ && (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b))
                 {
                     item.rectangle.width = blockout_tuning_->player_width;
@@ -385,6 +386,7 @@ namespace colourwars_editor
                 L"Moving paintables use the rectangle as their left anchor. Drag/resize edits that anchor; travel stays in world units. "
                 L"Blue shows full travel, gold the source-tuned standing corridor, and the filled body its initial phase. "
                 L"Duplicate places a copy below the complete corridor; blocked edits/copies are refused. Guides do not simulate riding or qualify runtime rate limits.\n\n"
+                L"Scored slabs have a fixed 160 by 80 slope and 24-unit normal thickness. Drag moves them; their slab/rise property selects left or right. They cannot be resized.\n\n"
                 L"Cyan edges mark exposed scoring faces (authored edges when aids are off). Spawn boxes follow source tuning. "
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
@@ -432,7 +434,7 @@ namespace colourwars_editor
         case add_object:
         {
             const char* types[] = {"StructurePaintable", "Structure", "StructureJumpThrough", "StructureRampRight",
-                "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough"};
+                "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft"};
             const LRESULT index = SendMessageW(palette_, CB_GETCURSEL, 0, 0);
             if (index < 0 || index >= static_cast<LRESULT>(std::size(types))) break;
             RECT client{}; GetClientRect(canvas_, &client);

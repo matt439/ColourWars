@@ -47,10 +47,12 @@ Select an object in the list or click it on the canvas. Drag its body to move
 it, or drag the handle at the bottom-right corner to resize it. Ramp editing
 moves or scales all three vertices together. Spawn markers can be moved;
 their boxes use `player.size` from source `game/content/tuning.json`.
+Fixed scored slabs move without a resize handle; their footprint is fixed.
 
 Use the palette to add paintable platforms, solid structures, jump-through
 platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),
-left/right ramps and decorative visuals. Team spawns and the four
+left/right ramps, [fixed scored slabs](#fixed-scored-slab-authoring-gapd5)
+and decorative visuals. Team spawns and the four
 bounds rectangles are also selectable and editable. The level entry exposes
 the stage name, menu icon and sound settings. New levels use the replacement
 `paint_exe` bank, `music.close_quarters` and its matching ending sting. Omit both
@@ -78,6 +80,7 @@ draws them with ([Materials](level-format.md#materials)). The palette gives each
 new collision object its usual one: a solid `Structure` is `ground`, a
 jump-through `ruler`, a paintable platform `pencil` and either ramp
 `set_square`. Decorative visuals get none. Duplicates keep their material.
+Fixed scored slabs require their dedicated `eraser` material.
 
 The inspector's `material` row lists, in its label, the values the object's
 collision type allows, such as `material (ground, pencil, eraser, paint_tin)`
@@ -86,7 +89,8 @@ or one the collision type does not allow, is refused like any other invalid
 edit. An object without a material still shows the row, empty; applying a value
 adds the field, as the Random setting does, and undo restores the omission.
 Applying an empty value removes the field, returning the object to the legacy
-stretched sheet/frame draw. The inspector adds no other missing field, and
+stretched sheet/frame draw, except on a fixed slab whose material is required.
+The inspector adds no other missing field, and
 never a material on a decoration. Changing `collision_type` to one the current
 material does not fit is refused too: change or clear the material first.
 The canvas stays schematic and does not draw materials; play the stage to see
@@ -128,6 +132,8 @@ level or the player's save. A missing or invalid aid file displays a diagnostic.
   decorations do not. Moving anchors never become permanent static blockers;
   their own scoring faces stay local to the body. The editor and game share the interval calculation in
   `game/paint_face_geometry.h`. With aids off, cyan shows authored faces instead.
+  Fixed slabs clip their diagonal faces and neighbouring flat faces against
+  the actual adjacency polygon, using the shared slab paint-geometry helper.
 - **Scoring area** shows the whole level and the part inside the selected
   rectangle. Select an object or one of the bounds rectangles to choose a
   region; selecting the level shows only the total. Area clips the inward paint
@@ -137,6 +143,8 @@ level or the player's save. A missing or invalid aid file displays a diagnostic.
   Movers appear at their initial phase, labelled in the summary. Their local
   strip dimensions and area are measured before translating the displayed
   positions, so changing phase does not change the available score.
+  Slabs retain local face areas and display actual world quads; selection
+  regions clip those quads, including their empty bounding-box corners.
   During a drag, measurements and scoring edges wait for the committed drop.
 - **Purple/gold boxes** show the recorded tap/held jump envelope in both
   directions from the top centre of the selected geometry, or the feet of a
@@ -168,8 +176,9 @@ while you edit rather than at the next game launch:
 | Field | Must name |
 |---|---|
 | `icon_frame` | a frame in `sprite_sheet_1` |
-| each object's `sheet_name` | a `sprite_sheet` listed in `game/content/manifest.json` |
-| each object's `frame_name` | an entry in that sheet's `sprite_frames`; an animation strip is not a frame |
+| `sheet_name`, when the object uses generic sprite fields | a `sprite_sheet` listed in `game/content/manifest.json` |
+| that object's `frame_name` | an entry in that sheet's `sprite_frames`; an animation strip is not a frame |
+| fixed slab's dedicated material | sprite sheet `terrain` and its `swatch_eraser_fill` frame |
 | `sound.sound_bank_name` | a `sound_bank` listed in the manifest |
 | `sound.music_name`, `sound.end_sting_name` | an effect of that bank: every wave when `create_effect_instance_for_each_wave` is true, plus each `sound_effect_instances` name |
 
@@ -288,7 +297,7 @@ bounds and ramps. Document acceptance does not establish those play qualities.
 
 ## Moving-structure authoring (`GAP#D5`)
 
-**Implemented 2026-10-26; final targeted qualification pending.** The palette's
+**Implemented and qualified 2026-10-26.** The palette's
 **Moving paintable block** and **Moving paintable platform** create the existing
 solid and jump-through horizontal paintables. They write `StructurePaintable`
 with the optional [motion record](level-format.md#horizontal-paintable-motion),
@@ -347,10 +356,50 @@ exact editor-save replay updates; Release explicitly excludes developer replay.
 Receipts: `out/validation/overnight-20261026/phase4/` (`editor-*` and `mover/`).
 No new GUI, native-pixel or human acceptance is claimed here.
 
-Static rotated structures get their own fields, guides and round-trip checks
-only after the placement-driven runtime contract is defined. No arbitrary
-rotation, lift or crush editor is implied. Human GUI handling and saved-stage
-play remain `ED#5`; Turbulence route/readability acceptance remains `POL#21`.
+Human GUI handling and saved-stage play remain `ED#5`; Turbulence
+route/readability acceptance remains `POL#21`.
+
+## Fixed scored-slab authoring (`GAP#D5`)
+
+The **Scored slab rising right** and **Scored slab rising left** palette entries
+write `FixedSlabPaintable` with `STRUCTURE_FIXED_SLAB` collision and the required
+`eraser` material. The fixed footprint spans 160 horizontal units, rises 80
+units and has 24 units of thickness measured along the slab normal. It is a
+solid scored slope, distinct from the existing unscored paint-pass ramp.
+
+`slab/x` and `slab/y` locate the top endpoint with the smaller world X;
+`slab/rise` selects `left` or `right`. A right-rising slab at `(1240,880)` ends
+at `(1400,800)`; its mirrored left-rising counterpart starts at `(2600,800)`.
+Endpoints must remain finite and within 65,536 world units. Dragging, nudging
+and rectangle-coordinate edits translate the body; resizing is refused. The
+canvas draws the actual sloping polygon and top support segment, and selects
+its body without treating an empty bounding-box corner as solid. Duplicates
+move below the complete body. Intersecting slabs are refused using the same
+strict positive-overlap test as runtime; a separated pair with overlapping
+bounding boxes remains valid.
+
+The four paint-face switches retain local face identity. Areas are measured
+before transforming their strips into world quads. Shared canonical paint
+adjacency corrects only checked OBB reconstruction drift at an authored join;
+the collider, visible tile pose and guide stay at their represented coordinates.
+It does not round an obstacle or erase a real small authored gap. Arbitrary
+rotation, resizing, motion and combined shape records are refused. Unknown
+metadata survives edits, duplication, undo/redo and save/reopen. The new type
+uses its dedicated material rather than generic sheet/frame/colour fields.
+
+Debug and Release game/editor builds, the full editor document suite and three
+hidden editor launch/status/close checks per preset pass. New document checks
+include mirrored
+normal extrusion, translation and immutable size, both-direction duplication,
+transactional pair/field refusals, saved metadata/schema round trips, actual
+polygon scoring, reciprocal face clipping, exact buried-cap zero and retained
+`0.00004` authored gaps. The CPU `fixed_slab` case separately loads an actual
+editor-saved trial through fresh 1/4-player public builders. Receipts are under
+`out/acceptance/x64-debug/level-editor/30f6ffeacf6a466a904168cdb7192c11/`
+and the matching Release receipt `78fd5457eb954c6da74d8b73355ac283`, alongside
+`out/validation/overnight-20261026/phase11/` (`slab-v4/x64-debug`, `regression/x64-release`).
+These checks do not establish attended GUI handling, saved-stage play, native
+composition or competitive value.
 
 ## Registration assistance (`ED#4`)
 
