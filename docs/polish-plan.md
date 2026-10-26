@@ -293,15 +293,102 @@ review scale, fractional placement and rotation in motion.
 four-player views. Slow camera movement and aim sweeps remain stable and readable
 at 720p, 1080p and QHD. Record the supported scaling behaviour and any letterboxing.
 
-**Scaling policy not yet recorded (`POL#34`, 2026-10-25).** That last sentence
-is still open. Four-unit texels project to fractional screen sizes at 720p and
-QHD, and no snapping, integer-scale or letterboxing policy is accepted
-([playable kit](polish-playable-kit.md#visual-observations-and-remaining-decisions),
-[refinement](polish-refine.md#open-after-this-increment)). The local next step is
-a short record of what the camera and split-screen layout do today at 720p, 1080p
-and QHD, from the code and existing probe captures, with the candidate policies
-(leave fractional, snap the camera, integer texel scale with letterboxing) and
-their cost in 1/2/4-player panes. Choosing one is the author's call.
+### Display scaling record
+
+**Current behavior recorded; policy selection remains with the author (`POL#34`).**
+This source/evidence record is based on `c030c054` (2026-10-26), with the same
+camera, render and presentation paths as the qualified `87593628` native
+captures. It selects no snapping, integer-scale or letterboxing policy.
+
+The active-gameplay camera uses
+`min(screen_height / 1080, pane_pixel_width / 1280)` with the current
+`presentation.json`. Two-player panes are stacked; four-player panes are
+quadrants. The nominal values at the three 16:9 sizes are:
+
+| Window | Players | Pane pixels | Gameplay scale | 4-world-unit cell, pixels | World extent |
+|---|---:|---|---:|---:|---|
+| 1280x720 | 1 | 1280x720 | 2/3 | 8/3 | 1920x1080 |
+| 1280x720 | 2 | 1280x360 | 2/3 | 8/3 | 1920x540 |
+| 1280x720 | 4 | 640x360 | 1/2 | 2 | 1280x720 |
+| 1920x1080 | 1 | 1920x1080 | 1 | 4 | 1920x1080 |
+| 1920x1080 | 2 | 1920x540 | 1 | 4 | 1920x540 |
+| 1920x1080 | 4 | 960x540 | 3/4 | 3 | 1280x720 |
+| 2560x1440 | 1 | 2560x1440 | 4/3 | 16/3 | 1920x1080 |
+| 2560x1440 | 2 | 2560x720 | 4/3 | 16/3 | 1920x540 |
+| 2560x1440 | 4 | 1280x720 | 1 | 4 | 1280x720 |
+
+[PlayerCamera](../game/objects/player_camera.cpp) uses whole-pixel pane edges,
+continuous translation and arena bounds; view shake is a separate render offset.
+It adds no gameplay bars. Other aspect ratios use the same minimum: a narrow
+pane can become width-limited and show more vertical world. Odd pane edges are
+truncated consistently by `Viewport::pixel_rect()`. At these standard sizes,
+four-player cell sizes are already integral; that alone does not align camera
+translation, moving sprites or rotated tools to a pixel grid. One/two-player
+4-unit columns can alternate 2/3 pixels at 720p and 5/6 at QHD as the camera pans.
+
+Menus and HUD have separate scale rules. [MenuPage](../game/states/menu_page.cpp)
+fits its 1920x1080 design to the full window, independent of player count; the
+scrim covers centered surplus at other aspect ratios. The gameplay HUD uses
+pane-local coordinates and `min(pane_width / 1920, pane_height / 1080)`.
+Its bar positions/sizes use pane fractions, while text, padding and paper
+keylines use that scalar ([InterfaceGameplay](../game/objects/interface_gameplay.cpp)).
+
+| Window | Fullscreen menu / 1P HUD scale | 2P HUD scale | 4P HUD scale |
+|---|---:|---:|---:|
+| 1280x720 | 2/3 | 1/3 | 1/3 |
+| 1920x1080 | 1 | 1/2 | 1/2 |
+| 2560x1440 | 4/3 | 2/3 | 2/3 |
+
+World materials and menu/HUD chrome use point sampling; UI typography uses
+linear sampling. The renderer already truncates each projected sprite-rectangle
+edge toward zero, while glyph geometry retains fractional positions/scales.
+Those renderer contracts are distinct from snapping the camera. Small overview
+and stage-preview paths can select miniature terrain below 0.25 camera scale;
+active gameplay retains ordinary terrain, even in a narrower, lower-scale pane.
+Stage Preview independently frames its authored world bounds inside its menu pane.
+
+**Candidates for the author:**
+
+- **Retain fractional scaling:** retain the current pane coverage, world extents
+  and continuous camera. The existing uneven column widths, subpixel placement
+  and rotated-pixel treatment remain part of the visual review.
+- **Snap the render camera to screen pixels:** retain the current scale and world
+  extent, but quantize translation. For 1/2P, a screen pixel spans 1.5 world
+  units at 720p, 1 at 1080p and 0.75 at QHD; for 4P it spans 2, 4/3 and 1
+  world units respectively. This can stabilize camera phase;
+  it does not make fractional cell widths uniform or solve moving/rotated art.
+  Rendering, pointer mapping and overlays need a consistent transform, with
+  continuous simulation/aim and a review of the stepped scrolling feel.
+- **Integer cell scale with an inset pane:** choose the largest whole number of
+  pixels per 4-world-unit cell that fits the current world extent, align the
+  render camera/pane, and center the unused area as bars. This illustrative
+  choice preserves world framing rather than changing the map/weapon sightlines.
+
+| Players | Active pane at 720p | At 1080p | At QHD |
+|---|---|---|---|
+| 1 | 960x540 | 1920x1080 | 2400x1350 |
+| 2 | 960x270 | 1920x540 | 2400x675 |
+| 4 | 640x360 | 960x540 | 1280x720 |
+
+For that integer-fit example, 1/2P retain 56.25% of each pane's area at 720p and
+87.89% at QHD, with no loss at 1080p; 4P fills its panes at all three sizes.
+The QHD 2P inset leaves an odd 45-pixel vertical remainder, so centered bars
+need an explicit whole-pixel split. HUD, cursor and warning placement must
+respect the active pane; scaling the HUD to it would also reduce its text size.
+Using the full pane at those integer scales instead would change the visible
+world extent. Integer grid art still does not settle arbitrary tool rotations
+or linear UI text. Collision geometry must not move to hide raster artifacts.
+
+**Evidence and remaining gate.** The [POL#32 native inspection](polish-press-tower.md#native-inspection-pol32)
+retains actual 1P/4P story/overview contexts at 720p/1080p/QHD, plus clean/heavy
+720p surface panes and the Press Tower 4P landing/exit captures. Two-player
+entries above are source-derived. The saved captures keep their original
+source/binary scopes; no new policy comparison or human motion/readability
+acceptance is claimed. The source pins, exact arithmetic and reused-receipt
+reconciliation are under `out/validation/todo-loop-20261025/pol34-prep-v1/`.
+The author still chooses a candidate, with motion/aim sweeps and 1/2/4P HUD and
+clean/heavy scene readability reviewed at all three sizes. Existing `POL#24`
+finish and physical-device gates remain open.
 
 **Workshop retirement validation (2026-10-15):** Debug and Release build and
 pass all 11 remaining consumer cases. Movement Course routes, movement feedback,

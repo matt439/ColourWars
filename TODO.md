@@ -48,7 +48,6 @@ This is a selection guide, not another priority order; each owner defines a boun
 |---|---|---|
 | `ROAD#9` | Per-seat controller rumble through one isolated `XInputSetState` file, which becomes `GAP#F6`'s exhibit | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
 | `POL#33` | Time `crossfeed` and `press_tower` level builds into the existing `perf` table | [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment) |
-| `POL#34` | Record today's 720p/1080p/QHD scaling behaviour and the candidate policies for the author | [§1](docs/polish-plan.md#1-establish-the-art-and-display-rules) |
 | `DBG#1` | No further unattended field selected; additional consumer audits are optional if selected | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -58,6 +57,8 @@ This is a selection guide, not another priority order; each owner defines a boun
   five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
 - **Unborrowed Splatoon mechanics:** paint underfoot, a painting-charged special and a
   splat tally, each yes or no, with or after `POL#27` (`POL#30`).
+- **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
+  treatment (`POL#34`); current behavior is documented, with no candidate accepted.
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
@@ -76,7 +77,7 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
-| `POL#34` | OPEN | MED | M | Display scaling: record what 720p/1080p/QHD and 1/2/4-player panes do today and the candidate snapping, integer-scale and letterboxing policies; the choice is the author's. [§1](docs/polish-plan.md#1-establish-the-art-and-display-rules). |
+| `POL#34` | DECISION | MED | M | Choose the recorded fractional, camera-snap or integer-cell/letterbox display policy after 720p/1080p/QHD motion and 1/2/4P readability review. [Record](docs/polish-plan.md#display-scaling-record). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
 
 ## Feel and feedback
