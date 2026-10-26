@@ -11,8 +11,9 @@ capability and placement checks below.
 
 The separate explicit-only [mover comparison](../game/content/levels/turbulence_mover_trial.json)
 adds the qualified horizontal pair beside that preserved skeleton. It is a
-playable blockout comparison, with its measured local role below; attended
-balance and fixed scored-slope placement/native qualification remain open.
+playable blockout comparison, with its measured local role below. The private
+fixed-slab comparison now has qualified core, routes, native composition and
+replay; broader placement pressure and attended balance remain open.
 
 ## Question and research transfer
 
@@ -599,7 +600,34 @@ survival, a universal weapon advantage or competitive value. Receipts are under
 `x64-release/turbulence-slab-routes-17176`. Compile the available-only case with
 `run-acceptance.ps1 -Cases turbulence_slab_routes -CompileOnly`, then invoke its
 executable with the staged game directory and the two private trial JSON paths.
-Fresh public replay and the remaining five-tool pressure comparison are next.
+The fresh public replay qualification follows below. The remaining five-tool
+pressure comparison belongs to the arena work.
+
+**Fresh public replay, 2026-10-26 (Debug).** The same case's `--replay` mode
+passes four record/play pairs: A/B, uphill/downhill. Production
+`ReplayRecorder`, codec and `ReplayPlayer` handle 1,192 actual tape updates,
+with sixteen checkpoints. A fresh factory rereads each private stage from disk
+using decoded stage/setup/seed/step metadata. It compares all observed match
+fingerprint fields and every paint quad, local area, face, team, raw owner and
+source ordinal on every update, plus final state, paid firing and a terminal
+RNG witness. Playback starts with neutral inputs and checks the actual
+post-player-filter input against the decoded tape.
+
+The first 180 countdown updates do not call `SeatInputFilter`. They are actual
+cold priming observations in separate receipts, not invented tape inputs.
+Each fresh rebuild compares its initial observation and all 180 priming
+observations before the 297-update uphill or 299-update downhill tape.
+The four pairs use 1,912 recording and 1,912 playback Level updates. Four
+malformed-input codec controls and one fresh wrong-checkpoint control pass;
+the latter adds 240 updates, for 4,064 actual updates in total.
+
+Receipts: `out/validation/overnight-20261026/phase15/replay/x64-debug/turbulence-slab-routes-42640/`.
+After adding the hooks, the default Release comparison's entire CSV and trace
+remain byte-identical to the earlier qualified outputs. Release explicitly
+rejects `--replay`. This qualifies the standalone public factory with its
+explicit priming; it does not qualify unmodified DebugDirector cold playback,
+cross-build determinism or human acceptance. The bounded `GAP#D5` capability
+work is complete; arena selection and pressure remain `POL#21`.
 
 ## Tool and recovery hypotheses
 
@@ -874,8 +902,9 @@ including moving approaches, preview and ending views.
 
 These checks establish construction, routes, score geography, the recorded
 near-receiver tool, single-pulse defender and bounded moving-fire/counterfire
-samples, and bounded native composition. Sustained/tracking opposed pressure,
-attended balance and mover/rotation placement remain open.
+samples, and bounded native composition. The later mover/slab records qualify
+their bounded capability placements; sustained/tracking opposed pressure and
+attended balance remain open.
 Attended both-side 1-4P play must still answer crossing comfort,
-pressure and regional value. `POL#21`, `GAP#D5`, `POL#3`, `POL#24`, `POL#27`
+pressure and regional value. `POL#21`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.

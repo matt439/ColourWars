@@ -9,4 +9,6 @@ namespace turbulence_slab_routes_acceptance
     using moving_structure_acceptance::require;
     void run(const fs::path& content, const fs::path& slab, const fs::path& shoulder,
         const fs::path& evidence);
+    void run_replay(const fs::path& content, const fs::path& slab, const fs::path& shoulder,
+        const fs::path& evidence);
 }

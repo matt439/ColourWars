@@ -2,10 +2,16 @@
 #include "scripts/acceptance/turbulence_slab_routes/fixtures.h"
 #include "game/objects/level_builder.h"
 #include "editor/level_document.h"
+#include "game/debug/dev_tools.h"
 #include <array>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#if COLOURWARS_DEV_TOOLS
+#include "game/debug/replay.h"
+#include "game/debug/tune_document.h"
+#include <rapidjson/prettywriter.h>
+#endif
 
 namespace turbulence_slab_routes_acceptance
 {
@@ -170,20 +176,24 @@ namespace turbulence_slab_routes_acceptance
             int owner = -1;
             Roles map;
 
-            Trial(World& with, const fs::path& stage, const Roles& groups, bool side_b) : world(with), map(groups)
+            Trial(World& with, const fs::path& stage, const Roles& groups, bool side_b,
+                const MenuLevelSettings* decoded_settings = nullptr, const unsigned int* decoded_seed = nullptr) :
+                world(with), map(groups)
             {
                 auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage).c_str()); info->validate();
                 const LevelObjectBuilder objects(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
                 info->validate_content(objects, world.render, world.audio); bounds = info->out_of_bounds_rectangle();
-                infos.add("turbulence_roller_route", std::move(info));
+                infos.add(decoded_settings ? decoded_settings->stage() : "turbulence_roller_route", std::move(info));
                 MenuLevelSettings settings;
                 settings.set_stage("turbulence_roller_route"); settings.set_player_count(1);
                 settings.set_screen_layout(ScreenLayout::one_player); settings.begin_input_claims(input_slots::keyboard_and_mouse);
                 settings.set_player_team(0, side_b ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(0, WeaponType::roller);
+                if (decoded_settings != nullptr) { settings = *decoded_settings; }
                 viewports.set_layout(settings.screen_layout());
                 LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
                     &world.tuning, &world.presentation, &resolution, nullptr, &partitioner, &mouse);
-                std::srand(seed); level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+                std::srand(decoded_seed ? *decoded_seed : seed);
+                level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
                 owner = paint_owners::index(player().player_num(), 0);
                 require(owner == 4 && player().primary_weapon().type() == WeaponType::roller,
                     "Public Roller route lost actual device-less owner4 or tool");
@@ -211,26 +221,34 @@ namespace turbulence_slab_routes_acceptance
                 for (const auto& effect : player().movement_feedback().effects())
                 { require(effect.kind != MovementFeedbackKind::takeoff || effect.age != 0.0f, "Jump-free public Roller route created a takeoff" + pose()); }
             }
-            void tick(float movement = 0.0f, bool fire = false, bool observe_route = false)
+            void tick(float movement = 0.0f, bool fire = false, bool observe_route = false,
+                SeatInputFilter* extra = nullptr, float seconds = moving_structure_acceptance::dt,
+                PlayerInputData* effective_output = nullptr)
             {
                 require(updates < maximum_scene_updates, "Public Roller route exceeded its finite update budget" + pose());
-                const bool paid_before = fire && player().primary_weapon().ready_to_shoot();
+                const bool ready_before = player().primary_weapon().ready_to_shoot();
                 const float ammo_before = player().weapon_ammo();
                 class Input final : public SeatInputFilter
                 {
                 public:
-                    Input(float movement, bool fire) : movement_(movement), fire_(fire) {}
-                    void filter_seats(std::vector<PlayerInputData>& seats, const Level&) override
+                    Input(float movement, bool fire, SeatInputFilter* extra) : movement_(movement), fire_(fire), extra_(extra) {}
+                    void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override
                     {
                         require(seats.size() == 1, "Public Roller route unexpectedly gained a seat");
                         seats[0] = {}; seats[0].connected = true;
                         seats[0].x_movement = movement_; seats[0].primary_shoot = fire_;
+                        if (extra_ != nullptr) { extra_->filter_seats(seats, level); }
+                        effective = seats[0]; called = true;
                     }
-                private: float movement_; bool fire_;
-                } input(movement, fire);
-                level->update({}, moving_structure_acceptance::dt, &input); ++updates;
-                if (fire) { ++held; }
-                if (paid_before)
+                    PlayerInputData effective;
+                    bool called = false;
+                private: float movement_; bool fire_; SeatInputFilter* extra_;
+                } input(movement, fire, extra);
+                level->update({}, seconds, &input); ++updates;
+                if (effective_output != nullptr && input.called) { *effective_output = input.effective; }
+                const bool actual_fire = input.called && input.effective.primary_shoot;
+                if (actual_fire) { ++held; }
+                if (actual_fire && ready_before)
                 {
                     const float cost = world.tuning.weapon(WeaponType::roller).details.ammo_usage;
                     const float actual_cost = ammo_before - player().weapon_ammo();
@@ -238,7 +256,7 @@ namespace turbulence_slab_routes_acceptance
                         "Actual held Roller pulse did not pay its source-tuned cost" + pose());
                     ++paid; paid_cost += actual_cost;
                 }
-                else if (fire)
+                else if (actual_fire)
                 { require(player().weapon_ammo() >= ammo_before, "Roller ammunition fell outside an actual ready trigger update" + pose()); }
                 if (observe_route)
                 {
@@ -357,6 +375,293 @@ namespace turbulence_slab_routes_acceptance
                 " total_owned=" << result.final_paint.total_owned << " airborne=" << result.airborne << '\n';
             return result;
         }
+
+#if COLOURWARS_DEV_TOOLS
+        std::uint64_t paint_witness(const std::vector<std::uint64_t>& paint);
+
+        struct Observation
+        {
+            MatchFingerprint print;
+            std::vector<std::uint64_t> paint;
+            std::uint64_t paint_hash = 0;
+        };
+
+        Observation observe(const Trial& trial, int input_update)
+        {
+            Observation result{ MatchFingerprint::of(*trial.level, input_update),
+                moving_structure_acceptance::sample_bits(trial.level->paint_surfaces()), 0 };
+            result.paint_hash = paint_witness(result.paint);
+            return result;
+        }
+
+        void same_observation(const Observation& expected, const Trial& actual, int input_update,
+            const std::string& label)
+        {
+            const auto difference = MatchFingerprint::difference(expected.print,
+                MatchFingerprint::of(*actual.level, input_update));
+            require(difference.empty(), label + ": " + difference);
+            require(expected.paint == moving_structure_acceptance::sample_bits(actual.level->paint_surfaces()),
+                label + ": complete world paint quads/local areas/team/raw-owner/source ordering differ");
+        }
+
+        std::uint64_t paint_witness(const std::vector<std::uint64_t>& paint)
+        {
+            std::uint64_t hash = 0xcbf29ce484222325ull;
+            for (const std::uint64_t value : paint)
+            {
+                for (unsigned int byte = 0; byte < 8; ++byte)
+                { hash ^= (value >> (byte * 8)) & 255u; hash *= 0x100000001b3ull; }
+            }
+            return hash;
+        }
+
+        void replay_trace(std::ofstream& trace, const char* phase, int level_update, int input_update,
+            const Observation& observation, const Trial& trial)
+        {
+            const auto paint = trial.paint();
+            trace << phase << ',' << level_update << ',' << input_update << ',' << hex64(observation.print.hash) << ',' <<
+                hex64(observation.paint_hash) << ',' << trial.player().center().x << ',' <<
+                trial.player().rectangle().bottom() << ',' << trial.player().weapon_ammo() << ',' <<
+                paint.receiver[0] << ',' << paint.total_owned << ',' << trial.player().carrier_id() << '\n';
+            require(trace.good(), "Cannot write exact public slab replay observations");
+        }
+
+        void write_variant(const fs::path& path, const rapidjson::Document& document)
+        {
+            require(!fs::exists(path), "Refusing earlier slab replay control receipt");
+            rapidjson::StringBuffer buffer;
+            rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+            require(document.Accept(writer), "Cannot serialize slab replay control JSON");
+            std::ofstream file(path, std::ios::binary); file << buffer.GetString(); file.close();
+            require(file.good(), "Cannot write slab replay control receipt");
+        }
+
+        void check_codec_refusal(const fs::path& tape, const fs::path& output)
+        {
+            auto invalid = parse(read(tape));
+            require(invalid["inputs"].Size() == 1 && !invalid["inputs"][0].Empty(),
+                "Slab replay codec control needs an actual recorded input run");
+            invalid["inputs"][0][0].SetString("1*not-an-encoded-input", invalid.GetAllocator());
+            write_variant(output, invalid);
+            bool refused = false;
+            try { (void)ReplayFile::read(output); }
+            catch (const std::runtime_error& error)
+            { refused = std::string(error.what()).size() > 0; }
+            require(refused, "Production replay codec accepted malformed recorded input");
+        }
+
+        struct ReplayCounts
+        {
+            int record_updates = 0, input_updates = 0, priming_updates = 0, checkpoints = 0;
+            int paid = 0, held = 0, braking = 0, corruption_updates = 0;
+            double receiver_top = 0.0;
+        };
+
+        ReplayCounts replay_route(World& world, const fs::path& content, const Geometry& geometry,
+            const fs::path& evidence, bool side_b, bool uphill, bool corruption_probe)
+        {
+            const std::string name = std::string("replay-") + (side_b ? "b-" : "a-") + (uphill ? "uphill" : "downhill");
+            const auto stage = station(content, geometry, evidence, name, side_b, uphill, world.tuning.player().size);
+            const auto stage_bytes = read(stage);
+            const auto groups = roles(parse(stage_bytes), geometry, side_b);
+            ReplayFile header;
+            header.build = "public-slab-Roller-after-180-unfiltered-countdown-updates";
+            header.dt_bits = bits_from_float(moving_structure_acceptance::dt);
+            header.seed = seed;
+            header.tuning_hash = fnv1a(read(content / "tuning.json"));
+            header.presentation_hash = fnv1a(read(content / "presentation.json"));
+            header.settings.set_stage(stage.stem().string()); header.settings.set_player_count(1);
+            header.settings.set_screen_layout(ScreenLayout::one_player);
+            header.settings.begin_input_claims(input_slots::keyboard_and_mouse);
+            header.settings.set_player_team(0, side_b ? PlayerTeam::b : PlayerTeam::a);
+            header.settings.set_player_weapon(0, WeaponType::roller);
+            auto original = std::make_unique<Trial>(world, stage, groups, side_b, &header.settings, &*header.seed);
+            const Observation initial = observe(*original, 0);
+            ReplayRecorder recorder(name, header, nullptr, maximum_scene_updates);
+            std::vector<Observation> priming, recorded;
+            std::ofstream trace(evidence / (name + "-exact-trace.csv"));
+            require(trace.good(), "Cannot create slab replay trace");
+            trace << std::setprecision(12) << "phase,level_update,recorded_input_update,full_fingerprint_hash,paint_bits_witness,"
+                "centre_x,feet_y,ammo,receiver_top_area,total_owned_area,carrier\n";
+            replay_trace(trace, "initial-cold", 0, 0, initial, *original);
+            const auto tick = [&](float movement = 0.0f, bool fire = false, bool route = false)
+            {
+                const std::size_t before = recorder.file().inputs.empty() ? 0 : recorder.file().inputs[0].size();
+                original->tick(movement, fire, route, &recorder);
+                const std::size_t after = recorder.file().inputs.empty() ? 0 : recorder.file().inputs[0].size();
+                if (after == before)
+                {
+                    require(recorded.empty() && !original->level->match_started(),
+                        "Production input filter skipped an active recorded slab update");
+                    priming.push_back(observe(*original, original->updates));
+                    replay_trace(trace, "unfiltered-cold-priming", original->updates, 0, priming.back(), *original);
+                }
+                else
+                {
+                    require(after == before + 1 && recorder.file().inputs.size() == 1,
+                        "Production slab recorder did not receive exactly one seat input per active update");
+                    recorded.push_back(observe(*original, static_cast<int>(after)));
+                    replay_trace(trace, "record", original->updates, static_cast<int>(after), recorded.back(), *original);
+                    if (after % ReplayFile::checkpoint_interval == 0) { recorder.add_checkpoint(recorded.back().print); }
+                }
+            };
+            int count_in = 0;
+            while (!original->level->match_started() && count_in < 240) { tick(); ++count_in; }
+            require(count_in == 181 && priming.size() == 180 && recorded.size() == 1,
+                "Slab replay source countdown/filter boundary changed; do not invent ignored tape inputs");
+            for (int update = 0; update < 60; ++update) { tick(); }
+            flat_stop(*original, uphill ? groups.upper_body : groups.crossover_body,
+                "Recorded slab Roller start lost original flat support");
+            require(original->player().primary_weapon().ready_to_shoot() && original->player().weapon_ammo() == 1.0f &&
+                original->paint().total_owned == 0.0, "Recorded slab route was not neutral/ready/fully funded");
+            const float target = mirror(side_b, uphill ? 1500.0f : 1160.0f);
+            const float direction = target > original->player().center().x ? 1.0f : -1.0f;
+            bool braking = false;
+            int braking_updates = 0;
+            for (int update = 0; update < 480; ++update)
+            {
+                const float error = std::abs(target - original->player().center().x);
+                const float speed = std::abs(original->player().velocity().x);
+                const float stop = speed * speed / (2.0f * world.tuning.player().x_deacceleration) +
+                    speed * moving_structure_acceptance::dt + 4.0f;
+                if (!braking && speed > 0.0f && error <= stop) { braking = true; }
+                tick(braking ? 0.0f : direction, !braking, true);
+                braking_updates += braking ? 1 : 0;
+                if (braking && original->player().velocity().x == 0.0f && supported(original->player())) { break; }
+            }
+            require(braking && original->paid > 0 && original->airborne == 0 && original->slope > 0,
+                "Recorded public slab route missed paid grounded Roller travel");
+            flat_stop(*original, uphill ? groups.crossover_body : groups.upper_body,
+                "Recorded slab route failed to stop on its fixed receiving floor");
+            for (int update = 0; update < 180; ++update) { tick(); }
+            flat_stop(*original, uphill ? groups.crossover_body : groups.upper_body,
+                "Recorded slab route lost final quiet support");
+            require(original->paint().receiver[0] > 0.0, "Recorded earned slab walk did not retain raw-owner top paint");
+            recorder.file().updates = static_cast<int>(recorded.size());
+            recorder.file().final_print = recorded.back().print;
+            const auto tape = evidence / (name + "-tape.json");
+            require(!fs::exists(tape), "Refusing earlier production slab replay tape"); recorder.file().write(tape);
+            ReplayCounts counts{ original->updates, static_cast<int>(recorded.size()), static_cast<int>(priming.size()),
+                static_cast<int>(recorder.file().checkpoints.size()), original->paid, original->held,
+                braking_updates, 0, original->paint().receiver[0] };
+            const unsigned int terminal_rng = static_cast<unsigned int>(std::rand());
+            original.reset();
+
+            // The current production codec contains input-filter calls, not the
+            // 180 Level updates that return before that filter. This separate
+            // receipt records the required cold priming explicitly.
+            const auto priming_path = evidence / (name + "-priming.json");
+            {
+                std::ofstream receipt(priming_path);
+                receipt << "{\"scope\":\"unfiltered-source-countdown-observations\",\"unfiltered_updates\":" << counts.priming_updates <<
+                    ",\"level_updates\":" << counts.record_updates << ",\"production_tape_updates\":" << counts.input_updates <<
+                    ",\"source_stage_hash\":\"" << hex64(fnv1a(stage_bytes)) << "\",\"initial_hash\":\"" << hex64(initial.print.hash) <<
+                    "\",\"codec_contains_priming\":false,\"director_cold_playback_qualified\":false}\n";
+                receipt.close(); require(receipt.good(), "Cannot finish explicit slab replay priming receipt");
+            }
+            const auto decoded = ReplayFile::read(tape);
+            const auto priming_receipt = parse(read(priming_path));
+            const int priming_count = priming_receipt["unfiltered_updates"].GetInt();
+            require(decoded.seed && decoded.build == header.build && decoded.dt_bits == header.dt_bits &&
+                decoded.tuning_hash == fnv1a(read(content / "tuning.json")) &&
+                decoded.presentation_hash == fnv1a(read(content / "presentation.json")) && !decoded.god && !decoded.infinite_ammo &&
+                decoded.suspends.empty() && decoded.updates == counts.input_updates && decoded.inputs.size() == 1 &&
+                decoded.inputs[0].size() == recorded.size() && decoded.checkpoints.size() == static_cast<std::size_t>(counts.checkpoints) &&
+                priming_count == counts.priming_updates && priming_count + decoded.updates == counts.record_updates,
+                "Production slab tape or explicit priming lost rebuilding metadata/input counts");
+            require(decoded.settings.stage() == stage.stem().string() && decoded.settings.player_count() == 1 &&
+                decoded.settings.screen_layout() == header.settings.screen_layout() &&
+                decoded.settings.player_settings()[0].team == header.settings.player_settings()[0].team &&
+                decoded.settings.player_settings()[0].num == header.settings.player_settings()[0].num &&
+                decoded.settings.player_settings()[0].weapon == WeaponType::roller,
+                "Production slab tape lost the actual complete roster/setup");
+            for (std::size_t update = 0; update < recorded.size(); ++update)
+            { require(replay_codec::same(recorder.file().inputs[0][update], decoded.inputs[0][update]), "Production slab input codec changed bits"); }
+            check_codec_refusal(tape, evidence / (name + "-invalid-input.json"));
+            const fs::path rebuild_stage = evidence / (decoded.settings.stage() + ".json");
+            require(read(rebuild_stage) == stage_bytes && fnv1a(read(rebuild_stage)) ==
+                std::stoull(priming_receipt["source_stage_hash"].GetString(), nullptr, 16),
+                "Decoded public slab stage selection/source hash differs");
+            const float seconds = float_from_bits(decoded.dt_bits);
+            const auto rebuilt_groups = roles(parse(read(rebuild_stage)), geometry, side_b);
+            auto playback = std::make_unique<Trial>(world, rebuild_stage, rebuilt_groups, side_b, &decoded.settings, &*decoded.seed);
+            same_observation(initial, *playback, 0, "Decoded cold slab rebuild differs before countdown");
+            for (int update = 0; update < priming_count; ++update)
+            {
+                playback->tick(0.0f, false, false, nullptr, seconds);
+                same_observation(priming[static_cast<std::size_t>(update)], *playback, update + 1,
+                    "Cold slab countdown differs at unfiltered update " + std::to_string(update + 1));
+                replay_trace(trace, "rebuild-unfiltered-priming", playback->updates, 0,
+                    priming[static_cast<std::size_t>(update)], *playback);
+            }
+            ReplayPlayer player(name, decoded);
+            for (int update = 0; update < decoded.updates; ++update)
+            {
+                // The ordinary baseline is neutral. Only the production
+                // ReplayPlayer can inject the recorded walk and paid trigger.
+                PlayerInputData effective;
+                playback->tick(0.0f, false, false, &player, seconds, &effective);
+                require(replay_codec::same(effective, decoded.inputs[0][static_cast<std::size_t>(update)]),
+                    "Production ReplayPlayer did not inject the exact decoded seat input over the neutral baseline");
+                const auto& expected = recorded[static_cast<std::size_t>(update)];
+                same_observation(expected, *playback, update + 1,
+                    "Production slab playback differs at tape update " + std::to_string(update + 1));
+                replay_trace(trace, "production-playback", playback->updates, update + 1, expected, *playback);
+                if (player.next_checkpoint < decoded.checkpoints.size() &&
+                    decoded.checkpoints[player.next_checkpoint].update == update + 1)
+                {
+                    const auto& checkpoint = decoded.checkpoints[player.next_checkpoint++];
+                    if (checkpoint.hash != expected.print.hash) { player.diverged_at = update + 1; }
+                }
+            }
+            player.finished = true;
+            player.matched = player.diverged_at == -1 && player.next_checkpoint == decoded.checkpoints.size() &&
+                MatchFingerprint::difference(decoded.final_print, MatchFingerprint::of(*playback->level, decoded.updates)).empty();
+            require(player.finished && player.matched && playback->paid == counts.paid && playback->held == counts.held &&
+                static_cast<unsigned int>(std::rand()) == terminal_rng,
+                "Production slab replay final fingerprint/checkpoints/paid counts/terminal RNG differ");
+            require(playback->paint().receiver[0] == counts.receiver_top && read(rebuild_stage) == stage_bytes,
+                "Production slab replay final earned paint or stage bytes differ");
+            playback.reset();
+
+            if (corruption_probe)
+            {
+                auto corrupt_json = parse(read(tape));
+                require(!decoded.checkpoints.empty(), "Checkpoint corruption control needs a recorded checkpoint");
+                const std::string changed = hex64(decoded.checkpoints[0].hash ^ 1u);
+                corrupt_json["checkpoints"][0]["hash"].SetString(changed.c_str(), corrupt_json.GetAllocator());
+                const auto corrupt_path = evidence / (name + "-wrong-checkpoint.json"); write_variant(corrupt_path, corrupt_json);
+                const auto corrupt = ReplayFile::read(corrupt_path);
+                ReplayPlayer mismatch(name + "-wrong-checkpoint", corrupt);
+                const auto control_stage = evidence / (corrupt.settings.stage() + ".json");
+                const auto control_groups = roles(parse(read(control_stage)), geometry, side_b);
+                auto control = std::make_unique<Trial>(world, control_stage, control_groups, side_b, &corrupt.settings, &*corrupt.seed);
+                for (int update = 0; update < priming_count; ++update)
+                { control->tick(0.0f, false, false, nullptr, float_from_bits(corrupt.dt_bits)); }
+                const int checkpoint_update = corrupt.checkpoints[0].update;
+                for (int update = 0; update < checkpoint_update; ++update)
+                {
+                    PlayerInputData effective;
+                    control->tick(0.0f, false, false, &mismatch, float_from_bits(corrupt.dt_bits), &effective);
+                    require(replay_codec::same(effective, corrupt.inputs[0][static_cast<std::size_t>(update)]),
+                        "Altered-checkpoint production ReplayPlayer lost its exact decoded input");
+                    const auto actual = MatchFingerprint::of(*control->level, update + 1);
+                    require(MatchFingerprint::difference(recorded[static_cast<std::size_t>(update)].print, actual).empty(),
+                        "Checkpoint corruption unexpectedly changed production replay state");
+                    if (update + 1 == checkpoint_update && actual.hash != corrupt.checkpoints[0].hash)
+                    { mismatch.diverged_at = update + 1; }
+                }
+                require(mismatch.diverged_at == checkpoint_update && mismatch.diverged_at == 60 && !mismatch.matched,
+                    "Fresh production slab playback failed to identify its altered checkpoint");
+                counts.corruption_updates = control->updates;
+            }
+            trace.close(); require(trace.good(), "Cannot finish slab replay exact trace");
+            std::cout << "PASS " << name << ": " << counts.priming_updates << " exact unfiltered cold priming updates + " <<
+                counts.input_updates << " actual production tape updates, " << counts.checkpoints <<
+                " checkpoints, every public fingerprint/paint quad/credit, decoded fresh disk rebuild and terminal RNG\n";
+            return counts;
+        }
+#endif
     }
 
     void run(const fs::path& content, const fs::path& slab, const fs::path& shoulder, const fs::path& evidence)
@@ -434,5 +739,53 @@ namespace turbulence_slab_routes_acceptance
             ",\"post_construction_placements\":0,\"jump_inputs\":0,\"deaths\":0,\"original_objects_preserved\":22,"
             "\"unscored_composite_ramp_preserved\":true,\"registered\":false,\"opposed_pressure_measured\":false,\"human_acceptance\":false}\n";
         summary.close(); require(summary.good(), "Cannot finish public Roller-route summary");
+    }
+
+    void run_replay(const fs::path& content, const fs::path& slab, const fs::path& shoulder, const fs::path& evidence)
+    {
+#if COLOURWARS_DEV_TOOLS
+        SourceGuard originals(content, slab, shoulder);
+        const auto baseline = parse(read(content / "levels/turbulence_mover_trial.json"));
+        const auto source = parse(read(slab));
+        require(baseline["collision_objects"].Size() == 22 && source["collision_objects"].Size() == 24,
+            "Slab replay requires the qualified 22-object source plus its fixed pair");
+        int original_ramps = 0;
+        for (rapidjson::SizeType index = 0; index < 22; ++index)
+        {
+            require(source["collision_objects"][index] == baseline["collision_objects"][index],
+                "Slab replay changed an original qualified object");
+            original_ramps += std::string(baseline["collision_objects"][index]["type"].GetString()) == "StructureRamp" ? 1 : 0;
+        }
+        const Geometry geometry{ "slab", slab, true, original_ramps };
+        World world(content);
+        int pairs = 0, record_updates = 0, tape_updates = 0, prime_updates = 0, checkpoints = 0, corruption_updates = 0;
+        for (const bool side_b : { false, true })
+        {
+            for (const bool uphill : { true, false })
+            {
+                const auto result = replay_route(world, content, geometry, evidence, side_b, uphill, pairs == 0);
+                ++pairs; record_updates += result.record_updates; tape_updates += result.input_updates;
+                prime_updates += result.priming_updates; checkpoints += result.checkpoints;
+                corruption_updates += result.corruption_updates;
+                require(record_updates * 2 + corruption_updates <= maximum_scene_updates * 9,
+                    "Slab replay matrix exceeded its finite recorded/playback/control budget");
+            }
+        }
+        originals.check();
+        require(pairs == 4, "Slab replay must rebuild four actual mirrored/directional Roller routes");
+        std::ofstream summary(evidence / "slab-public-replay-summary.json");
+        summary << "{\"outcome\":\"passed\",\"scope\":\"production-ReplayRecorder-codec-ReplayPlayer-public-slab\","
+            "\"record_play_pairs\":" << pairs << ",\"record_level_updates\":" << record_updates << ",\"play_level_updates\":" << record_updates <<
+            ",\"production_tape_updates\":" << tape_updates << ",\"recorded_unfiltered_priming_updates\":" << prime_updates <<
+            ",\"checkpoints\":" << checkpoints << ",\"malformed_codec_controls\":4,\"fresh_checkpoint_mismatch_controls\":1,"
+            "\"checkpoint_control_updates\":" << corruption_updates << ",\"total_actual_level_updates\":" << record_updates * 2 + corruption_updates <<
+            ",\"maximum_actual_level_updates\":9000,\"full_paint_bits_compared_every_update\":true,\"terminal_rng_witness_per_pair\":true,"
+            "\"post_construction_placements\":0,\"jump_inputs\":0,\"director_cold_playback_qualified\":false,"
+            "\"production_tape_contains_unfiltered_countdown\":false,\"cross_build_or_human_acceptance\":false}\n";
+        summary.close(); require(summary.good(), "Cannot finish production slab replay summary");
+#else
+        (void)content; (void)slab; (void)shoulder; (void)evidence;
+        throw std::runtime_error("Slab --replay requires Debug developer tools; Release replay is explicitly unqualified");
+#endif
     }
 }

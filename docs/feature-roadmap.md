@@ -1160,7 +1160,21 @@ refill. Directional paint and airborne-contact differences are measurements;
 the [arena record](polish-turbulence.md#why-the-new-geometry-earns-its-place)
 owns their exact areas and limits. Fresh public replay remains separate.
 
-**Remaining qualification, in dependency order:**
+**Fresh public replay qualified, 2026-10-26 (Debug).** Production recording,
+codec and playback pass four mirrored uphill/downhill pairs from fresh decoded
+public disk rebuilds. Every active fingerprint and complete paint/credit sample
+matches. The first 180 countdown updates have no input-filter callback, so each
+record/rebuild pair compares those cold priming observations separately before
+its actual tape. The 1,192 tape updates, sixteen checkpoints, four malformed
+codec controls and one 240-update wrong-checkpoint control use 4,064 actual
+Level updates. The [arena record](polish-turbulence.md#why-the-new-geometry-earns-its-place)
+owns the exact scope and receipts; stock DebugDirector cold playback and
+cross-build determinism remain outside this proof. Release excludes this mode.
+
+**Bounded capability work complete.** Runtime/editor construction, local paint,
+support/projectile contacts, public driven routes/replay and native composition
+now qualify the selected horizontal movers and mirrored static scored slabs.
+This finishes `GAP#D5`; arena pressure and geometry selection remain `POL#21`.
 
 The explicit-only `turbulence_mover_trial` now uses the authored pair beside
 the preserved static arena. Both-preset route and native composition checks,
@@ -1169,16 +1183,12 @@ recorded in the [arena owner](polish-turbulence.md#why-the-new-geometry-earns-it
 The concrete added role is a Sniper crossover-top paint angle at all four
 sampled phases; the other tools retain different static/moving tradeoffs.
 
-| milestone | bounded scope and acceptance |
-|---|---|
-| 4. Smallest useful static rotated structure | Qualify fresh public replay of the fixed-slab routes. The local Roller role, public driven routes and native composition are qualified above; broader arena pressure remains `POL#21`. Arbitrary or combined moving/rotating bodies are outside the slice. |
-
-Fresh public replay is next; broader placement pressure remains with the arena. Keep each milestone bounded
-and preserve the existing hierarchy and static arithmetic. The
+Arbitrary or combined moving/rotating bodies remain outside the implemented
+contract. Preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
 useful placements and route/side-swap qualification; attended arena acceptance
-remains a separate gate. The mover comparison stays out of Random. `GAP#D5` and
-`POL#21` stay open; human/device gates and provisional weapon balance stay
+remains a separate gate. The mover comparison stays out of Random. `POL#21`
+stays open; human/device gates and provisional weapon balance stay
 unchanged.
 
 ## Presentation rate (`GAP#L9`)
