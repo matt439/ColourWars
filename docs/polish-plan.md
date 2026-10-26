@@ -497,14 +497,18 @@ visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
 which stays selectable and in Random. Its baseline acceptance case and native four-pane
 captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
-support art remain open there. The Turbulence layout has not started; its first
-horizontal-moving capability is qualified separately in the
+support art remain open there. Turbulence now has a
+[route and score brief](polish-turbulence.md), with no candidate geometry yet;
+its first horizontal-moving capability is qualified separately in the
 [roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26). Builder/editor,
 rotation and useful placements remain open, and the existing arenas stay static.
 
 ### Turbulence blockout work (`POL#21`)
 
-**OPEN, scoped 2026-10-26.** This is the next layout, beside the preserved
+**OPEN, scoped 2026-10-26.** The [route and score brief](polish-turbulence.md)
+defines the fixed skeleton, optional moving approaches, spawn/pressure checks
+and provisional regional/face allocations; no playable layout is claimed.
+This is the next layout, beside the preserved
 `turbulence.json`. Use the recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
 and current P3/five-tool values. The first brief can proceed while the
 [moving-structure work](feature-roadmap.md#horizontal-movement-capability-2026-10-26)

@@ -1,0 +1,175 @@
+# Turbulence: route and score brief
+
+**Design brief, 2026-10-26; no candidate geometry or playable stage yet.** This
+is the next `POL#21` blockout, beside the preserved `turbulence.json`, under the
+[blockout scope](polish-plan.md#turbulence-blockout-work-pol21). Keep the current
+P3 movement, five-tool values, Crossfeed and earlier arenas unchanged. Author a
+new explicit-only stage with `include_in_random: false` when the layout begins.
+
+## Question and research transfer
+
+**Take the short exposed upper crossing now, wait for a moving change of angle,
+or descend to paint and approach from below?**
+
+The loading-yard subject is expressed through the approved Tool Props kit:
+offset ruler gantries above connected walking ground, with eraser freight
+blocks separating approaches. Machinery is scenery. There is no wind, lift,
+crushing route or moving rotation in this brief.
+
+This applies the recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map):
+TowerFall's connected spaces inform reconnecting approaches; Splatoon's joint
+weapon/geography design informs the firing and paint stations; INVERSUS informs
+the short-route/changed-angle choice; N++ informs repeated, recoverable
+landings. These are our design inferences from the recorded research, not new
+observations or imported geometry. Do not use the research's pre-P3 jump range
+as a current reach guarantee.
+
+## Directed routes before dimensions
+
+Reflect gameplay geometry and whole player bodies about the centre line. Use
+the same names with suffix A/B; every connection below applies on both sides.
+Offset platforms describe the stepped vertical arrangement, not an unmeasured
+side advantage. Exact coordinates, travel and timing follow real-Player trials.
+
+| Connection | Importance | Input family and intended landing |
+|---|---|---|
+| Home -> lower yard | Required departure | Drop through the home ruler, then walk; a stationary player can choose and take this route. |
+| Lower yard -> central lower crossing -> far lower yard | Required contest route | Walk, using supported ramps for elevation changes; space to stop and reverse behind solid freight blocks. Never requires boarding or waiting for a mover. |
+| Lower yard -> home | Recovery / return | Held jump through home support; provide a clear takeoff and braking area. |
+| Home -> side step -> upper approach | Optional second departure | Tap then held jump; stop or reverse at the upper approach before committing to centre. It leaves home through a different opening from the lower departure. |
+| Upper approach -> fixed crossover -> opposite upper approach | Optional short exposed crossing | Held jump between fixed landings; continue or brake on the receiving landing. A solid centre baffle interrupts a single straight lane between both homes. |
+| Upper approach -> mover -> crossover flank | Optional change of angle | Held boarding jump, carried horizontal interval, then tap/held dismount as measured. Stop or reverse on the receiver; no launch-velocity inheritance is assumed. |
+| Crossover / mover / upper approach -> lower crossing or yard | Recovery after retreat, failed boarding or missed landing | Walk off or drop into supported lower space; rejoin the required route without respawn. Do not place a pit under an optional crossing. |
+| Lower crossing -> side recovery step -> own upper approach | Optional return to height | Tap/held sequence, with a supported stop between jumps; does not rely on a favourable mover phase. |
+
+```mermaid
+flowchart LR
+    HA[Home A] -->|drop| YA[Yard A]
+    HB[Home B] -->|drop| YB[Yard B]
+    YA <-->|walk| LC[Lower crossing]
+    LC <-->|walk| YB
+    YA -->|held return| HA
+    YB -->|held return| HB
+    HA -->|tap / held| UA[Upper A]
+    HB -->|tap / held| UB[Upper B]
+    UA <-->|optional held| XC[Fixed crossover]
+    XC <-->|optional held| UB
+    UA <-->|board / dismount| MA[Mover A]
+    MA <-->|changed angle| XC
+    UB <-->|board / dismount| MB[Mover B]
+    MB <-->|changed angle| XC
+    UA -->|drop / miss| YA
+    UB -->|drop / miss| YB
+    XC -->|drop / miss| LC
+    MA -->|drop / miss| LC
+    MB -->|drop / miss| LC
+    LC -->|recovery step / held| UA
+    LC -->|recovery step / held| UB
+```
+
+The graph is an authoring contract, not evidence that any edge is achievable.
+The fixed skeleton must work before adding movers. Check full-body clearance,
+rest/intermediate/full-speed approaches, +/-2 input ticks and receiving space
+for continuing, stopping and reversing. A successful touch does not qualify a
+landing. Avoid the narrow-full-speed-stop problem recorded in Crossfeed.
+
+## Spawns and pressure stations
+
+Each home has four distinct, supported, nonoverlapping full-body spawn slots,
+using the current player dimensions. Reflect positions by the body's width,
+not just its top-left point. Keep every body inside the bounds, clear of solids
+and the full mover/standing envelopes. Home floors and roofs remain static.
+
+The lower drop opens behind a solid freight baffle; the upper departure leaves
+on its other side/height after the side step. Give each exit a waiting/reversal
+space outside the four spawn slots. Ramps and one-way support alone do not
+establish projectile shielding; use the actual solid/projectile geometry.
+
+Name stations at each home exit, each upper receiver, both ends of the fixed
+crossover, the lower centre cover and each mover endpoint. From the opposing
+stations, sample standing, jumping and moving fire with all five tools at all
+four spawn bodies and both departure mouths. Record which exits one position
+threatens, the warning/escape interval and the approach needed to gain it.
+Reject geometry that lets one centre holder cover both departures and their
+retreat at once. The samples will not prove universal spawn safety.
+
+## Regional and face paint budget
+
+These are initial **design allocations of exposed scored area**, totalling
+100%, before geometry exists; they are neither measurements nor balance gates.
+
+| Region | Target share | Route and painting reason |
+|---|---:|---|
+| Home A / Home B | 12% each | Ordinary home floor/roof tops score. Repainting here trades travel time for time away from the contest. |
+| Yard and upper approach A / B | 22% each | Connected Roller walking paint plus scored baffle faces and upper landings; two attack angles reconnect here. |
+| Lower central crossing | 12% | Accessible contest paint behind intermittent solid cover; no uninterrupted end-to-end shooting tunnel. |
+| Fixed upper crossover and both movers | 20% total | More exposed paint and changed angles, without making height alone decide the surface score. |
+
+Start with approximately 75% tops, 15% undersides and 10% walls across those
+regions. Ordinary floors and raised tops accept paint; perimeter boundaries or
+buried foundations may be unscored for their physical role. Do not ban home
+paint to repair a safe-loop problem. Diagnose travel/repaint cost and exposure.
+
+Reconcile object/region/face strips with runtime paint tiles after occlusion.
+Assign a mover's local scored faces once to its owning region; motion does not
+mint area or change ownership. Also report its occupied world region at sample
+phases so a local budget does not conceal paint carried into a sheltered area.
+Measure complete walking loops, paint per traversal/tank and the time to contest
+or repaint each region from all spawn slots before revising these targets.
+
+## Why the new geometry earns its place
+
+**One horizontal mover per side, mirrored as a pair.** Each traverses an open
+upper side bay and offers a flank landing with a different line onto the
+crossover's scored faces. It must earn that angle against waiting and exposure;
+it does not open the only exit, shorten the only recovery or carry spawn cover.
+The fixed upper route remains an immediate alternative. At endpoints, midtravel
+and reversals, misses fall to the lower route, with no closing standing corridor.
+Choose travel, period and mirrored initial phases only after comparing both
+sides' boarding/waiting/exposure windows. Use only the existing horizontal
+triangular motion, through the qualified public loader/editor path.
+
+**A mirrored pair of fixed sloping scored slabs at the crossover shoulders.**
+The intended role is a walkable retreat from an upper receiver toward the lower
+crossing while presenting a paintable underside to the lower approach. A solid
+slab also breaks a level firing line; an existing ramp passes paint and cannot
+provide that combined job. Select one shallow fixed orientation and footprint
+after the static route trial, then define support, projectile contact and local
+face scoring before implementation. If a flat solid plus existing ramp provides
+the same route and shot windows, retain that simpler construction and record why
+rotation was unnecessary. No arbitrary or animated rotation follows from this.
+
+## Tool and recovery hypotheses
+
+| Tool | Stations and question |
+|---|---|
+| Sprayer | Yard exit -> crossover shoulder: can a moving burst contest a receiver while leaving enough tank and time to retreat behind the freight baffle? |
+| Sniper | Upper receiver -> far receiver: is the short lane useful without also owning both lower departures or painting the underside? Check the centre baffle and reload/recovery exposure. |
+| Roller | Home -> yard -> lower crossing -> retreat: does connected walking paint repay the longer route, and can a missed upper landing return to that work without a trap? |
+| Mister | Lower cover -> shoulder underside / approaching mover: does diffusion create a distinct nearby contest without blanketing both routes from safety? Keep lifetime provisional. |
+| Bucket | Yard / lower-centre cover -> upper receiver: do real arcs reach the exposed landing, and does that launch position retain an escape before a second shot? |
+
+At these mirrored stations compare real nozzle/volume contact, stationary and
+moving fire, shot cadence, cover-to-cover exposure and the shot-free retreat
+interval. Record regenerated ammunition and return-to-contest time; standing
+behind one block is not evidence of a useful recovery loop. Do not change P3,
+Sniper reserve or Mister lifetime to make a first geometry attempt pass.
+
+## Next slice and acceptance still owed
+
+Author and reopen the explicit-only static skeleton through the editor, then
+load it through the game. Add movers only after runtime/schema, public replay
+rebuild and editor round-trip support; add scored sloping solids only after
+their separate collision/paint contract is qualified. Keep a before/after
+route and budget record for those additions.
+
+Drive both directions, failed routes and mover phases/reversals with the real
+Player. Reconcile paint and sampled five-tool pressure with side/loadout swaps,
+1v1, 2v2 and uneven three-player arrangements. Native 1/2/3/4-pane clean/heavy
+captures must show the receiving surface and first escape before commitment,
+including moving approaches, preview and ending views.
+
+No layout, route, paint, replay, rendering or human acceptance is claimed by
+this brief. Attended both-side 1-4P play must still answer crossing comfort,
+pressure and regional value. `POL#21`, `GAP#D5`, `POL#3`, `POL#24`, `POL#27`
+and physical-pad acceptance remain open.
