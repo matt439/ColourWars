@@ -520,10 +520,9 @@ registered. The full editor suite/hidden-window checks and twelve
 focused existing consumer cases also pass in both presets.
 
 The separate Scene courses alone do not establish a full public-loader driven
-route or replay. Native slab composition is qualified below. Settled five-tool
-pressure/paint comparison, the Roller's connected walking-paint role and
-attended value remain separate slices. Useful placement against the retained
-composite precedes geometry selection. `POL#21` and `GAP#D5` remain open.
+route or replay. Native composition and a partial local Roller paint role are
+qualified below. Broader five-tool pressure and attended value remain separate
+slices before geometry selection. `POL#21` and `GAP#D5` remain open.
 
 **Native fixed-slab composition, 2026-10-26 (Debug and Release).**
 `check-painter.ps1 -TurbulenceSlabOnly -TrialPath <private-trial.json>` passes
@@ -557,8 +556,50 @@ Debug `993662f0a8dd4927b81575dec8945de7`, Release
 `eaa33d9da0104a44ab47b5453a22bf4b`. The old composite's Release native check
 also passes after the shared fixture changes. Both normal-bank, isolated-save,
 SystemOnlyPath startup checks pass. The slab remains private and unregistered;
-useful tool/paint placement, public driven replay and attended acceptance remain
-separate qualifications.
+public driven replay, broader pressure and attended acceptance remain separate
+qualifications. The local Roller role below uses actual public-loader routes.
+
+**Public driven Roller comparison, 2026-10-26 (Debug and Release).**
+The optional `turbulence_slab_routes` case passes eight fresh public Levels:
+slab/composite, both mirrored sides and both walking directions. Private
+editor-authored spawn variants establish the upper approach at centre 1160,
+feet 880, or the crossover at centre 1540, feet 800; B mirrors those stations.
+There is no later placement, velocity edit or jump input. Each scene completes
+181 count-in and 60 neutral readiness updates, one held-fire walk, seventeen
+release/braking updates and 180 quiet updates. All original twenty-two objects,
+both input candidates, source stages and tuning remain unchanged.
+
+The eight scenes total 3,824 updates and 320 actual paid firing updates.
+Readiness is checked before each tick and reconciled against its actual ammo
+debit; holding the presentation firing flag is not counted as payment. Matched
+geometries start at the same actual pose, health and full reserve. Both sides
+reproduce the following settled **receiver-top** areas; the slab's receiver is
+its diagonal walking face, while the composite's is the flat shoe below its
+unscored ramp.
+
+| Direction | Paid updates per scene | Slab top area | Composite shoe-top area |
+|---|---:|---:|---:|
+| Uphill | 39 | 1,170.886414 | 576 |
+| Downhill | 41 | 97.573868 | 0 |
+
+Uphill slab samples also paint 48 on the exposed end cap. No sample paints the
+receiver underside. The CSV records original upper/crossover faces and total
+owned area separately, retaining each geometry's different score budget.
+Arrival reserves are about 0.844 uphill and 0.836 downhill in both geometries;
+all scenes recover full reserve, full health and supported endpoints. Slab
+routes have zero airborne walking updates. Each composite downhill route has
+ten airborne updates despite zero jump inputs, then lands and stops normally.
+This is a measured contact difference, without a human comfort claim.
+
+The result establishes a partial diagonal-face paint role during these paid
+walks. It does not establish full-face coverage, damage efficiency, opposed
+survival, a universal weapon advantage or competitive value. Receipts are under
+`out/validation/overnight-20261026/phase13/roller/`: Debug
+`x64-debug/turbulence-slab-routes-17364`, Release
+`x64-release/turbulence-slab-routes-17176`. Compile the available-only case with
+`run-acceptance.ps1 -Cases turbulence_slab_routes -CompileOnly`, then invoke its
+executable with the staged game directory and the two private trial JSON paths.
+Fresh public replay and the remaining five-tool pressure comparison are next.
 
 ## Tool and recovery hypotheses
 

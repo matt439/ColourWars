@@ -1152,6 +1152,14 @@ The [arena record](polish-turbulence.md#why-the-new-geometry-earns-its-place)
 owns the exact inventory, six interior-pixel controls, frozen-state checks and
 receipts. These hidden captures do not establish attended readability or value.
 
+**Local public Roller role qualified, 2026-10-26.** Both presets pass eight
+fresh public input-driven routes comparing the fixed slabs with the retained
+composite. The 3,824 updates and 320 paid firing updates establish partial
+diagonal-top paint with unchanged tuning, supported endpoints and natural
+refill. Directional paint and airborne-contact differences are measurements;
+the [arena record](polish-turbulence.md#why-the-new-geometry-earns-its-place)
+owns their exact areas and limits. Fresh public replay remains separate.
+
 **Remaining qualification, in dependency order:**
 
 The explicit-only `turbulence_mover_trial` now uses the authored pair beside
@@ -1163,9 +1171,9 @@ sampled phases; the other tools retain different static/moving tradeoffs.
 
 | milestone | bounded scope and acceptance |
 |---|---|
-| 4. Smallest useful static rotated structure | Qualify the fixed slabs' useful Turbulence weapon/paint role against the retained composite, including public driven routes and replay. Native composition is qualified above. Arbitrary or combined moving/rotating bodies are outside the slice. |
+| 4. Smallest useful static rotated structure | Qualify fresh public replay of the fixed-slab routes. The local Roller role, public driven routes and native composition are qualified above; broader arena pressure remains `POL#21`. Arbitrary or combined moving/rotating bodies are outside the slice. |
 
-The static scored slope's useful placement is next. Keep each milestone bounded
+Fresh public replay is next; broader placement pressure remains with the arena. Keep each milestone bounded
 and preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
 useful placements and route/side-swap qualification; attended arena acceptance

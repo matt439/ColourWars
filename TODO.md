@@ -27,7 +27,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    Turbulence's [static and mover comparisons](docs/polish-turbulence.md) are
    explicit-only; bounded moving fire, escape, mover routes/replay/native
    composition and a local paint angle are qualified. The fixed scored-slab
-   core and bounded native composition pass both presets; useful placement is next;
+   core, bounded native composition and a local Roller role pass both presets;
+   fresh public replay and broader pressure are next;
    opposed balance and attended value remain open.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
@@ -57,7 +58,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 | id | next implementation slice | owner |
 |---|---|---|
 | `POL#21` | Compare fixed slabs' useful pressure/paint placement with the retained shoulder composite | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
-| `GAP#D5` | Qualify the fixed slabs' useful Turbulence role through public driven routes and replay | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
+| `GAP#D5` | Qualify fresh public replay of the driven fixed-slab routes after native and local Roller-role checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
@@ -171,7 +172,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
-| `GAP#D5` | OPEN | MED | L | Qualify fixed scored slabs' useful Turbulence role and public driven replay against the retained composite (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
+| `GAP#D5` | OPEN | MED | L | Qualify fresh public replay of the driven fixed-slab routes (`POL#21`); native composition and a local Roller role pass. [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
 
 ## Engine reports
 
