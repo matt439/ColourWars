@@ -236,7 +236,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         compare("new-child-pending-refresh-" + std::to_string(repeat), true, next, new_words, false, false, false, true);
         if (repeat == 0)
         {
-            tap(Key::down); tap(Key::down);
+            tap(Key::down); tap(Key::down); tap(Key::down); // Aim, Rumble, Apply.
             const Frame before_interruption = main_menu_frame(app);
             app.keyboard()->on_key_down(Key::enter); tick();
             static_cast<WindowNotify&>(app).on_deactivated(); tick();

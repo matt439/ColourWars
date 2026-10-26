@@ -104,6 +104,7 @@ void StickSettingsMenu::init()
 {
 	this->input()->reset_actions();
 	this->selection_ = this->save()->play_settings();
+	this->rumble_edited_.fill(false);
 	if (input_slots::is_pad(this->pausing_player())) { this->slot_ = this->pausing_player(); }
 	else
 	{
@@ -174,20 +175,29 @@ void StickSettingsMenu::init()
 		[adjust_deadzone](Direction direction) { adjust_deadzone(true, direction); });
 	this->aim_ = row("aim", this->text().item(MenuItem::aim_deadzone), 2,
 		[adjust_deadzone](Direction direction) { adjust_deadzone(false, direction); });
-	for (OptionRow* option : { this->pad_.get(), this->movement_.get(), this->aim_.get() })
+	this->rumble_ = row("rumble", this->text().item(MenuItem::rumble), 3,
+		[this](Direction direction)
+		{
+			const size_t slot = static_cast<size_t>(this->slot_);
+			this->selection_.pad_rumble[slot] = direction == Direction::right;
+			this->rumble_edited_[slot] = true;
+			this->refresh_values();
+			this->set_status(this->text().status.sticks_pending);
+		});
+	for (OptionRow* option : { this->pad_.get(), this->movement_.get(), this->aim_.get(), this->rumble_.get() })
 	{
 		this->text_container_->add_child(option);
 		this->focus_.add(option);
 	}
 	UiText* apply = add_text("apply", this->text().item(MenuItem::apply), style.item_font,
-		this->calculate_widget_position(0, 3));
+		this->calculate_widget_position(0, 4));
 	const RectangleF apply_bounds = apply->bounds();
 	apply->set_scale(std::min({ 1.0f,
 		(look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - apply_bounds.x) / apply_bounds.width,
 		(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / apply_bounds.height }));
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(add_text("back", this->text().item(MenuItem::back), style.item_font,
-		this->calculate_widget_position(0, 4)), [this] { this->close(); });
+		this->calculate_widget_position(0, 5)), [this] { this->close(); });
 	this->status_ = add_text("status", L"", look.help_font, look.status_position);
 	this->connection_ = add_text("connection", L"", look.help_font, look.controls_position);
 	const float label_height = this->render_resources()->measure_text(
@@ -226,6 +236,7 @@ void StickSettingsMenu::refresh_values()
 	this->movement_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.movement_deadzone(this->slot_,
 		this->data()->tuning()->input().movement_deadzone))));
 	this->aim_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.aim_deadzone(this->slot_))));
+	this->rumble_->set_value(this->selection_.rumble_enabled(this->slot_) ? this->text().values.on : this->text().values.off);
 	this->refresh_preview();
 }
 
@@ -277,7 +288,14 @@ void StickSettingsMenu::apply_settings()
 	// Other preference pages may have pending edits; commit only this page's scope.
 	PlaySettings applied = this->save()->play_settings();
 	applied.sticks = this->selection_.sticks;
+	for (size_t slot = 0; slot < this->rumble_edited_.size(); ++slot)
+	{
+		if (this->rumble_edited_[slot]) { applied.pad_rumble[slot] = this->selection_.pad_rumble[slot]; }
+	}
 	const bool saved = this->save()->set_play_settings_and_save(applied);
+	this->selection_.pad_rumble = applied.pad_rumble;
+	this->rumble_edited_.fill(false);
+	this->refresh_values();
 	this->play_wave(this->confirm_sound_);
 	this->set_status(saved ? this->text().status.sticks_saved : this->text().status.active_save_failed, !saved);
 }

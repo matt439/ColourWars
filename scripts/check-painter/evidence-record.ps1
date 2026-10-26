@@ -696,7 +696,7 @@ elseif ($PercentageTextOnly) {
     $result.input_slots = @(4)
     $result.inputs = 'Actual Controls/audio parent and Pad Sticks child with the normal GamepadReader and public local keyboard events. All four nested private pad profiles are seeded identically; the existing page chooses its initial slot. No scripted pad backend, foreground/global input, physical-device or gameplay claim.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
-    $result.checks = 'Dedicated both-preset leaf for menu_text.values.percentage. Independent literal strings and UiText/OptionRow-equivalent linear references cover Controls music/SFX rows3/4 and Sticks movement/aim rows1/2 values, saved17/0/100, inherited movement0.999 rounding to100 and explicit0/90. Existing captured controls item fonts and width-then-height value fitting remain intact. Old long copy with tilde, a new font ID missing tilde and distinct numeric bearings, real adjustments, child return, reopen/reversal and zero-update720/1080/720 drawing comparisons prove retention and adoption. Actual child Apply/reload/repeat preserves pending parent volumes and unrelated preferences; controlled private-save failure keeps active10/85 while disk remains5/85, and later Escape discards pending edits. Full private save bytes, observed status colours, unchanged current preview across source replacement, frozen redraw and draw RNG are checked. Exactly132 state updates(hard132),87 readbacks,52 value CSV rows,4 status comparisons and8 compact crops per preset. No broad Controls matrix, gameplay, foreground/global input, physical-pad, hardware qualification, listening, human readability or performance acceptance.'
+    $result.checks = 'Dedicated both-preset leaf for menu_text.values.percentage. Independent literal strings and UiText/OptionRow-equivalent linear references cover Controls music/SFX rows3/4 and Sticks movement/aim rows1/2 values, saved17/0/100, inherited movement0.999 rounding to100 and explicit0/90. Existing captured controls item fonts and width-then-height value fitting remain intact. Old long copy with tilde, a new font ID missing tilde and distinct numeric bearings, real adjustments, child return, reopen/reversal and zero-update720/1080/720 drawing comparisons prove retention and adoption. Actual child Apply/reload/repeat preserves pending parent volumes and unrelated preferences; controlled private-save failure keeps active10/85 while disk remains5/85, and later Escape discards pending edits. Full private save bytes, observed status colours, unchanged current preview across source replacement, frozen redraw and draw RNG are checked. Exactly144 state updates(hard144),87 readbacks,52 value CSV rows,4 status comparisons and8 compact crops per preset. No broad Controls matrix, gameplay, foreground/global input, physical-pad, hardware qualification, listening, human readability or performance acceptance.'
 }
 elseif ($StageCountsOnly) {
     $result.scope = 'stage-counts-only'
@@ -1013,6 +1013,18 @@ elseif ($StickSettingsOnly) {
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.Remove('stage')
     $result.checks = 'Actual Pad sticks child at 720p/1080p/QHD: five bounded focus cards/arrows, full labels/values/status and response/association copy, native linear ink and contrast, initial and pausing slot selection, slot/deadzone clamps and pending cutoff previews, Apply/reload/failure and Back/Escape discard. Suspended parent Apply preserves child profiles. Frozen redraw, draw RNG, static Reduce effects and resize. No physical-controller comfort, human readability or listening acceptance.'
+}
+elseif ($RumbleOnly) {
+    $result.scope = 'rumble-owner-settings-only'
+    $result.stage = 'movement_course'
+    $result.player_counts = @(3)
+    $result.input_slots = @(3, 1, 4)
+    $result.Remove('palettes')
+    $result.palette_selection = 'Default Random; no palette comparison.'
+    $result.weapons = @('sprayer')
+    $result.inputs = 'Scripted reader and a recording sink factory; no native motor API or physical pad.'
+    foreach ($key in @($result.Keys)) { if ($key -like '*_checks') { $result.Remove($key) } }
+    $result.checks = 'Actual GameLevel event consumption and lifecycle stops, per-slot settings Apply/Back/failure and parent merge. Fake motors only; physical feel and hardware acceptance remain separate.'
 }
 elseif ($KeyboardJumpOnly) {
     $result.scope = 'keyboard-jump-only'

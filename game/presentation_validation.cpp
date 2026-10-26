@@ -421,10 +421,10 @@ void Presentation::validate_resources(const RenderResources& render,
 		check_controls_item(controls_items[index], static_cast<int>(index), index >= 3 && index <= 7);
 	}
 	const MenuItem sticks_items[]{ MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone,
-		MenuItem::apply, MenuItem::back };
+		MenuItem::rumble, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(sticks_items); ++index)
 	{
-		check_controls_item(sticks_items[index], static_cast<int>(index), index < 3);
+		check_controls_item(sticks_items[index], static_cast<int>(index), index < 4);
 	}
 	check_controls_item(MenuItem::apply, 3, false);
 	check_controls_item(MenuItem::back, 4, false);
@@ -880,7 +880,8 @@ void Presentation::validate_resources(const RenderResources& render,
 	const Vector2F controls_value_limit(controls.controls_position.x - controls.art.focus_padding.x * 2.0f -
 		controls.art.shadow_offset - controls.layout.position.x - controls.layout.spacing.x,
 		controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
-	for (const int row : { 3, 4, 5 })
+	// Rumble occupies Stick row 3; Controls toggles occupy rows 5 through 7.
+	for (const int row : { 3, 5, 6, 7 })
 	{
 		const Vector2F position = controls.layout.position +
 			Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * static_cast<float>(row));
@@ -1088,7 +1089,9 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->menu_.item_font, options_art);
 	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f),
 		controls.item_font, controls.art);
-	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 4.0f),
+	const RectangleF pad_jump_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 4.0f),
+		controls.item_font, controls.art);
+	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 5.0f),
 		controls.item_font, controls.art);
 	struct StatusMessage { const char* key; const std::wstring& text; };
 	const auto check_status = [&](const StatusMessage& message, const std::string& font,
@@ -1163,7 +1166,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	for (const StatusMessage& message : pad_jump_statuses)
 	{
 		check_status(message, controls.help_font, controls.status_position, controls.box_size,
-			controls.art, { sticks_back, pad_jump_help });
+			controls.art, { pad_jump_back, pad_jump_help });
 	}
 	const StatusMessage sticks_statuses[]{ { "sticks_pending", status_text.sticks_pending },
 		{ "sticks_saved", status_text.sticks_saved }, { "active_save_failed", status_text.active_save_failed } };

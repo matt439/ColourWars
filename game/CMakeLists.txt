@@ -23,6 +23,7 @@ add_executable(ColourWars WIN32
     presentation_read_menu.cpp
     presentation_validation.cpp
     rumble.cpp
+    rumble_xinput.cpp
     save.cpp
     session.cpp
     sound_groups.cpp
@@ -150,6 +151,7 @@ add_executable(ColourWars WIN32
     states/end_menu.cpp
     states/game_states.cpp
     states/game_level_dev_tools.cpp
+    states/game_level_rumble.cpp
     states/main_menu.cpp
     states/main_menu_credits.cpp
     states/main_menu_exit.cpp
@@ -188,6 +190,7 @@ target_link_libraries(ColourWars PRIVATE
     LabradorEngine
     Microsoft::DirectXTK
     labrador_settings
+    Xinput
 )
 target_precompile_headers(ColourWars PRIVATE pch.h)
 

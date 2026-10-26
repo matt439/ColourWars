@@ -395,7 +395,7 @@ before shipping it.
 
 ### Controller rumble (`ROAD#9`)
 
-**OPEN, 2026-10-25.** In a four-pad couch game rumble is the only private
+**Local implementation qualified, 2026-10-26; physical feel remains a decision.** In a four-pad couch game rumble is the only private
 per-player channel: the screen and speakers are shared
 ([gap audit F6](review/gap-audit.md)). The engine's `GamepadReader` exposes no
 vibration, so this is a client feature that also produces the exhibit for an
@@ -441,7 +441,7 @@ Actual nonfatal damage, the once-only elimination transition, the existing hard
 landing decision and the rate-limited empty-trigger warning emit coalescing
 feedback flags. Player merges its weapon's flags; Level drains them with each
 player's physical input slot. Placement/respawn and explicit discard clear them.
-There is no hardware call in those gameplay objects and no GameLevel output yet.
+There is no hardware call in those gameplay objects; GameLevel output follows below.
 
 Debug/Release `rumble`, `settings` and `gameplay_tuning` pass, including actual
 callers, sparse slots, frozen/spawn/cooldown/immune controls, save recovery and
@@ -451,11 +451,56 @@ presets. Phase-2 receipts are under `out/validation/overnight-20261026/phase2/`.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Settings page and match owner | Expose saved On/Off beside per-slot stick settings, and consume actual event intents through a GameLevel-owned policy with all lifecycle gates. Check pending/Apply/Back, sparse/reordered slots, unrelated settings and stale-event discard. Bots, replays and the keyboard seat must produce no motor output. |
-| Native hook and report exhibit | Put the slot-to-`XInputSetState` call and its stop path in one isolated file; unavailable/disconnected hardware must remain harmless. Qualify the callers with the fake sink, then draft `GAP#F6` with that file as the exhibit after rechecking the engine API. Filing still needs separate author authorization. |
+| Report exhibit | After qualification, draft `GAP#F6` using the isolated `rumble_xinput.cpp` exhibit and recheck the engine API. Filing still needs separate author authorization. |
+
+**Owner, settings page and native adapter qualified.**
+Pad sticks now has a per-slot Rumble row, with pending/Apply/Back semantics.
+It merges only explicitly edited rumble slots; the suspended Controls parent
+preserves the child's committed rumble flags alongside its stick settings.
+Authored help/status and row/font/bounds validation include that setting.
+
+GameLevel owns the sink and policy, ages pulses once per outer update and
+consumes every completed simulation step's events by physical input slot.
+Focus, coverage, pause/count-in, Debug pause/overlay, automation through
+`drives_slot`, connection and active-match state gate output. Stops discard
+pending events; rebuild stops the old policy before Level teardown and adopts
+the current authored profile. Time-up stops at the transition out of active
+play, before the later Results page. Sink lifetime covers policy destruction
+and initialization/rebuild unwind.
+
+`game/rumble_xinput.cpp` isolates SDK types, normalized-to-16-bit conversion,
+`XInputSetState`, failure handling and the transport-level lifetime stop. It
+links SDK `Xinput.lib`, matching the current DirectXTK reader's XINPUT1_4 import.
+The injected overload checks conversion/invalid-input/failure/stop intent without
+calling the native transport. Failures are nonfatal, without retries or log spam.
+
+Every painter mode, the separate display-awake lifecycle harness and the
+frame-pacing harness omit that native object and supply the recording default
+factory, including indirect GameMenu-to-GameLevel construction. `RumbleOnly`
+adds actual owner lifecycle/automation checks and a settings-page witness with
+isolated saves. The replay gate witness deliberately injects a damage event
+and stops before its next checkpoint; it establishes output suppression, not
+new replay determinism.
+
+Both game builds, `rumble_adapter`, `rumble`, `settings`, `stick_settings`,
+`menu_presentation`, `gameplay_tuning` and isolated system-path startup pass in
+Debug and Release. Release `menu_text` passes. Both-preset `RumbleOnly` runs
+passed: Debug records 15 owner cases and Release 11, with two sinks constructed
+and destroyed in each. Each also passes eight actual settings-page cases,
+including sparse owner isolation, pending/Apply/Back, save failure/retry and
+parent/edited-slot merges. Their fake factories record zero native motor calls.
+The separate display-awake lifecycle probe also passes both presets with the
+native rumble object omitted. The retained settings images were visually
+inspected. Phase-5 receipts are under `out/validation/overnight-20261026/phase5/`.
+The affected Debug Controls/Sticks/percentage matrices pass with six Sticks
+rows and the corresponding 144-update percentage budget. A stale child-Apply
+navigation fixture was corrected without changing production focus behavior.
+The frame-pacing harness compiles with its fake factory; no performance capture
+was run. The metadata audit narrows RumbleOnly to its actual three-player sparse
+roster and default Random palette selection, with no palette comparison.
 
 Do not close the physical feel review with fake-sink results. The native hook
-does not require a pad to build, and the queued implementation does not claim
+does not require a pad to build, and the implementation does not claim
 that its four candidate pulses feel distinct or comfortable.
 
 ### Input devices and seats
@@ -650,9 +695,9 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 ## Action bindings (`GAP#4.2`)
 
 **Default evaluators and keyboard Jump rebinding are implemented and validated.**
-**Next slice: OPEN (`GAP#4.2`), Pad 1-4 Jump face-button selection.** The face
-button defaults to A; the existing LT alias remains alongside every choice.
-Broader action and trigger rebinding remain unscoped; the bounded contract is
+**Keyboard and per-slot Pad Jump selection are implemented and qualified (`GAP#4.2`).**
+The face button defaults to A; the existing LT alias remains alongside every
+choice. Broader action and trigger rebinding remain unscoped; the bounded contract is
 [below](#pad-jump-face-button-slice-gap42).
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the

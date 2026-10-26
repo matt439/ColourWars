@@ -17,6 +17,7 @@
 #include "game/states/results_audio.h"
 #include "game/states/match_start.h"
 #include "game/display_awake.h"
+#include "game/rumble_sink.h"
 
 // Stack shapes during a session:
 //
@@ -90,6 +91,9 @@ private:
 	MenuLevelSettings settings_ = MenuLevelSettings();
 	MatchStart start_ = MatchStart::developer;
 	Session session_;
+	// The sink outlives every policy, including reset/unwind during a rebuild.
+	std::unique_ptr<RumbleSink> rumble_sink_;
+	std::unique_ptr<Rumble> rumble_;
 	std::unique_ptr<Level> level_ = nullptr;
 	std::unique_ptr<LevelBuilder> level_builder_ = nullptr;
 	std::unique_ptr<PlayerInput> player_input_ = nullptr;
@@ -122,6 +126,9 @@ private:
 	// active and the debug clock is not paused. Arena music may remain ducked.
 	bool audio_may_play() const;
 	void update_music(float dt);
+	void stop_rumble() const noexcept;
+	void sync_rumble();
+	void drain_rumble(float dt);
 
 	// DebugMatchTarget, for the developer tools only.
 	const MenuLevelSettings& debug_settings() const override;

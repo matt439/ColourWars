@@ -294,7 +294,9 @@ namespace menu_text_acceptance
             { false, 6, MenuItem::aim_marker, &MenuValueText::on },
             { false, 6, MenuItem::aim_marker, &MenuValueText::off },
             { false, 7, MenuItem::reduce_effects, &MenuValueText::on },
-            { false, 7, MenuItem::reduce_effects, &MenuValueText::off }
+            { false, 7, MenuItem::reduce_effects, &MenuValueText::off },
+            { false, 3, MenuItem::rumble, &MenuValueText::on },
+            { false, 3, MenuItem::rumble, &MenuValueText::off }
         };
         const auto check_rows = [&](const Presentation& look, bool width_limited, bool height_limited)
         {

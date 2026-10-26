@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 
 using namespace labrador;
 namespace display_awake_probe

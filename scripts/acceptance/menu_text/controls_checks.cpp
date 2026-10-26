@@ -9,16 +9,16 @@ namespace menu_text_acceptance
     namespace
     {
     constexpr MenuItem controls_fitted_items[]{ MenuItem::music_volume, MenuItem::sfx_volume, MenuItem::view_shake,
-        MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone };
+        MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::rumble };
     }
 
     void check_controls_text(Variants& variants, World& world)
     {
         constexpr const char* controls_keys[]{ "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_jump" };
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_jump", "rumble" };
         constexpr MenuItem controls_roles[]{ MenuItem::pad_sticks, MenuItem::music_volume, MenuItem::sfx_volume,
             MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad,
-            MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::keyboard_jump, MenuItem::pad_jump };
+            MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::keyboard_jump, MenuItem::pad_jump, MenuItem::rumble };
         const auto normalized = variants.load([&](rapidjson::Document& d)
         {
             for (const char* key : controls_keys)
@@ -43,7 +43,7 @@ namespace menu_text_acceptance
             }
         }
         for (const char* key : { "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_jump", "apply", "back" })
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_jump", "rumble", "apply", "back" })
         {
             // The main-menu font can draw this glyph. Controls' independently
             // selected item font must also support shared Apply and Back.
@@ -165,7 +165,7 @@ namespace menu_text_acceptance
         {
             const bool keyboard = std::string(key) == "keyboard_jump";
             const bool pad_jump = std::string(key) == "pad_jump";
-            const std::array<int, 2> rows{ keyboard ? 1 : (pad_jump ? 2 : 8), keyboard || pad_jump ? -1 : 3 };
+            const std::array<int, 2> rows{ keyboard ? 1 : (pad_jump ? 2 : 8), keyboard || pad_jump ? -1 : 4 };
             for (const char* copy : { "i", "F", "Fi", "FF", "H" })
             {
                 const auto fitted = variants.load([&](rapidjson::Document& d)
@@ -277,7 +277,7 @@ namespace menu_text_acceptance
         for (size_t index = 0; index < std::size(controls_fitted_items); ++index)
         {
             // Controls keeps Sticks/Keyboard Jump/Pad Jump first; its five
-            // shared settings occupy rows3-7. The Sticks child's rows stay0-2.
+            // shared settings occupy rows3-7. The Sticks child occupies rows0-3.
             const int row_index = index < 5 ? static_cast<int>(index) + 3 : static_cast<int>(index) - 5;
             const auto position = controls.layout.position + mattmath::Vector2F(0.0f,
                 controls.layout.spacing.y * static_cast<float>(row_index));

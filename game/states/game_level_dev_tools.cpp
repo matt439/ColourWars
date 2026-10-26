@@ -41,7 +41,9 @@ void GameLevel::debug_leave()
 void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
 	SeatInputFilter* seats)
 {
+	this->sync_rumble();
 	this->level_->update(inputs, dt, seats);
+	this->drain_rumble(dt);
 }
 
 const Level* GameLevel::debug_level() const
@@ -56,6 +58,7 @@ bool GameLevel::debug_level_finished() const
 
 void GameLevel::debug_sync_audio()
 {
+	this->sync_rumble();
 	if (this->results_audio_)
 	{
 		if (this->context()->active() && !this->data()->debug().match_audio_paused())

@@ -294,7 +294,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     {
         for (int row = 0; row < 8; ++row) { tap(Key::up); }
         presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Value parent failed to open Pad sticks");
-        tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::down); tap(Key::enter);
+        tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::enter);
         const int cutoff = preferences.play_settings().sticks[0].movement_deadzone;
         tap(Key::down); tap(Key::enter); tick(); require(stack.depth() == 2, "Value child Back lost the Controls parent");
         compare_pending("old-parent-after-child", old, long_words);

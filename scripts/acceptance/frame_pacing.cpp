@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 #include "game/sound_groups.h"
 #include "engine/app/application.h"
 #include "game/content_validation.h"

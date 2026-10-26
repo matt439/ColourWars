@@ -49,8 +49,8 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         words.controls_pending = L"Apply to save changes for all players.";
         words.controls_saved = L"Applied and saved for all players.";
         words.active_save_failed = L"Active for this run. Could not save.";
-        words.sticks_pending = L"Apply to save pad deadzones.";
-        words.sticks_saved = L"Pad deadzones applied and saved.";
+        words.sticks_pending = L"Apply to save pad settings.";
+        words.sticks_saved = L"Pad settings applied and saved.";
         return words;
     }();
     const auto profile = output / (controls_pages ? "status-controls-profile" : "status-options-profile");
@@ -130,7 +130,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         if (page == 0 || page == 1) { tap(Key::down); }
         if (page == 1) { tap(Key::down); }
         tap(Key::right);
-        const int remaining = page == 0 ? 3 : page == 1 ? 5 : 2;
+        const int remaining = page == 0 ? 3 : page == 1 ? 5 : 3;
         for (int row = 0; row < remaining; ++row) { tap(Key::down); }
     };
     const auto apply = [&](int page)

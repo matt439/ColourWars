@@ -148,8 +148,8 @@ namespace menu_text_acceptance
         { "controls_pending", L"Apply to save changes for all players.", &MenuStatusText::controls_pending, false },
         { "controls_saved", L"Applied and saved for all players.", &MenuStatusText::controls_saved, false },
         { "active_save_failed", L"Active for this run. Could not save.", &MenuStatusText::active_save_failed, false },
-        { "sticks_pending", L"Apply to save pad deadzones.", &MenuStatusText::sticks_pending, false },
-        { "sticks_saved", L"Pad deadzones applied and saved.", &MenuStatusText::sticks_saved, false },
+        { "sticks_pending", L"Apply to save pad settings.", &MenuStatusText::sticks_pending, false },
+        { "sticks_saved", L"Pad settings applied and saved.", &MenuStatusText::sticks_saved, false },
         { "options_reverted", L"Display settings reverted.", &MenuStatusText::options_reverted, true },
         { "options_display_failed", L"Could not change display settings. Previous settings restored.",
             &MenuStatusText::options_display_failed, true },
@@ -333,7 +333,7 @@ namespace menu_text_acceptance
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
-        { "keyboard_jump", L"Keyboard Jump" }, { "pad_jump", L"Pad Jump" }
+        { "keyboard_jump", L"Keyboard Jump" }, { "pad_jump", L"Pad Jump" }, { "rumble", L"Rumble" }
     };
 
     struct World

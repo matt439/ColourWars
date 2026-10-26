@@ -54,16 +54,16 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     } restore{ art, art };
     const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
         look.box_size) / 2.0f, look.box_size);
-    const std::array<const wchar_t*, 5> labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Apply", L"Back" };
-    const std::array<const char*, 5> names{ "pad", "move", "aim", "apply", "back" };
-    const std::wstring pending = L"Apply to save pad deadzones.";
+    const std::array<const wchar_t*, 6> labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble", L"Apply", L"Back" };
+    const std::array<const char*, 6> names{ "pad", "move", "aim", "rumble", "apply", "back" };
+    const std::wstring pending = L"Apply to save pad settings.";
     const auto measure = [&](const std::string& font, const std::wstring& text)
     {
         return app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(font), text);
     };
     const auto label_scale = [&](size_t row)
     {
-        if (row != 3) { return 1.0f; }
+        if (row != 4) { return 1.0f; }
         const Vector2F raw = measure(look.item_font, labels[row]);
         return std::min({ 1.0f,
             (look.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset - look.layout.position.x) / raw.x,
@@ -79,7 +79,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         return RectangleF(row_label(row).position() + Vector2F(look.layout.spacing.x, 0.0f),
             measure(look.item_font, value));
     };
-    using Values = std::array<std::wstring, 3>;
+    using Values = std::array<std::wstring, 4>;
     const auto row_bounds = [&](size_t row, const Values& values)
     {
         RectangleF result = row_label(row);
@@ -108,15 +108,15 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
             padded_height + art.shadow_offset <= look.layout.spacing.y,
             "Pad sticks action card escapes paper or overlaps its neighbour");
     }
-    require(label_scale(3) > 0.0f && label_scale(3) <= 1.0f &&
-        row_label(3).height + art.focus_padding.y * 2.0f <= look.layout.spacing.y,
+    require(label_scale(4) > 0.0f && label_scale(4) <= 1.0f &&
+        row_label(4).height + art.focus_padding.y * 2.0f <= look.layout.spacing.y,
         "Pad sticks Apply label did not fit its available row");
-    for (size_t row = 0; row < 3; ++row)
+    for (size_t row = 0; row < 4; ++row)
     {
-        const std::wstring value = row == 0 ? L"Pad 4" : L"90%";
+        const std::wstring value = row == 0 ? L"Pad 4" : row == 3 ? L"Off" : L"90%";
         require(row_label(row).right() + art.focus_padding.x < value_bounds(row, value).x &&
-            card(row_bounds(row, { L"Pad 4", L"90%", L"90%" })).right() < look.controls_position.x &&
-            panel.contains(card(row_bounds(row, { L"Pad 4", L"90%", L"90%" }))),
+            card(row_bounds(row, { L"Pad 4", L"90%", L"90%", L"Off" })).right() < look.controls_position.x &&
+            panel.contains(card(row_bounds(row, { L"Pad 4", L"90%", L"90%", L"Off" }))),
             "Pad sticks label/value card overlaps preview or escapes paper");
     }
     const StickPreviewPresentation& preview = look.stick_preview;
@@ -175,7 +175,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         const float available = panel.right() - art.shadow_offset - art.focus_padding.x - look.status_position.x;
         return RectangleF(look.status_position, raw * std::min(1.0f, available / raw.x));
     };
-    for (const wchar_t* status : { pending.c_str(), L"Pad deadzones applied and saved.",
+    for (const wchar_t* status : { pending.c_str(), L"Pad settings applied and saved.",
         L"Active for this run. Could not save." })
     {
         require(panel.contains(status_bounds(status)) && card(row_label(4)).bottom() < status_bounds(status).y,
@@ -344,7 +344,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         require(normal.pixels == main_menu_frame(app).pixels, "Pad sticks resize changed pixels or focus");
         return normal;
     };
-    const Values initial{ L"Pad 1", L"50%", L"50%" };
+    const Values initial{ L"Pad 1", L"50%", L"50%", L"On" };
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
     {
         resize_page(size); open_parent(); open_child();
@@ -360,10 +360,10 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     {
         if (app.gamepads()->connected(slot)) { initial_slot = slot; break; }
     }
-    std::ignore = capture("initial-slot", 0, { input_slots::device_name(initial_slot), L"50%", L"50%" },
+    std::ignore = capture("initial-slot", 0, { input_slots::device_name(initial_slot), L"50%", L"50%", L"On" },
         pending, art.focus_ink);
     open_parent(); stack.push(std::make_unique<StickSettingsMenu>(&context, 3)); tick();
-    std::ignore = capture("pausing-slot", 0, { L"Pad 4", L"50%", L"50%" }, pending, art.focus_ink);
+    std::ignore = capture("pausing-slot", 0, { L"Pad 4", L"50%", L"50%", L"On" }, pending, art.focus_ink);
 
     // The child saves only sticks into the current settings. The suspended
     // parent later saves its older pending music choice without reverting them.
@@ -394,24 +394,24 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     require(saved_bytes() == original && play.sticks[0].movement_deadzone == -1 &&
         play.sticks[0].aim_deadzone == -1 && play.music_volume == 0,
         "Pad sticks changed active preferences or saved before Apply");
-    tap(Key::down); tap(Key::enter);
+    tap(Key::down); tap(Key::down); tap(Key::enter);
     require(play.sticks[0].movement_deadzone == 30 && play.sticks[0].aim_deadzone == 70 && play.music_volume == 0,
         "Pad sticks Apply lost its pending values or applied suspended parent edits");
-    capture("applied", 3, values, L"Pad deadzones applied and saved.", art.focus_ink);
+    capture("applied", 4, values, L"Pad settings applied and saved.", art.focus_ink);
     const std::string child_saved = saved_bytes();
     Save reloaded; reloaded.load_save_file();
     require(reloaded.play_settings().sticks[0].movement_deadzone == 30 &&
         reloaded.play_settings().sticks[0].aim_deadzone == 70 && reloaded.play_settings().music_volume == 0 &&
         reloaded.resolution() == ScreenResolution::s_1920_1080 && reloaded.team_palette() == TeamColourPair::blue_yellow,
         "Pad sticks reload lost values or replaced other preferences");
-    tap(Key::up); tap(Key::up); tap(Key::up);
+    tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up);
     for (int step = 0; step < 8; ++step) { tap(Key::right); }
-    values = { L"Pad 4", L"50%", L"50%" };
-    capture("pad-max", 0, values, L"Pad deadzones applied and saved.", art.focus_ink);
+    values = { L"Pad 4", L"50%", L"50%", L"On" };
+    capture("pad-max", 0, values, L"Pad settings applied and saved.", art.focus_ink);
     tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::left);
     values[1] = L"55%"; values[2] = L"45%";
     capture("discard-pending", 2, values, pending, art.focus_ink);
-    tap(Key::down); tap(Key::down); tap(Key::enter);
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::enter);
     require(stack.depth() == 2 && saved_bytes() == child_saved &&
         play.sticks[3].movement_deadzone == -1 && play.sticks[3].aim_deadzone == -1,
         "Pad sticks Back saved an unapplied edit to another pad");
@@ -427,7 +427,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         reloaded.play_settings().sticks[0].aim_deadzone == 70,
         "Parent Apply failed to persist both independent settings edits");
     for (int row = 0; row < 8; ++row) { tap(Key::up); }
-    open_child(); values = { L"Pad 1", L"30%", L"70%" };
+    open_child(); values = { L"Pad 1", L"30%", L"70%", L"On" };
     capture("reopened", 0, values, pending, art.focus_ink);
     tap(Key::down); tap(Key::right); tap(Key::escape);
     require(stack.depth() == 2 && saved_bytes() == parent_saved && play.sticks[0].movement_deadzone == 30,
@@ -436,14 +436,14 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     open_child(); tap(Key::down); tap(Key::right); values[1] = L"35%";
     const std::filesystem::path blocked = save_path.wstring() + L".tmp";
     require(std::filesystem::create_directory(blocked), "Cannot block isolated Pad sticks temporary save");
-    tap(Key::down); tap(Key::down); tap(Key::enter);
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::enter);
     require(play.sticks[0].movement_deadzone == 35 && saved_bytes() == parent_saved,
         "Failed Pad sticks save lost the active choice or replaced previous JSON");
-    capture("save-failed", 3, values, L"Active for this run. Could not save.",
+    capture("save-failed", 4, values, L"Active for this run. Could not save.",
         presentation.main_menu().options_warning_colour);
     require(std::filesystem::remove(blocked), "Cannot remove isolated Pad sticks write refusal");
     require(records.good(), "Pad sticks capture record write failed");
-    std::cout << "PASS Pad sticks: actual child navigation; five bounded readable cards at 720p/1080p/QHD; "
+    std::cout << "PASS Pad sticks: actual child navigation; six bounded readable cards at 720p/1080p/QHD; "
         "pad/deadzone clamps, pending Apply, reload/failure and Back/Escape discard; parent Apply preserves "
         "child profiles; frozen/reduced/random/resize; no physical-controller comfort acceptance\n";
 }

@@ -206,6 +206,7 @@ void ControlsSettingsMenu::apply_settings()
 {
 	// The child commits pad profiles independently of these shared preferences.
 	this->selection_.sticks = this->save()->play_settings().sticks;
+	this->selection_.pad_rumble = this->save()->play_settings().pad_rumble;
 	const bool saved = this->save()->set_play_settings_and_save(this->selection_);
 	// The settings in memory changed whether or not the file did. The groups
 	// reach every playing and paused voice, so a music fade carries on.

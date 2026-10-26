@@ -143,8 +143,8 @@
       "controls_pending": "Apply to save changes for all players.",
       "controls_saved": "Applied and saved for all players.",
       "active_save_failed": "Active for this run. Could not save.",
-      "sticks_pending": "Apply to save pad deadzones.",
-      "sticks_saved": "Pad deadzones applied and saved.",
+      "sticks_pending": "Apply to save pad settings.",
+      "sticks_saved": "Pad settings applied and saved.",
       "options_reverted": "Display settings reverted.",
       "options_display_failed": "Could not change display settings. Previous settings restored.",
       "options_rollback_failed": "Could not restore display settings. Try Apply again."
@@ -314,7 +314,8 @@
       "keep": "Keep",
       "revert": "Revert",
       "keyboard_jump": "Keyboard Jump",
-      "pad_jump": "Pad Jump"
+      "pad_jump": "Pad Jump",
+      "rumble": "Rumble"
     }
   },
 

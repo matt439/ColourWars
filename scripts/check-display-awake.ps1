@@ -51,13 +51,15 @@ try {
         }|Sort-Object FullName)
         $entry=@($objects|Where-Object{$_.Name -ceq 'main.cpp.obj'});$platform=@($objects|Where-Object{$_.Name -ceq 'display_awake.cpp.obj'})
         if($entry.Count -ne 1 -or $platform.Count -ne 1 -or $platform[0].FullName.Substring($objectDirectory.Length+1) -cne 'display_awake.cpp.obj'){throw 'Expected exactly the normal entrypoint and one thin display_awake.cpp.obj'}
-        $linked=@($objects|Where-Object{$_.FullName -cne $entry[0].FullName -and $_.FullName -cne $platform[0].FullName})
+        $motors=@($objects|Where-Object{$_.Name -ceq 'rumble_xinput.cpp.obj'})
+        if($motors.Count -ne 1){throw 'Expected exactly one native rumble adapter to replace with the recording factory'}
+        $linked=@($objects|Where-Object{$_.FullName -cne $entry[0].FullName -and $_.FullName -cne $platform[0].FullName -and $_.FullName -cne $motors[0].FullName})
         if(@($linked|Where-Object{$_.Name -ceq 'game_states.cpp.obj'}).Count -ne 1){throw 'Actual GameLevel object is absent'}
-        $result.object_partition=[ordered]@{ordinary_replaced_entrypoint=[ordered]@{path=$entry[0].FullName;sha256=(Get-FileHash $entry[0].FullName).Hash};sole_additional_omission=[ordered]@{path=$platform[0].FullName;sha256=(Get-FileHash $platform[0].FullName).Hash;source='game/display_awake.cpp';source_sha256=(Get-FileHash (Join-Path $repo 'game/display_awake.cpp')).Hash};linked_count=$linked.Count;linked=@($linked|ForEach-Object{[ordered]@{path=$_.FullName;sha256=(Get-FileHash $_.FullName).Hash}})}
+        $result.object_partition=[ordered]@{ordinary_replaced_entrypoint=[ordered]@{path=$entry[0].FullName;sha256=(Get-FileHash $entry[0].FullName).Hash};display_request_adapter_omission=[ordered]@{path=$platform[0].FullName;sha256=(Get-FileHash $platform[0].FullName).Hash;source='game/display_awake.cpp';source_sha256=(Get-FileHash (Join-Path $repo 'game/display_awake.cpp')).Hash};motor_adapter_omission=[ordered]@{path=$motors[0].FullName;sha256=(Get-FileHash $motors[0].FullName).Hash;source='game/rumble_xinput.cpp';replacement='recording default factory; no native motor call'};linked_count=$linked.Count;linked=@($linked|ForEach-Object{[ordered]@{path=$_.FullName;sha256=(Get-FileHash $_.FullName).Hash}})}
         $installed=Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET;$dep=if($debug){Join-Path $installed 'debug/lib'}else{Join-Path $installed 'lib'}
         $libraries=@((Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),(Join-Path $build 'external/labrador/engine/math/MattMath.lib'),(Join-Path $dep 'DirectXTK.lib'),(Join-Path $dep 'xaudio2_9redist.lib'))
         $source=Join-Path $PSScriptRoot 'acceptance/display_awake_lifecycle.cpp';$exe=Join-Path $run 'display_awake_lifecycle.exe';$rsp=Join-Path $run 'compile.rsp'
-        $sourcePaths=@('game/display_awake.h','game/display_awake.cpp','game/states/game_states.h','game/states/game_states.cpp','scripts/acceptance/display_awake_lifecycle.cpp','scripts/check-display-awake.ps1')
+        $sourcePaths=@('game/display_awake.h','game/display_awake.cpp','game/rumble_sink.h','game/rumble_xinput.cpp','game/states/game_states.h','game/states/game_states.cpp','scripts/acceptance/display_awake_lifecycle.cpp','scripts/acceptance/painter_visual/rumble_sink_fixture.h','scripts/check-display-awake.ps1')
         $result.source_hashes=@(foreach($path in $sourcePaths){[ordered]@{path=$path;sha256=(Get-FileHash (Join-Path $repo $path)).Hash}})
         $result.library_hashes=@(foreach($path in $libraries){[ordered]@{path=$path;sha256=(Get-FileHash $path).Hash}})
         $contentPaths=@('manifest.json','tuning.json','presentation.json','levels/movement_course.json')

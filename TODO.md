@@ -53,7 +53,6 @@ without attended play or new hardware. Finish one bounded slice at a time.
 |---|---|---|
 | `POL#21` | Qualify Turbulence's five-tool pressure/recovery stations and native clean/heavy composition; supported movers and scored slopes follow their capability checks | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
 | `GAP#D5` | Justify useful Turbulence mover placements and the smallest static scored slope through route, paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
-| `ROAD#9` | Expose saved per-slot rumble On/Off and consume gameplay intents through a gated GameLevel owner; isolated native hook follows | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
@@ -70,7 +69,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
   (`GAP#5.1`).
 - **Report filing:** the guarded resize request and example (`ENG#23`) are
   prepared and locally qualified. Filing needs separate author authorization.
-- **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
+- **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#9`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
 ## Art direction, characters and the UI
@@ -151,7 +150,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#7` | DEFERRED | LOW | M | Per-seat view shake, aim marker and Reduce effects, after the stick-profile pattern; after `POL#27`. [Scope](docs/feature-roadmap.md#per-seat-accessibility-toggles-road7). |
 | `ROAD#8` | DEFERRED | LOW | S | More team palette pairs, each checked under colour-vision simulation; later UI art pass. [Scope](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
-| `ROAD#9` | OPEN | MED | M | Per-seat controller rumble for hits, eliminations, hard landings and dry fire, with a saved On/Off; bots, replays and pause never rumble. Feeling it needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
+| `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
 | `GAP#4.2` | UNSCOPED | MED | L | Other keyboard/pad actions and trigger choices need separate contracts; keyboard Jump and per-slot pad face-button Jump are complete. [Boundary](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
@@ -179,7 +178,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `GAP#F6` | BLOCKED | LOW | S | Rumble (`set_vibration`, capabilities): the exhibit is `ROAD#9`'s isolated XInput file; draft once it lands, filing needs authorisation. The FPS half was answered by report 14 (`Application::frame_timings`). |
+| `GAP#F6` | OPEN | LOW | S | Recheck the engine API and draft the rumble request using the qualified isolated XInput exhibit; filing needs authorisation. The FPS half was answered by report 14 (`Application::frame_timings`). |
 | `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 

@@ -57,6 +57,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 // This focused probe supplies the concrete input backend at the link seam.
@@ -189,6 +190,8 @@ namespace
 #include "scripts/acceptance/painter_visual/keyboard_jump_checks.h"
 #include "scripts/acceptance/painter_visual/keyboard_jump_ownership_checks.h"
 #include "scripts/acceptance/painter_visual/pad_jump_checks.h"
+#include "scripts/acceptance/painter_visual/rumble_settings_checks.h"
+#include "scripts/acceptance/painter_visual/rumble_owner_checks.h"
 #include "scripts/acceptance/painter_visual/percentage_checks.h"
 #include "scripts/acceptance/painter_visual/menu_motion_checks.h"
 #include "scripts/acceptance/painter_visual/home_alpha_checks.h"
@@ -243,7 +246,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
-            std::wstring(argv[3]) == L"keyboard-jump" ||
+            std::wstring(argv[3]) == L"keyboard-jump" || std::wstring(argv[3]) == L"rumble" ||
             std::wstring(argv[3]) == L"percentage-text" || std::wstring(argv[3]) == L"feedback-tune-colours" || std::wstring(argv[3]) == L"combat-tune-colours" || std::wstring(argv[3]) == L"blocked-shot-tune-colours" || std::wstring(argv[3]) == L"idle-drip-tune-colours" || std::wstring(argv[3]) == L"respawn-pen-tune-colours" || std::wstring(argv[3]) == L"cursor-tune-colours" || std::wstring(argv[3]) == L"silhouette-tune-colours" || std::wstring(argv[3]) == L"reveal-tune-colours" || std::wstring(argv[3]) == L"cursor-material-tune-colours" || std::wstring(argv[3]) == L"desktop-tune-colour" || std::wstring(argv[3]) == L"power-light-tune-colour" || std::wstring(argv[3]) == L"program-tune-colour" || std::wstring(argv[3]) == L"program-level-visibility" || std::wstring(argv[3]) == L"acting-tune-colours" || std::wstring(argv[3]) == L"glass-tune-colour" || std::wstring(argv[3]) == L"silhouette-body-tune-colour" || std::wstring(argv[3]) == L"scribble-tune-colour" || std::wstring(argv[3]) == L"hud-health-tune-colour" || std::wstring(argv[3]) == L"hud-track-tune-colour" || std::wstring(argv[3]) == L"crack-tune-colour" || std::wstring(argv[3]) == L"limb-tune-colours" ||
             std::wstring(argv[3]) == L"exposed-colour-alpha" || std::wstring(argv[3]) == L"duration-text" ||
             std::wstring(argv[3]) == L"resolution-text" || std::wstring(argv[3]) == L"end-continuation" || std::wstring(argv[3]) == L"results-text" || std::wstring(argv[3]) == L"session-result" || std::wstring(argv[3]) == L"series-score" || std::wstring(argv[3]) == L"round-heading" || std::wstring(argv[3]) == L"competitive-winner" || std::wstring(argv[3]) == L"contribution-team" || std::wstring(argv[3]) == L"result-percentage" ||
@@ -254,7 +257,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|press-tower|surface-finish|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|cursor-material-tune-colours|desktop-tune-colour|power-light-tune-colour|program-tune-colour|program-level-visibility|acting-tune-colours|glass-tune-colour|silhouette-body-tune-colour|scribble-tune-colour|hud-health-tune-colour|hud-track-tune-colour|hud-timer-tune-colour|hud-label-tune-colours|crack-tune-colour|limb-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|stage-preview-background-tune-colour|hud-closing-materials|hud-closing-shade|hud-paper-tune-colours|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|press-tower|surface-finish|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|cursor-material-tune-colours|desktop-tune-colour|power-light-tune-colour|program-tune-colour|program-level-visibility|acting-tune-colours|glass-tune-colour|silhouette-body-tune-colour|scribble-tune-colour|hud-health-tune-colour|hud-track-tune-colour|hud-timer-tune-colour|hud-label-tune-colours|crack-tune-colour|limb-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|rumble|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|stage-preview-background-tune-colour|hud-closing-materials|hud-closing-shade|hud-paper-tune-colours|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -273,6 +276,7 @@ int wmain(int argc, wchar_t** argv)
         const bool settings_menu_only = argc == 4 && std::wstring(argv[3]) == L"settings-menu";
         const bool controls_menu_only = argc == 4 && std::wstring(argv[3]) == L"controls-menu";
         const bool keyboard_jump_only = argc == 4 && std::wstring(argv[3]) == L"keyboard-jump";
+        const bool rumble_only = argc == 4 && std::wstring(argv[3]) == L"rumble";
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
         const bool remembered_setup_only = argc == 4 && (std::wstring(argv[3]) == L"remembered-setup" ||
             std::wstring(argv[3]) == L"remembered-setup-read");
@@ -365,11 +369,11 @@ int wmain(int argc, wchar_t** argv)
         require(!crack_tune_colour_only, "CrackTuneColourOnly requires the normal gamepad reader");
         require(!limb_tune_colours_only, "LimbTuneColoursOnly requires the normal gamepad reader");
 
-        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only ||
+        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options")),
             "The scripted gamepad backend is restricted to focused team/setup/menu-text acceptance");
 #else
-        require(argc != 4 || (!keyboard_jump_only && !remembered_setup_only && !connection_text_only && !stick_readouts_only && !team_focus_only && !team_tune_colours_only && !weapon_tune_colours_only && !stage_summary_only && !stage_preview_background_tune_colour_only && !menu_labels_only && std::wstring(argv[3]) != L"team-setup" &&
+        require(argc != 4 || (!rumble_only && !keyboard_jump_only && !remembered_setup_only && !connection_text_only && !stick_readouts_only && !team_focus_only && !team_tune_colours_only && !weapon_tune_colours_only && !stage_summary_only && !stage_preview_background_tune_colour_only && !menu_labels_only && std::wstring(argv[3]) != L"team-setup" &&
             std::wstring(argv[3]) != L"setup-motion" && std::wstring(argv[3]) != L"join-stage-motion" && std::wstring(argv[3]) != L"join-paper" && std::wstring(argv[3]) != L"team-paper" && std::wstring(argv[3]) != L"weapon-paper" && std::wstring(argv[3]) != L"stage-paper" && std::wstring(argv[3]) != L"home-return-focus" && std::wstring(argv[3]) != L"home-exit" && std::wstring(argv[3]) != L"options-defaults" && std::wstring(argv[3]) != L"display-trial" && std::wstring(argv[3]) != L"paused-options"),
             "Use check-painter.ps1 focused scripted input switches to compile the scripted input seam");
 #endif
@@ -754,6 +758,16 @@ int wmain(int argc, wchar_t** argv)
             feedback_tune_colour_checks(app, levels, tuning, presentation, content, output);
 #else
             std::cout << "PASS feedback-tune-colours-only Release consumer-only scope; no developer commands executed\n";
+#endif
+            return 0;
+        }
+        if (rumble_only)
+        {
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+            rumble_owner_checks(app, levels, canvas, tuning, presentation, content, output);
+            rumble_settings_checks(app, canvas, tuning, presentation, output);
+#else
+            throw std::runtime_error("RumbleOnly requires the scripted gamepad reader seam");
 #endif
             return 0;
         }

@@ -87,6 +87,9 @@ per-pad movement and aim deadzones, separate music and SFX volume,
 and On/Off **View shake** and **Aim marker** settings (both On by default).
 Open **Pad sticks** to select Pad 1-4, adjust each deadzone from 0-90%, and
 watch raw stick input and its movement/aim response before applying it.
+Its **Rumble** row switches feedback On or Off for that physical pad slot
+(default On); Apply saves the choice. Pausing, losing focus or disabling the
+slot stops feedback immediately. Physical-pad feel remains under review.
 Use D-pad/arrows on that page so the sticks stay free for testing.
 Profiles follow the pad slot, independently of player numbers; check the slot
 after reconnecting. Old saves keep their existing deadzones until edited.
