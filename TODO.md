@@ -24,7 +24,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    Turbulence, keeping the current P3/five-tool values as the baseline. The King of the Hill
    blockout is [Press Tower](docs/polish-press-tower.md) (explicit-only, beside the preserved
    original; attended play is `POL#31`); Crossfeed is now in Random at the author's request.
-   Turbulence is the next blockout.
+   Turbulence's [static candidate](docs/polish-turbulence.md) is explicit-only;
+   five-tool pressure and native composition are next.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
@@ -49,7 +50,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Author and reopen Turbulence's explicit-only static skeleton against its route/spawn/paint brief; supported movers and scored slopes follow their capability checks | [Brief](docs/polish-turbulence.md#next-slice-and-acceptance-still-owed) |
+| `POL#21` | Qualify Turbulence's five-tool pressure/recovery stations and native clean/heavy composition; supported movers and scored slopes follow their capability checks | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
 | `GAP#D5` | Qualify fresh public-loader replay rebuilds for the runtime-loaded horizontal mover; editor authoring follows | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 | `ROAD#9` | Add saved per-slot rumble On/Off, authored pulse values and actual gameplay callers to the qualified policy; isolated native hook follows | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
 | `GAP#4.2` | Expose the saved per-slot A/B/X/Y Jump choices through a scoped Pad Jump page and accurate controls help; qualify pages and replay adoption | [Bindings](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42) |
@@ -105,7 +106,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 |---|---|---|---|---|
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | OPEN | MED | XL | Arena blockouts after accepted Crossfeed: Turbulence next, then optional 1v1 CQ and side-swap qualification. [Press Tower](docs/polish-press-tower.md) has native captures; attended play (`POL#31`) and support art remain. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
+| `POL#21` | OPEN | MED | XL | Qualify [Turbulence Yard](docs/polish-turbulence.md) pressure, composition and capability placements; optional 1v1 CQ and side swaps follow. [Press Tower](docs/polish-press-tower.md) still needs attended play (`POL#31`) and support art. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 

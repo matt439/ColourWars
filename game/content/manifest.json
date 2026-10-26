@@ -34,7 +34,8 @@
                 "close_quarters",
                 "movement_course",
                 "crossfeed",
-                "press_tower"
+                "press_tower",
+                "turbulence_blockout"
             ]
         },
         {

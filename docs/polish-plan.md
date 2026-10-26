@@ -498,7 +498,8 @@ a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill
 which stays selectable and in Random. Its baseline acceptance case and native four-pane
 captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
 support art remain open there. Turbulence now has a
-[route and score brief](polish-turbulence.md), with no candidate geometry yet;
+[static Turbulence Yard candidate](polish-turbulence.md), explicit-only as
+`turbulence_blockout`, with qualified CPU routes and score geography;
 its first horizontal-moving capability is qualified separately in the
 [roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26). Builder/editor,
 rotation and useful placements remain open, and the existing arenas stay static.
@@ -507,7 +508,9 @@ rotation and useful placements remain open, and the existing arenas stay static.
 
 **OPEN, scoped 2026-10-26.** The [route and score brief](polish-turbulence.md)
 defines the fixed skeleton, optional moving approaches, spawn/pressure checks
-and provisional regional/face allocations; no playable layout is claimed.
+and provisional regional/face allocations. Its first static candidate is authored
+and qualified through the public loader and CPU route/paint cases; five-tool
+pressure, native composition, capability placements and attended play remain.
 This is the next layout, beside the preserved
 `turbulence.json`. Use the recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
 and current P3/five-tool values. The first brief can proceed while the
@@ -516,8 +519,7 @@ is implemented; Press Tower play does not block it.
 
 | Slice | Concrete result and stopping point | Dependency |
 |---|---|---|
-| Route and score brief | Name required, optional and recovery connections, their input families, four full-body spawns per side and two distinct departures. Budget paint by region/face, identify exposed crossings and useful retreat space. Explain the route choice earned by each proposed mover and static rotated structure. | Ready now; no new tuning or art required. |
-| First playable layout | Author a new explicit-only stage through the editor, with Random disabled. Retain a static route skeleton while capabilities land, then place the supported mover and rotated geometry. Reopen the saved level and load it through the game. | Brief; production builder/editor support for each new object. |
+| Capability placements | Add the justified mover and scored sloping geometry to the qualified explicit-only static candidate. Reopen and load each saved addition, preserving its fixed route/recovery skeleton. | Production builder/replay/editor support for each new object. |
 | Route, paint and tool qualification | Drive representative edges both ways with the real Player, including starting speeds, input margins, misses and mover phases/reversals. Reconcile regional/face paint, mirrored spawn threats and all five tools' firing/recovery windows; record side/loadout swaps and residual hypotheses. | Playable layout; production loader/replay qualification for movers. |
 | Native composition screen | Retain 1/2/3/4-view clean/heavy captures, moving approaches, landing/escape visibility, reversals and stage preview/ending views. Fix observed framing/content failures before handing over play questions. | Qualified layout and representative paint states. |
 

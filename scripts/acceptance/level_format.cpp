@@ -524,7 +524,7 @@ int main(int argc, char** argv)
             compare_runtime(modern, legacy, builder);
             ++checked;
         };
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed", "press_tower" })
+        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed", "press_tower", "turbulence_blockout" })
         {
             const std::string file = std::string(name) + ".json";
             check_compatible(content / "levels" / file);

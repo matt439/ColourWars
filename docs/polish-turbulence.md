@@ -1,10 +1,13 @@
 # Turbulence: route and score brief
 
-**Design brief, 2026-10-26; no candidate geometry or playable stage yet.** This
-is the next `POL#21` blockout, beside the preserved `turbulence.json`, under the
+**Static candidate, authored 2026-10-26.**
+[Turbulence Yard](../game/content/levels/turbulence_blockout.json) is the next
+`POL#21` blockout, beside the preserved `turbulence.json`, under the
 [blockout scope](polish-plan.md#turbulence-blockout-work-pol21). Keep the current
-P3 movement, five-tool values, Crossfeed and earlier arenas unchanged. Author a
-new explicit-only stage with `include_in_random: false` when the layout begins.
+P3 movement, five-tool values, Crossfeed and earlier arenas unchanged. The
+candidate is explicit-only with `include_in_random: false`. Its first skeleton
+contains neither movers nor scored rotated structures; those retain the
+capability and placement checks below.
 
 ## Question and research transfer
 
@@ -40,7 +43,7 @@ side advantage. Exact coordinates, travel and timing follow real-Player trials.
 | Upper approach -> fixed crossover -> opposite upper approach | Optional short exposed crossing | Held jump between fixed landings; continue or brake on the receiving landing. A solid centre baffle interrupts a single straight lane between both homes. |
 | Upper approach -> mover -> crossover flank | Optional change of angle | Held boarding jump, carried horizontal interval, then tap/held dismount as measured. Stop or reverse on the receiver; no launch-velocity inheritance is assumed. |
 | Crossover / mover / upper approach -> lower crossing or yard | Recovery after retreat, failed boarding or missed landing | Walk off or drop into supported lower space; rejoin the required route without respawn. Do not place a pit under an optional crossing. |
-| Lower crossing -> side recovery step -> own upper approach | Optional return to height | Tap/held sequence, with a supported stop between jumps; does not rely on a favourable mover phase. |
+| Lower crossing -> own yard -> home -> side step -> own upper approach | Optional return to height | Walk back, held return to home, tap then held; the longer static recovery avoids an inner ladder obstructing the walking corridor. |
 
 ```mermaid
 flowchart LR
@@ -63,8 +66,6 @@ flowchart LR
     XC -->|drop / miss| LC
     MA -->|drop / miss| LC
     MB -->|drop / miss| LC
-    LC -->|recovery step / held| UA
-    LC -->|recovery step / held| UB
 ```
 
 The graph is an authoring contract, not evidence that any edge is achievable.
@@ -72,6 +73,36 @@ The fixed skeleton must work before adding movers. Check full-body clearance,
 rest/intermediate/full-speed approaches, +/-2 input ticks and receiving space
 for continuing, stopping and reversing. A successful touch does not qualify a
 landing. Avoid the narrow-full-speed-stop problem recorded in Crossfeed.
+
+## First static geometry
+
+Coordinates are world units, Y downward. Reflect rectangles by
+`x_b = 4000 - x_a - width`, and reflect whole spawn bodies by their width.
+
+| Piece | A / centre rectangle (X, Y, W, H) | Initial role |
+|---|---|---|
+| Ground | 0, 1280, 4000, 400 | Continuous scored walking floor, exposed top only. |
+| Home floor / roof | 0, 1120, 600, 10 / 0, 960, 480, 10 | Static one-way rulers; ordinary tops score. |
+| Side step | 600, 1040, 280, 80 | 80-unit tap departure. |
+| Upper approach | 880, 880, 360, 80 | Held 160 rise from the side step, then a controlled stop. |
+| Lower bed | 1260, 1200, 320, 80 | Walkable low firing break; exposed faces score. |
+| Bed ascent / descent | 1100, 1200, 160, 80 / 1580, 1200, 160, 80 | Mirrored existing ramps; support players but pass paint. |
+| Crossover half | 1400, 800, 540, 80 | Optional 160-gap / 80-rise connection from the upper approach. |
+| Centre baffle | 1940, 720, 120, 160 | Upper firing break and optional controlled 80-unit tap crossing. |
+
+There are 20 collision objects, including two unscored perimeter walls. Spawns
+are A top-left X=30/150/270/390, Y=1000 and the corresponding reflected B
+bodies. Bounds are (-100,-100,4200,1900); camera/overview bounds are
+(0,360,4000,1020). The proposed top margin is not native framing evidence.
+The 120-wide baffle has only 68 units of whole-body positioning space; it is
+a controlled tap landing, not a promised full-speed braking destination.
+
+The source was created through `LevelDocument::create`, palette/setter calls,
+save and reopen, with resolved existing resources and byte-identical earlier
+arena files. `ColourWarsRegisterStage` previewed and applied its manifest and
+runtime-asset additions. The bounded authoring/registration receipts are under
+`out/validation/overnight-20261026/turbulence-author/`; this was the actual
+editor document pipeline, not an attended GUI handling session.
 
 ## Spawns and pressure stations
 
@@ -117,6 +148,24 @@ phases so a local budget does not conceal paint carried into a sheltered area.
 Measure complete walking loops, paint per traversal/tank and the time to contest
 or repaint each region from all spawn slots before revising these targets.
 
+**Initial measured geography.** The static candidate exposes 12,400 units of
+scoring edge, or 148,800 area at the unchanged 12-unit thickness. Runtime tiles
+and independent exposed-face counts agree: tops 103,680 (69.68%), undersides
+29,760 (20.00%), walls 15,360 (10.32%). The regional partition is:
+
+| Region | Measured area | Share |
+|---|---:|---:|
+| Home A / B | 20,160 each | 13.55% each |
+| Approach A / B | 25,200 each | 16.94% each |
+| Lower contest | 25,440 | 17.10% |
+| Upper crossing | 32,640 | 21.94% |
+
+These differ from the pre-geometry allocations: less approach/top paint, more
+lower-contest/underside paint. Keep that difference as a pressure/repaint
+question; it does not by itself justify changing tuning or banning floor paint.
+The case writes `turbulence-blockout-faces.csv` and
+`turbulence-blockout-regions.csv` beside its acceptance executable.
+
 ## Why the new geometry earns its place
 
 **One horizontal mover per side, mirrored as a pair.** Each traverses an open
@@ -155,10 +204,27 @@ interval. Record regenerated ammunition and return-to-contest time; standing
 behind one block is not evidence of a useful recovery loop. Do not change P3,
 Sniper reserve or Mister lifetime to make a first geometry attempt pass.
 
-## Next slice and acceptance still owed
+## Static qualification and next slice
 
-Author and reopen the explicit-only static skeleton through the editor, then
-load it through the game. Add movers only after runtime/schema, public replay
+The Debug and Release CPU cases qualify all eight spawns with two explicit deaths and
+held-input-safe respawns each, followed by jump-free lower departures. Its
+mirrored walking trial reaches the near bed at update 116, centre at 192 and
+far home at 352 with zero takeoffs. It deliberately stops/brakes at intermediate
+stations; these are fixture update counts, not uninterrupted match travel times.
+
+Optional departure/recovery trials pass at -2/0/+2 input ticks. They include
+the home roof rise, side-step tap, held upper approach, descent to the lower
+route and the longer return through home. Fixed-crossover trials pass with
+actual initial velocities 0/±415/±800 and those input margins, including a
+controlled centre-baffle tap and whole-body stopped landings. No position is
+injected after construction. Fresh public `LevelBuilder` loads with 1/4 players
+also pass, retaining the actual sparse slots, team-local spawns, screen layout,
+unchanged 181-update count-in, 12 active updates and exact neutral score.
+
+Receipts are under `out/validation/overnight-20261026/phase2/`, in
+`remaining/x64-debug/` and `release/x64-release/`. The next slice measures five-tool spawn/receiver
+pressure, real firing/recovery windows and native composition. Add movers only
+after runtime/schema, public replay
 rebuild and editor round-trip support; add scored sloping solids only after
 their separate collision/paint contract is qualified. Keep a before/after
 route and budget record for those additions.
@@ -169,7 +235,8 @@ Player. Reconcile paint and sampled five-tool pressure with side/loadout swaps,
 captures must show the receiving surface and first escape before commitment,
 including moving approaches, preview and ending views.
 
-No layout, route, paint, replay, rendering or human acceptance is claimed by
-this brief. Attended both-side 1-4P play must still answer crossing comfort,
+These static checks establish construction, routes and score geography only.
+Five-tool pressure, mover/rotation placement and native framing remain open.
+Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `GAP#D5`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.
