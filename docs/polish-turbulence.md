@@ -241,6 +241,28 @@ frames were visually inspected. These controlled hidden native captures establis
 composition and state preservation; attended readability, route cost, pressure,
 balance, physical pads and performance remain separate.
 
+**Bounded forward-pressure comparison, 2026-10-26 (Release).**
+The proposal's `--pressure` mode passes 280 own-mover samples (five tools,
+two sides, four authored phases and seven opposing home/departure/receiver
+bodies), plus 70 original-static upper-approach controls. Each uses actual
+editor validate/save/reopen, a public two-player LevelBuilder, the full
+181-update count-in, neutral readiness, one paid fixed-aim pulse and 180
+observation updates. All 350 distant forward samples miss within that window;
+no projectile remains at the end. Two separate mirrored ground-level Sniper
+controls at 300-unit separation both cause real nonfatal health loss at update
+6, leaving 0.666 health. The complete run uses 352 paid pulses and 143,992
+updates, including 842 for those positive controls.
+
+Receipts in `out/validation/overnight-20261026/phase8/pressure-v4/x64-release/`
+separate the 280 mover rows, 70 static rows and two positive controls. Source
+stage bytes remain equal. The neutral target oracle checks its exact physical
+foot plane, X and body size plus supported state; a one-ULP top-coordinate
+reconstruction on solid support is not treated as movement. Projectile counts
+are public snapshots, without launch/trajectory attribution. These samples
+cover cross-arena forward fire from each team's own half. They establish
+neither invader camping pressure nor useful local flank value, universal spawn
+safety, tracking, sustained fire, human warning time or competitive balance.
+
 **A mirrored pair of fixed sloping scored slabs at the crossover shoulders.**
 The intended role is a walkable retreat from an upper receiver toward the lower
 crossing while presenting a paintable underside to the lower approach. A solid
