@@ -377,8 +377,9 @@ unchanged. Receipts are under
 The case is available explicitly, outside the default CI inventory, and authors
 its fresh candidate in its receipt directory. It registers no game content.
 The controlled Sniper checks below qualify one blocked line and reachable top
-paint; broader pressure, comparison with a scored slab
-and attended value remain open before selecting the geometry.
+paint; the later five-tool comparison qualifies the recorded fixed stations.
+Comparison with a scored slab and attended value remain open before selecting
+the geometry.
 
 **Composite shot/paint controls, 2026-10-26.** Both presets pass the separate
 `--tools` mode's six real LevelBuilder scenes, 2,526 updates and ten controlled
@@ -435,6 +436,59 @@ one-player descent and heavy three-player ramp-stop frames were visually
 inspected. Source trial hashes stay equal. These are controlled hidden native
 observations; endings, human readability/reaction, physical pads, listening,
 performance, competitive value and a scored rotated-slab contract remain open.
+
+**Three-geometry five-tool comparison, 2026-10-26 (Release).** The separate
+`turbulence_slopes <staged-game-directory> --comparison` mode passes 60 fresh
+public `LevelBuilder` scenes, 24,540 updates and 60 paid single pulses. Each
+tool and side uses the same supported original upper-approach station across
+the static, mover and composite candidates. An opposed two-player family aims
+at a defender on the original fixed crossover; a separate solo family aims
+at the fixed point `(1320,880)`, or its mirror. That point is the shoe top
+only in the composite. Ninety public placements occur after the full count-in
+and before readiness; there is no later placement or earned-travel measurement.
+Ready health, reserves, aim, clock and paid cost match across each trio.
+
+The opposed samples reproduce the same recorded outcomes across all three
+geometries on both sides: Sniper first damages at update 7, leaving 0.666
+health; Mister first damages at 48, leaving 0.98. Sprayer, stationary Roller
+and Bucket cause no health loss during the 180-update observation. Each
+geometry has four health-hit scenes out of ten and eight scenes with **any**
+owned paint. The latter includes source-floor paint and does not mean that
+eight pulses paint the intended receiver. These fixed stations show no new
+opposed pressure advantage for the composite.
+
+Fresh solo samples distinguish the flat shoe's paint role. Values below are
+settled owned area per scene; both sides reproduce them. Static and mover
+values agree at these particular stations, with their distinct total arena
+budgets retained.
+
+| Tool | Static / mover total | Composite total | Composite shoe-top contribution |
+|---|---:|---:|---:|
+| Sprayer | 240 | 240 | 240 |
+| Sniper | 192 | 288 | 288 |
+| Roller | 624 | 624 | 0 |
+| Mister | 576 | 624 | 336 |
+| Bucket | 1,200 | 1,152 | 0 |
+
+All ten solo scenes per geometry gain some owned paint, including paint away
+from the fixed target. Sprayer redistributes its sample to the shoe top;
+Roller and Bucket do not paint that top. These independent scenes are not a
+match-score sum, damage-efficiency or competitive-value comparison. Source and
+face ordinals, raw-slot credit, optional shoe absence and the actual neutral
+budgets of 148,800 / 165,120 / 172,800 remain explicit in the CSV. Public
+projectile counts are snapshots, and the next-RNG value is a terminal witness,
+without a full-trajectory or complete-RNG-state claim.
+
+Receipts are under
+`out/validation/overnight-20261026/phase10/shoulder-comparison/x64-release/turbulence-slopes-25784/`.
+Debug compilation and the existing six-control Release `--tools` regression
+pass; the extended Debug comparison was not run. All eight source arenas and
+tuning remain unchanged. The composite remains isolated and unregistered.
+Its qualified route, flat underside and paint role do not establish a scored
+diagonal walking face or rotated-slab equivalence. The next implementation
+slice defines and qualifies one fixed scored slab's support, projectile and
+local-face contract before comparing its useful placement with this retained
+composite. No further pressure family is needed before that geometry work.
 
 ## Tool and recovery hypotheses
 

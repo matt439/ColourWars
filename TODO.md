@@ -54,7 +54,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Compare the shoulder composite's five-tool pressure and paint role with the static/mover candidates before geometry selection | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
+| `POL#21` | Define and qualify one fixed scored slab's collision and local-face contract before comparing its placement with the retained shoulder composite | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
 | `GAP#D5` | Qualify the smallest useful static scored slope through support, projectile, local-paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:

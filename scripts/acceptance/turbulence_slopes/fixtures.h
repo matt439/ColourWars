@@ -29,4 +29,5 @@ namespace turbulence_slopes_acceptance
     void geometry(Context& context);
     void routes(Context& context);
     void tool_checks(Context& context);
+    void comparison_checks(Context& context);
 }
