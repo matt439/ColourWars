@@ -33,7 +33,21 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($TurbulenceBlockoutOnly) {
+if ($TurbulenceMoverOnly) {
+    $result.scope = 'turbulence-mover-only'
+    $result.stage = 'turbulence_mover_trial'
+    $result.player_counts = @(1, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('outer-endpoint-wait', 'qualified-inward-commit-window', 'actual-carried-inner-reversal', 'continuous-outward-ride', 'controlled-clean-heavy-paint', 'actual-stage-preview', 'native-crop-rgb-parity', 'frozen-owner-state-rng')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result['trial_source'] = [ordered]@{ path=$trialResolved; sha256_before=$trialHashBefore; sha256_after=$null; unchanged=$false; registration='private-explicit-argument-only' }
+    $result.inputs = 'An explicit UTF-16 filesystem argument supplies the private actual-editor-authored trial. Four actual Levels own Scenes assembled with production object/player builders and real owner-bound moving shadows; public LevelBuilder loading and driven route/replay qualification are separate CPU evidence. Front riders are placed once, settle for six neutral ticks and remain on actual carriers across the four recorded phases; extra4P actors wait on static upper approaches. Direct ProjectileSpray contacts supply controlled heavy paint. The normal GamepadReader and global fake rumble factory remain linked; no physical-device or motor claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Exactly17 native720p full frames,41 unscaled native crops/CSV rows,35 readbacks and4 actual Level builds, with at most6000 Level updates. Sixteen actual Level captures cover1P/4P clean/heavy outer wait, qualified inward commit, carried inner reversal and continuing outward ride; one isolated actual local-registry StagePreview adds authored initial-pose context. All panes retain a whole player and standing-body-plus8unit safe upper-approach escape patch. Fixed crossover standing-body-plus80unit landing strips are required only in the CPU-qualified inward window (A right>=1230/B left<=2770, rider localgoals220/100 within8 and personal speed<1); outer endpoints are wait states. Actual Scene view/camera/pane metadata, exact motion/local face-team-raw-owner-area/carrier/shadow/view frozen snapshots, source-bound shadow/cull offsets, retained local credit and matched clean/heavy actor motion are checked. Native RGBA crop parity and independent retained RGB crop equality are distinct proofs. StagePreview checks repeated pixels, widget bounds and RNG only. Trial SHA256 is checked before/after; no asset or Random registration changes. Completed routes, gameplay pressure, replay, human readability/reaction time, physical pads/motors, listening, performance, slope, balance and arena acceptance remain separate gates.'
+}
+elseif ($TurbulenceBlockoutOnly) {
     $result.scope = 'turbulence-blockout-only'
     $result.stage = 'turbulence_blockout'
     $result.player_counts = @(1, 2, 3, 4)

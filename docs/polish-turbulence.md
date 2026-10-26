@@ -212,11 +212,34 @@ priming before applying the active-input tape; unmodified DebugDirector
 fresh-launch playback is not qualified. Receipts are in
 `out/validation/overnight-20261026/phase8/replay-debug.log` and
 `replay/x64-debug/turbulence-movers-30764/` beneath that phase directory.
-Release `--replay` reports its explicit Debug-tools limit. Native moving
-composition, five-tool role and attended play remain unqualified. In particular,
+Release `--replay` reports its explicit Debug-tools limit. Five-tool role and
+attended play remain unqualified. In particular,
 the higher standing fire may bypass the centre baffle and change pressure on
 both departures; route and paint-credit success alone do not establish that
 the bay earns its angle or its increased upper score share.
+
+**Private mover native composition, 2026-10-26.**
+`check-painter.ps1 -TurbulenceMoverOnly -TrialPath <saved-trial.json>` passes in
+Debug and Release at 1280x720, without registering the proposal. Each preset
+records 17 full frames, 41 native crops/CSV rows, 35 readbacks and four actual
+Levels: one/four players, clean/heavy paint, outer waiting, an inward commitment
+window, the carried inner reversal and the outward ride. An isolated actual
+StagePreview supplies the seventeenth frame. Owner-bound moving shadows follow
+the production builder path; repeated draws preserve observed motion, local
+paint, credit, carrier, shadow/cull bounds, actual Scene views, pixels and RNG,
+with Debug fingerprints checked where built.
+
+Every gameplay pane includes the whole player and an immediate supported upper
+escape. The full crossover landing patch is required during the measured inward
+window; outer waiting/ride frames make no promise that the distant landing is
+visible or reachable at that instant. The post-run verifier independently
+reconstructs phase, offsets, support/shadow/pane geometry and compares every crop
+RGB row with its source frame. Source trial hashes remain equal before/after.
+Receipts are in `out/validation/overnight-20261026/phase8/mover-native-v2/`.
+Representative clean one-player reversal and heavy four-player commitment
+frames were visually inspected. These controlled hidden native captures establish
+composition and state preservation; attended readability, route cost, pressure,
+balance, physical pads and performance remain separate.
 
 **A mirrored pair of fixed sloping scored slabs at the crossover shoulders.**
 The intended role is a walkable retreat from an upper receiver toward the lower

@@ -8,6 +8,7 @@ struct CrossfeedFixture
     Scene* scene = nullptr; // Borrowed from Level; useful for post-tick native observations.
     std::vector<CollisionObject*> structures;
     std::vector<StructurePaintable*> paintables;
+    std::vector<GameObject*> moving_shadows; // Borrowed actual owner-following wrappers.
 };
 
 RectangleF crossfeed_rectangle(const LevelLoadedInfo& info, const char* name)
@@ -82,7 +83,10 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
     { scene->add(std::move(shadow)); }
     CrossfeedFixture fixture;
     fixture.scene = scene.get();
-    for (auto& object : objects.build_collision_objects(info.collision_objects_json(), colours))
+    auto collision_objects = objects.build_collision_objects(info.collision_objects_json(), colours);
+    for (auto& shadow : objects.build_moving_shadows(info.collision_objects_json(), collision_objects))
+    { fixture.moving_shadows.push_back(scene->add(std::move(shadow))); }
+    for (auto& object : collision_objects)
     {
         if (auto* surface = dynamic_cast<StructurePaintable*>(object.get()))
         {
