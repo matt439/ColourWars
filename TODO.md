@@ -51,7 +51,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 |---|---|---|
 | `POL#21` | Author and reopen Turbulence's explicit-only static skeleton against its route/spawn/paint brief; supported movers and scored slopes follow their capability checks | [Brief](docs/polish-turbulence.md#next-slice-and-acceptance-still-owed) |
 | `GAP#D5` | Qualify fresh public-loader replay rebuilds for the runtime-loaded horizontal mover; editor authoring follows | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
-| `ROAD#9` | Define and qualify rumble pulse policy with a fake sink; settings/callers and the isolated native hook follow | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
+| `ROAD#9` | Add saved per-slot rumble On/Off, authored pulse values and actual gameplay callers to the qualified policy; isolated native hook follows | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
 | `GAP#4.2` | Per-slot gameplay Jump choice from A/B/X/Y, retaining LT and the existing menu controls; model/save/evaluator first | [Bindings](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:

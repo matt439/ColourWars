@@ -415,11 +415,25 @@ Acceptance is a CPU case over a fake vibration sink: which events pulse which
 seat, the per-seat setting and every stop condition. Feeling it needs pads
 (`ROAD#2`).
 
-The local work has three stopping points; each leaves a reviewable increment.
+The local work has bounded stopping points; each leaves a reviewable increment.
+
+**Pulse policy implemented, 2026-10-26.** `Rumble` borrows a nonthrowing sink
+and accepts caller-supplied profiles with normalized motor amplitudes and
+durations from zero to one second. Each event has its own timer; overlaps take
+the maximum per motor, and a repeated event refreshes only its own timer.
+Physical-slot and session gates cancel pulses instead of suspending them, so
+reconnect, re-enable and resume cannot revive old feedback. Explicit stop and
+destruction request zero for all four physical pads.
+
+The `rumble` fake-sink case passed in Debug and Release, covering all four
+events, overlap/expiry/repetition, sparse slots, keyboard/bot/replay/disabled
+and disconnected suppression, every stop condition and invalid-input atomicity.
+Receipts are under `out/validation/overnight-20261026/` (`runtime` and `release`).
+This policy has no native adapter, saved setting or gameplay caller yet; its
+test values are not authored cue tuning or a physical-feel result.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Pulse policy and fake sink | Define bounded motor amplitudes, durations and deterministic overlap behavior for the four existing events. Drive a fake sink through pulse expiry, repeated events, pause, focus loss, disconnect, match exit and destruction; no native motor calls are needed for this slice. |
 | Settings and gameplay callers | Add the saved per-slot On/Off and authored pulse values, then connect actual hit, elimination, hard-landing and dry-trigger callers. Check sparse/reordered rosters, unrelated settings, default/recovered saves and disabled slots. Bots, replays and the keyboard seat must produce no motor output. |
 | Native hook and report exhibit | Put the slot-to-`XInputSetState` call and its stop path in one isolated file; unavailable/disconnected hardware must remain harmless. Qualify the callers with the fake sink, then draft `GAP#F6` with that file as the exhibit after rechecking the engine API. Filing still needs separate author authorization. |
 

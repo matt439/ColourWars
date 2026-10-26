@@ -22,6 +22,7 @@ add_executable(ColourWars WIN32
     presentation_read_match.cpp
     presentation_read_menu.cpp
     presentation_validation.cpp
+    rumble.cpp
     save.cpp
     session.cpp
     sound_groups.cpp
