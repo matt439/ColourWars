@@ -18,7 +18,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.changes.outputs.docs_only }}
+    steps:
+      # Compare the whole push/PR without fetching or building the engine.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check CI change detection
+        run: python3 -m unittest discover -s scripts/ci -p test_*.py
+
+      - name: Lint changes and select build jobs
+        id: changes
+        run: python3 scripts/ci/lint.py
+
   windows:
+    needs: lint
+    if: needs.lint.outputs.docs_only != 'true'
     runs-on: windows-latest
 
     strategy:

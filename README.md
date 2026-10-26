@@ -216,6 +216,12 @@ They use no graphics device or speaker and isolate
 all save writes. Evidence stays under `out/acceptance/<preset>/`. CI runs the
 same checks; `-SkipBuild` is for an already-current build.
 
+CI lints changed lines for whitespace errors and conflict markers on every run.
+Pushes and pull requests containing only Markdown or images/videos under
+`docs/images/` stop after lint. Code, build files, scripts, schemas, runtime assets,
+submodule changes and deletion of packaged Markdown still run the full Windows
+checks. A manual workflow run always runs the full checks.
+
 For paired GPU captures of the takeoff/landing prototype, run
 `./scripts/check-movement-feedback.ps1 -Preset x64-debug -SkipBuild`.
 It uses a hidden D3D11 hardware window, scripted jumps and isolated profile;

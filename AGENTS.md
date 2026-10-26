@@ -122,8 +122,15 @@ ctest --test-dir out/labrador/x64-debug --output-on-failure
 ctest --test-dir out/labrador/x64-debug -R <name>    # a single test
 ```
 
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) builds both presets,
-runs consumer acceptance and checks startup. Acceptance runs four cases at a
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) always lints changed lines
+for whitespace errors and conflict markers. Pushes and pull requests that change
+only Markdown or image/video files under `docs/images/` skip the Windows jobs.
+Deleting a packaged Markdown file still runs full CI, as do code, scripts, schemas,
+runtime assets and submodule changes. Manual runs always run full CI. Change
+detection and its regression checks live in `scripts/ci/`.
+
+Full CI builds both presets, runs consumer acceptance and checks startup.
+Acceptance runs four cases at a
 time (`-Parallel 4`); on pull requests the Debug job leaves out `crossfeed`,
 `press_tower`, `menu_text` and `debug_console` (`-ExcludeCases`), which take
 minutes each under Debug's checked iterators (with them, Debug acceptance
