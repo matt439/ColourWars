@@ -15,7 +15,7 @@ int wmain(int argc, wchar_t* argv[])
         {
             std::cerr << "usage: balance_runner <content> [--stage id ... --seed uint32 ... "
                 "--players 1..4 --duration 0.05..600 --tools sprayer,sniper,... "
-                "--bot paint|chase|walk|jump|idle|skirmish --csv new-file]\n"
+                "--bot paint|chase|walk|jump|idle|skirmish --csv new-file [--paint-csv new-file]]\n"
                 "With <content> only, run bounded device-free self-tests.\n";
             return 2;
         }
@@ -27,12 +27,17 @@ int wmain(int argc, wchar_t* argv[])
         }
         const std::vector<std::wstring> arguments(argv + 2, argv + argc);
         const balance_runner::Options options = balance_runner::parse_options(content, arguments);
+        balance_runner::CsvOutputs outputs(options.csv, options.paint_csv); // Both targets prepared before the first match.
+        std::cout << "Prepared CSV stages (preserved on failure): " << labrador::path_to_utf8(outputs.main_stage_path())
+            << " ; " << labrador::path_to_utf8(outputs.paint_stage_path()) << '\n';
         const std::vector<balance_runner::Result> results = balance_runner::run_sweep(options);
-        balance_runner::write_csv(options.csv, results);
+        outputs.stage(results);
+        outputs.publish();
         std::cout << "PASS balance runner: " << results.size() << " completed matches; "
             << labrador::path_to_utf8(options.csv) << '\n'
+            << "Paint companion: " << labrador::path_to_utf8(options.paint_csv) << '\n'
             << "Aggregate held paint, pre-step empty-readiness ticks, observed death edges and validated enemy eliminations. "
-            "Region/face ownership, statistical reports and attended balance acceptance remain separate.\n";
+            "Final region/face held ownership is in the companion; statistical reports and attended balance acceptance remain separate.\n";
         return 0;
     }
     catch (const std::exception& error)

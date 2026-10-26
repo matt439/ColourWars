@@ -428,3 +428,31 @@ PaintTotal StructurePaintable::paint_total() const
 	}
 	return total;
 }
+
+void StructurePaintable::append_paint_surfaces(std::vector<PaintSurfaceSample>& samples,
+    std::size_t source_index) const
+{
+    samples.reserve(samples.size() + this->paint_tiles_.size());
+    for (const PaintStrip& strip : this->paint_strips_)
+    {
+        const PaintSurfaceFace face = strip.along_x
+            ? (strip.leading ? PaintSurfaceFace::top : PaintSurfaceFace::bottom)
+            : (strip.leading ? PaintSurfaceFace::left : PaintSurfaceFace::right);
+        for (int index = 0; index < strip.count; ++index)
+        {
+            const PaintTile& tile = this->paint_tiles_[static_cast<std::size_t>(strip.begin + index)];
+            const RectangleF rectangle = tile.bounds();
+            PaintSurfaceSample sample;
+            sample.corners = { Vector2F(rectangle.left(), rectangle.top()),
+                Vector2F(rectangle.right(), rectangle.top()),
+                Vector2F(rectangle.right(), rectangle.bottom()),
+                Vector2F(rectangle.left(), rectangle.bottom()) };
+            sample.face = face;
+            sample.team = tile.team();
+            sample.paint_owner = tile.player_num();
+            sample.scored_area = tile.area();
+            sample.source_index = source_index;
+            samples.push_back(sample);
+        }
+    }
+}

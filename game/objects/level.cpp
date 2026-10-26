@@ -718,3 +718,23 @@ LevelEndInfo Level::level_end_info() const
 
 	return result;
 }
+
+std::vector<PaintSurfaceSample> Level::paint_surfaces() const
+{
+    std::vector<PaintSurfaceSample> samples;
+    std::size_t source_index = 0;
+    for (const CollisionObject* object : this->scene_->collision_objects())
+    {
+        const PaintableObject* paintable = dynamic_cast<const PaintableObject*>(object);
+        if (paintable == nullptr)
+        {
+            if (to_collision_type(object->tag()) == CollisionObjectType::structure_paintable)
+            {
+                throw std::runtime_error("Object tagged STRUCTURE_PAINTABLE is not an PaintableObject");
+            }
+            continue;
+        }
+        paintable->append_paint_surfaces(samples, source_index++);
+    }
+    return samples;
+}

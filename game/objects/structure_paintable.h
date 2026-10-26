@@ -74,6 +74,8 @@ public:
 		const mattmath::Vector2F& normal, float penetration) override;
 
 	PaintTotal paint_total() const override;
+	void append_paint_surfaces(std::vector<PaintSurfaceSample>& samples,
+		std::size_t source_index = 0) const override;
 	// Ownership directly under a confirmed top-support contact. Tile intervals
 	// are half open, so a seam has one answer; side/bottom paint never counts.
 	PlayerTeam top_paint_team(float x) const;

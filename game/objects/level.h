@@ -155,6 +155,10 @@ public:
 	const BlockedShotFeedback& blocked_shot_feedback() const;
 
 	LevelEndInfo level_end_info() const;
+	// Exact scoring tiles in Scene paintable-role order, then per-source tile
+	// order. Faces overlap independently at corners; do not union their areas.
+	// Source indices are snapshot-local, not authored object names or replay IDs.
+	std::vector<PaintSurfaceSample> paint_surfaces() const;
 
 	// Developer tools. Present in every build; only Debug builds call them,
 	// between world updates. `view` indexes players_ (see below).

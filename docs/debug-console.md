@@ -988,6 +988,18 @@ There is no line-of-sight test, route planner or ballistic intercept solver;
 the bot can fire into a wall or fail a route. Seeded developer measurements
 do not establish human comfort, arena acceptance or tool balance.
 
+### Headless paired paint measurements
+
+The Debug-only headless runner accepts `-PaintCsv <new path>` through
+`scripts/run-balance.ps1`, or `--paint-csv` through the native
+console. Its companion defaults to `<mainstem>.paint.csv` beside the main CSV.
+Main schema 2/81 stays unchanged; the independent companion is schema 1/29.
+These are final held-paint measurements by region/authored face and validated
+owner, not route occupancy or human balance acceptance. See the
+[measurement and two-file recovery contract](gameplay-tuning.md#paired-final-paint-csv-contract)
+before interpreting denominators or a partial pair. This adds no in-game console
+command or shipping bot policy.
+
 ## Seed, record and play
 
 **`seed <n|off>`** fixes the random seed of every build until `seed off`:

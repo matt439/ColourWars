@@ -298,7 +298,162 @@ source/producer/CSV hashes, both comparison reviews and the preserved failure
 are under `out/validation/todo-loop-20261025/` in those native roots and
 `tool1-skirmish-prep-v1/`.
 
-**Still open in TOOL#1:** final region/face-owned paint
-and the first full five-tool report. The short control above
-qualifies the pipeline, not tool balance or human acceptance. No tuning value or
-shipping opponent behaviour changes in this slice.
+### Paired final paint CSV contract
+
+The runner writes a separate region/face companion while retaining the main
+schema **2**, its **81 columns** and existing serializer. Controlled native Paint
+and Skirmish golden runs retained their entire prior 81-column CSV bytes; the
+compatibility claim is scoped to those same-build/data controls.
+The companion has independent schema **1**, **29 columns**. Its one-based
+`match_row` joins each group to a main data row, excluding the header; stage,
+seed, player count, bot, requested duration, final fingerprint and the actual
+view-ordered roster provide additional identity checks. Roster text records
+seat/team/tool/paint-owner, rather than assuming a device slot is a seat.
+
+At the real time-up boundary the integration takes `Level::paint_surfaces()`:
+an owned vector of each actual scoring tile's world-space convex quad, authored
+`top`/`bottom`/`left`/`right` face, team, raw paint owner, authoritative scored-area
+float and snapshot-local source ordinal. It includes neutral tiles and discovers
+the paintable role independently of collision tags, including paintable one-way
+supports. The retained report owns its values; it keeps no Level, Player or tile
+pointers. Snapshot collection is read-only. The runner checks the old final
+fingerprint again after measurement and rejects a changed fingerprint.
+The current producer is static and axis aligned; the quad interface does not
+establish moving/rotated scoring support or acceptance.
+
+This is **final held paint**, not cumulative paint events, time spent holding an
+area, player visits or route occupancy. A low final painted area can identify a
+question for an attended route review; it cannot establish that nobody used the
+route. Valid seat credit requires a unique actual roster owner with a matching
+team. Neutral and uncredited painted rows remain explicit; invalid, absent or
+team-mismatched owners are not silently assigned to a seat.
+
+The helper clips each convex quad against the stage's vertical region rectangles,
+using geometric fractions to allocate the tile's authoritative scored area. It
+does not replace the quad with its axis-aligned bounding box or replace its area
+with corner-derived area. `outside_partition` is the complement, including area
+above/below the finite bands; its rectangle-bound fields are blank. Crossfeed
+uses its five named X bands and Press Tower its seven; other stages use a whole-
+arena band. Faces remain authored/local identities, not directions recomputed
+from a world normal. Cells have canonical region/face/team/owner/seat/status order.
+
+Two area authorities are deliberately recorded. `arena_runtime_*` reproduces the
+existing per-source float score additions, retaining source groups and tile
+order, and verifies those totals and raw-owner areas bit-for-bit against
+`LevelEndInfo`. `arena_runtime_painted_area` is the double sum of the two already
+grouped team floats. The main row continues using its existing runtime values. `arena_sample_*`
+and region/face denominators use compensated double sums of the authoritative
+individual tile floats. They can differ from the grouped runtime floats through
+rounding; arbitrary tile permutations are not a replay contract. Allocation
+conserves the sample totals within the emitted `allocation_tolerance`.
+`held_sample_area` is raw held area, not a percentage.
+`region_face_sample_paintable_area` includes neutral tiles, while
+`region_face_sample_painted_area` includes only A/B-painted area. Analysts must
+choose the intended denominator and handle a zero denominator explicitly. For
+painted-row coverage use the paintable denominator; share of painted area uses
+the painted denominator and excludes neutral rows.
+
+**Output paths and publication.** The launcher accepts `-PaintCsv`; the native
+console accepts `--paint-csv`. Omission creates `<mainstem>.paint.csv` beside the
+selected main CSV, even when `-Csv` is outside `-OutputDirectory`; the launcher's
+default main is `<new evidence directory>/matches.csv`. There is no companion-off
+switch. Wrapper relative paths resolve from the repository root; direct native
+relative paths use its working directory. Both destinations must be new and
+distinct. Unicode paths are supported; ambiguous/aliased or conflicting paths,
+one output used as the other's ancestor, and overlaps with the launcher's
+reserved evidence paths are refused before output creation.
+
+The native publisher exclusively reserves two sibling staging files before any
+match. Both full CSVs are serialized, written, flushed and closed before
+publication. It publishes the companion first and the main last, without replacing
+an existing destination. Main-last is a completion-marker convention for this
+writer, **not a jointly atomic two-file transaction**. A successful wrapper also
+requires native exit 0, both final files and unchanged input/source pins, then
+records both hashes in `run-info.json`. File existence alone does not qualify a
+pair or prove that a raced destination belongs to this run.
+
+On failure, preserve the run log, receipt and every named owned staging file or
+published orphan companion. In particular, a failed main move can leave the
+complete companion published and the complete main stage retained; this runner
+has not published its own main completion marker. Another writer may own a
+raced main path. The tool performs no automatic rollback, deletion, append,
+finalization or resume. Inspect the recorded ownership/paths and hashes after the
+owned process exits, and retry with a fresh output pair and a fresh wrapper
+evidence directory. Do not treat an orphan companion as a complete result or
+manually overwrite a destination to make the pair appear complete.
+
+**Evidence boundary.** The owned snapshot API and shared region/CSV helper have
+qualified foundations: Debug/Release game/editor builds and include checks,
+`paint_surfaces` and `balance_regions` in both presets, existing paint/console
+checks and the earlier Debug runner checks (nine CPU cases across the retained
+foundation runs). The original `near` fixture-identifier compile failure remains
+preserved; the narrow identifier rename changed no production or metric math.
+The foundation result is
+`out/validation/todo-loop-20261025/tool1-region-foundation-native-v2/result-v1.json`
+(SHA256 `906B9081DBA3AD34A575654A1BD7DF77F4D78EFC8C553271275B998C246254FF`),
+with independent foundation review `3C94419C6CE6275BBC9B5AEC41E99FDD364171576A09C1F157B7FDACA1EE53B6`.
+The seven-file integration source bundle is `tool1-pair-prep-v1/ready-v1.json`
+under that validation root (SHA256
+`07B086A56C84239362C37D01A518E9EE8577E6A44EAD8E8980056E176EF0C94D`).
+The source-only full-bundle review is
+`tool1-pair-prep-v1/independent-full-source-review-v1.json` under that root
+(SHA256 `515202F2944F3A84FBDF7E50A25BB4946A8BF273E2F2726EC8270C6B7A0C1F03`).
+The integrated qualification below is separate from the retained foundation and
+source-review results.
+
+**Integrated qualification (2026-10-26).** The actual scope is `b3ad8743` plus
+the pinned API/helper and seven-file runner integration, rather than clean HEAD.
+The integrated Debug console compiled and ran its four real self-check matches,
+including paired seeded-byte identity and the controlled partial-publication
+failure that retained an orphan companion and main stage. The native existing-
+directory-handle alias refusal also passed. The initial integrated executable
+SHA256 is `226DC4F0AD84731F132736EF5CA8FB0663490A19616FC4654F1AE937E47FE9B5`.
+All eight existing Debug/Release game/editor/engine/build-info producer hashes
+matched the qualified foundation. Those producers were reused; the positive
+public-wrapper controls compiled only their two console executables.
+
+The public preflight matrix refused 29 ordinary malformed/preexisting/conflicting
+output or evidence cases. Each retained identical tree contents, root presence
+and sentinels and restored console encoding, with no C++ console compilation or native matches.
+Three optional alternate-`out`-junction wrapper alias cases **did not run**:
+`out` resolved to the same ordinary path, so the harness recorded a LIMIT and
+changed no junction. The separately passed native resolved-parent alias control
+does not stand in for those three wrapper cases.
+
+Eight positive invocations produced four matches each: **32 match observations**,
+including legacy controls and repeats, not 32 independent seed configurations.
+The 4P/60-second Skirmish and 2P/20-second Paint controls on both stages at seeds
+0/17 retained their exact previous complete main CSVs. New 3-second controls
+covered 2P/4P, both stages, all five tools and seeds 0/uint32-max. Paired repeat
+files were whole-byte identical. Reversed-order companions were rejoined through
+their local main-row ordinals before all other 28 fields were compared by match
+and cell key. Direct Unicode explicit/default destinations and both public
+wrapper choices agreed where configured identically. Receipt checks verified
+both output hashes, source/input pins, exact roster/fingerprint metadata,
+runtime-float authority, sample-double allocation and bounded tolerance, UTF-8
+paths/logs and restored caller encoding.
+
+The compile/self-check receipt is
+`tool1-pair-compile-native-v1/result-v1.json`, SHA256
+`1DEFF06625FD106696F6150BCEBB9757CD487B6FB857312BB6BCBB1C4D7BEDDC`.
+The public refusals are `tool1-pair-native-v1/negative/result-v1.json`, SHA256
+`13FED846A295AAC1460692ADA40B74603EA7192FA6A3AC624ECCB1357CDD4E06`;
+the positives are `tool1-pair-native-v1/positive/result-v1.json`, SHA256
+`A2BAF13208446A9C594F5391E76DC218391EA5B0951FC5BDEF7B47602056EFB7`.
+Their separate CSV/receipt analysis is `tool1-pair-native-v1/positive/csv-checks.json`,
+SHA256 `170F27B62D52F2CCA831C6F8791AA995D22E0191533CF56B1E0BBB7F541E1193`.
+All paths are under `out/validation/todo-loop-20261025/`. The old complete Paint
+main hash is `79DAF9F654CB315BFC56F363EB7C09FE17D3C233F36613367621F2F6F49AC722`;
+Skirmish is `D4E311355FD13B6C1F46AD898D1CC3A424A0BD0498BD1B8A055AE6729950FB68`.
+
+Private positive qualification harness v1/v2 drafts and their source-only issues
+remain preserved. Their array/oracle corrections were frozen in v3 before actual
+positive execution; they were not production repairs or native integration
+failures. The actual integrated controls above passed. These are measurement and
+publication checks, not a statistical five-tool report, cross-machine replay
+promise, physical-device/listening pass or author balance/arena acceptance.
+
+**Still open in TOOL#1:** the first full five-tool report (the planned 250-match
+Crossfeed/Press Tower grid). The short controls and qualified metrics do not
+establish tool balance or human acceptance. No tuning value or shipping opponent
+behaviour changes in this slice.

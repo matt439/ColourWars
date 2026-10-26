@@ -4,9 +4,12 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
+#include "scripts/acceptance/balance_regions/metrics.h"
 #include <array>
 #include <cstdint>
 #include <filesystem>
+#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -25,6 +28,7 @@ namespace balance_runner
         std::vector<WeaponType> tools;
         std::string bot = "paint";
         std::filesystem::path csv;
+        std::filesystem::path paint_csv;
     };
 
     struct SeatResult
@@ -62,6 +66,8 @@ namespace balance_runner
         std::array<SeatResult, 4> seats{};
         std::uint64_t credited_enemy_eliminations = 0;
         std::uint64_t uncredited_projectile_lethals = 0;
+        // Owned final snapshot metrics; never drive gameplay or the main CSV fields.
+        std::optional<balance_regions::Measurement> paint_report;
     };
 
     Options parse_options(const std::filesystem::path& content,
@@ -72,7 +78,26 @@ namespace balance_runner
     std::string csv_header();
     std::string csv_row(const Result& result);
     std::string csv_text(const std::vector<Result>& results);
-    void write_csv(const std::filesystem::path& path, const std::vector<Result>& results);
+    std::string paint_csv_text(const std::vector<Result>& results);
+    // Reserves two exclusive sibling stage files before simulation. Both are
+    // complete/closed before publication. Companion moves first; main moves
+    // last as a completion-marker convention, not a two-file atomic transaction.
+    // Failures preserve stages/orphan companion and never replace destinations.
+    class CsvOutputs final
+    {
+    public:
+        CsvOutputs(const std::filesystem::path& main, const std::filesystem::path& paint);
+        ~CsvOutputs();
+        CsvOutputs(const CsvOutputs&) = delete;
+        CsvOutputs& operator=(const CsvOutputs&) = delete;
+        void stage(const std::vector<Result>& results);
+        void publish();
+        const std::filesystem::path& main_stage_path() const;
+        const std::filesystem::path& paint_stage_path() const;
+    private:
+        class Impl;
+        std::unique_ptr<Impl> impl_;
+    };
     // Validate fixed owner provenance against the actual opposing roster.
     void attribute_eliminations(Result& result, const std::vector<PlayerLethalProjectiles>& victims);
     std::vector<Result> run_sweep(const Options& options);

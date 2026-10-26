@@ -85,6 +85,8 @@ namespace balance_runner
             }
 
             bool has_stage(const std::string& stage) const { return this->stages_.contains(stage); }
+            mattmath::RectangleF arena(const std::string& stage) const
+            { return this->levels_.get(stage)->out_of_bounds_rectangle(); }
             const GameTuning& tuning() const { return this->tuning_; }
             std::unique_ptr<Level> build(const Options& options, const std::string& stage, std::uint32_t seed)
             {
@@ -246,6 +248,20 @@ namespace balance_runner
             for (int view = 0; view < level->player_count(); ++view)
             { victims.push_back(level->player(view).lethal_projectiles()); }
             attribute_eliminations(result, victims);
+            std::vector<balance_regions::RosterSeat> roster;
+            for (int view = 0; view < result.players; ++view)
+            {
+                const SeatResult& seat = result.seats.at(static_cast<std::size_t>(view));
+                roster.push_back({ seat.team, seat.paint_owner, tool_name(seat.tool) });
+            }
+            PaintTotal expected;
+            expected.total = end.total_area; expected.team_a = end.team_a_area; expected.team_b = end.team_b_area;
+            expected.player_areas = end.player_areas;
+            result.paint_report.emplace(level->paint_surfaces(), std::move(roster),
+                balance_regions::stage_partition(stage, world.arena(stage)));
+            result.paint_report->verify_runtime(expected);
+            if (MatchFingerprint::of(*level, static_cast<int>(updates)).hash != result.final_fingerprint)
+            { throw std::runtime_error("Read-only final paint snapshot changed the existing match fingerprint"); }
             return result;
         }
     }
