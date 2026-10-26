@@ -90,17 +90,23 @@ bool DebugDirectorImpl::replay_finished() const
 	return this->player_ != nullptr && this->player_->finished;
 }
 
-SeatInputFilter* DebugDirectorImpl::seat_filter() const
+SeatInputFilter* DebugDirectorImpl::seat_filter()
 {
+	SeatInputFilter* driver = this->bot_driver_.get();
 	if (this->player_ != nullptr)
 	{
-		return this->player_.get();
+		driver = this->player_.get();
 	}
-	if (this->recorder_ != nullptr)
+	else if (this->recorder_ != nullptr)
 	{
-		return this->recorder_.get();
+		driver = this->recorder_.get();
 	}
-	return this->bot_driver_.get();
+	if (!this->match_hook_active_ && this->background_updates_allowed())
+	{
+		this->background_inputs_.set_next(driver);
+		return &this->background_inputs_;
+	}
+	return driver;
 }
 
 std::optional<MatchFingerprint> DebugDirectorImpl::fingerprint() const

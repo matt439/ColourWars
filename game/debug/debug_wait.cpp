@@ -15,7 +15,7 @@ namespace
 
 std::string debug_wait_hint(const DebugWaitContext& context)
 {
-	if (!context.window_active)
+	if (!context.window_active && !context.background_running)
 	{
 		return "the window is inactive - click it";
 	}

@@ -15,6 +15,7 @@
 #include "game/debug/tune_document.h"
 #include "game/debug/tune_target.h"
 #include "game/game_data.h"
+#include "game/sound_groups.h"
 #include "game/states/menu_context.h"
 #include "game/states/menu_input.h"
 #include "game/states/menu_level_settings.h"
@@ -65,10 +66,52 @@ void DebugDirectorImpl::attach(Application* application, GameData* data)
 {
 	this->application_ = application;
 	this->data_ = data;
+	if (application != nullptr && !this->background_window_.attach(application->window(),
+		[this] { this->background_changed(); }))
+	{
+		this->log_.warning("script.background unavailable: could not observe the application window");
+	}
 	// The running game's baseline is the staged files main.cpp just loaded.
 	if (application != nullptr)
 	{
 		this->load_tune_documents();
+	}
+}
+
+bool DebugDirectorImpl::background_updates_allowed() const
+{
+	return this->background_scripts_ && background_window_allows(this->background_probe_ ?
+		this->background_probe_() : this->background_window_.state());
+}
+
+void DebugDirectorImpl::set_background_probe(std::function<DebugBackgroundState()> probe)
+{
+	this->background_probe_ = std::move(probe);
+	this->background_changed();
+}
+
+void DebugDirectorImpl::background_changed()
+{
+	if (this->match_ != nullptr) { this->match_->debug_background_changed(); }
+}
+
+void DebugDirectorImpl::sync_background_audio(bool active)
+{
+	if (this->application_ == nullptr || this->data_ == nullptr || this->data_->audio_resources() == nullptr ||
+		this->data_->save() == nullptr) { return; }
+	AudioResources& audio = *this->data_->audio_resources();
+	if (!active && (this->background_scripts_ || this->background_audio_muted_))
+	{
+		// Pausing existing voices alone leaves newly created shot/contact
+		// voices audible. Group gains reach those voices before they start.
+		audio.set_group_volume(audio.resolve_sound_group("music"), 0.0f);
+		audio.set_group_volume(audio.resolve_sound_group("sfx"), 0.0f);
+		this->background_audio_muted_ = true;
+	}
+	else if (active && this->background_audio_muted_)
+	{
+		sound_groups::apply(audio, this->data_->save()->play_settings());
+		this->background_audio_muted_ = false;
 	}
 }
 
@@ -123,7 +166,7 @@ void DebugDirectorImpl::run_launch_statements(const std::vector<std::string>& st
 	this->tick_scripts(false);
 }
 
-void DebugDirectorImpl::tick_scripts(bool from_hook)
+void DebugDirectorImpl::tick_scripts(bool from_hook, bool background_match)
 {
 	// Writes only after sampling has stopped, before a script can quit or
 	// rebuild. Manual captures are serviced even with no script running.
@@ -139,8 +182,11 @@ void DebugDirectorImpl::tick_scripts(bool from_hook)
 			return this->registry_.execute(statement.text, this->log_);
 		},
 		[this] { return this->wait_context(); },
-		[this]
+		[this, background_match]
 		{
+			// Disabling the policy in a statement takes effect before the next
+			// one. Queued statements remain for the next actual foreground hook.
+			if (background_match && !this->background_updates_allowed()) { return true; }
 			if (this->pending_screenshot_ && this->inline_capture_)
 			{
 				this->capture_screenshot_if_ready();
@@ -171,6 +217,7 @@ DebugWaitContext DebugDirectorImpl::wait_context() const
 	// GameData forwards the keyboard to the application: ask only with one.
 	context.window_active = this->application_ == nullptr || this->data_ == nullptr ||
 		this->data_->keyboard() == nullptr || this->data_->keyboard()->focused();
+	context.background_running = !context.window_active && this->background_updates_allowed();
 	return context;
 }
 

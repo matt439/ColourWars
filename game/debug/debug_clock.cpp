@@ -104,6 +104,11 @@ void DebugClock::reset_accumulator()
 	this->held_edges_.clear();
 }
 
+void DebugClock::discard_input_edges()
+{
+	this->held_edges_.clear();
+}
+
 bool DebugClock::is_default() const
 {
 	return !this->paused_ && this->timescale_ == 1.0f;

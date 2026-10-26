@@ -194,6 +194,9 @@ $previousLocalAppData = $env:LOCALAPPDATA
 $process = $null
 $failure = $null
 . (Join-Path $PSScriptRoot 'check-painter/evidence-record.ps1')
+if ($RumbleOnly -and $Preset -eq 'x64-debug') {
+    $result.background_supplement = 'Debug-only actual GameLevel script.background checks: native private-HWND facts; synthetic StateContext activation and injected hard gates; neutral physical actions, truthful presence, script/bot/replay, Music/SFX group mute before shots, recording motors and unchanged private Save. No physical pad, listening, real OS focus/power-sleep, CI1 or performance acceptance.'
+}
 try {
     if (-not $SkipBuild) {
         Write-Host "Configure and build $Preset; logs: $run"
@@ -287,7 +290,7 @@ try {
     $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
     $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib',
         'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib',
-        'uuid.lib', 'comdlg32.lib', 'advapi32.lib')
+        'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib')
     $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
     Write-Host "Compile painter visual probe ($Preset)"
     Invoke-Logged -Command $cache.CMAKE_CXX_COMPILER -Arguments @("@$responseFile") `
@@ -528,6 +531,26 @@ try {
     if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
+    }
+    if ($RumbleOnly -and $debug) {
+        $background = Get-Content -LiteralPath (Join-Path $captures 'debug-background-summary.json') -Raw | ConvertFrom-Json
+        $backgroundRows = @(Import-Csv -LiteralPath (Join-Path $captures 'debug-background.csv'))
+        $backgroundCases = @('default-off-inactive', 'actual-hidden-hard-gate',
+            'synthetic-inactive-neutral-presence-muted-before-step', 'foreground-zero-run-edge-discarded',
+            'inactive-actual-damage-motors-zero', 'inactive-script-wait',
+            'manual-debug-pause-and-script-self-disable-barrier', 'covered-toggle-hard-gate',
+            'injected-hidden', 'injected-minimized', 'injected-power-suspended', 'off-inactive-freezes',
+            'off-then-activation-ordinary-countin-current-preferences', 'actual-pause-menu-hard-gate',
+            'resume-countin-hard-gate', 'missing-pad-real-pause', 'inactive-bot-paid-shot-record',
+            'inactive-replay-final-fingerprint', 'new-inactive-level-enabled', 'new-inactive-level-disabled')
+        if ($background.outcome -cne 'passed' -or $background.cases -ne 20 -or $backgroundRows.Count -ne 20 -or
+            $background.recorded_updates -ne 420 -or $background.native_motor_calls -ne 0 -or
+            $background.save_unchanged -ne $true -or
+            @($backgroundRows.case | Sort-Object -Unique).Count -ne 20 -or
+            @(Compare-Object -ReferenceObject $backgroundCases -DifferenceObject @($backgroundRows.case)).Count -ne 0) {
+            throw 'Debug background supplement did not produce its complete bounded 20-case/420-update receipts.'
+        }
+        $result.background_receipt = $background
     }
     if ($trialMode) {
         $trialHashAfterAttempted = $true

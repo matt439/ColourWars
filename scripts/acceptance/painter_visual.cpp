@@ -199,6 +199,7 @@ namespace
 #include "scripts/acceptance/painter_visual/pad_jump_checks.h"
 #include "scripts/acceptance/painter_visual/rumble_settings_checks.h"
 #include "scripts/acceptance/painter_visual/rumble_owner_checks.h"
+#include "scripts/acceptance/painter_visual/debug_background_checks.h"
 #include "scripts/acceptance/painter_visual/percentage_checks.h"
 #include "scripts/acceptance/painter_visual/menu_motion_checks.h"
 #include "scripts/acceptance/painter_visual/home_alpha_checks.h"
@@ -776,6 +777,9 @@ int wmain(int argc, wchar_t** argv)
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
             rumble_owner_checks(app, levels, canvas, tuning, presentation, content, output);
             rumble_settings_checks(app, canvas, tuning, presentation, output);
+#if COLOURWARS_DEV_TOOLS
+            debug_background_checks(app, levels, tuning, presentation, content, output);
+#endif
 #else
             throw std::runtime_error("RumbleOnly requires the scripted gamepad reader seam");
 #endif

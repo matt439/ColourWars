@@ -70,7 +70,7 @@ try {
         foreach($include in @((Join-Path $repo 'external/labrador/external/rapidjson/include'),(Join-Path $installed 'include/directxtk'),(Join-Path $installed 'include/xaudio2redist'),(Join-Path $installed 'include'))){$arguments+='/external:I'+(Quote-LiteralPath $include)}
         $arguments+=@((Quote-LiteralPath $source),('/Fe:'+(Quote-LiteralPath $exe)),('/Fo:'+(Quote-LiteralPath (Join-Path $run 'display_awake_lifecycle.obj'))))
         $arguments+=@($linked|ForEach-Object{Quote-LiteralPath $_.FullName});$arguments+=@($libraries|ForEach-Object{Quote-LiteralPath $_})
-        $arguments+=@('d3d11.lib','dxgi.lib','dxguid.lib','kernel32.lib','user32.lib','gdi32.lib','winspool.lib','shell32.lib','ole32.lib','oleaut32.lib','uuid.lib','comdlg32.lib','advapi32.lib')
+        $arguments+=@('d3d11.lib','dxgi.lib','dxguid.lib','kernel32.lib','user32.lib','gdi32.lib','winspool.lib','shell32.lib','ole32.lib','oleaut32.lib','uuid.lib','comdlg32.lib','advapi32.lib', 'comctl32.lib')
         $arguments|Out-File -LiteralPath $rsp -Encoding unicode
         Invoke-NativeLogged $cache.CMAKE_CXX_COMPILER @("@$rsp") (Join-Path $run 'compile.log')
         Invoke-NativeLogged 'dumpbin' @('/nologo','/imports',$exe) (Join-Path $run 'imports.log')

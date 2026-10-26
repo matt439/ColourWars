@@ -45,6 +45,7 @@ public:
 	void on_suspend() override;
 	void on_resume() override;
 	void on_deactivated() override;
+	void on_activated() override;
 
 	// Debug hooks (DebugPageTarget). Only main-menu pages, whose frame starts
 	// a match on close, start one; child and match-overlay pages dismiss

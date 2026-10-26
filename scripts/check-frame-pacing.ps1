@@ -185,7 +185,7 @@ try {
     $arguments += @($objects | ForEach-Object { Quote-Path $_.FullName })
     $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
     $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib', 'gdi32.lib',
-        'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'Xinput.lib')
+        'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib', 'Xinput.lib')
     $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
     Invoke-Logged $cache.CMAKE_CXX_COMPILER @("@$responseFile") (Join-Path $run 'compile.log')
     $result.executable = $executable

@@ -13,6 +13,10 @@
 #include <vector>
 #include <process.h>
 
+// Session-only developer policy must not add conditional members to the
+// service that GameData borrows in both configurations.
+static_assert(sizeof(DebugDirector) == sizeof(void*));
+
 #if COLOURWARS_DEV_TOOLS
 #include "game/source_paths.h"
 #include "engine/render/text_encoding.h"
@@ -52,6 +56,7 @@ namespace debug_console_acceptance
 		".?AVBot@@", ".?AVPaintBot@@", ".?AVBotDriver@@", ".?AVReplayRecorder@@",
 		".?AVReplayPlayer@@", ".?AVTuneTarget@@", ".?AVTuningTarget@@",
 		".?AVSeatInputFilter@@",
+		".?AVDebugBackgroundInput@@",
 		// Phase 4: script waits.
 		".?AVDebugWait@@", ".?AVUpdatesWait@@", ".?AVMatchWait@@",
 	};
@@ -66,6 +71,11 @@ namespace debug_console_acceptance
 				(dev_tools::enabled ? " is missing from the Debug executable" :
 					" leaked into the Release executable"));
 		}
+		// The observer is non-polymorphic, so an RTTI absence assertion would
+		// say nothing about it. The command/diagnostic token is Debug-only,
+		// while the unconditional size assertion above checks the shared API.
+		require((text.find("script.background") != std::string::npos) == dev_tools::enabled,
+			"script.background command/observer diagnostic must be Debug-only");
 	}
 
 #if !COLOURWARS_DEV_TOOLS
@@ -120,7 +130,9 @@ int main(int argc, char** argv)
 
 	try
 	{
-		require(argc == 2, "Usage: debug_console.exe <game directory>");
+		require(argc == 2 || (argc == 3 && std::string(argv[2]) == "--background-only"),
+			"Usage: debug_console.exe <game directory> [--background-only]");
+		const bool background_only = argc == 3;
 		const std::filesystem::path game_directory = argv[1];
 		check_executable(game_directory);
 		check_launch_detection();
@@ -129,35 +141,48 @@ int main(int argc, char** argv)
 		Presentation presentation((game_directory / "presentation.json").string().c_str());
 
 #if COLOURWARS_DEV_TOOLS
+		// The focused path keeps the existing clock, hooks, scripts and replay
+		// regressions that background updates can affect. With no flag, every
+		// check below still runs in its original order, plus the new policy case.
 		check_tokenizer();
 		check_launch_arguments();
 		check_registry();
 		check_clock();
 		check_planner();
-		check_text_field();
+		if (!background_only) { check_text_field(); }
 		check_director(tuning, presentation);
 		check_match_hooks(tuning, presentation);
+		check_background_policy(game_directory, tuning, presentation);
 		check_chord();
 		check_input_filter(tuning, presentation);
-		check_registry_menu_traits(tuning, presentation);
-		check_menu_model(tuning, presentation);
+		if (!background_only)
+		{
+			check_registry_menu_traits(tuning, presentation);
+			check_menu_model(tuning, presentation);
+		}
 		check_unwinding(tuning, presentation);
-		check_overlays_and_cheats(tuning, presentation);
-		check_goto(tuning, presentation);
-		check_screenshot_file(tuning, presentation);
-		check_stations(game_directory, tuning);
+		if (!background_only)
+		{
+			check_overlays_and_cheats(tuning, presentation);
+			check_goto(tuning, presentation);
+			check_screenshot_file(tuning, presentation);
+			check_stations(game_directory, tuning);
+		}
 
 		// Phase 4. Scripts, binds and history use scratch folders; the
 		// developer's own profile is never read or written.
 		check_script_parse();
 		check_script_runner(tuning, presentation);
-		check_shipped_scripts(tuning, presentation, game_directory);
-		check_binds(tuning, presentation);
-		check_history(tuning, presentation);
+		if (!background_only)
+		{
+			check_shipped_scripts(tuning, presentation, game_directory);
+			check_binds(tuning, presentation);
+			check_history(tuning, presentation);
+		}
 		check_live_console_input(tuning, presentation);
-		check_perf();
+		if (!background_only) { check_perf(); }
 		check_wait_failures();
-		check_polish(tuning, presentation);
+		if (!background_only) { check_polish(tuning, presentation); }
 
 		// Phase 3. The real content files are only read; replays go to a
 		// temporary LOCALAPPDATA.
@@ -176,19 +201,25 @@ int main(int argc, char** argv)
 		std::string replay_case;
 		try
 		{
-			check_json_spans(game_directory);
-			check_tune_scope(game_directory);
-			const int consumed = check_tune_consumed(game_directory);
-			std::cout << "NOTE consumed-leaf check: " << consumed << " numbers and booleans, each read "
-				"by the game\n";
-			check_tune_commands(game_directory);
-			check_tune_completion_and_menu(game_directory);
+			if (!background_only)
+			{
+				check_json_spans(game_directory);
+				check_tune_scope(game_directory);
+				const int consumed = check_tune_consumed(game_directory);
+				std::cout << "NOTE consumed-leaf check: " << consumed << " numbers and booleans, each read "
+					"by the game\n";
+				check_tune_commands(game_directory);
+				check_tune_completion_and_menu(game_directory);
+			}
 			check_bots(tuning, presentation);
 			check_seeded_planner(tuning, presentation);
 			check_replay_codec();
 			replay_case = check_replay_cpu_match(game_directory);
-			check_opening(game_directory);
-			check_station_labels(game_directory);
+			if (!background_only)
+			{
+				check_opening(game_directory);
+				check_station_labels(game_directory);
+			}
 		}
 		catch (...)
 		{
@@ -201,6 +232,16 @@ int main(int argc, char** argv)
 		require(read_text(source / L"tuning.json") == source_tuning &&
 			read_text(source / L"presentation.json") == source_presentation,
 			"game/content/tuning.json and presentation.json are byte-for-byte unchanged");
+		if (background_only)
+		{
+			std::cout << "PASS debug console background-only (Debug): background CPU policy and "
+				"queued-edge/OFF-batch regressions; existing tokenizer, registry, clock, planner, director/match "
+				"hooks, chord/input filtering, unwinding/live-console blanking, script parser/runner/waits, "
+				"bots/seeded planner and replay codec/CPU match (" << replay_case << "); isolated profile and "
+				"source content unchanged; Debug-only command token and shared director layout. "
+				"No native focus/audio acceptance.\n";
+			return 0;
+		}
 
 		std::cout << "PASS debug console (Debug): tokenizer, launch arguments, registry, "
 			"completion, clock, planner, text field, director, match hooks, chord, input "
@@ -222,6 +263,11 @@ int main(int argc, char** argv)
 		require(!director.enabled() && director.impl() == nullptr,
 			"Release has no director implementation");
 		require(!DebugDirector::inert().enabled(), "The inert director is inert");
+		require(!director.background_scripts() && !director.background_updates_allowed() &&
+			!DebugDirector::inert().background_scripts() && !DebugDirector::inert().background_updates_allowed(),
+			"Release and inert directors never opt into background work");
+		director.sync_background_audio(false);
+		director.sync_background_audio(true);
 		const std::string with_statements = captured_stderr([&director]
 			{ director.run_launch_arguments({ L"+stage", L"movement_course" }); });
 		require(with_statements == "developer arguments ignored: Release build\n",
@@ -245,6 +291,8 @@ int main(int argc, char** argv)
 			page.dismissals == 0 && page.resets == 0, "Release asks no page anything");
 		FakeMatch match(director);
 		director.attach_match(match);
+		director.sync_background_audio(false);
+		director.sync_background_audio(true);
 		director.before_level_build(match);
 		director.after_level_build(match);
 		require(!director.before_match_update(match, 1.0f / 60.0f), "Release never takes an update");
@@ -254,6 +302,9 @@ int main(int argc, char** argv)
 			match.rebuilds == 0 && match.adopts == 0 && match.placed.empty() &&
 			match.respawned.empty() && match.updates == 1,
 			"Release pushes no overlay, player text or cheat into a match and runs one update");
+		require(match.background_changes == 0 && match.audio_syncs == 0 &&
+			!director.background_scripts() && !director.background_updates_allowed(),
+			"Release background policy/audio hooks remain inert for an attached target");
 		require(match.last_filter == nullptr && match.filtered_updates == 0,
 			"Release gives Level::update no seat filter: no bot, recording or replay");
 		director.match_suspended(match);
@@ -262,7 +313,8 @@ int main(int argc, char** argv)
 			require(!director.drives_slot(slot), "Release drives no seat, so a missing pad always pauses");
 		}
 
-		std::cout << "PASS debug console (Release): inert director; one stderr line for "
+		std::cout << (background_only ? "PASS debug console background-only (Release): " :
+			"PASS debug console (Release): ") << "inert director/background hooks and shared layout; one stderr line for "
 			"'+' arguments; pad chord, overlays and unwinding inert; no seat filter and no "
 			"driven slot; no console, registry, menu, command, bot, replay or tuning classes "
 			"in ColourWars.exe.\n";

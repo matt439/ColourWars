@@ -5,6 +5,7 @@
 
 #include "game/objects/opening_mode.h"
 #include "game/debug/debug_binds.h"
+#include "game/debug/debug_background.h"
 #include "game/debug/debug_chord.h"
 #include "game/debug/debug_clock.h"
 #include "game/debug/debug_log.h"
@@ -55,6 +56,12 @@ public:
 	DebugDirectorImpl& operator=(const DebugDirectorImpl&) = delete;
 
 	void attach(labrador::Application* application, GameData* data);
+	bool background_scripts() const { return this->background_scripts_; }
+	bool background_updates_allowed() const;
+	void sync_background_audio(bool active);
+	// CPU acceptance supplies facts without changing the real focus/presence
+	// state. Empty restores the native observer; no probe means unavailable.
+	void set_background_probe(std::function<DebugBackgroundState()> probe);
 
 	DebugLog& log() { return this->log_; }
 	const DebugLog& log() const { return this->log_; }
@@ -81,10 +88,10 @@ public:
 	void before_level_build(DebugMatchTarget& match);
 	void after_level_build(DebugMatchTarget& match);
 	void filter_match_inputs(std::vector<PlayerInputData>& inputs) const;
-	bool before_match_update(DebugMatchTarget& match, float dt);
+	bool before_match_update(DebugMatchTarget& match, float dt, bool active = true);
 	void update_match(DebugMatchTarget& match,
 		const std::vector<PlayerInputData>& inputs, float dt);
-	bool before_page_update(DebugPageTarget& page, float dt);
+	bool before_page_update(DebugPageTarget& page, float dt, bool active = true);
 	void begin_keyboard_capture();
 	void capture_input_frame(DebugPageTarget& page);
 	void end_keyboard_capture();
@@ -241,6 +248,13 @@ private:
 	std::unique_ptr<MenuContext> menu_context_;
 
 	bool keyboard_capture_ = false;
+	bool background_scripts_ = false;
+	bool background_audio_muted_ = false;
+	bool match_hook_active_ = true;
+	DebugBackgroundInput background_inputs_;
+	DebugBackgroundWindow background_window_;
+	std::function<DebugBackgroundState()> background_probe_;
+	void background_changed();
 
 	// `intro`: empty for the game's own choice, else full, quick or off.
 	std::string intro_;
@@ -343,7 +357,7 @@ private:
 	std::unique_ptr<ReplayPlayer> player_;
 	bool injecting_suspend_ = false;
 	std::optional<std::pair<bool, bool>> cheats_before_play_;
-	SeatInputFilter* seat_filter() const;
+	SeatInputFilter* seat_filter();
 	void before_level_update(DebugMatchTarget& match, float dt);
 	void after_level_update(DebugMatchTarget& match);
 	void stop_recording(const std::string& reason);
@@ -401,7 +415,7 @@ private:
 	// While a hook ticks: a pending screenshot may be taken in place, so two
 	// shots in a row show the same simulation frame.
 	bool inline_capture_ = false;
-	void tick_scripts(bool from_hook);
+	void tick_scripts(bool from_hook, bool background_match = false);
 	DebugStatus exec_script(const std::string& name, const std::vector<std::string>& args);
 	DebugStatus wait_command(const DebugArgs& args);
 

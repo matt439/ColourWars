@@ -46,11 +46,12 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Local implementation checkpoint, 2026-10-26.** No scoped `OPEN` implementation
-row remains. The current environment kit, small-view treatment and static landmarks
-stay approved; wider art and the unscoped capability contracts retain their owners'
-gates. The local Release ZIP passes inspection, normal startup and the separate
-missing-bank fallback; clean-machine acceptance still needs `ROAD#1`.
+**Implementation exhaustion audit, 2026-10-26.** The audit checked the remaining
+owners beyond their row statuses. It found and completed the bounded Debug
+background-script capability, reconciled stale geometry references and ran the
+25 previously unrun existing Release cases. Remaining play/hardware reviews,
+later art and unselected capability contracts retain their named gates below;
+there is no further concrete independent implementation selected by an owner.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 
@@ -193,7 +194,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
-| `DBG#6` | DEFERRED | LOW | M | Scripts stop when the window loses focus; no run-while-inactive switch. |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
 
 ## Tooling, CI and docs

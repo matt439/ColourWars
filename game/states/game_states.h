@@ -101,6 +101,7 @@ private:
 	bool covered_ = false;
 	bool pause_menu_open_ = false;
 	bool focus_interrupted_ = false;
+	bool background_continuing_ = false;
 	ResumeCountdown resume_countdown_;
 	std::unique_ptr<ResumeAudio> resume_audio_;
 	std::unique_ptr<ResultsAudio> results_audio_;
@@ -140,6 +141,7 @@ private:
 	bool debug_level_finished() const override;
 	const Level* debug_level() const override;
 	void debug_sync_audio() override;
+	void debug_background_changed() override;
 	std::vector<std::string> debug_status() const override;
 	void debug_set_overlays(const LevelOverlays& overlays) override;
 	void debug_set_player_text(bool showing) override;

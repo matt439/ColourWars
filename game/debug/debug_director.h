@@ -76,7 +76,7 @@ public:
 	// The top of GameLevel::update. Opens the console or the debug menu, takes
 	// a queued screenshot, runs the F-key binds and applies queued requests
 	// (rebuild, leave). True: the match has done its work for this step.
-	bool before_match_update(DebugMatchTarget& match, float dt);
+	bool before_match_update(DebugMatchTarget& match, float dt, bool active = true);
 
 	// Replaces GameLevel's single Level::update with the debug clock's
 	// 0..4 fixed-dt updates.
@@ -85,6 +85,14 @@ public:
 
 	// Whether the debug clock is paused, so the match's voices stay paused.
 	bool match_audio_paused() const;
+
+	// Session-only Debug policy. Background scripts never imply window focus
+	// or physical input, and hiding/minimising/power suspension remain gates.
+	bool background_scripts() const;
+	bool background_updates_allowed() const;
+	// Mute both runtime sound groups before inactive work can create voices.
+	// Restore the current preferences only on actual activation; no Save edit.
+	void sync_background_audio(bool active);
 
 	// GameLevel, right after each Level::suspend (a state pushed over the
 	// match, focus lost, the paused clock's audio sync). Suspending clears
@@ -105,7 +113,7 @@ public:
 	// takes a queued screenshot, starts a match queued by the console or by
 	// launch arguments, and dismisses pages over a match a request is waiting
 	// for. True: the page should not run its own logic this frame.
-	bool before_page_update(DebugPageTarget& page, float dt);
+	bool before_page_update(DebugPageTarget& page, float dt, bool active = true);
 
 	// A page owns raw keyboard input through its capture/release gate. Cancel
 	// queued developer work on entry; drain reserved keys/chords each frame.
@@ -140,17 +148,20 @@ inline void DebugDirector::detach_match(const DebugMatchTarget&) {}
 inline void DebugDirector::before_level_build(DebugMatchTarget&) {}
 inline void DebugDirector::after_level_build(DebugMatchTarget&) {}
 inline void DebugDirector::filter_match_inputs(std::vector<PlayerInputData>&) const {}
-inline bool DebugDirector::before_match_update(DebugMatchTarget&, float) { return false; }
+inline bool DebugDirector::before_match_update(DebugMatchTarget&, float, bool) { return false; }
 inline void DebugDirector::update_match(DebugMatchTarget& match,
 	const std::vector<PlayerInputData>& inputs, float dt)
 {
 	match.debug_update_level(inputs, dt, nullptr);
 }
 inline bool DebugDirector::match_audio_paused() const { return false; }
+inline bool DebugDirector::background_scripts() const { return false; }
+inline bool DebugDirector::background_updates_allowed() const { return false; }
+inline void DebugDirector::sync_background_audio(bool) {}
 inline void DebugDirector::match_suspended(DebugMatchTarget&) {}
 inline bool DebugDirector::drives_slot(int) const { return false; }
 inline OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const { return chosen; }
-inline bool DebugDirector::before_page_update(DebugPageTarget&, float) { return false; }
+inline bool DebugDirector::before_page_update(DebugPageTarget&, float, bool) { return false; }
 inline void DebugDirector::begin_keyboard_capture() {}
 inline void DebugDirector::capture_input_frame(DebugPageTarget&) {}
 inline void DebugDirector::end_keyboard_capture() {}

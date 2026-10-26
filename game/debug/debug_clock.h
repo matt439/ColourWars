@@ -42,6 +42,9 @@ public:
 
 	// After a rebuild: no partial step or old edge carries into the new level.
 	void reset_accumulator();
+	// Inactive physical input starts neutral even if a zero-run foreground
+	// tick had latched an edge. Keep simulation pacing and pending steps.
+	void discard_input_edges();
 
 	bool is_default() const;
 

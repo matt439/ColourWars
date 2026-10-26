@@ -35,6 +35,7 @@ add_executable(ColourWars WIN32
     debug/bind_commands.cpp
     debug/bot.cpp
     debug/bot_driver.cpp
+    debug/debug_background.cpp
     debug/debug_chord.cpp
     debug/debug_clock.cpp
     debug/debug_command.cpp
@@ -194,6 +195,7 @@ target_link_libraries(ColourWars PRIVATE
     Microsoft::DirectXTK
     labrador_settings
     Xinput
+    comctl32
 )
 target_precompile_headers(ColourWars PRIVATE pch.h)
 

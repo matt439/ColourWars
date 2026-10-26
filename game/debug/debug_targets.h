@@ -58,6 +58,9 @@ public:
 	// Pauses the level's voices while the debug clock is paused, the match is
 	// covered or the window is inactive; resumes them otherwise.
 	virtual void debug_sync_audio() = 0;
+	// A session policy/native hard gate changed while focus may already be
+	// absent. Real GameLevel reconciles immediately; other targets need none.
+	virtual void debug_background_changed() {}
 
 	// One line per view: device, position, move state.
 	virtual std::vector<std::string> debug_status() const = 0;
