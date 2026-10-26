@@ -39,16 +39,21 @@ jobs:
 
       # CMakePresets.json requires VCPKG_ROOT to locate the toolchain.
       - name: Point at the runner's vcpkg
+        id: vcpkg
         shell: pwsh
-        run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+        run: |
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          echo "image=$env:ImageOS-$env:ImageVersion" >> $env:GITHUB_OUTPUT
 
-      # Reuse dependency binaries across configure steps.
+      # Reuse dependency binaries across configure steps. vcpkg's package
+      # hashes include the compiler, which moves with the runner image, so a
+      # key without the image hits forever and restores nothing usable.
       - name: Cache vcpkg binaries
         uses: actions/cache@v4
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: vcpkg-${{ runner.os }}-
+          key: vcpkg-${{ steps.vcpkg.outputs.image }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ steps.vcpkg.outputs.image }}-
 
       - name: Find vcvars64
         run: |
@@ -69,10 +74,14 @@ jobs:
           call "%VCVARS%"
           cmake --build --preset ${{ matrix.preset }}
 
+      # Four cases at a time on the runner's four cores. Pull requests leave
+      # out the four Debug simulations that take three to eight minutes each
+      # under checked iterators; Release still runs them on every pull
+      # request, and every push to master runs the full Debug suite.
       - name: Consumer acceptance checks
         run: |
           call "%VCVARS%"
-          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 ${{ (matrix.preset == 'x64-debug' && github.event_name == 'pull_request') && '-ExcludeCases crossfeed,press_tower,menu_text,debug_console' || '' }}
 
       # Hidden, scripted correctness checks. Debug can fall back to WARP on
       # GPU-less runners; this establishes no hardware or performance acceptance.

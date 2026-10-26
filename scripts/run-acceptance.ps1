@@ -5,6 +5,9 @@ param(
     [switch] $SkipBuild,
     [string] $OutputDirectory,
     [string[]] $Cases,
+    [string[]] $ExcludeCases,
+    [ValidateRange(1, 64)]
+    [int] $Parallel = 1,
     [switch] $CompileOnly
 )
 
@@ -31,6 +34,16 @@ foreach ($case in $selectedCases) {
 }
 if (@($selectedCases | Select-Object -Unique).Count -ne @($selectedCases).Count) {
     throw 'Select each acceptance case once.'
+}
+if ($ExcludeCases) {
+    # 'pwsh -File' passes a comma list as one string.
+    $excluded = @($ExcludeCases | ForEach-Object { $_ -split ',' } |
+        Where-Object { $_.Trim() } | ForEach-Object { $_.Trim().ToLowerInvariant() })
+    foreach ($case in $excluded) {
+        if ($case -notin $availableCases) { throw "Unknown excluded acceptance case: $case" }
+    }
+    $selectedCases = @($selectedCases | Where-Object { $_ -notin $excluded })
+    if (-not $selectedCases) { throw 'Every selected acceptance case was excluded.' }
 }
 
 function Invoke-Logged {
@@ -179,6 +192,7 @@ try {
     # DLL imports still resolve from the same staged folder as the game.
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
+    $specs = @()
     foreach ($case in $selectedCases) {
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
         if ($case -eq 'story_audio') {
@@ -217,22 +231,120 @@ try {
         # CL accepts UTF-16 response files, including checkout paths that are
         # not representable in the machine's active ANSI code page.
         $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
-        Write-Host "Compile acceptance: $case ($Preset)"
-        Invoke-Logged -Command $cache.CMAKE_CXX_COMPILER -Arguments @("@$responseFile") `
-            -LogPath (Join-Path $evidence "$case-build.log")
-        if ($CompileOnly) { continue }
         $caseArguments = @($gameDirectory)
         if ($case -eq 'level_format') { $caseArguments += $repo }
-        # The new console tool emits UTF-8 paths; scope native decoding only
-        # to that executable and restore the caller even after a refusal.
+        $specs += [pscustomobject]@{
+            Case = $case
+            Compiler = $cache.CMAKE_CXX_COMPILER
+            ResponseFile = $responseFile
+            Executable = $executable
+            Arguments = $caseArguments
+            Evidence = $evidence
+            # The new console tool emits UTF-8 paths. Native decoding is
+            # process-wide, so it runs on its own after any parallel batch.
+            Utf8 = $case -eq 'balance_runner'
+        }
+    }
+
+    # Compiles and runs one case. Self-contained so it can run in a parallel
+    # runspace; output is returned rather than printed so cases never interleave.
+    $runCase = {
+        param($Spec, [bool] $CompileOnly)
+        # Windows PowerShell represents native stderr as ErrorRecord instances.
+        # The executable's exit code decides success; preserve both streams.
+        $ErrorActionPreference = 'Continue'
+        $watch = [System.Diagnostics.Stopwatch]::StartNew()
+        $lines = @()
+        $failure = $null
+        $log = Join-Path $Spec.Evidence "$($Spec.Case)-build.log"
+        $output = & $Spec.Compiler "@$($Spec.ResponseFile)" 2>&1
+        $code = $LASTEXITCODE
+        $output | Out-File -LiteralPath $log -Encoding utf8
+        if ($code -ne 0) {
+            $lines = $output
+            $failure = "$($Spec.Compiler) exited with $code. See $log"
+        } elseif (-not $CompileOnly) {
+            $log = Join-Path $Spec.Evidence "$($Spec.Case)-run.log"
+            $output = & $Spec.Executable @($Spec.Arguments) 2>&1
+            $code = $LASTEXITCODE
+            $output | Out-File -LiteralPath $log -Encoding utf8
+            $lines = $output
+            if ($code -ne 0) { $failure = "$($Spec.Executable) exited with $code. See $log" }
+        }
+        [pscustomobject]@{
+            Case = $Spec.Case
+            Lines = @($lines | ForEach-Object { "$_" })
+            Failure = $failure
+            Seconds = [int]$watch.Elapsed.TotalSeconds
+        }
+    }
+    $failures = [System.Collections.Generic.List[string]]::new()
+    $report = {
+        param($Result)
+        Write-Host "Acceptance: $($Result.Case) ($Preset, $($Result.Seconds)s)"
+        $Result.Lines | ForEach-Object { Write-Host $_ }
+        if ($Result.Failure) { $failures.Add("$($Result.Case): $($Result.Failure)") }
+    }
+
+    # Start the longest cases first so none of them is left running alone at
+    # the end; the order is from CI timings, slowest first.
+    $longestFirst = @('crossfeed', 'menu_text', 'press_tower', 'debug_console', 'story_audio',
+        'movement_course', 'menu_presentation', 'movement', 'cq_blockout', 'balance_regions',
+        'paint_surfaces', 'moving_structure', 'paint_underfoot', 'weapon_catalog')
+    $parallelSpecs = @($specs | Where-Object { -not $_.Utf8 } | Sort-Object {
+        $rank = [array]::IndexOf($longestFirst, $_.Case)
+        if ($rank -lt 0) { $longestFirst.Count } else { $rank }
+    }, { [array]::IndexOf($selectedCases, $_.Case) })
+    $serialSpecs = @($specs | Where-Object { $_.Utf8 })
+    if ($Parallel -gt 1) {
+        # A runspace pool rather than ForEach-Object -Parallel, so this also
+        # runs under Windows PowerShell. Results print as each case finishes.
+        Write-Host "Acceptance: $($parallelSpecs.Count) cases, $Parallel at a time ($Preset)"
+        $pool = [runspacefactory]::CreateRunspacePool(1, $Parallel)
+        $pool.Open()
+        try {
+            $pending = [System.Collections.Generic.List[object]]::new()
+            foreach ($spec in $parallelSpecs) {
+                $shell = [powershell]::Create()
+                $shell.RunspacePool = $pool
+                [void]$shell.AddScript($runCase.ToString()).AddArgument($spec).AddArgument($CompileOnly.IsPresent)
+                $pending.Add([pscustomobject]@{ Shell = $shell; Handle = $shell.BeginInvoke() })
+            }
+            while ($pending.Count -gt 0) {
+                $done = @($pending | Where-Object { $_.Handle.IsCompleted })
+                if (-not $done) { Start-Sleep -Milliseconds 250; continue }
+                foreach ($item in $done) {
+                    [void]$pending.Remove($item)
+                    try {
+                        foreach ($result in $item.Shell.EndInvoke($item.Handle)) { & $report $result }
+                    } catch {
+                        $failures.Add("runner: $_")
+                    } finally {
+                        $item.Shell.Dispose()
+                    }
+                }
+            }
+        } finally {
+            $pool.Dispose()
+        }
+    } else {
+        $serialSpecs = $parallelSpecs + $serialSpecs
+    }
+    foreach ($spec in $serialSpecs) {
+        if ($failures.Count -gt 0) { break }
+        Write-Host "Compile acceptance: $($spec.Case) ($Preset)"
+        # Scope native decoding to that executable and restore the caller even
+        # after a refusal.
         $previousNativeEncoding = [Console]::OutputEncoding
         try {
-            if ($case -eq 'balance_runner') { [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false) }
-            Invoke-Logged -Command $executable -Arguments $caseArguments `
-                -LogPath (Join-Path $evidence "$case-run.log") -ShowOutput
+            if ($spec.Utf8) { [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false) }
+            & $report (& $runCase $spec $CompileOnly.IsPresent)
         } finally {
-            if ($case -eq 'balance_runner') { [Console]::OutputEncoding = $previousNativeEncoding }
+            [Console]::OutputEncoding = $previousNativeEncoding
         }
+    }
+    if ($failures.Count -gt 0) {
+        throw "Acceptance failed:`n  " + ($failures -join "`n  ")
     }
     $operation = if ($CompileOnly) { 'compilation' } else { 'acceptance' }
     Write-Host "PASS $operation ($Preset). Evidence: $evidence"
