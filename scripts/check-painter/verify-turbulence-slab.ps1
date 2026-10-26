@@ -1,9 +1,10 @@
 # Explicit fixed scored slabs: controlled native stops, no human acceptance.
 $slabSummary = Get-Content -LiteralPath (Join-Path $captures 'turbulence-slab-summary.json') -Raw | ConvertFrom-Json
 $slabRows = @(Import-Csv -LiteralPath (Join-Path $captures 'turbulence-slab.csv'))
-$slabCounts = [ordered]@{ full_frames=29; native_crops=71; csv_rows=71; readbacks=59; level_builds=8; initial_placements=20
-    wet_frames=4; wet_slab_contacts=8; interior_pixel_candidates=7; interior_pixel_checks=6 }
-$slabKeys = @($slabCounts.Keys) + @('outcome','scope','level_updates','controlled_heavy_contacts','heavy_initial_fraction_min','trial_bytes_unchanged','human_acceptance','friendly_repaint_owner_state')
+$slabCounts = [ordered]@{ full_frames=33; native_crops=75; csv_rows=75; readbacks=67; level_builds=10; initial_placements=20
+    wet_frames=4; wet_slab_contacts=8; interior_pixel_candidates=7; interior_pixel_checks=6
+    ending_full_frames=4; ending_csv_rows=4; gameplay_csv_rows=71; ending_levels=2 }
+$slabKeys = @($slabCounts.Keys) + @('outcome','scope','level_updates','controlled_heavy_contacts','heavy_initial_fraction_min','trial_bytes_unchanged','human_acceptance','friendly_repaint_owner_state','ending_level_updates')
 if ((($slabSummary.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($slabKeys | Sort-Object) -join '|') -or
     $slabSummary.outcome -cne 'passed' -or $slabSummary.scope -cne 'turbulence-slab-only' -or
     $slabSummary.trial_bytes_unchanged -isnot [bool] -or -not $slabSummary.trial_bytes_unchanged -or
@@ -28,7 +29,7 @@ $slabTuning = Get-Content -LiteralPath (Join-Path $gameDirectory 'tuning.json') 
 $slabBody = $slabTuning.player.size
 $slabWorld = $slabStage.level_bounds.zoom_out_finish_bounds
 $slabBounds = $slabStage.level_bounds.camera_bounds
-if ($slabStage.collision_objects.Count -ne 24 -or $slabStage.display_name -cne 'Turbulence Yard - Mover Trial' -or
+if ($slabStage.collision_objects.Count -ne 24 -or $slabStage.display_name -cnotin @('Turbulence Yard - Mover Trial','Turbulence Yard - Slab Trial') -or
     $slabStage.include_in_random -isnot [bool] -or $slabStage.include_in_random -or $slabTuning.player.paint_underfoot.enabled -or
     $slabBody.x -ne 52 -or $slabBody.y -ne 120) { throw 'Fixed slab source/body/underfoot fixture differs.' }
 $slabObjects = @{}
@@ -72,10 +73,12 @@ for ($side = 0; $side -lt 2; ++$side) {
     }
 }
 $slabUpdates = Slab-Number $slabSummary.level_updates 'updates'
+$slabEndingUpdates = Slab-Number $slabSummary.ending_level_updates 'ending updates'
 $slabHeavy = Slab-Number $slabSummary.heavy_initial_fraction_min 'heavy fraction'
 $slabPaintables = @($slabStage.collision_objects | Where-Object { $_.type -cin @('StructurePaintable','FixedSlabPaintable') }).Count
-if ($slabUpdates -le 0 -or $slabUpdates -gt 6000 -or $slabUpdates -ne [Math]::Truncate($slabUpdates) -or
-    $slabSummary.controlled_heavy_contacts -ne (4*$slabPaintables+8) -or $slabHeavy -le 0.99 -or $slabHeavy -gt 1) {
+if ($slabUpdates -le 0 -or $slabUpdates -gt 8000 -or $slabUpdates -ne [Math]::Truncate($slabUpdates) -or
+    $slabEndingUpdates -le 0 -or $slabEndingUpdates -gt 2400 -or $slabEndingUpdates -ne [Math]::Truncate($slabEndingUpdates) -or
+    $slabEndingUpdates -ge $slabUpdates -or $slabSummary.controlled_heavy_contacts -ne (5*$slabPaintables+8) -or $slabHeavy -le 0.99 -or $slabHeavy -gt 1) {
     throw 'Fixed slab update/controlled paint budget differs.'
 }
 $slabColumns = 'capture,kind,phase,paint,players,view,input_slot,actor_role,scene_views,scene_objects,moving_owners,moving_shadows,fixed_slabs,fixed_shadows,camera_source,player_x,player_y,player_width,player_height,centre_x,feet_y,velocity_x,velocity_y,move_state,supported,carrier_id,expected_feet,top_start_x,top_start_y,top_end_x,top_end_y,normal_thickness,slab_p0_x,slab_p0_y,slab_p1_x,slab_p1_y,slab_p2_x,slab_p2_y,slab_p3_x,slab_p3_y,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,slope_x,slope_y,slope_width,slope_height,slope_visible,flat_x,flat_y,flat_width,flat_height,flat_visible,slab_x,slab_y,slab_width,slab_height,slab_visible,frozen_pixels,public_state,full_paint_owner_shadow_state,debug_fingerprint,rng,crop_rgba,evidence_scope'
@@ -222,9 +225,112 @@ foreach ($row in $slabRows | Where-Object { $_.phase -ceq 'mid-slab-wet' }) {
         }
     }
 }
+$slabEndingRows = @(Import-Csv -LiteralPath (Join-Path $captures 'turbulence-slab-ending.csv'))
+$slabEndingColumns = 'capture,kind,paint,players,level_state,scene_views,scene_objects,moving_owners,moving_shadows,fixed_slabs,fixed_shadows,initial_placements,level_updates,duration_seconds,menu_overlay,menu_result_source,team_a_played,team_b_played,total_area,team_a_area,team_b_area,coverage_ratio,winning_team,session_round,session_a_wins,session_b_wins,session_complete,camera_source,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,frozen_pixels,public_state,full_paint_owner_shadow_state,debug_fingerprint,rng,crop_rgba,evidence_scope'
+if ($slabEndingRows.Count -ne 4 -or ($slabEndingRows[0].PSObject.Properties.Name -join ',') -cne $slabEndingColumns) {
+    throw 'Fixed slab ending CSV schema/count differs.'
+}
+$slabEndingExpected = @{}
+foreach ($count in @(1,4)) {
+    $paint = if ($count -eq 1) { 'clean' } else { 'heavy' }
+    foreach ($phase in @('overview','end-menu')) {
+        $stem = "hidden-inspection-turbulence-slab-ending-$($count)p-$paint-$phase-720p"
+        $slabEndingExpected[$stem] = @($count,$paint,$phase)
+    }
+}
+$slabEndingSeen = @{}; $slabEndingMetrics = @{}
+foreach ($row in $slabEndingRows) {
+    if (-not $slabEndingExpected.ContainsKey($row.capture) -or $slabEndingSeen.ContainsKey($row.capture)) {
+        throw 'Unexpected/duplicate fixed slab ending capture.'
+    }
+    $slabEndingSeen[$row.capture] = $true
+    $expected = $slabEndingExpected[$row.capture]
+    $menu = $expected[2] -ceq 'end-menu'
+    $kind = if ($menu) { 'actual-EndMenuInitial-derived-result' } else { 'actual-Level-overview' }
+    $source = if ($menu) { 'actual-LevelEndInfo-Session' } else { 'not-applicable' }
+    $cameraSource = if ($menu) { 'actual-Scene-finished-plus-menu' } else { 'actual-Scene-overview' }
+    $fingerprint = if ($Preset -ceq 'x64-debug') { 'checked' } else { 'not-built' }
+    if ($row.kind -cne $kind -or $row.paint -cne $expected[1] -or $row.players -cne [string]$expected[0] -or
+        $row.level_state -cne $(if ($menu) { '4' } else { '3' }) -or $row.menu_overlay -cne [string][int]$menu -or
+        $row.menu_result_source -cne $source -or $row.camera_source -cne $cameraSource -or
+        $row.scene_views -cne '1' -or $row.scene_objects -cne '24' -or $row.moving_owners -cne '2' -or
+        $row.moving_shadows -cne '2' -or $row.fixed_slabs -cne '2' -or $row.fixed_shadows -cne '2' -or
+        $row.initial_placements -cne '0' -or $row.frozen_pixels -cne '1' -or $row.public_state -cne 'checked' -or
+        $row.full_paint_owner_shadow_state -cne 'checked' -or $row.debug_fingerprint -cne $fingerprint -or
+        $row.rng -cne 'checked' -or $row.crop_rgba -cne 'checked' -or
+        $row.evidence_scope -cne 'controlled-native-inspection-not-human-acceptance') {
+        throw 'Fixed slab ending result provenance/state scope differs.'
+    }
+    $n = @{}
+    foreach ($metric in @('duration_seconds','total_area','team_a_area','team_b_area','coverage_ratio',
+        'camera_x','camera_y','camera_scale','owned_fraction')) { $n[$metric] = Slab-Number $row.$metric ('ending/'+$metric) }
+    foreach ($metric in @('level_updates','team_a_played','team_b_played','winning_team','session_round',
+        'session_a_wins','session_b_wins','session_complete','pane_x','pane_y','pane_width','pane_height',
+        'crop_x','crop_y','crop_width','crop_height')) {
+        $value = 0
+        if (-not [int]::TryParse($row.$metric,[ref]$value) -or $value -lt 0) { throw 'Invalid fixed slab ending integer.' }
+        $n[$metric] = $value
+    }
+    if ($n.level_updates -le 0 -or $n.level_updates -gt 1200 -or $n.duration_seconds -ne 0.75 -or
+        $n.team_a_played -ne 1 -or $n.team_b_played -ne $(if ($expected[0] -eq 4) { 1 } else { 0 }) -or
+        $n.total_area -le 0 -or $n.team_a_area -lt 0 -or $n.team_b_area -lt 0 -or
+        $n.team_a_area+$n.team_b_area -gt $n.total_area+0.05 -or $n.coverage_ratio -lt 0 -or $n.coverage_ratio -gt 1.000001 -or
+        [Math]::Abs($n.coverage_ratio-($n.team_a_area+$n.team_b_area)/$n.total_area) -gt 0.000001 -or
+        [Math]::Abs($n.owned_fraction-$n.coverage_ratio) -gt 0.000001 -or
+        ($expected[1] -ceq 'clean' -and ($n.team_a_area -ne 0 -or $n.team_b_area -ne 0 -or $n.coverage_ratio -ne 0)) -or
+        ($expected[1] -ceq 'heavy' -and $n.coverage_ratio -le 0.99)) { throw 'Fixed slab actual ending update/participation/held score differs.' }
+    $winner = if ($n.team_a_area -gt $n.team_b_area) { 0 } elseif ($n.team_b_area -gt $n.team_a_area) { 1 } else { 2 }
+    if ($n.winning_team -ne $winner) { throw 'Fixed slab actual ending winner differs from held areas.' }
+    if ($menu) {
+        $aWins = if ($expected[0] -eq 4 -and $winner -eq 0) { 1 } else { 0 }
+        $bWins = if ($expected[0] -eq 4 -and $winner -eq 1) { 1 } else { 0 }
+        if ($n.session_round -ne 1 -or $n.session_a_wins -ne $aWins -or $n.session_b_wins -ne $bWins -or
+            $n.session_complete -ne 1) { throw 'Fixed slab actual single-round Session ledger differs from the real round result.' }
+    } elseif ($n.session_round -ne 0 -or $n.session_a_wins -ne 0 -or $n.session_b_wins -ne 0 -or $n.session_complete -ne 0) {
+        throw 'Fixed slab pre-finish overview claims a finished Session result.'
+    }
+    $pane = @($n.pane_x,$n.pane_y,$n.pane_width,$n.pane_height)
+    $crop = @($n.crop_x,$n.crop_y,$n.crop_width,$n.crop_height)
+    if (($pane -join ',') -cne '0,0,1280,720' -or ($crop -join ',') -cne '0,0,1280,720') {
+        throw 'Fixed slab ending full-native pane/crop differs.'
+    }
+    $scale = [Math]::Min(1280.0/[double]$slabWorld.width,720.0/[double]$slabWorld.height)
+    $cameraX = [double]$slabWorld.x-(1280.0/$scale-[double]$slabWorld.width)/2.0
+    $cameraY = [double]$slabWorld.y-(720.0/$scale-[double]$slabWorld.height)/2.0
+    if ([Math]::Abs($n.camera_scale-$scale) -gt 0.000001 -or [Math]::Abs($n.camera_x-$cameraX) -gt 0.002 -or
+        [Math]::Abs($n.camera_y-$cameraY) -gt 0.002) { throw 'Fixed slab ending source-world fit differs.' }
+    foreach ($shape in $slabGeometry) {
+        $bounds = $shape.bounds
+        if ($bounds[0] -lt $n.camera_x-0.002 -or $bounds[1] -lt $n.camera_y-0.002 -or
+            $bounds[0]+$bounds[2] -gt $n.camera_x+1280.0/$n.camera_scale+0.002 -or
+            $bounds[1]+$bounds[3] -gt $n.camera_y+720.0/$n.camera_scale+0.002) { throw 'Fixed slab ending camera clips a diagonal solid.' }
+    }
+    $slabEndingMetrics[$row.capture] = $n
+    $slabDimensions[$row.capture+'.ppm'] = @(1280,720)
+    $slabDimensions[$row.capture+'-view1-native.ppm'] = @(1280,720)
+    $slabCropPixels += [long]1280*720
+}
+$slabActualEndingUpdates = 0
+foreach ($count in @(1,4)) {
+    $paint = if ($count -eq 1) { 'clean' } else { 'heavy' }
+    $prefix = "hidden-inspection-turbulence-slab-ending-$($count)p-$paint-"
+    $overview = $slabEndingMetrics[$prefix+'overview-720p']
+    $menu = $slabEndingMetrics[$prefix+'end-menu-720p']
+    if ($overview.level_updates -ge $menu.level_updates) { throw 'Fixed slab ending did not advance from overview to actual finish.' }
+    foreach ($metric in @('duration_seconds','team_a_played','team_b_played','total_area','team_a_area','team_b_area',
+        'coverage_ratio','winning_team','camera_x','camera_y','camera_scale','owned_fraction')) {
+        if ($overview[$metric] -ne $menu[$metric]) { throw 'Fixed slab actual finish changed the recorded neutral score or ending camera.' }
+    }
+    $slabActualEndingUpdates += $menu.level_updates
+}
+if ($slabActualEndingUpdates -ne $slabEndingUpdates -or
+    $slabEndingMetrics['hidden-inspection-turbulence-slab-ending-1p-clean-end-menu-720p'].total_area -ne
+    $slabEndingMetrics['hidden-inspection-turbulence-slab-ending-4p-heavy-end-menu-720p'].total_area) {
+    throw 'Fixed slab ending totals do not reconcile across the actual two Levels.'
+}
 $slabFiles = @(Get-ChildItem -LiteralPath $captures -Filter '*.ppm' -File)
-if ($slabDimensions.Count -ne 100 -or $slabFiles.Count -ne 100 -or
-    (($slabFiles.Name | Sort-Object) -join '|') -cne (($slabDimensions.Keys | Sort-Object) -join '|')) { throw 'Fixed slab leaf requires exactly29 full frames and71 native crops.' }
+if ($slabDimensions.Count -ne 108 -or $slabFiles.Count -ne 108 -or
+    (($slabFiles.Name | Sort-Object) -join '|') -cne (($slabDimensions.Keys | Sort-Object) -join '|')) { throw 'Fixed slab leaf requires exactly33 full frames and75 native crops.' }
 $slabHeaderLengths = @{}; $slabPpmBytes = 0L
 foreach ($file in $slabFiles) {
     $size = $slabDimensions[$file.Name]
@@ -286,7 +392,13 @@ for ($index = 0; $index -lt $slabCandidatePoints.Count; ++$index) {
     }
 }
 if ($slabInteriorChecks -ne 6) { throw 'Fixed slab interior pixel check count differs.' }
-foreach ($group in $slabRows | Group-Object capture) {
+$slabEndingCropRows = @($slabEndingRows | ForEach-Object {
+    # Ending captures have one explicitly validated fullscreen crop.
+    [pscustomobject]@{ capture=$_.capture; view=1; crop_x=[int]$_.crop_x; crop_y=[int]$_.crop_y
+        crop_width=[int]$_.crop_width; crop_height=[int]$_.crop_height }
+})
+$slabAllCropRows = @($slabRows) + $slabEndingCropRows
+foreach ($group in $slabAllCropRows | Group-Object capture) {
     $fullName = $group.Name+'.ppm'; $full = [IO.File]::ReadAllBytes((Join-Path $captures $fullName))
     foreach ($row in $group.Group) {
         $cropName = $row.capture+'-view'+$row.view+'-native.ppm'; $crop = [IO.File]::ReadAllBytes((Join-Path $captures $cropName))
@@ -298,6 +410,7 @@ foreach ($group in $slabRows | Group-Object capture) {
         }
     }
 }
-$result['observed_counts'] = [ordered]@{ fixture=$slabSummary; full_frames=29; native_crops=71; csv_rows=71; readbacks=59
+$result['observed_counts'] = [ordered]@{ fixture=$slabSummary; full_frames=33; native_crops=75; csv_rows=75; readbacks=67
     native_crop_pixels=$slabCropPixels; ppm_bytes=$slabPpmBytes; crop_rgb_parity='checked'; scene_metadata='actual-Scene'; trial_source_hash='unchanged'
-    wet_frames=4; wet_slab_contacts=8; friendly_repaint_owner_state='checked'; interior_pixel_candidates=7; interior_pixel_checks=$slabInteriorChecks }
+    wet_frames=4; wet_slab_contacts=8; friendly_repaint_owner_state='checked'; interior_pixel_candidates=7; interior_pixel_checks=$slabInteriorChecks
+    gameplay_csv_rows=71; ending_csv_rows=4; ending_full_frames=4; ending_levels=2; ending_level_updates=$slabEndingUpdates }

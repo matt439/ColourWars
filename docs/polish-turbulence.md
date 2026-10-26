@@ -589,6 +589,29 @@ SystemOnlyPath startup checks pass. The slab remains private and unregistered;
 public driven replay, broader pressure and attended acceptance remain separate
 qualifications. The local Roller role below uses actual public-loader routes.
 
+**Registered slab endings, 2026-10-26 (Debug and Release).** The same native
+leaf now also inspects two fresh 0.75-second matches from the registered
+stage's actual spawns: 1P clean and 4P controlled-heavy. Each reaches the real
+overview at update 347 and finishes at 468. Its actual `LevelEndInfo` supplies
+`Session::finish_round` and a real `EndMenuInitial` over the finished Level.
+This inspects result-derived menu composition without claiming the intervening
+`GameLevel` results-navigation path was driven.
+
+Each preset passes 33 full frames, 75 native crops/CSV rows, 67 reads and ten
+fresh Levels. The original 29-frame gameplay/preview/wet/pinhole controls are
+retained; four ending frames and a separate four-row CSV are added. Actual
+updates total 4,016, including 936 for the two short endings. Initial placements
+stay at twenty; controlled paint contacts total 98. Native crop RGB matches
+its retained full frame. Frozen repeated drawing preserves the complete paint,
+collider/shadow, result and Session state, pixels and RNG; Debug also checks
+the replay fingerprint.
+
+Root inspected the clean whole-stage overview and heavy four-player end menu:
+the stage is framed and menu copy fits. These are controlled hidden captures,
+without attended readability, balance, physical-pad or performance acceptance.
+Receipts: `out/validation/overnight-20261026/phase17/slab-native/`, Release
+`7601c0dc393645e9bd48ae8bec2ea0c7`, Debug `817d052a0b6f4947901f64828ededb8f`.
+
 **Public driven Roller comparison, 2026-10-26 (Debug and Release).**
 The optional `turbulence_slab_routes` case passes eight fresh public Levels:
 slab/composite, both mirrored sides and both walking directions. Private

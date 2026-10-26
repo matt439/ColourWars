@@ -513,8 +513,9 @@ defines the fixed skeleton, optional moving approaches, spawn/pressure checks
 and provisional regional/face allocations. Its static, mover and fixed-slab
 comparisons are selectable beside the original. Public loader/editor, CPU
 route/paint, bounded five-tool pressure, replay and native split-screen checks
-are qualified. Slab ending views and lower-approach underside controls are the
-remaining bounded software checks; attended play remains separate.
+are qualified, including registered slab overview and result-derived ending
+composition. Lower-approach underside controls are the remaining bounded
+software check; attended play remains separate.
 This is the next layout, beside the preserved
 `turbulence.json`. Use the recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
 and current P3/five-tool values. The first brief can proceed while the

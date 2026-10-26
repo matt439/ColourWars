@@ -56,6 +56,28 @@ std::vector<std::uint64_t> turbulence_slab_frozen_state(const CrossfeedFixture& 
     return result;
 }
 
+// The ending probe lends the actual finished Level to the real menu page.
+// It does not replace the result with a synthetic LevelEndInfo or claim that
+// it drove GameLevel's intervening results-menu navigation.
+class SlabEndingBackdrop final : public State
+{
+public:
+    explicit SlabEndingBackdrop(const Level& level) : level_(level) {}
+    void init() override {}
+    void update(float) override {}
+    void draw(Renderer& renderer) const override { this->level_.draw(renderer); }
+private:
+    const Level& level_;
+};
+
+std::vector<float> turbulence_slab_end_state(const LevelEndInfo& result)
+{
+    std::vector<float> state{ result.total_area, result.team_a_area, result.team_b_area,
+        static_cast<float>(result.team_a_played), static_cast<float>(result.team_b_played) };
+    state.insert(state.end(), result.player_areas.begin(), result.player_areas.end());
+    return state;
+}
+
 void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences,
     const std::filesystem::path& trial_json, const std::filesystem::path& output)
@@ -74,7 +96,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
     loaded->validate_content(builder, *app.render_resources(), *app.audio_resources());
     require(loaded->collision_objects_json().size() == 24 && !loaded->include_in_random() &&
-        loaded->display_name() == "Turbulence Yard - Mover Trial" &&
+        (loaded->display_name() == "Turbulence Yard - Mover Trial" || loaded->display_name() == "Turbulence Yard - Slab Trial") &&
         loaded->camera_bounds_rectangle() == levels.get("turbulence_blockout")->camera_bounds_rectangle(),
         "Slab native source differs from the explicit-only authored comparison");
     trial_levels.add("turbulence_slab_trial", std::move(loaded));
@@ -117,11 +139,36 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(csv.good(), "Cannot open slab native receipt");
     std::size_t updates = 0, placements = 0, builds = 0, frames = 0, crops = 0, rows = 0, reads = 0, heavy_contacts = 0;
     std::size_t wet_frames = 0, wet_contacts = 0, interior_candidates = 0, interior_checks = 0;
+    std::size_t ending_frames = 0, ending_rows = 0, ending_levels = 0, ending_updates = 0;
     std::ofstream interior_csv(output / "slab-interior-pixels.csv");
     interior_csv.precision(std::numeric_limits<double>::max_digits10);
     interior_csv << "capture,x,y,world_x,world_y,local_x,local_y,interior,red,green,blue\n";
     require(interior_csv.good(), "Cannot open slab interior pixel receipt");
+    std::ofstream ending_csv(output / "turbulence-slab-ending.csv");
+    ending_csv.precision(std::numeric_limits<double>::max_digits10);
+    ending_csv << "capture,kind,paint,players,level_state,scene_views,scene_objects,moving_owners,moving_shadows,fixed_slabs,fixed_shadows,"
+        "initial_placements,level_updates,duration_seconds,menu_overlay,menu_result_source,team_a_played,team_b_played,total_area,team_a_area,team_b_area,"
+        "coverage_ratio,winning_team,session_round,session_a_wins,session_b_wins,session_complete,camera_source,camera_x,camera_y,camera_scale,"
+        "pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,frozen_pixels,public_state,"
+        "full_paint_owner_shadow_state,debug_fingerprint,rng,crop_rgba,evidence_scope\n";
+    require(ending_csv.good(), "Cannot open slab ending receipt");
     float heavy_min = 1;
+    const auto heavy_paint = [&](CrossfeedFixture& fixture)
+    {
+        const auto colours = TeamColourTools::team_colours(TeamColourPair::blue_orange, presentation.team_palette());
+        std::size_t source_index = 0;
+        for (auto* object : fixture.structures)
+        {
+            if (dynamic_cast<const PaintableObject*>(object) == nullptr) { continue; }
+            RectangleF splash = object->shape()->bounding_box(); splash.inflate(32);
+            splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
+            const auto team = source_index++ % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
+            const auto& shot_tuning = tuning.projectile(ProjectileType::spray);
+            const ProjectileSpray shot(splash, Vector2F::ZERO, team, team == PlayerTeam::a ? 3 : 1,
+                colours.team_colour(team), app.render_resources(), resolve_projectile_strip(shot_tuning, *app.render_resources()), &shot_tuning);
+            object->on_contact(shot, Vector2F::ZERO, 0); object->update(10); ++heavy_contacts;
+        }
+    };
     const auto supported = [](const Player& player)
     {
         const auto state = player.move_state();
@@ -201,19 +248,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 count, false, 30, heavy_contacts, "turbulence_slab_trial"); ++builds;
             if (paint != 0)
             {
-                const auto colours = TeamColourTools::team_colours(TeamColourPair::blue_orange, presentation.team_palette());
-                std::size_t source_index = 0;
-                for (auto* object : pair[paint].structures)
-                {
-                    if (dynamic_cast<const PaintableObject*>(object) == nullptr) { continue; }
-                    RectangleF splash = object->shape()->bounding_box(); splash.inflate(32);
-                    splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
-                    const auto team = source_index++ % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-                    const auto& shot_tuning = tuning.projectile(ProjectileType::spray);
-                    const ProjectileSpray shot(splash, Vector2F::ZERO, team, team == PlayerTeam::a ? 3 : 1,
-                        colours.team_colour(team), app.render_resources(), resolve_projectile_strip(shot_tuning, *app.render_resources()), &shot_tuning);
-                    object->on_contact(shot, Vector2F::ZERO, 0); object->update(10); ++heavy_contacts;
-                }
+                heavy_paint(pair[paint]);
             }
             const auto owners = pair[paint].level->horizontal_structure_states();
             const auto fixed_shadows = std::count_if(pair[paint].static_shadows.begin(), pair[paint].static_shadows.end(),
@@ -427,20 +462,133 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const std::string stem = "hidden-inspection-turbulence-slab-stage-preview-clean-720p"; save(frame, output / (stem + ".ppm")); ++frames;
         save_crop(frame, crop, stem + "-view1-native"); record(stem, "miniature", false, 0, 0, nullptr, camera, viewport, crop, 0);
     }
-    csv.close(); interior_csv.close();
-    require(csv.good() && interior_csv.good() && read_source() == source && frames == 29 && crops == 71 && rows == 71 && reads == 59 && builds == 8 && placements == 20 &&
+    for (const int count : { 1, 4 })
+    {
+        const bool heavy = count == 4;
+        std::srand(291030);
+        auto fixture = crossfeed_fixture(app, info, tuning, presentation, preferences,
+            count, false, 0.75f, heavy_contacts, "turbulence_slab_trial"); ++builds; ++ending_levels;
+        const auto slab_count = std::count_if(fixture.structures.begin(), fixture.structures.end(),
+            [](const CollisionObject* object) { return dynamic_cast<const FixedSlabPaintable*>(object) != nullptr; });
+        const auto shadow_count = std::count_if(fixture.static_shadows.begin(), fixture.static_shadows.end(),
+            [](const GameObject* object) { return dynamic_cast<const FixedSlabShadow*>(object) != nullptr; });
+        require(fixture.structures.size() == 24 && slab_count == 2 && shadow_count == 2 &&
+            fixture.level->horizontal_structure_states().size() == 2 && fixture.moving_shadows.size() == 2,
+            "Slab ending fixture lost its actual fixed/moving shapes or composed shadows");
+        if (heavy) { heavy_paint(fixture); heavy_min = std::min(heavy_min, turbulence_slab_ownership(fixture).second); }
+        std::size_t level_updates = 0;
+        const auto tick = [&]()
+        {
+            require(++level_updates <= 1200 && ++updates <= 8000, "Slab short-match ending exceeded its finite update budget");
+            ++ending_updates; fixture.level->update(neutral, dt);
+        };
+        while (fixture.level->state() != LevelState::overview) { tick(); }
+        const auto fullscreen = app.viewport_manager()->fullscreen_viewport();
+        require(fixture.scene->view_count() == 1 && fixture.scene->view(0).viewport == fullscreen,
+            "Slab actual ending did not collapse to its fullscreen Scene overview");
+        const auto expected_camera = Camera::frame(info.zoom_out_finish_bounds_rectangle(), fullscreen);
+        const auto& actual_view = fixture.scene->view(0);
+        require(actual_view.camera == expected_camera && actual_view.camera.visible_rectangle(actual_view.viewport).contains(info.zoom_out_finish_bounds_rectangle()),
+            "Slab actual ending camera does not fit its complete authored overview");
+        const auto record_ending = [&](const std::string& stem, bool menu, const Session* session)
+        {
+            const auto result = fixture.level->level_end_info(); const auto& actual = fixture.scene->view(0);
+            const auto pane = actual.viewport.pixel_rect(); const auto held = turbulence_slab_ownership(fixture);
+            require(result.total_area == held.first && (heavy ? held.second > 0.99f : held.second == 0),
+                "Actual slab ending lost its held score or controlled paint label");
+            require(fixture.level->state() == (menu ? LevelState::finished : LevelState::overview) &&
+                result.team_a_played && result.team_b_played == (count == 4), "Slab ending state/result participation differs from actual roster");
+            ending_csv << stem << ',' << (menu ? "actual-EndMenuInitial-derived-result" : "actual-Level-overview") << ',' <<
+                (heavy ? "heavy" : "clean") << ',' << count << ',' << static_cast<int>(fixture.level->state()) << ',' <<
+                fixture.scene->view_count() << ',' << fixture.structures.size() << ',' << fixture.level->horizontal_structure_states().size() << ',' <<
+                fixture.moving_shadows.size() << ',' << slab_count << ',' << shadow_count << ",0," << level_updates << ",0.75," << menu << ',' <<
+                (menu ? "actual-LevelEndInfo-Session" : "not-applicable") << ',' << result.team_a_played << ',' << result.team_b_played << ',' <<
+                result.total_area << ',' << result.team_a_area << ',' << result.team_b_area << ',' << result.coverage_ratio() << ',' <<
+                static_cast<int>(result.winning_team()) << ',' << (session ? session->round() : 0) << ',' <<
+                (session ? session->team_a_wins() : 0) << ',' << (session ? session->team_b_wins() : 0) << ',' << (session && session->complete()) << ',' <<
+                (menu ? "actual-Scene-finished-plus-menu" : "actual-Scene-overview") << ',' <<
+                actual.camera.translation.x << ',' << actual.camera.translation.y << ',' << actual.camera.scale << ',' <<
+                pane.x << ',' << pane.y << ',' << pane.width << ',' << pane.height << ',' << pane.x << ',' << pane.y << ',' << pane.width << ',' << pane.height << ',' <<
+                held.second << ",1,checked,checked,"
+#if COLOURWARS_DEV_TOOLS
+                << "checked"
+#else
+                << "not-built"
+#endif
+                << ",checked,checked,controlled-native-inspection-not-human-acceptance\n"; ++ending_rows;
+        };
+        const auto stem = "hidden-inspection-turbulence-slab-ending-" + std::to_string(count) + "p-" + (heavy ? "heavy-" : "clean-");
+        {
+            const auto before = turbulence_slab_frozen_state(fixture); const auto result = turbulence_slab_end_state(fixture.level->level_end_info());
+            const auto frame = crossfeed_frozen(app, fixture, reads);
+            require(before == turbulence_slab_frozen_state(fixture) && result == turbulence_slab_end_state(fixture.level->level_end_info()),
+                "Slab overview drawing changed actual result/paint/collider/shadow state");
+            const auto name = stem + "overview-720p"; save(frame, output / (name + ".ppm")); ++frames; ++ending_frames;
+            save_crop(frame, fullscreen.pixel_rect(), name + "-view1-native"); record_ending(name, false, nullptr);
+        }
+        while (fixture.level->state() != LevelState::finished) { tick(); }
+        const LevelEndInfo actual_result = fixture.level->level_end_info();
+        Session session; session.finish_round(actual_result);
+        Save saved; const_cast<PlaySettings&>(saved.play_settings()) = preferences;
+        auto& menu_preferences = const_cast<PlaySettings&>(saved.play_settings());
+        menu_preferences.music_volume = menu_preferences.sfx_volume = 0;
+        GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&trial_levels);
+        data.set_tuning(&tuning); data.set_presentation(&presentation);
+        MenuInput input(app.gamepads(), app.keyboard(), &tuning);
+        MenuLevelSettings settings; settings.set_stage("turbulence_slab_trial"); settings.set_player_count(count);
+        constexpr std::array<int, 4> slots{ 3, 1, 2, 0 }; settings.begin_input_claims(slots[0]);
+        for (int view = 1; view < count; ++view) { require(settings.claim_input_slot(slots[static_cast<std::size_t>(view)]), "Ending sparse input claim failed"); }
+        for (int view = 0; view < count; ++view) { settings.set_player_team(view, fixture.level->player(view).team()); }
+        MenuContext context(&data, &input, &settings);
+        StateContext& stack = app; stack.clear();
+        int actions = 0;
+        struct ClearEndingStack { StateContext& stack; ~ClearEndingStack() { this->stack.clear(); } } clear{ stack };
+        stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
+        for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape }) { app.keyboard()->on_key_up(key); }
+        app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
+        stack.push(std::make_unique<SlabEndingBackdrop>(*fixture.level));
+        stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, session), [&](const EndMenuAction&) { ++actions; });
+        stack.update(0.51f);
+        require(stack.depth() == 2 && actions == 0 && !context.music_exit_pending(), "Actual slab EndMenuInitial failed to remain a neutral result-derived page");
+        const auto public_before = observation(*fixture.level); const auto full_before = turbulence_slab_frozen_state(fixture);
+        const auto result_before = turbulence_slab_end_state(actual_result);
+        const std::array<int, 4> session_before{ session.round(), session.team_a_wins(), session.team_b_wins(), static_cast<int>(session.complete()) };
+#if COLOURWARS_DEV_TOOLS
+        const auto fingerprint = MatchFingerprint::of(*fixture.level, 0);
+#endif
+        const auto draw_menu = [&]()
+        { app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++reads; return read(*app.renderer()); };
+        std::srand(2931); const int expected_rng = std::rand(); std::srand(2931);
+        const auto frame = draw_menu(); const auto repeated = draw_menu();
+        require(frame.width == 1280 && frame.height == 720 && frame.pixels == repeated.pixels && std::rand() == expected_rng &&
+            public_before == observation(*fixture.level) && full_before == turbulence_slab_frozen_state(fixture) &&
+            result_before == turbulence_slab_end_state(fixture.level->level_end_info()) && session_before ==
+                std::array<int, 4>{ session.round(), session.team_a_wins(), session.team_b_wins(), static_cast<int>(session.complete()) } &&
+            stack.depth() == 2 && actions == 0 && !context.music_exit_pending(),
+            "Actual slab EndMenu drawing changed pixels, Level/result/Session state, stack action or RNG");
+#if COLOURWARS_DEV_TOOLS
+        require(MatchFingerprint::difference(fingerprint, MatchFingerprint::of(*fixture.level, 0)).empty(), "Slab EndMenu drawing changed Debug replay state");
+#endif
+        const auto name = stem + "end-menu-720p"; save(frame, output / (name + ".ppm")); ++frames; ++ending_frames;
+        save_crop(frame, fullscreen.pixel_rect(), name + "-view1-native"); record_ending(name, true, &session);
+    }
+    csv.close(); interior_csv.close(); ending_csv.close();
+    require(csv.good() && interior_csv.good() && ending_csv.good() && read_source() == source && frames == 33 && crops == 75 && rows == 71 && ending_rows == 4 && reads == 67 && builds == 10 && placements == 20 &&
+        ending_frames == 4 && ending_levels == 2 &&
         wet_frames == 4 && wet_contacts == 8 && interior_candidates == 7 && interior_checks == 6,
         "Slab native source/inventory/initial-placement count differs");
     std::ofstream summary(output / "turbulence-slab-summary.json");
-    summary << "{\"outcome\":\"passed\",\"scope\":\"turbulence-slab-only\",\"full_frames\":29,\"native_crops\":71,\"csv_rows\":71,\"readbacks\":59,\"level_builds\":8,"
+    summary << "{\"outcome\":\"passed\",\"scope\":\"turbulence-slab-only\",\"full_frames\":33,\"native_crops\":75,\"csv_rows\":75,\"readbacks\":67,\"level_builds\":10,"
         "\"initial_placements\":20,\"level_updates\":" << updates << ",\"controlled_heavy_contacts\":" << heavy_contacts << ",\"heavy_initial_fraction_min\":" << heavy_min <<
         ",\"wet_frames\":4,\"wet_slab_contacts\":8,\"interior_pixel_candidates\":7,\"interior_pixel_checks\":6,\"friendly_repaint_owner_state\":\"checked\","
+        "\"ending_full_frames\":4,\"ending_csv_rows\":4,\"gameplay_csv_rows\":71,\"ending_levels\":2,\"ending_level_updates\":" << ending_updates << ',' <<
         "\"trial_bytes_unchanged\":true,\"human_acceptance\":false}\n";
     std::ofstream scope(output / "turbulence-slab-scope.txt");
-    scope << "Explicit isolated24-object fixed scored-slab trial; this probe edits no runtime registration. Actual Level/Scene/object/player builders and real fixed/moving shadows; separate CPU evidence owns public LevelBuilder and longer route qualification.\n"
+    scope << "Explicit24-object fixed scored-slab source loaded into an isolated inspection registry; this probe edits no runtime registration. The source may be the qualified private comparison or the registered Slab Trial. Actual Level/Scene/object/player builders and real fixed/moving shadows; separate CPU evidence owns public LevelBuilder and longer route qualification.\n"
         "Hidden720p all1/2/3/4-player clean/heavy phases: fixed crossover before descent, actual no-jump whole-body slab midpoint (centre1320/2680 within0.04; nominalfeet827, actual body-edge top plane), and actual upper flat stop1060/2940. One controlled placement per actor only; extra3P/4P actors wait on their upper approaches. Broad release-braking plus small analog input pulses reach supported personal-vx0 stops; no intermediate teleport, jump, respawn or cheat.\n"
         "Every actual Scene pane retains whole player, standing-body slope warning, whole-body upper-stop patch and complete solid slab underside. The original mover pair retains its phase/credit/shadow invariants; slab walkers retain carrier0 and fixed slab world quads/local areas/credit stay unchanged during their walks. Controlled projectile contacts provide measured>99percent paint across all scoring roles, not weapon efficiency. Repeated Level draws preserve full pixels, public/structure/collider/local-material/static-shadow bounds, every paint tile's world corners/face/team/raw owner/area and complete moving-owner/carrier/shadow/view state, RNG and Debug fingerprints. Native RGBA crops equal actual source panes.\n"
-        "Four additional heavy-only midpoint frames capture immediate actual friendly repaint on the two slabs, before aging. Actual paint ownership/local areas and personal poses remain identical; wet pixels/state/RNG are frozen across repeated draws. The ordinary walk then settles before the upper capture. Six source-derived geometric interior points at known old primer pinholes must be owned blue/black; a seventh candidate is outside the top edge and is explicitly not an interior assertion. Other wet ages, colors and tools are not inferred. Actual isolated StagePreview checks only initial-pose pixels/widget bounds/RNG. Its miniature and diagonal tile raster are retained for visual inspection; no math-only universal seam-absence claim follows. No ending, human trajectory/readability/reaction, physical pad/motor, listening, performance, balance or arena acceptance is established.\n";
+        "Four additional heavy-only midpoint frames capture immediate actual friendly repaint on the two slabs, before aging. Actual paint ownership/local areas and personal poses remain identical; wet pixels/state/RNG are frozen across repeated draws. The ordinary walk then settles before the upper capture. Six source-derived geometric interior points at known old primer pinholes must be owned blue/black; a seventh candidate is outside the top edge and is explicitly not an interior assertion. Other wet ages, colors and tools are not inferred. Actual isolated StagePreview checks only initial-pose pixels/widget bounds/RNG. Its miniature and diagonal tile raster are retained for visual inspection; no math-only universal seam-absence claim follows.\n"
+        "Two further actual0.75-second matches (1Pclean/4Pheavy) run from their original spawns without placement to runtime overview and finished states. Each supplies one actual fullscreen overview and one actual EndMenuInitial over the finished Level. The page receives Session.finish_round(actualLevel.level_end_info()), never synthetic areas or a fake result; its neutral page update does not update the finished Level. This qualifies the displayed ending composition, not GameLevel results-navigation actions. All scoring/public/collider/paint/shadow state, Session ledger, pixels, RNG and Debug fingerprints remain frozen across repeated draws; retained native full-pane crops match all source RGBA/RGB rows. No human trajectory/readability/reaction, physical pad/motor, listening, performance, balance or arena acceptance is established.\n";
     summary.close(); scope.close(); require(summary.good() && scope.good(), "Cannot flush slab native summary/scope");
-    std::cout << "PASS slab native controlled descent:29 full frames/71 native crops/59 reads, all split layouts, 4 actual wet midpoint controls, 6 interior pinhole controls and frozen paint/owner/shadow state; human acceptance open\n";
+    std::cout << "PASS slab native controlled descent/endings:33 full frames/75 native crops/67 reads, original all-layout wet/pinhole controls plus actual short-match overview/result-derived EndMenu; human acceptance open\n";
 }
