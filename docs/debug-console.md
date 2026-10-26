@@ -166,7 +166,7 @@ running.
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
 | `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fifty-eight audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
-| `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
+| `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|skirmish\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
 | `record [name\|stop] [updates]`, `play <name\|stop> [force]`, `replays`, `checksum` | record every seat's input from a fresh build, replay it and compare, list recordings, print the running match's state hash |
 | `status` | stack depth, stage, seats (device, team, weapon, position, move state), clock, feedback, overlays, cheats, the stage's stations, anything queued |
@@ -930,6 +930,7 @@ device (or the neutral input of an idle dummy):
 | `jump` | walks, and jumps when blocked or every second or three, holding for a random time so the heights vary |
 | `chase` | walks at the nearest living opponent, jumps when it is above, aims and fires at it within range |
 | `paint` | roams like `jump`, sweeps its aim over the floor ahead and behind and fires until the tank is nearly empty, then lets it refill; an opponent close by is shot at instead |
+| `skirmish` | roams and paints, engages a nearby opponent using a tool-derived reach heuristic, withdraws without firing to refill, then returns toward its saved X or re-engages |
 
 - `bot all <behaviour>` drives every **idle dummy** of the current and later
   matches; `bot 2 chase` drives seat 2 whatever its device (the keyboard seat
@@ -961,6 +962,43 @@ repaint, result percentages, and real bot projectiles accounting for all held
 paint. The seeded real-Level recording still replays with matching checksums.
 Debug startup passed with an isolated save and graceful shutdown. Evidence is
 under `out/acceptance/{x64-debug,x64-release}/` and `out/validation/dbg3-startup/`.
+
+### Skirmish measurement bot
+
+Use `bot 2 skirmish` for a seat, `bot all skirmish` for idle dummies, or
+`ColourWars.exe +stage crossfeed +players 4 +bot all skirmish` in Debug.
+The [headless runner](gameplay-tuning.md#headless-balance-runner-tool1-2026-10-25)
+accepts `-Bot skirmish`; its default remains `paint` and existing bots retain
+their behavior.
+
+Skirmish paints while roaming, then approaches and fires at the nearest living
+opposing-team seat within its engagement heuristic. It refills when actual
+full-shot affordability is empty, even with positive ammunition, or its reserve
+falls to 15%. It withdraws without firing and waits for at least 80% reserve
+and full-shot affordability to return. Cooldown alone does not trigger refill.
+It then conserves that refill while returning to its saved X; saved Y is only
+a jump hint. A nearby enemy can interrupt the return. Death discards the old
+life's refill/return goal and releases a held jump.
+
+Reach uses current tool/projectile tuning for a stationary horizontal launch
+over at most 60 fixed updates (about one second), plus muzzle/body/collision
+extent. It is an engagement heuristic, not a hit-range guarantee: gravity,
+inherited velocity, diffusion, target motion and terrain are not solved.
+There is no line-of-sight test, route planner or ballistic intercept solver;
+the bot can fire into a wall or fail a route. Seeded developer measurements
+do not establish human comfort, arena acceptance or tool balance.
+
+### Headless paired paint measurements
+
+The Debug-only headless runner accepts `-PaintCsv <new path>` through
+`scripts/run-balance.ps1`, or `--paint-csv` through the native
+console. Its companion defaults to `<mainstem>.paint.csv` beside the main CSV.
+Main schema 2/81 stays unchanged; the independent companion is schema 1/29.
+These are final held-paint measurements by region/authored face and validated
+owner, not route occupancy or human balance acceptance. See the
+[measurement and two-file recovery contract](gameplay-tuning.md#paired-final-paint-csv-contract)
+before interpreting denominators or a partial pair. This adds no in-game console
+command or shipping bot policy.
 
 ## Seed, record and play
 
@@ -3015,3 +3053,56 @@ an attended/dedicated runner model with explicit focus ownership and retained
 failure evidence. Scope CI integration only after that model is demonstrated;
 a hidden launch or synthetic CPU input check does not qualify the foreground
 workflow. Existing CPU acceptance and startup/editor CI checks remain in place.
+## Experimental paint underfoot (`POL#36`)
+
+The prototype is disabled in shipped tuning. In an isolated Debug match:
+
+```
+tune tuning.player.paint_underfoot.enabled
+tune tuning.player.paint_underfoot.enabled on
+tune tuning.player.paint_underfoot.enabled off
+```
+
+The stored opt-in trial factors are own speed `1.10`, own ammunition recovery
+`1.25`, enemy speed `0.85`, and enemy recovery `0`. Their full paths are
+`tuning.player.paint_underfoot.own_speed_multiplier`,
+`tuning.player.paint_underfoot.own_ammo_regen_multiplier`,
+`tuning.player.paint_underfoot.enemy_speed_multiplier`, and
+`tuning.player.paint_underfoot.enemy_ammo_regen_multiplier`. They are live
+numeric fields; `tune.reset` restores file tokens. Do not use `tune.save` for an
+unattended experiment. There is no new special, damage, health or jump boost.
+
+A completed confirmed axis-aligned top contact is sampled at the foot center by team,
+then used consistently by movement and ammunition on the following physics step.
+Conflicting owned overlaps are neutral. Air, ramps, walls, ceilings and reset or
+dead players do not retain terrain context. Capture credit and colour palettes
+do not select the effect. See the [owner's timing and geometry contract](polish-plan.md#experimental-underfoot-prototype).
+
+Enabled replay fingerprints include the latched/frozen team context and the
+optional seat fields; disabled fingerprints/seat bytes keep the legacy form.
+Tuning text still participates in content-hash refusal even when its switch is
+off. An old recording made from different tuning text remains refused unless
+the existing explicit force policy is used. Gameplay identity is established
+separately by the frozen old-build/direct-input and report controls, not by
+weakening those guards. The [owner](polish-plan.md#experimental-underfoot-prototype)
+records the completed CPU, Release, disabled-identity and real-Application checks
+and their observation limits. Human `POL#27`/`POL#30`/`POL#31` decisions remain open.
+
+## Horizontal moving-state replay boundary
+
+A manually constructed Level with horizontal movers appends an optional
+`final.horizontal_motion` object to replay format 3; its schema is 1. Stable
+mover IDs, exact specification/phase/direction/offset and pose bits, ordered local
+face ownership/scored areas and seat-ordered carrier IDs contribute to the
+fingerprint. The decoder validates the optional domain strictly, including
+geometry, canonical IDs, roster joins and array cardinalities. Stored offsets
+remain exact even when world poses round to equal floats. These are observations,
+not a world-state restore mechanism.
+
+The Debug `moving_structure` acceptance case records and plays 240 real updates
+through Recorder/Player on two independently constructed seeded Levels, checks
+all four checkpoints, final state and terminal RNG, and rejects malformed tapes.
+Existing static encodings remain byte-identical in the retained old/new controls.
+There is no public builder kind, console spawn command or stage-loader rebuild
+for movers yet; ordinary `play` cannot reconstruct this manual fixture. See the
+[capability and remaining integration](feature-roadmap.md#horizontal-movement-capability-2026-10-26).

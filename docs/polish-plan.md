@@ -293,15 +293,102 @@ review scale, fractional placement and rotation in motion.
 four-player views. Slow camera movement and aim sweeps remain stable and readable
 at 720p, 1080p and QHD. Record the supported scaling behaviour and any letterboxing.
 
-**Scaling policy not yet recorded (`POL#34`, 2026-10-25).** That last sentence
-is still open. Four-unit texels project to fractional screen sizes at 720p and
-QHD, and no snapping, integer-scale or letterboxing policy is accepted
-([playable kit](polish-playable-kit.md#visual-observations-and-remaining-decisions),
-[refinement](polish-refine.md#open-after-this-increment)). The local next step is
-a short record of what the camera and split-screen layout do today at 720p, 1080p
-and QHD, from the code and existing probe captures, with the candidate policies
-(leave fractional, snap the camera, integer texel scale with letterboxing) and
-their cost in 1/2/4-player panes. Choosing one is the author's call.
+### Display scaling record
+
+**Current behavior recorded; policy selection remains with the author (`POL#34`).**
+This source/evidence record is based on `c030c054` (2026-10-26), with the same
+camera, render and presentation paths as the qualified `87593628` native
+captures. It selects no snapping, integer-scale or letterboxing policy.
+
+The active-gameplay camera uses
+`min(screen_height / 1080, pane_pixel_width / 1280)` with the current
+`presentation.json`. Two-player panes are stacked; four-player panes are
+quadrants. The nominal values at the three 16:9 sizes are:
+
+| Window | Players | Pane pixels | Gameplay scale | 4-world-unit cell, pixels | World extent |
+|---|---:|---|---:|---:|---|
+| 1280x720 | 1 | 1280x720 | 2/3 | 8/3 | 1920x1080 |
+| 1280x720 | 2 | 1280x360 | 2/3 | 8/3 | 1920x540 |
+| 1280x720 | 4 | 640x360 | 1/2 | 2 | 1280x720 |
+| 1920x1080 | 1 | 1920x1080 | 1 | 4 | 1920x1080 |
+| 1920x1080 | 2 | 1920x540 | 1 | 4 | 1920x540 |
+| 1920x1080 | 4 | 960x540 | 3/4 | 3 | 1280x720 |
+| 2560x1440 | 1 | 2560x1440 | 4/3 | 16/3 | 1920x1080 |
+| 2560x1440 | 2 | 2560x720 | 4/3 | 16/3 | 1920x540 |
+| 2560x1440 | 4 | 1280x720 | 1 | 4 | 1280x720 |
+
+[PlayerCamera](../game/objects/player_camera.cpp) uses whole-pixel pane edges,
+continuous translation and arena bounds; view shake is a separate render offset.
+It adds no gameplay bars. Other aspect ratios use the same minimum: a narrow
+pane can become width-limited and show more vertical world. Odd pane edges are
+truncated consistently by `Viewport::pixel_rect()`. At these standard sizes,
+four-player cell sizes are already integral; that alone does not align camera
+translation, moving sprites or rotated tools to a pixel grid. One/two-player
+4-unit columns can alternate 2/3 pixels at 720p and 5/6 at QHD as the camera pans.
+
+Menus and HUD have separate scale rules. [MenuPage](../game/states/menu_page.cpp)
+fits its 1920x1080 design to the full window, independent of player count; the
+scrim covers centered surplus at other aspect ratios. The gameplay HUD uses
+pane-local coordinates and `min(pane_width / 1920, pane_height / 1080)`.
+Its bar positions/sizes use pane fractions, while text, padding and paper
+keylines use that scalar ([InterfaceGameplay](../game/objects/interface_gameplay.cpp)).
+
+| Window | Fullscreen menu / 1P HUD scale | 2P HUD scale | 4P HUD scale |
+|---|---:|---:|---:|
+| 1280x720 | 2/3 | 1/3 | 1/3 |
+| 1920x1080 | 1 | 1/2 | 1/2 |
+| 2560x1440 | 4/3 | 2/3 | 2/3 |
+
+World materials and menu/HUD chrome use point sampling; UI typography uses
+linear sampling. The renderer already truncates each projected sprite-rectangle
+edge toward zero, while glyph geometry retains fractional positions/scales.
+Those renderer contracts are distinct from snapping the camera. Small overview
+and stage-preview paths can select miniature terrain below 0.25 camera scale;
+active gameplay retains ordinary terrain, even in a narrower, lower-scale pane.
+Stage Preview independently frames its authored world bounds inside its menu pane.
+
+**Candidates for the author:**
+
+- **Retain fractional scaling:** retain the current pane coverage, world extents
+  and continuous camera. The existing uneven column widths, subpixel placement
+  and rotated-pixel treatment remain part of the visual review.
+- **Snap the render camera to screen pixels:** retain the current scale and world
+  extent, but quantize translation. For 1/2P, a screen pixel spans 1.5 world
+  units at 720p, 1 at 1080p and 0.75 at QHD; for 4P it spans 2, 4/3 and 1
+  world units respectively. This can stabilize camera phase;
+  it does not make fractional cell widths uniform or solve moving/rotated art.
+  Rendering, pointer mapping and overlays need a consistent transform, with
+  continuous simulation/aim and a review of the stepped scrolling feel.
+- **Integer cell scale with an inset pane:** choose the largest whole number of
+  pixels per 4-world-unit cell that fits the current world extent, align the
+  render camera/pane, and center the unused area as bars. This illustrative
+  choice preserves world framing rather than changing the map/weapon sightlines.
+
+| Players | Active pane at 720p | At 1080p | At QHD |
+|---|---|---|---|
+| 1 | 960x540 | 1920x1080 | 2400x1350 |
+| 2 | 960x270 | 1920x540 | 2400x675 |
+| 4 | 640x360 | 960x540 | 1280x720 |
+
+For that integer-fit example, 1/2P retain 56.25% of each pane's area at 720p and
+87.89% at QHD, with no loss at 1080p; 4P fills its panes at all three sizes.
+The QHD 2P inset leaves an odd 45-pixel vertical remainder, so centered bars
+need an explicit whole-pixel split. HUD, cursor and warning placement must
+respect the active pane; scaling the HUD to it would also reduce its text size.
+Using the full pane at those integer scales instead would change the visible
+world extent. Integer grid art still does not settle arbitrary tool rotations
+or linear UI text. Collision geometry must not move to hide raster artifacts.
+
+**Evidence and remaining gate.** The [POL#32 native inspection](polish-press-tower.md#native-inspection-pol32)
+retains actual 1P/4P story/overview contexts at 720p/1080p/QHD, plus clean/heavy
+720p surface panes and the Press Tower 4P landing/exit captures. Two-player
+entries above are source-derived. The saved captures keep their original
+source/binary scopes; no new policy comparison or human motion/readability
+acceptance is claimed. The source pins, exact arithmetic and reused-receipt
+reconciliation are under `out/validation/todo-loop-20261025/pol34-prep-v1/`.
+The author still chooses a candidate, with motion/aim sweeps and 1/2/4P HUD and
+clean/heavy scene readability reviewed at all three sizes. Existing `POL#24`
+finish and physical-device gates remain open.
 
 **Workshop retirement validation (2026-10-15):** Debug and Release build and
 pass all 11 remaining consumer cases. Movement Course routes, movement feedback,
@@ -408,9 +495,12 @@ visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 
 **King of the Hill (2026-10-25):** the blockout is [Press Tower](polish-press-tower.md),
 a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
-which stays selectable and in Random. Its baseline acceptance case passes; attended play
-(`POL#31`), native four-pane captures (`POL#32`) and the brief's support art remain open there. Turbulence has
-not started.
+which stays selectable and in Random. Its baseline acceptance case and native four-pane
+captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
+support art remain open there. The Turbulence layout has not started; its first
+horizontal-moving capability is qualified separately in the
+[roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26). Builder/editor,
+rotation and useful placements remain open, and the existing arenas stay static.
 
 The first new-map pass uses current movement and weapon values. Define required,
 optional and recovery routes independently from their input families. Reconcile
@@ -931,17 +1021,18 @@ Measure loading pauses before choosing transition behaviour. Preserve the delibe
 withholding of live coverage percentages so the ending remains a reveal.
 
 <a id="level-build-pause-measured-2026-10-17"></a>
-**Level build pause measured (2026-10-17, `GAP#5.1` step 0).** The audit's freeze
+**Level build pause measured (2026-10-17, refreshed 2026-10-26; `GAP#5.1` step 0,
+`POL#33` complete).** The audit's freeze
 (no frame between stage select's last draw and the match's first,
 [gap-audit 5.1](review/gap-audit.md#51-every-screen-change-is-a-hard-cut-and-the-level-build-freezes-on-the-last-menu-frame))
-is now timed. Debug's [`perf`](debug-console.md#perf) prints `build <ms>  <stage>  <n>P`:
+is timed as construction, before the match's first draw. Debug's
+[`perf`](debug-console.md#perf) prints `build <ms>  <stage>  <n>P`:
 wall time from the end of the director's `before_level_build` to the top of
-`after_level_build`, which is the layout plus `LevelBuilder::build_level`. Release
-has no console, so its figures come from a one-off harness (not kept). It links the
-Release game objects and times `build_level` on the device-free content the
-acceptance cases build with: 7 builds per stage and count, 3 runs. The same harness
-in Debug reads about 10% under the in-game Debug figures, so building without a
-device leaves nothing material out. Milliseconds, Ryzen 9 9950X3D:
+`after_level_build`, which includes viewport layout plus `LevelBuilder::build_level`.
+Release has no console; the device-free harness links the actual Release game
+objects and times only `build_level`. The first four rows retain the 2026-10-17
+results, whose one-off Release harness was not kept. The last two rows are fresh
+2026-10-26 measurements. Milliseconds on the Ryzen 9 9950X3D:
 
 | stage | Debug in game, 1P | Debug in game, 4P | Release, 1P | Release, 4P |
 |---|---|---|---|---|
@@ -949,14 +1040,77 @@ device leaves nothing material out. Milliseconds, Ryzen 9 9950X3D:
 | `close_quarters` | 3.6-3.7 | 3.6-4.0 | 0.8-0.9 | 0.7-1.0 |
 | `king_of_the_hill` | 7.7-7.8 | 8.1-15.0 | 1.5-2.0 | 1.5-1.9 |
 | `turbulence` | 8.6-8.8 | 8.7 | 1.7-2.4 | 1.7-2.2 |
+| `crossfeed` | 5.1-5.5 | 5.4-6.3 | 0.6698-0.8756 | 0.6698-0.8916 |
+| `press_tower` | 6.1-6.5 | 6.3-6.4 | 0.7542-0.9467 | 0.7453-0.9854 |
 
-Debug is the first build and two `restart`s
-(`+stage <s> +players <n> +wait frames 3 +perf +restart ...`); the 15.0 is a first
-build. Release is min-max over 21 builds. Every Release build fits well inside one
-60 Hz frame, even on a machine several times slower, and Debug drops at most one
-frame. The "many frames" freeze is not there, so no loading card is needed. Not
-in these numbers is the match's first draw after the build, which `perf` treats as
-an interval start. What remains of `GAP#5.1` is the hard cut itself: a transition
+**Refresh method and scope.** Each new Debug cell is one actual game launch,
+first build plus two `restart`s, with `+wait frames 3 +perf +status` after each
+build and a graceful `quit`. Its three ordered build/status blocks confirmed the
+stage, count and actual roster. All four launches were requested hidden; sampled
+window observations were hidden, nonforeground and 1920x1080. They used fresh,
+isolated muted saves, without input synthesis or forced activation. These are
+unattended in-game construction samples, not visible-play or frame-pacing captures.
+`perf` displays 0.1 ms precision. In first/restart/restart order, Crossfeed was
+5.5/5.1/5.3 ms at 1P and 6.3/5.6/5.4 ms at 4P; Press Tower was 6.5/6.2/6.1 ms
+at 1P and 6.4/6.3/6.4 ms at 4P.
+
+Release retains every raw QPC interval: seven builds in each of three separate
+processes per stage/count, 21 samples per cell and 84 in total. Resource metadata
+setup, viewport layout, old-Level destruction, validation and CSV output are
+outside the timed call; null texture handles and silent banks create no render or
+audio device. Debug also excludes old-Level destruction and resource setup, but
+includes layout. Both exclude the first draw. Fixed settings are seed 0,
+1920x1080, Blue/Orange, all Sprayers, alternating A/B teams, keyboard first and
+idle remaining seats. The 1P opening is off; 4P uses full on the first build and
+quick on restarts. The private harness is `/MD /DNDEBUG /O2`, using the accepted
+CPU resource seam and the existing Release objects; the original unretained
+harness's internal setup is not claimed to be identical.
+
+The first Release Crossfeed 1P process exited 0 with seven valid rows, a PASS
+acknowledgement and empty stderr. Its wrapper then failed on an empty-stderr
+`.Trim()` before CSV qualification and its immediate post-run quiet check. The
+failed receipt is preserved in `pol33-release-native-v1`; a versioned wrapper
+independently qualified those seven rows and ran only the remaining 11 processes
+(77 new intervals). Pre-run quiet passed for the recovered cell, but its immediate
+post-run quiet check did not execute. A later clean scan is not retroactive
+evidence of past conditions. The other 11 processes passed their pre/post quiet
+guards. This procedural limitation accompanies the retained samples; it is not a
+game or build failure.
+
+**Source and evidence pins.** The measured checkout was `e5dac2bd` plus five
+pending, already-tested game API changes: `game/objects/level.cpp`, `level.h`,
+`paintable_object.h`, `structure_paintable.cpp` and `structure_paintable.h`.
+It was not a clean-HEAD measurement. The matching acceptance driver/probes make
+15 pending paths in total, fully listed and hashed in the private manifests.
+The prior game/editor and acceptance qualification remains recorded at `c030c054`
+plus that same pending foundation; intervening commits through `e5dac2bd` change
+only documentation. Labrador was `1e60fb26c4fdfcd1582c35c6862d8a06cc4c9b09`.
+The Debug game SHA256 is
+`B17E39A820D253950D2C620426EF0E46D24461699AB79BF295B4F3FA2AAEB17A`;
+the Release timing executable is
+`C0A10B18DAEC45D48401349F9C7D595D1607F8E3FDB259ADA3020C6827F84EC7`.
+All 162 explicitly linked Release objects/libraries, staged assets, source and
+producers are pinned in
+`out/validation/todo-loop-20261025/pol33-prep-v1/pins-v1.json`
+(SHA256 `98AAF12B9DC2FE42DB2294E75382AA7F749B420B419244DF1D4D0B55F979F183`).
+The source-only preparation, recovery, original failed receipt, 12 Release process
+CSVs and four Debug transcripts remain under that validation root in
+`pol33-prep-v1`, `pol33-recovery-v2`, `pol33-release-native-v1`,
+`pol33-release-resume-v2`, `pol33-debug-hidden-v2` and `pol33-debug-more-v2`.
+The checked aggregate is `pol33-release-resume-v2/summary-v2.json`, SHA256
+`6D830522FC4D5875889C5B3C9E759C6D447F99EF57EEB75082D6A60933FB4CE8`;
+it hashes all contributing receipts/CSVs/transcripts and retains the recovery
+limitation.
+
+**Loading-card reassessment.** Neither new blockout changes the construction-only
+conclusion on this machine: the largest new Release interval is 0.9854 ms and the
+largest Debug build interval is 6.5 ms, each below one 60 Hz interval (16.67 ms).
+These build durations do not establish dropped-frame counts, first-draw or startup
+behavior, a supported hardware baseline, or performance on slower machines. They
+do not create a construction-time reason for a loading card. Attended visible
+performance and gameplay acceptance remain separate gates.
+
+What remains of `GAP#5.1` is the hard cut itself: a transition
 look in the Paint.exe language (a fade, a wipe, a redraw or a deliberate cut) is UI
 art for a later pass using the approved gameplay style. Separately, the startup
 window is thought to show a blank client area during the asset walk (about 53 ms in
@@ -968,10 +1122,9 @@ captures, recorded with commit and date: a default-visible `x64-release` launch 
 state is constructed. If the first shows a flash and the second cures it, the engine's
 preferred fix is its own (show after the first `end_frame`, no class-brush paint) and
 needs no client call. Those captures are this repository's to make (`GAP#5.1`).
-Re-measure with `perf` when the blockouts (`POL#17`, `POL#21`) add geometry: the
-build makes paint tiles for every paintable face. `crossfeed` and `press_tower`
-are not in the table yet (`POL#33`): add their Debug in-game and Release rows
-the same way, and say whether either changes the no-loading-card conclusion.
+Re-measure with `perf` when later blockouts (`POL#17`, `POL#21`) add geometry: the
+build makes paint tiles for every paintable face. The Crossfeed and Press Tower
+refresh above completes `POL#33`; the first-draw, startup and human gates stay open.
 
 **Takeoff/landing production puffs implemented (2026-10-15, part of `POL#16`).**
 The [drawing and evidence](polish-feedback.md#paintexe-production-puffs-2026-10-15)
@@ -1540,12 +1693,10 @@ borrow as constraints on maps, but nothing records whether that absence is a
 decision. A 2026-10-24 review named three. Each changes balance, so none should
 be added ahead of `POL#27`.
 
-- **Paint underfoot.** Standing on paint does nothing: no speed or ammunition
-  recovery on your own colour, no slowdown or damage on the enemy's, and
-  ammunition regenerates on a timer alone. This is the largest unexplored lever
-  for making territory matter during the round instead of only at the count.
-  The hook exists: the player already tracks the paintable structures
-  supporting it.
+- **Paint underfoot.** Shipped tuning keeps movement and ammunition recovery
+  independent of paint. The default-off trial below lets the author judge whether
+  own-colour speed/recovery and enemy-colour slowdown should make territory
+  matter during the round. It adds no paint damage.
 - **A special charged by painting.** There are five primaries and nothing else.
   Splatoon uses a special to answer "why keep painting when nobody is here".
   The arena briefs currently answer that with geometry alone.
@@ -1557,17 +1708,95 @@ be added ahead of `POL#27`.
 The decision may be "no" for any of them. Record it here either way, so a later
 gap list reads the absence as intended.
 
-**Paint-underfoot prototype (`POL#36`, OPEN, 2026-10-25).** So the first lever
-can be decided by playing it rather than imagining it, build it behind a
-`tuning.json` switch that ships off. On your own colour: faster movement and
-faster ammunition recovery. On the enemy's: slower movement and no recovery.
-Each amount is a tuning number, and every number is zero or neutral while the
-switch is off, so shipped balance and `POL#27` evidence are unchanged. The
-console's `tune` turns it on for a match. Acceptance is a CPU case that checks
-the switch-off match is bit-identical to today's replay fingerprint, and that
-each effect follows the supporting structure's paint owner, with a driven pass
-across own, enemy and unpainted support. The prototype does not answer
-`POL#30`: the author does, after playing it.
+**Paint-underfoot prototype (`POL#36`, implemented 2026-10-26).** The default-off
+trial is available for an isolated Debug match through `tune`. Implementation
+does not answer `POL#30`: the author decides whether to keep the mechanic and
+its amounts after playing it with or after `POL#27`. Shipped tuning keeps the
+current P3/five-tool baseline.
+
+#### Experimental underfoot prototype
+
+`player.paint_underfoot.enabled` ships `false`. The inactive stored trial
+factors are friendly horizontal speed `1.10`, friendly ammunition recovery
+`1.25`, enemy horizontal speed `0.85`, and enemy recovery `0`. These amounts
+are experimental hypotheses for attended play, not accepted balance. A missing
+old `paint_underfoot` block remains disabled with neutral factors; a present
+block requires all five typed fields and finite usable derived rates.
+
+Gameplay reads the actual team's paint, independently of capture-credit owner,
+input slot and palette. At the completed contact phase, a living supported
+player samples its final foot center on an exposed static top face. The surface
+and tile intervals are half open; duplicate candidates have no effect, neutral
+answers are ignored, and conflicting owned overlaps resolve to neutral in either
+contact order. Only team values survive the phase. Cosmetic dust keeps its
+existing adjacent-edge colour rule.
+
+That completed snapshot controls the next physics step's horizontal initial
+speed, acceleration, release braking and cap through one factor. The same frozen
+class reaches the later weapon update as a recovery-only factor. Entering or
+repainting support therefore takes effect on the following step. A takeoff may
+use its starting support for that step; later airborne steps are neutral.
+Vertical motion, health, paid-shot costs, cooldowns and simulation `dt` retain
+the existing rules. Enemy recovery suppression leaves the normal delay clocks
+running. Place, death, respawn and disabled updates clear the terrain context.
+Top sampling also supports the manually constructed horizontal mover: it uses
+published world tile edges so rounded translation cannot lose a half-open edge.
+Rotated support and public moving-stage construction remain `GAP#D5` work.
+
+To try the stored amounts in Debug, without saving content:
+
+```
+tune tuning.player.paint_underfoot.enabled on
+```
+
+To restore shipped behavior:
+
+```
+tune tuning.player.paint_underfoot.enabled off
+```
+
+All multiplier leaves are live numeric tunes. Invalid schema, derived overflow
+and unsafe enabled stage displacement must be refused. Stage validation uses
+the maximum friendly boost, including momentum retained after leaving paint.
+A replay records the future-affecting support/step context only while enabled;
+disabled hashes and replay seat serialization retain the legacy form. Replay
+content-hash and step-size guards remain in force.
+
+Qualification recorded on 2026-10-26, under
+`out/validation/todo-loop-20261025`:
+
+- **Debug:** 15 qualified cases, including actual-object support, movement,
+  recovery, schema, tuning and replay checks. The enabled 600-update record/play
+  proof is compiled throwing assertions plus the fresh console's exit 0. Its
+  temporary tape and in-memory `MATCH` line were cleaned, not independently
+  inspected after exit.
+- **Release:** 13 original positive cases, including developer-tool exclusion,
+  plus fresh same-executable ammo exit 0 with all six PASS lines. The original
+  blank ammo log remains preserved and unexplained. A separate plain-environment
+  observation exited 3221225781 before output; the versioned observation with
+  the runtime DLL path supplied the explicit ammo proof, without rebuilding.
+- **Disabled identity:** the exact frozen old-API source, freshly linked to new
+  Debug producers, matches all three complete CSVs for each of two content
+  variants (old block absent and shipped switch off): 20 directed cases and
+  24,000 updates per variant. Four selected old report controls also match all
+  eight whole main/companion files: 34 matches and 1,610 companion rows. This is
+  bounded public-state/fingerprint, input and terminal-RNG evidence, not a new
+  250-match report or proof over every possible match.
+- **Real Application:** the hidden v3 run exited 0 after safe on/off and path/full
+  reset controls. Unsafe live enable and an unsafe enabled multiplier edit were
+  refused with the actual stage-displacement diagnostic; getter token maps and
+  complete edit ledgers stayed unchanged on each refusal. Source, staged and
+  private runtime disk hashes stayed unchanged. These observations complement
+  the CPU case's exact document-text and ledger-count checks, together with the reviewed validate-before-commit ordering; they do not
+  expose the real process's complete internal tuning-document bytes.
+
+The earlier private v2 real-Application route omitted six DDS textures and
+failed during asset loading before commands, then reached its wrapper deadline.
+Its failed result and missing-`sprite_sheet_1.dds` stderr remain preserved; v3
+corrected the private runtime inventory without a game rebuild or guard change.
+The Debug, Release recovery, off-state and real-Application receipts retain
+these scopes and failures. Human acceptance of the mechanic, its trial factors
+and `POL#27`/`POL#30`/`POL#31` remains open.
 
 ### Let players learn by making a mess
 

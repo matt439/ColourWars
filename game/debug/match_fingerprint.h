@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -25,7 +27,38 @@ struct MatchFingerprint
 		std::uint32_t respawn = 0;
 		int move_state = 0;
 		int alive = 0;
+        // Optional active-prototype state. Off records/hashes retain the legacy bytes.
+        bool paint_underfoot = false;
+        int support_paint_team = 0;
+        int step_paint_team = 0;
 	};
+
+    // Unconditional value layout; the optional domain is populated only for
+    // admitted movers, at the completed Level-update boundary. No object borrows.
+    struct HorizontalTilePrint
+    {
+        int face = 0;
+        int team = 0;
+        int owner = -1;
+        std::uint32_t area = 0;
+        std::array<std::uint32_t, 8> corners{};
+    };
+    struct HorizontalStructurePrint
+    {
+        std::uint32_t id = 0;
+        std::array<std::uint32_t, 7> spec{};
+        std::uint64_t phase = 0;
+        int direction = 1;
+        std::array<std::uint32_t, 4> offsets{};
+        std::array<std::uint32_t, 8> pose{};
+        std::vector<HorizontalTilePrint> tiles;
+    };
+    struct HorizontalTerrainPrint
+    {
+        std::vector<HorizontalStructurePrint> structures;
+        std::vector<std::uint32_t> carriers;
+    };
+    std::optional<HorizontalTerrainPrint> horizontal_motion;
 
 	int updates = 0;
 	std::uint64_t hash = 0;

@@ -5,6 +5,7 @@
 #include "engine/assets/json.h"
 
 #include <optional>
+#include <cmath>
 #include <stdexcept>
 
 using namespace labrador;
@@ -352,6 +353,51 @@ namespace
 		return sounds;
 	}
 
+    PaintUnderfootTuning read_paint_underfoot(const JsonValue& player)
+    {
+        PaintUnderfootTuning result;
+        if (!player.has("paint_underfoot")) { return result; }
+        const JsonValue json = player.object("paint_underfoot");
+        result.enabled = json.boolean("enabled");
+        const auto at_least_one = [&](const char* key)
+        {
+            const float value = read_finite(json, key);
+            if (!(value >= 1.0f))
+            { throw std::runtime_error(json.where() + ": '" + key + "' must be at least 1."); }
+            return value;
+        };
+        result.own_speed_multiplier = at_least_one("own_speed_multiplier");
+        result.own_ammo_regen_multiplier = at_least_one("own_ammo_regen_multiplier");
+        result.enemy_speed_multiplier = read_unit(json, "enemy_speed_multiplier");
+        if (!(result.enemy_speed_multiplier > 0.0f))
+        { throw std::runtime_error(json.where() + ": 'enemy_speed_multiplier' must be greater than zero."); }
+        result.enemy_ammo_regen_multiplier = read_unit(json, "enemy_ammo_regen_multiplier");
+        return result;
+    }
+
+    void validate_underfoot_rates(const JsonValue& json, const PlayerTuning& player)
+    {
+        if (!json.has("paint_underfoot")) { return; }
+        const JsonValue effect = json.object("paint_underfoot");
+        const auto speed = [&](float multiplier, const char* multiplier_key)
+        {
+            const auto rate = [&](float base, const char* key, bool may_be_zero)
+            {
+                const float derived = base * multiplier;
+                if (!std::isfinite(derived) || !(may_be_zero ? derived >= 0.0f : derived > 0.0f))
+                { throw std::runtime_error(effect.where() + ": '" + multiplier_key +
+                    "' times player." + key + " must be finite and retain a usable magnitude."); }
+            };
+            rate(player.x_initial_velocity, "x_initial_velocity", false);
+            rate(player.x_acceleration, "x_acceleration", true);
+            rate(player.x_deacceleration, "x_deacceleration", false);
+            rate(player.max_velocity.x, "max_velocity.x", false);
+            if (!std::isfinite(player.x_deacceleration * multiplier + player.x_acceleration * multiplier))
+            { throw std::runtime_error(effect.where() + ": '" + multiplier_key + "' produces non-finite horizontal braking."); }
+        };
+        speed(player.paint_underfoot.own_speed_multiplier, "own_speed_multiplier");
+        speed(player.paint_underfoot.enemy_speed_multiplier, "enemy_speed_multiplier");
+    }
 	PlayerTuning read_player(const JsonValue& root)
 	{
 		const JsonValue json = root.object("player");
@@ -369,6 +415,8 @@ namespace
 		player.x_initial_velocity = read_positive(json, "x_initial_velocity");
 		player.x_acceleration = read_non_negative(json, "x_acceleration");
 		player.x_deacceleration = read_positive(json, "x_deacceleration");
+		player.paint_underfoot = read_paint_underfoot(json);
+		validate_underfoot_rates(json, player);
 		// A multiplier on gravity; a negative one would turn it round on a ramp.
 		player.ramp_gravity_multiplier = read_non_negative(json, "ramp_gravity_multiplier");
 		// The vertical rates carry a direction in their sign (y is down), so
@@ -592,6 +640,17 @@ GameTuning::GameTuning(const JsonDocument& document)
 	this->ammo_regen_delay_ = read_non_negative(weapons, "ammo_regen_delay");
 	this->ammo_regen_rate_ = read_non_negative(weapons, "ammo_regen_rate");
 	this->starting_ammo_ = read_positive(weapons, "starting_ammo");
+    if (root.object("player").has("paint_underfoot"))
+    {
+        const JsonValue effect = root.object("player").object("paint_underfoot");
+        const auto recovery = [&](float multiplier, const char* key)
+        {
+            if (!std::isfinite(this->ammo_regen_rate_ * multiplier))
+            { throw std::runtime_error(effect.where() + ": '" + key + "' times weapons.ammo_regen_rate must be finite."); }
+        };
+        recovery(this->player_.paint_underfoot.own_ammo_regen_multiplier, "own_ammo_regen_multiplier");
+        recovery(this->player_.paint_underfoot.enemy_ammo_regen_multiplier, "enemy_ammo_regen_multiplier");
+    }
 
 	const auto add_weapon = [this, &weapons](WeaponType type, const char* key)
 	{

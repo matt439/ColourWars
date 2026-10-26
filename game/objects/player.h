@@ -1,6 +1,9 @@
 #pragma once
 
+#include "game/objects/horizontal_motion.h"
+
 #include "game/play_settings.h"
+#include "game/paint_owners.h"
 
 #include "game/tuning.h"
 #include "game/objects/weapon_type.h"
@@ -29,8 +32,26 @@
 #include "engine/render/camera.h"
 #include "engine/render/viewport.h"
 #include <array>
+#include <cstdint>
 #include <optional>
 
+// Passive match-lifetime counts. Owner indices use paint_owners, not view or
+// device-slot assumptions. Respawn retains them; no gameplay callback is added.
+struct PlayerLethalProjectiles
+{
+    std::array<std::uint64_t, paint_owners::count> enemy_by_owner{};
+    std::uint64_t uncredited = 0;
+    bool operator==(const PlayerLethalProjectiles&) const = default;
+};
+
+// Owned values only: contact pointers never escape their completed phase.
+struct PlayerPaintUnderfootState
+{
+    bool enabled = false;
+    PlayerTeam support_team = PlayerTeam::none;
+    PlayerTeam step_team = PlayerTeam::none;
+    bool operator==(const PlayerPaintUnderfootState&) const = default;
+};
 enum class PlayerState
 {
     alive,
@@ -142,7 +163,11 @@ public:
 
     // Finish the contact phase after dispatch. Measured contacts retain adjacent
     // support candidates whose callbacks an earlier separation made redundant.
-    void end_contacts(std::span<const labrador::Contact> contacts = {});
+    void end_contacts(std::span<const labrador::Contact> contacts = {},
+        std::span<const HorizontalSupportRef> supports = {});
+    // Level supplies a copied established-carrier step before Scene updates.
+    void prepare_carrier_step(std::optional<HorizontalCarryStep> step) noexcept;
+    HorizontalMotionId carrier_id() const;
     const MovementFeedback& movement_feedback() const;
     const CombatFeedback& combat_feedback() const;
     const QuietCharacter& quiet_character() const;
@@ -185,6 +210,8 @@ public:
 	bool showing_debug() const;
 
     float health() const;
+    // Fatal projectile contacts, before the later dead-state transition.
+    const PlayerLethalProjectiles& lethal_projectiles() const;
 
     float weapon_ammo() const;
     const labrador::Colour& team_colour() const;
@@ -194,6 +221,7 @@ public:
     PlayerState state() const;
 
     PlayerTeam team() const;
+    PlayerPaintUnderfootState paint_underfoot_state() const;
 
     float respawn_timer() const;
     // How far the redraw at the spawn has come: 0 at death, 1 at respawn.
@@ -286,12 +314,31 @@ private:
         const mattmath::RectangleF& body) const;
     // Borrowed only for this contact phase; query after every paint callback.
     std::vector<const StructurePaintable*> paint_supports_;
+    // Successful flat resolving callbacks can differ from measured normals
+    // at one-way edges. These borrows end with the current contact phase.
+    std::vector<const Structure*> resolved_flat_supports_;
     struct PaintedSupport
     {
         labrador::Colour colour;
         mattmath::Vector2F position;
     };
     std::optional<PaintedSupport> painted_support() const;
+    PlayerTeam gameplay_support_team() const;
+    float underfoot_speed_multiplier() const;
+    float underfoot_ammo_multiplier() const;
+    // Only an immutable Level identity crosses contact phases; no borrowed
+    // structure/contact pointer survives end_contacts. The step is consumed
+    // before personal integration; applied distance is reset each update.
+    HorizontalMotionId carrier_id_ = 0;
+    std::optional<HorizontalCarryStep> prepared_carrier_;
+    float movement_carried_x_ = 0.0f;
+    void clear_carrier() noexcept;
+    void apply_carrier(float dt);
+    void remember_flat_support(const labrador::CollisionObject& other);
+    void choose_carrier(std::span<const labrador::Contact> contacts,
+        std::span<const HorizontalSupportRef> supports);
+    PlayerTeam underfoot_support_team_ = PlayerTeam::none;
+    PlayerTeam underfoot_step_team_ = PlayerTeam::none;
 
     const PlayerTuning& player_tuning() const;
 
@@ -373,7 +420,7 @@ private:
 	bool supported_this_tick_ = false;
 	bool hit_ceiling_this_tick_ = false;
 
-	void on_projectile_contact(CollisionObjectType other_type);
+	void on_projectile_contact(CollisionObjectType other_type, const labrador::CollisionObject& source);
 
 	// Resolve flat surfaces using the contact normal and penetration depth.
 	void on_structure_contact(const labrador::CollisionObject& other,
@@ -421,4 +468,5 @@ private:
 
 	bool is_on_ground() const;
     bool is_on_ramp() const;
+    PlayerLethalProjectiles lethal_projectiles_{};
 };

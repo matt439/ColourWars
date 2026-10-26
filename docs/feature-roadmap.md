@@ -852,6 +852,59 @@ needs the player to ride it, paint on it to stay owned by its face, and replays
 to stay deterministic. Choose placements during blockout rather than altering
 the geometry under style review; Crossfeed and Press Tower stay static.
 
+### Horizontal movement capability (2026-10-26)
+
+The first `GAP#D5` increment is implemented: a manually constructed
+`TranslatingStructurePaintable` follows an axis-aligned horizontal triangular
+path. A `Level` admits its fixed-lifetime movers before the first frame, gives
+them stable IDs, prepares motion before input/state mutation and commits it
+with the active physics step. Zero-duration updates preserve motion history and
+do not reuse a previous contact sweep. Unsupported time steps, nonfinite rates,
+unsafe relative displacement and closing support corridors are refused.
+
+Confirmed solid and one-way top contacts carry a rider without adding personal
+velocity or tool travel. Jump, drop, walk-off, death and placement release that
+context. Paint, credit and scored areas remain attached to local faces; world
+queries, scoring samples, art, splash, runoff, culling and the composed shadow
+follow the current pose. Flying paint uses chronological relative sweeps across
+reversals; a Roller retains its published launch volume, multiple victims and
+short lifetime while painting each moving pair once. Existing static paths keep
+their original arithmetic.
+
+Optional moving state participates in Debug fingerprints and replay format 3.
+The qualified record/play factory is a fresh, manually constructed seeded Level;
+this is not yet a public stage-loader replay path. Class layouts remain the same
+in Debug and Release.
+
+Qualification is retained under `out/validation/todo-loop-20261025`:
+
+- Debug game/editor and include checks, with 20 targeted native cases; Release
+  game/editor and include checks, with 19 cases. `moving_structure` includes
+  actual-object motion, paint, rider/lifecycle, projectile and bounds controls;
+  its recorder/player and strict-codec checks run in Debug only.
+- The exact old compatibility source, freshly linked to the new Debug objects,
+  reproduces both complete legacy replay JSON files. A separate old-API trace
+  reproduces all three complete CSVs over 20 Crossfeed/Press Tower cases,
+  24,000 directed updates, both teams and all five tools, including terminal RNG.
+- One hidden D3D11 hardware probe on the RTX 5080 passes 26 retained captures
+  and 42 pane visits: 1/2/4 panes, ordinary/miniature poses, reversals, world-cull
+  controls, runoff contrast and camera restoration after an exception. Independent
+  retained-RGB checks recompute every frame hash and inspect the exact inventory.
+  These are fixture cameras, not gameplay framing or comfort acceptance.
+
+`moving-native-v9`, `moving-followups-v1`, `moving-device-v2` and
+`moving-device-review-v1` hold those receipts. Failed fixture/launch observations
+are preserved. The full Crossfeed balance case reached its 180-second bound
+without a failure diagnostic and is **not qualified**; it is not repeated here.
+The full Press Tower balance case was not run for this increment. Their bounded
+static identity controls above pass; this is no new balance or performance claim.
+
+**Remaining:** builder schema/validation and editor round trips, a useful
+Turbulence placement and public loader/replay rebuild, rotated structures and
+their support/paint contract, then the arena's route/side-swap and attended play
+acceptance. No shipped arena uses the new mover yet. `GAP#D5` and `POL#21` stay
+open; human/device gates and provisional weapon balance stay unchanged.
+
 ## Presentation rate (`GAP#L9`)
 
 **UNSCOPED.** `SIMULATION_HZ` deliberately fixes gameplay at 60 Hz; changing

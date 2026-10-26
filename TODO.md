@@ -29,10 +29,11 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
 
-5. **Feeding the above (`TOOL#1`, `POL#36`, `GAP#D5`):** a headless bot runner turns
-   five-tool and spawn questions into numbers before attended play; a switch-off
-   paint-underfoot prototype lets `POL#30` be decided by playing it; Turbulence brings
-   the first moving and rotated structures.
+5. **Feeding the above (`GAP#D5`):** the first headless five-tool report
+   is recorded in the arena owners; attended decisions remain above. The default-off
+   paint-underfoot prototype is available for `POL#30`. The manual horizontal mover
+   is qualified; Turbulence still needs builder/editor integration, useful placements
+   and rotated structures ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
@@ -47,9 +48,6 @@ This is a selection guide, not another priority order; each owner defines a boun
 | id | next implementation slice | owner |
 |---|---|---|
 | `ROAD#9` | Per-seat controller rumble through one isolated `XInputSetState` file, which becomes `GAP#F6`'s exhibit | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
-| `POL#32` | A `-PressTowerOnly` painter leaf and probe mode, and Press Tower in the surface-finish and miniature-terrain matrices | [Press Tower, Open](docs/polish-press-tower.md#open) |
-| `POL#33` | Time `crossfeed` and `press_tower` level builds into the existing `perf` table | [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment) |
-| `POL#34` | Record today's 720p/1080p/QHD scaling behaviour and the candidate policies for the author | [§1](docs/polish-plan.md#1-establish-the-art-and-display-rules) |
 | `DBG#1` | No further unattended field selected; additional consumer audits are optional if selected | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -59,6 +57,8 @@ This is a selection guide, not another priority order; each owner defines a boun
   five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
 - **Unborrowed Splatoon mechanics:** paint underfoot, a painting-charged special and a
   splat tally, each yes or no, with or after `POL#27` (`POL#30`).
+- **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
+  treatment (`POL#34`); current behavior is documented, with no candidate accepted.
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
@@ -77,7 +77,7 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
-| `POL#34` | OPEN | MED | M | Display scaling: record what 720p/1080p/QHD and 1/2/4-player panes do today and the candidate snapping, integer-scale and letterboxing policies; the choice is the author's. [§1](docs/polish-plan.md#1-establish-the-art-and-display-rules). |
+| `POL#34` | DECISION | MED | M | Choose the recorded fractional, camera-snap or integer-cell/letterbox display policy after 720p/1080p/QHD motion and 1/2/4P readability review. [Record](docs/polish-plan.md#display-scaling-record). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
 
 ## Feel and feedback
@@ -101,10 +101,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 |---|---|---|---|---|
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | OPEN | MED | XL | Arena blockouts after the accepted Crossfeed reference: Turbulence is next, then an optional 1v1 CQ variant and side-swap qualification. [Press Tower](docs/polish-press-tower.md) (King of the Hill brief) is built; its play and captures are `POL#31`/`POL#32`, support art remains. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
-| `POL#36` | OPEN | MED | L | Paint-underfoot prototype behind a `tuning.json` switch that ships off: speed and recovery on your colour, slowdown on the enemy's, so `POL#30` is decided by play. Switch-off matches stay bit-identical. [POL#30](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
+| `POL#21` | OPEN | MED | XL | Arena blockouts after accepted Crossfeed: Turbulence next, then optional 1v1 CQ and side-swap qualification. [Press Tower](docs/polish-press-tower.md) has native captures; attended play (`POL#31`) and support art remain. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
-| `POL#32` | OPEN | LOW | M | Press Tower native four-pane captures: add a `-PressTowerOnly` check-painter leaf and probe mode, and list it in the surface-finish and miniature-terrain matrices. Running it needs the GPU machine. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
 ## Audio replacement
@@ -131,7 +129,6 @@ here.
 | `ROAD#2` | DECISION | MED | M | Physical-pad sessions: 2P and 4P on every stage and weapon; join, unplug/replug, pause, focus, fullscreen/resize, series draws, rematch, relaunch; a long soak past the display timers; one non-XInput pad. Needs pads. |
 | `ROAD#4` | DEFERRED | LOW | M | A pad that returns in a different XInput slot cannot reclaim its player mid-match. Deferred until it proves inconvenient. [First increment](docs/feature-roadmap.md#first-increment-explicit-joining-and-reconnect-pause). |
 | `POL#24` | DECISION | MED | M | The finish review and fresh-player observations on the Crossfeed reference match, including its spawn pressure and 1-4P clean/heavy readability; the gate before production widens. [Process](docs/polish-plan.md#7-acceptance-and-delivery). |
-| `POL#33` | OPEN | LOW | S | Add `crossfeed` and `press_tower` to the level-build timing table with `perf` and the Release harness; Windows only. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
 | `GAP#7.6` | DEFERRED | LOW | S | Replace the stock `directx.ico` in the later UI/release-art pass using the approved style; the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
 
@@ -164,7 +161,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
-| `GAP#D5` | OPEN | MED | L | Rotated and moving builder structures, placed in the Turbulence blockout (`POL#21`): riding, support, face-owned paint, editor and deterministic replays. Crossfeed and Press Tower stay static. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
+| `GAP#D5` | OPEN | MED | L | Integrate the horizontal mover with the builder/editor and public replay rebuild; add rotated structures and useful Turbulence placements with layout acceptance (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
 
 ## Engine reports
 
@@ -200,7 +197,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `TOOL#1` | OPEN | HIGH | L | Headless balance runner: device-free seeded bot matches, a `skirmish` bot, CSV of paint share, eliminations and starvation per stage x tool x seed; first sweep on Crossfeed and Press Tower for `POL#27`/`POL#31`. [Scope](docs/gameplay-tuning.md#headless-balance-runner-tool1-2026-10-25). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
 ## Areas with no open rows

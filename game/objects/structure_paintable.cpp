@@ -153,7 +153,23 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 
 	const Projectile& projectile = dynamic_cast<const Projectile&>(other);
 	const RectangleF splash = other.shape()->bounding_box();
+	this->paint_from_projectile(projectile, splash, team);
+}
 
+void StructurePaintable::paint_from_projectile(const Projectile& projectile,
+	const RectangleF& splash)
+{
+	const CollisionLayer other_layer = projectile.layer();
+	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
+		other_layer != collision_layers::PROJECTILE_TEAM_B) { return; }
+	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
+		PlayerTeam::a : PlayerTeam::b;
+	this->paint_from_projectile(projectile, splash, team);
+}
+
+void StructurePaintable::paint_from_projectile(const Projectile& projectile,
+	const RectangleF& splash, PlayerTeam team)
+{
 	bool tile_painted = false;
 	bool tile_captured = false;
 
@@ -394,6 +410,23 @@ PlayerTeam StructurePaintable::top_paint_team(float x) const
 	return PlayerTeam::none;
 }
 
+PlayerTeam StructurePaintable::top_paint_team_translated(float world_x, float offset_x) const
+{
+	for (const PaintStrip& strip : this->paint_strips_)
+	{
+		if (!strip.top) { continue; }
+		for (int index = 0; index < strip.count; ++index)
+		{
+			const PaintTile& tile = this->paint_tiles_[static_cast<size_t>(strip.begin + index)];
+			const RectangleF rectangle = tile.bounds();
+			const float left = offset_x == 0.0f ? rectangle.left() : rectangle.left() + offset_x;
+			const float right = offset_x == 0.0f ? rectangle.right() : rectangle.right() + offset_x;
+			if (world_x >= left && world_x < right) { return tile.team(); }
+		}
+	}
+	return PlayerTeam::none;
+}
+
 std::optional<Colour> StructurePaintable::top_paint_colour(float x) const
 {
 	const PlayerTeam team = this->top_paint_team(x);
@@ -427,4 +460,32 @@ PaintTotal StructurePaintable::paint_total() const
 		};
 	}
 	return total;
+}
+
+void StructurePaintable::append_paint_surfaces(std::vector<PaintSurfaceSample>& samples,
+    std::size_t source_index) const
+{
+    samples.reserve(samples.size() + this->paint_tiles_.size());
+    for (const PaintStrip& strip : this->paint_strips_)
+    {
+        const PaintSurfaceFace face = strip.along_x
+            ? (strip.leading ? PaintSurfaceFace::top : PaintSurfaceFace::bottom)
+            : (strip.leading ? PaintSurfaceFace::left : PaintSurfaceFace::right);
+        for (int index = 0; index < strip.count; ++index)
+        {
+            const PaintTile& tile = this->paint_tiles_[static_cast<std::size_t>(strip.begin + index)];
+            const RectangleF rectangle = tile.bounds();
+            PaintSurfaceSample sample;
+            sample.corners = { Vector2F(rectangle.left(), rectangle.top()),
+                Vector2F(rectangle.right(), rectangle.top()),
+                Vector2F(rectangle.right(), rectangle.bottom()),
+                Vector2F(rectangle.left(), rectangle.bottom()) };
+            sample.face = face;
+            sample.team = tile.team();
+            sample.paint_owner = tile.player_num();
+            sample.scored_area = tile.area();
+            sample.source_index = source_index;
+            samples.push_back(sample);
+        }
+    }
 }

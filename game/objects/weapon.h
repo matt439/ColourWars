@@ -79,7 +79,7 @@ public:
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
 			bool player_facing_right,
-		float dt);
+		float dt, float ammo_regen_multiplier = 1.0f);
 
 	float ammo() const;
 	// The same strict cooldown and full-shot paint gate used by firing.
@@ -205,7 +205,7 @@ protected:
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
 		const mattmath::Vector2F& player_center,
 		const mattmath::Vector2F& player_velocity,
-		float dt);
+		float dt, float ammo_regen_multiplier);
 
 	virtual void update_movement_and_rotation(PlayerInputData input,
 		const mattmath::Vector2F& player_center,

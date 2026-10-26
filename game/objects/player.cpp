@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player.h"
+#include "game/objects/projectile.h"
 #include "game/objects/paint_audio.h"
 #include "game/objects/structure_paintable.h"
 
@@ -197,7 +198,7 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
 
     if (is_projectile(other_type))
     {
-        this->on_projectile_contact(other_type);
+        this->on_projectile_contact(other_type, other);
         return;
     }
 
@@ -220,7 +221,8 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
     }
     this->on_structure_contact(other, normal, penetration);
 }
-void Player::end_contacts(std::span<const Contact> contacts)
+void Player::end_contacts(std::span<const Contact> contacts,
+    std::span<const HorizontalSupportRef> supports)
 {
     // A projected slope can touch without penetrating, so dispatch may have
     // no manifold to resolve. Retain that support only if later wall/ceiling
@@ -381,7 +383,22 @@ void Player::end_contacts(std::span<const Contact> contacts)
     // Ground-aware tool feedback sees the completed contact phase, including a
     // buffered jump. Fatal contacts and spawn settling silently reset history.
     const bool can_act = this->state_ == PlayerState::alive && this->health_ > 0.0f;
-    const float resolved_x = this->rectangle_.x - this->movement_start_x_;
+    // Sample after every paint/separation callback and buffered takeoff. The
+    // prior step's frozen class has already served movement and ammunition.
+    if (!this->player_tuning().paint_underfoot.enabled || !can_act)
+    {
+        this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
+    }
+    else if (this->movement_audio_dt_ > 0.0f)
+    {
+        this->underfoot_support_team_ = this->gameplay_support_team();
+    }
+    if (!supports.empty()) { this->choose_carrier(contacts, supports); }
+    // Static movement retains its exact original subtraction. Involuntary
+    // carry changes world pose, never personal footsteps or tool locomotion.
+    const float resolved_x = this->movement_carried_x_ == 0.0f ?
+        this->rectangle_.x - this->movement_start_x_ :
+        (this->rectangle_.x - this->movement_start_x_) - this->movement_carried_x_;
     // Separation from a wall or an overlapping spawn is not walked distance.
     const float distance = resolved_x * this->movement_requested_x_ > 0.0f ?
         std::min(std::abs(resolved_x), std::abs(this->movement_requested_x_)) : 0.0f;
@@ -424,8 +441,158 @@ void Player::end_contacts(std::span<const Contact> contacts)
     this->hit_ceiling_this_tick_ = false;
     this->support_impact_speed_ = 0.0f;
     this->paint_supports_.clear();
+    this->resolved_flat_supports_.clear();
 }
 
+void Player::remember_flat_support(const CollisionObject& other)
+{
+    if (const auto* support = dynamic_cast<const Structure*>(&other))
+    { this->resolved_flat_supports_.push_back(support); }
+}
+
+void Player::clear_carrier() noexcept
+{
+    this->carrier_id_ = 0;
+    this->prepared_carrier_.reset();
+    this->resolved_flat_supports_.clear();
+    // Do not erase this tick's applied carry before feedback subtracts it.
+}
+
+HorizontalMotionId Player::carrier_id() const { return this->carrier_id_; }
+
+void Player::prepare_carrier_step(std::optional<HorizontalCarryStep> step) noexcept
+{
+    if (!step || step->id == 0 || step->id != this->carrier_id_)
+    {
+        this->clear_carrier();
+        return;
+    }
+    this->prepared_carrier_ = *step;
+}
+
+void Player::apply_carrier(float dt)
+{
+    if (!(dt > 0.0f) || !this->prepared_carrier_) { return; }
+    const HorizontalCarryStep step = *this->prepared_carrier_;
+    this->prepared_carrier_.reset();
+    const bool flat = this->move_state() == PlayerMoveState::on_ground ||
+        this->move_state() == PlayerMoveState::on_drop_down_ground;
+    const float overlap = std::min(this->rectangle_.right(), step.previous_top.right()) -
+        std::max(this->rectangle_.left(), step.previous_top.left());
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f || !flat ||
+        step.id != this->carrier_id_ || !(overlap > 0.0f) ||
+        !feet_at(this->rectangle_, step.previous_top.top()))
+    {
+        this->clear_carrier();
+        return;
+    }
+    const float before = this->rectangle_.x;
+    this->rectangle_.offset(step.displacement_x, 0.0f);
+    this->movement_carried_x_ = this->rectangle_.x - before;
+}
+
+void Player::choose_carrier(std::span<const Contact> contacts,
+    std::span<const HorizontalSupportRef> supports)
+{
+    const bool flat = this->move_state() == PlayerMoveState::on_ground ||
+        this->move_state() == PlayerMoveState::on_drop_down_ground;
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
+        !flat || !this->supported_this_tick_)
+    {
+        this->clear_carrier();
+        return;
+    }
+    const HorizontalSupportRef* best = nullptr;
+    float best_overlap = -1.0f;
+    for (const HorizontalSupportRef& candidate : supports)
+    {
+        if (candidate.surface == nullptr) { continue; }
+        const CollisionObjectType type = to_collision_type(candidate.surface->tag());
+        if (type != CollisionObjectType::structure &&
+            type != CollisionObjectType::structure_paintable &&
+            type != CollisionObjectType::structure_jump_through) { continue; }
+        bool measured_top = false;
+        for (const Contact& contact : contacts)
+        {
+            Vector2F normal;
+            const CollisionObject* other = nullptr;
+            if (contact.a == this) { other = contact.b; normal = contact.normal; }
+            else if (contact.b == this) { other = contact.a; normal = -contact.normal; }
+            if (other == candidate.surface && normal.y > 0.0f &&
+                std::abs(normal.y) >= std::abs(normal.x)) { measured_top = true; break; }
+        }
+        const bool resolved_top = std::find(this->resolved_flat_supports_.begin(),
+            this->resolved_flat_supports_.end(), candidate.surface) != this->resolved_flat_supports_.end();
+        if (!measured_top && !resolved_top) { continue; }
+        const RectangleF surface = candidate.surface->shape()->bounding_box();
+        const float overlap = std::min(this->rectangle_.right(), surface.right()) -
+            std::max(this->rectangle_.left(), surface.left());
+        if (!(overlap > 0.0f) || !feet_at(this->rectangle_, surface.top())) { continue; }
+        if (candidate.motion != 0 && candidate.motion == this->carrier_id_)
+        {
+            this->prepared_carrier_.reset();
+            return; // Still valid established carrier wins before overlap ties.
+        }
+        const bool static_first = best != nullptr && candidate.motion == 0 && best->motion != 0;
+        const bool same_kind = best != nullptr && (candidate.motion == 0) == (best->motion == 0);
+        if (best == nullptr || overlap > best_overlap ||
+            (overlap == best_overlap && (static_first || (same_kind && candidate.order < best->order))))
+        {
+            best = &candidate;
+            best_overlap = overlap;
+        }
+    }
+    this->carrier_id_ = best == nullptr ? 0 : best->motion;
+    this->prepared_carrier_.reset();
+}
+
+PlayerTeam Player::gameplay_support_team() const
+{
+    const bool flat_ground = this->move_state() == PlayerMoveState::on_ground ||
+        this->move_state() == PlayerMoveState::on_drop_down_ground;
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
+        !this->supported_this_tick_ || !flat_ground) { return PlayerTeam::none; }
+    const float foot_x = this->rectangle_.center().x;
+    PlayerTeam answer = PlayerTeam::none;
+    for (std::size_t index = 0; index < this->paint_supports_.size(); ++index)
+    {
+        const StructurePaintable* support = this->paint_supports_[index];
+        bool duplicate = false;
+        for (std::size_t previous = 0; previous < index; ++previous)
+        { duplicate |= this->paint_supports_[previous] == support; }
+        if (duplicate) { continue; }
+        const RectangleF surface = support->shape()->bounding_box();
+        if (!(foot_x >= surface.left() && foot_x < surface.right()) ||
+            !feet_at(this->rectangle_, surface.top())) { continue; }
+        const PlayerTeam team = support->top_paint_team(foot_x);
+        if (team == PlayerTeam::none) { continue; }
+        if (answer != PlayerTeam::none && answer != team) { return PlayerTeam::none; }
+        answer = team;
+    }
+    return answer;
+}
+
+PlayerPaintUnderfootState Player::paint_underfoot_state() const
+{
+    if (!this->player_tuning().paint_underfoot.enabled) { return {}; }
+    return { true, this->underfoot_support_team_, this->underfoot_step_team_ };
+}
+
+float Player::underfoot_speed_multiplier() const
+{
+    const PaintUnderfootTuning& effect = this->player_tuning().paint_underfoot;
+    if (!effect.enabled || this->underfoot_step_team_ == PlayerTeam::none ||
+        this->state_ != PlayerState::alive || this->health_ <= 0.0f) { return 1.0f; }
+    return this->underfoot_step_team_ == this->team_ ? effect.own_speed_multiplier : effect.enemy_speed_multiplier;
+}
+
+float Player::underfoot_ammo_multiplier() const
+{
+    const PaintUnderfootTuning& effect = this->player_tuning().paint_underfoot;
+    if (!effect.enabled || this->underfoot_step_team_ == PlayerTeam::none ||
+        this->state_ != PlayerState::alive || this->health_ <= 0.0f) { return 1.0f; }
+    return this->underfoot_step_team_ == this->team_ ? effect.own_ammo_regen_multiplier : effect.enemy_ammo_regen_multiplier;
+}
 std::optional<Player::PaintedSupport> Player::painted_support() const
 {
     for (const StructurePaintable* support : this->paint_supports_)
@@ -507,6 +674,7 @@ void Player::on_structure_contact(const CollisionObject& other,
         }
         this->set_move_state(normal.y > 0.0f ?
             PlayerMoveState::on_ground : PlayerMoveState::on_ceiling);
+        if (normal.y > 0.0f) { this->remember_flat_support(other); }
     }
     else
     {
@@ -582,6 +750,7 @@ void Player::on_jump_through_contact(const CollisionObject& other)
             std::min(this->rectangle_.right(), other_rect.right())) / 2.0f, other_rect.top() };
         this->set_move_state(PlayerMoveState::on_drop_down_ground);
         this->supported_this_tick_ = true;
+        this->remember_flat_support(other);
     }
 }
 
@@ -589,7 +758,8 @@ void Player::update_weapon_position() const
 {
     this->primary_->set_player_center(this->center());
 }
-void Player::on_projectile_contact(CollisionObjectType other_type)
+void Player::on_projectile_contact(CollisionObjectType other_type,
+    const CollisionObject& source)
 {
     // The projectile side is unchanged: paint still lands.
     if (this->damage_immune_)
@@ -600,7 +770,30 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
     // Damage belongs to the projectile's tuning record.
     const float damage = this->tuning_->projectile(
         to_projectile_type(other_type)).details.player_damage;
+    const bool vulnerable = this->state_ == PlayerState::alive && this->health_ > 0.0f;
     this->health_ -= damage;
+    if (this->health_ <= 0.0f)
+    {
+        this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
+        this->clear_carrier();
+    }
+    if (vulnerable && this->health_ <= 0.0f)
+    {
+        // Capture the fatal contact now: the dead state arrives next update.
+        // Later hits cannot replace credit. This metadata changes no damage,
+        // contact, feedback, timer, or random-number decision.
+        const auto* projectile = dynamic_cast<const Projectile*>(&source);
+        const CollisionLayer enemy_layer = this->team_ == PlayerTeam::a ?
+            collision_layers::PROJECTILE_TEAM_B : this->team_ == PlayerTeam::b ?
+            collision_layers::PROJECTILE_TEAM_A : CollisionLayer{ 0 };
+        const int owner = projectile != nullptr ? projectile->player_num() : -1;
+        if (projectile != nullptr && enemy_layer != 0 && source.layer() == enemy_layer &&
+            owner >= 0 && owner < paint_owners::count)
+        {
+            ++this->lethal_projectiles_.enemy_by_owner[static_cast<size_t>(owner)];
+        }
+        else { ++this->lethal_projectiles_.uncredited; }
+    }
 
     if (damage > 0.0f && this->health_ > 0.0f && this->state_ == PlayerState::alive)
     {
@@ -620,10 +813,26 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
 
 void Player::update(float dt)
 {
+    // One completed contact snapshot feeds movement and the later weapon call.
+    // dt0 does not refresh terrain context; the disabled path always clears it.
+    if (!this->player_tuning().paint_underfoot.enabled ||
+        this->state_ != PlayerState::alive || this->health_ <= 0.0f)
+    {
+        this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
+    }
+    else if (dt > 0.0f)
+    {
+        const bool flat_ground = this->move_state() == PlayerMoveState::on_ground ||
+            this->move_state() == PlayerMoveState::on_drop_down_ground;
+        this->underfoot_step_team_ = flat_ground ? this->underfoot_support_team_ : PlayerTeam::none;
+        this->underfoot_support_team_ = PlayerTeam::none;
+    }
     this->projected_ramp_support_ = false;
     this->paint_supports_.clear();
+    this->resolved_flat_supports_.clear();
     this->movement_audio_dt_ = dt;
     this->movement_start_x_ = this->rectangle_.x;
+    this->movement_carried_x_ = 0.0f;
     this->movement_previous_velocity_ = this->velocity().x;
     this->movement_requested_x_ = 0.0f;
     // Age old cues before movement can emit new ones; every new event is drawn
@@ -733,7 +942,7 @@ std::vector<std::unique_ptr<Projectile>>
         this->center(),
         MovingObject::velocity(),
         this->facing_right(),
-        dt);
+        dt, this->underfoot_ammo_multiplier());
     // A paid shot is still a shot when its muzzle immediately contacts cover.
     // Check before launch obstruction retires it, never from held input or the
     // weapon's looping presentation flag (which also spans the cooldown).
@@ -777,6 +986,13 @@ void Player::update_prev_rectangle()
 
 void Player::update_movement(float dt)
 {
+    const PlayerTuning& base = this->player_tuning();
+    const float multiplier = this->underfoot_speed_multiplier();
+    // Neutral/off copies the old operands without an extra multiply by one.
+    const float initial = multiplier == 1.0f ? base.x_initial_velocity : base.x_initial_velocity * multiplier;
+    const float acceleration = multiplier == 1.0f ? base.x_acceleration : base.x_acceleration * multiplier;
+    const float braking_rate = multiplier == 1.0f ? base.x_deacceleration : base.x_deacceleration * multiplier;
+    const float cap = multiplier == 1.0f ? base.max_velocity.x : base.max_velocity.x * multiplier;
     const auto previous_ramp_position = this->ramp_support_at(this->rectangle_);
     const bool on_previous_ramp = this->is_on_ramp() && previous_ramp_position &&
         feet_at(this->rectangle_, previous_ramp_position->y);
@@ -803,22 +1019,22 @@ void Player::update_movement(float dt)
 
     if (are_equal(MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
     {
-        MovingObject::set_velocity_x(this->player_tuning().x_initial_velocity * x_input);
+        MovingObject::set_velocity_x(initial * x_input);
     }
     else if (MovingObject::velocity_x() > 0.0f && x_input > 0.0f)
     {
-        MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
-        if (MovingObject::velocity_x() > this->player_tuning().max_velocity.x)
+        MovingObject::alter_velocity_x(acceleration * dt * x_input);
+        if (MovingObject::velocity_x() > cap)
         {
-            MovingObject::set_velocity_x(this->player_tuning().max_velocity.x);
+            MovingObject::set_velocity_x(cap);
         }
     }
     else if (MovingObject::velocity_x() < 0.0f && x_input < 0.0f)
     {
-        MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
-        if (MovingObject::velocity_x() < -this->player_tuning().max_velocity.x)
+        MovingObject::alter_velocity_x(acceleration * dt * x_input);
+        if (MovingObject::velocity_x() < -cap)
         {
-            MovingObject::set_velocity_x(-this->player_tuning().max_velocity.x);
+            MovingObject::set_velocity_x(-cap);
         }
     }
     else if ((MovingObject::velocity_x() > 0.0f && x_input < 0.0f) ||
@@ -826,9 +1042,9 @@ void Player::update_movement(float dt)
     {
         // Opposing input always includes release braking. Small corrections
         // must not make stopping weaker than letting go of the stick.
-        const PlayerTuning& tuning = this->player_tuning();
-        const float braking = tuning.x_deacceleration +
-            tuning.x_acceleration * std::fabs(x_input);
+
+        const float braking = braking_rate +
+            acceleration * std::fabs(x_input);
         const float time_to_stop = std::fabs(MovingObject::velocity_x()) / braking;
         if (dt <= time_to_stop)
         {
@@ -839,13 +1055,13 @@ void Player::update_movement(float dt)
             // Spend only the remainder accelerating in the new direction;
             // braking itself cannot propel the player past zero.
             MovingObject::set_velocity_x(std::clamp(
-                tuning.x_acceleration * x_input * (dt - time_to_stop),
-                -tuning.max_velocity.x, tuning.max_velocity.x));
+                acceleration * x_input * (dt - time_to_stop),
+                -cap, cap));
         }
     }
     else if (MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
     {
-        MovingObject::alter_velocity_x(-this->player_tuning().x_deacceleration * dt);
+        MovingObject::alter_velocity_x(-braking_rate * dt);
         if (MovingObject::velocity_x() < 0.0f)
         {
             MovingObject::set_velocity_x(0.0f);
@@ -853,7 +1069,7 @@ void Player::update_movement(float dt)
     }
     else if (MovingObject::velocity_x() < 0.0f && are_equal(x_input, 0.0f))
     {
-        MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt);
+        MovingObject::alter_velocity_x(braking_rate * dt);
         if (MovingObject::velocity_x() > 0.0f)
         {
             MovingObject::set_velocity_x(0.0f);
@@ -891,6 +1107,9 @@ void Player::update_movement(float dt)
         this->do_jump(dt);
 	}
 
+    // Accepted jump/drop has already released support. A rider receives the
+    // platform's world displacement before its own unchanged integration.
+    this->apply_carrier(dt);
     const Vector2F displacement = MovingObject::velocity() * dt;
     this->movement_requested_x_ = displacement.x;
     this->rectangle_.offset(displacement.x, displacement.y);
@@ -970,6 +1189,7 @@ void Player::do_jump(float dt)
 
 void Player::start_jump()
 {
+    this->clear_carrier();
     this->ramp_support_.reset();
     this->projected_ramp_support_ = false;
     this->start_action(PlayerAnimationState::taking_off);
@@ -1023,6 +1243,7 @@ void Player::clear_view_shake() { this->view_shake_.clear(); }
 
 void Player::reset_jump_input()
 {
+    this->clear_carrier();
     this->jump_buffer_remaining_ = 0.0f;
     this->ledge_grace_remaining_ = 0.0f;
     this->jump_waiting_for_release_ = true;
@@ -1088,6 +1309,8 @@ const PlayerTuning& Player::player_tuning() const
 
 void Player::place_at(const Vector2F& top_left)
 {
+    this->clear_carrier();
+    this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     this->view_shake_.clear();
     this->quiet_character_.reset();
     this->combat_feedback_.clear();
@@ -1123,7 +1346,9 @@ void Player::force_respawn()
 
 void Player::kill()
 {
+    this->clear_carrier();
     this->health_ = 0.0f;
+    this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     this->quiet_character_.reset();
     this->primary_->reset_motion();
 }
@@ -1278,6 +1503,11 @@ float Player::health() const
 void Player::set_camera(const Camera& camera)
 {
 	this->camera_ = camera;
+}
+
+const PlayerLethalProjectiles& Player::lethal_projectiles() const
+{
+    return this->lethal_projectiles_;
 }
 
 float Player::weapon_ammo() const

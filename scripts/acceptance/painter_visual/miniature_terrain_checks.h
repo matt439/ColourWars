@@ -422,11 +422,13 @@ void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& level
         else if (size.x == 1280)
         { require(first_720.pixels == actual.pixels, "actual StagePreview changed after native resize return"); }
     }
-    // The original four stages remain visual-change discriminators. Crossfeed
-    // adds exact reference/repeat/resize coverage; its authored primer can mask
-    // the miniature strokes, and its larger preview scales use ordinary art.
-    // No general material rule requires every authored stage to change pixels.
-    if (std::string_view(stage) != "crossfeed")
+    // The original four stages remain positive visual-change controls.
+    // Crossfeed and Press Tower retain exact reference/repeat/resize coverage:
+    // authored primer can mask miniature strokes, and larger previews use
+    // ordinary art. Every authored stage need not change pixels from legacy.
+    const std::string_view stage_name(stage);
+    if (stage_name == "close_quarters" || stage_name == "king_of_the_hill" ||
+        stage_name == "turbulence" || stage_name == "movement_course")
     { require(changed > 0, "actual StagePreview never differed from disappearing-stroke legacy terrain"); }
 }
 
@@ -436,7 +438,7 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
     size_t changed_overviews = 0;
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed" })
+    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
     {
         const LevelLoadedInfo* info = levels.get(stage);
         Scene scene(app.thread_pool(), app.partitioner()); std::vector<GameObject*> scenery;
@@ -553,7 +555,7 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
     const std::filesystem::path& output, std::ofstream& records)
 {
     const NestedSaveProfile isolated(output / "miniature-story-profile");
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed" })
+    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
     {
         for (const int count : { 1, 4 })
         {
@@ -677,6 +679,6 @@ void miniature_terrain_matrix(Application& app, Registry<LevelLoadedInfo>& level
     require(records.good(), "miniature terrain comparison record write failed");
     std::cout << "PASS miniature terrain: independent exposed edge/masked seam/lit body/major ruler tick and ramp silhouette "
         "pixel oracles, legacy comparisons, actual owned paint overlay, exact native material and Scene parity; "
-        "all five shipped stage 1P/4P overview/story contexts at720p/1080p/QHD, resize return, frozen state/RNG and Debug fingerprints. "
+        "all six selected stage 1P/4P overview/story contexts at720p/1080p/QHD, resize return, frozen state/RNG and Debug fingerprints. "
         "Muted renderer evidence; human readability, physical pads and performance acceptance remain separate.\n";
 }

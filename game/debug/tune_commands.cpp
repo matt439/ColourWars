@@ -303,7 +303,7 @@ DebugStatus DebugDirectorImpl::tune_validate_and_apply(int file, const std::stri
 	const bool checks_levels = name == "tuning" &&
 		(edited_path.empty() || edited_path.starts_with("paint.") ||
 			edited_path.starts_with("player.size.") ||
-			edited_path.starts_with("player.max_velocity.") ||
+			edited_path.starts_with("player.max_velocity.") || edited_path.starts_with("player.paint_underfoot.") ||
 			edited_path == "player.x_initial_velocity" ||
 			edited_path == "player.drop_down_velocity");
 	try

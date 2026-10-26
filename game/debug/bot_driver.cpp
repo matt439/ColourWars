@@ -5,6 +5,8 @@
 #include "game/debug/bot_driver.h"
 #include "game/objects/level.h"
 #include "game/tuning.h"
+#include "game/objects/weapon.h"
+#include "engine/core/step_timer.h"
 
 namespace
 {
@@ -20,6 +22,37 @@ namespace
 		default:
 			return false;
 		}
+	}
+
+	// Policy for developer measurements only: a stationary horizontal launch,
+	// using the actual fixed-step drag/cap/first-step lifetime convention for
+	// at most sixty steps. Gravity, inherited velocity, terrain, diffusion and
+	// target motion can all change a real hit. This is not a range certificate.
+	float engagement_distance(const Player& player, const GameTuning& tuning)
+	{
+		const Weapon& weapon = player.primary_weapon();
+		const WeaponTuning& tool = tuning.weapon(weapon.type());
+		const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
+		const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
+			labrador::StepTimer::TicksPerSecond / 60));
+		float speed = tool.details.starting_vel_length;
+		float distance = 0.0f;
+		float elapsed = 0.0f;
+		for (int step = 0; step < 60; ++step)
+		{
+			elapsed += dt;
+			if (step > 0 && elapsed > projectile.details.delete_timer) { break; }
+			if (std::fabs(speed) > projectile.details.wind_resistance * projectile.wind_stop_factor)
+			{
+				speed += speed > 0.0f ? -projectile.details.wind_resistance * dt :
+					projectile.details.wind_resistance * dt;
+			}
+			else { speed = 0.0f; }
+			speed = std::clamp(speed, -projectile.max_velocity.x, projectile.max_velocity.x);
+			distance += std::fabs(speed * dt);
+		}
+		return distance + mattmath::Vector2F::distance(weapon.nozzle_pos(), player.center()) +
+			projectile.details.col_rect_size.x * 0.5f + tuning.player().size.x * 0.5f;
 	}
 
 	BotSeatView::Seat seat_of(const Player& player, const GameTuning& tuning)
@@ -55,7 +88,8 @@ bool BotDriver::drives(int seat) const
 	return this->behaviours_.find(seat) != this->behaviours_.end();
 }
 
-BotSeatView BotDriver::view_of(const Level& level, int seat, int step, const GameTuning& tuning)
+BotSeatView BotDriver::view_of(const Level& level, int seat, int step, const GameTuning& tuning,
+	bool observe_tool)
 {
 	BotSeatView view;
 	view.step = step;
@@ -72,6 +106,12 @@ BotSeatView BotDriver::view_of(const Level& level, int seat, int step, const Gam
 			view.others.push_back(state);
 		}
 	}
+	if (observe_tool && seat >= 0 && seat < level.player_count())
+	{
+		const Player& self = level.player(seat);
+		view.shot_empty = self.primary_weapon().readiness() == WeaponReadiness::empty;
+		view.engage_distance = engagement_distance(self, tuning);
+	}
 	return view;
 }
 
@@ -84,7 +124,7 @@ void BotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Level& l
 			continue;
 		}
 		seats[static_cast<std::size_t>(seat)] = bot != nullptr ?
-			bot->think(view_of(level, seat, this->step_, *this->tuning_)) : Bot::neutral();
+			bot->think(view_of(level, seat, this->step_, *this->tuning_, bot->name() == "skirmish")) : Bot::neutral();
 	}
 	++this->step_;
 }

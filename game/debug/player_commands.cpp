@@ -334,7 +334,7 @@ void DebugDirectorImpl::register_bot_commands()
 {
 	std::vector<std::string> seats_and_all = { "all", "off", "1", "2", "3", "4" };
 	auto bot = std::make_unique<LambdaCommand>("bot",
-		"drive seats with scripted input: bot <seat|all> <idle|walk|jump|chase|paint|off>; "
+		"drive seats with scripted input: bot <seat|all> <idle|walk|jump|chase|paint|skirmish|off>; "
 		"all = every idle dummy; bot off clears; bot alone lists",
 		std::vector<DebugArgSpec>{
 			{ "seat|all|off", true, [seats_and_all] { return seats_and_all; } },
@@ -373,12 +373,12 @@ void DebugDirectorImpl::register_bot_commands()
 				if (behaviour.empty())
 				{
 					return DebugStatus::failure("bot: name a behaviour: idle, walk, jump, chase, "
-						"paint or off");
+						"paint, skirmish or off");
 				}
 				if (behaviour != "off" && !Bot::is_behaviour(behaviour))
 				{
 					return DebugStatus::failure("bot: unknown behaviour '" + behaviour +
-						"'; one of idle, walk, jump, chase, paint, off");
+						"'; one of idle, walk, jump, chase, paint, skirmish, off");
 				}
 				if (target == "all")
 				{

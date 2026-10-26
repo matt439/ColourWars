@@ -68,12 +68,22 @@ namespace
 		// unclamped, and a drop-through adds drop_down_velocity to y after
 		// the clamp. Its farthest step on each axis is the larger of the
 		// first pair and the sum of the second.
-		const Vector2F player_speed(
-			std::max(std::abs(player.max_velocity.x), std::abs(player.x_initial_velocity)),
+        float horizontal_speed = std::max(std::abs(player.max_velocity.x), std::abs(player.x_initial_velocity));
+        std::string horizontal_keys = "player.max_velocity.x (or player.x_initial_velocity, if that is larger)";
+        if (player.paint_underfoot.enabled)
+        {
+            // A boost can retain momentum on the next neutral/airborne step.
+            const float factor = player.paint_underfoot.own_speed_multiplier;
+            horizontal_speed = std::max(std::abs(player.max_velocity.x * factor),
+                std::abs(player.x_initial_velocity * factor));
+            horizontal_keys += " multiplied by player.paint_underfoot.own_speed_multiplier";
+        }
+        const Vector2F player_speed(
+			horizontal_speed,
 			std::abs(player.max_velocity.y) + std::abs(player.drop_down_velocity));
 		return {
 			{ "a player",
-				"player.max_velocity.x (or player.x_initial_velocity, if that is larger)",
+				horizontal_keys,
 				"player.max_velocity.y (or player.drop_down_velocity, which a drop-through "
 					"adds to it)",
 				player.size, player_speed * seconds_per_step,

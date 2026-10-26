@@ -37,6 +37,7 @@ namespace debug_console_acceptance
 	namespace
 	{
 #include "scripts/acceptance/debug_console/tune_colour_sweep_checks.h"
+#include "scripts/acceptance/debug_console/tune_underfoot_checks.h"
 #include "scripts/acceptance/debug_console/tune_feedback_colour_checks.h"
 #include "scripts/acceptance/debug_console/tune_opening_art_colour_checks.h"
 #include "scripts/acceptance/debug_console/tune_opening_scene_colour_checks.h"
@@ -346,6 +347,7 @@ namespace debug_console_acceptance
 
 		// Keep these edits after the existing exact tune.diff count and restore
 		// them before the save/conflict fixtures below.
+		check_underfoot_tunes(impl, tuning, scratch);
 		check_motion_tunes(impl, tuning, scratch);
 		check_menu_layout_tunes(impl, presentation, scratch);
 		check_colour_tunes(game_directory);

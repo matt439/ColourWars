@@ -59,7 +59,7 @@ Bot::Bot(std::uint64_t seed) : random_(seed)
 
 const std::vector<std::string>& Bot::behaviours()
 {
-	static const std::vector<std::string> names = { "idle", "walk", "jump", "chase", "paint" };
+	static const std::vector<std::string> names = { "idle", "walk", "jump", "chase", "paint", "skirmish" };
 	return names;
 }
 
@@ -82,6 +82,7 @@ std::unique_ptr<Bot> Bot::make(std::string_view behaviour, std::uint64_t seed, i
 	if (behaviour == "jump") { return std::make_unique<JumpBot>(mixed); }
 	if (behaviour == "chase") { return std::make_unique<ChaseBot>(mixed); }
 	if (behaviour == "paint") { return std::make_unique<PaintBot>(mixed); }
+	if (behaviour == "skirmish") { return std::make_unique<SkirmishBot>(mixed); }
 	return nullptr;
 }
 
@@ -300,5 +301,138 @@ void PaintBot::decorate(PlayerInputData& input, const BotSeatView& view)
 		this->refilling_ = true;
 	}
 	input.primary_shoot = !this->refilling_;
+}
+
+// ---------------------------------------------------------------------------
+
+void JumpBot::reset_jump()
+{
+	PlayerInputData released = neutral();
+	this->hold_jump(released, false);
+	this->hold_left_ = 0;
+	this->jump_in_ = this->random_.between(60, 180);
+}
+
+SkirmishBot::SkirmishBot(std::uint64_t seed) : JumpBot(seed)
+{
+	this->sweep_ = this->random_.between(pi / 6.0f, pi / 3.0f);
+}
+
+const BotSeatView::Seat* SkirmishBot::nearest_enemy(const BotSeatView& view)
+{
+	if (view.self.team != PlayerTeam::a && view.self.team != PlayerTeam::b)
+	{
+		return nullptr;
+	}
+	const PlayerTeam enemy = view.self.team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
+	const BotSeatView::Seat* nearest = nullptr;
+	float best = 0.0f;
+	for (const BotSeatView::Seat& other : view.others)
+	{
+		if (!other.alive || other.health <= 0.0f || other.team != enemy) { continue; }
+		const float distance = Vector2F::distance_squared(other.center, view.self.center);
+		// Strict comparison preserves view-order ties.
+		if (nearest == nullptr || distance < best) { nearest = &other; best = distance; }
+	}
+	return nearest;
+}
+
+PlayerInputData SkirmishBot::think(const BotSeatView& view)
+{
+	if (!view.self.alive || view.self.health <= 0.0f)
+	{
+		if (this->was_alive_) { this->reset_jump(); }
+		this->was_alive_ = false;
+		this->mode_ = Mode::paint;
+		this->target_near_ = false;
+		this->target_offset_ = Vector2F::ZERO;
+		this->return_point_ = Vector2F::ZERO;
+		BotSeatView inactive = view;
+		inactive.self.alive = false;
+		return JumpBot::think(inactive);
+	}
+	if (!this->was_alive_)
+	{
+		this->was_alive_ = true;
+		this->mode_ = Mode::paint;
+		this->return_point_ = view.self.center;
+	}
+	const BotSeatView::Seat* target = nearest_enemy(view);
+	this->target_offset_ = target != nullptr ? target->center - view.self.center : Vector2F::ZERO;
+	this->target_near_ = target != nullptr && view.engage_distance > 0.0f &&
+		this->target_offset_.length() <= view.engage_distance;
+
+	// A tank can be positive yet unable to buy the next shot (notably Sniper).
+	// Recovery requires both the larger tank threshold and full-shot readiness.
+	if (this->mode_ != Mode::refill && (view.shot_empty || view.self.ammo <= 0.15f))
+	{
+		this->mode_ = Mode::refill;
+		this->return_point_ = view.self.center;
+		this->retreat_heading_ = target != nullptr && this->target_offset_.x != 0.0f ?
+			(this->target_offset_.x > 0.0f ? -1.0f : 1.0f) :
+			(view.self.facing_right ? -1.0f : 1.0f);
+	}
+	if (this->mode_ == Mode::refill)
+	{
+		if (view.self.ammo >= 0.8f && !view.shot_empty) { this->mode_ = Mode::return_to_paint; }
+	}
+	if (this->mode_ != Mode::refill)
+	{
+		if (this->target_near_) { this->mode_ = Mode::engage; }
+		else if (this->mode_ == Mode::engage) { this->mode_ = Mode::paint; }
+		if (this->mode_ == Mode::return_to_paint &&
+			std::fabs(this->return_point_.x - view.self.center.x) <= view.player_height * 0.15f)
+		{
+			this->mode_ = Mode::paint;
+		}
+	}
+	return JumpBot::think(view);
+}
+
+float SkirmishBot::walk_direction(const BotSeatView& view)
+{
+	if (this->mode_ == Mode::refill) { return this->retreat_heading_; }
+	if (this->mode_ == Mode::return_to_paint)
+	{
+		return this->return_point_.x > view.self.center.x ? 1.0f : -1.0f;
+	}
+	if (this->mode_ == Mode::engage)
+	{
+		// A simple stopping distance, not cover selection or tool balance.
+		const float gap = view.engage_distance * 0.6f;
+		if (std::fabs(this->target_offset_.x) <= gap) { return 0.0f; }
+		return this->target_offset_.x > 0.0f ? 1.0f : -1.0f;
+	}
+	return JumpBot::walk_direction(view);
+}
+
+bool SkirmishBot::wants_jump(const BotSeatView& view)
+{
+	const bool above = this->mode_ == Mode::engage ?
+		this->target_offset_.y < -view.player_height :
+		this->mode_ == Mode::return_to_paint &&
+		this->return_point_.y < view.self.center.y - view.player_height;
+	return above || JumpBot::wants_jump(view);
+}
+
+void SkirmishBot::decorate(PlayerInputData& input, const BotSeatView& view)
+{
+	JumpBot::decorate(input, view);
+	if (this->mode_ == Mode::engage)
+	{
+		aim(input, this->target_offset_);
+		input.primary_shoot = !view.shot_empty;
+		return;
+	}
+	if (this->mode_ == Mode::paint)
+	{
+		this->sweep_ += this->random_.between(-0.04f, 0.04f);
+		this->sweep_ = std::clamp(this->sweep_, pi / 6.0f, pi * 5.0f / 12.0f);
+	}
+	const float facing = input.x_movement != 0.0f ? input.x_movement :
+		(view.self.facing_right ? 1.0f : -1.0f);
+	aim(input, Vector2F(facing * std::cos(this->sweep_), std::sin(this->sweep_)));
+	// Returning conserves the refill until the old location or a new fight.
+	input.primary_shoot = this->mode_ == Mode::paint && !view.shot_empty;
 }
 #endif

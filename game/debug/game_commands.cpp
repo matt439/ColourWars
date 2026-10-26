@@ -122,7 +122,7 @@ void DebugDirectorImpl::register_commands()
 			if (args.has(1) && !Bot::is_behaviour(args.text(1)))
 			{
 				return DebugStatus::failure("players: unknown bot '" + args.text(1) +
-					"'; one of idle, walk, jump, chase, paint");
+					"'; one of idle, walk, jump, chase, paint, skirmish");
 			}
 			if (args.has(1))
 			{

@@ -45,6 +45,12 @@ struct BotSeatView
 
 	int step = 0;
 	float player_height = 120.0f;
+	// Only populated by BotDriver's opt-in skirmish observation. This is the
+	// actual full-shot affordability state, including a positive but low tank.
+	bool shot_empty = false;
+	// Developer engagement heuristic: a stationary horizontal launch for at
+	// most 60 fixed steps, plus muzzle/body/volume extent. Not a hit or LOS test.
+	float engage_distance = 0.0f;
 	Seat self;
 	std::vector<Seat> others; // every other seat, in view order
 };
@@ -67,7 +73,7 @@ public:
 	virtual PlayerInputData think(const BotSeatView& view) = 0;
 	virtual std::string_view name() const = 0;
 
-	// idle, walk, jump, chase, paint. `idle` is neutral connected input and
+	// idle, walk, jump, chase, paint, skirmish. `idle` is neutral connected input and
 	// has no class; make returns nullptr for it.
 	static const std::vector<std::string>& behaviours();
 	static bool is_behaviour(std::string_view name);
@@ -128,6 +134,9 @@ public:
 protected:
 	void decorate(PlayerInputData& input, const BotSeatView& view) override;
 	virtual bool wants_jump(const BotSeatView& view);
+	// New behaviours may discard a held jump on death. Existing bots do not
+	// call this, preserving their established view/RNG sequences.
+	void reset_jump();
 
 private:
 	int jump_in_ = 0;
@@ -168,4 +177,33 @@ protected:
 private:
 	float sweep_ = 0.6f; // radians below the horizontal
 	bool refilling_ = false;
+};
+
+
+// A developer measurement bot, not a shipping opponent. Paints while roaming,
+// engages a nearby enemy, withdraws without firing while refilling, then
+// returns to its pre-refill position or re-engages an enemy encountered first.
+// It has no terrain visibility, route planner or ballistic intercept solver.
+class SkirmishBot final : public JumpBot
+{
+public:
+	explicit SkirmishBot(std::uint64_t seed);
+
+	PlayerInputData think(const BotSeatView& view) override;
+	std::string_view name() const override { return "skirmish"; }
+
+private:
+	enum class Mode { paint, engage, refill, return_to_paint };
+	Mode mode_ = Mode::paint;
+	bool was_alive_ = false;
+	bool target_near_ = false;
+	mattmath::Vector2F target_offset_ = mattmath::Vector2F::ZERO;
+	mattmath::Vector2F return_point_ = mattmath::Vector2F::ZERO;
+	float retreat_heading_ = 1.0f;
+	float sweep_ = 0.6f;
+
+	float walk_direction(const BotSeatView& view) override;
+	bool wants_jump(const BotSeatView& view) override;
+	void decorate(PlayerInputData& input, const BotSeatView& view) override;
+	static const BotSeatView::Seat* nearest_enemy(const BotSeatView& view);
 };
