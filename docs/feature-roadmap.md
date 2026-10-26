@@ -27,10 +27,35 @@ mode or speculative `MatchRules` seam is planned; a future ruleset would need
 its own product decision.
 
 Solo remains practice (`GAP#1.3`), with coverage results and no opponent. The
-Debug bots remain developer tools; shipping AI opponents is outside the chosen
-scope. The accepted solo story treatment is unchanged: no person, opening or
-reveal, as recorded in the [backstory](backstory.md#building-it). These decisions
-close the ruleset and shipped-AI questions raised by the frozen gap audit.
+accepted solo story treatment is unchanged: no person, opening or reveal, as
+recorded in the [backstory](backstory.md#building-it). The original exclusion of
+shipping AI opponents was superseded by the author's 2026-10-27 request below;
+the existing Debug bots remain developer tools.
+
+### AI bot players (ROAD#10)
+
+**ROAD#10 - OPEN (requested 2026-10-27).** Add playable AI teammates and
+opponents through normal match setup in Debug and Release, within the existing
+four-player, two-team limit. Keep a bot-free solo-practice option available.
+
+Start with three difficulty settings: **Easy, Normal and Hard**, selectable per
+bot during setup. Difficulty should change reaction time, aim accuracy and
+decision quality while using the same movement, weapons, ammunition and scoring
+rules as human players.
+
+The first implementation step is to define the human/bot roster and setup flow,
+bot view allocation, team/weapon selection and difficulty tuning. Build on the
+existing input and seeded Debug-bot experience where useful, preserving the
+game's OOP design. Playable bots need to navigate platforms and recover when
+stuck, seek paintable territory, engage opponents and manage paint reserves
+across all five tools. The current scripted measurement bots do not establish
+those capabilities.
+
+Acceptance needs menu setup, mixed human/bot rosters, bot identity, pause and
+disconnect handling, restarts and series continuity in both builds; repeatable
+navigation/combat checks on the shipped arenas; and attended play showing that
+the three difficulty settings feel distinct. Automated checks alone do not
+establish difficulty or gameplay quality.
 
 ### Balanced random teams
 
