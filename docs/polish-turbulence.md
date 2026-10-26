@@ -377,7 +377,7 @@ unchanged. Receipts are under
 The case is available explicitly, outside the default CI inventory, and authors
 its fresh candidate in its receipt directory. It registers no game content.
 The controlled Sniper checks below qualify one blocked line and reachable top
-paint; broader pressure, native composition, comparison with a scored slab
+paint; broader pressure, comparison with a scored slab
 and attended value remain open before selecting the geometry.
 
 **Composite shot/paint controls, 2026-10-26.** Both presets pass the separate
@@ -405,6 +405,36 @@ establish the flat shoe's underside blocking/painting and reachable top in the
 existing paint-pass ramp construction. They do not qualify sloped-face score,
 rotated-slab equivalence, other weapons/aims, earned travel, human response or
 competitive value. All eight source arenas and tuning remain unchanged.
+
+**Composite native descent, 2026-10-26.**
+`check-painter.ps1 -TurbulenceShoulderOnly -TrialPath <isolated-trial.json>`
+passes Debug and Release at 1280x720 across all 1/2/3/4-player layouts,
+clean/heavy paint: 25 full frames, 61 native crops/CSV rows, 51 readbacks and
+eight actual Levels per preset. The 3,080 Level updates include actual no-jump
+walks from the fixed crossover to a supported whole-body ramp stop, then to
+the upper flat stop. Twenty initial public placements establish the controlled
+stations; there is no later placement. Bounded analog input corrections reach
+the measured stopped centres within 0.04 units, with zero personal X velocity
+and the actual body-edge triangle support plane, rather than a claimed centre
+foot contact. Third/fourth actors wait on their static upper approaches.
+
+Each pane contains the whole player, standing-body ramp warning patch, full
+upper stop and complete shoe underside. Repeated draws preserve pixels,
+public/structure observations, every world paint tile's corners, face, team,
+raw owner and area, and full state for the two original movers, carrier,
+shadow/cull and Scene views. Debug fingerprints and RNG are checked where
+applicable. The independent verifier reconstructs triangles, shoes, support
+planes and native pane geometry, then compares every retained crop RGB row
+with its source frame. Seventy-two controlled contacts establish full heavy
+paint; they are not weapon-efficiency samples. An actual private-registry
+StagePreview supplies the final frame at authored initial poses.
+
+Receipts are under
+`out/validation/overnight-20261026/phase9/shoulder-native/`; representative clean
+one-player descent and heavy three-player ramp-stop frames were visually
+inspected. Source trial hashes stay equal. These are controlled hidden native
+observations; endings, human readability/reaction, physical pads, listening,
+performance, competitive value and a scored rotated-slab contract remain open.
 
 ## Tool and recovery hypotheses
 

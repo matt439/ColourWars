@@ -33,7 +33,21 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($TurbulenceMoverOnly) {
+if ($TurbulenceShoulderOnly) {
+    $result.scope = 'turbulence-shoulder-only'
+    $result.stage = 'turbulence_shoulder_trial'
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'mister', 'roller', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('before-descent', 'actual-mid-ramp-supported-stop', 'actual-upper-flat-stop', 'controlled-clean-heavy-paint', 'actual-stage-preview', 'native-crop-rgb-parity', 'frozen-full-paint-owner-state')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result['trial_source'] = [ordered]@{ path=$trialResolved; sha256_before=$trialHashBefore; sha256_after=$null; unchanged=$false; registration='private-explicit-argument-only' }
+    $result.inputs = 'An explicit quoted UTF-16 filesystem path supplies the isolated26-object shoulder composite. Eight actual Levels/Scenes use production object/player builders and owner-bound moving shadows; public LevelBuilder and longer route/score checks are separate CPU evidence. Exactly20 initial placements put front actors on their own fixed crossover and extra3P/4P actors on their upper approach. Three neutral settle ticks precede capture; actual release-braking and small analog inputs then reach the ramp midpoint and upper stop, without intermediate placement, jump, drop, respawn or cheat. Normal GamepadReader and fake rumble factory remain linked; no physical-pad or motor claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Exactly25 native720p full frames,61 native crops/CSV rows,51 readbacks and8 actual Levels, with at most6000 updates. All1/2/3/4 clean/heavy fixed-crossover, mid-ramp and upper-flat stop phases plus one isolated actual StagePreview retain actual Scene camera/pane ownership, whole actor bodies, whole-body ramp/flat warning patches and the complete shoe underside. Midpoints are1320/2680 within0.04, at rest on the proper ramp state/carrier0; actual feet follow the independent body-edge triangle plane (nominal827). Upper stops1060/2940 retain complete flat support. Clean/heavy public motion matches on every post-placement tick. Controlled contacts establish>99percent held paint. Frozen draws preserve pixels/public/structure state, complete paint corner/face/team/raw-owner/area and full mover/carrier/shadow/view state, RNG and Debug fingerprints. Source RGBA crops and independently retained RGB rows are checked separately. StagePreview checks only authored initial-pose pixels/bounds/RNG; source hash is unchanged. This establishes no human/full-trajectory, ending, readability/reaction-time, physical-pad/motor, listening, performance, balance, arena or moving/rotated scored-slope capability acceptance.'
+}
+elseif ($TurbulenceMoverOnly) {
     $result.scope = 'turbulence-mover-only'
     $result.stage = 'turbulence_mover_trial'
     $result.player_counts = @(1, 2, 3, 4)
