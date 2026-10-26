@@ -23,6 +23,7 @@ namespace level_editor_acceptance
     {
         fs::path repository, stage, manifest, runtime;
         std::string stage_bytes, manifest_bytes, runtime_bytes;
+        std::string last_level_name;
 
         RegistrationFixture(const fs::path& repo, const fs::path& scratch) :
             repository(scratch / "registration-repository"),
@@ -48,6 +49,7 @@ namespace level_editor_acceptance
                 require(extensions.contains(kind), "Review a new manifest kind before copying registration fixtures");
                 for (const rapidjson::Value& name : group["names"].GetArray())
                 {
+                    if (kind == "level") { last_level_name = name.GetString(); }
                     for (const std::string& extension : extensions.at(kind))
                     {
                         const fs::path relative = (fs::path(group["directory"].GetString()) /
@@ -59,6 +61,9 @@ namespace level_editor_acceptance
                     }
                 }
             }
+            require(!last_level_name.empty() &&
+                last_level_name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-") == std::string::npos,
+                "The independent registration byte oracle needs a last level with a plain identifier");
             for (const fs::path& relative : runtime_files)
             {
                 fs::create_directories((copied_content / relative).parent_path());
@@ -161,9 +166,10 @@ namespace level_editor_acceptance
                 // existing last stage, and one literal path before the first
                 // runtime list's closing line. Every other byte must survive.
                 std::string expected_manifest = manifest;
-                const std::string last = "\"turbulence_blockout\"";
+                const std::string last = "\"" + fixture.last_level_name + "\"";
                 const std::size_t name = expected_manifest.rfind(last);
-                require(name != std::string::npos, "The registration manifest fixture needs its last shipped stage");
+                require(name != std::string::npos && expected_manifest.find(last) == name,
+                    "The independent registration byte oracle needs its last level token exactly once");
                 expected_manifest.insert(name + last.size(), "," + newline + "                \"acceptance_arena\"");
                 std::string expected_runtime = runtime;
                 const std::size_t begin = expected_runtime.find("set(COLOURWARS_RUNTIME_ASSETS");
