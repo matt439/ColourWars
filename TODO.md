@@ -54,7 +54,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Compare a supported scored slope at the Turbulence crossover shoulders against the retained static and mover candidates | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
+| `POL#21` | Measure the shoulder composite's paint/shot windows and native composition before selecting it or a scored slope | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
 | `GAP#D5` | Qualify the smallest useful static scored slope through support, projectile, local-paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:

@@ -345,6 +345,39 @@ face scoring before implementation. If a flat solid plus existing ramp provides
 the same route and shot windows, retain that simpler construction and record why
 rotation was unnecessary. No arbitrary or animated rotation follows from this.
 
+**Isolated composite shoulder trial, 2026-10-26.** Before adding a new shape,
+the optional `turbulence_slopes` case authors a comparison through the actual
+editor palette and setters. It appends two existing 160-by-80 ramps across
+the shoulder gaps and two ordinary solid paintable shoes immediately beneath
+them: A shoe `(1240,880,160,24)`, B `(2600,880,160,24)`. The ramps rise toward
+the fixed crossover. They retain their existing unscored, paint-pass contract;
+the shoes retain all ordinary exposed flat faces, including their reachable
+tops. This is a compound construction, without sloped-face scoring or an
+equivalence claim for a rotated slab.
+
+Debug and Release pass actual save/reopen and fresh public 1/4-player loads,
+the unchanged 181-update count-in and twelve neutral updates. Independent
+unit-edge occupancy, editor strips and every runtime source/face agree at
+172,800 total: a net 7,680 above the mover comparison. Each shoe contributes
+1,920 top, 1,920 bottom and 288 exposed-end area; its other end is buried and
+the adjacent old approach loses 288 end area. No reachable paint is hidden
+to make the budget resemble the earlier target.
+
+Both presets also pass twelve mirrored uphill/downhill shoulder trials and
+two original home/lower crossings, totalling 7,408 updates. Personal speed
+marks 0/415/800 come from actual input; the uphill 800 mark can occur on the
+ramp rather than before entry. The rest-start cases stop with the whole body
+on the ramp; all cases stop on the flat receiver and recover the original
+lower bed. No jump, velocity setter or post-construction placement is used.
+All eight source arenas, the original twenty-two objects and tuning remain
+unchanged. Receipts are under
+`out/validation/overnight-20261026/phase9/shoulder-trial-v2/`.
+
+The case is available explicitly, outside the default CI inventory, and authors
+its fresh candidate in its receipt directory. It registers no game content.
+Useful paint/shot windows, native composition, comparison with a scored slab
+and attended value remain open before selecting the geometry.
+
 ## Tool and recovery hypotheses
 
 | Tool | Stations and question |
