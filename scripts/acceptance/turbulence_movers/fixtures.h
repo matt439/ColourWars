@@ -39,6 +39,8 @@ namespace turbulence_movers_acceptance
             unsigned int seed = 439u);
         void tick(const PlayerInputData& action = input(), SeatInputFilter* next = nullptr,
             float seconds = dt);
+        void tick_inputs(const std::vector<PlayerInputData>& actions, SeatInputFilter* next = nullptr,
+            float seconds = dt);
         int count_in();
         void start();
         void check() const;
@@ -53,6 +55,7 @@ namespace turbulence_movers_acceptance
         labrador::Partitioner partitioner;
         std::unique_ptr<Level> level;
         int updates = 0;
+        bool allow_damage = false;
     private:
         mattmath::RectangleF bounds_;
         std::vector<std::pair<std::string, std::unique_ptr<mattmath::Shape>>> solids_;
@@ -61,4 +64,5 @@ namespace turbulence_movers_acceptance
     float steering(const Trial& trial, float target);
     void geometry(Context& context);
     void routes(Context& context, bool full_matrix);
+    void replay(Context& context);
 }

@@ -200,7 +200,19 @@ are fully counted. Receipts are under
 The optional case authors a fresh trial in its receipt directory when no staged
 default exists; both-preset default invocations also pass their six focused
 routes and actual author/save/reopen checks. An explicit input path remains authoritative. This proposal
-is not registered game content. Seeded replay of this placement, native moving
+is not registered game content. Debug `--replay` also passes two fresh seeded
+public disk rebuilds from decoded tape settings, seed and timestep: A's
+wait/jump route matches all 788 active updates and thirteen checkpoints; B's
+drop route matches all 619 active updates and ten checkpoints. Each run compares
+the initial state, all 186 source countdown/settling updates, every active
+fingerprint, final state, terminal RNG and unchanged editor source bytes.
+Paid raw-slot local paint, two carried reversals, release and lower-route
+recovery are exercised. This standalone harness explicitly repeats its source
+priming before applying the active-input tape; unmodified DebugDirector
+fresh-launch playback is not qualified. Receipts are in
+`out/validation/overnight-20261026/phase8/replay-debug.log` and
+`replay/x64-debug/turbulence-movers-30764/` beneath that phase directory.
+Release `--replay` reports its explicit Debug-tools limit. Native moving
 composition, five-tool role and attended play remain unqualified. In particular,
 the higher standing fire may bypass the centre baffle and change pressure on
 both departures; route and paint-credit success alone do not establish that

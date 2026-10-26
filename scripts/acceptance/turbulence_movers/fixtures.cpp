@@ -20,15 +20,19 @@ namespace turbulence_movers_acceptance
     MenuLevelSettings settings(int count, PlayerTeam first_team)
     {
         MenuLevelSettings setup;
+        require(count == 1 || count == 2 || count == 4, "Unsupported mover trial roster count");
         setup.set_stage("turbulence_mover_trial"); setup.set_player_count(count);
-        setup.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
+        setup.set_screen_layout(count == 1 ? ScreenLayout::one_player :
+            (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
         constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
         setup.begin_input_claims(count == 1 ? input_slots::keyboard_and_mouse : slots[0]);
         for (int view = 1; view < count; ++view)
         { require(setup.claim_input_slot(slots[static_cast<size_t>(view)]), "Trial sparse roster claim failed"); }
         for (int view = 0; view < count; ++view)
         {
-            setup.set_player_team(view, view == 0 ? first_team : (view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b));
+            setup.set_player_team(view, view == 0 ? first_team : (count == 2 ?
+                (first_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a) :
+                (view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b)));
             setup.set_player_weapon(view, WeaponType::sprayer);
         }
         return setup;
@@ -141,20 +145,26 @@ namespace turbulence_movers_acceptance
 
     void Trial::tick(const PlayerInputData& action, SeatInputFilter* next, float seconds)
     {
+        tick_inputs({ action }, next, seconds);
+    }
+
+    void Trial::tick_inputs(const std::vector<PlayerInputData>& actions, SeatInputFilter* next, float seconds)
+    {
+        require(actions.size() <= static_cast<size_t>(level->player_count()), "Too many mover-trial seat inputs");
         class Inputs final : public SeatInputFilter
         {
         public:
-            Inputs(const PlayerInputData& value, SeatInputFilter* inner) : value_(value), inner_(inner) {}
+            Inputs(const std::vector<PlayerInputData>& values, SeatInputFilter* inner) : values_(values), inner_(inner) {}
             void filter_seats(std::vector<PlayerInputData>& seats, const Level& source) override
             {
                 for (auto& seat : seats) { seat = input(); }
-                if (!seats.empty()) { seats[0] = value_; }
+                for (size_t index = 0; index < values_.size(); ++index) { seats[index] = values_[index]; }
                 if (inner_ != nullptr) { inner_->filter_seats(seats, source); }
             }
         private:
-            PlayerInputData value_;
+            const std::vector<PlayerInputData>& values_;
             SeatInputFilter* inner_;
-        } filter(action, next);
+        } filter(actions, next);
         level->update({}, seconds, &filter);
         if (seconds > 0.0f) { ++updates; }
         check();
@@ -180,7 +190,7 @@ namespace turbulence_movers_acceptance
         {
             const Player& actual = level->player(view);
             const auto& body = actual.rectangle();
-            require(actual.state() == PlayerState::alive && actual.health() > 0.99f,
+            require(actual.state() == PlayerState::alive && actual.health() > (allow_damage ? 0.0f : 0.99f),
                 "Mover route lost health or respawned at update " + std::to_string(updates));
             require(body.left() >= bounds_.left() - 0.05f && body.right() <= bounds_.right() + 0.05f &&
                 body.top() >= bounds_.top() - 0.05f && body.bottom() <= bounds_.bottom() + 0.05f,
