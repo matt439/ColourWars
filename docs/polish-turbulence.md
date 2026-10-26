@@ -300,8 +300,9 @@ crossover and its local face, team and raw keyboard-slot credit. Sniper paints
 the static approach: this is the concrete changed paint angle. Mister paints
 240/288 top area in two mover phases per side, versus 48 from the static
 control. Sprayer and Bucket instead favour this static station: Sprayer paints
-144 wall area there and no crossover face from the movers; Bucket paints 48
-top plus 864 wall area there and none from the movers. Roller paints neither
+144 wall plus 48 underside area there and no crossover face from the movers;
+Bucket paints 48 top, 864 wall and 48 underside area there and none from the
+movers. Roller paints neither
 receiver at this fixed-point separation. No extra pulse is added to force a
 miss into a hit, and samples are separate scenes rather than summed match score.
 
@@ -375,8 +376,35 @@ unchanged. Receipts are under
 
 The case is available explicitly, outside the default CI inventory, and authors
 its fresh candidate in its receipt directory. It registers no game content.
-Useful paint/shot windows, native composition, comparison with a scored slab
+The controlled Sniper checks below qualify one blocked line and reachable top
+paint; broader pressure, native composition, comparison with a scored slab
 and attended value remain open before selecting the geometry.
+
+**Composite shot/paint controls, 2026-10-26.** Both presets pass the separate
+`--tools` mode's six real LevelBuilder scenes, 2,526 updates and ten controlled
+placements after the full count-in and before neutral readiness. Each side has
+a two-player shoe-present scene, a matched scene whose editor document removes
+only that shoe, and a fresh solo top-paint scene. All actors remain supported;
+one ready Sniper pulse is paid and released, then observed for 180 updates.
+No actor is moved during readiness or observation.
+
+From the original lower bed at centre 1320 (or its mirror), the intact shoe
+gains 288 owned underside area at update 4 and the defender standing on the
+ramp keeps full health. Without that shoe, the same shot passes the existing
+ramp and causes nonfatal health loss at update 7, leaving 0.666 health. A solo
+source on the original upper approach at centre 1160 (or its mirror) paints
+288 shoe-top area at update 4, credited to raw keyboard slot 4. All six shots
+cost 0.3 reserve and naturally recover full reserve by the observation end.
+
+Receipts are under
+`out/validation/overnight-20261026/phase9/shoulder-tools-v2/`. The separate
+station-preflight CSV labels rejected crossover-origin proposals as geometric
+analysis, without pretending they were fired trials. Public projectile counts
+are snapshots, not a continuous trajectory trace. These controlled samples
+establish the flat shoe's underside blocking/painting and reachable top in the
+existing paint-pass ramp construction. They do not qualify sloped-face score,
+rotated-slab equivalence, other weapons/aims, earned travel, human response or
+competitive value. All eight source arenas and tuning remain unchanged.
 
 ## Tool and recovery hypotheses
 

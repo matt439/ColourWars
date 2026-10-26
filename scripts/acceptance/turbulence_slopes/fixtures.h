@@ -28,4 +28,5 @@ namespace turbulence_slopes_acceptance
     void author_trial(const fs::path& content, const fs::path& source, const fs::path& tuning, const fs::path& output);
     void geometry(Context& context);
     void routes(Context& context);
+    void tool_checks(Context& context);
 }
