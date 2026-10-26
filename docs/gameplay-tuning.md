@@ -129,7 +129,7 @@ Slices, in order:
 1. **Runner.** Device-free build, bots on all seats, CSV out, deterministic per
    seed. Acceptance: the same seed reproduces the same row bit for bit, and a
    short sweep on `crossfeed` completes inside the acceptance budget.
-2. **A `skirmish` bot.** `paint` and `chase` each play half the game. A bot that
+2. **A `skirmish` bot (implemented).** `paint` and `chase` each play half the game. A bot that
    paints, engages an opponent in range, retreats to refill and returns is the
    minimum for the numbers to say anything about tools rather than bots. It
    stays a developer tool: shipping AI opponents is outside the chosen scope
@@ -160,7 +160,7 @@ scripts/run-balance.ps1 -Stage crossfeed,press_tower -Seed 0,17 -Players 2 -Tool
 Stages and seeds form the sweep dimensions; tool order and the A/B/A/B roster
 are fixed for each invocation. One to four players are supported. Tools default
 to Sprayer per seat and the bot defaults to `paint`; the existing `idle`, `walk`,
-`jump` and `chase` behaviours are also available. `-OutputDirectory` chooses a
+`jump`, `chase` and `skirmish` behaviours are also available. `-OutputDirectory` chooses a
 fresh evidence directory and `-Csv` chooses a new CSV path. Existing CSVs and
 run directories are refused. `-SkipBuild` is for an already current Debug build;
 the tool itself is always freshly compiled. Run metadata pins source/data,
@@ -259,7 +259,46 @@ source baseline `e5256a5` and engine `1e60fb2`, source/producer/CSV pins,
 case logs and the separate CSV comparison are retained under
 `out/validation/todo-loop-20261025/tool1-lethal-native-v1/`.
 
-**Still open in TOOL#1:** final region/face-owned paint,
-the `skirmish` bot and the first full five-tool report. The short control above
+### Skirmish measurement bot
+
+`scripts/run-balance.ps1 -Bot skirmish` selects the new Debug-only policy.
+It paints, engages, withdraws to refill and returns, using actual full-shot
+affordability rather than positive ammunition alone. The
+[bot policy and limits](debug-console.md#skirmish-measurement-bot) describe
+the saved-X return/Y jump hint and tuning-derived stationary-launch heuristic.
+There is no line-of-sight, path or ballistic-intercept solver. Default `paint`,
+the earlier bots, schema-2 metrics and gameplay tuning remain unchanged.
+
+The `skirmish_bot` consumer case exercises policy transitions, death/reset,
+private RNG and deterministic input, actual five-tool observations, a real
+positive-but-unaffordable Sniper tank and unchanged old-bot observations.
+Release checks developer-code exclusion instead of running the policy.
+
+Qualification: Debug/Release game/editor builds and include-boundary checks
+passed. `skirmish_bot` and `debug_console` passed in both presets, plus Debug's
+`balance_runner` (five CPU cases). Four 4P, 60-second controls used
+Sprayer/Sniper/Mister/Bucket on Crossfeed and Press Tower at seeds 0/17;
+two 2P, 60-second controls used Roller/Sprayer on those stages at seed 0.
+Every new match ran 3601 active ticks. The primary four-row Skirmish CSV
+repeated byte-for-byte, and its reversed-order rows matched all 81 fields by
+key. The previous four-row, 20-second
+two-Sniper `paint` control retained its entire 81-column CSV bytes.
+These six new controls cover the tools across different rosters; the full
+comparative report and attended balance decisions remain open.
+
+The first Debug qualification stopped because an old CLI negative still
+expected registered `skirmish` to be rejected. That failed run remains under
+`tool1-skirmish-native-v1/`. Its passed Debug producers, dedicated Skirmish
+and console checks were retained with a frozen input/evidence record.
+The narrow fixture repair adds positive Skirmish parsing and uses a genuine
+unknown bot for the negative; no bot policy or gameplay changed. Fresh
+`tool1-skirmish-native-v2/` runs passed the affected Debug runner and remaining
+Release/public checks. Source baseline `95ac1e9`, engine `1e60fb2`, exact
+source/producer/CSV hashes, both comparison reviews and the preserved failure
+are under `out/validation/todo-loop-20261025/` in those native roots and
+`tool1-skirmish-prep-v1/`.
+
+**Still open in TOOL#1:** final region/face-owned paint
+and the first full five-tool report. The short control above
 qualifies the pipeline, not tool balance or human acceptance. No tuning value or
 shipping opponent behaviour changes in this slice.

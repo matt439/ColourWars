@@ -6,7 +6,7 @@ param(
     [ValidateRange(1,4)][int] $Players = 2,
     [ValidateRange(0.05,600.0)][double] $Duration = 60,
     [ValidateSet('sprayer','sniper','roller','mister','bucket')][string[]] $Tools,
-    [ValidateSet('idle','walk','jump','chase','paint')][string] $Bot = 'paint',
+    [ValidateSet('idle','walk','jump','chase','paint','skirmish')][string] $Bot = 'paint',
     [string] $Csv,
     [string] $OutputDirectory,
     [switch] $SkipBuild

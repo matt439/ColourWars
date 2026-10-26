@@ -142,12 +142,17 @@ namespace balance_runner
         const Options bounds = parsed({ L"--seed", L"4294967295", L"--stage", L"crossfeed", L"--stage", L"press_tower" });
         require(bounds.seeds[0] == std::numeric_limits<std::uint32_t>::max() && bounds.stages.size() == 2,
             "The complete uint32 seed range and repeated stage options must be supported");
+        const Options skirmish = parsed({ L"--seed", L"0", L"--players", L"4", L"--duration", L"0.25",
+            L"--tools", L"sniper,roller,mister,bucket", L"--bot", L"skirmish" });
+        require(skirmish.bot == "skirmish" && skirmish.seeds == zero.seeds &&
+            skirmish.players == zero.players && skirmish.tools == zero.tools && skirmish.duration == zero.duration,
+            "The registered skirmish bot did not preserve the CLI zero seed, concrete roster and duration");
         for (const std::vector<std::wstring>& invalid : std::vector<std::vector<std::wstring>>{
             { L"--players", L"0" }, { L"--players", L"5" }, { L"--seed", L"-1" },
             { L"--seed", L"4294967296" }, { L"--seed", L"1x" }, { L"--duration", L"nan" },
             { L"--duration", L"inf" }, { L"--duration", L"0" }, { L"--duration", L"601" },
             { L"--duration", L"0.05x" }, { L"--tools", L"sprayer" },
-            { L"--tools", L"sprayer,random" }, { L"--bot", L"skirmish" },
+            { L"--tools", L"sprayer,random" }, { L"--bot", L"not_a_bot" },
             { L"--stage", L"crossfeed", L"--stage", L"crossfeed" },
             { L"--seed", L"0", L"--seed", L"0" },
             { L"--players", L"2", L"--players", L"2" }, { L"--unknown", L"value" }, { L"--duration" }

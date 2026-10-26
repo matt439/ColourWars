@@ -166,7 +166,7 @@ running.
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
 | `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fifty-eight audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
-| `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
+| `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|skirmish\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
 | `record [name\|stop] [updates]`, `play <name\|stop> [force]`, `replays`, `checksum` | record every seat's input from a fresh build, replay it and compare, list recordings, print the running match's state hash |
 | `status` | stack depth, stage, seats (device, team, weapon, position, move state), clock, feedback, overlays, cheats, the stage's stations, anything queued |
@@ -930,6 +930,7 @@ device (or the neutral input of an idle dummy):
 | `jump` | walks, and jumps when blocked or every second or three, holding for a random time so the heights vary |
 | `chase` | walks at the nearest living opponent, jumps when it is above, aims and fires at it within range |
 | `paint` | roams like `jump`, sweeps its aim over the floor ahead and behind and fires until the tank is nearly empty, then lets it refill; an opponent close by is shot at instead |
+| `skirmish` | roams and paints, engages a nearby opponent using a tool-derived reach heuristic, withdraws without firing to refill, then returns toward its saved X or re-engages |
 
 - `bot all <behaviour>` drives every **idle dummy** of the current and later
   matches; `bot 2 chase` drives seat 2 whatever its device (the keyboard seat
@@ -961,6 +962,31 @@ repaint, result percentages, and real bot projectiles accounting for all held
 paint. The seeded real-Level recording still replays with matching checksums.
 Debug startup passed with an isolated save and graceful shutdown. Evidence is
 under `out/acceptance/{x64-debug,x64-release}/` and `out/validation/dbg3-startup/`.
+
+### Skirmish measurement bot
+
+Use `bot 2 skirmish` for a seat, `bot all skirmish` for idle dummies, or
+`ColourWars.exe +stage crossfeed +players 4 +bot all skirmish` in Debug.
+The [headless runner](gameplay-tuning.md#headless-balance-runner-tool1-2026-10-25)
+accepts `-Bot skirmish`; its default remains `paint` and existing bots retain
+their behavior.
+
+Skirmish paints while roaming, then approaches and fires at the nearest living
+opposing-team seat within its engagement heuristic. It refills when actual
+full-shot affordability is empty, even with positive ammunition, or its reserve
+falls to 15%. It withdraws without firing and waits for at least 80% reserve
+and full-shot affordability to return. Cooldown alone does not trigger refill.
+It then conserves that refill while returning to its saved X; saved Y is only
+a jump hint. A nearby enemy can interrupt the return. Death discards the old
+life's refill/return goal and releases a held jump.
+
+Reach uses current tool/projectile tuning for a stationary horizontal launch
+over at most 60 fixed updates (about one second), plus muzzle/body/collision
+extent. It is an engagement heuristic, not a hit-range guarantee: gravity,
+inherited velocity, diffusion, target motion and terrain are not solved.
+There is no line-of-sight test, route planner or ballistic intercept solver;
+the bot can fire into a wall or fail a route. Seeded developer measurements
+do not establish human comfort, arena acceptance or tool balance.
 
 ## Seed, record and play
 
