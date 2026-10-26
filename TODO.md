@@ -69,7 +69,8 @@ without attended play or new hardware. Finish one bounded slice at a time.
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
 - **Report filing:** the guarded resize request and example (`ENG#23`) are
-  prepared and locally qualified. Filing needs separate author authorization.
+  prepared and locally qualified, alongside the vibration-output draft (`ENG#25`).
+  Filing needs separate author authorization.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#9`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -172,14 +173,14 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The one live draft remains unfiled. Minimal engine-focused reports with
+`GAP#F*`. The two live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `GAP#F6` | OPEN | LOW | S | Recheck the engine API and draft the rumble request using the qualified isolated XInput exhibit; filing needs authorisation. The FPS half was answered by report 14 (`Application::frame_timings`). |
+| `ENG#25` | DECISION | LOW | S | Prepared vibration-output draft and qualified isolated XInput exhibit; author authorization and a fresh upstream recheck are required to file. Current task forbids filing. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output--draft-with-isolated-adapter-exhibit). |
 | `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 

@@ -451,7 +451,7 @@ presets. Phase-2 receipts are under `out/validation/overnight-20261026/phase2/`.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Report exhibit | After qualification, draft `GAP#F6` using the isolated `rumble_xinput.cpp` exhibit and recheck the engine API. Filing still needs separate author authorization. |
+| Report filing | [Report 25](review/engine-reports.md#25-no-public-controller-vibration-output--draft-with-isolated-adapter-exhibit) is prepared against published engine master `c03a6f6`. Filing needs separate author authorization and a fresh upstream recheck. |
 
 **Owner, settings page and native adapter qualified.**
 Pad sticks now has a per-slot Rumble row, with pending/Apply/Back semantics.
