@@ -159,6 +159,16 @@ revision; deliberately no SHA is written into docs, since it goes stale the firs
 time the pin moves. To move it, checkout the new revision inside the submodule,
 **build before committing**, then `git add external/labrador`.
 
+**The pin follows Labrador's releases.** When the engine tags a new minor or
+major version (`v0.2.0` → `v0.3.0`, `v1.4.2` → `v2.0.0`), move the pin to that
+tag **within a week of the tag**. A patch release may wait for the next reason
+to move. A first client that sits a release behind is reporting against an
+engine that no longer exists, and every week of drift makes the bump larger and
+the report ledger staler. If the bump can't land in that week, because it
+breaks the build or acceptance, the blocker goes in [TODO.md](TODO.md) and,
+where the engine is at fault, in the report ledger. Don't just leave the pin
+where it is.
+
 Engine changes belong in the Labrador repository, not here. `labrador_settings`
 — the `/W4 /WX` interface target every real target compiles against — is defined
 by the engine and deliberately *not* copied here; two definitions across two
