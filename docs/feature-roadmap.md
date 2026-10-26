@@ -395,7 +395,7 @@ before shipping it.
 
 ### Controller rumble (`ROAD#9`)
 
-**OPEN, 2026-10-25.** In a four-pad couch game rumble is the only private
+**Local implementation qualified, 2026-10-26; physical feel remains a decision.** In a four-pad couch game rumble is the only private
 per-player channel: the screen and speakers are shared
 ([gap audit F6](review/gap-audit.md)). The engine's `GamepadReader` exposes no
 vibration, so this is a client feature that also produces the exhibit for an
@@ -415,16 +415,92 @@ Acceptance is a CPU case over a fake vibration sink: which events pulse which
 seat, the per-seat setting and every stop condition. Feeling it needs pads
 (`ROAD#2`).
 
-The local work has three stopping points; each leaves a reviewable increment.
+The local work has bounded stopping points; each leaves a reviewable increment.
+
+**Pulse policy implemented, 2026-10-26.** `Rumble` borrows a nonthrowing sink
+and accepts caller-supplied profiles with normalized motor amplitudes and
+durations from zero to one second. Each event has its own timer; overlaps take
+the maximum per motor, and a repeated event refreshes only its own timer.
+Physical-slot and session gates cancel pulses instead of suspending them, so
+reconnect, re-enable and resume cannot revive old feedback. Explicit stop and
+destruction request zero for all four physical pads.
+
+The `rumble` fake-sink case passed in Debug and Release, covering all four
+events, overlap/expiry/repetition, sparse slots, keyboard/bot/replay/disabled
+and disconnected suppression, every stop condition and invalid-input atomicity.
+Receipts are under `out/validation/overnight-20261026/` (`runtime` and `release`).
+The policy test values are not authored cue tuning or a physical-feel result.
+
+**Data and event intents implemented, 2026-10-26.** `PlaySettings.pad_rumble`
+holds four default-On slot flags; the save writes `pad_rumble` as four
+`{"enabled": bool}` records, recovering missing/malformed entries independently.
+Four named pulse records now live in `tuning.json` with contextual finite/range
+validation. Their values are provisional until physical-pad review.
+
+Actual nonfatal damage, the once-only elimination transition, the existing hard
+landing decision and the rate-limited empty-trigger warning emit coalescing
+feedback flags. Player merges its weapon's flags; Level drains them with each
+player's physical input slot. Placement/respawn and explicit discard clear them.
+There is no hardware call in those gameplay objects; GameLevel output follows below.
+
+Debug/Release `rumble`, `settings` and `gameplay_tuning` pass, including actual
+callers, sparse slots, frozen/spawn/cooldown/immune controls, save recovery and
+failure, and exact gameplay/RNG/Debug-fingerprint invariance while draining.
+`combat_feedback`, `weapon_feedback` and `movement_contact` also pass in both
+presets. Phase-2 receipts are under `out/validation/overnight-20261026/phase2/`.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Pulse policy and fake sink | Define bounded motor amplitudes, durations and deterministic overlap behavior for the four existing events. Drive a fake sink through pulse expiry, repeated events, pause, focus loss, disconnect, match exit and destruction; no native motor calls are needed for this slice. |
-| Settings and gameplay callers | Add the saved per-slot On/Off and authored pulse values, then connect actual hit, elimination, hard-landing and dry-trigger callers. Check sparse/reordered rosters, unrelated settings, default/recovered saves and disabled slots. Bots, replays and the keyboard seat must produce no motor output. |
-| Native hook and report exhibit | Put the slot-to-`XInputSetState` call and its stop path in one isolated file; unavailable/disconnected hardware must remain harmless. Qualify the callers with the fake sink, then draft `GAP#F6` with that file as the exhibit after rechecking the engine API. Filing still needs separate author authorization. |
+| Report filing | [Report 25](review/engine-reports.md#25-no-public-controller-vibration-output--draft-with-isolated-adapter-exhibit) is prepared against published engine master `c03a6f6`. Filing needs separate author authorization and a fresh upstream recheck. |
+
+**Owner, settings page and native adapter qualified.**
+Pad sticks now has a per-slot Rumble row, with pending/Apply/Back semantics.
+It merges only explicitly edited rumble slots; the suspended Controls parent
+preserves the child's committed rumble flags alongside its stick settings.
+Authored help/status and row/font/bounds validation include that setting.
+
+GameLevel owns the sink and policy, ages pulses once per outer update and
+consumes every completed simulation step's events by physical input slot.
+Focus, coverage, pause/count-in, Debug pause/overlay, automation through
+`drives_slot`, connection and active-match state gate output. Stops discard
+pending events; rebuild stops the old policy before Level teardown and adopts
+the current authored profile. Time-up stops at the transition out of active
+play, before the later Results page. Sink lifetime covers policy destruction
+and initialization/rebuild unwind.
+
+`game/rumble_xinput.cpp` isolates SDK types, normalized-to-16-bit conversion,
+`XInputSetState`, failure handling and the transport-level lifetime stop. It
+links SDK `Xinput.lib`, matching the current DirectXTK reader's XINPUT1_4 import.
+The injected overload checks conversion/invalid-input/failure/stop intent without
+calling the native transport. Failures are nonfatal, without retries or log spam.
+
+Every painter mode, the separate display-awake lifecycle harness and the
+frame-pacing harness omit that native object and supply the recording default
+factory, including indirect GameMenu-to-GameLevel construction. `RumbleOnly`
+adds actual owner lifecycle/automation checks and a settings-page witness with
+isolated saves. The replay gate witness deliberately injects a damage event
+and stops before its next checkpoint; it establishes output suppression, not
+new replay determinism.
+
+Both game builds, `rumble_adapter`, `rumble`, `settings`, `stick_settings`,
+`menu_presentation`, `gameplay_tuning` and isolated system-path startup pass in
+Debug and Release. Release `menu_text` passes. Both-preset `RumbleOnly` runs
+passed: Debug records 15 owner cases and Release 11, with two sinks constructed
+and destroyed in each. Each also passes eight actual settings-page cases,
+including sparse owner isolation, pending/Apply/Back, save failure/retry and
+parent/edited-slot merges. Their fake factories record zero native motor calls.
+The separate display-awake lifecycle probe also passes both presets with the
+native rumble object omitted. The retained settings images were visually
+inspected. Phase-5 receipts are under `out/validation/overnight-20261026/phase5/`.
+The affected Debug Controls/Sticks/percentage matrices pass with six Sticks
+rows and the corresponding 144-update percentage budget. A stale child-Apply
+navigation fixture was corrected without changing production focus behavior.
+The frame-pacing harness compiles with its fake factory; no performance capture
+was run. The metadata audit narrows RumbleOnly to its actual three-player sparse
+roster and default Random palette selection, with no palette comparison.
 
 Do not close the physical feel review with fake-sink results. The native hook
-does not require a pad to build, and the queued implementation does not claim
+does not require a pad to build, and the implementation does not claim
 that its four candidate pulses feel distinct or comfortable.
 
 ### Input devices and seats
@@ -619,9 +695,9 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 ## Action bindings (`GAP#4.2`)
 
 **Default evaluators and keyboard Jump rebinding are implemented and validated.**
-**Next slice: OPEN (`GAP#4.2`), Pad 1-4 Jump face-button selection.** The face
-button defaults to A; the existing LT alias remains alongside every choice.
-Broader action and trigger rebinding remain unscoped; the bounded contract is
+**Keyboard and per-slot Pad Jump selection are implemented and qualified (`GAP#4.2`).**
+The face button defaults to A; the existing LT alias remains alongside every
+choice. Broader action and trigger rebinding remain unscoped; the bounded contract is
 [below](#pad-jump-face-button-slice-gap42).
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
@@ -783,8 +859,8 @@ listening, balance, hardware-baseline or performance acceptance.
 
 ### Pad Jump face-button slice (`GAP#4.2`)
 
-**OPEN, scoped 2026-10-26.** The next local increment lets each XInput slot
-choose A, B, X or Y as its gameplay Jump face button, default A. LT remains an
+**Scoped pad slice implemented and qualified, 2026-10-26.** Each XInput slot
+can choose A, B, X or Y as its gameplay Jump face button, default A. LT remains an
 independent Jump source with the existing live threshold and alias-edge rules.
 Use a discrete choice rather than a new pad-capture interaction. The existing
 Pad 1-4 selector and pending/Apply/Back flow establish the menu pattern; retain
@@ -796,15 +872,54 @@ Back debug, RT shooting, sticks and analog drop retain their current mappings.
 A face button's menu role is not a gameplay binding conflict. There is no
 unbound-Jump option or trigger reassignment in this increment.
 
-| slice | deliverable and acceptance |
-|---|---|
-| Model, save and evaluator | Extend the independent input preferences with four validated face-button choices and stable save tokens. Missing choices retain A; define local recovery for malformed choices without discarding keyboard Jump or unrelated settings. Actual `PlayerInput` must use the selected slot's effective binding. Check all four choices, sparse/reordered rosters, save/load/reset, failed writes and held input during adoption. |
-| Page and controls help | Add a Pad Jump child with slot and face-button selectors, current-slot defaults, Apply and Back. Pending edits stay local until Apply; closing discards them. Save only this page's scope. Its help names the selected slot's Jump button and retained LT alias; shared Controls help points to the per-pad choice instead of promising A for every pad. Keep menu controls explicit and unchanged. Validate actual font bounds and page ownership from main-menu and paused routes. |
-| Integration and replay | Exercise actual readers and pages with scripted snapshots: the former button is neutral after remapping, LT crossing while the face button is held still presses Jump, and first poll/reconnect/focus/resume produce no invented edge. Check Apply/Back and per-slot isolation, then record/play through the existing post-mapping `PlayerInputData` route with different saved choices. |
+**Model/save/evaluator implemented, 2026-10-26.** `InputBindings.pad_jump`
+holds four physical-slot choices and writes canonical `a`/`b`/`x`/`y` tokens
+under the existing version-3 `input_bindings` section. Missing/malformed slots
+recover independently to A while valid keyboard and other pad choices survive.
+The actual `PlayerInput` caches each slot's effective binding, retaining LT and
+source-level engine edges when a saved choice changes during held input.
+Keyboard Jump Apply merges its key into the latest preferences so it cannot
+overwrite newer pad choices.
 
-The first stopping point is the model/save/evaluator slice. It can be qualified
-without physical hardware; no new engine input API or rebinding artwork is
-needed. Synthetic devices establish mapping behavior. Physical-pad comfort
+Debug/Release game builds and `input_bindings`, `action_bindings`,
+`keyboard_jump_capture`, `settings`, `remembered_setup` and `resume_countdown`
+passed. Coverage includes all choices/slots, sparse slots, LT alias edges,
+held adoption, suspend/reconnect/resume, local save recovery, failed writes,
+reset and unrelated preferences. Receipts are under
+`out/validation/overnight-20261026/` (`input` and `release`).
+
+**Page/help and mapped replay qualified.** Controls now opens `PadJumpMenu`,
+with physical-slot and face-button selectors, Reset this pad, Apply and Back.
+Pending choices survive slot changes. Apply merges only edited slots into the
+latest preferences; keyboard and untouched slots survive. Reset is pending for
+the selected slot, and Back discards unapplied changes. Default selection follows
+the pausing physical slot, otherwise the first connected pad, otherwise Pad 1.
+
+Shared help names the per-pad choice and LT instead of promising A everywhere.
+The opening reminder names the actual sparse roster's buttons and refreshes
+while paused without ticking the Level. Menus still use A/B/X and intro skip
+still uses A/B/Start. The ten-row Controls layout uses the existing Lato font,
+64-unit spacing and valid 8-unit focus padding; no art-rule guard is relaxed.
+
+`check-painter.ps1 -KeyboardJumpOnly` now checks both binding pages. Debug and
+Release passed at 720p/1080p: 32 physical-slot/face Apply/reloads, 65 independent
+native help/status glyph pairs, pending merge/reset/discard, controlled save
+failure/retry, parent audio preferences, connected-owner isolation and selected-B
+menu Back. Two actual paused page routes qualify reminder refresh/reversal with
+unchanged Level fingerprints, and mixed four-pad reminders fit their cards.
+The retained entry/reminder images were visually inspected; this is automated
+native rendering and synthetic input, not an attended pad session.
+
+Debug additionally records 360 actual-reader updates for reordered slots through
+the production post-mapping recorder/file/player path. Persisted alternate face
+choices change live input on 111 frames; replay from decoded settings preserves
+every seat stream, fingerprint, six checkpoints, final state and terminal RNG.
+Release explicitly excludes that developer replay path. The Release `menu_text`
+case and both-preset `menu_presentation` checks also pass. Phase-3 native and
+CPU receipts are under `out/validation/overnight-20261026/phase3/`.
+
+No new engine input API or rebinding artwork was needed. Synthetic devices
+establish mapping behavior. Physical-pad comfort
 remains `ROAD#2`, and attended readability, balance and hardware acceptance stay
 open.
 
@@ -882,14 +997,13 @@ no physical-pad, attended readability or performance acceptance.
 abstraction beyond the existing `OptionRow`; a list of unused toggle, slider,
 progress or modal types is not an implementation task.
 
-`GAP#D5` is **OPEN** with the Turbulence blockout (`POL#21`, 2026-10-25). Its
-brief, offset platforms and crossing routes that reward repositioning, is the
-first layout where a moving platform earns its place. Add rotated and moving
-structures behind the builder with a useful arena placement for each, and
-collision, support, paint and editor acceptance for that layout. Moving support
-needs the player to ride it, paint on it to stay owned by its face, and replays
-to stay deterministic. Choose placements during blockout rather than altering
-the geometry under style review; Crossfeed and Press Tower stay static.
+`GAP#D5` is **complete for the selected bounded capability** (2026-10-26).
+The [qualification below](#horizontal-movement-capability-2026-10-26) covers
+horizontal movers and mirrored fixed scored slabs through runtime/editor
+construction, collision/support, local paint, public routes/replay and native
+composition. Their useful placements remain explicit-only Turbulence
+comparisons; attended selection and balance are `POL#21`. Arbitrary moving
+rotation is outside this contract. Crossfeed and Press Tower stay static.
 
 ### Horizontal movement capability (2026-10-26)
 
@@ -911,8 +1025,8 @@ short lifetime while painting each moving pair once. Existing static paths keep
 their original arithmetic.
 
 Optional moving state participates in Debug fingerprints and replay format 3.
-The qualified record/play factory is a fresh, manually constructed seeded Level;
-this is not yet a public stage-loader replay path. Class layouts remain the same
+The first qualified record/play factory was a fresh, manually constructed seeded
+Level; public stage-loader qualification is recorded below. Class layouts remain the same
 in Debug and Release.
 
 Qualification is retained under `out/validation/todo-loop-20261025`:
@@ -938,21 +1052,142 @@ without a failure diagnostic and is **not qualified**; it is not repeated here.
 The full Press Tower balance case was not run for this increment. Their bounded
 static identity controls above pass; this is no new balance or performance claim.
 
-**Remaining implementation, in dependency order:**
+**Runtime JSON and object construction implemented, 2026-10-26.** Optional
+`StructurePaintable.motion` loads the existing horizontal trajectory through
+the production object builder; missing motion retains the static constructor.
+The [format contract](level-format.md#horizontal-paintable-motion) records the
+field limits and the separate scene/player admission checks. Movers no longer
+act as permanent static paint/material occluders; matches and stage previews
+compose translated shadows from their actual mover owners. Envelope-aware
+editor authoring is recorded below.
 
-| milestone | bounded scope and acceptance |
-|---|---|
-| 1. Runtime JSON and diagnostics | Define and load an explicit horizontal-motion record for the existing axis-aligned triangular path on solid or jump-through flat paintables: finite representable anchor, positive travel to a distinct endpoint, period of at least two simulation steps and phase in [0,1). Missing motion preserves static behavior. Reject malformed/unsupported motion with a stage/object diagnostic; retain the finite-rate, displacement, lifetime and open-support-corridor admission restrictions. Check malformed records and unchanged static fixtures before adding an arena placement. |
-| 2. Public builder and replay rebuild | Construct the existing mover through `LevelObjectBuilder`/`LevelBuilder`, then record and replay a fresh public-loader stage. Check stable admission IDs, authored initial phase, seeded rebuilds, local-face paint/credit, rider release, zero-step/reversal behavior and fresh-build fingerprints; the manual factory qualification above does not substitute for this path. |
-| 3. Editor authoring and round trip | Add the [moving-structure authoring contract](level-editor.md#moving-structure-authoring-gapd5): preserve existing records, edit supported motion fields and show the complete travel envelope. Save/reopen/build the same fixture with the same motion and diagnostics; existing static stages must round-trip unchanged. |
-| 4. Smallest useful static rotated structure | Use the [Turbulence blockout brief](polish-plan.md#turbulence-blockout-work-pol21) to select one useful fixed orientation and footprint, then define its collision/support and local-face paint contract before implementing it. Qualify builder/editor round trips, projectile contacts, scoring, art/culling/shadow alignment and the required route. This is static geometry; arbitrary rotating or combined moving/rotating bodies are outside the slice. |
+Debug/Release game/editor builds, `level_format`, `moving_structure`,
+`paint_surfaces`, `terrain`, `stage_selection` and editor document acceptance
+passed. Tests cover malformed records, authored phase, deterministic fresh object
+construction, admission refusal, moving shadow ownership and static occlusion;
+that increment did not exercise a public `LevelBuilder` replay rebuild. Receipts are
+under `out/validation/overnight-20261026/` (`runtime`, `release`, editor logs).
 
-Milestone 1 is the next local implementation step. Keep each milestone bounded
-and preserve the existing hierarchy and static arithmetic. The
+**Public rebuild/replay qualified, 2026-10-26.** The `moving_structure` case
+now writes complete stages and rereads them into fresh registries through
+`LevelLoadedInfo` and `LevelBuilder`. Both presets qualify authored phases,
+mover-only IDs, disk rebuilds, zero-step history and stage-named unsafe admission.
+Debug additionally records/serializes/reads/rebuilds solid and one-way stages:
+360 exact updates each, six checkpoints each, final state and terminal RNG.
+The traces prove actual carry, paid local-face paint/credit, jump release,
+one-way drop release and both reversals. Rebuild uses the decoded stage, setup,
+seed and step; it does not reuse the recording's Level or manual factory.
+
+Receipts are under `out/validation/overnight-20261026/phase2/` (`runtime-v2`,
+`release`, and the printed task-owned replay receipt path). This qualifies
+production `ReplayRecorder`/`ReplayPlayer` with the public builder; DebugDirector
+command/restart adapters and native/human acceptance are separate. The existing
+legacy-byte/hash checks also pass. Release excludes the developer replay path.
+
+**Editor authoring and round trips qualified, 2026-10-26.** The
+[editor contract](level-editor.md#moving-structure-authoring-gapd5) now supports
+solid and one-way movers, anchor/property edits, safe duplication, undo/redo
+and saved round trips while preserving unknown metadata and rectangle/TLBR
+precedence. Source `player.size` supplies the complete standing corridor; mover
+documents require an explicit tuning-file context. The editor and runtime share
+an engine-free field/envelope contract with the existing arithmetic and messages.
+Actual-player rate/displacement checks remain in `Level`.
+
+The canvas shows the anchor, initial-phase body, complete travel and expanded
+standing corridor. Motion paint is counted once in anchor space; changing phase
+only translates scoring-guide locations, including across fractional float
+boundaries. The actual editor model is included in `moving_structure` acceptance:
+its saved stage loads through `LevelBuilder` with local paint/material checks,
+and Debug records/rebuilds 180 exact updates with carry, paid local-face credit
+and terminal RNG. Document checks cover both collision kinds, transactional
+geometry edits, duplication, metadata, changed source sizes and scoring.
+
+Current-source editor builds/document checks and `moving_structure` passed in
+Debug and Release after the fractional-area correction. Debug includes the
+180-update editor-save replay and 720-update solid/one-way public replays;
+Release explicitly excludes developer replay. Receipts are under
+`out/validation/overnight-20261026/phase4/` (`editor-*` and `mover/`).
+The continuous editor strip sum and gameplay's float tile aggregation have
+separate rounding; qualification checks phase invariance within each and
+reconciles the published tile areas. This implementation does not close native
+composition, attended editor/play, physical-pad or Turbulence acceptance.
+
+**Fixed scored-slab core qualified in Debug and Release, 2026-10-26.**
+`FixedSlabPaintable` adds one fixed 160-horizontal/80-rise footprint with
+24-unit normal thickness, mirrored left/right. It retains the game's
+`Structure`/`PaintableObject` hierarchy. The separate Player support path uses
+the real top segment; caps and underside stay solid. Actual Scene courses
+cover driven joins, stops, jumping, both contact orders, repeated uphill
+ceiling stops without creep, reversal and recovery. Legacy static arithmetic
+remains on its existing paths.
+
+Flying paint selects the actual first impact using four-axis swept SAT for
+the current linearly changing projectile boxes. Empty AABB corners, diffusion,
+launch departure versus crossing, and enemy/cover ordering are qualified.
+Paint ownership and credit stay in local tiles; published world quads carry
+their authoritative local areas. A shared checked canonical adjacency helper
+prevents OBB reconstruction drift from creating buried-face score, while
+retaining real authored gaps. The editor exposes the
+[same bounded contract](level-editor.md#fixed-scored-slab-authoring-gapd5),
+with transactional edits, save/reopen and reciprocal polygon face clipping.
+
+Both game/editor builds, the full editor document/hidden-window checks and
+`fixed_slab` pass. Per preset, the case includes 18 actual Scene courses over 3,684 updates,
+560 independent SAT probes, real projectile/credit controls, fresh public
+1/4-player loads over 386 updates and seven paired editor/runtime refusals.
+The isolated 24-object trial preserves all 22 mover-trial objects and remains
+unregistered. Twelve focused existing cases also pass in both presets: movement/contact,
+paint surfaces/underfoot, movers, blocked shots, tunnelling, terrain, format,
+stage selection, lethal provenance and ammunition. Receipts are under
+`out/validation/overnight-20261026/phase11/` (`slab-v4`, `regression`) and the
+editor receipts linked above. New slab CPU receipts are `slab-v4/x64-debug/fixed-slab-29548`
+and `regression/x64-release/fixed-slab-35444`.
+
+**Native composition qualified, 2026-10-26.** The fixed-slab probe passes both
+presets: 29 frames, 71 pane crops, 59 readbacks and 3,080 updates across all
+split layouts, including four fresh wet-paint controls. Its visual base bands
+remove measured primer pinholes while retaining every scoring tile and owner.
+The [arena record](polish-turbulence.md#why-the-new-geometry-earns-its-place)
+owns the exact inventory, six interior-pixel controls, frozen-state checks and
+receipts. These hidden captures do not establish attended readability or value.
+
+**Local public Roller role qualified, 2026-10-26.** Both presets pass eight
+fresh public input-driven routes comparing the fixed slabs with the retained
+composite. The 3,824 updates and 320 paid firing updates establish partial
+diagonal-top paint with unchanged tuning, supported endpoints and natural
+refill. Directional paint and airborne-contact differences are measurements;
+the [arena record](polish-turbulence.md#why-the-new-geometry-earns-its-place)
+owns their exact areas and limits. Fresh public replay remains separate.
+
+**Fresh public replay qualified, 2026-10-26 (Debug).** Production recording,
+codec and playback pass four mirrored uphill/downhill pairs from fresh decoded
+public disk rebuilds. Every active fingerprint and complete paint/credit sample
+matches. The first 180 countdown updates have no input-filter callback, so each
+record/rebuild pair compares those cold priming observations separately before
+its actual tape. The 1,192 tape updates, sixteen checkpoints, four malformed
+codec controls and one 240-update wrong-checkpoint control use 4,064 actual
+Level updates. The [arena record](polish-turbulence.md#why-the-new-geometry-earns-its-place)
+owns the exact scope and receipts; stock DebugDirector cold playback and
+cross-build determinism remain outside this proof. Release excludes this mode.
+
+**Bounded capability work complete.** Runtime/editor construction, local paint,
+support/projectile contacts, public driven routes/replay and native composition
+now qualify the selected horizontal movers and mirrored static scored slabs.
+This finishes `GAP#D5`; arena pressure and geometry selection remain `POL#21`.
+
+The explicit-only `turbulence_mover_trial` now uses the authored pair beside
+the preserved static arena. Both-preset route and native composition checks,
+Debug seeded public rebuilds and the Release local five-tool comparison are
+recorded in the [arena owner](polish-turbulence.md#why-the-new-geometry-earns-its-place).
+The concrete added role is a Sniper crossover-top paint angle at all four
+sampled phases; the other tools retain different static/moving tradeoffs.
+
+Arbitrary or combined moving/rotating bodies remain outside the implemented
+contract. Preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
 useful placements and route/side-swap qualification; attended arena acceptance
-remains a separate gate. No shipped arena uses the new mover yet. `GAP#D5` and
-`POL#21` stay open; human/device gates and provisional weapon balance stay
+remains a separate gate. The mover comparison stays out of Random. `POL#21`
+stays open; human/device gates and provisional weapon balance stay
 unchanged.
 
 ## Presentation rate (`GAP#L9`)

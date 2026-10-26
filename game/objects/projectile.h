@@ -127,6 +127,9 @@ private:
 	void resolve_sweep(const mattmath::RectangleF& start,
 		const mattmath::RectangleF& finish,
 		std::span<labrador::CollisionObject* const> objects, bool launch);
+	void resolve_fixed_slab_sweep(const mattmath::RectangleF& start,
+		const mattmath::RectangleF& finish,
+		std::span<labrador::CollisionObject* const> objects, bool launch);
 
     void resolve_translating_contacts(const mattmath::RectangleF& start,
         const mattmath::RectangleF& finish,

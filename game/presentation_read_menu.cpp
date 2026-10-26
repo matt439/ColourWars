@@ -626,16 +626,16 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": controls_position and controls_size must fit inside box_size.");
 		}
 
-		// Six settings, Keyboard Jump and Apply/Back share the left column. Reserve their
+		// Six settings, Keyboard/Pad Jump and Apply/Back share the left column. Reserve their
 		// authored size, focus card and shadow before the help and status text.
 		const Vector2F last_row_bottom = menu.layout.position + menu.layout.size +
-			Vector2F(menu.layout.spacing.x, menu.layout.spacing.y * 8.0f);
+			Vector2F(menu.layout.spacing.x, menu.layout.spacing.y * 9.0f);
 		const Vector2F rows_bottom = last_row_bottom + menu.art.focus_padding + Vector2F(menu.art.shadow_offset);
 		if (rows_bottom.x >= menu.controls_position.x || rows_bottom.y >= bottom.y ||
 			menu.layout.spacing.x <= menu.layout.size.x + menu.art.focus_padding.x ||
 			menu.layout.spacing.y < menu.layout.size.y + menu.art.focus_padding.y * 2.0f + menu.art.shadow_offset)
 		{
-			throw std::runtime_error(json.where() + ": layout.position, layout.size and layout.spacing must keep nine rows "
+			throw std::runtime_error(json.where() + ": layout.position, layout.size and layout.spacing must keep ten rows "
 				"and their focus cards inside box_size and before controls_position.");
 		}
 		if (menu.heading_position.y >= menu.layout.position.y - menu.art.focus_padding.y ||
@@ -643,7 +643,7 @@ namespace presentation_read
 			menu.status_position.y <= rows_bottom.y || menu.status_position.x >= menu.controls_position.x)
 		{
 			throw std::runtime_error(json.where() + ": heading_position, controls_position and status_position must order "
-				"the heading, nine rows and status without overlapping the help column.");
+				"the heading, ten rows and status without overlapping the help column.");
 		}
 
 		// Validate the shared page layout first so its diagnostics still identify

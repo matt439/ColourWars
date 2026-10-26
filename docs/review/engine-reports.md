@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **One is live as an unfiled draft with an exhibit (23), found after the
+> **Two are live as unfiled drafts with exhibits (23 and 25), found after the
 > engine's last answers. Twenty-three are closed** and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
@@ -161,8 +161,9 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | prepared and qualified locally 2026-10-24; upstream checked 02:24:30 UTC at pin `19cf650`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
+| 25 | No public controller vibration output | [Isolated XInput adapter](../../game/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | prepared locally 2026-10-26; published master checked at `c03a6f6`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
 
-Nothing else is outstanding, on either side, beyond report 23 below and the
+Nothing else is outstanding, on either side, beyond reports 23 and 25 below and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -237,6 +238,48 @@ when the window is hidden, matching `leave_fullscreen`.
 
 `SettingsProbeActivationGuard` and its five uses; each fixture keeps its
 hidden/not-foreground requirement as the regression check.
+
+---
+
+## 25. No public controller vibration output - **draft with isolated adapter exhibit**
+
+**Upstream checked 2026-10-26, 14:55 UTC.** GitHub's published `master` resolved
+to [`c03a6f653f3d524fae53b6cb662074ec3f2bb48a`](https://github.com/matt439/Labrador/commit/c03a6f653f3d524fae53b6cb662074ec3f2bb48a).
+The immutable [Gamepads header](https://github.com/matt439/Labrador/blob/c03a6f653f3d524fae53b6cb662074ec3f2bb48a/engine/input/gamepads.h),
+[reader header](https://github.com/matt439/Labrador/blob/c03a6f653f3d524fae53b6cb662074ec3f2bb48a/engine/input/gamepad_reader.h),
+`gamepad.h` and XInput reader implementation still expose snapshots, edges,
+connection and suspend/resume, with no vibration output or capability query.
+Separate repository issue searches for rumble and vibration returned no match.
+This check did not move the client's engine pin or change the engine checkout.
+
+**Exhibit.** [game/rumble_xinput.cpp](../../game/rumble_xinput.cpp) converts two
+normalized motor amplitudes into 16-bit speeds and calls `XInputSetState` using
+the same physical user indices as the engine's reader. ColourWars consequently
+names a native pad API and links SDK `Xinput.lib` outside that reader's backend.
+The [factory seam](../../game/rumble_sink.h) isolates this exception. Its injected
+transport exercises conversion, invalid-value stop, slot bounds, unavailable
+devices, failure and lifetime stop through the same adapter code.
+
+**Reproduction and expected result.** A client can read slot 0 through
+`Application::gamepads()->state(0)`, but neither that service nor its reader has
+an operation for setting that slot's motor output. The client must add a second
+native transport, as this exhibit does. A small engine output operation using
+the existing slot contract would remove that transport. Keep pulse timing,
+game events, per-slot preferences, pause/replay/bot gates and ownership in the
+client; they are not part of this request. Unsupported/disconnected output
+should be a defined harmless result. Zero output must have an explicit stop
+meaning. Exact spelling, validation and backend support remain engine decisions.
+Capability discovery is a separate proposal: this client has no demonstrated
+capability-dependent caller, so the report does not require one.
+
+**Qualification and limits.** Both game presets and `rumble_adapter` pass;
+the callback-only case never invokes XInput. Both-preset actual-GameLevel and
+settings probes use a recording factory, including lifecycle and automation
+gates. No physical motor or feel acceptance is claimed. Receipts are under
+`out/validation/overnight-20261026/phase5/`. An engine answer could replace the
+native request/factory and direct SDK dependency; the client policy and its
+regressions remain useful. This is a local draft, not a filed issue. Separate
+authorization and a fresh upstream recheck are required before filing.
 
 ---
 

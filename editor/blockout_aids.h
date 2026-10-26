@@ -27,6 +27,9 @@ namespace colourwars_editor
         Rect strip;
         bool along_x = false;
         bool leading = false;
+        // Slab strips retain authoritative local area in strip and their real
+        // world quad here. Flat/moving strips keep the original rectangle path.
+        std::optional<PaintPolygon> polygon;
     };
 
     BlockoutTuning load_blockout_tuning(const std::filesystem::path& path,

@@ -17,6 +17,7 @@
 #include "game/states/results_audio.h"
 #include "game/states/match_start.h"
 #include "game/display_awake.h"
+#include "game/rumble_sink.h"
 
 // Stack shapes during a session:
 //
@@ -90,6 +91,9 @@ private:
 	MenuLevelSettings settings_ = MenuLevelSettings();
 	MatchStart start_ = MatchStart::developer;
 	Session session_;
+	// The sink outlives every policy, including reset/unwind during a rebuild.
+	std::unique_ptr<RumbleSink> rumble_sink_;
+	std::unique_ptr<Rumble> rumble_;
 	std::unique_ptr<Level> level_ = nullptr;
 	std::unique_ptr<LevelBuilder> level_builder_ = nullptr;
 	std::unique_ptr<PlayerInput> player_input_ = nullptr;
@@ -97,6 +101,7 @@ private:
 	bool covered_ = false;
 	bool pause_menu_open_ = false;
 	bool focus_interrupted_ = false;
+	bool background_continuing_ = false;
 	ResumeCountdown resume_countdown_;
 	std::unique_ptr<ResumeAudio> resume_audio_;
 	std::unique_ptr<ResultsAudio> results_audio_;
@@ -122,6 +127,9 @@ private:
 	// active and the debug clock is not paused. Arena music may remain ducked.
 	bool audio_may_play() const;
 	void update_music(float dt);
+	void stop_rumble() const noexcept;
+	void sync_rumble();
+	void drain_rumble(float dt);
 
 	// DebugMatchTarget, for the developer tools only.
 	const MenuLevelSettings& debug_settings() const override;
@@ -133,6 +141,7 @@ private:
 	bool debug_level_finished() const override;
 	const Level* debug_level() const override;
 	void debug_sync_audio() override;
+	void debug_background_changed() override;
 	std::vector<std::string> debug_status() const override;
 	void debug_set_overlays(const LevelOverlays& overlays) override;
 	void debug_set_player_text(bool showing) override;

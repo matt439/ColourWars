@@ -148,7 +148,9 @@ try {
     $objectDirectory = Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir'
     $objects = @(Get-ChildItem -LiteralPath $objectDirectory -Filter '*.obj' -File -Recurse |
         Where-Object {
-            if ($_.Name -eq 'main.cpp.obj') { return $false }
+            # GameMenu can construct GameLevel indirectly; its test factory
+            # must never resolve to the physical motor adapter.
+            if ($_.Name -in @('main.cpp.obj', 'rumble_xinput.cpp.obj')) { return $false }
             if ($_.Name -eq 'cmake_pch.cxx.obj') { return $true }
             $sourceRelative = $_.FullName.Substring($objectDirectory.Length + 1)
             $sourceRelative = $sourceRelative.Substring(0, $sourceRelative.Length - '.obj'.Length)
@@ -183,7 +185,7 @@ try {
     $arguments += @($objects | ForEach-Object { Quote-Path $_.FullName })
     $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
     $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib', 'gdi32.lib',
-        'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'uuid.lib', 'comdlg32.lib', 'advapi32.lib')
+        'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib', 'Xinput.lib')
     $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
     Invoke-Logged $cache.CMAKE_CXX_COMPILER @("@$responseFile") (Join-Path $run 'compile.log')
     $result.executable = $executable

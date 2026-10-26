@@ -90,7 +90,7 @@ namespace
 			actual.sfx_volume == wanted.sfx_volume &&
 			actual.view_shake == wanted.view_shake &&
 			actual.aim_marker == wanted.aim_marker &&
-			actual.reduce_effects == wanted.reduce_effects,
+			actual.reduce_effects == wanted.reduce_effects && actual.pad_rumble == wanted.pad_rumble,
 			"Shared play preferences did not survive reloading");
 		for (int slot = 0; slot < input_slots::pad_count; ++slot)
 		{
@@ -290,6 +290,67 @@ namespace
 		}
 	}
 
+	void check_rumble_loading(const IsolatedSaveDirectory& directory)
+	{
+		const auto check = [&](const std::string& member, const std::array<bool, input_slots::pad_count>& expected)
+		{
+			write_stick_fixture(directory, ",\"pad_sticks\":[{\"movement_deadzone\":25,\"aim_deadzone\":35}]" + member);
+			Save restored;
+			restored.load_save_file();
+			require_fixture_preferences(restored);
+			require(restored.play_settings().pad_rumble == expected &&
+				restored.play_settings().sticks[0].movement_deadzone == 25 &&
+				restored.play_settings().sticks[0].aim_deadzone == 35,
+				"Rumble recovery lost physical-slot association or reset unrelated stick preferences");
+			for (int slot = 0; slot < input_slots::pad_count; ++slot)
+			{
+				require(restored.play_settings().rumble_enabled(slot) == expected[static_cast<size_t>(slot)],
+					"Rumble preference accessor read a different device slot");
+			}
+			require(restored.save_to_file(), "Could not canonicalize the rumble save fixture");
+			std::string canonical = "\"pad_rumble\":[";
+			for (size_t slot = 0; slot < expected.size(); ++slot)
+			{
+				if (slot != 0) { canonical += ','; }
+				canonical += expected[slot] ? "{\"enabled\":true}" : "{\"enabled\":false}";
+			}
+			canonical += ']';
+			require(contents(directory.save_path()).find(canonical) != std::string::npos,
+				"Rumble save did not write four canonical typed entries");
+			check_round_trip(restored);
+		};
+		for (const char* member : { "", ",\"pad_rumble\":null", ",\"pad_rumble\":true",
+			",\"pad_rumble\":0", ",\"pad_rumble\":{}", ",\"pad_rumble\":\"pads\"", ",\"pad_rumble\":[]" })
+		{
+			check(member, { true, true, true, true });
+		}
+		check(",\"pad_rumble\":[{\"enabled\":false}]", { false, true, true, true });
+		check(",\"pad_rumble\":[{\"enabled\":false},null,{\"enabled\":false},{\"enabled\":\"false\"},{\"enabled\":false}]",
+			{ false, true, false, true });
+		for (const char* malformed : { "null", "false", "0", "\"false\"", "[]", "{}",
+			"{\"enabled\":null}", "{\"enabled\":0}", "{\"enabled\":1}", "{\"enabled\":\"false\"}" })
+		{
+			for (int slot = 0; slot < input_slots::pad_count; ++slot)
+			{
+				std::string member = ",\"pad_rumble\":[";
+				std::array<bool, input_slots::pad_count> expected{};
+				for (int entry = 0; entry < input_slots::pad_count; ++entry)
+				{
+					if (entry != 0) { member += ','; }
+					member += entry == slot ? malformed : "{\"enabled\":false}";
+					expected[static_cast<size_t>(entry)] = entry == slot;
+				}
+				member += ']';
+				check(member, expected);
+			}
+		}
+		for (const int slot : { -1, input_slots::keyboard_and_mouse, input_slots::count,
+			(std::numeric_limits<int>::min)(), (std::numeric_limits<int>::max)() })
+		{
+			require(!PlaySettings{}.rumble_enabled(slot), "Keyboard or invalid slot was eligible for rumble");
+		}
+	}
+
 	void check_boolean_loading(const IsolatedSaveDirectory& directory,
 		const char* key, bool PlaySettings::* preference,
 		const char* other_key, bool PlaySettings::* other_preference)
@@ -354,6 +415,9 @@ int main()
 		const IsolatedSaveDirectory directory;
 		Save save;
 		PlaySettings play;
+		require(play.pad_rumble == std::array<bool, input_slots::pad_count>{ true, true, true, true },
+			"Rumble is not enabled independently on all four pad slots by default");
+		play.pad_rumble = { false, true, false, true };
 		play.aim_sensitivity = 5;
 		play.music_volume = 30;
 		play.sfx_volume = 70;
@@ -403,6 +467,7 @@ int main()
 		play.view_shake = true;
 		play.aim_marker = true;
 		play.reduce_effects = false;
+		play.pad_rumble = { true, false, true, false };
 		const bool play_saved = save.set_play_settings_and_save(play);
 		CloseHandle(locked);
 		require(!display_saved && !play_saved,
@@ -410,7 +475,8 @@ int main()
 		require(save.resolution() == labrador::ScreenResolution::s_1280_720 &&
 			!save.fullscreen() && save.team_palette() == TeamColourPair::pink_green &&
 			save.play_settings().music_volume == 0 && save.play_settings().view_shake &&
-			save.play_settings().aim_marker && !save.play_settings().reduce_effects,
+			save.play_settings().aim_marker && !save.play_settings().reduce_effects &&
+			save.play_settings().pad_rumble == play.pad_rumble,
 			"Failed saves lost the active settings");
 		require(contents(directory.save_path()) == original,
 			"Failed replacement damaged the previous save");
@@ -427,9 +493,10 @@ int main()
 		check_stick_loading(directory);
 		check_legacy_sticks(directory);
 		check_stick_api(directory);
+		check_rumble_loading(directory);
 		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery, "
 			"boolean recovery, four pad profiles, typed field recovery, legacy aim inheritance, "
-			"stick normalization and persistence\n";
+			"stick normalization, independent per-slot rumble recovery and persistence\n";
 		return 0;
 	}
 	catch (const std::exception& error)

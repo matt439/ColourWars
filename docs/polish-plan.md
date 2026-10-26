@@ -497,23 +497,37 @@ visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
 which stays selectable and in Random. Its baseline acceptance case and native four-pane
 captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
-support art remain open there. The Turbulence layout has not started; its first
-horizontal-moving capability is qualified separately in the
-[roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26). Builder/editor,
-rotation and useful placements remain open, and the existing arenas stay static.
+support art remain open there. Turbulence now has
+[static, mover and scored-slab Turbulence Yard comparisons](polish-turbulence.md), explicit-only
+as `turbulence_blockout`, `turbulence_mover_trial` and `turbulence_slab_trial`. CPU routes, local scoring,
+public builder/editor round trips, Debug replay, all split-screen native layouts
+and the bounded local five-tool paint-angle comparison are qualified. The
+[roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26) records
+the qualified fixed-slab capability; attended balance/value remains a separate gate.
+The earlier arenas and P3/five-tool tuning are preserved.
 
 ### Turbulence blockout work (`POL#21`)
 
-**OPEN, scoped 2026-10-26.** This is the next layout, beside the preserved
-`turbulence.json`. Use the recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
-and current P3/five-tool values. The first brief can proceed while the
-[moving-structure work](feature-roadmap.md#horizontal-movement-capability-2026-10-26)
-is implemented; Press Tower play does not block it.
+**DECISION, software checkpoint 2026-10-26.** The [route and score brief](polish-turbulence.md)
+defines the fixed skeleton, optional moving approaches, spawn/pressure checks
+and provisional regional/face allocations. Its static, mover and fixed-slab
+comparisons are selectable beside the original. Public loader/editor, CPU
+route/paint, bounded five-tool pressure, replay and native split-screen checks
+are qualified, including registered slab overview, result-derived ending
+composition and lower-approach underside cover/paint controls. The bounded
+software comparisons retain the current values; attended play must choose the
+geometry and answer pressure, crossing comfort and balance.
+No additional pressure mode is required before that session. The local Release
+package and separate missing-bank fallback also pass; clean-machine acceptance
+remains `ROAD#1`. Press Tower support art retains its owner's later art-pass gate.
+Retain these comparisons beside the preserved `turbulence.json`. Use the
+recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
+and current P3/five-tool values during selection. Turbulence and Press Tower
+keep separate attended-play gates.
 
 | Slice | Concrete result and stopping point | Dependency |
 |---|---|---|
-| Route and score brief | Name required, optional and recovery connections, their input families, four full-body spawns per side and two distinct departures. Budget paint by region/face, identify exposed crossings and useful retreat space. Explain the route choice earned by each proposed mover and static rotated structure. | Ready now; no new tuning or art required. |
-| First playable layout | Author a new explicit-only stage through the editor, with Random disabled. Retain a static route skeleton while capabilities land, then place the supported mover and rotated geometry. Reopen the saved level and load it through the game. | Brief; production builder/editor support for each new object. |
+| Capability placements | Add the justified mover and scored sloping geometry to the qualified explicit-only static candidate. Reopen and load each saved addition, preserving its fixed route/recovery skeleton. | Production builder/replay/editor support for each new object. |
 | Route, paint and tool qualification | Drive representative edges both ways with the real Player, including starting speeds, input margins, misses and mover phases/reversals. Reconcile regional/face paint, mirrored spawn threats and all five tools' firing/recovery windows; record side/loadout swaps and residual hypotheses. | Playable layout; production loader/replay qualification for movers. |
 | Native composition screen | Retain 1/2/3/4-view clean/heavy captures, moving approaches, landing/escape visibility, reversals and stage preview/ending views. Fix observed framing/content failures before handing over play questions. | Qualified layout and representative paint states. |
 
@@ -1754,7 +1768,7 @@ block requires all five typed fields and finite usable derived rates.
 
 Gameplay reads the actual team's paint, independently of capture-credit owner,
 input slot and palette. At the completed contact phase, a living supported
-player samples its final foot center on an exposed static top face. The surface
+player samples its final foot center on an exposed flat top face. The surface
 and tile intervals are half open; duplicate candidates have no effect, neutral
 answers are ignored, and conflicting owned overlaps resolve to neutral in either
 contact order. Only team values survive the phase. Cosmetic dust keeps its
@@ -1768,9 +1782,13 @@ use its starting support for that step; later airborne steps are neutral.
 Vertical motion, health, paid-shot costs, cooldowns and simulation `dt` retain
 the existing rules. Enemy recovery suppression leaves the normal delay clocks
 running. Place, death, respawn and disabled updates clear the terrain context.
-Top sampling also supports the manually constructed horizontal mover: it uses
-published world tile edges so rounded translation cannot lose a half-open edge.
-Rotated support and public moving-stage construction remain `GAP#D5` work.
+Top sampling also supports horizontal movers: it uses published world tile
+edges so rounded translation cannot lose a half-open edge. The selected fixed
+scored slabs sample the actual support corner in the slab's local top frame.
+That bounded rotated support and public moving-stage construction are now
+qualified in the [completed capability record](feature-roadmap.md#horizontal-movement-capability-2026-10-26).
+Arbitrary moving rotation remains outside the contract; the mechanic still
+needs the author's `POL#30` decision.
 
 To try the stored amounts in Debug, without saving content:
 

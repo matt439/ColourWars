@@ -32,7 +32,7 @@ namespace debug_console_acceptance
 	void require(bool condition, const std::string& message);
 
 	// A match as the director sees it: counts updates and rebuilds, records
-	// each update's jump edge, and can finish after a number of updates.
+	// each update's jump/debug/intro edges, and can finish after a number of updates.
 	// Like GameLevel, its rebuild goes through before_level_build. Compiled in
 	// Release too, where the director must ask it nothing.
 	class FakeMatch final : public DebugMatchTarget
@@ -44,10 +44,13 @@ namespace debug_console_acceptance
 		int updates = 0;
 		int finish_after = -1;
 		std::vector<bool> jumps;
+		int debug_edges = 0;
+		int intro_skip_edges = 0;
 		int rebuilds = 0;
 		bool last_reset_session = false;
 		int leaves = 0;
 		int audio_syncs = 0;
+		int background_changes = 0;
 
 		// Phase 2: what the director pushed into the level, and what it asked of it.
 		LevelOverlays overlays;
@@ -136,6 +139,9 @@ namespace debug_console_acceptance
 			++this->updates;
 			this->jumps.push_back(
 				inputs[static_cast<std::size_t>(input_slots::keyboard_and_mouse)].jump_pressed);
+			const auto& keyboard = inputs[static_cast<std::size_t>(input_slots::keyboard_and_mouse)];
+			this->debug_edges += keyboard.toggle_debug ? 1 : 0;
+			this->intro_skip_edges += keyboard.skip_intro ? 1 : 0;
 			this->last_filter = seats;
 			this->filtered_updates += seats != nullptr ? 1 : 0;
 		}
@@ -145,6 +151,7 @@ namespace debug_console_acceptance
 		}
 		const Level* debug_level() const override { return nullptr; }
 		void debug_sync_audio() override { ++this->audio_syncs; }
+		void debug_background_changed() override { ++this->background_changes; }
 		std::vector<std::string> debug_status() const override { return {}; }
 
 		// Phase 4: the countdown, the HUD labels pushed, the opening cards.
@@ -171,6 +178,8 @@ namespace debug_console_acceptance
 		{
 			this->updates = 0;
 			this->jumps.clear();
+			this->debug_edges = 0;
+			this->intro_skip_edges = 0;
 			this->finish_after = -1;
 		}
 
@@ -412,6 +421,10 @@ namespace debug_console_acceptance
 	void check_goto(GameTuning& tuning, Presentation& presentation);
 	void check_screenshot_file(GameTuning& tuning, Presentation& presentation);
 	void check_stations(const std::filesystem::path& game_directory, const GameTuning& tuning);
+
+	// background_checks.cpp
+	void check_background_policy(const std::filesystem::path& content, GameTuning& tuning,
+		Presentation& presentation);
 
 	// menu_checks.cpp
 	void check_chord();

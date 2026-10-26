@@ -116,6 +116,11 @@ public:
 	// logic step (the Debug bots and replays); null in Release.
 	void update(const std::vector<PlayerInputData>& player_inputs, float dt,
 		SeatInputFilter* seats = nullptr);
+	// Feedback intents, retaining each Player's physical slot. Drain once after
+	// a completed tick, including blocked bot/replay/keyboard events; this never
+	// changes simulation/RNG state. A lifecycle stop may explicitly discard them.
+	std::vector<SlotRumbleEvents> take_rumble_events();
+	void clear_rumble_events() noexcept;
 
 	// Refresh size-dependent presentation before rendering, even when a menu
 	// covers the match. Called on the main thread, before render workers start.
@@ -187,6 +192,9 @@ public:
 	std::wstring_view keyboard_controls_text() const;
 	mattmath::RectangleF keyboard_controls_text_bounds() const;
 	mattmath::RectangleF keyboard_controls_card_bounds() const;
+	std::wstring_view gamepad_controls_text() const;
+	mattmath::RectangleF gamepad_controls_text_bounds() const;
+	mattmath::RectangleF gamepad_controls_card_bounds() const;
 	// overlay.stations as the scene holds it: one UiText per station, in
 	// LevelLoadedInfo::stations() order, made the first time the overlay is
 	// turned on and only hidden after that. None until then, so none in Release.
@@ -291,6 +299,9 @@ private:
 	const InputBindings* input_bindings_ = nullptr;
 	labrador::TextDropShadow* keyboard_controls_ = nullptr;
 	std::wstring keyboard_jump_label_;
+	labrador::TextDropShadow* gamepad_controls_ = nullptr;
+	std::vector<int> gamepad_slots_;
+	std::array<labrador::GamepadButton, input_slots::pad_count> gamepad_jump_{};
 	struct ControlsReminderLook
 	{
 		mattmath::Vector2F reference_size, margin, padding, heading_shadow, text_shadow;

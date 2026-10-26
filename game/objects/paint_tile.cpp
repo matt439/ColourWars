@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/paint_tile.h"
+#include "game/objects/fixed_slab_geometry.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -107,6 +108,74 @@ void PaintTile::draw_surface(DrawList& draw_list) const
 	}
 }
 
+void PaintTile::draw_splash_rigid(DrawList& draw_list,
+	const FixedSlabGeometry& geometry) const
+{
+	if (this->team_ == PlayerTeam::none) { return; }
+	this->splash_.draw_with_colour_rigid(draw_list,
+		this->team_colours_.team_colour(this->team_), geometry);
+}
+
+void PaintTile::draw_surface_rigid(DrawList& draw_list,
+	const FixedSlabGeometry& geometry) const
+{
+	this->draw_surface_base_rigid(draw_list, geometry, this->rectangle_);
+	this->draw_surface_wet_rigid(draw_list, geometry);
+}
+
+void PaintTile::draw_rectangle_rigid(DrawList& draw_list,
+	const FixedSlabGeometry& geometry, const RectangleF& local, const Colour& tint) const
+{
+	const Vector2F anchor = geometry.to_world(local.top_left());
+	// The local rectangle starts at this exact rigid-frame point. A raw
+	// source rect deliberately supplies no authored sprite-frame pivot.
+	this->sprite_sheet()->draw(draw_list,
+		this->sprite_sheet()->sprite_frame(this->frame()).source_rectangle(),
+		RectangleF(anchor, local.size()), tint, geometry.tangent().angle(), Vector2F::ZERO,
+		SpriteFlip::none, this->layer_depth());
+}
+
+void PaintTile::draw_surface_base_rigid(DrawList& draw_list,
+	const FixedSlabGeometry& geometry, const RectangleF& local_band) const
+{
+	if (this->team_ == PlayerTeam::none) { return; }
+	const Colour tint = this->team_colours_.team_colour(this->team_);
+	this->draw_rectangle_rigid(draw_list, geometry, local_band, tint);
+	const float depth = this->along_x_ ? local_band.height : local_band.width;
+	const float edge = std::min(this->paint_->edge_width, depth);
+	const RectangleF inner = this->along_x_
+		? RectangleF(local_band.x, this->leading_ ? local_band.bottom() - edge : local_band.top(),
+			local_band.width, edge)
+		: RectangleF(this->leading_ ? local_band.right() - edge : local_band.left(), local_band.y,
+			edge, local_band.height);
+	this->draw_rectangle_rigid(draw_list, geometry, inner, Colour::black);
+}
+
+void PaintTile::draw_surface_wet_rigid(DrawList& draw_list,
+	const FixedSlabGeometry& geometry) const
+{
+	if (this->team_ == PlayerTeam::none) { return; }
+	const Colour tint = this->team_colours_.team_colour(this->team_);
+	const float depth = this->along_x_ ? this->rectangle_.height : this->rectangle_.width;
+	const float edge = std::min(this->paint_->edge_width, depth);
+	if (this->wet_age_ < this->paint_->wet_duration)
+	{
+		const float progress = this->wet_age_ / this->paint_->wet_duration;
+		const float colour_depth = depth - edge;
+		const float shine_depth = std::min(this->paint_->settle_depth, colour_depth);
+		if (shine_depth > 0.0f)
+		{
+			const float offset = std::min(this->paint_->settle_depth * progress,
+				colour_depth - shine_depth);
+			const float amount = this->paint_->wet_highlight * (1.0f - progress);
+			this->draw_rectangle_rigid(draw_list, geometry, this->face_band(offset, shine_depth), Colour(
+				tint.r + (1.0f - tint.r) * amount,
+				tint.g + (1.0f - tint.g) * amount,
+				tint.b + (1.0f - tint.b) * amount, 1.0f));
+		}
+	}
+}
+
 RectangleF PaintTile::face_band(float offset, float depth) const
 {
 	RectangleF band = this->rectangle_;
@@ -178,6 +247,7 @@ PaintTileSplash::PaintTileSplash(
 
 void PaintTileSplash::read_clip(RenderResources::SheetStrip clip)
 {
+	this->rigid_clip_ = clip;
 	// The object already holds clip.sheet(), so this is two indexed reads.
 	const AnimationStrip& strip = this->sprite_sheet()->animation_strip(clip.strip());
 	this->frame_time_ = strip.frame_time();
@@ -239,6 +309,18 @@ void PaintTileSplash::draw_with_colour(DrawList& draw_list,
 	this->AnimationObject::draw_with(draw_list,
 		RectangleF(this->rectangle_.center(), this->rectangle_.size()),
 		colour, this->flip());
+}
+void PaintTileSplash::draw_with_colour_rigid(DrawList& draw_list,
+	const Colour& colour, const FixedSlabGeometry& geometry) const
+{
+	if (!this->active_) { return; }
+	const AnimationStrip& strip = this->sprite_sheet()->animation_strip(this->rigid_clip_.strip());
+	const int index = std::min(static_cast<int>(this->age_ / this->frame_time_),
+		this->frame_count_ - 1);
+	this->sprite_sheet()->draw(draw_list, strip.frame_rect(index),
+		RectangleF(geometry.to_world(this->rectangle_.center()), this->rectangle_.size()),
+		colour, geometry.tangent().angle() + this->draw_rotation(), this->origin(),
+		this->flip(), this->layer_depth());
 }
 RectangleF PaintTileSplash::bounds() const
 {

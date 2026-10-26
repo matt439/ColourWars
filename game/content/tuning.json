@@ -6,6 +6,13 @@
         "menu_engage_threshold": 0.8,
         "menu_release_threshold": 0.6
     },
+    "rumble": {
+        "_comment": "Candidate pulses; physical comfort and distinction remain for the pad review.",
+        "hit": { "low_frequency": 0.35, "high_frequency": 0.55, "duration": 0.10 },
+        "elimination": { "low_frequency": 0.80, "high_frequency": 0.40, "duration": 0.25 },
+        "hard_landing": { "low_frequency": 0.40, "high_frequency": 0.15, "duration": 0.08 },
+        "dry_fire": { "low_frequency": 0.0, "high_frequency": 0.25, "duration": 0.04 }
+    },
     "match": {
         "duration": 240.0,
         "duration_choices": [

@@ -56,7 +56,8 @@
                 "oneOf": [
                     { "$ref": "#/definitions/structure" },
                     { "$ref": "#/definitions/paintable" },
-                    { "$ref": "#/definitions/ramp" }
+                    { "$ref": "#/definitions/ramp" },
+                    { "$ref": "#/definitions/fixed_slab" }
                 ]
             }
         },
@@ -142,6 +143,21 @@
             },
             "additionalProperties": true
         },
+        "motion": {
+            "description": "Horizontal triangular translation of a flat paintable from its left anchor; period is the full round trip in seconds and phase is cycles. Float representability and scene/player admission remain runtime checks. Unknown metadata is ignored; axis, travel_y and rotation are unsupported requests.",
+            "type": "object",
+            "required": ["type", "travel_x", "period", "phase"],
+            "properties": {
+                "type": { "enum": ["horizontal"] },
+                "travel_x": { "type": "number", "minimum": 0, "exclusiveMinimum": true },
+                "period": { "type": "number", "minimum": 0.03333333333333333 },
+                "phase": { "type": "number", "minimum": 0, "maximum": 1, "exclusiveMaximum": true },
+                "axis": { "not": {} },
+                "travel_y": { "not": {} },
+                "rotation": { "not": {} }
+            },
+            "additionalProperties": true
+        },
         "object_common": {
             "type": "object",
             "required": ["type", "sheet_name", "frame_name", "colour"],
@@ -150,10 +166,12 @@
                 "sheet_name": { "type": "string" },
                 "frame_name": { "type": "string" },
                 "colour": { "$ref": "#/definitions/colour" },
-                "drift": { "$ref": "#/definitions/drift" }
+                "drift": { "$ref": "#/definitions/drift" },
+                "motion": { "$ref": "#/definitions/motion" }
             },
             "dependencies": {
-                "drift": { "properties": { "type": { "enum": ["Visual"] } } }
+                "drift": { "properties": { "type": { "enum": ["Visual"] } } },
+                "motion": { "properties": { "type": { "enum": ["StructurePaintable"] } } }
             },
             "additionalProperties": true
         },
@@ -246,6 +264,46 @@
                     }
                 }
             ]
+        },
+        "fixed_slab": {
+            "description": "One fixed scored slab: 160-unit horizontal span, 80-unit rise and 24-unit normal thickness. slab.x/y is the endpoint with smaller X. It has a dedicated eraser material and no sprite or arbitrary rotation vocabulary.",
+            "type": "object",
+            "required": ["type", "collision_type", "material", "slab", "paintable_faces"],
+            "properties": {
+                "type": { "enum": ["FixedSlabPaintable"] },
+                "collision_type": { "enum": ["STRUCTURE_FIXED_SLAB"] },
+                "material": { "enum": ["eraser"] },
+                "slab": {
+                    "type": "object",
+                    "required": ["x", "y", "rise"],
+                    "properties": {
+                        "x": { "type": "number", "minimum": -65536, "maximum": 65376 },
+                        "y": { "type": "number", "minimum": -65536, "maximum": 65536 },
+                        "rise": { "enum": ["left", "right"] },
+                        "width": { "not": {} }, "height": { "not": {} },
+                        "angle": { "not": {} }, "rotation": { "not": {} },
+                        "thickness": { "not": {} }, "motion": { "not": {} }
+                    },
+                    "oneOf": [
+                        { "properties": { "rise": { "enum": ["right"] }, "y": { "minimum": -65456 } } },
+                        { "properties": { "rise": { "enum": ["left"] }, "y": { "maximum": 65456 } } }
+                    ],
+                    "additionalProperties": true
+                },
+                "paintable_faces": {
+                    "type": "object",
+                    "required": ["left", "top", "right", "bottom"],
+                    "properties": {
+                        "left": { "type": "boolean" }, "top": { "type": "boolean" },
+                        "right": { "type": "boolean" }, "bottom": { "type": "boolean" }
+                    },
+                    "additionalProperties": true
+                },
+                "motion": { "not": {} }, "drift": { "not": {} },
+                "rotation": { "not": {} }, "rectangle": { "not": {} },
+                "rectangle_tlbr": { "not": {} }, "triangle": { "not": {} }
+            },
+            "additionalProperties": true
         },
         "visual": {
             "allOf": [

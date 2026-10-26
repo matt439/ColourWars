@@ -35,12 +35,14 @@ namespace colourwars_editor
         Entry entry;
         Rect rectangle;
         std::map<std::string, std::string> values;
+        std::optional<MotionGuide> motion;
+        std::optional<PaintPolygon> slab;
     };
 
     class Editor
     {
     public:
-        explicit Editor(HINSTANCE instance) : instance_(instance) {}
+        explicit Editor(HINSTANCE instance);
         int run(int show, const std::filesystem::path& initial_path);
 
     private:

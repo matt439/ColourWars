@@ -40,6 +40,11 @@ namespace menu_text_acceptance
             require(text.keyboard_jump.*entry.field == entry.text,
                 std::string("Keyboard Jump menu default changed: ") + entry.key);
         }
+        for (const auto& entry : pad_jump_text)
+        {
+            require(text.pad_jump.*entry.field == entry.text,
+                std::string("Pad Jump menu default changed: ") + entry.key);
+        }
         require(text.keyboard_jump.current_key(L"Space") == L"Current: Space" &&
             text.keyboard_jump.pending_key(L"J") == L"Pending: J" &&
             text.keyboard_jump.release_key(L"W") == L"Release W to keep this choice.",
@@ -172,7 +177,7 @@ namespace menu_text_acceptance
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_jump", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -191,7 +196,7 @@ namespace menu_text_acceptance
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_jump", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -215,6 +220,7 @@ namespace menu_text_acceptance
         for (const auto& entry : title_text) { required("title", entry.key); }
         for (const auto& entry : help_text) { required("help", entry.key); }
         for (const auto& entry : keyboard_jump_text) { required("keyboard_jump", entry.key); }
+        for (const auto& entry : pad_jump_text) { required("pad_jump", entry.key); }
         for (const auto& entry : status_text) { required("status", entry.key); }
         for (const auto& entry : connection_text) { required("connection", entry.key); }
         for (const auto& entry : label_text) { required("labels", entry.key); }

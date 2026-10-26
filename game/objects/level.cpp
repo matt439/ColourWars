@@ -4,6 +4,7 @@
 #include "game/objects/structure.h"
 #include "game/objects/translating_structure_paintable.h"
 #include "game/simulation.h"
+#include "game/horizontal_motion_contract.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -17,52 +18,28 @@ using namespace labrador;
 
 namespace
 {
-    struct HorizontalBox
-    {
-        double left, top, right, bottom;
-    };
+    using HorizontalBox = horizontal_motion_contract::Box;
 
     double horizontal_finite(double value)
     {
-        if (!std::isfinite(value) || std::abs(value) >
-            static_cast<double>((std::numeric_limits<float>::max)()))
-        {
-            throw std::invalid_argument("Horizontal motion requires finite representable arithmetic and edges.");
-        }
-        return value;
+        return horizontal_motion_contract::finite(value);
     }
 
     double horizontal_up(double value)
     {
-        horizontal_finite(value);
-        if (value < 0.0)
-        { throw std::invalid_argument("Horizontal motion requires nonnegative displacement budgets."); }
-        float result = static_cast<float>(value);
-        if (static_cast<double>(result) < value)
-        { result = std::nextafter(result, std::numeric_limits<float>::infinity()); }
-        return horizontal_finite(static_cast<double>(result));
+        return horizontal_motion_contract::up(value);
     }
 
     // A full upward float spacing covers nearest-rounding error on either sign.
     // Refuse extreme coordinates instead of deriving an infinite/vacuous bound.
     double horizontal_ulp(double magnitude)
     {
-        const float value = static_cast<float>(horizontal_up(std::abs(magnitude)));
-        const float next = std::nextafter(value, std::numeric_limits<float>::infinity());
-        horizontal_finite(static_cast<double>(next));
-        return static_cast<double>(next) - static_cast<double>(value);
+        return horizontal_motion_contract::ulp(magnitude);
     }
 
     HorizontalBox horizontal_box(const RectangleF& value)
     {
-        const HorizontalBox box{ value.left(), value.top(), value.right(), value.bottom() };
-        for (double edge : { box.left, box.top, box.right, box.bottom })
-        { horizontal_finite(edge); }
-        if (!std::isfinite(value.width) || !std::isfinite(value.height) ||
-            !(value.width > 0.0f) || !(value.height > 0.0f) ||
-            !(box.left < box.right) || !(box.top < box.bottom))
-        { throw std::invalid_argument("Horizontal motion requires finite positive represented body dimensions."); }
-        return box;
+        return horizontal_motion_contract::box({ value.x, value.y, value.width, value.height });
     }
 
     RectangleF horizontal_pose(const HorizontalMotionSpec& spec, float offset)
@@ -76,25 +53,21 @@ namespace
     HorizontalBox horizontal_path(const TranslatingStructurePaintable& mover)
     {
         const HorizontalMotionSpec spec = mover.motion_state().spec;
-        HorizontalMotion::validate_spec(spec);
-        const HorizontalBox first = horizontal_box(spec.anchor);
-        const HorizontalBox last = horizontal_box(horizontal_pose(spec, spec.travel_x));
-        return { std::min(first.left, last.left), first.top,
-            std::max(first.right, last.right), first.bottom };
+        return horizontal_motion_contract::path({
+            { spec.anchor.x, spec.anchor.y, spec.anchor.width, spec.anchor.height },
+            spec.travel_x, spec.period_seconds, spec.initial_phase });
     }
 
     bool horizontal_contains(const HorizontalBox& outer, const HorizontalBox& inner)
     {
-        return inner.left >= outer.left && inner.top >= outer.top &&
-            inner.right <= outer.right && inner.bottom <= outer.bottom;
+        return horizontal_motion_contract::contains(outer, inner);
     }
 
     bool horizontal_intersects(const HorizontalBox& a, const HorizontalBox& b)
     {
         // Positive interiors only. A coplanar dock's top touches the rider's
         // feet boundary; it is not a raised lip/ceiling exemption.
-        return a.left < b.right && a.right > b.left &&
-            a.top < b.bottom && a.bottom > b.top;
+        return horizontal_motion_contract::intersects(a, b);
     }
 
     struct HorizontalPlayerSpeed { double x, y; };
@@ -345,6 +318,23 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 
 	// Refresh on every path so views and overlays reflect the completed tick.
 	this->refresh_views();
+}
+
+std::vector<SlotRumbleEvents> Level::take_rumble_events()
+{
+	std::vector<SlotRumbleEvents> result;
+	// Complete allocation before consuming any player's pending flags.
+	result.reserve(this->players_.size());
+	for (Player* player : this->players_)
+	{
+		result.push_back({ player->player_num(), player->take_rumble_events() });
+	}
+	return result;
+}
+
+void Level::clear_rumble_events() noexcept
+{
+	for (Player* player : this->players_) { player->clear_rumble_events(); }
 }
 
 void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
@@ -986,12 +976,7 @@ void Level::validate_horizontal_admission() const
             { throw std::invalid_argument("Horizontal motion admission received a null Player."); }
             const RectangleF& body = player->rectangle();
             horizontal_box(body);
-            const double scale = std::max({ std::abs(path.left), std::abs(path.right),
-                std::abs(path.top), static_cast<double>(body.width), static_cast<double>(body.height) });
-            const double pad = 2.0 * horizontal_ulp(horizontal_finite(2.0 * scale));
-            const HorizontalBox standing{ horizontal_finite(path.left - body.width - pad),
-                horizontal_finite(path.top - body.height - pad),
-                horizontal_finite(path.right + body.width + pad), path.top };
+            const HorizontalBox standing = horizontal_motion_contract::standing(path, body.width, body.height);
             if (!horizontal_contains(world, standing))
             { throw std::invalid_argument("Horizontal motion standing envelope leaves Scene bounds."); }
             for (const CollisionObject* object : this->scene_->collision_objects())

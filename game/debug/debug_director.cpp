@@ -81,9 +81,9 @@ void DebugDirector::filter_match_inputs(std::vector<PlayerInputData>& inputs) co
 	}
 }
 
-bool DebugDirector::before_match_update(DebugMatchTarget& match, float dt)
+bool DebugDirector::before_match_update(DebugMatchTarget& match, float dt, bool active)
 {
-	return this->impl_ != nullptr && this->impl_->before_match_update(match, dt);
+	return this->impl_ != nullptr && this->impl_->before_match_update(match, dt, active);
 }
 
 void DebugDirector::update_match(DebugMatchTarget& match,
@@ -101,6 +101,21 @@ bool DebugDirector::match_audio_paused() const
 {
 	return this->impl_ != nullptr && (this->impl_->clock().paused() ||
 		this->impl_->debug_menu_open() || this->impl_->blocking_console_open());
+}
+
+bool DebugDirector::background_scripts() const
+{
+	return this->impl_ != nullptr && this->impl_->background_scripts();
+}
+
+bool DebugDirector::background_updates_allowed() const
+{
+	return this->impl_ != nullptr && this->impl_->background_updates_allowed();
+}
+
+void DebugDirector::sync_background_audio(bool active)
+{
+	if (this->impl_ != nullptr) { this->impl_->sync_background_audio(active); }
 }
 
 void DebugDirector::match_suspended(DebugMatchTarget& match)
@@ -121,9 +136,9 @@ OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const
 	return this->impl_ != nullptr ? this->impl_->opening_mode(chosen) : chosen;
 }
 
-bool DebugDirector::before_page_update(DebugPageTarget& page, float dt)
+bool DebugDirector::before_page_update(DebugPageTarget& page, float dt, bool active)
 {
-	return this->impl_ != nullptr && this->impl_->before_page_update(page, dt);
+	return this->impl_ != nullptr && this->impl_->before_page_update(page, dt, active);
 }
 
 void DebugDirector::begin_keyboard_capture()

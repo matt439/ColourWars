@@ -38,6 +38,8 @@ private:
 	std::unique_ptr<OptionRow> pad_;
 	std::unique_ptr<OptionRow> movement_;
 	std::unique_ptr<OptionRow> aim_;
+	std::unique_ptr<OptionRow> rumble_;
+	std::array<bool, input_slots::pad_count> rumble_edited_{};
 	labrador::UiText* status_ = nullptr;
 	labrador::UiText* connection_ = nullptr;
 	labrador::UiText* raw_movement_ = nullptr;

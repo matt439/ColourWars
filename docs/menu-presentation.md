@@ -548,7 +548,7 @@ remain point-filtered and lettering linear-filtered.
 ## Shared headings and complete control legends
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
-seventeen complete prompt-bar legends, thirty-nine row labels, a solo-practice
+seventeen complete prompt-bar legends, forty-two row labels, a solo-practice
 hint, a paused-Options palette-timing caption, five Title/Home strings,
 three Controls/Pad Sticks help strings, eleven
 fixed save-status messages, three shared setting values, two Pause confirmation
@@ -562,7 +562,7 @@ two fixed Stage Select mode labels:
 | `menu_text.brand` | One brand-line string |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_jump`, `rumble` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.options_palette_timing` | One persistent paused-Options palette-timing caption |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
@@ -934,7 +934,7 @@ The Pad sticks action and both pages' Apply/Back actions retain their measured
 font size. Text bounds expanded by `controls_settings.art.focus_padding` must
 fit the Controls paper, centered in
 `(1920, menu_style.chrome.footer_y)` using `controls_settings.box_size`, and
-their row height. For all thirteen uses, the padded right edge must be at most
+their row height. For each use, the padded right edge must be at most
 `controls_settings.controls_position.x`, where the help and preview area
 begins, and the padded bottom edge must be at most
 `controls_settings.status_position.y`. These checks use the actual measured
@@ -970,7 +970,7 @@ and spacing:
 CONTROLLER
 Move / drop: left stick
 Aim: right stick    Shoot: RT
-Jump: A / LT (hold for height)
+Jump: Pad Jump choice / LT (hold for height)
 Pause: Start    Debug: Back / View
 KEYBOARD + MOUSE
 Move: A / D    Drop: S / Down
@@ -1005,6 +1005,15 @@ Leading, trailing or consecutive line breaks that create blank lines are
 rejected, as are CR, tabs and other control characters. The caption follows the
 shared normalized, nonblank, single-line rule. No automatic wrapping or format
 placeholders are introduced.
+
+The separate `menu_text.pad_jump` block owns the Pad Jump heading, button/reset
+labels, current/pending `{button}` lines, multiline help and pending/saved status.
+Both substitutions require exactly one token and a supported face-button label.
+The page captures its copy on opening, fits actual glyph bounds within the
+existing Controls paper/help/status regions, and names LT and the fixed menu
+controls explicitly. The shared Controls block points to this per-slot choice;
+the opening reminder uses the actual roster's saved buttons, including mixed
+four-pad choices. See the [qualified pad slice](feature-roadmap.md#pad-jump-face-button-slice-gap42).
 
 Startup checks actual help-font glyphs and finite, positive measured bounds.
 The help region begins at `controls_settings.controls_position`, has size

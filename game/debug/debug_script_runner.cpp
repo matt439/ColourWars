@@ -169,7 +169,9 @@ std::string DebugScriptRunner::waiting(const DebugWaitContext& context) const
 	if (this->blocked_)
 	{
 		const std::string hint = debug_wait_hint(context);
-		return this->current_.where() + " screenshot pending" + (hint.empty() ? "" : "; " + hint);
+		const std::string reason = context.in_match && !context.window_active &&
+			!context.background_running ? " inactive match" : " screenshot pending";
+		return this->current_.where() + reason + (hint.empty() ? "" : "; " + hint);
 	}
 	return {};
 }

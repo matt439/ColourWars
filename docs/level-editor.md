@@ -47,9 +47,12 @@ Select an object in the list or click it on the canvas. Drag its body to move
 it, or drag the handle at the bottom-right corner to resize it. Ramp editing
 moves or scales all three vertices together. Spawn markers can be moved;
 their boxes use `player.size` from source `game/content/tuning.json`.
+Fixed scored slabs move without a resize handle; their footprint is fixed.
 
 Use the palette to add paintable platforms, solid structures, jump-through
-platforms, left/right ramps and decorative visuals. Team spawns and the four
+platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),
+left/right ramps, [fixed scored slabs](#fixed-scored-slab-authoring-gapd5)
+and decorative visuals. Team spawns and the four
 bounds rectangles are also selectable and editable. The level entry exposes
 the stage name, menu icon and sound settings. New levels use the replacement
 `paint_exe` bank, `music.close_quarters` and its matching ending sting. Omit both
@@ -77,6 +80,7 @@ draws them with ([Materials](level-format.md#materials)). The palette gives each
 new collision object its usual one: a solid `Structure` is `ground`, a
 jump-through `ruler`, a paintable platform `pencil` and either ramp
 `set_square`. Decorative visuals get none. Duplicates keep their material.
+Fixed scored slabs require their dedicated `eraser` material.
 
 The inspector's `material` row lists, in its label, the values the object's
 collision type allows, such as `material (ground, pencil, eraser, paint_tin)`
@@ -85,7 +89,8 @@ or one the collision type does not allow, is refused like any other invalid
 edit. An object without a material still shows the row, empty; applying a value
 adds the field, as the Random setting does, and undo restores the omission.
 Applying an empty value removes the field, returning the object to the legacy
-stretched sheet/frame draw. The inspector adds no other missing field, and
+stretched sheet/frame draw, except on a fixed slab whose material is required.
+The inspector adds no other missing field, and
 never a material on a decoration. Changing `collision_type` to one the current
 material does not fit is refused too: change or clear the material first.
 The canvas stays schematic and does not draw materials; play the stage to see
@@ -124,14 +129,22 @@ level or the player's save. A missing or invalid aid file displays a diagnostic.
 
 - **Cyan edges** show exposed scoring faces. Flat structures, including
   jump-through platforms, bury faces reached from their outward side. Ramps and
-  decorations do not. The editor and game share the interval calculation in
+  decorations do not. Moving anchors never become permanent static blockers;
+  their own scoring faces stay local to the body. The editor and game share the interval calculation in
   `game/paint_face_geometry.h`. With aids off, cyan shows authored faces instead.
+  Fixed slabs clip their diagonal faces and neighbouring flat faces against
+  the actual adjacency polygon, using the shared slab paint-geometry helper.
 - **Scoring area** shows the whole level and the part inside the selected
   rectangle. Select an object or one of the bounds rectangles to choose a
   region; selecting the level shows only the total. Area clips the inward paint
   strips using current `paint.thickness`, in world units squared. Corners and
   overlapping strips contribute separately, as in runtime scoring. It measures
   available scoring surface, without assigning teams or predicting reachability.
+  Movers appear at their initial phase, labelled in the summary. Their local
+  strip dimensions and area are measured before translating the displayed
+  positions, so changing phase does not change the available score.
+  Slabs retain local face areas and display actual world quads; selection
+  regions clip those quads, including their empty bounding-box corners.
   During a drag, measurements and scoring edges wait for the committed drop.
 - **Purple/gold boxes** show the recorded tap/held jump envelope in both
   directions from the top centre of the selected geometry, or the feet of a
@@ -163,8 +176,9 @@ while you edit rather than at the next game launch:
 | Field | Must name |
 |---|---|
 | `icon_frame` | a frame in `sprite_sheet_1` |
-| each object's `sheet_name` | a `sprite_sheet` listed in `game/content/manifest.json` |
-| each object's `frame_name` | an entry in that sheet's `sprite_frames`; an animation strip is not a frame |
+| `sheet_name`, when the object uses generic sprite fields | a `sprite_sheet` listed in `game/content/manifest.json` |
+| that object's `frame_name` | an entry in that sheet's `sprite_frames`; an animation strip is not a frame |
+| fixed slab's dedicated material | sprite sheet `terrain` and its `swatch_eraser_fill` frame |
 | `sound.sound_bank_name` | a `sound_bank` listed in the manifest |
 | `sound.music_name`, `sound.end_sting_name` | an effect of that bank: every wave when `create_effect_instance_for_each_wave` is true, plus each `sound_effect_instances` name |
 
@@ -283,30 +297,109 @@ bounds and ramps. Document acceptance does not establish those play qualities.
 
 ## Moving-structure authoring (`GAP#D5`)
 
-**Planned implementation, scoped 2026-10-26.** The qualified horizontal mover
-cannot yet be authored or round-tripped here. Its first dependency is the
-[runtime JSON/schema contract](feature-roadmap.md#horizontal-movement-capability-2026-10-26);
-this is part of `GAP#D5`, separate from the attended `ED#5` review.
+**Implemented and qualified 2026-10-26.** The palette's
+**Moving paintable block** and **Moving paintable platform** create the existing
+solid and jump-through horizontal paintables. They write `StructurePaintable`
+with the optional [motion record](level-format.md#horizontal-paintable-motion),
+using `pencil` and `ruler` materials respectively. No new motion kind is added.
 
-After that contract lands, add the supported paintable mover to the palette and
-document model. Expose the anchor rectangle, horizontal travel, period and initial
-phase that the runtime actually accepts. Draw its anchor and travel envelope as
-editor guides; preview guides do not establish simulated collision or riding.
-Define move/resize/duplicate semantics so editing an anchor cannot silently
-change the intended path or create an unsafe envelope.
+The rectangle is the **leftmost anchor**. Dragging, nudging, resizing and exact
+coordinate edits change that anchor; horizontal travel remains an absolute
+distance and the period and phase remain unchanged. The inspector exposes
+`motion/type` (`horizontal`), `motion/travel_x` in world units,
+`motion/period` in round-trip seconds and `motion/phase` in cycles [0,1).
+New movers start at travel 120, period 6.4 and phase 0 as editable authoring
+defaults, not an accepted arena placement or balance choice.
 
-The bounded exit is add/select/edit, undo/redo and save/reopen of an authored
-mover, preserving unknown metadata and unrelated source fields. Invalid edits
-must preserve the last valid document and undo history, with named diagnostics.
-Keep the runtime's solid/one-way paintable limits and rejection of blocking
-geometry intersecting the mover or standing envelope. Check the saved fixture
-through production `LevelBuilder`, including material/paint ownership and
-replay reconstruction; editor acceptance alone does not prove it plays.
+The filled body shows its initial phase. A white dashed outline marks the
+anchor, blue dashes the complete travel envelope, and gold dots the expanded
+standing corridor. Selection and resize handles edit the anchor; clicking the
+initial body also selects that object. **F** frames the complete travel and
+standing guides. Drag guides are provisional until the drop commits. These
+are geometry guides, without simulated riding or a route-feasibility claim.
 
-Static rotated structures get their own fields, guides and round-trip checks
-only after the placement-driven runtime contract is defined. No arbitrary
-rotation, lift or crush editor is implied. Human GUI handling and saved-stage
-play remain `ED#5`; Turbulence route/readability acceptance remains `POL#21`.
+**Ctrl+D** retains motion, material and unknown metadata and places the copy
+below the original's complete body/standing corridor. It does not use the
+ordinary object's overlapping 50-unit offset. If the new envelope leaves Scene
+bounds or intersects another structure, duplication is refused. Anchor, motion,
+static-geometry and bounds edits validate the complete candidate before changing
+the document or undo/redo branch. Save/reopen retains unknown root, object and
+motion metadata, rectangle/TLBR encoding and ignored alternative geometry.
+
+The application supplies source `game/content/tuning.json` for player size;
+the registration helper supplies the same repository context. Tools using the
+document API pass that path to `LevelDocument(tuning_path)`. The default
+constructor still works for static documents, but cannot load or add a mover
+without this explicit context. Mover validation rereads current `player.size`
+and shares the runtime's float field, travel and standing-envelope arithmetic
+through the engine-free `game/horizontal_motion_contract.h`. Changes to source
+size can therefore invalidate a formerly usable corridor, including an undo
+candidate. No guessed player size is substituted.
+
+The complete platform and standing envelopes must lie inside Scene bounds and
+clear the other flat/ramp structures and mover paths. Full actual-player
+rate/displacement admission remains authoritative in production `LevelBuilder`;
+passing editor geometry validation does not qualify that budget or gameplay.
+Scoring diagnostics keep mover dimensions and area in anchor space and translate
+only guide locations, including at fractional float boundaries. Gameplay's
+per-tile float accumulation can round differently from continuous editor strips;
+neither total changes merely because initial phase changes.
+
+The document checks cover both palette kinds, properties, phase/standing guides,
+transactional rejection, anchor move/resize, duplication, undo/redo, changed
+source dimensions, metadata/TLBR preservation and save/reopen. The CPU
+`moving_structure` case compiles the actual editor model and passes its saved
+stage through production `LevelBuilder`, with material/scoring checks and Debug
+Recorder/Player reconstruction. Debug/Release editor builds, document checks and
+`moving_structure` passed after the fractional-area fix. Debug includes 180
+exact editor-save replay updates; Release explicitly excludes developer replay.
+Receipts: `out/validation/overnight-20261026/phase4/` (`editor-*` and `mover/`).
+No new GUI, native-pixel or human acceptance is claimed here.
+
+Human GUI handling and saved-stage play remain `ED#5`; Turbulence
+route/readability acceptance remains `POL#21`.
+
+## Fixed scored-slab authoring (`GAP#D5`)
+
+The **Scored slab rising right** and **Scored slab rising left** palette entries
+write `FixedSlabPaintable` with `STRUCTURE_FIXED_SLAB` collision and the required
+`eraser` material. The fixed footprint spans 160 horizontal units, rises 80
+units and has 24 units of thickness measured along the slab normal. It is a
+solid scored slope, distinct from the existing unscored paint-pass ramp.
+
+`slab/x` and `slab/y` locate the top endpoint with the smaller world X;
+`slab/rise` selects `left` or `right`. A right-rising slab at `(1240,880)` ends
+at `(1400,800)`; its mirrored left-rising counterpart starts at `(2600,800)`.
+Endpoints must remain finite and within 65,536 world units. Dragging, nudging
+and rectangle-coordinate edits translate the body; resizing is refused. The
+canvas draws the actual sloping polygon and top support segment, and selects
+its body without treating an empty bounding-box corner as solid. Duplicates
+move below the complete body. Intersecting slabs are refused using the same
+strict positive-overlap test as runtime; a separated pair with overlapping
+bounding boxes remains valid.
+
+The four paint-face switches retain local face identity. Areas are measured
+before transforming their strips into world quads. Shared canonical paint
+adjacency corrects only checked OBB reconstruction drift at an authored join;
+the collider, visible tile pose and guide stay at their represented coordinates.
+It does not round an obstacle or erase a real small authored gap. Arbitrary
+rotation, resizing, motion and combined shape records are refused. Unknown
+metadata survives edits, duplication, undo/redo and save/reopen. The new type
+uses its dedicated material rather than generic sheet/frame/colour fields.
+
+Debug and Release game/editor builds, the full editor document suite and three
+hidden editor launch/status/close checks per preset pass. New document checks
+include mirrored
+normal extrusion, translation and immutable size, both-direction duplication,
+transactional pair/field refusals, saved metadata/schema round trips, actual
+polygon scoring, reciprocal face clipping, exact buried-cap zero and retained
+`0.00004` authored gaps. The CPU `fixed_slab` case separately loads an actual
+editor-saved trial through fresh 1/4-player public builders. Receipts are under
+`out/acceptance/x64-debug/level-editor/30f6ffeacf6a466a904168cdb7192c11/`
+and the matching Release receipt `78fd5457eb954c6da74d8b73355ac283`, alongside
+`out/validation/overnight-20261026/phase11/` (`slab-v4/x64-debug`, `regression/x64-release`).
+These checks do not establish attended GUI handling, saved-stage play, native
+composition or competitive value.
 
 ## Registration assistance (`ED#4`)
 
@@ -349,6 +442,12 @@ Configure/build the game after registration to copy the stage beside the
 executable. The game's startup/content validation remains authoritative;
 registration does not establish route, spawn or gameplay acceptance (`ED#5`).
 GUI integration can follow actual use of the command-line helper.
+
+The explicit-only [Turbulence slab trial](../game/content/levels/turbulence_slab_trial.json)
+was saved/reopened by `LevelDocument` and registered through this API on
+2026-10-26. It preserves the qualified 24-object geometry and all eight earlier
+level files. The [arena record](polish-turbulence.md) owns its public-loader,
+route and composition evidence; this automated use does not close `ED#5`.
 
 The document acceptance case also checks exact LF/CRLF and BOM-preserving
 appends, malformed/partial/aliased lists, resource validation, stale inputs and

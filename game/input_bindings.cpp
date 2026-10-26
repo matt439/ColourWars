@@ -26,6 +26,17 @@ namespace
 		{ Key::u, L"U" }, { Key::v, L"V" }, { Key::w, L"W" }, { Key::x, L"X" }, { Key::y, L"Y" },
 		{ Key::z, L"Z" }, { Key::space, L"Space" }
 	} };
+
+	struct ButtonName
+	{
+		GamepadButton button;
+		std::string_view name;
+		std::wstring_view label;
+	};
+	constexpr std::array<ButtonName, 4> button_names{ {
+		{ GamepadButton::a, "a", L"A" }, { GamepadButton::b, "b", L"B" },
+		{ GamepadButton::x, "x", L"X" }, { GamepadButton::y, "y", L"Y" }
+	} };
 }
 
 bool keyboard_jump_key_supported(Key key)
@@ -72,6 +83,30 @@ Key input_key_from_name(std::string_view name)
 	return *key;
 }
 
+bool pad_jump_button_supported(GamepadButton button)
+{
+	return std::any_of(button_names.begin(), button_names.end(),
+		[button](const ButtonName& value) { return value.button == button; });
+}
+
+std::string_view input_button_name(GamepadButton button)
+{
+	for (const auto& value : button_names) { if (value.button == button) { return value.name; } }
+	throw std::invalid_argument("Pad Jump button must be A, B, X or Y");
+}
+
+std::wstring_view input_button_label(GamepadButton button)
+{
+	for (const auto& value : button_names) { if (value.button == button) { return value.label; } }
+	throw std::invalid_argument("Pad Jump button must be A, B, X or Y");
+}
+
+GamepadButton input_button_from_name(std::string_view name)
+{
+	for (const auto& value : button_names) { if (value.name == name) { return value.button; } }
+	throw std::invalid_argument("Unknown pad Jump button name");
+}
+
 void InputBindings::validate() const
 {
 	if (!keyboard_jump_key_supported(this->keyboard_jump))
@@ -83,6 +118,13 @@ void InputBindings::validate() const
 		throw std::invalid_argument("Keyboard Jump key " + std::string(input_key_name(this->keyboard_jump)) +
 			" conflicts with another gameplay action");
 	}
+	for (GamepadButton button : this->pad_jump)
+	{
+		if (!pad_jump_button_supported(button))
+		{
+			throw std::invalid_argument("Pad Jump button must be A, B, X or Y");
+		}
+	}
 }
 
 ActionBindings effective_action_bindings(const InputBindings& preferences)
@@ -90,6 +132,14 @@ ActionBindings effective_action_bindings(const InputBindings& preferences)
 	preferences.validate();
 	ActionBindings result = default_action_bindings();
 	result.game_desktop[static_cast<std::size_t>(GameAction::jump)].keys = { preferences.keyboard_jump };
+	return result;
+}
+
+ActionBindings effective_action_bindings(const InputBindings& preferences, int pad_slot)
+{
+	ActionBindings result = effective_action_bindings(preferences);
+	result.game_pad[static_cast<std::size_t>(GameAction::jump)].buttons =
+		{ preferences.pad_jump.at(static_cast<std::size_t>(pad_slot)) };
 	return result;
 }
 
@@ -101,17 +151,34 @@ void InputBindingsSection::reset(SaveData& data) const
 void InputBindingsSection::read(const JsonValue& root, SaveData& data) const
 {
 	if (!root.has(this->key())) { return; }
+	const JsonValue section = root.object(this->key());
 	InputBindings candidate;
 	try
 	{
-		candidate.keyboard_jump = input_key_from_name(root.object(this->key()).string("keyboard_jump"));
+		candidate.keyboard_jump = input_key_from_name(section.string("keyboard_jump"));
 		candidate.validate();
 	}
-	catch (const std::invalid_argument& error)
+	catch (const std::runtime_error&)
 	{
-		// Save's section boundary catches runtime_error. Keep validation failure
-		// local instead of letting it reset every independent preference.
-		throw std::runtime_error(error.what());
+		candidate.keyboard_jump = Key::space;
+	}
+	catch (const std::invalid_argument&)
+	{
+		candidate.keyboard_jump = Key::space;
+	}
+	if (section.has("pad_jump"))
+	{
+		try
+		{
+			const JsonValue slots = section.array("pad_jump");
+			for (std::size_t slot = 0; slot < candidate.pad_jump.size() && slot < slots.size(); ++slot)
+			{
+				try { candidate.pad_jump[slot] = input_button_from_name(slots.at(slot).as_string()); }
+				catch (const std::runtime_error&) {} // Recover just this slot to A.
+				catch (const std::invalid_argument&) {}
+			}
+		}
+		catch (const std::runtime_error&) {} // A malformed array does not discard the keyboard key.
 	}
 	data.input_bindings = candidate;
 }
@@ -122,5 +189,12 @@ void InputBindingsSection::write(SaveWriter& writer, const SaveData& data) const
 	writer.begin_object();
 	writer.key("keyboard_jump");
 	writer.string(std::string(input_key_name(data.input_bindings.keyboard_jump)));
+	writer.key("pad_jump");
+	writer.begin_array();
+	for (GamepadButton button : data.input_bindings.pad_jump)
+	{
+		writer.string(std::string(input_button_name(button)));
+	}
+	writer.end_array();
 	writer.end_object();
 }

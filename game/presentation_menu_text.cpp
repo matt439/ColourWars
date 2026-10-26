@@ -252,6 +252,21 @@ namespace presentation_read
 			{ throw std::runtime_error(jump.where() + ": " + field.first + ": " + error.what()); }
 		}
 		const JsonValue status = json.object("status");
+		const JsonValue pad_jump = json.object("pad_jump");
+		PadJumpMenuText& buttons = text.pad_jump;
+		for (const auto& field : { std::pair{ "heading", &PadJumpMenuText::heading },
+			std::pair{ "button", &PadJumpMenuText::button }, std::pair{ "reset", &PadJumpMenuText::reset },
+			std::pair{ "current", &PadJumpMenuText::current }, std::pair{ "pending", &PadJumpMenuText::pending },
+			std::pair{ "pending_status", &PadJumpMenuText::pending_status }, std::pair{ "saved_status", &PadJumpMenuText::saved_status } })
+		{ buttons.*field.second = read_menu_line(pad_jump, field.first); }
+		buttons.help = read_menu_block(pad_jump, "help");
+		for (const auto& field : { std::pair{ "current", &PadJumpMenuText::current },
+			std::pair{ "pending", &PadJumpMenuText::pending } })
+		{
+			try { std::ignore = format_label_template(buttons.*field.second, { { L"{button}", L"A" } }); }
+			catch (const std::invalid_argument& error)
+			{ throw std::runtime_error(pad_jump.where() + ": " + field.first + ": " + error.what()); }
+		}
 		text.status.options_pending = read_menu_line(status, "options_pending");
 		text.status.options_saved = read_menu_line(status, "options_saved");
 		text.status.options_save_failed = read_menu_line(status, "options_save_failed");
@@ -502,6 +517,25 @@ std::wstring KeyboardJumpMenuText::release_key(std::wstring_view label) const
 
 std::wstring KeyboardJumpMenuText::help_block(std::wstring_view current_label, std::wstring_view pending_label) const
 { return this->current_key(current_label) + L'\n' + this->pending_key(pending_label) + L'\n' + this->help; }
+
+namespace
+{
+	std::wstring pad_button_line(const std::wstring& text, std::wstring_view label)
+	{
+		if (label != L"A" && label != L"B" && label != L"X" && label != L"Y")
+		{ throw std::invalid_argument("Pad Jump label must be A, B, X or Y."); }
+		return format_label_template(text, { { L"{button}", std::wstring(label) } });
+	}
+}
+
+std::wstring PadJumpMenuText::current_button(std::wstring_view label) const
+{ return pad_button_line(this->current, label); }
+
+std::wstring PadJumpMenuText::pending_button(std::wstring_view label) const
+{ return pad_button_line(this->pending, label); }
+
+std::wstring PadJumpMenuText::help_block(std::wstring_view current_label, std::wstring_view pending_label) const
+{ return this->current_button(current_label) + L'\n' + this->pending_button(pending_label) + L'\n' + this->help; }
 
 const std::wstring& MenuText::heading(MenuHeading heading) const
 {

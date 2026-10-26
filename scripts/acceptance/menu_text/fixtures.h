@@ -89,7 +89,7 @@ namespace menu_text_acceptance
     struct HelpText { const char* key; const wchar_t* text; std::wstring MenuHelpText::* field; bool multiline; };
     constexpr HelpText help_text[]{
         { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\n"
-            L"Jump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\n"
+            L"Jump: Pad Jump choice / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\n"
             L"Move: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\n"
             L"Jump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\n"
             L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
@@ -123,6 +123,22 @@ namespace menu_text_acceptance
         { "capture_cancelled", L"Gesture cancelled; pending key unchanged.", &KeyboardJumpMenuText::capture_cancelled },
         { "debug_collision", L"Jump key also has a developer bind.", &KeyboardJumpMenuText::debug_collision }
     };
+    struct PadJumpText {
+        const char* key; const wchar_t* text; std::wstring PadJumpMenuText::* field;
+        bool multiline = false; bool button_template = false;
+    };
+    constexpr PadJumpText pad_jump_text[]{
+        { "heading", L"Pad Jump", &PadJumpMenuText::heading },
+        { "button", L"Jump button", &PadJumpMenuText::button },
+        { "reset", L"Reset this pad to A", &PadJumpMenuText::reset },
+        { "current", L"Current: {button} / LT", &PadJumpMenuText::current, false, true },
+        { "pending", L"Pending: {button} / LT", &PadJumpMenuText::pending, false, true },
+        { "help", L"Choose A, B, X or Y for this pad.\nLT also jumps; hold for height.\n"
+            L"Apply saves edited pads.\nBack discards unapplied changes.\nMenus: A selects; B goes back.\n"
+            L"Intro skip keeps A / B / Start.\nProfiles follow Pad 1-4 slots.", &PadJumpMenuText::help, true },
+        { "pending_status", L"Apply to activate edited pads' Jump buttons.", &PadJumpMenuText::pending_status },
+        { "saved_status", L"Edited pads' Jump buttons applied and saved.", &PadJumpMenuText::saved_status }
+    };
     struct StatusText { const char* key; const wchar_t* text; std::wstring MenuStatusText::* field; bool options; };
     constexpr StatusText status_text[]{
         { "options_pending", L"Apply to save changes.", &MenuStatusText::options_pending, true },
@@ -132,8 +148,8 @@ namespace menu_text_acceptance
         { "controls_pending", L"Apply to save changes for all players.", &MenuStatusText::controls_pending, false },
         { "controls_saved", L"Applied and saved for all players.", &MenuStatusText::controls_saved, false },
         { "active_save_failed", L"Active for this run. Could not save.", &MenuStatusText::active_save_failed, false },
-        { "sticks_pending", L"Apply to save pad deadzones.", &MenuStatusText::sticks_pending, false },
-        { "sticks_saved", L"Pad deadzones applied and saved.", &MenuStatusText::sticks_saved, false },
+        { "sticks_pending", L"Apply to save pad settings.", &MenuStatusText::sticks_pending, false },
+        { "sticks_saved", L"Pad settings applied and saved.", &MenuStatusText::sticks_saved, false },
         { "options_reverted", L"Display settings reverted.", &MenuStatusText::options_reverted, true },
         { "options_display_failed", L"Could not change display settings. Previous settings restored.",
             &MenuStatusText::options_display_failed, true },
@@ -317,7 +333,7 @@ namespace menu_text_acceptance
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
-        { "keyboard_jump", L"Keyboard Jump" }
+        { "keyboard_jump", L"Keyboard Jump" }, { "pad_jump", L"Pad Jump" }, { "rumble", L"Rumble" }
     };
 
     struct World
@@ -433,6 +449,7 @@ namespace menu_text_acceptance
     void check_end_heading_bounds(Variants& variants, World& world);
     void check_controls_text(Variants& variants, World& world);
     void check_controls_option_rows(Variants& variants, World& world);
+    void check_pad_jump_text(Variants& variants, World& world);
     void check_setting_percentage_text(Variants& variants, World& world, const MenuText& defaults);
     void check_setting_percentage_rows(Variants& variants, World& world);
     void check_value_text(Variants& variants, World& world);

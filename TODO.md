@@ -24,37 +24,39 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    Turbulence, keeping the current P3/five-tool values as the baseline. The King of the Hill
    blockout is [Press Tower](docs/polish-press-tower.md) (explicit-only, beside the preserved
    original; attended play is `POL#31`); Crossfeed is now in Random at the author's request.
-   Turbulence is the next blockout.
+   Turbulence's [static, mover and scored-slab comparisons](docs/polish-turbulence.md)
+   are explicit-only. The scoped software qualification is complete: bounded
+   fire/escape, routes/replay, local paint/cover roles, native composition and
+   endings. Attended geometry choice, crossing comfort and opposed balance
+   are now the next step (`POL#21`); current values remain provisional.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
 
-5. **Feeding the above (`GAP#D5`):** the first headless five-tool report
+5. **Feeding the above:** the first headless five-tool report
    is recorded in the arena owners; attended decisions remain above. The default-off
-   paint-underfoot prototype is available for `POL#30`. The manual horizontal mover
-   is qualified; Turbulence still needs builder/editor integration, useful placements
-   and rotated structures ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
+   paint-underfoot prototype is available for `POL#30`. Runtime horizontal motion
+   and public-loader replay, editor authoring and saved-stage round trips are qualified;
+   the Turbulence mover comparison qualifies a local paint role. Fixed scored
+   slabs now have core/editor/native, local Roller-role and public driven
+   route/replay qualification; arena pressure and selection remain `POL#21`
+   ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Local implementation choices.** The current environment kit, small-view treatment
-and static landmarks are approved for this stage. The retained parallax comparison
-recommends keeping the shipped arenas static. These local slices advance the blockout
-or provide supporting work when it does not compete with it.
-This is a selection guide, not another priority order; each owner defines stopping points
-and dependencies. The first two rows feed the current blockout aim; the others can proceed
-without attended play or new hardware. Finish one bounded slice at a time.
-
-| id | next implementation slice | owner |
-|---|---|---|
-| `POL#21` | Write Turbulence's route, spawn and regional paint brief; justify mover/rotation placements before choosing geometry | [Blockout work](docs/polish-plan.md#turbulence-blockout-work-pol21) |
-| `GAP#D5` | Expose the qualified horizontal mover through runtime JSON/schema validation; public replay rebuild and editor authoring follow | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
-| `ROAD#9` | Define and qualify rumble pulse policy with a fake sink; settings/callers and the isolated native hook follow | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
-| `GAP#4.2` | Per-slot gameplay Jump choice from A/B/X/Y, retaining LT and the existing menu controls; model/save/evaluator first | [Bindings](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42) |
+**Implementation exhaustion audit, 2026-10-26.** The audit checked the remaining
+owners beyond their row statuses. It found and completed the bounded Debug
+background-script capability, reconciled stale geometry references and ran the
+25 previously unrun existing Release cases. Remaining play/hardware reviews,
+later art and unselected capability contracts retain their named gates below;
+there is no further concrete independent implementation selected by an owner.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
+
+- **Turbulence play and selection:** choose among the explicit-only comparisons after
+  both-side 1-4P pressure, crossing-comfort and regional-value play (`POL#21`).
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
 - **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
   recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
@@ -68,8 +70,9 @@ without attended play or new hardware. Finish one bounded slice at a time.
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
 - **Report filing:** the guarded resize request and example (`ENG#23`) are
-  prepared and locally qualified. Filing needs separate author authorization.
-- **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
+  prepared and locally qualified, alongside the vibration-output draft (`ENG#25`).
+  Filing needs separate author authorization.
+- **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#9`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
 ## Art direction, characters and the UI
@@ -105,7 +108,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 |---|---|---|---|---|
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | OPEN | MED | XL | Arena blockouts after accepted Crossfeed: Turbulence next, then optional 1v1 CQ and side-swap qualification. [Press Tower](docs/polish-press-tower.md) has native captures; attended play (`POL#31`) and support art remain. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
+| `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
@@ -150,8 +153,8 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#7` | DEFERRED | LOW | M | Per-seat view shake, aim marker and Reduce effects, after the stick-profile pattern; after `POL#27`. [Scope](docs/feature-roadmap.md#per-seat-accessibility-toggles-road7). |
 | `ROAD#8` | DEFERRED | LOW | S | More team palette pairs, each checked under colour-vision simulation; later UI art pass. [Scope](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
-| `ROAD#9` | OPEN | MED | M | Per-seat controller rumble for hits, eliminations, hard landings and dry fire, with a saved On/Off; bots, replays and pause never rumble. Feeling it needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
-| `GAP#4.2` | OPEN | MED | L | Per-slot pad Jump choice A/B/X/Y, retaining LT and menu controls; model/save/evaluator, then page/help and qualification. Broader rebinding remains unscoped. [Scope](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42). |
+| `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
+| `GAP#4.2` | UNSCOPED | MED | L | Other keyboard/pad actions and trigger choices need separate contracts; keyboard Jump and per-slot pad face-button Jump are complete. [Boundary](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
@@ -165,20 +168,19 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
-| `GAP#D5` | OPEN | MED | L | Integrate the horizontal mover with the builder/editor and public replay rebuild; add rotated structures and useful Turbulence placements with layout acceptance (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
 
 ## Engine reports
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The one live draft remains unfiled. Minimal engine-focused reports with
+`GAP#F*`. The two live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `GAP#F6` | BLOCKED | LOW | S | Rumble (`set_vibration`, capabilities): the exhibit is `ROAD#9`'s isolated XInput file; draft once it lands, filing needs authorisation. The FPS half was answered by report 14 (`Application::frame_timings`). |
+| `ENG#25` | DECISION | LOW | S | Prepared vibration-output draft and qualified isolated XInput exhibit; author authorization and a fresh upstream recheck are required to file. Current task forbids filing. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output--draft-with-isolated-adapter-exhibit). |
 | `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
@@ -192,7 +194,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
-| `DBG#6` | DEFERRED | LOW | M | Scripts stop when the window loses focus; no run-while-inactive switch. |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
 
 ## Tooling, CI and docs

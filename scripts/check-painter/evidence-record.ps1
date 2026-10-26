@@ -33,7 +33,62 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($PressTowerOnly) {
+if ($TurbulenceSlabOnly) {
+    $result.scope = 'turbulence-slab-only'
+    $result.stage = 'turbulence_slab_trial'
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'mister', 'roller', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('before-descent', 'actual-mid-slab-supported-stop', 'actual-mid-slab-wet', 'actual-finished-level-overview', 'actual-EndMenuInitial', 'six-known-owned-interior-pixels', 'actual-upper-flat-stop', 'controlled-clean-heavy-paint', 'actual-stage-preview', 'native-crop-rgb-parity', 'frozen-local-paint-owner-shadow-state')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result['trial_source'] = [ordered]@{ path=$trialResolved; sha256_before=$trialHashBefore; sha256_after=$null; unchanged=$false; registration='explicit-argument-only-probe-makes-no-registration-changes' }
+    $result.inputs = 'An explicit quoted UTF-16 filesystem path supplies the 24-object fixed-slab source, whether the private trial or registered stage. Ten actual Levels/Scenes use production object/player builders, two real horizontal movers and their moving shadows, plus two static sloping scored slabs and their static shadows. Exactly20 initial placements establish fixed crossover stations and extra3P/4P upper waiting stations. Actual release-braking and bounded analog inputs reach the diagonal midpoint and upper flat stop, with no intermediate placement, jump, drop, respawn or cheat. Controlled projectile contacts establish heavy ownership on every paintable object, including the diagonal faces. Two additional short matches,1P clean and4P heavy, finish from actual source spawns without additional placements. Their real LevelEndInfo supplies Session.finish_round and actual EndMenuInitial construction, rather than synthetic results. Physical-pad and motor acceptance are separate.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Exactly33 native720p full frames,75 native crops,71 gameplay CSV rows plus4 ending CSV rows,67 readbacks and10 actual Levels, with at most8000 updates. All1/2/3/4 clean/heavy fixed-crossover, settled mid-slab and upper-flat stop phases plus isolated actual StagePreview retain actual Scene camera/pane ownership, whole actor bodies and complete diagonal/upper-stop bounds. Midpoints1320/2680 are at rest on the proper slope state with carrier0; feet follow the independently reconstructed actual top edge at the uphill body corner. Frozen draws preserve complete local paint corner/face/team/raw-owner/area, collider, static/moving shadow, view and public state, pixels, RNG and Debug fingerprints. Native RGBA crops and independently retained full-frame RGB rows agree. Four additional heavy-only mid-slab-wet frames follow eight friendly slab contacts, with no new Level, placement, update or paint-owner change. Their pose, geometry, held area and camera match the settled heavy stops. Seven retained pinhole candidates are independently projected into the source slab frame; one is outside the diagonal, while six interior pixels must be owned blue or its black edge in the retained PPM. This covers the four initial wet states and six known interior pixels, not every wet age or diagonal pixel. Two actual finished-Level overviews and two actual EndMenuInitial captures cover1P clean/4P heavy short matches; each retains a complete native frame/crop and actual score/result provenance. Their frozen state, draw RNG, Debug fingerprint and copied RGB remain checked. StagePreview checks authored initial-pose pixels/bounds/RNG only. Trial source hash is unchanged. Native images still need visual inspection for diagonal quantization seams and miniature treatment; no human readability/reaction, physical pads/motors, listening, performance, competitive balance or arena acceptance is established.'
+}
+elseif ($TurbulenceShoulderOnly) {
+    $result.scope = 'turbulence-shoulder-only'
+    $result.stage = 'turbulence_shoulder_trial'
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'mister', 'roller', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('before-descent', 'actual-mid-ramp-supported-stop', 'actual-upper-flat-stop', 'controlled-clean-heavy-paint', 'actual-stage-preview', 'native-crop-rgb-parity', 'frozen-full-paint-owner-state')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result['trial_source'] = [ordered]@{ path=$trialResolved; sha256_before=$trialHashBefore; sha256_after=$null; unchanged=$false; registration='private-explicit-argument-only' }
+    $result.inputs = 'An explicit quoted UTF-16 filesystem path supplies the isolated26-object shoulder composite. Eight actual Levels/Scenes use production object/player builders and owner-bound moving shadows; public LevelBuilder and longer route/score checks are separate CPU evidence. Exactly20 initial placements put front actors on their own fixed crossover and extra3P/4P actors on their upper approach. Three neutral settle ticks precede capture; actual release-braking and small analog inputs then reach the ramp midpoint and upper stop, without intermediate placement, jump, drop, respawn or cheat. Normal GamepadReader and fake rumble factory remain linked; no physical-pad or motor claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Exactly25 native720p full frames,61 native crops/CSV rows,51 readbacks and8 actual Levels, with at most6000 updates. All1/2/3/4 clean/heavy fixed-crossover, mid-ramp and upper-flat stop phases plus one isolated actual StagePreview retain actual Scene camera/pane ownership, whole actor bodies, whole-body ramp/flat warning patches and the complete shoe underside. Midpoints are1320/2680 within0.04, at rest on the proper ramp state/carrier0; actual feet follow the independent body-edge triangle plane (nominal827). Upper stops1060/2940 retain complete flat support. Clean/heavy public motion matches on every post-placement tick. Controlled contacts establish>99percent held paint. Frozen draws preserve pixels/public/structure state, complete paint corner/face/team/raw-owner/area and full mover/carrier/shadow/view state, RNG and Debug fingerprints. Source RGBA crops and independently retained RGB rows are checked separately. StagePreview checks only authored initial-pose pixels/bounds/RNG; source hash is unchanged. This establishes no human/full-trajectory, ending, readability/reaction-time, physical-pad/motor, listening, performance, balance, arena or moving/rotated scored-slope capability acceptance.'
+}
+elseif ($TurbulenceMoverOnly) {
+    $result.scope = 'turbulence-mover-only'
+    $result.stage = 'turbulence_mover_trial'
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'mister', 'roller', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('outer-endpoint-wait', 'qualified-inward-commit-window', 'actual-carried-inner-reversal', 'continuous-outward-ride', 'controlled-clean-heavy-paint', 'actual-stage-preview', 'native-crop-rgb-parity', 'frozen-owner-state-rng')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result['trial_source'] = [ordered]@{ path=$trialResolved; sha256_before=$trialHashBefore; sha256_after=$null; unchanged=$false; registration='private-explicit-argument-only' }
+    $result.inputs = 'An explicit UTF-16 filesystem argument supplies the private actual-editor-authored trial. Eight actual Levels own Scenes assembled with production object/player builders and real owner-bound moving shadows; public LevelBuilder loading and driven route/replay qualification are separate CPU evidence. Front riders are placed once, settle for six neutral ticks and remain on actual carriers across the four recorded phases; extra3P/4P actors wait on static upper approaches. Direct ProjectileSpray contacts supply controlled heavy paint. The normal GamepadReader and global fake rumble factory remain linked; no physical-device or motor claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Exactly33 native720p full frames,81 unscaled native crops/CSV rows,67 readbacks and8 actual Level builds, with at most6000 Level updates. Thirty-two actual Level captures cover1P/2P/3P/4P clean/heavy outer wait, qualified inward commit, carried inner reversal and continuing outward ride; one isolated actual local-registry StagePreview adds authored initial-pose context. All panes retain a whole player and standing-body-plus8unit safe upper-approach escape patch. Fixed crossover standing-body-plus80unit landing strips are required only in the CPU-qualified inward window (A right>=1230/B left<=2770, rider localgoals220/100 within8 and personal speed<1); outer endpoints are wait states. Actual Scene view/camera/pane metadata, exact motion/local face-team-raw-owner-area/carrier/shadow/view frozen snapshots, source-bound shadow/cull offsets, retained local credit and matched clean/heavy actor motion are checked. Native RGBA crop parity and independent retained RGB crop equality are distinct proofs. StagePreview checks repeated pixels, widget bounds and RNG only. Trial SHA256 is checked before/after; no asset or Random registration changes. Completed routes, gameplay pressure, replay, human readability/reaction time, physical pads/motors, listening, performance, slope, balance and arena acceptance remain separate gates.'
+}
+elseif ($TurbulenceBlockoutOnly) {
+    $result.scope = 'turbulence-blockout-only'
+    $result.stage = 'turbulence_blockout'
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('lower-upper-approaches', 'immediate-supported-reversal', 'home-exits', 'controlled-clean-heavy-paint', 'actual-runtime-overview', 'actual-stage-preview', 'native-crop-rgb-parity', 'frozen-state-rng-debug-fingerprint')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result.inputs = 'Ten actual Levels own Scenes assembled with production object/player builders; the public LevelBuilder loading path is separately qualified by CPU acceptance. Sparse-slot PlayerInputData drives eighteen lower/upper approach ticks after controlled placement and six settle ticks, plus six walking home-exit ticks. Direct ProjectileSpray contacts establish controlled heavy paint. The normal GamepadReader remains linked; no physical-input or completed-route claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Exactly twenty-one native720p full frames, fifty-one unscaled native crops/CSV rows and forty-three readbacks cover 1/2/3/4-player lower/upper approaches, 4P home exits, two actual short-match overviews and one isolated actual StagePreview. Ten Level builds and at most8000 updates; measured heavy paint exceeds99percent. Each gameplay pane keeps its full player, whole-body landing patch and immediate source-supported reversal patch inside its actual Scene camera. Upper reversal and home-ground patches retain an eight-world-unit support cap; eventual lower drops are outside the upper-reversal warning claim. Actual Scene view counts/cameras/viewports, staged patch geometry and full-frame/crop RGB parity are checked. Paired clean/heavy actor motion matches and every gameplay pane has visible paint difference. Repeated Level draws preserve observed public/paint/geometry state, views, pixels, RNG and Debug fingerprints; StagePreview checks pixels, widget bounds and RNG only. Human readability/reaction timing, completed routes, gameplay pressure, balance, movers, slopes, physical pads, listening, performance and arena acceptance remain open.'
+}
+elseif ($PressTowerOnly) {
     $result.scope = 'press-tower-only'
     $result.stage = 'press_tower'
     $result.player_counts = @(4)
@@ -696,7 +751,7 @@ elseif ($PercentageTextOnly) {
     $result.input_slots = @(4)
     $result.inputs = 'Actual Controls/audio parent and Pad Sticks child with the normal GamepadReader and public local keyboard events. All four nested private pad profiles are seeded identically; the existing page chooses its initial slot. No scripted pad backend, foreground/global input, physical-device or gameplay claim.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
-    $result.checks = 'Dedicated both-preset leaf for menu_text.values.percentage. Independent literal strings and UiText/OptionRow-equivalent linear references cover Controls music/SFX rows2/3 and Sticks movement/aim rows1/2 values, saved17/0/100, inherited movement0.999 rounding to100 and explicit0/90. Existing captured controls item fonts and width-then-height value fitting remain intact. Old long copy with tilde, a new font ID missing tilde and distinct numeric bearings, real adjustments, child return, reopen/reversal and zero-update720/1080/720 drawing comparisons prove retention and adoption. Actual child Apply/reload/repeat preserves pending parent volumes and unrelated preferences; controlled private-save failure keeps active10/85 while disk remains5/85, and later Escape discards pending edits. Full private save bytes, observed status colours, unchanged current preview across source replacement, frozen redraw and draw RNG are checked. Exactly123 state updates(hard123),87 readbacks,52 value CSV rows,4 status comparisons and8 compact crops per preset. No broad Controls matrix, gameplay, foreground/global input, physical-pad, hardware qualification, listening, human readability or performance acceptance.'
+    $result.checks = 'Dedicated both-preset leaf for menu_text.values.percentage. Independent literal strings and UiText/OptionRow-equivalent linear references cover Controls music/SFX rows3/4 and Sticks movement/aim rows1/2 values, saved17/0/100, inherited movement0.999 rounding to100 and explicit0/90. Existing captured controls item fonts and width-then-height value fitting remain intact. Old long copy with tilde, a new font ID missing tilde and distinct numeric bearings, real adjustments, child return, reopen/reversal and zero-update720/1080/720 drawing comparisons prove retention and adoption. Actual child Apply/reload/repeat preserves pending parent volumes and unrelated preferences; controlled private-save failure keeps active10/85 while disk remains5/85, and later Escape discards pending edits. Full private save bytes, observed status colours, unchanged current preview across source replacement, frozen redraw and draw RNG are checked. Exactly144 state updates(hard144),87 readbacks,52 value CSV rows,4 status comparisons and8 compact crops per preset. No broad Controls matrix, gameplay, foreground/global input, physical-pad, hardware qualification, listening, human readability or performance acceptance.'
 }
 elseif ($StageCountsOnly) {
     $result.scope = 'stage-counts-only'
@@ -1014,17 +1069,35 @@ elseif ($StickSettingsOnly) {
     $result.Remove('stage')
     $result.checks = 'Actual Pad sticks child at 720p/1080p/QHD: five bounded focus cards/arrows, full labels/values/status and response/association copy, native linear ink and contrast, initial and pausing slot selection, slot/deadzone clamps and pending cutoff previews, Apply/reload/failure and Back/Escape discard. Suspended parent Apply preserves child profiles. Frozen redraw, draw RNG, static Reduce effects and resize. No physical-controller comfort, human readability or listening acceptance.'
 }
+elseif ($RumbleOnly) {
+    $result.scope = 'rumble-owner-settings-only'
+    $result.stage = 'movement_course'
+    $result.player_counts = @(3)
+    $result.input_slots = @(3, 1, 4)
+    $result.Remove('palettes')
+    $result.palette_selection = 'Default Random; no palette comparison.'
+    $result.weapons = @('sprayer')
+    $result.inputs = 'Scripted reader and a recording sink factory; no native motor API or physical pad.'
+    foreach ($key in @($result.Keys)) { if ($key -like '*_checks') { $result.Remove($key) } }
+    $result.checks = 'Actual GameLevel event consumption and lifecycle stops, per-slot settings Apply/Back/failure and parent merge. Fake motors only; physical feel and hardware acceptance remain separate.'
+}
 elseif ($KeyboardJumpOnly) {
     $result.scope = 'keyboard-jump-only'
     $result.Remove('stage')
     $result.stages = @('movement_course')
-    $result.player_counts = @(1)
+    $result.player_counts = @(1, 4)
     $result.palettes = @('blue_yellow')
-    $result.weapons = @('sprayer')
+    $result.weapons = @('sprayer', 'sniper', 'mister', 'bucket')
     $result.resolutions = @('1280x720', '1920x1080')
-    $result.actions = @('actual-controls-child', 'held-entry-neutral-gate', 'single-j-release', 'repeated-frame', 'conflict-chord-overlap-unsupported-navigation', 'escape-and-focus-cancellation', 'pending-active-reset-apply-back', 'independent-parent-audio', 'failed-write-active-choice-and-retry', 'private-save-reload', 'fitted-help-status-action-labels-and-disabled-ink', 'captured-child-copy-and-effective-parent-help', 'fresh-space-menu-proceed', 'paused-countdown-effective-reminder', 'captured-layout-key-reversal', 'frozen-public-state-rng-and-debug-fingerprint')
-    $result.input_slots = @(0, 1, 2, 4)
+    $result.actions = @('actual-controls-child', 'held-entry-neutral-gate', 'single-j-release', 'repeated-frame', 'conflict-chord-overlap-unsupported-navigation', 'escape-and-focus-cancellation', 'pending-active-reset-apply-back', 'independent-parent-audio', 'failed-write-active-choice-and-retry', 'private-save-reload', 'fitted-help-status-action-labels-and-disabled-ink', 'captured-child-copy-and-effective-parent-help', 'fresh-space-menu-proceed', 'paused-countdown-effective-reminder', 'captured-layout-key-reversal', 'frozen-public-state-rng-and-debug-fingerprint', 'pad-face-and-slot-selectors', 'pad-multi-slot-latest-copy-merge', 'pad-reset-discard', 'pad-connected-owner-isolation', 'four-pad-mixed-reminder-fit')
+    $result.input_slots = @(0, 1, 2, 3, 4)
     $result.inputs = 'Public Keyboard.on_key_down/on_key_up and poll through actual Controls/KeyboardJumpMenu/StateContext and a one-player GameLevel Pause route. Scripted GamepadReader seam for owner/fallback checks; private save/debug profile; hidden owned window. No global/foreground input or physical-device claim.'
+    $result.inputs += ' PadJumpMenu adds32 actual slot/face Apply/reload cases and65 independent native glyph pairs; scripted physical-owner navigation reaches the actual GameLevel Pause/Options/Controls/Pad Jump route and updates its countdown reminder while covered. A public LevelBuilder fixture shows all four distinct pad mappings in a reordered four-player roster.'
+    if ($Preset -eq 'x64-debug') {
+        $result.player_counts = @(1, 2, 4)
+        $result.actions += 'actual-reader-post-mapping-record-play-with-different-saved-faces'
+        $result.inputs += ' Debug additionally records360 actual-reader inputs after production slot-to-seat mapping in a seeded public two-pad build, writes/reads the production tape, persists different face choices and rebuilds from decoded setup; changed live inputs cannot alter the exact played seat streams, per-tick fingerprints, six checkpoints, final state or terminal RNG. The local test tuning changes only countdown and its contained push to a quarter step.'
+    }
     $result.audio = 'Private menu save starts muted; pending parent music is applied without a music owner, then muted again before the actual GameLevel fixture. No listening acceptance.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.checks = 'Bounded both-preset keyboard Jump UI/save/native-render slice at720/1080. Actual Controls entry and independent child capture/Reset/Apply/Back check held entry and opener neutral gating, single J gesture/release, repeated same-frame reads, chord/overlap/A-conflict/unsupported and navigation ownership, Escape and focus cancellation, pending versus active keys, independent parent pending audio, two controlled failed writes with active preference and byte-identical prior JSON, retry and ten fresh Save reloads. Independently fitted native linear help/status text and four visible action labels plus disabled ink are checked; captured child templates survive replacement, parent effective help refreshes on return, and Space capture requires a separate fresh menu confirmation. Two actual GameLevel Pause/Options/Controls/Jump routes update the countdown reminder via draw/refresh at unchanged resolution, without a covered Level simulation update; key reversal preserves original text/layout despite unrelated live geometry changes. Frozen draw RNG/public state and Debug fingerprint remain checked. Native counters require42 help/status pairs in Release or44 in Debug, ten Save reloads and two opening captures; CSV and compact native crops accompany the result. Debug adds a private bare-J bind warning and removal. A separate actual-menu ownership leaf requires eleven common scripted-pad observations plus eleven Debug observations: owner Back/key drain, other-pad exclusion, disconnected-owner participant and spare fallback, reconnect rearming and fresh Space; Debug checks queued work, grave/F11/chord ownership and Keyboard-held F10 through capture, release and focus loss without opening the debug menu or global input. Actual OS focus delivery remains outside this probe. Process relaunch, physical devices, exhaustive key domain, human readability, listening and performance are outside this leaf.'

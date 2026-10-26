@@ -15,6 +15,8 @@
 
 namespace colourwars_editor
 {
+    Editor::Editor(HINSTANCE instance) : instance_(instance),
+        document_(std::filesystem::path(COLOURWARS_CONTENT_DIR) / L"tuning.json") {}
     HWND Editor::control(const wchar_t* type, const wchar_t* text, DWORD style, int id)
     {
         HWND child = CreateWindowExW(0, type, text, WS_CHILD | WS_VISIBLE | style,
@@ -72,7 +74,8 @@ namespace colourwars_editor
         toolbar_.push_back(control(L"BUTTON", L"Redo", WS_TABSTOP, edit_redo));
         palette_ = control(WC_COMBOBOXW, L"Object to add", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, palette);
         const wchar_t* names[] = {L"Paintable block", L"Solid block", L"Jump-through platform",
-            L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn"};
+            L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn",
+            L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left"};
         for (const wchar_t* name : names) SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
         SendMessageW(palette_, CB_SETCURSEL, 0, 0);
         toolbar_.push_back(control(L"BUTTON", L"+ Add", WS_TABSTOP, add_object));
@@ -99,7 +102,7 @@ namespace colourwars_editor
         SendMessageW(value_edit_, EM_SETLIMITTEXT, 32767, 0);
         apply_ = control(L"BUTTON", L"Apply", WS_TABSTOP, apply_property);
         revert_ = control(L"BUTTON", L"Revert", WS_TABSTOP, revert_property);
-        hint_ = control(L"STATIC", L"Drag to move. Drag the white corner to resize.\r\n\r\nWheel: zoom   Middle drag: pan\r\nF: frame selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\n\r\nCyan: exposed scoring faces.\r\nView > Blockout aids: reach and area.\r\nPreview shows geometry, not textures.", SS_LEFT, 0);
+        hint_ = control(L"STATIC", L"Drag to move. Drag the white corner to resize.\r\n\r\nWheel: zoom   Middle drag: pan\r\nF: frame selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\n\r\nCyan: exposed scoring faces.\r\nMovers: white anchor, blue travel, gold standing corridor; filled initial pose.\r\nPreview shows geometry, not textures.", SS_LEFT, 0);
         status_ = control(L"STATIC", L"", SS_LEFT, 0);
         canvas_ = CreateWindowExW(0, L"ColourWarsEditorCanvas", L"Level canvas",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 1, 1, window_, nullptr, instance_, this);
@@ -183,6 +186,9 @@ namespace colourwars_editor
                 DrawItem item{entry, document_.rectangle(entry), {}};
                 for (const Property& property : document_.properties(entry))
                     item.values[property.path.starts_with('/') ? property.path.substr(1) : property.path] = property.value;
+                try { item.motion = document_.motion_guide(entry); }
+                catch (const std::exception& exception) { blockout_error_ = wide(exception.what()); }
+                item.slab = document_.slab_guide(entry);
                 if (blockout_tuning_ && (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b))
                 {
                     item.rectangle.width = blockout_tuning_->player_width;
@@ -377,6 +383,10 @@ namespace colourwars_editor
                 L"Wheel zooms around the pointer. Middle drag pans. F frames selection; Home fits the arena. "
                 L"Arrows nudge by the snap amount; Shift bypasses snap. Ctrl+D duplicates, Delete removes, Ctrl+Z/Y undo/redo. "
                 L"New objects appear in the centre of the current view.\n\n"
+                L"Moving paintables use the rectangle as their left anchor. Drag/resize edits that anchor; travel stays in world units. "
+                L"Blue shows full travel, gold the source-tuned standing corridor, and the filled body its initial phase. "
+                L"Duplicate places a copy below the complete corridor; blocked edits/copies are refused. Guides do not simulate riding or qualify runtime rate limits.\n\n"
+                L"Scored slabs have a fixed 160 by 80 slope and 24-unit normal thickness. Drag moves them; their slab/rise property selects left or right. They cannot be resized.\n\n"
                 L"Cyan edges mark exposed scoring faces (authored edges when aids are off). Spawn boxes follow source tuning. "
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
@@ -402,7 +412,16 @@ namespace colourwars_editor
             if (selection_)
             {
                 for (const DrawItem& item : draw_items_)
-                    if (same_entry(item.entry, *selection_)) { fit(item.rectangle); break; }
+                    if (same_entry(item.entry, *selection_))
+                    {
+                        Rect area = item.rectangle;
+                        if (item.motion)
+                        {
+                            area = item.motion->standing_envelope;
+                            area.height = item.motion->travel_envelope.y + item.motion->travel_envelope.height - area.y;
+                        }
+                        fit(area); break;
+                    }
             }
             break;
         case view_blockout:
@@ -415,7 +434,7 @@ namespace colourwars_editor
         case add_object:
         {
             const char* types[] = {"StructurePaintable", "Structure", "StructureJumpThrough", "StructureRampRight",
-                "StructureRampLeft", "Visual", "SpawnA", "SpawnB"};
+                "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft"};
             const LRESULT index = SendMessageW(palette_, CB_GETCURSEL, 0, 0);
             if (index < 0 || index >= static_cast<LRESULT>(std::size(types))) break;
             RECT client{}; GetClientRect(canvas_, &client);

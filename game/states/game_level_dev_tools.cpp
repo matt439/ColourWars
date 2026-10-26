@@ -41,7 +41,11 @@ void GameLevel::debug_leave()
 void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
 	SeatInputFilter* seats)
 {
+	this->data()->debug().sync_background_audio(this->context()->active());
+	this->sync_rumble();
 	this->level_->update(inputs, dt, seats);
+	if (!this->context()->active()) { this->level_->pause_audio(); }
+	this->drain_rumble(dt);
 }
 
 const Level* GameLevel::debug_level() const
@@ -56,6 +60,8 @@ bool GameLevel::debug_level_finished() const
 
 void GameLevel::debug_sync_audio()
 {
+	this->data()->debug().sync_background_audio(this->context()->active());
+	this->sync_rumble();
 	if (this->results_audio_)
 	{
 		if (this->context()->active() && !this->data()->debug().match_audio_paused())
@@ -68,7 +74,8 @@ void GameLevel::debug_sync_audio()
 	{
 		this->level_->resume();
 	}
-	else if (this->covered_ || !this->context()->active())
+	else if (this->covered_ || (!this->context()->active() &&
+		!this->data()->debug().background_updates_allowed()))
 	{
 		this->level_->suspend();
 		this->data()->debug().match_suspended(*this);
@@ -79,6 +86,31 @@ void GameLevel::debug_sync_audio()
 		// keep their jump state and a paused or stepped match (a replay among
 		// them) plays out as it would have run.
 		this->level_->pause_audio();
+	}
+}
+
+void GameLevel::debug_background_changed()
+{
+	if (this->level_ == nullptr || this->context()->active()) { return; }
+	this->data()->debug().sync_background_audio(false);
+	this->stop_rumble();
+	if (this->results_audio_) { this->results_audio_->suspend(); }
+	if (this->resume_audio_) { this->resume_audio_->stop(); }
+	if (!this->covered_ && !this->pause_menu_open_ &&
+		this->data()->debug().background_updates_allowed())
+	{
+		// A previous ordinary focus interruption is already recorded; enabling
+		// the policy releases that hold, never an existing resume countdown.
+		this->background_continuing_ = true;
+		this->focus_interrupted_ = false;
+		this->level_->pause_audio();
+	}
+	else if (this->background_continuing_)
+	{
+		this->background_continuing_ = false;
+		this->focus_interrupted_ = this->level_->state() == LevelState::active;
+		this->level_->suspend();
+		this->data()->debug().match_suspended(*this);
 	}
 }
 

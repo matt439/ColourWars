@@ -35,6 +35,7 @@ private:
 	PlayerInputData keyboard_and_mouse_input(
 		const labrador::Keyboard& keyboard, const labrador::Mouse& mouse) const;
 	const ActionBindings& effective_bindings() const;
+	const ActionBindings& effective_pad_bindings(int slot) const;
 
 	const labrador::Gamepads* gamepads_ = nullptr;
 	const labrador::Keyboard* keyboard_ = nullptr;
@@ -46,4 +47,6 @@ private:
 	// edges always come from the engine's continuously sampled snapshots.
 	mutable labrador::Key keyboard_jump_ = labrador::Key::none;
 	mutable ActionBindings keyboard_bindings_;
+	mutable std::array<labrador::GamepadButton, input_slots::pad_count> pad_jump_{};
+	mutable std::array<ActionBindings, input_slots::pad_count> pad_bindings_;
 };

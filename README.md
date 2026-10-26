@@ -34,7 +34,8 @@ round. After the series, Play Series Again clears the wins. Quitting discards
 the session. For solo practice, choose Single Match and 1 Player. The experimental
 [Movement Course](docs/polish-movement-course.md) provides repeatable jump, landing
 and platform-drop trials; select it explicitly, as Random uses the four arenas
-(including Crossfeed). The provisional Press Tower is also explicit-only.
+(including Crossfeed). The provisional Press Tower and the static, mover and
+scored-slab Turbulence Yard comparisons are also explicit-only.
 The chosen art direction is Paint.exe Maximalism, crude mouse-drawn box-heads.
 Its five round-2 rules are accepted in [the polish plan](docs/polish-plan.md#1-establish-the-art-and-display-rules);
 the superseded workshop comparison was retired on 2026-10-15. Open work is in
@@ -87,10 +88,16 @@ per-pad movement and aim deadzones, separate music and SFX volume,
 and On/Off **View shake** and **Aim marker** settings (both On by default).
 Open **Pad sticks** to select Pad 1-4, adjust each deadzone from 0-90%, and
 watch raw stick input and its movement/aim response before applying it.
+Its **Rumble** row switches feedback On or Off for that physical pad slot
+(default On); Apply saves the choice. Pausing, losing focus or disabling the
+slot stops feedback immediately. Physical-pad feel remains under review.
 Use D-pad/arrows on that page so the sticks stay free for testing.
 Profiles follow the pad slot, independently of player numbers; check the slot
 after reconnecting. Old saves keep their existing deadzones until edited.
 Mouse aim follows the cursor and the roller keeps its fixed aim.
+Open **Pad Jump** to choose A, B, X or Y for each Pad 1-4 slot; A is the default
+and the left trigger remains a Jump alias. **Keyboard Jump** changes the shared
+keyboard player's Jump key. These choices leave menu and intro controls unchanged.
 Use Left/Right to adjust; Apply saves the current page's changes for future launches.
 Back discards unapplied changes. From Pause, Back returns to the pause menu;
 Resume uses the new settings in the current match. Volume is 0-100% of the
@@ -105,6 +112,8 @@ roller has no marker. Shapes remain distinct with sound muted or without colour.
 **Credits** on the home menu acknowledges the engine, third-party code, content
 tools, fonts, artwork and accepted replacement audio sources. Full notices and
 licence terms are included as `NOTICE`, `LICENSE` and `licenses/` in the release.
+
+The following controls are the defaults:
 
 | Action | Gamepad | Keyboard and mouse |
 |---|---|---|
@@ -295,7 +304,8 @@ artifact.
 Only the assets listed in [cmake/runtime_assets.cmake](cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.
 The ZIP includes licence notices, the seven compiled fonts, six sprite sheets,
-the five arenas (including Crossfeed and Press Tower) and Movement Course, tuning,
+the eight arenas (including Crossfeed, Press Tower and the explicit static/mover/slab
+Turbulence Yard comparisons) and Movement Course, tuning,
 presentation, the replacement sound-bank definition and validated `paint_exe.xwb`,
 with audio provenance and CC0 terms. Source audio, development art, content tools and saves are excluded.
 Do not distribute the normal `game/` build directory in place of this ZIP.

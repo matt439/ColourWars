@@ -72,6 +72,8 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 	lines.push_back("clock: timescale " + NumberVariable::format(this->clock_.timescale()) +
 		(this->clock_.paused() ? ", paused (" + std::to_string(this->clock_.pending_steps()) +
 			" step(s) pending)" : ", running"));
+	lines.push_back(std::string("script.background ") + (this->background_scripts_ ? "on" : "off") +
+		(this->background_scripts_ && !this->background_updates_allowed() ? " (window gate closed)" : ""));
 	lines.push_back(std::string("feedback ") +
 		(this->presentation_->movement_feedback().enabled ? "on" : "off"));
 	std::string overlays;
@@ -142,6 +144,7 @@ std::string DebugDirectorImpl::status_strip() const
 	{
 		add("PAUSED");
 	}
+	if (this->background_scripts_) { add("BACKGROUND"); }
 	if (!this->presentation_->movement_feedback().enabled)
 	{
 		add("feedback off");

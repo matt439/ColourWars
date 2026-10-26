@@ -22,6 +22,8 @@ add_executable(ColourWars WIN32
     presentation_read_match.cpp
     presentation_read_menu.cpp
     presentation_validation.cpp
+    rumble.cpp
+    rumble_xinput.cpp
     save.cpp
     session.cpp
     sound_groups.cpp
@@ -33,6 +35,7 @@ add_executable(ColourWars WIN32
     debug/bind_commands.cpp
     debug/bot.cpp
     debug/bot_driver.cpp
+    debug/debug_background.cpp
     debug/debug_chord.cpp
     debug/debug_clock.cpp
     debug/debug_command.cpp
@@ -82,6 +85,9 @@ add_executable(ColourWars WIN32
     objects/reveal_art.cpp
     objects/debug_text.cpp
     objects/figure_acting.cpp
+    objects/fixed_slab_geometry.cpp
+    objects/fixed_slab_paintable.cpp
+    objects/fixed_slab_shadow.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
     objects/level_audio.cpp
@@ -144,10 +150,12 @@ add_executable(ColourWars WIN32
     states/controls_settings_menu.cpp
     states/keyboard_jump_capture.cpp
     states/keyboard_jump_menu.cpp
+    states/pad_jump_menu.cpp
     states/stick_settings_menu.cpp
     states/end_menu.cpp
     states/game_states.cpp
     states/game_level_dev_tools.cpp
+    states/game_level_rumble.cpp
     states/main_menu.cpp
     states/main_menu_credits.cpp
     states/main_menu_exit.cpp
@@ -186,6 +194,8 @@ target_link_libraries(ColourWars PRIVATE
     LabradorEngine
     Microsoft::DirectXTK
     labrador_settings
+    Xinput
+    comctl32
 )
 target_precompile_headers(ColourWars PRIVATE pch.h)
 

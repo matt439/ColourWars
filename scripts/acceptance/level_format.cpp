@@ -2,6 +2,9 @@
 #include "game/level_format.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/level_object_builder.h"
+#include "game/objects/translating_structure_paintable.h"
+#include "game/objects/fixed_slab_paintable.h"
+#include "game/simulation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/assets/sound_bank_loader.h"
 #include "editor/content_catalog.h"
@@ -42,6 +45,42 @@ namespace
     {
         rapidjson::Document result;
         result.CopyFrom(source, result.GetAllocator());
+        return result;
+    }
+
+    std::vector<std::filesystem::path> manifest_levels(const std::filesystem::path& content)
+    {
+        const auto root = content.lexically_normal();
+        const auto manifest = read_document(root / "manifest.json");
+        require(manifest.IsObject() && manifest.HasMember("assets") && manifest["assets"].IsArray(),
+            "Level inventory needs the actual manifest assets");
+        std::vector<std::filesystem::path> result;
+        std::set<std::filesystem::path> expected, directories{ root / "levels" };
+        for (const auto& asset : manifest["assets"].GetArray())
+        {
+            if (std::string(asset["kind"].GetString()) != "level") { continue; }
+            const auto directory = (root / asset["directory"].GetString()).lexically_normal();
+            directories.insert(directory);
+            for (const auto& name : asset["names"].GetArray())
+            {
+                const auto relative = (std::filesystem::path(asset["directory"].GetString()) /
+                    (std::string(name.GetString()) + ".json")).lexically_normal();
+                require(expected.insert(relative).second, "Manifest repeats a level file");
+                result.push_back(relative);
+            }
+        }
+        require(!result.empty(), "Manifest has no levels to qualify");
+        std::set<std::filesystem::path> actual;
+        for (const auto& directory : directories)
+        {
+            require(std::filesystem::is_directory(directory), "Manifest level directory is absent: " + directory.string());
+            for (const auto& file : std::filesystem::directory_iterator(directory))
+            {
+                if (file.is_regular_file() && file.path().extension() == ".json")
+                { actual.insert(file.path().lexically_relative(root).lexically_normal()); }
+            }
+        }
+        require(actual == expected, "Manifest and packaged level-file inventories differ in " + content.string());
         return result;
     }
 
@@ -108,8 +147,17 @@ namespace
             const CollisionObject& left = *modern_collision[index];
             const CollisionObject& right = *legacy_collision[index];
             require(typeid(left) == typeid(right) && left.bounds() == right.bounds() &&
-                left.tag() == right.tag() && left.layer() == right.layer() && left.mask() == right.mask(),
+                left.tag() == right.tag() && left.layer() == right.layer() && left.mask() == right.mask() &&
+                left.shape()->shape_type() == right.shape()->shape_type() &&
+                left.shape()->bounding_box() == right.shape()->bounding_box(),
                 "Format tag changed a built object's type, bounds or collision classification");
+            if (const auto* slab = dynamic_cast<const FixedSlabPaintable*>(&left))
+            {
+                const auto* peer = dynamic_cast<const FixedSlabPaintable*>(&right);
+                require(peer != nullptr && slab->geometry().shape() == peer->geometry().shape() &&
+                    slab->exposed_bottom() == peer->exposed_bottom(),
+                    "Format tag changed the fixed slab collider or exposed shadow intervals");
+            }
             const auto* left_paint = dynamic_cast<const PaintableObject*>(&left);
             const auto* right_paint = dynamic_cast<const PaintableObject*>(&right);
             require((left_paint == nullptr) == (right_paint == nullptr), "Format tag changed scoring participation");
@@ -119,6 +167,18 @@ namespace
                 const PaintTotal b = right_paint->paint_total();
                 require(a.total == b.total && a.team_a == b.team_a && a.team_b == b.team_b &&
                     a.player_areas == b.player_areas, "Format tag changed exposed paint coverage");
+                std::vector<PaintSurfaceSample> a_samples, b_samples;
+                left_paint->append_paint_surfaces(a_samples);
+                right_paint->append_paint_surfaces(b_samples);
+                require(a_samples.size() == b_samples.size(), "Format tag changed paint tile inventory");
+                for (std::size_t tile = 0; tile < a_samples.size(); ++tile)
+                {
+                    const auto& a_tile = a_samples[tile]; const auto& b_tile = b_samples[tile];
+                    require(a_tile.corners == b_tile.corners && a_tile.face == b_tile.face &&
+                        a_tile.team == b_tile.team && a_tile.paint_owner == b_tile.paint_owner &&
+                        a_tile.scored_area == b_tile.scored_area && a_tile.source_index == b_tile.source_index,
+                        "Format tag changed an actual paint tile's pose, local face, credit or authoritative area");
+                }
             }
         }
         const auto modern_visual = builder.build_non_collision_objects(modern.non_collision_objects_json());
@@ -312,6 +372,124 @@ namespace
         runtime_rejects(chromatic, "not a grey", builder, render, audio);
     }
 
+    void check_motion_fixtures(const rapidjson::SchemaDocument& schema,
+        const rapidjson::Document& source, const std::filesystem::path& scratch,
+        const LevelObjectBuilder& builder, const RenderResources& render, const AudioResources& audio)
+    {
+        auto baseline = copy_document(source);
+        auto& allocator = baseline.GetAllocator();
+        rapidjson::Value mover;
+        mover.CopyFrom(baseline["collision_objects"][3], allocator);
+        mover["rectangle"]["x"].SetInt(600);
+        mover["rectangle"]["y"].SetInt(700);
+        mover["rectangle"]["width"].SetInt(320);
+        mover["rectangle"]["height"].SetInt(20);
+        rapidjson::Value motion(rapidjson::kObjectType);
+        motion.AddMember("type", "horizontal", allocator);
+        motion.AddMember("travel_x", 120, allocator);
+        motion.AddMember("period", 6.4, allocator);
+        motion.AddMember("phase", 0.25, allocator);
+        mover.AddMember("motion", motion, allocator);
+        baseline["collision_objects"].Clear();
+        baseline["collision_objects"].PushBack(mover, allocator);
+
+        const auto check = [&](const char* name, bool schema_accepts, bool runtime_accepts, auto edit)
+        {
+            auto document = copy_document(baseline);
+            edit(document);
+            schema_is(schema, document, schema_accepts, name);
+            const auto path = scratch / (std::string(name) + ".json");
+            write_document(path, document);
+            if (!runtime_accepts)
+            {
+                runtime_rejects(path, "motion", builder, render, audio);
+                return;
+            }
+            const LevelLoadedInfo info(path.string().c_str());
+            info.validate(); info.validate_content(builder, render, audio);
+            const auto objects = builder.build_collision_objects(info.collision_objects_json(), TeamColour{});
+            const auto* moving = dynamic_cast<const TranslatingStructurePaintable*>(objects[0].get());
+            require(moving != nullptr, "Authored motion was silently built as static terrain");
+            const auto state = moving->motion_state();
+            require(state.spec.anchor == RectangleF(600.0f, 700.0f, 320.0f, 20.0f) &&
+                state.spec.travel_x == 120.0f && state.spec.period_seconds == 6.4f &&
+                state.spec.initial_phase == 0.25f && moving->bounds().x == 660.0f &&
+                moving->motion_id() == 0, "Motion fields, initial phase or admission boundary changed");
+        };
+        check("motion-solid", true, true, [](rapidjson::Document&) {});
+        check("motion-jump-through", true, true, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][0]["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
+            d["collision_objects"][0]["material"].SetString("ruler");
+        });
+        check("motion-metadata", true, true, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"].AddMember("_comment", "retained metadata", d.GetAllocator()); });
+        check("motion-tlbr", true, true, [](rapidjson::Document& d)
+        {
+            auto& object = d["collision_objects"][0];
+            rapidjson::Value tlbr(rapidjson::kObjectType);
+            tlbr.AddMember("left", 600, d.GetAllocator()); tlbr.AddMember("top", 700, d.GetAllocator());
+            tlbr.AddMember("right", 920, d.GetAllocator()); tlbr.AddMember("bottom", 720, d.GetAllocator());
+            object.RemoveMember("rectangle"); object.AddMember("rectangle_tlbr", tlbr, d.GetAllocator());
+        });
+        check("motion-rectangle-precedence", true, true, [](rapidjson::Document& d)
+        { d["collision_objects"][0].AddMember("rectangle_tlbr", "ignored", d.GetAllocator()); });
+        for (const char* field : { "type", "travel_x", "period", "phase" })
+        {
+            check((std::string("motion-missing-") + field).c_str(), false, false,
+                [field](rapidjson::Document& d) { d["collision_objects"][0]["motion"].RemoveMember(field); });
+        }
+        check("motion-wrong-type", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"].SetBool(false); });
+        check("motion-unsupported-kind", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["type"].SetString("vertical"); });
+        check("motion-string-travel", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["travel_x"].SetString("120"); });
+        size_t travel_case = 0;
+        for (const double travel : { 0.0, -120.0, 1.0e-40, 1.0e40 })
+        {
+            const bool structural = travel > 0.0;
+            check((std::string("motion-travel-") + std::to_string(travel_case++)).c_str(), structural, false,
+                [travel](rapidjson::Document& d) { d["collision_objects"][0]["motion"]["travel_x"].SetDouble(travel); });
+        }
+        check("motion-short-period", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["period"].SetDouble(SECONDS_PER_STEP); });
+        check("motion-overflow-period", true, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["period"].SetDouble(1.0e40); });
+        check("motion-negative-phase", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["phase"].SetDouble(-0.1); });
+        check("motion-phase-one", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["phase"].SetDouble(1.0); });
+        check("motion-phase-rounding", true, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["phase"].SetDouble(0.999999999999); });
+        check("motion-indistinct-edges", true, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["rectangle"]["x"].SetDouble(1.0e20); });
+        for (const char* field : { "axis", "travel_y", "rotation" })
+        {
+            check((std::string("motion-unsupported-") + field).c_str(), false, false,
+                [field](rapidjson::Document& d)
+                { d["collision_objects"][0]["motion"].AddMember(rapidjson::StringRef(field), 0, d.GetAllocator()); });
+        }
+        check("motion-on-plain-structure", false, false, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][0]["type"].SetString("Structure");
+            d["collision_objects"][0]["collision_type"].SetString("STRUCTURE");
+        });
+        check("motion-on-ramp", false, false, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][0]["type"].SetString("StructureRamp");
+            d["collision_objects"][0]["collision_type"].SetString("STRUCTURE_RAMP_RIGHT");
+        });
+        check("motion-on-visual", false, false, [](rapidjson::Document& d)
+        {
+            auto& object = d["non_collision_objects"][0];
+            rapidjson::Value motion; motion.CopyFrom(d["collision_objects"][0]["motion"], d.GetAllocator());
+            object.AddMember("motion", motion, d.GetAllocator());
+            d["collision_objects"][0].RemoveMember("motion");
+        });
+        std::cout << "PASS horizontal motion schema/runtime fields, diagnostics and initial construction\n";
+    }
+
     // The editor's warning-only resource check reads the sheet and bank formats
     // itself. Hold its catalog to the engine's loaders on the staged content.
     void check_editor_catalog(const std::filesystem::path& content)
@@ -404,13 +582,16 @@ int main(int argc, char** argv)
             compare_runtime(modern, legacy, builder);
             ++checked;
         };
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed", "press_tower" })
+        const auto staged_levels = manifest_levels(content);
+        const auto source_levels = manifest_levels(repo / "game/content");
+        require(staged_levels == source_levels, "Source and staged manifests differ in level inventory or order");
+        require(staged_levels.size() == 9, "Current format acceptance needs all nine registered stages");
+        for (const auto& file : staged_levels)
         {
-            const std::string file = std::string(name) + ".json";
-            check_compatible(content / "levels" / file);
-            check_compatible(repo / "game/content/levels" / file);
-            const LevelLoadedInfo staged((content / "levels" / file).string().c_str());
-            const LevelLoadedInfo source((repo / "game/content/levels" / file).string().c_str());
+            check_compatible(content / file);
+            check_compatible(repo / "game/content" / file);
+            const LevelLoadedInfo staged((content / file).string().c_str());
+            const LevelLoadedInfo source((repo / "game/content" / file).string().c_str());
             compare_runtime(staged, source, builder);
         }
         const auto template_path = repo / "editor/template.json";
@@ -419,6 +600,7 @@ int main(int argc, char** argv)
         write_document(scratch / "baseline.json", source);
         check_versions(scratch);
         check_schema_fixtures(schema, source, scratch, builder, render, audio);
+        check_motion_fixtures(schema, source, scratch, builder, render, audio);
         check_editor_catalog(content);
         std::cout << "PASS level format 1: " << checked << " staged/source/template files, legacy object/paint parity, "
             "early version rejection, schema fixtures and runtime resource/geometry authority.\n";

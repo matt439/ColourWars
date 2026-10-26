@@ -59,6 +59,7 @@ enum class PlayerState
 };
 
 class StructurePaintable;
+class FixedSlabPaintable;
 class BlockedShotFeedback;
 
 enum class PlayerMoveState
@@ -206,6 +207,10 @@ public:
 	bool input_jump_held() const;
 	PlayerMoveState move_state() const;
     int player_num() const;
+    // Drain after completed gameplay/contact work, even when output is gated.
+    // The equipped weapon's dry-trigger event joins this player's events.
+    RumbleEvents take_rumble_events() noexcept;
+    void clear_rumble_events() noexcept;
 
 	bool showing_debug() const;
 
@@ -312,6 +317,21 @@ private:
     bool projected_ramp_support_ = false;
     std::optional<mattmath::Vector2F> ramp_support_at(
         const mattmath::RectangleF& body) const;
+    // Fixed slabs are immutable, non-retiring Scene objects for the round.
+    // The owning Level outlives its Players; no destructor dereferences this
+    // borrow. Retaining it also permits post-paint queries when exact tangent
+    // projection leaves no penetrating contact in the current phase.
+    struct FixedSlabSupport
+    {
+        mattmath::Vector2F start;
+        mattmath::Vector2F end;
+        const FixedSlabPaintable* surface = nullptr;
+    };
+    std::optional<FixedSlabSupport> fixed_slab_support_;
+    bool projected_fixed_slab_support_ = false;
+    std::optional<mattmath::Vector2F> fixed_slab_support_at(
+        const mattmath::RectangleF& body) const;
+    void remember_fixed_slab_support(const FixedSlabPaintable& slab);
     // Borrowed only for this contact phase; query after every paint callback.
     std::vector<const StructurePaintable*> paint_supports_;
     // Successful flat resolving callbacks can differ from measured normals
@@ -343,6 +363,7 @@ private:
     const PlayerTuning& player_tuning() const;
 
     std::unique_ptr<Weapon> primary_ = nullptr;
+    RumbleEvents pending_rumble_;
 
     // Health and respawn delay are initialized from tuning in the constructor.
     float health_ = 0.0f;
@@ -430,6 +451,9 @@ private:
 	void on_ramp_contact(CollisionObjectType other_type,
 		const labrador::CollisionObject& other,
 		const mattmath::Vector2F& normal, float penetration);
+
+    void on_fixed_slab_contact(const FixedSlabPaintable& slab,
+        const mattmath::Vector2F& normal, float penetration);
 
 	void on_jump_through_contact(const labrador::CollisionObject& other);
 

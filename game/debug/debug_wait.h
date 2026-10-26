@@ -29,6 +29,7 @@ struct DebugWaitContext
 	bool record_armed = false;
 	bool paused = false;
 	bool window_active = true;
+	bool background_running = false;
 };
 
 // What a script waits for. The runner checks it between updates; the

@@ -31,12 +31,20 @@ MenuPage::MenuPage(MenuContext* context) :
 
 void MenuPage::update(float dt)
 {
+	this->data()->debug().sync_background_audio(this->context()->active());
 	const bool raw_keyboard_owned = this->owns_raw_keyboard_input();
 	if (raw_keyboard_owned)
 	{
 		this->data()->debug().capture_input_frame(*this);
 	}
-	else if (this->data()->debug().before_page_update(*this, dt))
+	else if (this->data()->debug().before_page_update(*this, dt, this->context()->active()))
+	{
+		this->menu_context()->suspend_music();
+		this->reset_menu_motion();
+		return;
+	}
+	this->data()->debug().sync_background_audio(this->context()->active());
+	if (!this->context()->active() && this->data()->debug().background_scripts())
 	{
 		this->menu_context()->suspend_music();
 		this->reset_menu_motion();
@@ -85,7 +93,13 @@ void MenuPage::on_resume()
 
 void MenuPage::on_deactivated()
 {
+	this->data()->debug().sync_background_audio(false);
 	this->reset_menu_motion();
+}
+
+void MenuPage::on_activated()
+{
+	this->data()->debug().sync_background_audio(true);
 }
 
 void MenuPage::register_selection_motion(MenuFocusMotion* motion)

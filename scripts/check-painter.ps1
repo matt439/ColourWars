@@ -16,6 +16,11 @@ param(
     [switch] $CqBlockoutOnly,
     [switch] $CrossfeedOnly,
     [switch] $PressTowerOnly,
+    [switch] $TurbulenceBlockoutOnly,
+    [switch] $TurbulenceMoverOnly,
+    [switch] $TurbulenceShoulderOnly,
+    [switch] $TurbulenceSlabOnly,
+    [string] $TrialPath,
     [switch] $SurfaceFinishOnly,
     [switch] $RouteWarningOnly,
     [switch] $LandmarkOnly,
@@ -87,6 +92,7 @@ param(
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $KeyboardJumpOnly,
+    [switch] $RumbleOnly,
     [switch] $PercentageTextOnly,
     [switch] $StickSettingsOnly,
     [switch] $TeamSetupOnly,
@@ -104,6 +110,20 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+$trialResolved = $null
+$trialHashBefore = $null
+$trialHashAfterAttempted = $false
+$trialMode = $TurbulenceMoverOnly -or $TurbulenceShoulderOnly -or $TurbulenceSlabOnly
+if ($PSBoundParameters.ContainsKey('TrialPath') -and -not $trialMode) {
+    throw 'TrialPath is supported only with TurbulenceMoverOnly, TurbulenceShoulderOnly or TurbulenceSlabOnly.'
+}
+if ($trialMode) {
+    $trialModeName = if ($TurbulenceSlabOnly) { 'TurbulenceSlabOnly' } elseif ($TurbulenceShoulderOnly) { 'TurbulenceShoulderOnly' } else { 'TurbulenceMoverOnly' }
+    if ([string]::IsNullOrWhiteSpace($TrialPath)) { throw "$trialModeName requires an explicit TrialPath." }
+    $trialResolved = [IO.Path]::GetFullPath($TrialPath)
+    if (-not (Test-Path -LiteralPath $trialResolved -PathType Leaf)) { throw "TrialPath is not a readable existing file: $trialResolved" }
+    $trialHashBefore = (Get-FileHash -LiteralPath $trialResolved -Algorithm SHA256).Hash
+}
 if ($TuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'TuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
@@ -113,7 +133,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$PressTowerOnly.IsPresent + [int]$SurfaceFinishOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$CursorTuneColoursOnly.IsPresent + [int]$SilhouetteTuneColoursOnly.IsPresent + [int]$RevealTuneColoursOnly.IsPresent + [int]$CursorMaterialTuneColoursOnly.IsPresent + [int]$DesktopTuneColourOnly.IsPresent + [int]$PowerLightTuneColourOnly.IsPresent + [int]$ProgramTuneColourOnly.IsPresent + [int]$ProgramLevelVisibilityOnly.IsPresent + [int]$ActingTuneColoursOnly.IsPresent + [int]$GlassTuneColourOnly.IsPresent + [int]$SilhouetteBodyTuneColourOnly.IsPresent + [int]$ScribbleTuneColourOnly.IsPresent + [int]$HudHealthTuneColourOnly.IsPresent + [int]$HudTrackTuneColourOnly.IsPresent + [int]$HudTimerTuneColourOnly.IsPresent + [int]$HudClosingMaterialsOnly.IsPresent + [int]$HudClosingShadeOnly.IsPresent + [int]$HudPaperTuneColoursOnly.IsPresent + [int]$HudLabelTuneColoursOnly.IsPresent + [int]$StagePreviewBackgroundTuneColourOnly.IsPresent + [int]$CrackTuneColourOnly.IsPresent + [int]$LimbTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$RumbleOnly.IsPresent + [int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$PressTowerOnly.IsPresent + [int]$TurbulenceBlockoutOnly.IsPresent + [int]$TurbulenceMoverOnly.IsPresent + [int]$TurbulenceShoulderOnly.IsPresent + [int]$TurbulenceSlabOnly.IsPresent + [int]$SurfaceFinishOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$CursorTuneColoursOnly.IsPresent + [int]$SilhouetteTuneColoursOnly.IsPresent + [int]$RevealTuneColoursOnly.IsPresent + [int]$CursorMaterialTuneColoursOnly.IsPresent + [int]$DesktopTuneColourOnly.IsPresent + [int]$PowerLightTuneColourOnly.IsPresent + [int]$ProgramTuneColourOnly.IsPresent + [int]$ProgramLevelVisibilityOnly.IsPresent + [int]$ActingTuneColoursOnly.IsPresent + [int]$GlassTuneColourOnly.IsPresent + [int]$SilhouetteBodyTuneColourOnly.IsPresent + [int]$ScribbleTuneColourOnly.IsPresent + [int]$HudHealthTuneColourOnly.IsPresent + [int]$HudTrackTuneColourOnly.IsPresent + [int]$HudTimerTuneColourOnly.IsPresent + [int]$HudClosingMaterialsOnly.IsPresent + [int]$HudClosingShadeOnly.IsPresent + [int]$HudPaperTuneColoursOnly.IsPresent + [int]$HudLabelTuneColoursOnly.IsPresent + [int]$StagePreviewBackgroundTuneColourOnly.IsPresent + [int]$CrackTuneColourOnly.IsPresent + [int]$LimbTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -174,6 +194,9 @@ $previousLocalAppData = $env:LOCALAPPDATA
 $process = $null
 $failure = $null
 . (Join-Path $PSScriptRoot 'check-painter/evidence-record.ps1')
+if ($RumbleOnly -and $Preset -eq 'x64-debug') {
+    $result.background_supplement = 'Debug-only actual GameLevel script.background checks: native private-HWND facts; synthetic StateContext activation and injected hard gates; neutral physical actions, truthful presence, script/bot/replay, Music/SFX group mute before shots, recording motors and unchanged private Save. No physical pad, listening, real OS focus/power-sleep, CI1 or performance acceptance.'
+}
 try {
     if (-not $SkipBuild) {
         Write-Host "Configure and build $Preset; logs: $run"
@@ -208,7 +231,9 @@ try {
     $objectDirectory = Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir'
     $objects = @(Get-ChildItem -LiteralPath $objectDirectory `
         -Filter '*.obj' -File -Recurse | Where-Object {
-            if ($_.Name -eq 'main.cpp.obj') { return $false }
+            # Every painter mode supplies a fake factory, so no existing or
+            # future GameLevel probe can contact physical rumble motors.
+            if ($_.Name -in @('main.cpp.obj', 'rumble_xinput.cpp.obj')) { return $false }
             if ($_.Name -eq 'cmake_pch.cxx.obj') { return $true }
             # CMake may leave an old object behind after its source is retired.
             $sourceRelative = $_.FullName.Substring($objectDirectory.Length + 1)
@@ -235,7 +260,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($RumbleOnly -or $KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     if ($StagePreviewBackgroundTuneColourOnly -and ($arguments -notcontains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
         throw 'StagePreviewBackgroundTuneColourOnly requires the scripted gamepad reader.'
     }
@@ -265,7 +290,7 @@ try {
     $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
     $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib',
         'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib',
-        'uuid.lib', 'comdlg32.lib', 'advapi32.lib')
+        'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib')
     $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
     Write-Host "Compile painter visual probe ($Preset)"
     Invoke-Logged -Command $cache.CMAKE_CXX_COMPILER -Arguments @("@$responseFile") `
@@ -274,7 +299,7 @@ try {
     $result.staged_content_hashes = @(
         'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json',
         'levels/close_quarters.json', 'levels/king_of_the_hill.json', 'levels/turbulence.json', 'levels/crossfeed.json',
-        'levels/press_tower.json',
+        'levels/press_tower.json', 'levels/turbulence_blockout.json',
         'textures/painter.dds', 'textures/painter.json',
         'textures/weapon_paint.dds', 'textures/weapon_paint.json',
         'textures/terrain.dds', 'textures/terrain.json' |
@@ -292,6 +317,10 @@ try {
     elseif ($CqBlockoutOnly) { $probeArguments += 'cq-blockout' }
     elseif ($CrossfeedOnly) { $probeArguments += 'crossfeed' }
     elseif ($PressTowerOnly) { $probeArguments += 'press-tower' }
+    elseif ($TurbulenceBlockoutOnly) { $probeArguments += 'turbulence-blockout' }
+    elseif ($TurbulenceMoverOnly) { $probeArguments += @('turbulence-mover', (Quote-Path $trialResolved)) }
+    elseif ($TurbulenceShoulderOnly) { $probeArguments += @('turbulence-shoulder', (Quote-Path $trialResolved)) }
+    elseif ($TurbulenceSlabOnly) { $probeArguments += @('turbulence-slab', (Quote-Path $trialResolved)) }
     elseif ($SurfaceFinishOnly) { $probeArguments += 'surface-finish' }
     elseif ($RouteWarningOnly) { $probeArguments += 'route-warning' }
     elseif ($LandmarkOnly) { $probeArguments += 'landmark' }
@@ -362,6 +391,7 @@ try {
     elseif ($PausedOptionsOnly) { $probeArguments += 'paused-options' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
+    elseif ($RumbleOnly) { $probeArguments += 'rumble' }
     elseif ($KeyboardJumpOnly) { $probeArguments += 'keyboard-jump' }
     elseif ($PercentageTextOnly) { $probeArguments += 'percentage-text' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
@@ -434,9 +464,15 @@ try {
         }
     }
     $expectedSaveFailures = @{}
+    if ($RumbleOnly) {
+        $line = 'save failure: Could not write ' + (Join-Path $captures 'rumble-settings-profile/ColourWars/save_data.json') + '.'
+        $expectedSaveFailures[$line] = 1
+    }
     if ($KeyboardJumpOnly) {
         $line = 'save failure: Could not write ' + (Join-Path $captures 'keyboard-jump-profile/ColourWars/save_data.json') + '.'
         $expectedSaveFailures[$line] = 2
+        $line = 'save failure: Could not write ' + (Join-Path $captures 'pad-jump-profile/ColourWars/save_data.json') + '.'
+        $expectedSaveFailures[$line] = 1
     }
     if ($PercentageTextOnly) {
         $line = 'save failure: Could not write ' + (Join-Path $captures 'percentage-profile/ColourWars/save_data.json') + '.'
@@ -496,9 +532,39 @@ try {
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
     }
+    if ($RumbleOnly -and $debug) {
+        $background = Get-Content -LiteralPath (Join-Path $captures 'debug-background-summary.json') -Raw | ConvertFrom-Json
+        $backgroundRows = @(Import-Csv -LiteralPath (Join-Path $captures 'debug-background.csv'))
+        $backgroundCases = @('default-off-inactive', 'actual-hidden-hard-gate',
+            'synthetic-inactive-neutral-presence-muted-before-step', 'foreground-zero-run-edge-discarded',
+            'inactive-actual-damage-motors-zero', 'inactive-script-wait',
+            'manual-debug-pause-and-script-self-disable-barrier', 'covered-toggle-hard-gate',
+            'injected-hidden', 'injected-minimized', 'injected-power-suspended', 'off-inactive-freezes',
+            'off-then-activation-ordinary-countin-current-preferences', 'actual-pause-menu-hard-gate',
+            'resume-countin-hard-gate', 'missing-pad-real-pause', 'inactive-bot-paid-shot-record',
+            'inactive-replay-final-fingerprint', 'new-inactive-level-enabled', 'new-inactive-level-disabled')
+        if ($background.outcome -cne 'passed' -or $background.cases -ne 20 -or $backgroundRows.Count -ne 20 -or
+            $background.recorded_updates -ne 420 -or $background.native_motor_calls -ne 0 -or
+            $background.save_unchanged -ne $true -or
+            @($backgroundRows.case | Sort-Object -Unique).Count -ne 20 -or
+            @(Compare-Object -ReferenceObject $backgroundCases -DifferenceObject @($backgroundRows.case)).Count -ne 0) {
+            throw 'Debug background supplement did not produce its complete bounded 20-case/420-update receipts.'
+        }
+        $result.background_receipt = $background
+    }
+    if ($trialMode) {
+        $trialHashAfterAttempted = $true
+        $result.trial_source.sha256_after = (Get-FileHash -LiteralPath $trialResolved -Algorithm SHA256).Hash
+        $result.trial_source.unchanged = $result.trial_source.sha256_after -ceq $trialHashBefore
+        if (-not $result.trial_source.unchanged) { throw 'The native probe changed its explicitly supplied private trial.' }
+    }
     if ($CqBlockoutOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-cq-blockout.ps1') }
     if ($CrossfeedOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-crossfeed.ps1') }
     if ($PressTowerOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-press-tower.ps1') }
+    if ($TurbulenceBlockoutOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-turbulence-blockout.ps1') }
+    if ($TurbulenceMoverOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-turbulence-mover.ps1') }
+    if ($TurbulenceShoulderOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-turbulence-shoulder.ps1') }
+    if ($TurbulenceSlabOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-turbulence-slab.ps1') }
     if ($SurfaceFinishOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-surface-finish.ps1') }
     if ($RouteWarningOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-route-warning.ps1') }
     if ($ResultPercentageOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-result-percentage.ps1') }
@@ -566,6 +632,19 @@ finally {
             $null = $process.WaitForExit(3000)
         }
         $process.Dispose()
+    }
+    if ($trialMode -and -not $trialHashAfterAttempted) {
+        $trialHashAfterAttempted = $true
+        try {
+            $result.trial_source.sha256_after = (Get-FileHash -LiteralPath $trialResolved -Algorithm SHA256).Hash
+            $result.trial_source.unchanged = $result.trial_source.sha256_after -ceq $trialHashBefore
+            if (-not $result.trial_source.unchanged) { throw 'The failed native run changed its explicitly supplied private trial.' }
+        }
+        catch {
+            if ($null -eq $failure) { $failure = $_ }
+            $result.outcome = 'failed'
+            $result.diagnostic += ' Trial source check: ' + $_.Exception.Message
+        }
     }
     $result | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $run 'result.json') -Encoding utf8
     Write-Host "Painter evidence: $run"

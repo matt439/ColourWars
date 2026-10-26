@@ -11,6 +11,7 @@ CollisionLayer collision_layer(CollisionObjectType type)
 	case CollisionObjectType::structure:
 	case CollisionObjectType::structure_paintable:
 	case CollisionObjectType::structure_jump_through:
+	case CollisionObjectType::structure_fixed_slab:
 		return collision_layers::STRUCTURE;
 
 	case CollisionObjectType::structure_ramp_left:
@@ -52,6 +53,7 @@ CollisionMask collision_mask(CollisionObjectType type)
 	case CollisionObjectType::structure_jump_through:
 	case CollisionObjectType::structure_ramp_left:
 	case CollisionObjectType::structure_ramp_right:
+	case CollisionObjectType::structure_fixed_slab:
 		return collision_layers::ALL_PLAYERS | collision_layers::ALL_PROJECTILES;
 
 	// Players collide with geometry and enemy paint, but not other players or friendly paint.

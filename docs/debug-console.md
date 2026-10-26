@@ -1578,10 +1578,6 @@ as the game. In Release:
   data (which frames, which stations); anything that needs logic is a command.
 - **A live console over the menus**, and **binds in the menus**: menus have no
   simulation to keep running, and F5 (`restart`) means nothing there.
-- **Scripts that keep running while the window is in the background**: the
-  match only updates while the window is active, and losing focus suspends the
-  level (which would change a review's checksums anyway). A Debug-only "run
-  while inactive" switch would not stop the suspend; not built.
 - **Typing in the live console while the keyboard player keeps playing**: the
   whole keyboard seat is blanked (`DBG#4`). The keys you type are the keyboard
   seat's play keys, and nothing can tell typing a key from playing it; the
@@ -1594,6 +1590,73 @@ as the game. In Release:
   (a recording stops at the end of the round).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side.
+
+## Background script work (`DBG#6`)
+
+**Implemented and qualified, 2026-10-26.** `script.background [0|1]` is a Debug-only,
+session-only opt-in, default `0`. The pinned native loop already ticks without
+focus; the client coordinates its own script, match and suspension gates.
+The opt-in permits automation in an ordinarily inactive, shown window. With it
+enabled, hidden, minimized and power-suspended windows remain held. It never marks the real
+Application active or admits physical gameplay/menu controls while inactive.
+
+Truthful connection checks, manual/covered pauses and existing resume countdowns
+remain authoritative. Ordinary opt-in focus loss avoids gameplay-buffer and
+replay-suspend mutations; disabling it while inactive restores the normal hold.
+Music/SFX are muted before background simulation without changing saved
+preferences, current preferences restore on actual activation, and rumble output
+stays zero. New inactive matches and script-driven rebuild/menu/quit transitions
+obey the same policy. Normal focus behavior and Release remain unchanged.
+
+For an unattended developer match in a shown, ordinarily unfocused window:
+
+```powershell
+ColourWars.exe +script.background 1 +stage movement_course +bot all paint +wait 300 +quit
+```
+
+The command without an argument reports the current choice. It is not saved.
+Physical inputs are cleared after mouse-aim resolution, before bots/replay
+supply their effective inputs; connection facts are retained. Buffered physical
+edges from a zero-run foreground tick are discarded without changing clock
+pacing or pending manual steps. Disabling the mode during an inactive match
+holds the next script statement and queued match action until activation.
+Default-off menu-side script handling keeps its earlier behavior.
+
+Both game presets build under `/W4 /WX`. The focused `debug_console
+--background-only` case passes in Debug and Release, including all-field
+post-mouse neutralization, driver ordering, held edges, both disable-batch
+orders, command validation, existing clock/script/bot/replay regressions,
+shared layouts and Release command/RTTI exclusion. Nine relevant existing
+consumer cases also pass per preset.
+
+The Debug `RumbleOnly` supplement passes twenty cases through actual GameLevel
+and StateContext, with injected window facts and synthetic activation. It
+records and replays 420 updates, checks the final fingerprint and neutral
+non-bot tape channels, pre-update Music/SFX gains, every motor intent and
+unchanged private Save bytes. It also checks native private-HWND visibility,
+minimize and message forwarding/lifetime, including synthetic power messages.
+The existing Rumble checks pass in both presets; no extra screenshots are added.
+
+Receipts are under `out/validation/overnight-20261026/phase20/`:
+`background-cpu-*-v2.log`, `regression-*` and `background-native-v4/` (Debug
+`30d7b44643864a248f5fb8d9d48e252b`, Release `b014cdcd1d36467a81a2817885dc293a`).
+Both published-bank SystemOnlyPath startups also pass with isolated saves,
+per-monitor v2 DPI awareness and graceful shutdown: Debug
+`99c565c8260f455e9ea69b4f1c664180`, Release `378b21cc7e2046398367b2f154a65ce2`.
+Failed native receipts are retained: v1 had a diagnostic-string compile error;
+v2 exposed post-neutralization mouse aim and prompted the production fix;
+v3 drove the reconnect menu with the wrong pad, corrected to its actual owner.
+These controlled results do not establish attended OS-focus/power-sleep,
+physical-pad, listening or performance acceptance, and do not satisfy `CI#1`.
+
+The refreshed local Release ZIP at `9d08adc5` also passes file/audio/console
+inspection, all nine level-byte checks, normal extracted startup and a separate
+missing-bank-copy startup. Receipts are under
+`out/validation/overnight-20261026/phase21/`; the normal startup is
+`3953dcbf708644dd974ce81a8f51a88b`, and the fallback is
+`a5291edaec4d4ca783c37027ed030486`. Its 63-file ZIP SHA256 is
+`191451EDD2A1AD69D883E0D997FBA98255082308C17FC666CA27929829E993EB`.
+Clean-machine acceptance remains `ROAD#1`.
 
 ## Remaining live-tuning work (`DBG#1`)
 
@@ -3075,9 +3138,10 @@ The stored opt-in trial factors are own speed `1.10`, own ammunition recovery
 numeric fields; `tune.reset` restores file tokens. Do not use `tune.save` for an
 unattended experiment. There is no new special, damage, health or jump boost.
 
-A completed confirmed axis-aligned top contact is sampled at the foot center by team,
-then used consistently by movement and ammunition on the following physics step.
-Conflicting owned overlaps are neutral. Air, ramps, walls, ceilings and reset or
+A completed confirmed flat top contact is sampled at the foot center by team;
+the selected fixed scored slabs use their actual support corner in the local
+top frame. The result is used consistently by movement and ammunition on the following physics step.
+Conflicting owned overlaps are neutral. Air, unscored ramps, walls, ceilings and reset or
 dead players do not retain terrain context. Capture credit and colour palettes
 do not select the effect. See the [owner's timing and geometry contract](polish-plan.md#experimental-underfoot-prototype).
 
@@ -3093,7 +3157,7 @@ and their observation limits. Human `POL#27`/`POL#30`/`POL#31` decisions remain 
 
 ## Horizontal moving-state replay boundary
 
-A manually constructed Level with horizontal movers appends an optional
+A Level with horizontal movers appends an optional
 `final.horizontal_motion` object to replay format 3; its schema is 1. Stable
 mover IDs, exact specification/phase/direction/offset and pose bits, ordered local
 face ownership/scored areas and seat-ordered carrier IDs contribute to the
@@ -3106,6 +3170,9 @@ The Debug `moving_structure` acceptance case records and plays 240 real updates
 through Recorder/Player on two independently constructed seeded Levels, checks
 all four checkpoints, final state and terminal RNG, and rejects malformed tapes.
 Existing static encodings remain byte-identical in the retained old/new controls.
-There is no public builder kind, console spawn command or stage-loader rebuild
-for movers yet; ordinary `play` cannot reconstruct this manual fixture. See the
-[capability and remaining integration](feature-roadmap.md#horizontal-movement-capability-2026-10-26).
+Public builder/editor construction and seeded stage-loader rebuilds are now
+qualified in the [capability record](feature-roadmap.md#horizontal-movement-capability-2026-10-26).
+The 240-update case above remains a manual fixture; ordinary `play` cannot
+reconstruct that unregistered fixture. The separate public Turbulence route
+proofs use decoded stage/setup/seed factories, with their exact countdown and
+playback limits recorded in the [arena owner](polish-turbulence.md).

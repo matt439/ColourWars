@@ -24,7 +24,9 @@ enum class CollisionObjectType
 	projectile_ball_team_b,
 	projectile_mist_team_a,
 	projectile_mist_team_b,
-	none
+	none,
+	// Appended so existing replay/debug tag values remain unchanged.
+	structure_fixed_slab
 };
 
 namespace collision_layers
@@ -87,7 +89,8 @@ inline bool is_structure(CollisionObjectType type)
 		type == CollisionObjectType::structure_paintable ||
 		type == CollisionObjectType::structure_jump_through ||
 		type == CollisionObjectType::structure_ramp_left ||
-		type == CollisionObjectType::structure_ramp_right;
+		type == CollisionObjectType::structure_ramp_right ||
+		type == CollisionObjectType::structure_fixed_slab;
 }
 
 inline bool is_structure_ramp(CollisionObjectType type)

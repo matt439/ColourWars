@@ -29,10 +29,15 @@ struct PlaySettings
 	bool aim_marker = true;
 	bool reduce_effects = false;
 	std::array<StickSettings, input_slots::pad_count> sticks{};
+	std::array<bool, input_slots::pad_count> pad_rumble{ true, true, true, true };
 
 	float music_gain() const { return static_cast<float>(music_volume) / 100.0f; }
 	float sfx_gain() const { return static_cast<float>(sfx_volume) / 100.0f; }
 	bool view_shake_enabled() const { return this->view_shake && !this->reduce_effects; }
+	bool rumble_enabled(int slot) const
+	{
+		return input_slots::is_pad(slot) && this->pad_rumble[static_cast<std::size_t>(slot)];
+	}
 
 	// Absolute stick aiming has no turn speed. Sensitivity controls the radial
 	// deadzone; the default setting uses half the stick's travel.

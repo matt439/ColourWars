@@ -671,6 +671,23 @@ void DebugDirectorImpl::register_script_commands()
 
 	// The live console ------------------------------------------------------
 
+	registry.add(std::make_unique<BoolVariable>("script.background",
+		"session-only inactive script/bot/replay updates; physical input, audio and rumble "
+		"stay inactive; hidden, minimised and power-suspended windows still stop", false,
+		[this] { return this->background_scripts_; },
+		[this](bool on)
+		{
+			this->background_scripts_ = on;
+			if (on && this->application_ != nullptr && this->data_ != nullptr &&
+				!this->data_->keyboard()->focused())
+			{
+				this->sync_background_audio(false);
+			}
+			this->background_changed();
+			return DebugStatus::success(std::string("script.background = ") + (on ? "on" : "off") +
+				(on && !this->background_updates_allowed() ? " (window gate closed)" : ""));
+		}));
+
 	registry.add(std::make_unique<BoolVariable>("console.live",
 		"the console over a running match: the match keeps going, the keyboard seat is "
 		"idle while it is open (off: the console freezes the world)", false,

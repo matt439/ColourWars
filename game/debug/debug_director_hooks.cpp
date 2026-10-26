@@ -101,6 +101,8 @@ void DebugDirectorImpl::apply_pending_content()
 
 void DebugDirectorImpl::attach_match(DebugMatchTarget& match)
 {
+	this->match_hook_active_ = true;
+	this->background_inputs_.set_next(nullptr);
 	this->match_ = &match;
 	this->waiting_notice_shown_ = false;
 	// Perf times match frames: not the time spent in the menus before this.
@@ -124,6 +126,8 @@ void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
 {
 	if (this->match_ == &match)
 	{
+		this->match_hook_active_ = true;
+		this->background_inputs_.set_next(nullptr);
 		this->break_perf_interval();
 		// The level is still alive: a recording ends with its final state.
 		this->stop_recording("the match ended");
@@ -475,16 +479,18 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 	}
 }
 
-bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt)
+bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt, bool active)
 {
+	this->match_hook_active_ = active;
+	if (!active) { this->clock_.discard_input_edges(); }
 	++this->hook_frames_;
-	if (this->poll_debug_menu_toggle(dt) || this->open_console_if_requested(true))
+	if (active && (this->poll_debug_menu_toggle(dt) || this->open_console_if_requested(true)))
 	{
 		return true;
 	}
 
 	this->capture_screenshot_if_ready();
-	if (this->live_open_ && this->live_view_ != nullptr && this->data_ != nullptr)
+	if (active && this->live_open_ && this->live_view_ != nullptr && this->data_ != nullptr)
 	{
 		// The live console has the keyboard: no binds while it is open.
 		if (this->live_view_->update(*this->data_->keyboard(), dt, *this) ==
@@ -493,14 +499,15 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt)
 			this->close_live_console("");
 		}
 	}
-	else
+	else if (active)
 	{
 		this->run_binds(match);
 	}
 	// A statement's queued rebuild applies below, in this same hook; a
 	// screenshot with nothing queued is taken before this step's update.
 	++this->script_frames_;
-	this->tick_scripts(true);
+	this->tick_scripts(true, !active);
+	if (!active && !this->background_updates_allowed()) { return true; }
 
 	if (this->leave_requested_)
 	{
@@ -641,8 +648,13 @@ void DebugDirectorImpl::end_keyboard_capture()
 	this->keyboard_capture_ = false;
 }
 
-bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
+bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt, bool active)
 {
+	this->match_hook_active_ = true;
+	this->background_inputs_.set_next(nullptr);
+	// Existing default hooks retain their policy. Opting in permits only
+	// ordinary inactive work; native hide/minimise/power gates still hold it.
+	if (!active && this->background_scripts_ && !this->background_updates_allowed()) { return false; }
 	if (this->keyboard_capture_)
 	{
 		this->capture_input_frame(page);
@@ -653,7 +665,7 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 	// and perf times only frames with the match on top (a page may cover it).
 	this->close_live_console("a menu opened");
 	this->break_perf_interval();
-	if (this->poll_debug_menu_toggle(dt))
+	if (active && this->poll_debug_menu_toggle(dt))
 	{
 		return true;
 	}
@@ -666,7 +678,7 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 			page.debug_reset_input(slot);
 		}
 	}
-	if (this->open_console_if_requested(false))
+	if (active && this->open_console_if_requested(false))
 	{
 		return true;
 	}

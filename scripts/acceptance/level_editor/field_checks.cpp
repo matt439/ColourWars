@@ -220,6 +220,27 @@ namespace level_editor_acceptance
     void check_drift(const fs::path& repo, const fs::path& scratch)
     {
         LevelDocument base;
+        // Runtime motion is separate from decorative drift. A default document
+        // without source player-size context cannot qualify standing corridors.
+        rapidjson::Document moving = parse(contents(repo / "editor/template.json"));
+        rapidjson::Document motion;
+        motion.Parse("{\"type\":\"horizontal\",\"travel_x\":120,\"period\":6.4,\"phase\":0.25}");
+        rapidjson::Value motion_value;
+        motion_value.CopyFrom(motion, moving.GetAllocator());
+        moving["collision_objects"][3].AddMember("motion", motion_value, moving.GetAllocator());
+        const fs::path moving_path = scratch / "unsupported-runtime-motion.json";
+        const std::string moving_source = encode(moving);
+        write(moving_path, moving_source);
+        std::string motion_diagnostic;
+        reject_without_change(base, [&]
+        {
+            try { base.load(moving_path); }
+            catch (const std::exception& error) { motion_diagnostic = error.what(); throw; }
+        }, "Editor accepted motion without explicit source tuning context");
+        require(motion_diagnostic.find("motion") != std::string::npos &&
+            motion_diagnostic.find("source tuning.json authoring context") != std::string::npos &&
+            contents(moving_path) == moving_source,
+            "Editor motion refusal lost its explanation or changed the source");
         rapidjson::Document valid = parse(base.serialize());
         rapidjson::Document drift;
         drift.Parse("{\"distance\":32,\"period\":60,\"phase\":0.25,\"author_note\":\"retain\"}");

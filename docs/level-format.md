@@ -107,7 +107,7 @@ does not use it for lookup, collision or uniqueness.
 | Array | `type` | Allowed `collision_type` | Geometry and extra fields |
 |---|---|---|---|
 | `collision_objects` | `Structure` | `STRUCTURE`, `STRUCTURE_JUMP_THROUGH` | Rectangle; optional `material`. Fixed solid or jump-through terrain; no scoring paint. |
-| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE`, `STRUCTURE_JUMP_THROUGH` | Rectangle plus all four `paintable_faces` booleans; optional `material`. Fixed paint-scoring solid or jump-through terrain. |
+| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE`, `STRUCTURE_JUMP_THROUGH` | Rectangle plus all four `paintable_faces` booleans; optional `material` and horizontal `motion`. Paint-scoring solid or jump-through terrain. |
 | `collision_objects` | `StructureRamp` | `STRUCTURE_RAMP_RIGHT`, `STRUCTURE_RAMP_LEFT` | `triangle` with six coordinates; optional `material`. Fixed ramp collision; no scoring paint. |
 | `non_collision_objects` | `Visual` | None is read | Rectangle; optional `drift`. Decorative art with no collision or score; backdrop props use sheet `terrain`. |
 
@@ -126,6 +126,52 @@ Width and height must be finite and positive; for TLBR, `right > left` and
 the runtime ignores `rectangle_tlbr`, even if that ignored field is malformed.
 The schema preserves that precedence. Neither encoding accepts anchor names,
 relative positions or a layout expression.
+
+### Horizontal paintable motion
+
+A flat `StructurePaintable` may add:
+
+```json
+"motion": { "type": "horizontal", "travel_x": 120, "period": 6.4, "phase": 0.25 }
+```
+
+The rectangle is the **leftmost anchor**, rather than the initial world pose.
+The body travels right by `travel_x`, then returns along the same horizontal
+path. `period` is the complete round trip in seconds. `phase` is a fraction of
+that trip: 0 is the left endpoint departing right, 0.5 is the right endpoint
+departing left, and 0.25 starts halfway to the right endpoint. The initial pose
+is used by gameplay, culling and the stage preview; paint and credit stay on
+the object's local faces. Omission retains the original static object path.
+
+All four fields are required. Travel must be finite and positive and reach a
+distinct representable endpoint. The full period must span at least two fixed
+simulation steps (currently 1/30 second); phase must remain in [0,1) after float
+conversion. The anchor and endpoint must have finite, positive represented
+edges. Both solid and jump-through paintables are supported. Motion on plain
+structures, ramps or visuals, another motion `type`, and `axis`, `travel_y` or
+`rotation` in the record are errors. Other unknown keys remain ignored metadata,
+as elsewhere in format 1; they do not add motion capabilities.
+
+This is the existing horizontal triangular mover, with its existing safety
+limits. On actual Level admission the entire platform envelope and expanded
+standing corridor must lie inside Scene bounds and clear every other structure
+over its complete path. The actual player dimensions/rates must leave safe
+relative displacement at the fixed step. Two individually valid records can
+therefore still fail when combined into a stage. The schema and startup object
+validation alone cannot establish this scene-level contract.
+
+Moving anchors do not permanently bury static paint or terrain edges and do
+not leave a static airbrush shadow. A material-bearing moving platform casts
+the existing translated shadow tied to the actual Scene-owned mover.
+
+The [editor](level-editor.md#moving-structure-authoring-gapd5) now exposes solid
+and one-way horizontal paintables, anchor/motion fields and full travel/standing
+guides. Its document model requires explicit source `tuning.json` context for
+player size and validates envelope edits transactionally. Both-preset document
+and editor-save/public-loader checks pass. No shipped arena uses this field yet;
+public-loader record/play reconstruction is CPU-qualified in the
+`moving_structure` acceptance case. Useful arena placement and native/human
+acceptance remain separate.
 
 A ramp reads `triangle` instead of either rectangle:
 
@@ -274,6 +320,52 @@ arena suffixes are `king_of_the_hill` and `turbulence`. Movement Course omits
 both pairs. The optional missing-bank substitution remains supported: an absent
 bank becomes silent and cannot establish whether named cues exist in the real
 bank. See the [audio inventory](audio-inventory.md).
+
+## Fixed scored slabs
+
+`FixedSlabPaintable` is a bounded static solid: a 160-unit horizontal span,
+80-unit rise and **24-unit normal thickness**. It accepts the two mirrored
+orientations below, rather than arbitrary angles, sizes or moving rotation.
+
+```json
+{
+    "type": "FixedSlabPaintable",
+    "name": "shoulder_a",
+    "collision_type": "STRUCTURE_FIXED_SLAB",
+    "material": "eraser",
+    "slab": { "x": 1240, "y": 880, "rise": "right" },
+    "paintable_faces": { "left": true, "top": true, "right": true, "bottom": true }
+}
+```
+
+`x,y` names the **leftmost endpoint of the top walking edge**. `right` ends
+at `(x+160,y-80)`; `left` ends at `(x+160,y+80)`. Both endpoints must remain
+finite game floats within -65,536 to 65,536 and retain the fixed footprint
+after conversion. The dedicated eraser treatment resolves its own resources;
+this type does not require the ordinary sprite sheet, frame or colour fields.
+Unknown metadata survives editor round trips. Motion, drift, arbitrary rotation,
+alternate rectangle/triangle geometry and slab size/thickness requests are
+refused. Intersecting slabs need a separate shared-boundary contract and are
+refused; ordinary flat terrain can meet or overlap their ends.
+
+The top is supported by its actual sloping segment. End caps and underside
+remain solid; the existing paint-pass ramps keep their original behavior.
+Flying paint uses four-axis continuous contact selection, including growing
+rectangular projectile volumes and mixed static/moving cover. Paint tiles live
+in the slab's local frame. Score uses their authoritative local areas, while
+public surface samples publish transformed corners. Friendly repaint retains
+credit and enemy capture transfers it. Exposed faces are clipped against actual
+flat terrain; reciprocal flat faces use the slab polygon, never its bounding
+box. Adjacency uses the authored top endpoints and normal extrusion, correcting
+only OBB reconstruction drift within four coordinate float ULPs. Obstacle
+coordinates and real authored gaps are preserved; larger corrections fail.
+The collider and published tile corners retain their represented OBB pose.
+The slab's material, paint, splash, culling and static underside shadow
+follow that fixed frame. Sloped gravity runoff has no separate policy yet.
+
+The editor offers both fixed orientations, actual outline/top-edge guides,
+translation and rise edits. Resize is refused. These contracts do not qualify
+a placement's routes, competitive value, native composition or attended play.
 
 ## Stations and validation limits
 

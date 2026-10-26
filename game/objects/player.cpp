@@ -4,6 +4,7 @@
 #include "game/objects/projectile.h"
 #include "game/objects/paint_audio.h"
 #include "game/objects/structure_paintable.h"
+#include "game/objects/fixed_slab_paintable.h"
 
 #include "engine/collision/resolve.h"
 
@@ -214,6 +215,11 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
         this->on_jump_through_contact(other);
         return;
     }
+    if (other_type == CollisionObjectType::structure_fixed_slab)
+    {
+        this->on_fixed_slab_contact(dynamic_cast<const FixedSlabPaintable&>(other), normal, penetration);
+        return;
+    }
     if (is_structure_ramp(other_type))
     {
         this->on_ramp_contact(other_type, other, normal, penetration);
@@ -224,6 +230,27 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
 void Player::end_contacts(std::span<const Contact> contacts,
     std::span<const HorizontalSupportRef> supports)
 {
+    // The new solid slab keeps its own support line; its normal extrusion's
+    // AABB is not the line the feet walk on. Legacy ramps retain their path.
+    if (this->projected_fixed_slab_support_ && !this->supported_this_tick_ &&
+        !this->hit_ceiling_this_tick_ && this->is_on_ramp())
+    {
+        if (const auto support = this->fixed_slab_support_at(this->rectangle_);
+            support && feet_at(this->rectangle_, support->y))
+        {
+            this->supported_this_tick_ = true;
+            this->support_position_ = *support;
+        }
+    }
+    const auto slab_position = this->fixed_slab_support_at(this->rectangle_);
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
+        !this->supported_this_tick_ || !this->is_on_ramp() ||
+        !slab_position || !feet_at(this->rectangle_, slab_position->y))
+    {
+        this->fixed_slab_support_.reset();
+    }
+    this->projected_fixed_slab_support_ = false;
+
     // A projected slope can touch without penetrating, so dispatch may have
     // no manifold to resolve. Retain that support only if later wall/ceiling
     // responses left the body on the same surface. Real contacts take priority.
@@ -290,7 +317,8 @@ void Player::end_contacts(std::span<const Contact> contacts,
                 const bool at_toe = uphill && feet_at(this->rectangle_, ramp.bottom()) &&
                     coordinate_at(corner, toe, this->rectangle_.width);
                 const float crest = rises_right ? ramp.right() : ramp.left();
-                const float crest_corner = rises_right ? this->rectangle_.left() : this->rectangle_.right();
+                const float crest_corner = rises_right ? this->rectangle_.left() :
+                    this->rectangle_.right();
                 const bool downhill = rises_right ? this->movement_requested_x_ < 0.0f :
                     this->movement_requested_x_ > 0.0f;
                 const bool at_crest = downhill && feet_at(this->rectangle_, ramp.top()) &&
@@ -302,6 +330,35 @@ void Player::end_contacts(std::span<const Contact> contacts,
                         PlayerMoveState::on_ramp_left);
                     this->support_position_ = at_toe ? Vector2F(toe, ramp.bottom()) :
                         Vector2F(crest, ramp.top());
+                }
+            }
+            else if (type == CollisionObjectType::structure_fixed_slab)
+            {
+                const auto& slab = dynamic_cast<const FixedSlabPaintable&>(*other);
+                const Vector2F start = slab.geometry().top_start();
+                const Vector2F end = slab.geometry().top_end();
+                const bool rises_right = end.y < start.y;
+                const Vector2F toe = rises_right ? start : end;
+                const Vector2F crest = rises_right ? end : start;
+                const float toe_corner = rises_right ? this->rectangle_.right() : this->rectangle_.left();
+                const bool uphill = rises_right ? this->movement_requested_x_ > 0.0f :
+                    this->movement_requested_x_ < 0.0f;
+                const bool downhill = rises_right ? this->movement_requested_x_ < 0.0f :
+                    this->movement_requested_x_ > 0.0f;
+                const bool at_toe = uphill && feet_at(this->rectangle_, toe.y) &&
+                    coordinate_at(toe_corner, toe.x, this->rectangle_.width);
+                // The adjoining flat may resolve first while the body
+                // straddles the crest. Keep that real vertex support until
+                // the trailing corner enters the slope, rather than requiring
+                // a discrete step to land exactly on the crest's X.
+                const bool at_crest = downhill && feet_at(this->rectangle_, crest.y) &&
+                    this->rectangle_.left() <= crest.x && this->rectangle_.right() >= crest.x;
+                if (at_toe || at_crest)
+                {
+                    this->remember_fixed_slab_support(slab);
+                    this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right :
+                        PlayerMoveState::on_ramp_left);
+                    this->support_position_ = at_toe ? toe : crest;
                 }
             }
         }
@@ -333,6 +390,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
                 }
                 if (this->support_impact_speed_ >= this->movement_feedback_look_->landing_min_speed)
                 {
+                    this->pending_rumble_.hard_landing = true;
                     this->start_action(PlayerAnimationState::landing);
                 }
             }
@@ -548,6 +606,15 @@ void Player::choose_carrier(std::span<const Contact> contacts,
 
 PlayerTeam Player::gameplay_support_team() const
 {
+    if (this->fixed_slab_support_ && this->is_on_ramp() &&
+        this->state_ == PlayerState::alive && this->health_ > 0.0f && this->supported_this_tick_)
+    {
+        if (const auto point = this->fixed_slab_support_at(this->rectangle_);
+            point && feet_at(this->rectangle_, point->y))
+        {
+            return this->fixed_slab_support_->surface->top_paint_team(point->x);
+        }
+    }
     const bool flat_ground = this->move_state() == PlayerMoveState::on_ground ||
         this->move_state() == PlayerMoveState::on_drop_down_ground;
     if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
@@ -595,6 +662,17 @@ float Player::underfoot_ammo_multiplier() const
 }
 std::optional<Player::PaintedSupport> Player::painted_support() const
 {
+    if (this->fixed_slab_support_ && this->is_on_ramp() && this->supported_this_tick_)
+    {
+        if (const auto point = this->fixed_slab_support_at(this->rectangle_);
+            point && feet_at(this->rectangle_, point->y))
+        {
+            if (const auto colour = this->fixed_slab_support_->surface->top_paint_colour(point->x))
+            {
+                return PaintedSupport{ *colour, *point };
+            }
+        }
+    }
     for (const StructurePaintable* support : this->paint_supports_)
     {
         const RectangleF surface = support->shape()->bounding_box();
@@ -623,6 +701,27 @@ std::optional<Player::PaintedSupport> Player::painted_support() const
 void Player::on_structure_contact(const CollisionObject& other,
     const Vector2F& normal, float penetration)
 {
+    if (this->projected_fixed_slab_support_ && normal.y < 0.0f &&
+        std::abs(normal.y) >= std::abs(normal.x))
+    {
+        if (const auto support = this->fixed_slab_support_at(this->prev_rectangle_);
+            support && feet_at(this->prev_rectangle_, support->y))
+        {
+            const bool rises_right = this->fixed_slab_support_->end.y < this->fixed_slab_support_->start.y;
+            this->rectangle_ = this->prev_rectangle_;
+            MovingObject::set_velocity_x(0.0f);
+            MovingObject::set_velocity_y(0.0f);
+            this->support_position_ = *support;
+            this->supported_this_tick_ = true;
+            this->hit_ceiling_this_tick_ = true;
+            this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
+            this->projected_fixed_slab_support_ = false;
+            // The restored pose still has its real fixed-lifetime support.
+            // Retain the line so held uphill input rejects the same blocked
+            // step next tick instead of falling back into the slab/ceiling.
+            return;
+        }
+    }
     // A grounded slope step rises with the ramp. If that rise meets a
     // ceiling, separating downward would put the feet inside the same ramp.
     // Reject the attempted step at its previous supported pose instead. A
@@ -697,6 +796,8 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
     this->rectangle_.offset(
         separation_along(normal, penetration, Vector2F::DIRECTION_DOWN));
 
+    this->fixed_slab_support_.reset();
+    this->projected_fixed_slab_support_ = false;
     this->set_move_state(other_type == CollisionObjectType::structure_ramp_left ?
         PlayerMoveState::on_ramp_left : PlayerMoveState::on_ramp_right);
     this->supported_this_tick_ = true;
@@ -713,6 +814,57 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
         this->rectangle_.bottom() };
 
     MovingObject::set_velocity_y(0.0f);
+}
+
+void Player::remember_fixed_slab_support(const FixedSlabPaintable& slab)
+{
+    this->ramp_support_.reset();
+    this->projected_ramp_support_ = false;
+    this->fixed_slab_support_ = FixedSlabSupport{
+        slab.geometry().top_start(), slab.geometry().top_end(), &slab };
+    this->clear_carrier();
+}
+
+void Player::on_fixed_slab_contact(const FixedSlabPaintable& slab,
+    const Vector2F& normal, float penetration)
+{
+    const Vector2F inward = slab.geometry().inward_normal();
+    const float alignment = normal.x * inward.x + normal.y * inward.y;
+    // SAT may select world Y at a top endpoint. Both that normal and the
+    // slab's top normal qualify; either end cap and the underside do not.
+    const bool top_contact = normal.y > 0.0f &&
+        std::abs(normal.y) >= std::abs(normal.x) &&
+        alignment >= inward.y - 4.0f * std::numeric_limits<float>::epsilon();
+    const Vector2F start = slab.geometry().top_start();
+    const Vector2F end = slab.geometry().top_end();
+    if (!top_contact || this->rectangle_.right() < start.x || this->rectangle_.left() > end.x)
+    {
+        this->on_structure_contact(slab, normal, penetration);
+        return;
+    }
+
+    this->rectangle_.offset(separation_along(normal, penetration, Vector2F::DIRECTION_DOWN));
+    this->remember_fixed_slab_support(slab);
+    const bool rises_right = end.y < start.y;
+    this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
+    this->supported_this_tick_ = true;
+    this->support_impact_speed_ = std::max(this->support_impact_speed_, this->velocity().y);
+    if (const auto point = this->fixed_slab_support_at(this->rectangle_))
+    {
+        this->support_position_ = *point;
+    }
+    MovingObject::set_velocity_y(0.0f);
+}
+
+std::optional<Vector2F> Player::fixed_slab_support_at(const RectangleF& body) const
+{
+    if (!this->fixed_slab_support_) { return std::nullopt; }
+    const FixedSlabSupport& slab = *this->fixed_slab_support_;
+    if (body.right() < slab.start.x || body.left() > slab.end.x) { return std::nullopt; }
+    const bool rises_right = slab.end.y < slab.start.y;
+    const float x = std::clamp(rises_right ? body.right() : body.left(), slab.start.x, slab.end.x);
+    const float along = (x - slab.start.x) / (slab.end.x - slab.start.x);
+    return Vector2F(x, slab.start.y + along * (slab.end.y - slab.start.y));
 }
 
 std::optional<Vector2F> Player::ramp_support_at(const RectangleF& body) const
@@ -797,6 +949,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
 
     if (damage > 0.0f && this->health_ > 0.0f && this->state_ == PlayerState::alive)
     {
+        this->pending_rumble_.hit = true;
         this->start_action(PlayerAnimationState::hurt);
         this->combat_feedback_.hurt();
         if (this->preferences_->view_shake_enabled()) { this->view_shake_.hurt(); }
@@ -824,10 +977,13 @@ void Player::update(float dt)
     {
         const bool flat_ground = this->move_state() == PlayerMoveState::on_ground ||
             this->move_state() == PlayerMoveState::on_drop_down_ground;
-        this->underfoot_step_team_ = flat_ground ? this->underfoot_support_team_ : PlayerTeam::none;
+        const bool fixed_slab_ground = this->is_on_ramp() && this->fixed_slab_support_.has_value();
+        this->underfoot_step_team_ = flat_ground || fixed_slab_ground ?
+            this->underfoot_support_team_ : PlayerTeam::none;
         this->underfoot_support_team_ = PlayerTeam::none;
     }
     this->projected_ramp_support_ = false;
+    this->projected_fixed_slab_support_ = false;
     this->paint_supports_.clear();
     this->resolved_flat_supports_.clear();
     this->movement_audio_dt_ = dt;
@@ -852,9 +1008,11 @@ void Player::update(float dt)
         this->had_ground_support_ = false;
         this->landing_feedback_ready_ = false;
         this->ramp_support_.reset();
+        this->fixed_slab_support_.reset();
         this->reset_jump_input();
         this->set_move_state(PlayerMoveState::in_air);
         this->start_action(PlayerAnimationState::elimination);
+        this->pending_rumble_.elimination = true;
         this->combat_feedback_.eliminate(this->rectangle_);
         if (this->preferences_->view_shake_enabled()) { this->view_shake_.eliminate(); }
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
@@ -996,6 +1154,9 @@ void Player::update_movement(float dt)
     const auto previous_ramp_position = this->ramp_support_at(this->rectangle_);
     const bool on_previous_ramp = this->is_on_ramp() && previous_ramp_position &&
         feet_at(this->rectangle_, previous_ramp_position->y);
+    const auto previous_slab_position = this->fixed_slab_support_at(this->rectangle_);
+    const bool on_previous_slab = this->is_on_ramp() && previous_slab_position &&
+        feet_at(this->rectangle_, previous_slab_position->y);
     this->jump_buffer_remaining_ = std::max(0.0f, this->jump_buffer_remaining_ - dt);
     this->ledge_grace_remaining_ = std::max(0.0f, this->ledge_grace_remaining_ - dt);
     if (this->jump_waiting_for_release_)
@@ -1130,6 +1291,15 @@ void Player::update_movement(float dt)
             this->projected_ramp_support_ = true;
         }
     }
+    if (dt > 0.0f && on_previous_slab && this->is_on_ramp())
+    {
+        if (const auto support = this->fixed_slab_support_at(this->rectangle_))
+        {
+            this->rectangle_.set_position_y_from_bottom(support->y);
+            MovingObject::set_velocity_y(0.0f);
+            this->projected_fixed_slab_support_ = true;
+        }
+    }
 
     if (x_input > 0.0f)
     {
@@ -1191,7 +1361,9 @@ void Player::start_jump()
 {
     this->clear_carrier();
     this->ramp_support_.reset();
+    this->fixed_slab_support_.reset();
     this->projected_ramp_support_ = false;
+    this->projected_fixed_slab_support_ = false;
     this->start_action(PlayerAnimationState::taking_off);
     // A grace jump occurs at the current airborne feet; it does not invent a
     // ground contact at the ledge. Buffered jumps use the resolved support.
@@ -1309,6 +1481,7 @@ const PlayerTuning& Player::player_tuning() const
 
 void Player::place_at(const Vector2F& top_left)
 {
+    this->clear_rumble_events();
     this->clear_carrier();
     this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     this->view_shake_.clear();
@@ -1326,7 +1499,9 @@ void Player::place_at(const Vector2F& top_left)
     this->landing_feedback_ready_ = false;
     this->support_impact_speed_ = 0.0f;
     this->ramp_support_.reset();
+    this->fixed_slab_support_.reset();
     this->projected_ramp_support_ = false;
+    this->projected_fixed_slab_support_ = false;
     this->rectangle_.set_position(top_left);
     this->prev_rectangle_ = this->rectangle_;
     this->reset_jump_input();
@@ -1338,6 +1513,20 @@ void Player::place_at(const Vector2F& top_left)
     MovingObject::set_velocity(Vector2F::ZERO);
 }
 
+RumbleEvents Player::take_rumble_events() noexcept
+{
+    RumbleEvents result = this->pending_rumble_;
+    result.merge(this->primary_->take_rumble_events());
+    this->pending_rumble_ = {};
+    return result;
+}
+
+void Player::clear_rumble_events() noexcept
+{
+    this->pending_rumble_ = {};
+    this->primary_->clear_rumble_events();
+}
+
 void Player::force_respawn()
 {
     this->respawn();
@@ -1347,6 +1536,8 @@ void Player::force_respawn()
 void Player::kill()
 {
     this->clear_carrier();
+    this->fixed_slab_support_.reset();
+    this->projected_fixed_slab_support_ = false;
     this->health_ = 0.0f;
     this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     this->quiet_character_.reset();

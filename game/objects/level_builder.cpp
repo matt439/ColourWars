@@ -65,9 +65,14 @@ std::unique_ptr<Level>
 		scene->add(std::move(shadow));
 	}
 
-	for (std::unique_ptr<labrador::CollisionObject>& object :
-		this->level_object_builder_->build_collision_objects(
-			load_info->collision_objects_json(), team_colours))
+	auto collision_objects = this->level_object_builder_->build_collision_objects(
+		load_info->collision_objects_json(), team_colours);
+	for (std::unique_ptr<GameObject>& shadow :
+		this->level_object_builder_->build_moving_shadows(load_info->collision_objects_json(), collision_objects))
+	{
+		scene->add(std::move(shadow));
+	}
+	for (std::unique_ptr<labrador::CollisionObject>& object : collision_objects)
 	{
 		scene->add(std::move(object));
 	}
@@ -83,7 +88,9 @@ std::unique_ptr<Level>
 		players.push_back(scene->add(std::move(player)));
 	}
 
-	return std::make_unique<Level>(
+	try
+	{
+		return std::make_unique<Level>(
 		std::move(scene),
 		std::move(players),
 		this->level_object_builder_->build_viewport_dividers(
@@ -109,4 +116,11 @@ std::unique_ptr<Level>
 		this->mouse_,
 		load_info->stations(),
 		opening, settings.duration(), this->input_bindings_);
+	}
+	catch (const std::invalid_argument& error)
+	{
+		// Object-field errors already name their source JSON. Admission combines
+		// the complete Scene, roster and tuning, so identify the owning stage too.
+		throw std::runtime_error("level '" + settings.stage() + "': " + error.what());
+	}
 }

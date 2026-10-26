@@ -26,6 +26,8 @@ int wmain(int argc, wchar_t* argv[])
         check_random_setting(scratch);
         check_materials(scratch);
         check_drift(repo, scratch);
+        check_motion(repo, scratch);
+        check_fixed_slabs(repo, scratch);
         check_history_and_failures(scratch);
         check_stage_registration(repo, scratch);
         std::cout << "PASS level editor document acceptance\n";
