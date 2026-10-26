@@ -941,8 +941,8 @@ short lifetime while painting each moving pair once. Existing static paths keep
 their original arithmetic.
 
 Optional moving state participates in Debug fingerprints and replay format 3.
-The qualified record/play factory is a fresh, manually constructed seeded Level;
-this is not yet a public stage-loader replay path. Class layouts remain the same
+The first qualified record/play factory was a fresh, manually constructed seeded
+Level; public stage-loader qualification is recorded below. Class layouts remain the same
 in Debug and Release.
 
 Qualification is retained under `out/validation/todo-loop-20261025`:
@@ -984,15 +984,30 @@ construction, admission refusal, moving shadow ownership and static occlusion;
 they do not yet exercise a public `LevelBuilder` replay rebuild. Receipts are
 under `out/validation/overnight-20261026/` (`runtime`, `release`, editor logs).
 
+**Public rebuild/replay qualified, 2026-10-26.** The `moving_structure` case
+now writes complete stages and rereads them into fresh registries through
+`LevelLoadedInfo` and `LevelBuilder`. Both presets qualify authored phases,
+mover-only IDs, disk rebuilds, zero-step history and stage-named unsafe admission.
+Debug additionally records/serializes/reads/rebuilds solid and one-way stages:
+360 exact updates each, six checkpoints each, final state and terminal RNG.
+The traces prove actual carry, paid local-face paint/credit, jump release,
+one-way drop release and both reversals. Rebuild uses the decoded stage, setup,
+seed and step; it does not reuse the recording's Level or manual factory.
+
+Receipts are under `out/validation/overnight-20261026/phase2/` (`runtime-v2`,
+`release`, and the printed task-owned replay receipt path). This qualifies
+production `ReplayRecorder`/`ReplayPlayer` with the public builder; DebugDirector
+command/restart adapters and native/human acceptance are separate. The existing
+legacy-byte/hash checks also pass. Release excludes the developer replay path.
+
 **Remaining implementation, in dependency order:**
 
 | milestone | bounded scope and acceptance |
 |---|---|
-| 2. Public builder and replay rebuild | Construct the existing mover through `LevelObjectBuilder`/`LevelBuilder`, then record and replay a fresh public-loader stage. Check stable admission IDs, authored initial phase, seeded rebuilds, local-face paint/credit, rider release, zero-step/reversal behavior and fresh-build fingerprints; the manual factory qualification above does not substitute for this path. |
 | 3. Editor authoring and round trip | Add the [moving-structure authoring contract](level-editor.md#moving-structure-authoring-gapd5): preserve existing records, edit supported motion fields and show the complete travel envelope. Save/reopen/build the same fixture with the same motion and diagnostics; existing static stages must round-trip unchanged. |
 | 4. Smallest useful static rotated structure | Use the [Turbulence blockout brief](polish-plan.md#turbulence-blockout-work-pol21) to select one useful fixed orientation and footprint, then define its collision/support and local-face paint contract before implementing it. Qualify builder/editor round trips, projectile contacts, scoring, art/culling/shadow alignment and the required route. This is static geometry; arbitrary rotating or combined moving/rotating bodies are outside the slice. |
 
-Milestone 2 is the next local implementation step. Keep each milestone bounded
+Milestone 3 is the next local implementation step. Keep each milestone bounded
 and preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
 useful placements and route/side-swap qualification; attended arena acceptance

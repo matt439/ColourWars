@@ -32,8 +32,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
 
 5. **Feeding the above (`GAP#D5`):** the first headless five-tool report
    is recorded in the arena owners; attended decisions remain above. The default-off
-   paint-underfoot prototype is available for `POL#30`. The manual horizontal mover
-   is qualified; Turbulence still needs builder/editor integration, useful placements
+   paint-underfoot prototype is available for `POL#30`. Runtime horizontal motion
+   and public-loader replay are qualified; Turbulence still needs editor authoring, useful placements
    and rotated structures ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
@@ -51,7 +51,7 @@ without attended play or new hardware. Finish one bounded slice at a time.
 | id | next implementation slice | owner |
 |---|---|---|
 | `POL#21` | Qualify Turbulence's five-tool pressure/recovery stations and native clean/heavy composition; supported movers and scored slopes follow their capability checks | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
-| `GAP#D5` | Qualify fresh public-loader replay rebuilds for the runtime-loaded horizontal mover; editor authoring follows | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
+| `GAP#D5` | Add envelope-aware editor authoring and round trips for the qualified runtime-loaded horizontal mover; useful placements and scored slopes follow | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 | `ROAD#9` | Add saved per-slot rumble On/Off, authored pulse values and actual gameplay callers to the qualified policy; isolated native hook follows | [Rumble](docs/feature-roadmap.md#controller-rumble-road9) |
 | `GAP#4.2` | Expose the saved per-slot A/B/X/Y Jump choices through a scoped Pad Jump page and accurate controls help; qualify pages and replay adoption | [Bindings](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42) |
 
@@ -166,7 +166,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
-| `GAP#D5` | OPEN | MED | L | Qualify public-loader replay rebuild and editor authoring for the runtime-loaded horizontal mover; add rotated structures and useful Turbulence placements with layout acceptance (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
+| `GAP#D5` | OPEN | MED | L | Add editor authoring for the qualified runtime-loaded horizontal mover; add rotated structures and useful Turbulence placements with layout acceptance (`POL#21`). [Boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26). |
 
 ## Engine reports
 

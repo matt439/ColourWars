@@ -167,7 +167,9 @@ the existing translated shadow tied to the actual Scene-owned mover.
 Editor authoring is a later `GAP#D5` milestone: the editor currently refuses
 documents containing `motion`, rather than permitting unsafe edits whose
 preview would omit the travel envelope. No shipped arena uses this field yet;
-public-loader replay qualification and useful arena placement remain separate.
+public-loader record/play reconstruction is CPU-qualified in the
+`moving_structure` acceptance case. Useful arena placement and native/human
+acceptance remain separate.
 
 A ramp reads `triangle` instead of either rectangle:
 

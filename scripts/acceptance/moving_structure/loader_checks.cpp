@@ -1,7 +1,9 @@
 #include "game/pch.h"
 #include "scripts/acceptance/moving_structure/fixtures.h"
 #include "game/objects/level_object_builder.h"
+#include "scripts/acceptance/moving_structure/loader_fixture.h"
 #include <iostream>
+#include <process.h>
 
 namespace moving_structure_acceptance
 {
@@ -94,5 +96,52 @@ namespace moving_structure_acceptance
         throws_with([&] { blocked.build(); }, "envelope intersects");
 
         std::cout << "PASS runtime-built horizontal movers: authored phase/rebuild, admission, live shadow and static occlusion\n";
+
+        const auto directory = std::filesystem::temp_directory_path() /
+            (L"colourwars_public_loader_" + std::to_wstring(_getpid()));
+        require(!std::filesystem::exists(directory), "Refusing to overwrite an earlier public-loader receipt directory");
+        std::filesystem::create_directories(directory);
+        const auto stage = directory / L"public_moving_fixture.json";
+        const auto unsafe_stage = directory / L"unsafe_moving_fixture.json";
+        write_loaded_stage(stage);
+        write_loaded_stage(unsafe_stage, false, true);
+        const auto settings = loaded_settings();
+        std::vector<std::uint64_t> initial;
+        for (int rebuild = 0; rebuild < 2; ++rebuild)
+        {
+            LoadedFixture loaded(world, stage, settings, 179u);
+            const auto states = loaded.level->horizontal_structure_states();
+            require(states.size() == 2 && states[0].id == 1 && states[1].id == 2 &&
+                states[0].motion.spec.initial_phase == 0.25f && states[1].motion.spec.initial_phase == 0.75f &&
+                states[0].current_bounds.x == 1060.0f && states[1].current_bounds.x == 2532.0f,
+                "Public LevelBuilder changed authored phase or canonical mover-only IDs");
+            const auto actual = motion_bits(states[0].motion);
+            if (rebuild == 0) { initial = actual; }
+            else { require(actual == initial, "Fresh on-disk public build changed motion bits"); }
+            loaded.start();
+            const auto before_zero = loaded.level->horizontal_structure_states();
+            loaded.tick(input(), 0.0f);
+            const auto after_zero = loaded.level->horizontal_structure_states();
+            for (size_t index = 0; index < before_zero.size(); ++index)
+            {
+                require(motion_bits(before_zero[index].motion) == motion_bits(after_zero[index].motion),
+                    "Public-loaded zero-step changed authored motion history");
+            }
+        }
+        bool stage_named = false;
+        try { LoadedFixture unsafe(world, unsafe_stage, settings, 179u); }
+        catch (const std::runtime_error& error)
+        {
+            const std::string message = error.what();
+            stage_named = message.find(settings.stage()) != std::string::npos &&
+                message.find("envelope intersects") != std::string::npos;
+        }
+        require(stage_named, "Public admission refusal must name its stage and unsafe geometry");
+        for (const auto& path : { stage, unsafe_stage })
+        {
+            require(std::filesystem::remove(path), "Cannot remove owned public-loader stage receipt");
+        }
+        require(std::filesystem::remove(directory), "Cannot remove owned public-loader receipt directory");
+        std::cout << "PASS fresh public LevelBuilder disk reloads, authored phases/IDs, zero-step and named unsafe admission\n";
     }
 }
