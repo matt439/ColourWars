@@ -443,6 +443,12 @@ executable. The game's startup/content validation remains authoritative;
 registration does not establish route, spawn or gameplay acceptance (`ED#5`).
 GUI integration can follow actual use of the command-line helper.
 
+The explicit-only [Turbulence slab trial](../game/content/levels/turbulence_slab_trial.json)
+was saved/reopened by `LevelDocument` and registered through this API on
+2026-10-26. It preserves the qualified 24-object geometry and all eight earlier
+level files. The [arena record](polish-turbulence.md) owns its public-loader,
+route and composition evidence; this automated use does not close `ED#5`.
+
 The document acceptance case also checks exact LF/CRLF and BOM-preserving
 appends, malformed/partial/aliased lists, resource validation, stale inputs and
 proposals, first/second replacement failures, locked/read-only files and named

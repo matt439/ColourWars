@@ -16,7 +16,7 @@ Set-StrictMode -Version Latest
 
 $acceptanceCases = @('display_awake', 'rumble', 'rumble_adapter', 'action_bindings', 'input_bindings', 'keyboard_jump_capture', 'ammo', 'settings', 'match_records', 'remembered_setup', 'stick_settings', 'paint', 'camera_framing', 'view_shake', 'movement', 'movement_contact', 'combat_feedback', 'tool_motion', 'weapon_feedback', 'aim_marker', 'player_identity', 'blocked_shot', 'idle_drip', 'quiet_character', 'stage_selection', 'team_palette', 'team_selection', 'menu_navigation',
         'movement_course', 'cq_blockout', 'crossfeed', 'press_tower', 'turbulence_blockout', 'resume_countdown', 'debug_console', 'story_audio', 'level_format', 'fatal_report', 'gameplay_tuning', 'menu_presentation', 'weapon_catalog', 'menu_text', 'menu_focus_motion', 'display_trial', 'tunnelling', 'text_wrap', 'terrain', 'lethal_provenance', 'skirmish_bot', 'paint_surfaces', 'balance_regions', 'paint_underfoot', 'moving_structure', 'fixed_slab')
-$availableCases = @($acceptanceCases) + @('balance_runner', 'turbulence_movers', 'turbulence_slopes', 'turbulence_slab_routes')
+$availableCases = @($acceptanceCases) + @('balance_runner', 'turbulence_movers', 'turbulence_slopes', 'turbulence_slab_routes', 'turbulence_slab_stage')
 $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
     if (-not $Cases) { throw 'Cases must contain at least one case name.' }
     @($Cases | ForEach-Object {
@@ -232,7 +232,7 @@ try {
         # not representable in the machine's active ANSI code page.
         $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
         $caseArguments = @($gameDirectory)
-        if ($case -eq 'level_format') { $caseArguments += $repo }
+        if ($case -in @('level_format', 'turbulence_slab_stage')) { $caseArguments += $repo }
         $specs += [pscustomobject]@{
             Case = $case
             Compiler = $cache.CMAKE_CXX_COMPILER

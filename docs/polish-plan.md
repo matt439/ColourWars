@@ -498,21 +498,23 @@ a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill
 which stays selectable and in Random. Its baseline acceptance case and native four-pane
 captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
 support art remain open there. Turbulence now has
-[static and mover Turbulence Yard comparisons](polish-turbulence.md), explicit-only
-as `turbulence_blockout` and `turbulence_mover_trial`. CPU routes, local scoring,
+[static, mover and scored-slab Turbulence Yard comparisons](polish-turbulence.md), explicit-only
+as `turbulence_blockout`, `turbulence_mover_trial` and `turbulence_slab_trial`. CPU routes, local scoring,
 public builder/editor round trips, Debug replay, all split-screen native layouts
 and the bounded local five-tool paint-angle comparison are qualified. The
-[roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26) keeps
-fixed scored slopes open; attended balance/value remains a separate gate.
+[roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26) records
+the qualified fixed-slab capability; attended balance/value remains a separate gate.
 The earlier arenas and P3/five-tool tuning are preserved.
 
 ### Turbulence blockout work (`POL#21`)
 
 **OPEN, scoped 2026-10-26.** The [route and score brief](polish-turbulence.md)
 defines the fixed skeleton, optional moving approaches, spawn/pressure checks
-and provisional regional/face allocations. Its first static candidate is authored
-and qualified through the public loader and CPU route/paint cases; five-tool
-pressure, native composition, capability placements and attended play remain.
+and provisional regional/face allocations. Its static, mover and fixed-slab
+comparisons are selectable beside the original. Public loader/editor, CPU
+route/paint, bounded five-tool pressure, replay and native split-screen checks
+are qualified. Slab ending views and lower-approach underside controls are the
+remaining bounded software checks; attended play remains separate.
 This is the next layout, beside the preserved
 `turbulence.json`. Use the recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
 and current P3/five-tool values. The first brief can proceed while the

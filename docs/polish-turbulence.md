@@ -11,9 +11,38 @@ capability and placement checks below.
 
 The separate explicit-only [mover comparison](../game/content/levels/turbulence_mover_trial.json)
 adds the qualified horizontal pair beside that preserved skeleton. It is a
-playable blockout comparison, with its measured local role below. The private
-fixed-slab comparison now has qualified core, routes, native composition and
-replay; broader placement pressure and attended balance remain open.
+playable blockout comparison, with its measured local role below. The separate
+explicit-only [scored-slab comparison](../game/content/levels/turbulence_slab_trial.json)
+adds the qualified fixed pair to that mover layout. Core, routes, native
+composition, replay and the bounded four-geometry tool comparison are qualified;
+broader placement pressure and attended balance remain open.
+
+**Selectable slab trial, 2026-10-26.** The actual editor loaded the qualified
+private 24-object candidate, set its display name to **Turbulence Yard - Slab
+Trial**, saved it into source and reopened it unchanged. The registration API
+then added exactly one manifest name and one runtime asset path. All eight
+earlier level files, tuning and presentation remain byte-identical; the new
+file preserves all 22 mover-trial objects and the private candidate's two
+fixed slabs. There are nine explicit selections and the same four Random
+arenas. This is a playable comparison, pending arena selection and balance.
+
+Both presets build and pass startup with audio, isolated save, DPI awareness
+and graceful shutdown. The read-only `turbulence_slab_stage` case loads the
+actual registered catalog and drives four fresh public 1/2/3/4P matches per
+preset through count-in, time-up, overview and finish. Each takes 543 updates:
+active at 181, time-up at 301 and overview at 422. Static/slab geometry and
+paint remain unchanged; original movers retain their local paint while moving.
+Both presets also pass stage selection, all 19 source/staged/template format
+checks, terrain material/score/shadow checks and the full fixed-slab case. The
+new trial uses the same strict untinted, cloudless paper policy as the two
+earlier Turbulence blockouts; finished-arena cloud rules remain intact.
+These neutral CPU endings establish roster, score, camera and transition
+preconditions, without native ending pixels or attended play claims.
+
+Receipts: `out/validation/overnight-20261026/phase16/registration/` and
+`phase16/public-stage/` (Release `turbulence-slab-stage-41768`, Debug
+`turbulence-slab-stage-35412`). The authoring tool requires explicit
+`--author-preview` and `--apply` modes; normal consumer checks cannot execute it.
 
 ## Question and research transfer
 

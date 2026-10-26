@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <set>
 #include <rapidjson/prettywriter.h>
 
 namespace fixed_slab_acceptance
@@ -60,21 +61,50 @@ namespace fixed_slab_acceptance
         struct SourceGuard
         {
             std::vector<std::pair<fs::path, std::string>> originals;
-            explicit SourceGuard(const fs::path& content)
+            fs::path content;
+            std::set<fs::path> levels;
+
+            static std::set<fs::path> inventory(const fs::path& root)
+            {
+                const auto manifest = parsed(bytes(root / "manifest.json"));
+                std::set<fs::path> expected, actual;
+                for (const auto& asset : manifest["assets"].GetArray())
+                {
+                    if (std::string(asset["kind"].GetString()) != "level") { continue; }
+                    for (const auto& name : asset["names"].GetArray())
+                    {
+                        const auto path = (fs::path(asset["directory"].GetString()) /
+                            (std::string(name.GetString()) + ".json")).lexically_normal();
+                        require(expected.insert(path).second, "Public slab guard found a duplicate manifest level");
+                    }
+                }
+                for (const auto& file : fs::directory_iterator(root / "levels"))
+                {
+                    if (file.is_regular_file() && file.path().extension() == ".json")
+                    { actual.insert(file.path().lexically_relative(root).lexically_normal()); }
+                }
+                require(actual == expected, "Public slab guard needs exact manifest/filesystem level inventory");
+                for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course",
+                    "crossfeed", "press_tower", "turbulence_blockout", "turbulence_mover_trial" })
+                {
+                    require(expected.contains(fs::path("levels") / (std::string(name) + ".json")),
+                        "Public slab guard lost an original arena");
+                }
+                return expected;
+            }
+
+            explicit SourceGuard(const fs::path& root) : content(root.lexically_normal()), levels(inventory(content))
             {
                 for (const char* file : { "manifest.json", "tuning.json", "presentation.json" })
                 { originals.emplace_back(content / file, bytes(content / file)); }
-                for (const auto& file : fs::directory_iterator(content / "levels"))
-                {
-                    if (file.is_regular_file() && file.path().extension() == ".json")
-                    { originals.emplace_back(file.path(), bytes(file.path())); }
-                }
-                require(originals.size() == 11, "Public slab guard must retain eight source arenas and three startup files");
+                for (const auto& file : levels) { originals.emplace_back(content / file, bytes(content / file)); }
+                require(originals.size() == levels.size() + 3, "Public slab guard lost startup or registered-level byte snapshots");
             }
             void check() const
             {
                 for (const auto& [path, original] : originals)
                 { require(bytes(path) == original, "Public slab check changed source content: " + path.string()); }
+                require(inventory(content) == levels, "Public slab check changed the source level inventory");
             }
         };
 

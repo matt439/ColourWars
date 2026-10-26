@@ -36,7 +36,8 @@
                 "crossfeed",
                 "press_tower",
                 "turbulence_blockout",
-                "turbulence_mover_trial"
+                "turbulence_mover_trial",
+                "turbulence_slab_trial"
             ]
         },
         {

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
+#include <set>
 
 namespace
 {
@@ -61,6 +62,8 @@ namespace
 		bool press_tower_found = false;
 		bool turbulence_blockout_found = false;
 		bool turbulence_mover_found = false;
+		bool turbulence_slab_found = false;
+		std::set<std::string> names_seen;
 		size_t crossfeed_index = 0;
 		size_t defaulted_arenas = 0;
 		for (size_t group = 0; group < assets.size(); ++group)
@@ -71,6 +74,7 @@ namespace
 			for (size_t index = 0; index < names.size(); ++index)
 			{
 				const std::string name = names.at(index).as_string();
+				require(names_seen.insert(name).second, "Shipped stage names must be unique");
 				const std::string path = (content / asset.string("directory") / (name + ".json")).string();
 				const LevelLoadedInfo info(path.c_str());
 				info.validate();
@@ -101,6 +105,11 @@ namespace
 					turbulence_mover_found = true;
 					require(!info.include_in_random(), "Turbulence mover comparison must remain explicit-only while provisional");
 				}
+				if (name == "turbulence_slab_trial")
+				{
+					turbulence_slab_found = true;
+					require(!info.include_in_random(), "Turbulence scored-slab comparison must remain explicit-only while provisional");
+				}
 				const labrador::JsonDocument source = labrador::read_json_file(path.c_str());
 				if (!source.root().has("include_in_random"))
 				{
@@ -109,10 +118,18 @@ namespace
 				}
 			}
 		}
-		require(course_found && crossfeed_found && press_tower_found && turbulence_blockout_found && turbulence_mover_found && defaulted_arenas >= 3,
+		require(course_found && crossfeed_found && press_tower_found && turbulence_blockout_found && turbulence_mover_found &&
+			turbulence_slab_found && defaulted_arenas == 3,
 			"Acceptance needs the explicit course, Press Tower and Turbulence comparisons, eligible Crossfeed and three unchanged arenas");
+		const std::set<std::string> expected_names{ "king_of_the_hill", "turbulence", "close_quarters", "movement_course",
+			"crossfeed", "press_tower", "turbulence_blockout", "turbulence_mover_trial", "turbulence_slab_trial" };
+		require(stages.size() == 9 && names_seen == expected_names, "Stage selection must expose exactly the nine registered stages");
 		const std::vector<size_t> candidates = random_stage_indices(stages);
-		require(!candidates.empty(), "Shipped content needs eligible match arenas");
+		require(candidates.size() == 4, "The three legacy arenas and accepted Crossfeed must remain the four Random candidates");
+		std::set<std::string> candidate_names;
+		for (const size_t index : candidates) { candidate_names.insert(stages[index].name); }
+		require(candidate_names == std::set<std::string>{ "king_of_the_hill", "turbulence", "close_quarters", "crossfeed" },
+			"Random changed its four accepted arena identities");
 		require(std::find(candidates.begin(), candidates.end(), crossfeed_index) != candidates.end(),
 			"Shipped Random selection omitted accepted Crossfeed");
 		for (size_t draw = 0; draw < candidates.size(); ++draw)
@@ -120,7 +137,8 @@ namespace
 			const size_t index = random_stage_index(stages, draw);
 			require(index == candidates[draw] && stages[index].include_in_random &&
 				stages[index].name != "movement_course" && stages[index].name != "press_tower" &&
-				stages[index].name != "turbulence_blockout" && stages[index].name != "turbulence_mover_trial",
+				stages[index].name != "turbulence_blockout" && stages[index].name != "turbulence_mover_trial" &&
+				stages[index].name != "turbulence_slab_trial",
 				"Shipped Random selection admitted an explicit-only stage");
 		}
 		std::cout << "Shipped stage selection: " << stages.size() << " explicit stages; "

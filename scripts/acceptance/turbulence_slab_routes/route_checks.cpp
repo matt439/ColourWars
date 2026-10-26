@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <set>
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay.h"
 #include "game/debug/tune_document.h"
@@ -45,22 +46,52 @@ namespace turbulence_slab_routes_acceptance
         struct SourceGuard
         {
             std::vector<std::pair<fs::path, std::string>> sources;
-            SourceGuard(const fs::path& content, const fs::path& slab, const fs::path& shoulder)
+            fs::path content;
+            std::set<fs::path> levels;
+
+            static std::set<fs::path> inventory(const fs::path& root)
+            {
+                const auto manifest = parse(read(root / "manifest.json"));
+                std::set<fs::path> expected, actual;
+                for (const auto& asset : manifest["assets"].GetArray())
+                {
+                    if (std::string(asset["kind"].GetString()) != "level") { continue; }
+                    for (const auto& name : asset["names"].GetArray())
+                    {
+                        const auto path = (fs::path(asset["directory"].GetString()) /
+                            (std::string(name.GetString()) + ".json")).lexically_normal();
+                        require(expected.insert(path).second, "Roller-route guard found a duplicate manifest level");
+                    }
+                }
+                for (const auto& file : fs::directory_iterator(root / "levels"))
+                {
+                    if (file.is_regular_file() && file.path().extension() == ".json")
+                    { actual.insert(file.path().lexically_relative(root).lexically_normal()); }
+                }
+                require(actual == expected, "Roller-route guard needs exact manifest/filesystem level inventory");
+                for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course",
+                    "crossfeed", "press_tower", "turbulence_blockout", "turbulence_mover_trial" })
+                {
+                    require(expected.contains(fs::path("levels") / (std::string(name) + ".json")),
+                        "Roller-route guard lost an original arena");
+                }
+                return expected;
+            }
+
+            SourceGuard(const fs::path& root, const fs::path& slab, const fs::path& shoulder) :
+                content(root.lexically_normal()), levels(inventory(content))
             {
                 for (const char* file : { "manifest.json", "tuning.json", "presentation.json" })
                 { sources.emplace_back(content / file, read(content / file)); }
-                for (const auto& file : fs::directory_iterator(content / "levels"))
-                {
-                    if (file.is_regular_file() && file.path().extension() == ".json")
-                    { sources.emplace_back(file.path(), read(file.path())); }
-                }
-                require(sources.size() == 11, "Roller-route guard must preserve eight source arenas");
+                for (const auto& file : levels) { sources.emplace_back(content / file, read(content / file)); }
+                require(sources.size() == levels.size() + 3, "Roller-route guard lost startup or registered-level byte snapshots");
                 sources.emplace_back(slab, read(slab)); sources.emplace_back(shoulder, read(shoulder));
             }
             void check() const
             {
                 for (const auto& [path, before] : sources)
                 { require(read(path) == before, "Roller route changed source content: " + path.string()); }
+                require(inventory(content) == levels, "Roller route changed the source level inventory");
             }
         };
 
