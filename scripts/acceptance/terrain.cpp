@@ -5,6 +5,8 @@
 #include "game/objects/level_object_builder.h"
 #include "game/objects/structure.h"
 #include "game/objects/terrain_material.h"
+#include "game/objects/translating_structure_paintable.h"
+#include "game/objects/translated_airbrush_shadow.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/render/camera.h"
 #include "engine/render/dds_file.h"
@@ -124,17 +126,30 @@ namespace
 	void check_drawing(const Structure& structure, const std::string& where)
 	{
 		const TerrainMaterial* material = structure.material();
+		const auto* mover = dynamic_cast<const TranslatingStructurePaintable*>(&structure);
+		// A mover retains its material in anchor space; drawing translates the
+		// camera. Static structures keep their original collision-shape path.
+		const RectangleF anchor = mover != nullptr ? mover->motion_state().spec.anchor : RectangleF::ZERO;
+		const Shape* material_shape = mover != nullptr ? &anchor : structure.shape();
 		const auto& quads = material->quads();
 		require(!quads.empty(), where + " draws nothing");
 		require(quads.size() <= QUAD_BUDGET, where + " draws " + std::to_string(quads.size()) +
 			" quads; the budget is " + std::to_string(QUAD_BUDGET));
-		const Triangle* triangle = dynamic_cast<const Triangle*>(structure.shape());
+		const Triangle* triangle = dynamic_cast<const Triangle*>(material_shape);
 		for (const TerrainQuad& quad : quads)
 		{
 			const RectangleF& r = quad.rectangle;
 			require(r.width > 0.0f && r.height > 0.0f, where + " has an empty quad");
-			require(inside(r, structure.shape()->bounding_box()),
+			require(inside(r, material_shape->bounding_box()),
 				where + " draws outside its collision rectangle");
+			if (mover != nullptr)
+			{
+				RectangleF world = r;
+				const float offset = mover->translation().x;
+				if (offset != 0.0f) { world.offset(offset, 0.0f); }
+				require(inside(world, structure.shape()->bounding_box()),
+					where + ": translated material leaves its actual world collider");
+			}
 			if (triangle != nullptr)
 			{
 				const Vector2F corners[]{ r.top_left(), Vector2F(r.right(), r.top()),
@@ -180,6 +195,7 @@ namespace
 #include "scripts/acceptance/terrain/miniature_checks.h"
 #include "scripts/acceptance/terrain/surface_finish_checks.h"
 #include "scripts/acceptance/terrain/landmark_checks.h"
+#include "scripts/acceptance/terrain/moving_checks.h"
 
 namespace
 {
@@ -205,7 +221,12 @@ namespace
 			require(structure->material()->name() == json.string("material"),
 				where + " built a different material than it names");
 			check_drawing(*structure, where);
-			check_miniature_projection(*structure->material(), *structure->shape(), where);
+			if (const auto* mover = dynamic_cast<const TranslatingStructurePaintable*>(structure))
+			{
+				const RectangleF anchor = mover->motion_state().spec.anchor;
+				check_miniature_projection(*structure->material(), anchor, where);
+			}
+			else { check_miniature_projection(*structure->material(), *structure->shape(), where); }
 
 			// The same content draws the same quads on every build.
 			const auto* again = dynamic_cast<const Structure*>(second[index].get());
@@ -243,6 +264,7 @@ namespace
 			}
 			require(under, stage + ": a shadow is not under any underside");
 		}
+		check_moving_shadows(world, builder, collision_json, first, stage);
 
 		// Backdrop hues come from terrain texels; every authored tint stays grey.
 		const JsonValue decorations = document.root().array("non_collision_objects");
@@ -325,7 +347,7 @@ int main(int argc, char** argv)
 		std::cout << "PASS terrain: " << stages << " stages fully materialled, every drawing inside "
 			"its collision shape and deterministic, shadows under real undersides, untinted "
 			"backdrops on paper, shared sealed finishes clipped to exposed faces, quantized miniature silhouettes, "
-			"qualified native-size static landmarks with stable bounds/RNG/reduction, a paper-only provisional blockout, "
+			"qualified native-size static landmarks with stable bounds/RNG/reduction, paper-only provisional blockouts, "
 			"bounded deterministic cloud drift with live reduction, and material/drift/camera refusals.\n";
 		return 0;
 	}

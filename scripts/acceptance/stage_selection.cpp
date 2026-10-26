@@ -60,6 +60,7 @@ namespace
 		bool crossfeed_found = false;
 		bool press_tower_found = false;
 		bool turbulence_blockout_found = false;
+		bool turbulence_mover_found = false;
 		size_t crossfeed_index = 0;
 		size_t defaulted_arenas = 0;
 		for (size_t group = 0; group < assets.size(); ++group)
@@ -95,6 +96,11 @@ namespace
 					turbulence_blockout_found = true;
 					require(!info.include_in_random(), "Turbulence blockout must remain explicit-only while provisional");
 				}
+				if (name == "turbulence_mover_trial")
+				{
+					turbulence_mover_found = true;
+					require(!info.include_in_random(), "Turbulence mover comparison must remain explicit-only while provisional");
+				}
 				const labrador::JsonDocument source = labrador::read_json_file(path.c_str());
 				if (!source.root().has("include_in_random"))
 				{
@@ -103,8 +109,8 @@ namespace
 				}
 			}
 		}
-		require(course_found && crossfeed_found && press_tower_found && turbulence_blockout_found && defaulted_arenas >= 3,
-			"Acceptance needs the explicit course, Press Tower and Turbulence blockout, eligible Crossfeed and three unchanged arenas");
+		require(course_found && crossfeed_found && press_tower_found && turbulence_blockout_found && turbulence_mover_found && defaulted_arenas >= 3,
+			"Acceptance needs the explicit course, Press Tower and Turbulence comparisons, eligible Crossfeed and three unchanged arenas");
 		const std::vector<size_t> candidates = random_stage_indices(stages);
 		require(!candidates.empty(), "Shipped content needs eligible match arenas");
 		require(std::find(candidates.begin(), candidates.end(), crossfeed_index) != candidates.end(),
@@ -114,7 +120,7 @@ namespace
 			const size_t index = random_stage_index(stages, draw);
 			require(index == candidates[draw] && stages[index].include_in_random &&
 				stages[index].name != "movement_course" && stages[index].name != "press_tower" &&
-				stages[index].name != "turbulence_blockout",
+				stages[index].name != "turbulence_blockout" && stages[index].name != "turbulence_mover_trial",
 				"Shipped Random selection admitted an explicit-only stage");
 		}
 		std::cout << "Shipped stage selection: " << stages.size() << " explicit stages; "
@@ -159,7 +165,7 @@ int main(int argc, char** argv)
 		check_mapping();
 		check_shipped_stages(argv[1]);
 		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
-		std::cout << "PASS stage selection: explicit course, Press Tower and Turbulence blockout, Crossfeed in Random, eligible Random mapping, defaults and rejection guards.\n";
+		std::cout << "PASS stage selection: explicit course, Press Tower and Turbulence comparisons, Crossfeed in Random, eligible Random mapping, defaults and rejection guards.\n";
 		return 0;
 	}
 	catch (const std::exception& error)

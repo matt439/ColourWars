@@ -1115,15 +1115,22 @@ composition, attended editor/play, physical-pad or Turbulence acceptance.
 
 **Remaining implementation, in dependency order:**
 
+The explicit-only `turbulence_mover_trial` now uses the authored pair beside
+the preserved static arena. Both-preset route and native composition checks,
+Debug seeded public rebuilds and the Release local five-tool comparison are
+recorded in the [arena owner](polish-turbulence.md#why-the-new-geometry-earns-its-place).
+The concrete added role is a Sniper crossover-top paint angle at all four
+sampled phases; the other tools retain different static/moving tradeoffs.
+
 | milestone | bounded scope and acceptance |
 |---|---|
 | 4. Smallest useful static rotated structure | Use the [Turbulence blockout brief](polish-plan.md#turbulence-blockout-work-pol21) to select one useful fixed orientation and footprint, then define its collision/support and local-face paint contract before implementing it. Qualify builder/editor round trips, projectile contacts, scoring, art/culling/shadow alignment and the required route. This is static geometry; arbitrary rotating or combined moving/rotating bodies are outside the slice. |
 
-The static rotated contract and useful placements are next. Keep each milestone bounded
+The static scored-slope contract and its useful placement are next. Keep each milestone bounded
 and preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
 useful placements and route/side-swap qualification; attended arena acceptance
-remains a separate gate. No shipped arena uses the new mover yet. `GAP#D5` and
+remains a separate gate. The mover comparison stays out of Random. `GAP#D5` and
 `POL#21` stay open; human/device gates and provisional weapon balance stay
 unchanged.
 

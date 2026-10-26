@@ -35,7 +35,7 @@ namespace
 		// Turbulence's provisional static skeleton has only the approved paper
 		// backing. Clouds and landmark dressing belong to its later art/framing
 		// slice; it is cloudless for that reason, rather than an interior.
-		const bool paper_blockout = stage == "turbulence_blockout";
+        const bool paper_blockout = stage == "turbulence_blockout" || stage == "turbulence_mover_trial";
 		if (paper_blockout)
 		{
 			require(decorations.size() == 1 && decorations.at(0).string("name") == "paper_sky" &&

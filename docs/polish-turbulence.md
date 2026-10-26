@@ -9,6 +9,11 @@ candidate is explicit-only with `include_in_random: false`. Its first skeleton
 contains neither movers nor scored rotated structures; those retain the
 capability and placement checks below.
 
+The separate explicit-only [mover comparison](../game/content/levels/turbulence_mover_trial.json)
+adds the qualified horizontal pair beside that preserved skeleton. It is a
+playable blockout comparison, with its measured local role below; attended
+balance and the fixed scored-slope slice remain open.
+
 ## Question and research transfer
 
 **Take the short exposed upper crossing now, wait for a moving change of angle,
@@ -199,8 +204,10 @@ are fully counted. Receipts are under
 `movers-routes-debug.log`, `movers-routes-release.log` and their per-trial CSVs.
 The optional case authors a fresh trial in its receipt directory when no staged
 default exists; both-preset default invocations also pass their six focused
-routes and actual author/save/reopen checks. An explicit input path remains authoritative. This proposal
-is not registered game content. Debug `--replay` also passes two fresh seeded
+routes and actual author/save/reopen checks. An explicit input path remains
+authoritative. The qualified source is registered separately as the explicit-only
+`turbulence_mover_trial`, preserving the static candidate. Debug `--replay` also
+passes two fresh seeded
 public disk rebuilds from decoded tape settings, seed and timestep: A's
 wait/jump route matches all 788 active updates and thirteen checkpoints; B's
 drop route matches all 619 active updates and ten checkpoints. Each run compares
@@ -212,11 +219,10 @@ priming before applying the active-input tape; unmodified DebugDirector
 fresh-launch playback is not qualified. Receipts are in
 `out/validation/overnight-20261026/phase8/replay-debug.log` and
 `replay/x64-debug/turbulence-movers-30764/` beneath that phase directory.
-Release `--replay` reports its explicit Debug-tools limit. Five-tool role and
-attended play remain unqualified. In particular,
-the higher standing fire may bypass the centre baffle and change pressure on
-both departures; route and paint-credit success alone do not establish that
-the bay earns its angle or its increased upper score share.
+Release `--replay` reports its explicit Debug-tools limit. The bounded local
+five-tool comparison below qualifies a Sniper paint angle; attended play and
+the increased upper score share remain unaccepted. Route and paint-credit
+success alone do not establish competitive value or safety at both departures.
 
 **Private mover native composition, 2026-10-26.**
 `check-painter.ps1 -TurbulenceMoverOnly -TrialPath <saved-trial.json>` passes in
@@ -262,6 +268,60 @@ are public snapshots, without launch/trajectory attribution. These samples
 cover cross-arena forward fire from each team's own half. They establish
 neither invader camping pressure nor useful local flank value, universal spawn
 safety, tracking, sustained fire, human warning time or competitive balance.
+
+**Local crossover role and unoccupied paint controls, 2026-10-26 (Release).**
+`--local-roles` passes 50 occupied single-pulse scenes and 50 separate unoccupied
+paint controls: each family has five tools, two sides, four mover phases and
+one matched original-static upper-approach control per tool/side. These use
+valid original-spawn public LevelBuilder construction and the full count-in,
+then one controlled source placement (and an opposing crossover defender in
+the occupied family) before readiness. The 100 scenes use 40,900 updates and
+150 public setup placements. Every subsequent readiness/observation update
+uses real support, carry, weapons and contacts; no placement occurs during
+those intervals. These combat stations do not measure the travel cost to earn
+them; the separate driven routes qualify boarding and recovery.
+
+The occupied family records 14/40 mover and 4/10 static health-loss witnesses.
+Sniper hits from all four mover phases on each side and from each static
+control; Mister hits from three mover phases per side and each static control.
+The other three tools miss the stationary defender at this initial separation.
+Those counts are samples of a single paid pulse, fixed initial aim and seed,
+with a neutral defender; they are not competitive rankings.
+
+In fresh one-player controls, the fixed aim point is the crossover top centre
+`(1520,800)` or its mirror. The public paint collector identifies the actual
+crossover and its local face, team and raw keyboard-slot credit. Sniper paints
+288 top area from every sampled mover phase, versus zero crossover paint from
+the static approach: this is the concrete changed paint angle. Mister paints
+240/288 top area in two mover phases per side, versus 48 from the static
+control. Sprayer and Bucket instead favour this static station: Sprayer paints
+144 wall area there and no crossover face from the movers; Bucket paints 48
+top plus 864 wall area there and none from the movers. Roller paints neither
+receiver at this fixed-point separation. No extra pulse is added to force a
+miss into a hit, and samples are separate scenes rather than summed match score.
+
+Receipts in `out/validation/overnight-20261026/phase8/local-roles-v2/x64-release/`
+separate occupied health/paint observations from `local-paint.csv` and their
+per-tool summaries. They retain actual firing poses/phases, ammunition,
+per-face credit, first paint and public projectile-count snapshots. The
+proposal therefore offers a phase-dependent optional route and a measured
+Sniper top-paint angle, without supplying a general five-tool advantage.
+Pressure under tracking, invader camping, persistent return fire, opposed
+recovery and attended value/readability remain unqualified. All seven earlier
+arenas and P3/five-tool tuning are preserved.
+
+The playable comparison was freshly authored through the same document pipeline
+and has exactly the qualified trial's bytes. The registration CLI preview and
+apply add only its manifest/runtime-asset entries. Both game builds and focused
+`moving_structure`, `stage_selection`, `level_format`, `turbulence_blockout`,
+`turbulence_movers` and manifest-wide `terrain` checks pass. Terrain checks
+retain anchored material/miniature geometry and independently translated world
+collider/shadow bounds for movers; the paper-only backdrop contract remains
+exact. Both isolated SystemOnlyPath startups pass with the accepted audio bank,
+per-monitor DPI awareness and graceful shutdown. Receipts are under
+`phase8/registered-mover/`, `registered-mover-followup-v2/` and
+`registered-startup/` in the same overnight validation directory. Random still
+has four candidates among eight explicit stages.
 
 **A mirrored pair of fixed sloping scored slabs at the crossover shoulders.**
 The intended role is a walkable retreat from an upper receiver toward the lower

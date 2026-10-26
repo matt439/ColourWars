@@ -66,4 +66,5 @@ namespace turbulence_movers_acceptance
     void routes(Context& context, bool full_matrix);
     void replay(Context& context);
     void pressure(Context& context);
+    void local_roles(Context& context);
 }

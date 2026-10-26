@@ -24,9 +24,10 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    Turbulence, keeping the current P3/five-tool values as the baseline. The King of the Hill
    blockout is [Press Tower](docs/polish-press-tower.md) (explicit-only, beside the preserved
    original; attended play is `POL#31`); Crossfeed is now in Random at the author's request.
-   Turbulence's [static candidate](docs/polish-turbulence.md) is explicit-only;
-   near-receiver tool trials and static native composition are qualified;
-   moving/jumping pressure, escape windows and useful mover placements are next.
+   Turbulence's [static and mover comparisons](docs/polish-turbulence.md) are
+   explicit-only; bounded moving fire, escape, mover routes/replay/native
+   composition and a local paint angle are qualified. Scored slopes are next;
+   opposed balance and attended value remain open.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
@@ -35,7 +36,8 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    is recorded in the arena owners; attended decisions remain above. The default-off
    paint-underfoot prototype is available for `POL#30`. Runtime horizontal motion
    and public-loader replay, editor authoring and saved-stage round trips are qualified;
-   useful Turbulence placements and rotated structures remain
+   the Turbulence mover comparison qualifies a local paint role; fixed scored
+   slopes remain
    ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
 
 UI artwork uses the approved gameplay style and remains outside the current blockout aim.
@@ -52,8 +54,8 @@ without attended play or new hardware. Finish one bounded slice at a time.
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `POL#21` | Qualify useful Turbulence mover placements against the recorded static routes, pressure and native baseline; supported scored slopes follow | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
-| `GAP#D5` | Justify useful Turbulence mover placements and the smallest static scored slope through route, paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
+| `POL#21` | Compare a supported scored slope at the Turbulence crossover shoulders against the retained static and mover candidates | [Candidate](docs/polish-turbulence.md#static-qualification-and-next-slice) |
+| `GAP#D5` | Qualify the smallest useful static scored slope through support, projectile, local-paint and layout checks | [Capability work](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
