@@ -178,6 +178,34 @@ Choose travel, period and mirrored initial phases only after comparing both
 sides' boarding/waiting/exposure windows. Use only the existing horizontal
 triangular motion, through the qualified public loader/editor path.
 
+**Isolated mover proposal, 2026-10-26.** The optional `turbulence_movers`
+acceptance case adds two one-way public-palette paintables in a saved/reopened
+`LevelDocument`: A anchor `(600,720,320,20)`, B anchor `(2760,720,320,20)`,
+320-unit horizontal travel, four-second period and phases 0/0.5. The original
+twenty collision objects, spawns, bounds and unrelated metadata remain equal;
+all seven source arena files and tuning remain byte-identical. Fresh public
+`LevelBuilder` loads pass with 1/4 actual players and the unchanged 181-update
+count-in. Debug and Release each pass the explicit `--routes` matrix of 26
+real-Level trials: 24 rides across four authored phases, -2/0/+2 input margins
+and both sides, plus two tap-miss controls. One held boarding jump, personal
+braking, 244 carried updates through two reversals, paid Sprayer paint credited
+to raw keyboard slot 4, inward waiting and jump to the fixed crossover or
+one-way drop, and ordinary home/lower-route recovery all pass without
+post-construction placement or respawn. Actual local scoring adds 16,320 area:
+total 165,120, tops 111,360, undersides 37,440 and walls 16,320. The upper-role
+budget is 48,960/165,120 (29.65%), above the initial 20% target; the added faces
+are fully counted. Receipts are under
+`out/validation/overnight-20261026/phase7/`, including `author-run.log`,
+`movers-routes-debug.log`, `movers-routes-release.log` and their per-trial CSVs.
+The optional case authors a fresh trial in its receipt directory when no staged
+default exists; both-preset default invocations also pass their six focused
+routes and actual author/save/reopen checks. An explicit input path remains authoritative. This proposal
+is not registered game content. Seeded replay of this placement, native moving
+composition, five-tool role and attended play remain unqualified. In particular,
+the higher standing fire may bypass the centre baffle and change pressure on
+both departures; route and paint-credit success alone do not establish that
+the bay earns its angle or its increased upper score share.
+
 **A mirrored pair of fixed sloping scored slabs at the crossover shoulders.**
 The intended role is a walkable retreat from an upper receiver toward the lower
 crossing while presenting a paintable underside to the lower approach. A solid
