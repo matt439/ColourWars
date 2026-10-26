@@ -508,7 +508,7 @@ The earlier arenas and P3/five-tool tuning are preserved.
 
 ### Turbulence blockout work (`POL#21`)
 
-**OPEN, scoped 2026-10-26.** The [route and score brief](polish-turbulence.md)
+**DECISION, software checkpoint 2026-10-26.** The [route and score brief](polish-turbulence.md)
 defines the fixed skeleton, optional moving approaches, spawn/pressure checks
 and provisional regional/face allocations. Its static, mover and fixed-slab
 comparisons are selectable beside the original. Public loader/editor, CPU
@@ -517,11 +517,13 @@ are qualified, including registered slab overview, result-derived ending
 composition and lower-approach underside cover/paint controls. The bounded
 software comparisons retain the current values; attended play must choose the
 geometry and answer pressure, crossing comfort and balance.
-This is the next layout, beside the preserved
-`turbulence.json`. Use the recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
-and current P3/five-tool values. The first brief can proceed while the
-[moving-structure work](feature-roadmap.md#horizontal-movement-capability-2026-10-26)
-is implemented; Press Tower play does not block it.
+No additional pressure mode is required before that session. The local Release
+package and separate missing-bank fallback also pass; clean-machine acceptance
+remains `ROAD#1`. Press Tower support art retains its owner's later art-pass gate.
+Retain these comparisons beside the preserved `turbulence.json`. Use the
+recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
+and current P3/five-tool values during selection. Turbulence and Press Tower
+keep separate attended-play gates.
 
 | Slice | Concrete result and stopping point | Dependency |
 |---|---|---|

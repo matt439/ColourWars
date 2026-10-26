@@ -14,8 +14,10 @@ adds the qualified horizontal pair beside that preserved skeleton. It is a
 playable blockout comparison, with its measured local role below. The separate
 explicit-only [scored-slab comparison](../game/content/levels/turbulence_slab_trial.json)
 adds the qualified fixed pair to that mover layout. Core, routes, native
-composition, replay and the bounded four-geometry tool comparison are qualified;
-broader placement pressure and attended balance remain open.
+composition, replay and the bounded four-geometry tool comparison are qualified.
+The scoped software work is complete. `POL#21` now needs attended both-side
+1-4P play to choose geometry and answer pressure, crossing comfort and balance;
+this has not accepted the slab trial or changed the current values.
 
 **Selectable slab trial, 2026-10-26.** The actual editor loaded the qualified
 private 24-object candidate, set its display name to **Turbulence Yard - Slab
@@ -43,6 +45,23 @@ Receipts: `out/validation/overnight-20261026/phase16/registration/` and
 `phase16/public-stage/` (Release `turbulence-slab-stage-41768`, Debug
 `turbulence-slab-stage-35412`). The authoring tool requires explicit
 `--author-preview` and `--apply` modes; normal consumer checks cannot execute it.
+
+**Local Release delivery check, 2026-10-26.** The ZIP built at `a18c5663`
+passes the CI file/audio/Release-console inspection and extracted
+SystemOnlyPath startup. Its 63 files contain all nine source-identical levels,
+the same four Random arenas and the accepted bank/provenance. A separate
+62-file copy omitting only the bank also starts and reports the expected silent
+fallback; the ZIP and normal extracted bank are preserved. Both startups check
+isolated saves, per-monitor v2 DPI awareness and graceful shutdown.
+
+Receipts: `out/validation/overnight-20261026/phase18/release-package/inspection.json`,
+normal startup `46df4757ebe34d9395d85f67d44e48b2` and missing-bank startup
+`8858146359f545ac8692a542a1f97e4e`. ZIP SHA256:
+`278AD46FCC97D6B179DA004717EFC9628BB4B71C1410776F9D83A1B40D8BC779`.
+This is local delivery evidence; clean-machine acceptance remains `ROAD#1`.
+The focused checks and probes above passed; the full consumer suite was not
+rerun as a whole. No attended balance, physical-pad, listening or performance
+acceptance is implied.
 
 ## Question and research transfer
 

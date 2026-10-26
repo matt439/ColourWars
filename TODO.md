@@ -24,12 +24,11 @@ See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
    Turbulence, keeping the current P3/five-tool values as the baseline. The King of the Hill
    blockout is [Press Tower](docs/polish-press-tower.md) (explicit-only, beside the preserved
    original; attended play is `POL#31`); Crossfeed is now in Random at the author's request.
-   Turbulence's [static and mover comparisons](docs/polish-turbulence.md) are
-   explicit-only; bounded moving fire, escape, mover routes/replay/native
-   composition and a local paint angle are qualified. The fixed scored-slab
-   core, bounded native composition and a local Roller role pass both presets;
-   fresh public replay is qualified; broader pressure is next;
-   opposed balance and attended value remain open.
+   Turbulence's [static, mover and scored-slab comparisons](docs/polish-turbulence.md)
+   are explicit-only. The scoped software qualification is complete: bounded
+   fire/escape, routes/replay, local paint/cover roles, native composition and
+   endings. Attended geometry choice, crossing comfort and opposed balance
+   are now the next step (`POL#21`); current values remain provisional.
 4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance, C2
    recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
    review and fresh-player observations (`POL#24`) still gate wider art production.
@@ -47,19 +46,16 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Local implementation choices.** The current environment kit, small-view treatment
-and static landmarks are approved for this stage. The retained parallax comparison
-recommends keeping the shipped arenas static. These local slices advance the blockout
-or provide supporting work when it does not compete with it.
-This is a selection guide, not another priority order; each owner defines stopping points
-and dependencies. The first two rows feed the current blockout aim; the others can proceed
-without attended play or new hardware. Finish one bounded slice at a time.
-
-| id | next implementation slice | owner |
-|---|---|---|
-| `POL#21` | Verify the local Release package and record the remaining attended Turbulence questions | [Candidate](docs/polish-turbulence.md#why-the-new-geometry-earns-its-place) |
+**Local implementation checkpoint, 2026-10-26.** No scoped `OPEN` implementation
+row remains. The current environment kit, small-view treatment and static landmarks
+stay approved; wider art and the unscoped capability contracts retain their owners'
+gates. The local Release ZIP passes inspection, normal startup and the separate
+missing-bank fallback; clean-machine acceptance still needs `ROAD#1`.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
+
+- **Turbulence play and selection:** choose among the explicit-only comparisons after
+  both-side 1-4P pressure, crossing-comfort and regional-value play (`POL#21`).
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
 - **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
   recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
@@ -111,7 +107,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 |---|---|---|---|---|
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
 | `POL#30` | DECISION | MED | S | Decide paint underfoot, a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | OPEN | MED | XL | Qualify [Turbulence Yard](docs/polish-turbulence.md) opposed pressure and capability placements; optional 1v1 CQ and side swaps follow. [Press Tower](docs/polish-press-tower.md) still needs attended play (`POL#31`) and support art. |
+| `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
