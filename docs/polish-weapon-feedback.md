@@ -43,6 +43,21 @@ a one-unit keyline. Startup rejects nonpositive/nonfinite timings and geometry,
 oversized keylines and missing fill resources. The shapes use the existing
 utility fill frame; no new atlas or build dependency is required.
 
+## Low-paint advance warning (`POL#38`)
+
+**OPEN, requested by the author 2026-10-27.** Players need both a visual and
+an audio warning when close to exhausting their paint, before they incur the
+existing depletion penalty. The implemented empty-fire and recovery accents
+do not provide that advance warning.
+
+Next, check the actual supply, shot costs and depletion rules, then add a
+warning threshold and distinct visual/audio cues before exhaustion. Keep the
+warning readable during firing and rearm it after sufficient recovery without
+repeating sound every update. Acceptance: all five tools warn before the
+penalty; the visual cue works with sound muted and at four-player size, and
+the audio cue is distinguishable in the multiplayer mix. Preserve the current
+paint costs, regeneration and penalty while adding the feedback.
+
 ## Reproduction
 
 From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:

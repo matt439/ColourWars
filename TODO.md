@@ -86,6 +86,7 @@ questions in the polish sub-docs are superseded, not open.
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#34` | DECISION | MED | M | Choose the recorded fractional, camera-snap or integer-cell/letterbox display policy after 720p/1080p/QHD motion and 1/2/4P readability review. [Record](docs/polish-plan.md#display-scaling-record). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
+| `POL#37` | OPEN | HIGH | S | Fix the main-menu duplicate highlight: Down leaves the first item highlighted while highlighting the second. [Report and acceptance](docs/polish-main-menu.md#main-menu-duplicate-highlight-pol37). |
 
 ## Feel and feedback
 
@@ -98,6 +99,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#3` | DECISION | MED | M | Retain the author's positive P3 movement baseline. Attended C2 identity/rear-threat recognition, input-margin and physical-pad review remain; preserve legacy climbs. [Acceptance](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25), [course](docs/polish-movement-course.md). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
+| `POL#38` | OPEN | HIGH | M | Add visual and audio low-paint warnings before exhaustion incurs the depletion penalty. [Scope](docs/polish-weapon-feedback.md#low-paint-advance-warning-pol38). |
+| `POL#39` | OPEN | MED | M | Make the small white mouse cursor easier to find during play; prototype a contrasting indicator beneath it. [Scope](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
 
 ## Levels and the editor
 

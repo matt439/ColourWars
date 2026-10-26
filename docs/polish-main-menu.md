@@ -32,6 +32,18 @@ retain their behavior, as do music and effects bindings and gains. The keyboard
 seat continues to make the title's controller hint unnecessary; its authored
 position and font bounds are retained for that existing hint.
 
+## Main-menu duplicate highlight (`POL#37`)
+
+**OPEN, reported by the author 2026-10-27.** On the main menu, press Down
+from the first item: its highlight remains while a second highlight appears
+on the second item, making both look selected.
+
+Next, reproduce this on Home and check the persistent Play paper card described
+above against the actual focus drawing. Correct the treatment so only the
+current action looks selected. Acceptance: Down/Up through all four actions,
+including wraparound and returning from a child page, leaves one unambiguous
+selection indicator on the action that confirmation activates.
+
 ## Validation
 
 Debug and Release build under `/W4 /WX` and each pass all 22 consumer

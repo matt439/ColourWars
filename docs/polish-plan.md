@@ -1586,6 +1586,19 @@ requirements for every milestone. Fold the small experiments into the relevant
 passes above; promote them to production work when observation supports them.
 Keep the first polished match as the next deliverable.
 
+### Mouse-cursor visibility (`POL#39`)
+
+**OPEN, reported by the author 2026-10-27.** The small white Windows cursor
+is easy to lose during play. Prototype a contrasting indicator beneath the
+cursor, such as a backing or halo, to make it easy to locate while aiming.
+This concerns the mouse pointer itself, alongside the existing nozzle-direction
+and readiness marker.
+
+Next, inspect how the gameplay cursor is drawn and add the backing at the
+actual pointer position. Acceptance: it stays visible over pale, dark and
+heavily painted scenes in 1/2/4-player layouts without obscuring the target or
+changing the aiming point. Reduced effects should retain a steady indicator.
+
 ### Help players read the tool and the fight
 
 The current [weapon update](../game/objects/weapon.cpp) distinguishes ammunition
