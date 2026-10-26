@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/play_settings.h"
+#include "game/paint_owners.h"
 
 #include "game/tuning.h"
 #include "game/objects/weapon_type.h"
@@ -29,7 +30,17 @@
 #include "engine/render/camera.h"
 #include "engine/render/viewport.h"
 #include <array>
+#include <cstdint>
 #include <optional>
+
+// Passive match-lifetime counts. Owner indices use paint_owners, not view or
+// device-slot assumptions. Respawn retains them; no gameplay callback is added.
+struct PlayerLethalProjectiles
+{
+    std::array<std::uint64_t, paint_owners::count> enemy_by_owner{};
+    std::uint64_t uncredited = 0;
+    bool operator==(const PlayerLethalProjectiles&) const = default;
+};
 
 enum class PlayerState
 {
@@ -185,6 +196,8 @@ public:
 	bool showing_debug() const;
 
     float health() const;
+    // Fatal projectile contacts, before the later dead-state transition.
+    const PlayerLethalProjectiles& lethal_projectiles() const;
 
     float weapon_ammo() const;
     const labrador::Colour& team_colour() const;
@@ -373,7 +386,7 @@ private:
 	bool supported_this_tick_ = false;
 	bool hit_ceiling_this_tick_ = false;
 
-	void on_projectile_contact(CollisionObjectType other_type);
+	void on_projectile_contact(CollisionObjectType other_type, const labrador::CollisionObject& source);
 
 	// Resolve flat surfaces using the contact normal and penetration depth.
 	void on_structure_contact(const labrador::CollisionObject& other,
@@ -421,4 +434,5 @@ private:
 
 	bool is_on_ground() const;
     bool is_on_ramp() const;
+    PlayerLethalProjectiles lethal_projectiles_{};
 };

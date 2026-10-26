@@ -3,9 +3,11 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/input_slots.h"
 #include "game/paint_owners.h"
+#include "game/objects/player.h"
 #include "engine/core/file_path.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -64,16 +66,67 @@ namespace balance_runner
                     "Per-seat held paint is invalid");
                 seats += seat.paint_area;
             }
+            std::uint64_t credits = 0, credited_deaths = 0, uncredited = 0;
+            for (const SeatResult& seat : result.seats)
+            {
+                credits += seat.credited_enemy_eliminations;
+                credited_deaths += seat.credited_enemy_projectile_deaths;
+                uncredited += seat.uncredited_projectile_lethals;
+            }
+            require(credits == result.credited_enemy_eliminations && credited_deaths == credits &&
+                uncredited == result.uncredited_projectile_lethals, "Credited/uncredited lethal totals do not reconcile");
             require(std::fabs(seats - painted) <= tolerance,
                 "Actual per-owner paint does not reconcile with team-held area");
             require(csv_row(result).find('\n') == std::string::npos &&
                 csv_row(result).find('\r') == std::string::npos,
                 "One completed match must occupy one CSV row");
         }
+        void attribution_checks()
+        {
+            Result result;
+            result.players = 4;
+            for (int view = 0; view < result.players; ++view)
+            {
+                SeatResult& seat = result.seats.at(static_cast<std::size_t>(view));
+                seat.paint_owner = paint_owners::index(-1, view);
+                seat.team = view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
+            }
+            std::vector<PlayerLethalProjectiles> victims(4);
+            const auto owner = [&](int view) { return static_cast<std::size_t>(result.seats.at(static_cast<std::size_t>(view)).paint_owner); };
+            victims[1].enemy_by_owner[owner(0)] = 2;
+            victims[1].enemy_by_owner[owner(2)] = 1;
+            victims[0].enemy_by_owner[owner(1)] = 1;
+            victims[2].enemy_by_owner[owner(2)] = 3; // Self provenance cannot earn credit.
+            victims[2].enemy_by_owner[owner(0)] = 4; // Same-team provenance cannot earn credit.
+            victims[3].enemy_by_owner[0] = 5;        // Valid owner index, absent from this roster.
+            victims[3].uncredited = 2;              // Invalid/unowned/non-enemy source metadata.
+            attribute_eliminations(result, victims);
+            require(result.credited_enemy_eliminations == 4 && result.uncredited_projectile_lethals == 14 &&
+                result.seats[0].credited_enemy_eliminations == 2 && result.seats[1].credited_enemy_eliminations == 1 &&
+                result.seats[2].credited_enemy_eliminations == 1 && result.seats[3].credited_enemy_eliminations == 0 &&
+                result.seats[1].credited_enemy_projectile_deaths == 3 && result.seats[0].credited_enemy_projectile_deaths == 1 &&
+                result.seats[2].uncredited_projectile_lethals == 7 && result.seats[3].uncredited_projectile_lethals == 7,
+                "Owner/roster/opponent/self validation did not preserve raw lethal provenance");
+            const std::string once = csv_row(result);
+            attribute_eliminations(result, victims);
+            require(csv_row(result) == once, "Repeated lethal snapshots accumulated duplicate credit");
+            Result invalid = result;
+            invalid.seats[1].paint_owner = invalid.seats[0].paint_owner;
+            refuses([&] { attribute_eliminations(invalid, victims); }, "Duplicate roster owners accepted for credit");
+            invalid = result; invalid.seats[0].paint_owner = paint_owners::count;
+            refuses([&] { attribute_eliminations(invalid, victims); }, "Invalid roster owner accepted for credit");
+            const std::string header = csv_header();
+            const std::size_t extension = header.find(",credited_enemy_eliminations,uncredited_projectile_lethals");
+            require(extension != std::string::npos &&
+                std::count(header.begin(), header.begin() + static_cast<std::ptrdiff_t>(extension), ',') == 66 &&
+                std::count(header.begin(), header.end(), ',') == 80 && csv_row(result).rfind("2,", 0) == 0,
+                "Schema2 must append14 columns after the67-field legacy schema");
+        }
     }
 
     void self_tests(const std::filesystem::path& content)
     {
+        attribution_checks();
         const std::filesystem::path parser_csv = std::filesystem::temp_directory_path() /
             (L"colourwars_balance_parser_unused_" + std::to_wstring(_getpid()) + L".csv");
         const auto parsed = [&](std::vector<std::wstring> arguments)
@@ -149,8 +202,8 @@ namespace balance_runner
         std::cout << "PASS balance runner: 4 real CPU matches, nontrivial active state, whole-row seeded byte identity, "
             "2/4-player device-less owner mapping, 0/uint32-max seeds, bounded Crossfeed sweep, CLI refusals, "
             "exact Unicode-file CSV publication and no-overwrite. "
-            "Metrics are held paint, pre-step full-shot empty readiness and sampled death edges; "
-            "no killer credit, region/face ownership, physical device, listening or balance acceptance.\n"
+            "Metrics are held paint, pre-step full-shot empty readiness, sampled death edges and validated enemy credit; "
+            "region/face ownership, physical device, listening and balance acceptance remain open.\n"
             << "Private CSV evidence: " << labrador::path_to_utf8(csv) << '\n';
     }
 }

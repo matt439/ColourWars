@@ -241,7 +241,63 @@ namespace balance_runner
                 seat.paint_area = end.player_areas.at(static_cast<std::size_t>(seat.paint_owner));
                 seat.final_health = player.health(); seat.final_ammo = player.weapon_ammo();
             }
+            std::vector<PlayerLethalProjectiles> victims;
+            victims.reserve(static_cast<std::size_t>(level->player_count()));
+            for (int view = 0; view < level->player_count(); ++view)
+            { victims.push_back(level->player(view).lethal_projectiles()); }
+            attribute_eliminations(result, victims);
             return result;
+        }
+    }
+
+    void attribute_eliminations(Result& result, const std::vector<PlayerLethalProjectiles>& victims)
+    {
+        if (result.players < 1 || result.players > 4 || victims.size() != static_cast<std::size_t>(result.players))
+        { throw std::invalid_argument("Lethal snapshots must match the actual roster"); }
+        std::array<int, paint_owners::count> owner_views;
+        owner_views.fill(-1);
+        for (int view = 0; view < result.players; ++view)
+        {
+            const SeatResult& seat = result.seats.at(static_cast<std::size_t>(view));
+            if (seat.paint_owner < 0 || seat.paint_owner >= paint_owners::count ||
+                (seat.team != PlayerTeam::a && seat.team != PlayerTeam::b))
+            { throw std::invalid_argument("Lethal attribution requires valid roster owners and teams"); }
+            int& known = owner_views.at(static_cast<std::size_t>(seat.paint_owner));
+            if (known >= 0) { throw std::invalid_argument("Lethal attribution requires unique roster owners"); }
+            known = view;
+        }
+        std::array<std::uint64_t, 4> credits{}, deaths{}, uncredited{};
+        std::uint64_t total_credits = 0, total_uncredited = 0;
+        for (int victim = 0; victim < result.players; ++victim)
+        {
+            const auto index = static_cast<std::size_t>(victim);
+            uncredited[index] = victims[index].uncredited;
+            for (std::size_t owner = 0; owner < victims[index].enemy_by_owner.size(); ++owner)
+            {
+                const std::uint64_t count = victims[index].enemy_by_owner[owner];
+                const int attacker = owner_views[owner];
+                // A raw source owner is not sufficient credit: it must identify
+                // another actual participant on the opposing team.
+                if (attacker >= 0 && attacker != victim &&
+                    result.seats[static_cast<std::size_t>(attacker)].team != result.seats[index].team)
+                {
+                    credits[static_cast<std::size_t>(attacker)] += count;
+                    deaths[index] += count;
+                    total_credits += count;
+                }
+                else { uncredited[index] += count; }
+            }
+            total_uncredited += uncredited[index];
+        }
+        // Publish only after the complete roster has validated; repeated
+        // snapshots recompute the same totals instead of accumulating twice.
+        result.credited_enemy_eliminations = total_credits;
+        result.uncredited_projectile_lethals = total_uncredited;
+        for (std::size_t view = 0; view < result.seats.size(); ++view)
+        {
+            result.seats[view].credited_enemy_eliminations = credits[view];
+            result.seats[view].credited_enemy_projectile_deaths = deaths[view];
+            result.seats[view].uncredited_projectile_lethals = uncredited[view];
         }
     }
 

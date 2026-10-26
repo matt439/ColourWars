@@ -31,8 +31,8 @@ int wmain(int argc, wchar_t* argv[])
         balance_runner::write_csv(options.csv, results);
         std::cout << "PASS balance runner: " << results.size() << " completed matches; "
             << labrador::path_to_utf8(options.csv) << '\n'
-            << "Aggregate held paint, pre-step empty-readiness ticks and observed death edges only. "
-            "Credited eliminations, region/face ownership, skirmish AI and attended balance acceptance remain separate.\n";
+            << "Aggregate held paint, pre-step empty-readiness ticks, observed death edges and validated enemy eliminations. "
+            "Region/face ownership, skirmish AI and attended balance acceptance remain separate.\n";
         return 0;
     }
     catch (const std::exception& error)

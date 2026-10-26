@@ -166,7 +166,7 @@ run directories are refused. `-SkipBuild` is for an already current Debug build;
 the tool itself is always freshly compiled. Run metadata pins source/data,
 executable, arguments and CSV bytes separately from the deterministic rows.
 
-The 67-column CSV schema records stage, seed, roster/tools, requested duration,
+The original 67-column prefix records stage, seed, roster/tools, requested duration,
 actual active ticks and the fixed-step bits, raw team/seat paint areas, final
 health/ammunition and a gameplay fingerprint. Team/seat `share_of_painted`
 uses the painted-area denominator; `coverage_of_arena` uses all scoring area,
@@ -215,7 +215,51 @@ developer-only case. Case selection is validated before building, and
 `-CompileOnly` lets the launcher reuse the compiler/object linkage without
 pretending the self-checks ran during compilation.
 
-**Still open in TOOL#1:** credited eliminations, final region/face-owned paint,
+### Credited projectile eliminations (schema 2)
+
+`Player::lethal_projectiles()` records the first projectile contact that takes
+an alive player's positive health through zero, before the later dead-state
+transition. Match-lifetime counters survive timed and forced respawn; a fresh
+match starts them at zero. Repeated contacts cannot replace the fatal source.
+The existing sampled `observed_death_edges` remains a separate measure and can
+miss that terminal contact at time-up.
+
+A valid projectile owner is only provisional provenance. The runner validates
+unique actual roster owners/teams and credits a different opposing participant;
+unknown, friendly, self or absent owners remain uncredited. Credit snapshots
+recompute rather than accumulate twice. Each seat records
+`credited_enemy_eliminations`, `credited_enemy_projectile_deaths` and
+`uncredited_projectile_lethals`; match totals reconcile the credited and
+uncredited counts. This records projectile lethals, not a new scoring rule.
+
+Schema 2 retains the original 67-column prefix/order and appends 14 fields:
+two match totals and those three measures for each of four seats, giving
+81 columns. The declared version changes from 1 to 2; unused-seat counters
+remain zero. Earlier schema-1 files remain historical controls. Damage, tuning and
+gameplay decisions are unchanged.
+
+The ordinary `lethal_provenance` consumer case exercises real Player/projectile
+callbacks, immunity and repeated/competing hits, respawn retention and
+uncredited sources. The added collision controls cover a fast Jet
+crossing with both endpoints clear and an actual Scene batch where one
+shared Roller volume hits two victims. The Debug runner adds actual-roster validation,
+idempotent attribution and deterministic match checks. `lethal_provenance` runs in both presets; the
+`balance_runner` case and public launcher remain Debug-only.
+
+Qualification: Debug/Release game/editor builds and include-boundary checks
+passed, along with `lethal_provenance`, `combat_feedback`, `view_shake` and
+`debug_console` in both presets plus Debug's `balance_runner` (nine CPU cases).
+The public two-Sniper, 20-second Crossfeed/Press Tower control at seeds 0/17
+retained all 66 non-schema legacy values, including fingerprints, exactly;
+only schema 1 became 2. Complete 81-column repeats were byte-identical and
+reversed-order rows matched by key. Press Tower seed 17 recorded one credited
+elimination/death; the other rows recorded zero, with no uncredited lethals.
+These short paint-bot controls qualify measurement, not tool balance. Actual
+source baseline `e5256a5` and engine `1e60fb2`, source/producer/CSV pins,
+case logs and the separate CSV comparison are retained under
+`out/validation/todo-loop-20261025/tool1-lethal-native-v1/`.
+
+**Still open in TOOL#1:** final region/face-owned paint,
 the `skirmish` bot and the first full five-tool report. The short control above
 qualifies the pipeline, not tool balance or human acceptance. No tuning value or
 shipping opponent behaviour changes in this slice.

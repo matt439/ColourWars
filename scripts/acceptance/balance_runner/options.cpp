@@ -216,6 +216,14 @@ namespace balance_runner
                 "observed_death_edges", "final_health", "final_ammo" })
             { out << prefix << name; }
         }
+        out << ",credited_enemy_eliminations,uncredited_projectile_lethals";
+        for (int seat = 1; seat <= 4; ++seat)
+        {
+            const std::string prefix = ",p" + std::to_string(seat) + '_';
+            for (const char* name : { "credited_enemy_eliminations", "credited_enemy_projectile_deaths",
+                "uncredited_projectile_lethals" })
+            { out << prefix << name; }
+        }
         return out.str();
     }
 
@@ -225,7 +233,7 @@ namespace balance_runner
         out.imbue(std::locale::classic());
         out << std::setprecision(std::numeric_limits<double>::max_digits10);
         const double painted = static_cast<double>(result.team_a_area) + result.team_b_area;
-        out << 1 << ',' << field(result.stage) << ',' << result.seed << ',' << result.players << ','
+        out << 2 << ',' << field(result.stage) << ',' << result.seed << ',' << result.players << ','
             << field(result.bot) << ',' << result.duration << ',' << labrador::StepTimer::TicksPerSecond / 60 << ','
             << std::bit_cast<std::uint32_t>(fixed_dt()) << ',' << result.active_ticks << ','
             << static_cast<double>(result.active_ticks) * fixed_dt() << ',' << result.team_a_area << ','
@@ -240,6 +248,12 @@ namespace balance_runner
                 << ratio(seat.paint_area, result.paintable_area) << ',' << seat.alive_ticks << ','
                 << seat.ammo_starved_ticks << ',' << seat.fire_starved_ticks << ',' << seat.observed_death_edges << ','
                 << seat.final_health << ',' << seat.final_ammo;
+        }
+        out << ',' << result.credited_enemy_eliminations << ',' << result.uncredited_projectile_lethals;
+        for (const SeatResult& seat : result.seats)
+        {
+            out << ',' << seat.credited_enemy_eliminations << ',' << seat.credited_enemy_projectile_deaths << ','
+                << seat.uncredited_projectile_lethals;
         }
         return out.str();
     }

@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+struct PlayerLethalProjectiles;
+
 namespace balance_runner
 {
     // A developer measurement, never an AI opponent in the shipped game.
@@ -39,6 +41,9 @@ namespace balance_runner
         std::uint64_t observed_death_edges = 0;
         float final_health = 0.0f;
         float final_ammo = 0.0f;
+        std::uint64_t credited_enemy_eliminations = 0;
+        std::uint64_t credited_enemy_projectile_deaths = 0;
+        std::uint64_t uncredited_projectile_lethals = 0;
     };
 
     struct Result
@@ -55,6 +60,8 @@ namespace balance_runner
         std::uint64_t final_fingerprint = 0;
         bool activity_observed = false; // Actual motion/ammo change, for nontrivial self-checks.
         std::array<SeatResult, 4> seats{};
+        std::uint64_t credited_enemy_eliminations = 0;
+        std::uint64_t uncredited_projectile_lethals = 0;
     };
 
     Options parse_options(const std::filesystem::path& content,
@@ -66,6 +73,8 @@ namespace balance_runner
     std::string csv_row(const Result& result);
     std::string csv_text(const std::vector<Result>& results);
     void write_csv(const std::filesystem::path& path, const std::vector<Result>& results);
+    // Validate fixed owner provenance against the actual opposing roster.
+    void attribute_eliminations(Result& result, const std::vector<PlayerLethalProjectiles>& victims);
     std::vector<Result> run_sweep(const Options& options);
     void self_tests(const std::filesystem::path& content);
 }

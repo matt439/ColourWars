@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player.h"
+#include "game/objects/projectile.h"
 #include "game/objects/paint_audio.h"
 #include "game/objects/structure_paintable.h"
 
@@ -197,7 +198,7 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
 
     if (is_projectile(other_type))
     {
-        this->on_projectile_contact(other_type);
+        this->on_projectile_contact(other_type, other);
         return;
     }
 
@@ -589,7 +590,8 @@ void Player::update_weapon_position() const
 {
     this->primary_->set_player_center(this->center());
 }
-void Player::on_projectile_contact(CollisionObjectType other_type)
+void Player::on_projectile_contact(CollisionObjectType other_type,
+    const CollisionObject& source)
 {
     // The projectile side is unchanged: paint still lands.
     if (this->damage_immune_)
@@ -600,7 +602,25 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
     // Damage belongs to the projectile's tuning record.
     const float damage = this->tuning_->projectile(
         to_projectile_type(other_type)).details.player_damage;
+    const bool vulnerable = this->state_ == PlayerState::alive && this->health_ > 0.0f;
     this->health_ -= damage;
+    if (vulnerable && this->health_ <= 0.0f)
+    {
+        // Capture the fatal contact now: the dead state arrives next update.
+        // Later hits cannot replace credit. This metadata changes no damage,
+        // contact, feedback, timer, or random-number decision.
+        const auto* projectile = dynamic_cast<const Projectile*>(&source);
+        const CollisionLayer enemy_layer = this->team_ == PlayerTeam::a ?
+            collision_layers::PROJECTILE_TEAM_B : this->team_ == PlayerTeam::b ?
+            collision_layers::PROJECTILE_TEAM_A : CollisionLayer{ 0 };
+        const int owner = projectile != nullptr ? projectile->player_num() : -1;
+        if (projectile != nullptr && enemy_layer != 0 && source.layer() == enemy_layer &&
+            owner >= 0 && owner < paint_owners::count)
+        {
+            ++this->lethal_projectiles_.enemy_by_owner[static_cast<size_t>(owner)];
+        }
+        else { ++this->lethal_projectiles_.uncredited; }
+    }
 
     if (damage > 0.0f && this->health_ > 0.0f && this->state_ == PlayerState::alive)
     {
@@ -1278,6 +1298,11 @@ float Player::health() const
 void Player::set_camera(const Camera& camera)
 {
 	this->camera_ = camera;
+}
+
+const PlayerLethalProjectiles& Player::lethal_projectiles() const
+{
+    return this->lethal_projectiles_;
 }
 
 float Player::weapon_ammo() const
