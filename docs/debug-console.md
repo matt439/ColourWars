@@ -1649,6 +1649,15 @@ v3 drove the reconnect menu with the wrong pad, corrected to its actual owner.
 These controlled results do not establish attended OS-focus/power-sleep,
 physical-pad, listening or performance acceptance, and do not satisfy `CI#1`.
 
+The refreshed local Release ZIP at `9d08adc5` also passes file/audio/console
+inspection, all nine level-byte checks, normal extracted startup and a separate
+missing-bank-copy startup. Receipts are under
+`out/validation/overnight-20261026/phase21/`; the normal startup is
+`3953dcbf708644dd974ce81a8f51a88b`, and the fallback is
+`a5291edaec4d4ca783c37027ed030486`. Its 63-file ZIP SHA256 is
+`191451EDD2A1AD69D883E0D997FBA98255082308C17FC666CA27929829E993EB`.
+Clean-machine acceptance remains `ROAD#1`.
+
 ## Remaining live-tuning work (`DBG#1`)
 
 **DEFERRED (readiness audit, 2026-10-26).** No additional field/caller is selected;
