@@ -105,7 +105,7 @@
     "home_subtitle": "Paint the arena. Claim the win.",
     "display_trial_countdown": "Reverting in {seconds}s",
     "help": {
-      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: Pad Jump choice / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
       "pad_association": "Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
       "aim_cutoff": "Right stick: radial cutoff"
     },
@@ -125,6 +125,16 @@
       "capture_conflict": "Key already used for movement or drop.",
       "capture_cancelled": "Gesture cancelled; pending key unchanged.",
       "debug_collision": "Jump key also has a developer bind."
+    },
+    "pad_jump": {
+      "heading": "Pad Jump",
+      "button": "Jump button",
+      "reset": "Reset this pad to A",
+      "current": "Current: {button} / LT",
+      "pending": "Pending: {button} / LT",
+      "help": "Choose A, B, X or Y for this pad.\nLT also jumps; hold for height.\nApply saves edited pads.\nBack discards unapplied changes.\nMenus: A selects; B goes back.\nIntro skip keeps A / B / Start.\nProfiles follow Pad 1-4 slots.",
+      "pending_status": "Apply to activate edited pads' Jump buttons.",
+      "saved_status": "Edited pads' Jump buttons applied and saved."
     },
     "status": {
       "options_pending": "Apply to save changes.",
@@ -303,7 +313,8 @@
       "restore_defaults": "Restore defaults",
       "keep": "Keep",
       "revert": "Revert",
-      "keyboard_jump": "Keyboard Jump"
+      "keyboard_jump": "Keyboard Jump",
+      "pad_jump": "Pad Jump"
     }
   },
 
@@ -447,7 +458,7 @@
     "controls_position": { "x": 1120.0, "y": 210.0 },
     "controls_size": { "x": 620.0, "y": 700.0 },
     "status_position": { "x": 220.0, "y": 888.0 },
-    "item_font": "lato_black_36",
+    "item_font": "lato_black_24",
     "help_font": "lato_black_24",
     "stick_preview": {
       "raw_movement": { "position": { "x": 1120.0, "y": 315.0 }, "size": { "x": 620.0, "y": 24.0 } },
@@ -463,8 +474,8 @@
     },
     "layout": {
       "position": { "x": 220.0, "y": 210.0 },
-      "size": { "x": 300.0, "y": 54.0 },
-      "spacing": { "x": 510.0, "y": 74.0 }
+      "size": { "x": 300.0, "y": 46.0 },
+      "spacing": { "x": 510.0, "y": 64.0 }
     }
   },
 

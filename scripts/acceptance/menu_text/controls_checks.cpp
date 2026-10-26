@@ -15,10 +15,10 @@ namespace menu_text_acceptance
     void check_controls_text(Variants& variants, World& world)
     {
         constexpr const char* controls_keys[]{ "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump" };
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_jump" };
         constexpr MenuItem controls_roles[]{ MenuItem::pad_sticks, MenuItem::music_volume, MenuItem::sfx_volume,
             MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad,
-            MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::keyboard_jump };
+            MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::keyboard_jump, MenuItem::pad_jump };
         const auto normalized = variants.load([&](rapidjson::Document& d)
         {
             for (const char* key : controls_keys)
@@ -43,7 +43,7 @@ namespace menu_text_acceptance
             }
         }
         for (const char* key : { "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "apply", "back" })
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_jump", "apply", "back" })
         {
             // The main-menu font can draw this glyph. Controls' independently
             // selected item font must also support shared Apply and Back.
@@ -62,11 +62,15 @@ namespace menu_text_acceptance
                 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_controls_exact", std::make_unique<Font>(TextureHandle{}, glyphs, 20.0f));
-        world.render.add_font("menu_controls_row_exact", std::make_unique<Font>(TextureHandle{}, glyphs, 58.0f));
-        world.render.add_font("menu_controls_row_overflow", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 58.25f));
+        world.render.add_font("menu_controls_row_exact", std::make_unique<Font>(TextureHandle{}, glyphs, 48.0f));
+        world.render.add_font("menu_controls_row_overflow", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 48.25f));
         const auto exact_controls = [](rapidjson::Document& d)
         {
             d["controls_settings"]["item_font"].SetString("menu_controls_exact");
+            // Leave the nominal rectangle just below the measured 48-high
+            // boundary, so the later status counterexample reaches resource
+            // validation rather than failing the nominal layout first.
+            d["controls_settings"]["layout"]["size"]["y"].SetFloat(45.0f);
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("i"); }
         };
         for (const char* key : { "pad_sticks", "back" })
@@ -88,13 +92,12 @@ namespace menu_text_acceptance
             }
         }
         // World loads the shipped SpriteFontFile metrics without a graphics
-        // device. The shipped face keeps its descenders inside its 58 line
-        // spacing, so its actions fit the 58-high row unscaled. The regression
-        // this guards came from a face whose descenders reached 62, so alias
+        // device. The compact shipped face fits its 48-high row unscaled.
+        // Preserve the deep-descender regression with a face reaching 52, so alias
         // the shipped glyphs with g/j/p/q/y stretched to that depth, distinct
         // from the synthetic exact-boundary fonts registered below.
-        const Font* shipped_font = world.render.font(world.render.resolve_sprite_font("lato_black_36"));
-        require(shipped_font->line_spacing() == 58.0f, "Shipped Controls action font changed its line spacing");
+        const Font* shipped_font = world.render.font(world.render.resolve_sprite_font("lato_black_24"));
+        require(shipped_font->line_spacing() <= 48.0f, "Shipped Controls action font exceeds its compact row");
         std::vector<Glyph> shipped_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
@@ -103,7 +106,7 @@ namespace menu_text_acceptance
             Glyph deep = *glyph;
             if (character == U'g' || character == U'j' || character == U'p' || character == U'q' || character == U'y')
             {
-                deep.subrect.height = static_cast<int>(62.0f - deep.y_offset);
+                deep.subrect.height = static_cast<int>(52.0f - deep.y_offset);
             }
             shipped_glyphs.push_back(deep);
         }
@@ -116,34 +119,34 @@ namespace menu_text_acceptance
         const float action_width = real_controls.controls_position.x - real_controls.art.focus_padding.x * 2.0f -
             real_controls.art.shadow_offset - real_controls.layout.position.x;
         const float action_height = real_controls.layout.spacing.y - real_controls.art.focus_padding.y * 2.0f;
-        require(action_width == 842.0f && action_height == 58.0f,
+        require(action_width == 842.0f && action_height == 48.0f,
             "Controls actions lost their authored full-column width or row-height limit");
         const auto action_font = world.render.resolve_sprite_font(real_controls.item_font);
-        for (const MenuItem item : { MenuItem::keyboard_jump, MenuItem::apply })
+        for (const MenuItem item : { MenuItem::keyboard_jump, MenuItem::pad_jump, MenuItem::apply })
         {
             const auto& copy = real_actions.menu_text().item(item);
-            const auto shipped = world.render.measure_text(world.render.resolve_sprite_font("lato_black_36"), copy);
-            require(shipped.y == 58.0f && shipped.y <= action_height,
-                "Shipped Controls action no longer fits its 58-high row unscaled");
+            const auto shipped = world.render.measure_text(world.render.resolve_sprite_font("lato_black_24"), copy);
+            require(shipped.y > 0.0f && shipped.y <= action_height,
+                "Shipped Controls action no longer fits its 48-high row unscaled");
             const auto raw = world.render.measure_text(action_font, copy);
-            require(raw == mattmath::Vector2F(shipped.x, 62.0f) &&
-                raw.y + real_controls.art.focus_padding.y * 2.0f == 78.0f &&
+            require(raw == mattmath::Vector2F(shipped.x, 52.0f) &&
+                raw.y + real_controls.art.focus_padding.y * 2.0f == 68.0f &&
                 raw.y + real_controls.art.focus_padding.y * 2.0f > real_controls.layout.spacing.y,
-                "Action regression no longer exercises 62-high descenders in a 74-high row");
+                "Action regression no longer exercises 52-high descenders plus padding in a 64-high row");
             UiText text("shipped-action", copy, real_controls.item_font, real_controls.layout.position,
                 &world.render, real_controls.art.ink);
             const float scale = std::min({ 1.0f, action_width / raw.x, action_height / raw.y });
             text.set_scale(scale);
-            require(scale == 58.0f / 62.0f && text.text() == copy && text.bounds().height == 58.0f &&
+            require(scale == 48.0f / 52.0f && text.text() == copy && std::abs(text.bounds().height - 48.0f) < 0.001f &&
                 text.bounds().width == raw.x * scale,
-                "Deep-descender action did not retain its complete label with a uniform 58/62 fit");
+                "Deep-descender action did not retain its complete label with a uniform 48/52 fit");
         }
         std::vector<Glyph> action_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
             action_glyphs.push_back({ character, mattmath::RectangleI(0, 0,
-                character == U'F' ? 842 : 8, character == U'F' ? 58 : 16),
-                0.0f, character == U'H' ? 42.25f : 0.0f, 0.0f });
+                character == U'F' ? 842 : 8, character == U'F' ? 48 : 16),
+                0.0f, character == U'H' ? 32.25f : 0.0f, 0.0f });
         }
         world.render.add_font("menu_controls_action_exact", std::make_unique<Font>(TextureHandle{}, action_glyphs, 20.0f));
         for (const bool nonfinite : { false, true })
@@ -158,10 +161,11 @@ namespace menu_text_acceptance
             world.render.add_font(nonfinite ? "menu_controls_action_nonfinite" : "menu_controls_action_zero",
                 std::make_unique<Font>(TextureHandle{}, std::move(invalid_glyphs), 20.0f));
         }
-        for (const char* key : { "keyboard_jump", "apply" })
+        for (const char* key : { "keyboard_jump", "pad_jump", "apply" })
         {
             const bool keyboard = std::string(key) == "keyboard_jump";
-            const std::array<int, 2> rows{ keyboard ? 1 : 7, keyboard ? -1 : 3 };
+            const bool pad_jump = std::string(key) == "pad_jump";
+            const std::array<int, 2> rows{ keyboard ? 1 : (pad_jump ? 2 : 8), keyboard || pad_jump ? -1 : 3 };
             for (const char* copy : { "i", "F", "Fi", "FF", "H" })
             {
                 const auto fitted = variants.load([&](rapidjson::Document& d)
@@ -191,7 +195,7 @@ namespace menu_text_acceptance
                         "Action boundary did not distinguish exact/short labels from width/height overflow");
                     if (words == L"F")
                     {
-                        require(text.bounds().size() == mattmath::Vector2F(842.0f, 58.0f),
+                        require(text.bounds().size() == mattmath::Vector2F(842.0f, 48.0f),
                             "Exact action glyph did not touch both fitted limits");
                     }
                 }
@@ -225,23 +229,23 @@ namespace menu_text_acceptance
         const auto status_edge = [&](rapidjson::Document& d)
         {
             row_edge(d);
-            // Nine nominal 54-high rows plus their shadow end at 866. The
-            // 58-high text plus focus padding reaches 868 and must stay clear
+            // Ten nominal 45-high rows plus their shadow end at 841. The
+            // 48-high text plus focus padding reaches 842 and must stay clear
             // of the status even when that nominal layout still parses.
-            d["controls_settings"]["status_position"]["y"].SetFloat(868.0f);
+            d["controls_settings"]["status_position"]["y"].SetFloat(842.0f);
         };
         const auto fits_status = variants.load(status_edge);
         fits_status.validate_resources(world.render, world.audio);
         const auto& status_look = fits_status.controls_settings();
-        const float measured_back_bottom = status_look.layout.position.y + status_look.layout.spacing.y * 8.0f +
+        const float measured_back_bottom = status_look.layout.position.y + status_look.layout.spacing.y * 9.0f +
             world.render.measure_text(world.render.resolve_sprite_font(status_look.item_font), L"i").y +
             status_look.art.focus_padding.y;
-        require(measured_back_bottom == 868.0f && measured_back_bottom == status_look.status_position.y,
-            "Controls status boundary does not touch the actual ninth row's measured font and focus padding");
+        require(measured_back_bottom == 842.0f && measured_back_bottom == status_look.status_position.y,
+            "Controls status boundary does not touch the actual tenth row's measured font and focus padding");
         variants.rejects("items.back", [&](rapidjson::Document& d)
         {
             status_edge(d);
-            d["controls_settings"]["status_position"]["y"].SetFloat(867.75f);
+            d["controls_settings"]["status_position"]["y"].SetFloat(841.75f);
         }, &world);
     }
 
@@ -267,14 +271,14 @@ namespace menu_text_acceptance
             controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset -
                 controls.layout.position.x - controls.layout.spacing.x,
             controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
-        require(controls.layout.size.y == 54.0f && controls.layout.spacing.y == 74.0f &&
-            label_width == 482.0f && value_limit == mattmath::Vector2F(332.0f, 58.0f),
+        require(controls.layout.size.y == 46.0f && controls.layout.spacing.y == 64.0f &&
+            label_width == 482.0f && value_limit == mattmath::Vector2F(332.0f, 48.0f),
             "Controls fitted-row fixture no longer exercises the shipped column and height limits");
         for (size_t index = 0; index < std::size(controls_fitted_items); ++index)
         {
-            // Controls keeps Sticks/Keyboard Jump first; its five shared
-            // settings now occupy rows2-6. The Sticks child's rows stay0-2.
-            const int row_index = index < 5 ? static_cast<int>(index) + 2 : static_cast<int>(index) - 5;
+            // Controls keeps Sticks/Keyboard Jump/Pad Jump first; its five
+            // shared settings occupy rows3-7. The Sticks child's rows stay0-2.
+            const int row_index = index < 5 ? static_cast<int>(index) + 3 : static_cast<int>(index) - 5;
             const auto position = controls.layout.position + mattmath::Vector2F(0.0f,
                 controls.layout.spacing.y * static_cast<float>(row_index));
             const std::wstring& text = look.menu_text().item(controls_fitted_items[index]);
@@ -312,14 +316,14 @@ namespace menu_text_acceptance
             row.draw(no_device);
         }
         // Exercise the second fit step independently: this short label needs
-        // no width reduction, while its font is just taller than Controls' 58.
+        // no width reduction, while its font is just taller than Controls' 48.
         style.item_font = "menu_controls_row_overflow";
         OptionRow height_row("controls_height", L"i", controls.layout.position,
             controls.layout.position + mattmath::Vector2F(controls.layout.spacing.x, 0.0f),
             style, controls.art.ink, &world.render, {}, &controls.art, value_limit);
         const UiText* fitted = row_text(height_row, "controls_height_label");
         require(fitted != nullptr && fitted->text() == L"i" && fitted->bounds().height > 0.0f &&
-            fitted->bounds().height <= 58.01f && fitted->bounds().height < 58.25f &&
+            fitted->bounds().height <= 48.01f && fitted->bounds().height < 48.25f &&
             fitted->bounds().width > 0.0f && fitted->bounds().width < 8.0f,
             "Controls OptionRow did not preserve and shrink a height-constrained authored label");
     }

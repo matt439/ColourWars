@@ -400,8 +400,8 @@ namespace menu_text_acceptance
         const auto touches_track = [&](rapidjson::Document& d)
         {
             exact_caption(d);
-            // Move is 20 high, plus eight units of existing focus padding:
-            // the 28-high F starts exactly at the response track's bottom.
+            // Move is20 high plus8 focus padding. The28-high F starts at
+            // 447-28=419, exactly the response track's395+24 bottom.
             d["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(447.0f);
         };
         const auto fits_track = variants.load(touches_track);

@@ -6,7 +6,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
 {
     using Help = decltype(MenuText{}.help);
     const Help legacy{
-        L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\n"
+        L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: Pad Jump choice / LT (hold for height)\n"
         L"Pause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\n"
         L"Aim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\n"
         L"MENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
@@ -219,7 +219,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     next.validate_resources(*app.render_resources(), *app.audio_resources());
 
     reset_preferences(); presentation = old; open(false);
-    tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::up); tap(Key::up);
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::up); tap(Key::up); tap(Key::up);
     const Frame old_parent = compare("custom-old-parent", false, old, old_words, true);
     presentation = next; tick();
     require(old_parent.pixels == main_menu_frame(app).pixels, "Static-help reload changed the suspended Controls snapshot");
@@ -287,7 +287,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         "Live replacement changed the retained parent's refreshed template, font or fitting bounds");
 
     const int applied_cutoff = preferences.play_settings().sticks[0].movement_deadzone;
-    for (int row = 1; row < 7; ++row) { tap(Key::down); }
+    for (int row = 1; row < 8; ++row) { tap(Key::down); }
     tap(Key::enter);
     Save reloaded; reloaded.load_save_file();
     require(reloaded.play_settings().music_volume == 10 &&
@@ -302,8 +302,8 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         reset_preferences(); presentation = old; open(sticks);
         const Frame retained = compare("custom-old", sticks, old, old_words, !sticks, sticks);
         presentation = next; tick();
-        tap(Key::down); if (!sticks) { tap(Key::down); }
-        tap(Key::right); tap(Key::left); tap(Key::up); if (!sticks) { tap(Key::up); }
+        tap(Key::down); if (!sticks) { tap(Key::down); tap(Key::down); }
+        tap(Key::right); tap(Key::left); tap(Key::up); if (!sticks) { tap(Key::up); tap(Key::up); }
         require(retained.pixels == main_menu_frame(app).pixels,
             "Dynamic settings refresh rebased an old page's static help or font");
         compare("retained-old-after-refresh", sticks, old, old_words, !sticks, sticks);
@@ -311,12 +311,12 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         const Frame adopted = compare("reopened-new", sticks, next, new_words, false, false, !sticks, sticks);
         require(adopted.pixels != retained.pixels, "Reopened settings did not adopt new static help and help font");
         presentation = old; tick();
-        tap(Key::down); if (!sticks) { tap(Key::down); }
-        tap(Key::right); tap(Key::left); tap(Key::up); if (!sticks) { tap(Key::up); }
+        tap(Key::down); if (!sticks) { tap(Key::down); tap(Key::down); }
+        tap(Key::right); tap(Key::left); tap(Key::up); if (!sticks) { tap(Key::up); tap(Key::up); }
         require(adopted.pixels == main_menu_frame(app).pixels,
             "Source reversal or dynamic settings refresh rebased the reopened static-help snapshot");
         compare("retained-new-after-reversal", sticks, next, new_words, false, false, !sticks, sticks);
-        const std::string before_discard = saved_bytes(); tap(Key::down); if (!sticks) { tap(Key::down); }
+        const std::string before_discard = saved_bytes(); tap(Key::down); if (!sticks) { tap(Key::down); tap(Key::down); }
         tap(Key::right); tap(Key::escape); tick();
         require(stack.depth() == (sticks ? 2 : 1) && saved_bytes() == before_discard,
             "Static-help reload changed Escape discard or closed the wrong page");

@@ -437,6 +437,8 @@ try {
     if ($KeyboardJumpOnly) {
         $line = 'save failure: Could not write ' + (Join-Path $captures 'keyboard-jump-profile/ColourWars/save_data.json') + '.'
         $expectedSaveFailures[$line] = 2
+        $line = 'save failure: Could not write ' + (Join-Path $captures 'pad-jump-profile/ColourWars/save_data.json') + '.'
+        $expectedSaveFailures[$line] = 1
     }
     if ($PercentageTextOnly) {
         $line = 'save failure: Could not write ' + (Join-Path $captures 'percentage-profile/ColourWars/save_data.json') + '.'

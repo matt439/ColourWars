@@ -55,6 +55,8 @@ function Write-ContactSheet {
         $cellHeight = 160
         $monitorCellWidth = 320
         $monitorCellHeight = 160
+        $padCellWidth = 320
+        $padCellHeight = 160
         foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File |
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
                 $_.Name -like 'hidden-inspection-cq-*-native.ppm' -or
@@ -71,6 +73,7 @@ function Write-ContactSheet {
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
                 ($_.Name -like 'keyboard-jump-*.ppm' -and $_.Name -notlike '*-context.ppm') -or
+                $_.Name -like 'pad-jump-*.ppm' -or
                 $_.Name -like 'percentage-*.ppm' -or $_.Name -like 'feedback-colour-*.ppm' -or $_.Name -like 'combat-colour-*.ppm' -or $_.Name -like 'blocked-colour-*.ppm' -or $_.Name -like 'idle-drip-colour-*.ppm' -or $_.Name -like 'respawn-pen-*.ppm' -or $_.Name -like 'cursor-colour-*.ppm' -or $_.Name -like 'silhouette-colour-*.ppm' -or $_.Name -like 'reveal-colour-*.ppm' -or $_.Name -like 'cursor-material-*.ppm' -or $_.Name -like 'desktop-colour-*.ppm' -or $_.Name -like 'power-light-colour-*.ppm' -or $_.Name -like 'program-colour-*.ppm' -or $_.Name -like 'acting-colour-*.ppm' -or $_.Name -like 'glass-colour-*.ppm' -or $_.Name -like 'silhouette-body-colour-*.ppm' -or $_.Name -like 'scribble-colour-*.ppm' -or $_.Name -like 'hud-health-colour-*.ppm' -or $_.Name -like 'hud-track-colour-*.ppm' -or $_.Name -like 'hud-timer-colour-*.ppm' -or $_.Name -like 'hud-label-colour-*.ppm' -or $_.Name -like 'hud-timer-shadow-colour-*.ppm' -or $_.Name -like 'hud-closing-text-colour-*.ppm' -or $_.Name -like 'crack-colour-*.ppm' -or $_.Name -like 'limb-colour-*.ppm' -or $_.Name -like 'quiet-face-colour-*.ppm' -or $_.Name -like 'program-level-*.ppm' -or $_.Name -like 'alpha-*.ppm' -or $_.Name -like 'duration-*.ppm' -or $_.Name -like 'resolution-*.ppm' -or $_.Name -like 'end-continuation-*.ppm' -or $_.Name -like 'results-text-*.ppm' -or $_.Name -like 'session-result-*.ppm' -or $_.Name -like 'series-score-*.ppm' -or $_.Name -like 'round-heading-*.ppm' -or $_.Name -like 'competitive-winner-*.ppm' -or $_.Name -like 'contribution-team-*.ppm' -or $_.Name -like 'result-percentage-*.ppm' -or
                 $_.Name -like 'hud-closing-materials-*.ppm' -or
                 $_.Name -like 'closing-shade-colour-*.ppm' -or
@@ -121,15 +124,22 @@ function Write-ContactSheet {
                 $monitorCellWidth = [Math]::Max($monitorCellWidth, $width + 16)
                 $monitorCellHeight = [Math]::Max($monitorCellHeight, $height + 48)
             }
+            elseif ($file.BaseName -like 'pad-jump-*') {
+                $padCellWidth = [Math]::Max($padCellWidth, $width + 16)
+                $padCellHeight = [Math]::Max($padCellHeight, $height + 48)
+            }
             else {
                 $cellWidth = [Math]::Max($cellWidth, $width + 16)
                 $cellHeight = [Math]::Max($cellHeight, $height + 48)
             }
         }
         if ($images.Count -eq 0) { throw 'No painter or monitor captures were produced.' }
-        $painters = @($images | Where-Object { $_.name -notlike 'monitor-*' -and $_.name -notlike 'closing-story-*' })
+        $painters = @($images | Where-Object { $_.name -notlike 'monitor-*' -and $_.name -notlike 'closing-story-*' -and $_.name -notlike 'pad-jump-*' })
         Write-ContactSheetPages -Images $painters -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-contact'
+        $padJump = @($images | Where-Object { $_.name -like 'pad-jump-*' })
+        Write-ContactSheetPages -Images $padJump -CellWidth $padCellWidth -CellHeight $padCellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-pad-jump-contact'
         # Keep the complete matrix above, and compact action review pages
         # with one native-size figure per action/frame/facing or 4P palette.
         # Selecting view 1 avoids repeating the four panes on this summary;

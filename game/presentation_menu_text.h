@@ -29,7 +29,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_jump, count
 };
 
 struct MenuTitleText
@@ -55,6 +55,14 @@ struct KeyboardJumpMenuText
 	std::wstring current_key(std::wstring_view label) const;
 	std::wstring pending_key(std::wstring_view label) const;
 	std::wstring release_key(std::wstring_view label) const;
+	std::wstring help_block(std::wstring_view current_label, std::wstring_view pending_label) const;
+};
+
+struct PadJumpMenuText
+{
+	std::wstring heading, button, reset, current, pending, help, pending_status, saved_status;
+	std::wstring current_button(std::wstring_view label) const;
+	std::wstring pending_button(std::wstring_view label) const;
 	std::wstring help_block(std::wstring_view current_label, std::wstring_view pending_label) const;
 };
 
@@ -214,6 +222,7 @@ struct MenuText
 	std::wstring options_palette_timing;
 	MenuHelpText help;
 	KeyboardJumpMenuText keyboard_jump;
+	PadJumpMenuText pad_jump;
 	MenuStatusText status;
 	MenuValueText values;
 	MenuConfirmationText confirmations;

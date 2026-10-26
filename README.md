@@ -91,6 +91,9 @@ Use D-pad/arrows on that page so the sticks stay free for testing.
 Profiles follow the pad slot, independently of player numbers; check the slot
 after reconnecting. Old saves keep their existing deadzones until edited.
 Mouse aim follows the cursor and the roller keeps its fixed aim.
+Open **Pad Jump** to choose A, B, X or Y for each Pad 1-4 slot; A is the default
+and the left trigger remains a Jump alias. **Keyboard Jump** changes the shared
+keyboard player's Jump key. These choices leave menu and intro controls unchanged.
 Use Left/Right to adjust; Apply saves the current page's changes for future launches.
 Back discards unapplied changes. From Pause, Back returns to the pause menu;
 Resume uses the new settings in the current match. Volume is 0-100% of the
@@ -105,6 +108,8 @@ roller has no marker. Shapes remain distinct with sound muted or without colour.
 **Credits** on the home menu acknowledges the engine, third-party code, content
 tools, fonts, artwork and accepted replacement audio sources. Full notices and
 licence terms are included as `NOTICE`, `LICENSE` and `licenses/` in the release.
+
+The following controls are the defaults:
 
 | Action | Gamepad | Keyboard and mouse |
 |---|---|---|

@@ -71,9 +71,10 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		{
 			anyone_on_keyboard = true;
 		}
-		else
+		else if (input_slots::is_pad(player->player_num()))
 		{
 			anyone_on_gamepad = true;
+			this->gamepad_slots_.push_back(player->player_num());
 		}
 	}
 
@@ -93,10 +94,10 @@ void Level::build_opening_frame(RenderResources* render_resources)
 
 	if (anyone_on_gamepad)
 	{
-		add_reminder(L"GAMEPAD",
-			L"Left stick  Move    |    Stick down  Drop through\n"
-			L"A / LT  Jump    |    RT  Shoot\n"
-			L"Right stick  Aim    |    Start  Pause");
+		const InputBindings bindings = this->input_bindings_ ? *this->input_bindings_ : InputBindings{};
+		add_reminder(L"GAMEPAD", controls_text::pad_controls_reminder(bindings, this->gamepad_slots_));
+		this->gamepad_controls_ = this->controls_reminders_.back().text.get();
+		this->gamepad_jump_ = bindings.pad_jump;
 	}
 	if (anyone_on_keyboard)
 	{
@@ -112,13 +113,48 @@ void Level::build_opening_frame(RenderResources* render_resources)
 
 void Level::refresh_keyboard_controls()
 {
-	if (!this->keyboard_controls_) { return; }
-	const Key key = this->input_bindings_ ? this->input_bindings_->keyboard_jump : Key::space;
-	const std::wstring_view label = input_key_label(key);
-	if (this->keyboard_jump_label_ == label) { return; }
-	this->keyboard_controls_->set_text(controls_text::keyboard_controls_reminder(key));
-	this->keyboard_jump_label_ = label;
-	this->centre_controls_text();
+	bool changed = false;
+	if (this->gamepad_controls_ && this->input_bindings_ && this->gamepad_jump_ != this->input_bindings_->pad_jump)
+	{
+		this->gamepad_controls_->set_text(controls_text::pad_controls_reminder(*this->input_bindings_, this->gamepad_slots_));
+		this->gamepad_jump_ = this->input_bindings_->pad_jump;
+		changed = true;
+	}
+	if (this->keyboard_controls_)
+	{
+		const Key key = this->input_bindings_ ? this->input_bindings_->keyboard_jump : Key::space;
+		const std::wstring_view label = input_key_label(key);
+		if (this->keyboard_jump_label_ != label)
+		{
+			this->keyboard_controls_->set_text(controls_text::keyboard_controls_reminder(key));
+			this->keyboard_jump_label_ = label;
+			changed = true;
+		}
+	}
+	if (changed) { this->centre_controls_text(); }
+}
+
+std::wstring_view Level::gamepad_controls_text() const
+{ return this->gamepad_controls_ ? std::wstring_view(this->gamepad_controls_->text()) : std::wstring_view{}; }
+
+RectangleF Level::gamepad_controls_text_bounds() const
+{
+	if (this->state_ == LevelState::start_countdown)
+	{
+		for (const ControlsReminder& reminder : this->controls_reminders_)
+		{ if (reminder.text.get() == this->gamepad_controls_) { return reminder.text_bounds; } }
+	}
+	return RectangleF::ZERO;
+}
+
+RectangleF Level::gamepad_controls_card_bounds() const
+{
+	if (this->state_ == LevelState::start_countdown)
+	{
+		for (const ControlsReminder& reminder : this->controls_reminders_)
+		{ if (reminder.text.get() == this->gamepad_controls_) { return reminder.card; } }
+	}
+	return RectangleF::ZERO;
 }
 
 std::wstring_view Level::keyboard_controls_text() const

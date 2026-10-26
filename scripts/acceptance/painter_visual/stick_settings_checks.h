@@ -102,16 +102,15 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     for (size_t row = 0; row < labels.size(); ++row)
     {
         const float padded_height = row_label(row).height + art.focus_padding.y * 2.0f;
-        // The paper's shade stays inside its focus bounds. Apply may fill its
-        // complete fitted row; the other labels retain their strict margin.
+        // A smaller font may fit without scaling. Test the complete padded
+        // row and shade rather than requiring an overflowing raw label.
         require(panel.contains(card(row_label(row))) &&
-            (row == 3 ? padded_height <= look.layout.spacing.y :
-                padded_height + art.shadow_offset < look.layout.spacing.y),
+            padded_height + art.shadow_offset <= look.layout.spacing.y,
             "Pad sticks action card escapes paper or overlaps its neighbour");
     }
-    require(label_scale(3) < 1.0f && measure(look.item_font, labels[3]).y +
-        art.focus_padding.y * 2.0f > look.layout.spacing.y,
-        "Pad sticks Apply fixture did not distinguish its overflowing raw label from the fitted action");
+    require(label_scale(3) > 0.0f && label_scale(3) <= 1.0f &&
+        row_label(3).height + art.focus_padding.y * 2.0f <= look.layout.spacing.y,
+        "Pad sticks Apply label did not fit its available row");
     for (size_t row = 0; row < 3; ++row)
     {
         const std::wstring value = row == 0 ? L"Pad 4" : L"90%";
@@ -369,7 +368,8 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     // The child saves only sticks into the current settings. The suspended
     // parent later saves its older pending music choice without reverting them.
     resize_page({ 1280, 720 }); open_parent();
-    tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::up); tap(Key::up); open_child();
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right);
+    tap(Key::up); tap(Key::up); tap(Key::up); open_child();
     const std::string original = saved_bytes();
     Values values = initial;
     tap(Key::down);
@@ -416,7 +416,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         play.sticks[3].movement_deadzone == -1 && play.sticks[3].aim_deadzone == -1,
         "Pad sticks Back saved an unapplied edit to another pad");
     tick();
-    for (int row = 0; row < 7; ++row) { tap(Key::down); }
+    for (int row = 0; row < 8; ++row) { tap(Key::down); }
     tap(Key::enter);
     require(play.music_volume == 10 && play.sticks[0].movement_deadzone == 30 && play.sticks[0].aim_deadzone == 70 &&
         play.sticks[3].movement_deadzone == -1 && play.sticks[3].aim_deadzone == -1,
@@ -426,7 +426,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     require(reloaded.play_settings().music_volume == 10 && reloaded.play_settings().sticks[0].movement_deadzone == 30 &&
         reloaded.play_settings().sticks[0].aim_deadzone == 70,
         "Parent Apply failed to persist both independent settings edits");
-    for (int row = 0; row < 7; ++row) { tap(Key::up); }
+    for (int row = 0; row < 8; ++row) { tap(Key::up); }
     open_child(); values = { L"Pad 1", L"30%", L"70%" };
     capture("reopened", 0, values, pending, art.focus_ink);
     tap(Key::down); tap(Key::right); tap(Key::escape);

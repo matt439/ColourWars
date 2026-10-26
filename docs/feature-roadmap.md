@@ -814,8 +814,8 @@ listening, balance, hardware-baseline or performance acceptance.
 
 ### Pad Jump face-button slice (`GAP#4.2`)
 
-**OPEN, scoped 2026-10-26.** The next local increment lets each XInput slot
-choose A, B, X or Y as its gameplay Jump face button, default A. LT remains an
+**Scoped pad slice implemented and qualified, 2026-10-26.** Each XInput slot
+can choose A, B, X or Y as its gameplay Jump face button, default A. LT remains an
 independent Jump source with the existing live threshold and alias-edge rules.
 Use a discrete choice rather than a new pad-capture interaction. The existing
 Pad 1-4 selector and pending/Apply/Back flow establish the menu pattern; retain
@@ -826,11 +826,6 @@ identity. Only gameplay Jump changes: menu A/B/X, intro skipping, Start pause,
 Back debug, RT shooting, sticks and analog drop retain their current mappings.
 A face button's menu role is not a gameplay binding conflict. There is no
 unbound-Jump option or trigger reassignment in this increment.
-
-| slice | deliverable and acceptance |
-|---|---|
-| Page and controls help | Add a Pad Jump child with slot and face-button selectors, current-slot defaults, Apply and Back. Pending edits stay local until Apply; closing discards them. Save only this page's scope. Its help names the selected slot's Jump button and retained LT alias; shared Controls help points to the per-pad choice instead of promising A for every pad. Keep menu controls explicit and unchanged. Validate actual font bounds and page ownership from main-menu and paused routes. |
-| Integration and replay | Exercise actual readers and pages with scripted snapshots: the former button is neutral after remapping, LT crossing while the face button is held still presses Jump, and first poll/reconnect/focus/resume produce no invented edge. Check Apply/Back and per-slot isolation, then record/play through the existing post-mapping `PlayerInputData` route with different saved choices. |
 
 **Model/save/evaluator implemented, 2026-10-26.** `InputBindings.pad_jump`
 holds four physical-slot choices and writes canonical `a`/`b`/`x`/`y` tokens
@@ -846,12 +841,40 @@ Debug/Release game builds and `input_bindings`, `action_bindings`,
 passed. Coverage includes all choices/slots, sparse slots, LT alias edges,
 held adoption, suspend/reconnect/resume, local save recovery, failed writes,
 reset and unrelated preferences. Receipts are under
-`out/validation/overnight-20261026/` (`input` and `release`). The page/help and
-public replay checks remain the next slices; saved choices are usable by the
-reader but not yet exposed through a pad-settings page.
+`out/validation/overnight-20261026/` (`input` and `release`).
 
-The next stopping point is the page/help slice. No new engine input API or
-rebinding artwork is needed. Synthetic devices establish mapping behavior. Physical-pad comfort
+**Page/help and mapped replay qualified.** Controls now opens `PadJumpMenu`,
+with physical-slot and face-button selectors, Reset this pad, Apply and Back.
+Pending choices survive slot changes. Apply merges only edited slots into the
+latest preferences; keyboard and untouched slots survive. Reset is pending for
+the selected slot, and Back discards unapplied changes. Default selection follows
+the pausing physical slot, otherwise the first connected pad, otherwise Pad 1.
+
+Shared help names the per-pad choice and LT instead of promising A everywhere.
+The opening reminder names the actual sparse roster's buttons and refreshes
+while paused without ticking the Level. Menus still use A/B/X and intro skip
+still uses A/B/Start. The ten-row Controls layout uses the existing Lato font,
+64-unit spacing and valid 8-unit focus padding; no art-rule guard is relaxed.
+
+`check-painter.ps1 -KeyboardJumpOnly` now checks both binding pages. Debug and
+Release passed at 720p/1080p: 32 physical-slot/face Apply/reloads, 65 independent
+native help/status glyph pairs, pending merge/reset/discard, controlled save
+failure/retry, parent audio preferences, connected-owner isolation and selected-B
+menu Back. Two actual paused page routes qualify reminder refresh/reversal with
+unchanged Level fingerprints, and mixed four-pad reminders fit their cards.
+The retained entry/reminder images were visually inspected; this is automated
+native rendering and synthetic input, not an attended pad session.
+
+Debug additionally records 360 actual-reader updates for reordered slots through
+the production post-mapping recorder/file/player path. Persisted alternate face
+choices change live input on 111 frames; replay from decoded settings preserves
+every seat stream, fingerprint, six checkpoints, final state and terminal RNG.
+Release explicitly excludes that developer replay path. The Release `menu_text`
+case and both-preset `menu_presentation` checks also pass. Phase-3 native and
+CPU receipts are under `out/validation/overnight-20261026/phase3/`.
+
+No new engine input API or rebinding artwork was needed. Synthetic devices
+establish mapping behavior. Physical-pad comfort
 remains `ROAD#2`, and attended readability, balance and hardware acceptance stay
 open.
 

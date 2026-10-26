@@ -57,6 +57,36 @@ std::wstring controls_text::keyboard_controls_reminder(labrador::Key jump)
     return text;
 }
 
+std::wstring controls_text::pad_controls_reminder(const InputBindings& bindings, std::span<const int> slots)
+{
+    bindings.validate();
+    if (slots.empty()) { throw std::invalid_argument("Pad controls reminder needs a physical slot"); }
+    const auto choice = [&](int slot)
+    {
+        return bindings.pad_jump.at(static_cast<size_t>(slot));
+    };
+    const auto first = choice(slots.front());
+    const bool common = std::all_of(slots.begin(), slots.end(), [&](int slot) { return choice(slot) == first; });
+    std::wstring text = L"Left stick  Move    |    Stick down  Drop through\n";
+    if (common)
+    {
+        text.append(input_button_label(first));
+        text += L" / LT  Jump    |    RT  Shoot\n";
+    }
+    else
+    {
+        for (int slot : slots)
+        {
+            text += L"Pad " + std::to_wstring(slot + 1) + L": ";
+            text.append(input_button_label(choice(slot)));
+            text += L" / LT  Jump\n";
+        }
+        text += L"RT  Shoot\n";
+    }
+    text += L"Right stick  Aim    |    Start  Pause";
+    return text;
+}
+
 std::wstring controls_text::key_line(std::wstring_view authored, std::wstring_view label)
 {
     const auto keys = jump_keys();

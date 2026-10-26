@@ -1,6 +1,6 @@
 // Isolated leaf probe for four preference percentages. No broad Controls matrix,
 // pad injection, gameplay state, foreground input or hardware qualification.
-// Successful run: 123 explicit StateContext updates, 87 readbacks, 52 value CSV
+// Successful run: 132 explicit StateContext updates, 87 readbacks, 52 value CSV
 // rows, four status comparisons and eight compact crops (four states x two sizes).
 void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
@@ -99,7 +99,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     size_t updates = 0, readbacks = 0, csv_rows = 0, crops = 0, status_checks = 0;
     const auto tick = [&](float elapsed = 0.0f)
     {
-        require(updates < 123, "Percentage leaf probe exceeded its explicit update budget");
+        require(updates < 132, "Percentage leaf probe exceeded its explicit update budget");
         ++updates; app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto tap = [&](Key key)
@@ -166,7 +166,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const Presentation& snapshot, PercentageVariant variant, int first, int second, bool save_crop)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.controls_settings(); const auto& art = look.art;
-        const std::array<const wchar_t*, 9> control_labels{ L"Pad sticks", L"Keyboard Jump", L"Music volume", L"SFX volume",
+        const std::array<const wchar_t*, 10> control_labels{ L"Pad sticks", L"Keyboard Jump", L"Pad Jump", L"Music volume", L"SFX volume",
             L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
         const std::array<const wchar_t*, 5> stick_labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Apply", L"Back" };
         const std::array<std::wstring, 2> values{ literal_value(variant, first), literal_value(variant, second) };
@@ -184,15 +184,15 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             UiText* result = widget.get(); text.push_back(std::move(widget)); return result;
         };
         const size_t row_count = sticks ? stick_labels.size() : control_labels.size();
-        const size_t first_value_row = sticks ? 1 : 2;
+        const size_t first_value_row = sticks ? 1 : 3;
         RectangleF focused_bounds;
         for (size_t row = 0; row < row_count; ++row)
         {
             const Vector2F position = look.layout.position + Vector2F(0.0f, look.layout.spacing.y * static_cast<float>(row));
             UiText* label = add(sticks ? stick_labels[row] : control_labels[row], position,
                 row == focus_row ? art.focus_ink : art.ink);
-            const bool adjustable = sticks ? row < 3 : (row >= 2 && row <= 6);
-            const bool fitted_action = sticks ? row == 3 : (row == 1 || row == 7);
+            const bool adjustable = sticks ? row < 3 : (row >= 3 && row <= 7);
+            const bool fitted_action = sticks ? row == 3 : (row == 1 || row == 2 || row == 8);
             if (adjustable || fitted_action)
             {
                 const RectangleF raw = label->bounds();
@@ -376,8 +376,8 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     presentation = next; tick();
     require(compare("old-parent-retained", false, 0, old, PercentageVariant::old_long, 0, 100, false).pixels == old_parent.pixels,
         "Replacing percentage copy/font changed an existing Controls page");
-    tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::left);
-    tap(Key::up); tap(Key::up); tap(Key::up);
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::left);
+    tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up);
     const Frame pending_parent = compare("old-parent-pending", false, 0, old, PercentageVariant::old_long, 10, 90, false);
     check_preferences(seeded);
     require(saved_bytes() == seeded_bytes, "Pending percentage volume edit wrote the private save");
@@ -434,8 +434,8 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     check_preferences(active);
     presentation = next; open_parent();
     std::ignore = compare("new-parent-reopened", false, 0, next, PercentageVariant::new_long, 0, 100, false);
-    presentation = old; tick(); tap(Key::down); tap(Key::down); tap(Key::right);
-    std::ignore = compare("new-parent-reversed-pending", false, 2, next, PercentageVariant::new_long, 10, 100, false);
+    presentation = old; tick(); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right);
+    std::ignore = compare("new-parent-reversed-pending", false, 3, next, PercentageVariant::new_long, 10, 100, false);
     tap(Key::escape);
     require(stack.depth() == 1 && saved_bytes() == applied_bytes, "New percentage page persisted a discarded value");
     check_preferences(active);
@@ -453,7 +453,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     require(stack.depth() == 1 && saved_bytes() == applied_bytes,
         "Reopened percentage discard changed persisted preferences or stack ownership");
     check_preferences(active); check_reload(applied);
-    require(updates == 123 && readbacks == 87 && csv_rows == 52 && status_checks == 4 && crops == 8 && records.good(),
+    require(updates == 132 && readbacks == 87 && csv_rows == 52 && status_checks == 4 && crops == 8 && records.good(),
         "Percentage leaf probe drifted from its frozen update/readback/CSV/crop budgets");
     std::ofstream summary(output / "percentage-summary.json");
     summary << "{\n  \"outcome\": \"passed\",\n  \"updates\": " << updates << ",\n  \"readbacks\": " << readbacks <<
