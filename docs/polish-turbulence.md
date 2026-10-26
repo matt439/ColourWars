@@ -226,11 +226,12 @@ success alone do not establish competitive value or safety at both departures.
 
 **Private mover native composition, 2026-10-26.**
 `check-painter.ps1 -TurbulenceMoverOnly -TrialPath <saved-trial.json>` passes in
-Debug and Release at 1280x720, without registering the proposal. Each preset
-records 17 full frames, 41 native crops/CSV rows, 35 readbacks and four actual
-Levels: one/four players, clean/heavy paint, outer waiting, an inward commitment
+Debug and Release at 1280x720, using a private registry without changing the
+shipped registration. Each preset records 33 full frames, 81 native crops/CSV
+rows, 67 readbacks and eight actual Levels: one/two/three/four players,
+clean/heavy paint, outer waiting, an inward commitment
 window, the carried inner reversal and the outward ride. An isolated actual
-StagePreview supplies the seventeenth frame. Owner-bound moving shadows follow
+StagePreview supplies the thirty-third frame. Owner-bound moving shadows follow
 the production builder path; repeated draws preserve observed motion, local
 paint, credit, carrier, shadow/cull bounds, actual Scene views, pixels and RNG,
 with Debug fingerprints checked where built.
@@ -241,9 +242,13 @@ window; outer waiting/ride frames make no promise that the distant landing is
 visible or reachable at that instant. The post-run verifier independently
 reconstructs phase, offsets, support/shadow/pane geometry and compares every crop
 RGB row with its source frame. Source trial hashes remain equal before/after.
-Receipts are in `out/validation/overnight-20261026/phase8/mover-native-v2/`.
-Representative clean one-player reversal and heavy four-player commitment
-frames were visually inspected. These controlled hidden native captures establish
+The all-layout receipts are in
+`out/validation/overnight-20261026/phase9/mover-all-layouts/`, with 4,792 updates
+and 64 controlled heavy contacts per preset; the earlier one/four-player
+receipts remain under `phase8/mover-native-v2/`. The independent verifier
+checks the two-player halves and three-player TL/BR/BL pane order as well as
+full-screen/quadrant layouts. Representative clean one/two-player and heavy
+three/four-player frames were visually inspected. These controlled hidden native captures establish
 composition and state preservation; attended readability, route cost, pressure,
 balance, physical pads and performance remain separate.
 

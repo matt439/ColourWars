@@ -150,7 +150,7 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         save(crop, output / (stem + ".ppm")); ++crops;
     };
     const auto neutral = neutral_inputs();
-    for (const int count : { 1, 4 })
+    for (const int count : { 1, 2, 3, 4 })
     {
         std::array<CrossfeedFixture, 2> fixtures;
         std::array<std::array<RectangleF, 2>, 2> shadow_anchors{}, shadow_cull_anchors{};
@@ -336,19 +336,19 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
             nullptr, RectangleF::ZERO, camera, viewport, crop, 0.0f, true, overview, overview);
     }
     records.close();
-    require(source_bytes() == source && records.good() && builds == 4 && frames == 17 && crops == 41 && rows == 41 && readbacks == 35,
+    require(source_bytes() == source && records.good() && builds == 8 && frames == 33 && crops == 81 && rows == 81 && readbacks == 67,
         "Mover native evidence changed trial bytes or exceeded its bounded inventory");
     std::ofstream summary(output / "turbulence-mover-summary.json");
-    summary << "{\"outcome\":\"passed\",\"scope\":\"turbulence-mover-only\",\"full_frames\":17,\"native_crops\":41,\"csv_rows\":41,"
-        "\"readbacks\":35,\"level_builds\":4,\"level_updates\":" << updates << ",\"controlled_heavy_contacts\":" << heavy_contacts <<
+    summary << "{\"outcome\":\"passed\",\"scope\":\"turbulence-mover-only\",\"full_frames\":33,\"native_crops\":81,\"csv_rows\":81,"
+        "\"readbacks\":67,\"level_builds\":8,\"level_updates\":" << updates << ",\"controlled_heavy_contacts\":" << heavy_contacts <<
         ",\"heavy_initial_fraction_min\":" << heavy_min << ",\"trial_bytes_unchanged\":true,\"human_acceptance\":false}\n";
     std::ofstream scope(output / "turbulence-mover-scope.txt");
-    scope << "Private explicitly supplied editor-authored trial; no shipped registration or Random inclusion. Actual Levels/Scenes use production object/player builders, with actual owner-bound moving shadows; public LevelBuilder route/load qualification is separate CPU evidence.\n"
-        "Hidden1280x720 1P/4P clean/heavy outer wait, inward commit, real carried inner reversal and continuing outward ride. Front riders are deliberately placed once, then neutral actual Level updates carry them continuously; extra4P actors wait on static upper approaches. No driven-route completion is claimed.\n"
+    scope << "Explicitly supplied editor-authored trial; this probe changes no shipped registration or Random inclusion. Actual Levels/Scenes use production object/player builders, with actual owner-bound moving shadows; public LevelBuilder route/load qualification is separate CPU evidence.\n"
+        "Hidden1280x720 1P/2P/3P/4P clean/heavy outer wait, inward commit, real carried inner reversal and continuing outward ride. Front riders are deliberately placed once, then neutral actual Level updates carry them continuously; extra3P/4P actors wait on static upper approaches. No driven-route completion is claimed.\n"
         "Whole player bodies and first safe upper-approach standing-body-plus8unit support caps stay in each actual Scene camera. Fixed crossover standing-body-plus80unit landing strips are required only at the separately CPU-qualified inward window (A right>=1230/B left<=2770); outer endpoint is a wait state, without a480unit-gap target-visibility requirement. Other landing-visible values are observations.\n"
         "Controlled ProjectileSpray contacts establish >99percent held paint without claiming weapon efficiency. Local face/team/raw-owner/area, actual carrier/local standing position, collider and real shadow/cull translation are checked while stepping. Repeated Level draws freeze full pixels, public observations, exact motion/local-credit/carrier/shadow/view scalars, RNG and Debug fingerprints. Every native crop has exact source RGBA parity.\n"
         "Isolated actual local-registry StagePreview checks repeated pixels, widget bounds and RNG at authored initial poses only; it owns no match or clock. Native crops are unscaled. No human/readability/reaction-time, physical-pad/motor, listening, performance, balance, slope or arena acceptance.\n";
     summary.close(); scope.close(); require(summary.good() && scope.good(), "Cannot flush mover native summary/scope");
-    std::cout << "PASS Turbulence private mover native inspection:17 full frames/41 native crops/35 reads, actual carry/reversal/shadows, "
+    std::cout << "PASS Turbulence mover native inspection:33 full frames/81 native crops/67 reads across1P/2P/3P/4P, actual carry/reversal/shadows, "
         "qualified inward landing visibility, source crop parity and frozen state; human acceptance open\n";
 }

@@ -1,7 +1,7 @@
 # Focused private-path mover inspection; no shipped level or manifest is edited.
 $moverSummary = Get-Content -LiteralPath (Join-Path $captures 'turbulence-mover-summary.json') -Raw | ConvertFrom-Json
 $moverRows = @(Import-Csv -LiteralPath (Join-Path $captures 'turbulence-mover.csv'))
-$moverCounts = [ordered]@{ full_frames=17; native_crops=41; csv_rows=41; readbacks=35; level_builds=4 }
+$moverCounts = [ordered]@{ full_frames=33; native_crops=81; csv_rows=81; readbacks=67; level_builds=8 }
 $moverKeys = @($moverCounts.Keys)+@('outcome','scope','level_updates','controlled_heavy_contacts','heavy_initial_fraction_min','trial_bytes_unchanged','human_acceptance')
 if ((($moverSummary.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($moverKeys | Sort-Object) -join '|') -or
     $moverSummary.outcome -cne 'passed' -or $moverSummary.scope -cne 'turbulence-mover-only' -or
@@ -58,14 +58,14 @@ $moverUpdates=Mover-Number $moverSummary.level_updates 'updates'
 $moverHeavy=Mover-Number $moverSummary.heavy_initial_fraction_min 'initial heavy fraction'
 $moverPaintables=@($moverStage.collision_objects | Where-Object { $_.type -ceq 'StructurePaintable' }).Count
 if ($moverUpdates -le 0 -or $moverUpdates -gt 6000 -or $moverUpdates -ne [Math]::Truncate($moverUpdates) -or
-    $moverSummary.controlled_heavy_contacts -ne 2*$moverPaintables -or $moverHeavy -le 0.99 -or $moverHeavy -gt 1) {
+    $moverSummary.controlled_heavy_contacts -ne 4*$moverPaintables -or $moverHeavy -le 0.99 -or $moverHeavy -gt 1) {
     throw 'Private mover native update/controlled paint budget differs.'
 }
 $moverColumns='capture,kind,phase,condition,paint,players,view,input_slot,actor_role,scene_views,camera_source,player_x,player_y,velocity_x,velocity_y,carrier_id,mover_id,mover_phase,mover_direction,previous_offset,current_offset,mover_x,mover_y,mover_width,mover_height,shadow_x,shadow_y,shadow_width,shadow_height,local_owned_area,local_credited_area,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,landing_required,landing_x,landing_y,landing_width,landing_height,landing_visible,escape_x,escape_y,escape_width,escape_height,escape_visible,frozen_pixels,public_state,motion_paint_shadow_state,debug_fingerprint,rng,crop_rgba,evidence_scope'
-if ($moverRows.Count -ne 41 -or ($moverRows[0].PSObject.Properties.Name -join ',') -cne $moverColumns) { throw 'Private mover CSV schema/count differs.' }
+if ($moverRows.Count -ne 81 -or ($moverRows[0].PSObject.Properties.Name -join ',') -cne $moverColumns) { throw 'Private mover CSV schema/count differs.' }
 $moverConditions=@{ 'outer-wait'='wait-not-crossover-commit'; 'inner-commit'='qualified-inward-window'; 'inner-reversal'='carried-direction-reversal'; 'outward-ride'='continuous-carrier-ride' }
 $moverExpected=@{}; $moverSlots=@(3,1,2,0)
-foreach ($count in @(1,4)) {
+foreach ($count in @(1,2,3,4)) {
     foreach ($paint in @('clean','heavy')) {
         foreach ($phase in @('outer-wait','inner-commit','inner-reversal','outward-ride')) {
             $stem="hidden-inspection-turbulence-mover-$($count)p-$paint-$phase-720p"
@@ -119,7 +119,17 @@ foreach ($row in $moverRows) {
         throw "Private mover pane/camera/ownership bounds differ: $key"
     }
     $pane=@($n.pane_x,$n.pane_y,$n.pane_width,$n.pane_height); $crop=@($n.crop_x,$n.crop_y,$n.crop_width,$n.crop_height)
-    $expectedPane=if($widget){$moverPreviewPane}elseif($row.players -ceq '1'){@(0,0,1280,720)}else{@((($viewIndex%2)*640),([int][Math]::Floor($viewIndex/2.0)*360),640,360)}
+    $expectedPane=if($widget){$moverPreviewPane}
+        elseif($row.players -ceq '1'){@(0,0,1280,720)}
+        elseif($row.players -ceq '2'){@(0,($viewIndex*360),1280,360)}
+        # Three-player order is top-left, bottom-right, bottom-left; the
+        # top-right quadrant is intentionally unused by player views.
+        elseif($row.players -ceq '3'){
+            if($viewIndex -eq 0){@(0,0,640,360)}
+            elseif($viewIndex -eq 1){@(640,360,640,360)}
+            else{@(0,360,640,360)}
+        }
+        else{@((($viewIndex%2)*640),([int][Math]::Floor($viewIndex/2.0)*360),640,360)}
     if (($pane -join ',') -cne ($expectedPane -join ',') -or ($crop -join ',') -cne ($expectedPane -join ',')) { throw "Private mover crop/pane differs from native layout: $key" }
     $physicalWidth=if($widget){$moverPreviewWidth}else{$n.pane_width}; $physicalHeight=if($widget){$moverPreviewHeight}else{$n.pane_height}
     if ($widget) {
@@ -161,7 +171,7 @@ foreach ($row in $moverRows) {
         } else {
             $waitX=if($side -eq 0){1160.0}else{2840.0}
             if ($n.carrier_id -ne 0 -or [Math]::Abs($n.player_x+$moverBody.x/2.0-$waitX) -gt 0.06 -or
-                [Math]::Abs($n.player_y+$moverBody.y-880.0) -gt 0.06) { throw 'Extra4P static waiting inspector moved from its declared upper approach.' }
+                [Math]::Abs($n.player_y+$moverBody.y-880.0) -gt 0.06) { throw 'Extra3P/4P static waiting inspector moved from its declared upper approach.' }
         }
         $scale=720.0/[double]$moverPresentation.camera.reference_height
         if ($moverPresentation.camera.minimum_world_width -gt 0) { $scale=[Math]::Min($scale,$physicalWidth/[double]$moverPresentation.camera.minimum_world_width) }
@@ -203,8 +213,8 @@ foreach ($row in $moverRows | Where-Object { $_.kind -ceq 'actual-Level-fixture'
     }
 }
 $moverFiles=@(Get-ChildItem -LiteralPath $captures -Filter '*.ppm' -File)
-if ($moverDimensions.Count -ne 58 -or $moverFiles.Count -ne 58 -or (($moverFiles.Name|Sort-Object)-join '|') -cne (($moverDimensions.Keys|Sort-Object)-join '|')) {
-    throw 'Private mover leaf requires exactly17 full frames and41 native crops without another painter matrix.'
+if ($moverDimensions.Count -ne 114 -or $moverFiles.Count -ne 114 -or (($moverFiles.Name|Sort-Object)-join '|') -cne (($moverDimensions.Keys|Sort-Object)-join '|')) {
+    throw 'Private mover leaf requires exactly33 full frames and81 native crops without another painter matrix.'
 }
 $moverHeaderLengths=@{}; $moverPpmBytes=0L
 foreach ($file in $moverFiles) {
@@ -227,5 +237,5 @@ foreach ($group in $moverRows | Group-Object capture) {
         }
     }
 }
-$result['observed_counts']=[ordered]@{ fixture=$moverSummary; full_frames=17; native_crops=41; csv_rows=41; readbacks=35
+$result['observed_counts']=[ordered]@{ fixture=$moverSummary; full_frames=33; native_crops=81; csv_rows=81; readbacks=67
     native_crop_pixels=$moverCropPixels; ppm_bytes=$moverPpmBytes; crop_rgb_parity='checked'; scene_metadata='actual-Scene'; trial_source_hash='unchanged' }
