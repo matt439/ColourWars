@@ -497,12 +497,14 @@ visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
 which stays selectable and in Random. Its baseline acceptance case and native four-pane
 captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
-support art remain open there. Turbulence now has a
-[static Turbulence Yard candidate](polish-turbulence.md), explicit-only as
-`turbulence_blockout`, with qualified CPU routes and score geography;
-its first horizontal-moving capability is qualified separately in the
-[roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26). Builder/editor,
-rotation and useful placements remain open, and the existing arenas stay static.
+support art remain open there. Turbulence now has
+[static and mover Turbulence Yard comparisons](polish-turbulence.md), explicit-only
+as `turbulence_blockout` and `turbulence_mover_trial`. CPU routes, local scoring,
+public builder/editor round trips, Debug replay, all split-screen native layouts
+and the bounded local five-tool paint-angle comparison are qualified. The
+[roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26) keeps
+fixed scored slopes open; attended balance/value remains a separate gate.
+The earlier arenas and P3/five-tool tuning are preserved.
 
 ### Turbulence blockout work (`POL#21`)
 

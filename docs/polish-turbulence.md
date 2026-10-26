@@ -328,6 +328,13 @@ per-monitor DPI awareness and graceful shutdown. Receipts are under
 `registered-startup/` in the same overnight validation directory. Random still
 has four candidates among eight explicit stages.
 
+A local Release ZIP at revision `57865ad0` also passes the CI file/audio/console
+inspection and isolated extracted-package SystemOnlyPath startup. Its 62 files
+include byte-identical mover content, manifest and tuning, with the accepted
+bank and no development executables/audio. The ZIP and inspection receipt are
+under `out/validation/overnight-20261026/phase9/release-package/`; this is local
+packaging evidence, not the clean Windows machine acceptance in `ROAD#1`.
+
 **A mirrored pair of fixed sloping scored slabs at the crossover shoulders.**
 The intended role is a walkable retreat from an upper receiver toward the lower
 crossing while presenting a paintable underside to the lower approach. A solid
