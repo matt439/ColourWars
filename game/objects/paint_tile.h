@@ -97,6 +97,12 @@ public:
 		const FixedSlabGeometry& geometry) const;
 	void draw_surface_rigid(labrador::DrawList& draw_list,
 		const FixedSlabGeometry& geometry) const;
+	// A rigid structure may join same-team tiles into one opaque visual base.
+	// Wet highlights stay per tile; scoring rectangles and credit never join.
+	void draw_surface_base_rigid(labrador::DrawList& draw_list,
+		const FixedSlabGeometry& geometry, const mattmath::RectangleF& local_band) const;
+	void draw_surface_wet_rigid(labrador::DrawList& draw_list,
+		const FixedSlabGeometry& geometry) const;
 	void update(float dt) override;
 	float area() const;
 	PlayerTeam team() const;
@@ -124,4 +130,7 @@ private:
 	bool leading_ = true;
 	PaintTileSplash splash_;
 	mattmath::RectangleF face_band(float offset, float depth) const;
+	void draw_rectangle_rigid(labrador::DrawList& draw_list,
+		const FixedSlabGeometry& geometry, const mattmath::RectangleF& local,
+		const labrador::Colour& tint) const;
 };

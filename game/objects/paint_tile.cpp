@@ -119,23 +119,45 @@ void PaintTile::draw_splash_rigid(DrawList& draw_list,
 void PaintTile::draw_surface_rigid(DrawList& draw_list,
 	const FixedSlabGeometry& geometry) const
 {
+	this->draw_surface_base_rigid(draw_list, geometry, this->rectangle_);
+	this->draw_surface_wet_rigid(draw_list, geometry);
+}
+
+void PaintTile::draw_rectangle_rigid(DrawList& draw_list,
+	const FixedSlabGeometry& geometry, const RectangleF& local, const Colour& tint) const
+{
+	const Vector2F anchor = geometry.to_world(local.top_left());
+	// The local rectangle starts at this exact rigid-frame point. A raw
+	// source rect deliberately supplies no authored sprite-frame pivot.
+	this->sprite_sheet()->draw(draw_list,
+		this->sprite_sheet()->sprite_frame(this->frame()).source_rectangle(),
+		RectangleF(anchor, local.size()), tint, geometry.tangent().angle(), Vector2F::ZERO,
+		SpriteFlip::none, this->layer_depth());
+}
+
+void PaintTile::draw_surface_base_rigid(DrawList& draw_list,
+	const FixedSlabGeometry& geometry, const RectangleF& local_band) const
+{
 	if (this->team_ == PlayerTeam::none) { return; }
-	const float angle = geometry.tangent().angle();
-	const auto fill = [&](const RectangleF& local, const Colour& tint)
-	{
-		const Vector2F anchor = geometry.to_world(local.top_left());
-		// The scoring rectangle starts at this exact rigid-frame point. A raw
-		// source rect deliberately supplies no authored sprite-frame pivot.
-		this->sprite_sheet()->draw(draw_list,
-			this->sprite_sheet()->sprite_frame(this->frame()).source_rectangle(),
-			RectangleF(anchor, local.size()), tint, angle, Vector2F::ZERO,
-			SpriteFlip::none, this->layer_depth());
-	};
 	const Colour tint = this->team_colours_.team_colour(this->team_);
-	fill(this->rectangle_, tint);
+	this->draw_rectangle_rigid(draw_list, geometry, local_band, tint);
+	const float depth = this->along_x_ ? local_band.height : local_band.width;
+	const float edge = std::min(this->paint_->edge_width, depth);
+	const RectangleF inner = this->along_x_
+		? RectangleF(local_band.x, this->leading_ ? local_band.bottom() - edge : local_band.top(),
+			local_band.width, edge)
+		: RectangleF(this->leading_ ? local_band.right() - edge : local_band.left(), local_band.y,
+			edge, local_band.height);
+	this->draw_rectangle_rigid(draw_list, geometry, inner, Colour::black);
+}
+
+void PaintTile::draw_surface_wet_rigid(DrawList& draw_list,
+	const FixedSlabGeometry& geometry) const
+{
+	if (this->team_ == PlayerTeam::none) { return; }
+	const Colour tint = this->team_colours_.team_colour(this->team_);
 	const float depth = this->along_x_ ? this->rectangle_.height : this->rectangle_.width;
 	const float edge = std::min(this->paint_->edge_width, depth);
-	fill(this->face_band(depth - edge, edge), Colour::black);
 	if (this->wet_age_ < this->paint_->wet_duration)
 	{
 		const float progress = this->wet_age_ / this->paint_->wet_duration;
@@ -146,7 +168,7 @@ void PaintTile::draw_surface_rigid(DrawList& draw_list,
 			const float offset = std::min(this->paint_->settle_depth * progress,
 				colour_depth - shine_depth);
 			const float amount = this->paint_->wet_highlight * (1.0f - progress);
-			fill(this->face_band(offset, shine_depth), Colour(
+			this->draw_rectangle_rigid(draw_list, geometry, this->face_band(offset, shine_depth), Colour(
 				tint.r + (1.0f - tint.r) * amount,
 				tint.g + (1.0f - tint.g) * amount,
 				tint.b + (1.0f - tint.b) * amount, 1.0f));

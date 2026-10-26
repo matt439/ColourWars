@@ -519,12 +519,46 @@ All eight source stages and tuning remain unchanged; this slab trial is not
 registered. The full editor suite/hidden-window checks and twelve
 focused existing consumer cases also pass in both presets.
 
-The separate Scene courses do not establish
-a full public-loader driven route or replay. Native slab composition, settled
-five-tool pressure/paint comparison, the Roller's connected walking-paint role
-and attended value remain unqualified. The next slice checks native layout
-and the intended useful placement against the retained composite before
-selecting geometry. `POL#21` and `GAP#D5` remain open.
+The separate Scene courses alone do not establish a full public-loader driven
+route or replay. Native slab composition is qualified below. Settled five-tool
+pressure/paint comparison, the Roller's connected walking-paint role and
+attended value remain separate slices. Useful placement against the retained
+composite precedes geometry selection. `POL#21` and `GAP#D5` remain open.
+
+**Native fixed-slab composition, 2026-10-26 (Debug and Release).**
+`check-painter.ps1 -TurbulenceSlabOnly -TrialPath <private-trial.json>` passes
+on the RTX 5080/D3D11 at 1280x720. Each preset retains 29 full frames,
+71 native pane crops/CSV rows, 59 readbacks and eight actual Levels. Twenty
+initial public placements establish the stations; 3,080 ordinary Level updates
+then drive the crossover descent, whole-body slab stop and upper-flat stop.
+All 1/2/3/4-player layouts have clean/heavy pairs at those three phases, plus
+four immediate wet midpoint frames and an isolated StagePreview.
+
+The 80 controlled paint contacts include eight friendly wet repaints. They
+preserve tile ownership, local areas and personal poses. The subsequent actual
+walk outlasts the wet/splash duration before the last capture. Repeated draws
+preserve observed public state, collider/material and real shadow bounds,
+every published tile corner/face/team/raw owner/area, mover/carrier/view state,
+pixels, RNG and Debug fingerprints. Native RGBA crops and an independent
+retained-RGB row comparison agree with their full frames.
+
+The first native run exposed white primer pinholes between independently
+rounded rotated tiles. The rigid painter now draws contiguous same-team bases
+as complete bands, with individual wet highlights; scoring tiles and credit
+remain separate. Six independently classified interior probes change from
+white to team blue in the retained before/after frames. A seventh candidate
+lies outside the geometric band and is excluded from that assertion. Settled
+one-player paint, fresh four-player wet paint and the miniature were visually
+inspected. This qualifies those bounded raster samples, without a universal
+pixel-seam or animation-lifetime claim.
+
+Final receipts are under `out/validation/overnight-20261026/phase12/slab-native/`:
+Debug `993662f0a8dd4927b81575dec8945de7`, Release
+`eaa33d9da0104a44ab47b5453a22bf4b`. The old composite's Release native check
+also passes after the shared fixture changes. Both normal-bank, isolated-save,
+SystemOnlyPath startup checks pass. The slab remains private and unregistered;
+useful tool/paint placement, public driven replay and attended acceptance remain
+separate qualifications.
 
 ## Tool and recovery hypotheses
 

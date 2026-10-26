@@ -88,7 +88,8 @@ FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
                     length, this->paint_->thickness)
                 : RectangleF(leading ? edge : edge - this->paint_->thickness, interval.first,
                     this->paint_->thickness, length);
-            this->strips_.push_back({ band, along_x, leading });
+            this->strips_.push_back({ band, along_x, leading,
+                this->tiles_.size(), static_cast<std::size_t>(count) });
             for (int index = 0; index < count; ++index)
             {
                 const float position = interval.first + pitch * index;
@@ -149,7 +150,25 @@ void FixedSlabPaintable::draw(DrawList& draw_list) const
         this->draw_local(draw_list, inner, Colour::black);
     }
     for (const Tile& tile : this->tiles_) { tile.paint.draw_splash_rigid(draw_list, this->geometry_); }
-    for (const Tile& tile : this->tiles_) { tile.paint.draw_surface_rigid(draw_list, this->geometry_); }
+    for (const Strip& strip : this->strips_)
+    {
+        const std::size_t strip_end = strip.first_tile + strip.tile_count;
+        for (std::size_t begin = strip.first_tile; begin < strip_end;)
+        {
+            const PaintTile& first = this->tiles_[begin].paint;
+            if (first.team() == PlayerTeam::none) { ++begin; continue; }
+            std::size_t end = begin + 1;
+            while (end < strip_end && this->tiles_[end].paint.team() == first.team()) { ++end; }
+            const RectangleF band = RectangleF::union_of(first.bounds(), this->tiles_[end - 1].paint.bounds());
+            // Quantizing each rotated tile separately exposes primer at their
+            // joins. One same-team opaque base covers the contiguous face;
+            // all original tiles, owner credit and wet ages remain untouched.
+            first.draw_surface_base_rigid(draw_list, this->geometry_, band);
+            for (std::size_t index = begin; index < end; ++index)
+            { this->tiles_[index].paint.draw_surface_wet_rigid(draw_list, this->geometry_); }
+            begin = end;
+        }
+    }
 }
 
 void FixedSlabPaintable::draw_miniature(DrawList& draw_list) const { this->draw(draw_list); }

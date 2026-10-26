@@ -46,6 +46,8 @@ private:
         mattmath::RectangleF band;
         bool along_x;
         bool leading;
+        std::size_t first_tile;
+        std::size_t tile_count;
     };
 
     FixedSlabGeometry geometry_;

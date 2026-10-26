@@ -1144,6 +1144,14 @@ stage selection, lethal provenance and ammunition. Receipts are under
 editor receipts linked above. New slab CPU receipts are `slab-v4/x64-debug/fixed-slab-29548`
 and `regression/x64-release/fixed-slab-35444`.
 
+**Native composition qualified, 2026-10-26.** The fixed-slab probe passes both
+presets: 29 frames, 71 pane crops, 59 readbacks and 3,080 updates across all
+split layouts, including four fresh wet-paint controls. Its visual base bands
+remove measured primer pinholes while retaining every scoring tile and owner.
+The [arena record](polish-turbulence.md#why-the-new-geometry-earns-its-place)
+owns the exact inventory, six interior-pixel controls, frozen-state checks and
+receipts. These hidden captures do not establish attended readability or value.
+
 **Remaining qualification, in dependency order:**
 
 The explicit-only `turbulence_mover_trial` now uses the authored pair beside
@@ -1155,9 +1163,9 @@ sampled phases; the other tools retain different static/moving tradeoffs.
 
 | milestone | bounded scope and acceptance |
 |---|---|
-| 4. Smallest useful static rotated structure | Qualify the implemented fixed slabs' native 1/2/3/4-pane composition, art/culling/shadow alignment and useful Turbulence placement against the retained composite, including the intended weapon/paint role. Keep public load checks distinct from full public driven-route/replay evidence. Arbitrary or combined moving/rotating bodies are outside the slice. |
+| 4. Smallest useful static rotated structure | Qualify the fixed slabs' useful Turbulence weapon/paint role against the retained composite, including public driven routes and replay. Native composition is qualified above. Arbitrary or combined moving/rotating bodies are outside the slice. |
 
-Native composition and the static scored slope's useful placement are next. Keep each milestone bounded
+The static scored slope's useful placement is next. Keep each milestone bounded
 and preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
 useful placements and route/side-swap qualification; attended arena acceptance

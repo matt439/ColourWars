@@ -33,7 +33,21 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($TurbulenceShoulderOnly) {
+if ($TurbulenceSlabOnly) {
+    $result.scope = 'turbulence-slab-only'
+    $result.stage = 'turbulence_slab_trial'
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer', 'sniper', 'mister', 'roller', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('before-descent', 'actual-mid-slab-supported-stop', 'actual-mid-slab-wet', 'six-known-owned-interior-pixels', 'actual-upper-flat-stop', 'controlled-clean-heavy-paint', 'actual-stage-preview', 'native-crop-rgb-parity', 'frozen-local-paint-owner-shadow-state')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result['trial_source'] = [ordered]@{ path=$trialResolved; sha256_before=$trialHashBefore; sha256_after=$null; unchanged=$false; registration='private-explicit-argument-only' }
+    $result.inputs = 'An explicit quoted UTF-16 filesystem path supplies the private24-object fixed-slab trial. Eight actual Levels/Scenes use production object/player builders, two real horizontal movers and their moving shadows, plus two static sloping scored slabs and their static shadows. Exactly20 initial placements establish fixed crossover stations and extra3P/4P upper waiting stations. Actual release-braking and bounded analog inputs reach the diagonal midpoint and upper flat stop, with no intermediate placement, jump, drop, respawn or cheat. Controlled projectile contacts establish heavy ownership on every paintable object, including the diagonal faces. Physical-pad and motor acceptance are separate.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Exactly29 native720p full frames,71 native crops/CSV rows,59 readbacks and8 actual Levels, with at most6000 updates. All1/2/3/4 clean/heavy fixed-crossover, settled mid-slab and upper-flat stop phases plus isolated actual StagePreview retain actual Scene camera/pane ownership, whole actor bodies and complete diagonal/upper-stop bounds. Midpoints1320/2680 are at rest on the proper slope state with carrier0; feet follow the independently reconstructed actual top edge at the uphill body corner. Frozen draws preserve complete local paint corner/face/team/raw-owner/area, collider, static/moving shadow, view and public state, pixels, RNG and Debug fingerprints. Native RGBA crops and independently retained full-frame RGB rows agree. Four additional heavy-only mid-slab-wet frames follow eight friendly slab contacts, with no new Level, placement, update or paint-owner change. Their pose, geometry, held area and camera match the settled heavy stops. Seven retained pinhole candidates are independently projected into the source slab frame; one is outside the diagonal, while six interior pixels must be owned blue or its black edge in the retained PPM. This covers the four initial wet states and six known interior pixels, not every wet age or diagonal pixel. StagePreview checks authored initial-pose pixels/bounds/RNG only. Trial source hash is unchanged. Native images still need visual inspection for diagonal quantization seams and miniature treatment; no human readability/reaction, endings, physical pads/motors, listening, performance, competitive balance or arena acceptance is established.'
+}
+elseif ($TurbulenceShoulderOnly) {
     $result.scope = 'turbulence-shoulder-only'
     $result.stage = 'turbulence_shoulder_trial'
     $result.player_counts = @(1, 2, 3, 4)
