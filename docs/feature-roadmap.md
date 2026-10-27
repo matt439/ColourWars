@@ -1987,7 +1987,10 @@ steps). Riding is a measurement, not a requirement.
 Still open in `ROAD#15`: lifts and other vertical motion (the mover is
 horizontal only), team-gated rails and growing sponges, editor checks for the
 drive fields (the editor keeps them as metadata, and the game refuses a bad
-one at load), ferry art that shows its heading, and attended play.
+one at load), ferry art that shows its heading, and attended play. The
+stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
+`-StageCountsOnly`, `-StageSummaryOnly`) have not yet been run with the tenth
+stage; they run only on MattPC.
 
 ## Menu navigation follow-up (GAP#4.4)
 
