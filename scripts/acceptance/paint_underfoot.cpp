@@ -14,6 +14,7 @@ int wmain(int argc, wchar_t* argv[])
         paint_underfoot_acceptance::check_support(world);
         paint_underfoot_acceptance::check_recovery(world);
         paint_underfoot_acceptance::check_schema_and_bounds(world);
+        paint_underfoot_acceptance::check_health_regen(world);
         std::cout << "PASS paint underfoot: actual contact/movement/recovery/schema/bounds; no human balance acceptance\n";
         return 0;
     }

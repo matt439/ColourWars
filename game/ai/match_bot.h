@@ -33,6 +33,9 @@ struct MatchBotObservation
 	float ammo = 0.0f;
 	// The seat's handicap refill boost; paint underfoot is not predicted.
 	float paint_refill = 1.0f;
+	// The paint-underfoot trial is on, and the support this step is enemy paint.
+	bool underfoot = false;
+	bool on_enemy_paint = false;
 	bool shot_empty = false;
 	float engage_distance = 0.0f;
 	WeaponType weapon = WeaponType::sprayer;
@@ -124,6 +127,9 @@ private:
 	bool riding_ = false;
 	MatchBotSupport ride_support_;
 	int ride_hold_left_ = 0;
+	// The last grounded centre that was not enemy paint, for a refill's way back.
+	bool has_off_enemy_ = false;
+	mattmath::Vector2F off_enemy_center_;
 
 	float random_unit();
 	void decide(const MatchBotObservation& view);

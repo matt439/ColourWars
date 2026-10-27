@@ -6,7 +6,8 @@ void check_underfoot_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const Sc
     const std::string staged_before = read_text(scratch.staged / L"tuning.json");
     const auto before = tuning.player().paint_underfoot;
     const PlayerTuning* const borrowed = &tuning.player();
-    for (const char* field : { "enabled", "own_speed_multiplier", "own_ammo_regen_multiplier", "enemy_speed_multiplier", "enemy_ammo_regen_multiplier" })
+    for (const char* field : { "enabled", "own_speed_multiplier", "own_ammo_regen_multiplier", "enemy_speed_multiplier", "enemy_ammo_regen_multiplier",
+        "enemy_blocks_health_regen" })
     {
         require(!impl.tune_token(root + field).empty() && impl.execute("tune " + root + field).ok,
             "Underfoot typed getter is present in actual scratch tuning");
@@ -16,6 +17,8 @@ void check_underfoot_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const Sc
         impl.execute("tune " + root + "own_ammo_regen_multiplier 1.5").ok &&
         impl.execute("tune " + root + "enemy_speed_multiplier 0.75").ok &&
         impl.execute("tune " + root + "enemy_ammo_regen_multiplier 0").ok &&
+        impl.execute("tune " + root + "enemy_blocks_health_regen on").ok &&
+        tuning.player().paint_underfoot.enemy_blocks_health_regen &&
         impl.execute("tune " + root + "enabled on").ok && tuning.player().paint_underfoot.enabled &&
         &tuning.player() == borrowed, "Valid live underfoot edits do not move borrowed tuning records");
     const std::string text = impl.tune_document("tuning")->current().text();
@@ -38,6 +41,7 @@ void check_underfoot_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const Sc
         tuning.player().paint_underfoot.enemy_speed_multiplier == before.enemy_speed_multiplier &&
         tuning.player().paint_underfoot.own_ammo_regen_multiplier == before.own_ammo_regen_multiplier &&
         tuning.player().paint_underfoot.enemy_ammo_regen_multiplier == before.enemy_ammo_regen_multiplier &&
+        tuning.player().paint_underfoot.enemy_blocks_health_regen == before.enemy_blocks_health_regen &&
         read_text(scratch.source / L"tuning.json") == source_before &&
         read_text(scratch.staged / L"tuning.json") == staged_before,
         "Underfoot reset did not restore exact data without writing source/staged files");

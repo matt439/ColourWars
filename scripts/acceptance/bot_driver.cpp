@@ -297,6 +297,38 @@ namespace
 		}
 	}
 
+	// Under the paint-underfoot trial a refill on enemy paint never finishes.
+	void check_refill_off_enemy_paint(const GameTuning& tuning, const GameTuning& unaware)
+	{
+		require(tuning.bots().refill_off_enemy_paint && !unaware.bots().refill_off_enemy_paint,
+			"The refill-off-enemy-paint fixtures do not differ in their toggle");
+		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+		{
+			MatchBotObservation view = fixture(tuning);
+			view.ammo = tuning.bots().reserve_low * 0.5f;
+			view.underfoot = true;
+			MatchBot bot(&tuning, difficulty, 7), plain(&unaware, difficulty, 7), off(&tuning, difficulty, 7);
+			require(react(bot, view, tuning, difficulty).x_movement == 0.0f,
+				"A refilling bot off enemy paint did not hold still");
+			const float walked = react(plain, view, unaware, difficulty).x_movement;
+			require(walked != 0.0f, "The fixture's refilling bot did not walk with the toggle off");
+			MatchBotObservation trial_off = view;
+			trial_off.underfoot = false;
+			require(react(off, trial_off, tuning, difficulty).x_movement == walked,
+				"The refill toggle changed a bot while paint underfoot was off");
+			// Last off enemy paint on the left; now standing on enemy paint.
+			view.center = { -400.0f, 0.0f };
+			react(bot, view, tuning, difficulty);
+			view.center = {};
+			view.on_enemy_paint = true;
+			require(react(bot, view, tuning, difficulty).x_movement < 0.0f,
+				"A refilling bot on enemy paint did not walk back to the last ground off it");
+			MatchBot fresh(&tuning, difficulty, 7);
+			require(react(fresh, view, tuning, difficulty).x_movement != 0.0f,
+				"A refilling bot on enemy paint with nowhere known to go stood still");
+		}
+	}
+
 	void check_standing_and_descent(const GameTuning& tuning)
 	{
 		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
@@ -428,6 +460,8 @@ namespace
 		rejects("sight_distance", [](auto& d) { d["bots"]["sight_distance"].SetInt(0); });
 		rejects("reserve_resume", [](auto& d) { d["bots"]["reserve_resume"].SetDouble(0.01); });
 		rejects("stuck_turn_steps", [](auto& d) { d["bots"]["stuck_turn_steps"].SetInt(1); });
+		rejects("refill_off_enemy_paint", [](auto& d) { d["bots"].RemoveMember("refill_off_enemy_paint"); });
+		rejects("refill_off_enemy_paint", [](auto& d) { d["bots"]["refill_off_enemy_paint"].SetInt(1); });
 		for (const char* field : { "recovery_steps", "progress_window_steps", "progress_distance",
 			"finish_dwell_steps", "deliberate_shot_interval", "refill_retreat_margin", "mover_hold_steps" })
 		{
@@ -461,12 +495,22 @@ int wmain(int argc, wchar_t** argv)
 		check_private_sequences(tuning);
 		check_visible_approach(tuning);
 		check_refill_retreat(tuning);
+		{
+			std::ifstream stream(content / "tuning.json", std::ios::binary);
+			const std::string source{ std::istreambuf_iterator<char>(stream), {} };
+			rapidjson::Document document; document.Parse(source.c_str());
+			require(!document.HasParseError(), "Cannot parse bot tuning source fixture");
+			document["bots"]["refill_off_enemy_paint"].SetBool(false);
+			rapidjson::StringBuffer buffer;
+			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer); document.Accept(writer);
+			check_refill_off_enemy_paint(tuning, GameTuning(labrador::parse_json(buffer.GetString(), "bot-unaware")));
+		}
 		check_mover_hold(tuning);
 		check_standing_and_descent(tuning);
 		bot_ascent_acceptance::check(tuning);
 		bot_ascent_approach_acceptance::check(tuning);
 		bot_ramp_acceptance::check(tuning);
-		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
+		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, refill off enemy paint under the underfoot trial, bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	}
 	catch (const std::exception& error)

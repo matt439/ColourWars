@@ -169,6 +169,7 @@ namespace
 		bots.deliberate_shot_interval = read_positive(json, "deliberate_shot_interval");
 		bots.refill_retreat_margin = read_positive(json, "refill_retreat_margin");
 		bots.mover_hold_steps = steps(json, "mover_hold_steps");
+		bots.refill_off_enemy_paint = json.boolean("refill_off_enemy_paint");
 		if (bots.stuck_turn_steps <= bots.stuck_jump_steps)
 		{
 			throw std::runtime_error(json.where() + ": stuck_turn_steps must exceed stuck_jump_steps.");
@@ -470,6 +471,8 @@ namespace
         if (!(result.enemy_speed_multiplier > 0.0f))
         { throw std::runtime_error(json.where() + ": 'enemy_speed_multiplier' must be greater than zero."); }
         result.enemy_ammo_regen_multiplier = read_unit(json, "enemy_ammo_regen_multiplier");
+        result.enemy_blocks_health_regen = json.has("enemy_blocks_health_regen") &&
+            json.boolean("enemy_blocks_health_regen");
         return result;
     }
 

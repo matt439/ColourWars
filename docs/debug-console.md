@@ -3152,7 +3152,19 @@ The stored opt-in trial factors are own speed `1.10`, own ammunition recovery
 `tuning.player.paint_underfoot.enemy_speed_multiplier`, and
 `tuning.player.paint_underfoot.enemy_ammo_regen_multiplier`. They are live
 numeric fields; `tune.reset` restores file tokens. Do not use `tune.save` for an
-unattended experiment. There is no new special, damage, health or jump boost.
+unattended experiment. There is no new special, damage or jump boost.
+
+Two switches only act while the prototype is enabled:
+
+```
+tune tuning.player.paint_underfoot.enemy_blocks_health_regen on
+tune tuning.bots.refill_off_enemy_paint off
+```
+
+The first (shipped `false`) pauses health regeneration, and its delay, while a
+player stands on enemy paint. The second (shipped `true`) sends a refilling bot
+back off enemy paint and holds it still until its reserve resumes; turn it off to
+see the unaware bots.
 
 A completed confirmed flat top contact is sampled at the foot center by team;
 the selected fixed scored slabs use their actual support corner in the local

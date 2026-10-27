@@ -149,6 +149,10 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 		view.facing_right = player.facing_right();
 		view.ammo = player.weapon_ammo() / this->tuning_->starting_ammo();
 		view.paint_refill = this->tuning_->handicap(player.handicap()).paint_refill;
+		const PlayerPaintUnderfootState underfoot = player.paint_underfoot_state();
+		view.underfoot = underfoot.enabled;
+		view.on_enemy_paint = underfoot.enabled && underfoot.step_team != PlayerTeam::none &&
+			underfoot.step_team != player.team();
 		view.shot_empty = weapon.readiness() == WeaponReadiness::empty;
 		view.engage_distance = engagement_distance(player, *this->tuning_);
 		view.weapon = weapon.type();

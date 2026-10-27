@@ -1813,6 +1813,21 @@ qualified in the [completed capability record](feature-roadmap.md#horizontal-mov
 Arbitrary moving rotation remains outside the contract; the mechanic still
 needs the author's `POL#30` decision.
 
+Two further switches, added 2026-10-27, act only while `enabled` is on, so the
+shipped game is unchanged by either:
+
+- `player.paint_underfoot.enemy_blocks_health_regen` (ships `false`; optional,
+  missing reads as `false`). While the frozen step class is enemy paint, health
+  neither regenerates nor advances its regeneration delay, so leaving enemy
+  paint resumes where the delay stood. This is the cheap Splatoon-like
+  alternative to paint damage: it deals no damage, plays no hurt feedback and
+  cannot kill, and a handicap's `damage_taken` is unaffected.
+- `bots.refill_off_enemy_paint` (ships `true`). With enemy recovery at `0`, a
+  refilling bot that kept walking to its next paint goal could stay empty. When
+  on, a refilling bot that is not backing away from a threat walks back to the
+  last grounded centre it held off enemy paint, and holds still once off it,
+  until its reserve resumes. Off restores the unaware bots for comparison.
+
 To try the stored amounts in Debug, without saving content:
 
 ```
