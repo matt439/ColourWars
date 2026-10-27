@@ -156,7 +156,8 @@
       "percentage": "{value}%",
       "duration_minutes": "{value} min",
       "duration_default": "Default ({value})",
-      "resolution": "{width}x{height}"
+      "resolution": "{width}x{height}",
+      "shared": "Shared ({value})"
     },
     "confirmations": {
       "restart": "Are you sure you want to restart?",

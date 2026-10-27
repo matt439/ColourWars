@@ -384,7 +384,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
             {
                 this->movement_feedback_.land(this->support_position_,
                     this->support_impact_speed_);
-                if (this->preferences_->view_shake_enabled())
+                if (this->preferences_->view_shake_enabled(this->player_num_))
                 {
                     this->view_shake_.land(this->support_impact_speed_);
                 }
@@ -952,7 +952,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
         this->pending_rumble_.hit = true;
         this->start_action(PlayerAnimationState::hurt);
         this->combat_feedback_.hurt();
-        if (this->preferences_->view_shake_enabled()) { this->view_shake_.hurt(); }
+        if (this->preferences_->view_shake_enabled(this->player_num_)) { this->view_shake_.hurt(); }
     }
 
     this->health_regen_timer_ = 0.0f;
@@ -995,7 +995,7 @@ void Player::update(float dt)
     // on its actual tick at age zero, irrespective of the number of views.
     this->movement_feedback_.update(dt);
     this->combat_feedback_.update(dt);
-    this->view_shake_.update(dt, this->preferences_->view_shake_enabled());
+    this->view_shake_.update(dt, this->preferences_->view_shake_enabled(this->player_num_));
     this->age_action(dt);
     if (this->state_ == PlayerState::alive && this->health_ <= 0.0f)
     {
@@ -1014,7 +1014,7 @@ void Player::update(float dt)
         this->start_action(PlayerAnimationState::elimination);
         this->pending_rumble_.elimination = true;
         this->combat_feedback_.eliminate(this->rectangle_);
-        if (this->preferences_->view_shake_enabled()) { this->view_shake_.eliminate(); }
+        if (this->preferences_->view_shake_enabled(this->player_num_)) { this->view_shake_.eliminate(); }
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
     }
 

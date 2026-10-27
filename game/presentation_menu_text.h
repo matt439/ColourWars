@@ -91,6 +91,7 @@ struct MenuValueText
 	std::wstring duration_minutes;
 	std::wstring duration_default;
 	std::wstring resolution;
+	std::wstring shared;
 };
 
 struct MenuConfirmationText
@@ -247,6 +248,8 @@ struct MenuText
 	std::wstring display_countdown(int seconds) const;
 	// Integer volume and rounded effective-deadzone values share the 0-100 domain.
 	std::wstring setting_percentage(int value) const;
+	// A per-pad switch that follows the shared one, showing what it resolves to.
+	std::wstring setting_shared(bool value) const;
 	// Positive finite seconds retain the Mode row's float division and default
 	// stream precision, including scientific notation and minutes underflowing to 0.
 	std::wstring setting_duration(float seconds, bool use_default) const;

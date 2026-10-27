@@ -1986,7 +1986,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	// duration template and its literal glyphs here; the joint content check
 	// measures actual defaults/choices, and Mode checks retained values at refresh.
 	for (const auto& field : { std::pair("duration_minutes", &values.duration_minutes),
-		std::pair("duration_default", &values.duration_default) })
+		std::pair("duration_default", &values.duration_default), std::pair("shared", &values.shared) })
 	{
 		const std::string where = this->source_path_ + ": menu_text.values." + field.first;
 		try

@@ -292,7 +292,8 @@ namespace presentation_read
 			throw std::runtime_error(values.where() + ": percentage: " + error.what());
 		}
 		for (const auto& field : { std::pair("duration_minutes", &text.values.duration_minutes),
-			std::pair("duration_default", &text.values.duration_default) })
+			std::pair("duration_default", &text.values.duration_default),
+			std::pair("shared", &text.values.shared) })
 		{
 			*field.second = read_menu_line(values, field.first);
 			try
@@ -665,6 +666,11 @@ std::wstring MenuText::setting_duration(float seconds, bool use_default) const
 		{ { L"{value}", number.str() } });
 	return use_default ? format_label_template(this->values.duration_default,
 		{ { L"{value}", minutes } }) : minutes;
+}
+
+std::wstring MenuText::setting_shared(bool value) const
+{
+	return format_label_template(this->values.shared, { { L"{value}", value ? this->values.on : this->values.off } });
 }
 
 std::wstring MenuText::setting_resolution(int width, int height) const

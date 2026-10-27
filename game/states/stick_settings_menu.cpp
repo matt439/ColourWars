@@ -105,6 +105,7 @@ void StickSettingsMenu::init()
 	this->input()->reset_actions();
 	this->selection_ = this->save()->play_settings();
 	this->rumble_edited_.fill(false);
+	this->comfort_edited_.fill(false);
 	if (input_slots::is_pad(this->pausing_player())) { this->slot_ = this->pausing_player(); }
 	else
 	{
@@ -184,20 +185,40 @@ void StickSettingsMenu::init()
 			this->refresh_values();
 			this->set_status(this->text().status.sticks_pending);
 		});
-	for (OptionRow* option : { this->pad_.get(), this->movement_.get(), this->aim_.get(), this->rumble_.get() })
+	// Off, Shared, On: Left leans to Off and Right to On, as on the shared rows.
+	const auto comfort_row = [this, &row](const char* name, MenuItem item, int index,
+		SeatSwitch SeatComfort::* field)
+	{
+		return row(name, this->text().item(item), index, [this, field](Direction direction)
+		{
+			const size_t slot = static_cast<size_t>(this->slot_);
+			SeatSwitch& value = this->selection_.pad_comfort[slot].*field;
+			value = static_cast<SeatSwitch>(std::clamp(static_cast<int>(value) +
+				(direction == Direction::right ? 1 : -1), static_cast<int>(SeatSwitch::off),
+				static_cast<int>(SeatSwitch::on)));
+			this->comfort_edited_[slot] = true;
+			this->refresh_values();
+			this->set_status(this->text().status.sticks_pending);
+		});
+	};
+	this->view_shake_ = comfort_row("view_shake", MenuItem::view_shake, 4, &SeatComfort::view_shake);
+	this->aim_marker_ = comfort_row("aim_marker", MenuItem::aim_marker, 5, &SeatComfort::aim_marker);
+	this->reduce_effects_ = comfort_row("reduce_effects", MenuItem::reduce_effects, 6, &SeatComfort::reduce_effects);
+	for (OptionRow* option : { this->pad_.get(), this->movement_.get(), this->aim_.get(), this->rumble_.get(),
+		this->view_shake_.get(), this->aim_marker_.get(), this->reduce_effects_.get() })
 	{
 		this->text_container_->add_child(option);
 		this->focus_.add(option);
 	}
 	UiText* apply = add_text("apply", this->text().item(MenuItem::apply), style.item_font,
-		this->calculate_widget_position(0, 4));
+		this->calculate_widget_position(0, 7));
 	const RectangleF apply_bounds = apply->bounds();
 	apply->set_scale(std::min({ 1.0f,
 		(look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - apply_bounds.x) / apply_bounds.width,
 		(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / apply_bounds.height }));
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(add_text("back", this->text().item(MenuItem::back), style.item_font,
-		this->calculate_widget_position(0, 5)), [this] { this->close(); });
+		this->calculate_widget_position(0, 8)), [this] { this->close(); });
 	this->status_ = add_text("status", L"", look.help_font, look.status_position);
 	this->connection_ = add_text("connection", L"", look.help_font, look.controls_position);
 	const float label_height = this->render_resources()->measure_text(
@@ -237,6 +258,15 @@ void StickSettingsMenu::refresh_values()
 		this->data()->tuning()->input().movement_deadzone))));
 	this->aim_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.aim_deadzone(this->slot_))));
 	this->rumble_->set_value(this->selection_.rumble_enabled(this->slot_) ? this->text().values.on : this->text().values.off);
+	const SeatComfort& comfort = this->selection_.seat_comfort(this->slot_);
+	const auto comfort_value = [this](SeatSwitch value, bool shared)
+	{
+		return value == SeatSwitch::shared ? this->text().setting_shared(shared) :
+			(value == SeatSwitch::on ? this->text().values.on : this->text().values.off);
+	};
+	this->view_shake_->set_value(comfort_value(comfort.view_shake, this->selection_.view_shake));
+	this->aim_marker_->set_value(comfort_value(comfort.aim_marker, this->selection_.aim_marker));
+	this->reduce_effects_->set_value(comfort_value(comfort.reduce_effects, this->selection_.reduce_effects));
 	this->refresh_preview();
 }
 
@@ -291,10 +321,13 @@ void StickSettingsMenu::apply_settings()
 	for (size_t slot = 0; slot < this->rumble_edited_.size(); ++slot)
 	{
 		if (this->rumble_edited_[slot]) { applied.pad_rumble[slot] = this->selection_.pad_rumble[slot]; }
+		if (this->comfort_edited_[slot]) { applied.pad_comfort[slot] = this->selection_.pad_comfort[slot]; }
 	}
 	const bool saved = this->save()->set_play_settings_and_save(applied);
 	this->selection_.pad_rumble = applied.pad_rumble;
+	this->selection_.pad_comfort = applied.pad_comfort;
 	this->rumble_edited_.fill(false);
+	this->comfort_edited_.fill(false);
 	this->refresh_values();
 	this->play_wave(this->confirm_sound_);
 	this->set_status(saved ? this->text().status.sticks_saved : this->text().status.active_save_failed, !saved);

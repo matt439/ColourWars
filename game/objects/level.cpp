@@ -802,7 +802,7 @@ Camera Level::view_camera(int view) const
 {
 	const Player& player = *this->players_.at(static_cast<size_t>(view));
 	const int pane = this->view_for_participant(view);
-	if (this->state_ != LevelState::active || !this->preferences_->view_shake_enabled() ||
+	if (this->state_ != LevelState::active || !this->preferences_->view_shake_enabled(player.player_num()) ||
 		pane < 0 || player.view_shake().offset() == Vector2F::ZERO) { return player.camera(); }
 	return PlayerCamera::displaced(player.camera(),
 		this->viewport_manager_->player_viewport(pane), player.view_shake().offset(),
