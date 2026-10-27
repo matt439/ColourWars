@@ -37,8 +37,10 @@ struct MatchBotObservation
 	std::vector<mattmath::Vector2F> territory;
 	// Deterministic visible top paint on the current support, aim only. It
 	// never supplies a standing/descent goal or consumes the navigation RNG.
+	// A deliberate tool with none there may take another scoring top whose
+	// straight launch from this pose, grounded or airborne, lands on it.
 	std::optional<mattmath::Vector2F> support_paint;
-	// The standing support that support_paint lies on; valid only with it.
+	// The support that support_paint lies on; valid only with it.
 	mattmath::RectangleF support_bounds;
 	// Visible in-range non-team top paint on the current support, even where
 	// this pose's launch clearance rejects every tile. Refreshed with it.
@@ -85,6 +87,8 @@ private:
 	mattmath::Vector2F paint_goal_;
 	float heading_ = 1.0f;
 	PlayerInputData decision_;
+	// The decision's single error draw, reapplied when a slow tool re-aims.
+	float aim_error_ = 0.0f;
 	bool ascending_ = false;
 	bool ascent_airborne_ = false;
 	bool continue_ascent_ = false;
@@ -124,4 +128,5 @@ private:
 		mattmath::Vector2F to, const MatchBotRamp& ramp) const;
 	bool obstacle_ahead(const MatchBotObservation& view) const;
 	bool ledge_ahead(const MatchBotObservation& view) const;
+	bool unscored_floor(const MatchBotObservation& view) const;
 };

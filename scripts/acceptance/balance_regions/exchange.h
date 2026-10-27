@@ -128,6 +128,12 @@ namespace balance_regions
             return 8.0 * std::numeric_limits<double>::epsilon() * this->total_ *
                 static_cast<double>(this->additions_ + this->ever_.size() + 1);
         }
+        // The holding after the last sampled step, by the same bookkeeping.
+        double held(std::size_t region, std::size_t team) const
+        {
+            const TeamRegionExchange& x = this->team_[region][team];
+            return x.initial_held + x.neutral_claim + x.enemy_capture - x.lost_to_enemy - x.to_neutral;
+        }
         const TeamRegionExchange& team(std::size_t region, std::size_t team) const { return this->team_[region][team]; }
         const SeatRegionExchange& seat(std::size_t region, std::size_t seat) const { return this->seat_[region][seat]; }
         std::size_t regions() const { return this->regions_; }

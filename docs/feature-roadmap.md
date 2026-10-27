@@ -927,15 +927,128 @@ Design diagnoses and an adversarial review were run first. The review's three
 confirmed landing-test defects (box origin, swept contact and post-move launch)
 are fixed above.
 
-**Next implementation:** diagnose and fix the Close Quarters `61403` home-band
-loop, which the progress check misses because motion keeps exceeding its
-distance window. Decide what a slow tool should spend during an ascent so that a
-brief mid-chain pass can paint, and qualify middle-region retention under
-sustained opposition. CPU/frame-pacing, including the per-step support scans for
-ready Snipers and finishing bots, is unmeasured. Moving-support routes, the
-full suite, native bot presentation and physical-pad checks were not run.
-Attended difficulty distinction and usefulness remain the author's acceptance
-gate; values remain provisional and `ROAD#10` stays OPEN.
+The next slice below fixes that loop, decides the slow tool's ascent spending and
+qualifies middle retention under sustained opposition.
+
+#### Home-band loop, slow-tool spending and sustained middle retention (2026-10-27)
+
+**The Close Quarters `61403` loop.** A per-step trace of the lone team-a Sprayer
+showed no stuck state the progress check could see. It spawns above the
+non-scoring home floor (x 0-1500) and descends to it. With no sampled paint in
+range, its decision aims along its heading, `(heading, 0.7)`, and fires. That
+untargeted fire painted nothing that scores and emptied the reserve near x 1200.
+The refill then retreated from a visible enemy about 1500 units away, back to
+x 400, where the reserve recovered and the walk started again. The bot moved
+continuously, so the 52-unit progress window never tripped, and it never reached
+the scoring floor at x 1500.
+
+Untargeted fire is now withheld while the bot stands on a known non-scoring
+support. Fire at an engaged enemy, a support target or a sampled paint goal is
+unchanged, as is untargeted fire on scoring ground, ramps and in the air. The
+named trial now retains off-home paint, and the combat-trial CSV is unchanged by
+this part. Across the 2v2 team trials, paint claimed per paid shot rises for every
+tool against the unchanged-policy run (Sprayer 33.9 -> 36.1 area, Roller 27.0 ->
+30.8, Bucket 520 -> 543, Mister 179 -> 188, Sniper 174 -> 187), with both parts
+of this slice applied.
+
+A second latent behaviour appeared in the same trace and is not changed here:
+`seeking_after_descent_` clears only on a scoring landing. After the bot's drop to
+that non-scoring floor it stayed set for the rest of the life, which disables every
+ascent and ramp choice. Close Quarters lets the bot walk out, but an arena whose
+only exit from a non-scoring floor is a climb would hold it there.
+
+**What a slow tool spends during an ascent.** The four King of the Hill terrace
+misses are geometric, not timing. The route's finish, `mountain_level_7`, is
+exposed only as a 100-unit lip on each side, with `mountain_level_8` 100 units
+above it. A Sniper's straight jet starts about 110 units from its centre, so from
+the lip, or from the apex of the jump onto it, every launch that starts above the
+top lands beyond the lip. Withholding fire for that landing, the first candidate
+tried, made it worse (144/150): the bot then never fired at all on the lip.
+
+The decision taken is instead: **a deliberate tool spends its shot only where a
+straight launch from its current pose lands on a scoring top, and nowhere else
+mid-chain.** The driver now qualifies a target for a ready deliberate tool when it
+is grounded or airborne. A tile on the support underfoot keeps priority, as before.
+Without one, it may take the nearest visible, in-range top on any scoring support
+whose nominal straight launch passes the existing landing test. Each step the bot
+re-aims at that target with the decision's single stored error draw, and fires
+only if that exact angle lands. With no target during an ascent or ramp chain, it
+holds fire. Visible enemies, reserves, cooldown, reaction cadence and the
+navigation random stream are unchanged. The re-aim needs a decision made in
+this life; before the first one, after a spawn, the bot holds as before rather
+than firing ahead of its reaction delay with no drawn error.
+
+Measured alone, this part raises Sniper paint per paid shot in the team trials
+from 178.7 to 187.0 area, and its final owned paint from 374k to 384k. Other-arena finishing paint stays **146/150**: the
+remaining misses are the same terrace Snipers (team a on all three difficulties,
+team b on Hard), now classified as a geometric limit of that lip for this tool.
+Turbulence final top paint remains 90/90, CQ deck paint 60/60 and natural-spawn
+paint 120/120. Stationary local combat keeps damage and attributed eliminations
+in 10/10, and all 60 moving/opposed gates hold. Their measurements move in both
+directions (all-seat health loss in moving-human trials 27.380 -> 26.729,
+opposed 74.812 -> 76.148, attributed opposed eliminations 40 -> 41).
+
+**Sustained opposition.** `bot_team_trials` adds **40** sustained trials: one
+Normal bot a side, a neutral human on each team (P4 claims an ordinary pad slot
+and never acts), all four arenas, five tool rotations, both mirrored sides and
+the three seeds across rotations, for **7200** active steps each. Every step it
+samples each team's middle-band holding from the exchange ledger (new
+`ExchangeLedger::held`). A new `bot_team_trials_middle.csv` records, for every
+trial and team, the first holding step, held steps, losses, recaptures, the
+longest gap, final-third holding and minimum, peak, and whether the enemy was
+still capturing that team's middle tiles in the final third.
+
+| Arena (sustained 1v1, 20 teams) | Enemy still capturing in final third | Held every final-third step | Lowest final-third share of peak |
+|---|---|---|---|
+| Crossfeed | 20/20 | 20/20 | 0.099 |
+| Close Quarters | 19/20 | 20/20 | 0.199 |
+| King of the Hill | 19/20 | 20/20 | 0.177 |
+| Turbulence | 7/20 | 20/20 | 0.298 |
+
+Repeatable gates: all 80 sustained bots move, buy fire and retain paint, and
+every sustained team holds middle paint at every final-third step. The share of
+peak is a measurement. A share floor of a tenth was tried and dropped: the
+review fix below moved one Crossfeed team from 0.18 to 0.099 without it ever
+losing the middle. These qualify retention capability under continued enemy
+capture between equal bots; they are not balance or difficulty evidence.
+
+**Gate reclassification.** The old mixed-tool gate required every team to retain
+off-home paint at the final sample, with one named exception. That conflated
+navigation with what an outnumbered side keeps. After the loop fix the one-bot
+Turbulence side on seed `61403`, human b, rotation 0 holds none at the end. Its
+Sprayer reached and painted the middle, died near step 1590 and lost that paint to
+two opponents. The case now separates three gates:
+
+- every bot's body leaves its home band (560/560 across all three matrices);
+- two-bot teams retain off-home paint (120/120);
+- the formerly named Close Quarters loop must retain it.
+
+One-bot final retention is a measurement (119/120).
+
+Validation: Debug and Release builds and the fifteen selected cases pass:
+`bot_driver`, `bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_ascents`,
+`bot_arena_routes`, `bot_hill_routes`, `bot_turbulence_routes`, `bot_trials`,
+`bot_runtime`, `gameplay_tuning`, `movement`, `bot_territory`, `bot_combat_trials`
+and `bot_team_trials`.
+Nine final-input replays reproduce public players, projectile count and exact
+paint state, including one 7200-step sustained tape, with complete fingerprints
+additionally checked in Debug. All six trial CSVs, including the new middle
+report, are byte-identical between builds, and both real-bank isolated startup
+checks pass. Evidence: `out/validation/road10-loop/`;
+the unchanged-policy baseline run is `out/validation/road10-loop-baseline/`. An
+adversarial review (policy, harness and determinism lenses, each finding
+verified independently) confirmed one defect, fixed above: the slow-tool re-aim
+could fire before a life's first decision with a zero or stale error draw. Two
+other findings were refuted and the harness lens found none.
+
+**Next implementation:** decide whether `seeking_after_descent_` should clear on
+any completed descent, and whether a refilling bot should retreat from a visible
+enemy well outside that enemy's reach. Both appeared in the loop trace. Measure
+the CPU cost of the per-step support scans, which now also run for airborne ready
+Snipers. Moving-support routes, the full suite, native bot presentation and
+physical-pad checks were not run. Attended difficulty distinction and usefulness
+remain the author's acceptance gate; values remain provisional and `ROAD#10`
+stays OPEN.
 
 ### Balanced random teams
 

@@ -131,6 +131,21 @@ bool MatchBot::ledge_ahead(const MatchBotObservation& view) const
 	return true;
 }
 
+bool MatchBot::unscored_floor(const MatchBotObservation& view) const
+{
+	if (!view.grounded) { return false; }
+	const float feet = view.center.y + view.size.y * 0.5f;
+	bool standing = false;
+	for (const MatchBotSupport& support : view.supports)
+	{
+		if (std::fabs(feet - support.bounds.top()) >= 0.1f ||
+			view.center.x < support.bounds.left() || view.center.x > support.bounds.right()) { continue; }
+		if (support.paintable) { return false; }
+		standing = true;
+	}
+	return standing;
+}
+
 void MatchBot::decide(const MatchBotObservation& view)
 {
 	this->decision_ = {};
@@ -232,6 +247,7 @@ void MatchBot::decide(const MatchBotObservation& view)
 	}
 	this->decision_.drop_through = dropping;
 	Vector2F aim(this->heading_, 0.7f);
+	bool targeted = true;
 	if (engaging)
 	{
 		const WeaponTuning& tool = this->tuning_->weapon(view.weapon);
@@ -249,16 +265,21 @@ void MatchBot::decide(const MatchBotObservation& view)
 	{
 		aim = this->paint_goal_ - view.center;
 	}
+	else { targeted = false; }
 	if (aim.length_squared() > 0.0f)
 	{
 		const float error = this->tuning_->bot(this->difficulty_).aim_error_radians;
-		const float angle = aim.angle() + (this->random_unit() * 2.0f - 1.0f) * error;
+		this->aim_error_ = (this->random_unit() * 2.0f - 1.0f) * error;
+		const float angle = aim.angle() + this->aim_error_;
 		this->decision_.shoot_angle = angle;
 		this->decision_.shoot_direction = Vector2F(std::cos(angle), std::sin(angle));
 		this->decision_.shoot_direction_requested = true;
 		this->decision_.right_analog_stick = this->decision_.shoot_direction;
 	}
-	this->decision_.primary_shoot = !this->refilling_ && !view.shot_empty;
+	// Untargeted fire paints the floor ahead. On a known non-scoring floor it
+	// only drains the reserve the bot needs on reaching scoring ground.
+	this->decision_.primary_shoot = !this->refilling_ && !view.shot_empty &&
+		(targeted || !this->unscored_floor(view));
 	// The window steers each step; a held decision would count as blocked.
 	if (finishing) { this->decision_.x_movement = 0.0f; this->decision_.left_analog_stick = {}; }
 	this->react_in_ = this->tuning_->bot(this->difficulty_).reaction_steps;
@@ -282,6 +303,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->finish_left_ = 0;
 		this->visited_supports_.clear();
 		this->decision_ = neutral;
+		this->aim_error_ = 0.0f;
 		return neutral;
 	}
 	if (!this->had_alive_step_)
@@ -342,12 +364,23 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->jump_left_ = 0;
 		if (--this->finish_left_ == 0) { this->react_in_ = 1; }
 	}
-	// One deliberate shot outlasts its decision. With a checked target on this
-	// support and no visible opponent, spend it only on an angle that lands.
-	if (view.support_paint && view.grounded && view.enemies.empty() && this->deliberate(view.weapon) &&
-		!(input.shoot_direction_requested &&
-			match_bot_territory::top_launch_lands(view, view.support_bounds, input.shoot_angle, *this->tuning_)))
-	{ input.primary_shoot = false; }
+	// One deliberate shot outlasts its decision. With a checked top target and
+	// no visible opponent, re-aim each step with the decision's drawn error and
+	// spend it only on an angle that lands. A climb's pose changes faster than
+	// that shot recovers, so mid-chain it is spent on nothing else.
+	// Before this life's first decision there is no drawn error to reuse.
+	const bool slow = view.enemies.empty() && this->deliberate(view.weapon) &&
+		this->decision_.shoot_direction_requested;
+	if (slow && view.support_paint)
+	{
+		const float angle = (*view.support_paint - view.center).angle() + this->aim_error_;
+		input.shoot_angle = angle;
+		input.shoot_direction = Vector2F(std::cos(angle), std::sin(angle));
+		input.shoot_direction_requested = true;
+		input.right_analog_stick = input.shoot_direction;
+		input.primary_shoot = match_bot_territory::top_launch_lands(view, view.support_bounds, angle, *this->tuning_);
+	}
+	else if (slow && (this->ascending_ || this->climbing_ramp_ || this->continue_ascent_)) { input.primary_shoot = false; }
 	input.connected = true;
 	// The reserve guard is immediate, even between policy reactions. It cannot
 	// buy an unaffordable shot or inherit firing from a depleted decision.

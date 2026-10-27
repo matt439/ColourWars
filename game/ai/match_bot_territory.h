@@ -65,6 +65,26 @@ namespace match_bot_territory
 		mattmath::RectangleF bounds;
 	};
 
+	// One horizontal top tile on a support's top edge, as an aim point just
+	// above the paint. Rotated tiles have a local face and are rejected.
+	inline std::optional<mattmath::Vector2F> top_tile_point(const mattmath::RectangleF& bounds,
+		const PaintSurfaceSample& surface, float thickness, float body_width)
+	{
+		constexpr float tolerance = 0.1f;
+		if (surface.face != PaintSurfaceFace::top ||
+			std::fabs(surface.corners[0].y - surface.corners[1].y) > tolerance) { return std::nullopt; }
+		mattmath::Vector2F point;
+		for (const mattmath::Vector2F& corner : surface.corners)
+		{
+			if (corner.x < bounds.left() - tolerance || corner.x > bounds.right() + tolerance ||
+				std::fabs(corner.y - bounds.top()) > thickness + tolerance) { return std::nullopt; }
+			point += corner;
+		}
+		point *= 0.25f;
+		point.y -= thickness + body_width * 0.05f;
+		return point;
+	}
+
 	// Geometry qualification only; the caller still checks ownership, range
 	// and visibility before offering this aim-only point to the policy.
 	inline std::optional<SupportTop> support_top_point(const MatchBotObservation& view,
@@ -79,21 +99,22 @@ namespace match_bot_territory
 			if (!support.paintable || std::fabs(feet - bounds.top()) > tolerance ||
 				view.center.x + view.size.x * 0.5f <= bounds.left() ||
 				view.center.x - view.size.x * 0.5f >= bounds.right()) { continue; }
-			bool belongs = true;
-			mattmath::Vector2F point;
-			for (const mattmath::Vector2F& corner : surface.corners)
-			{
-				belongs = belongs && corner.x >= bounds.left() - tolerance &&
-					corner.x <= bounds.right() + tolerance &&
-					std::fabs(corner.y - bounds.top()) <= thickness + tolerance;
-				point += corner;
-			}
-			// A rotated tile's face is local, so require a horizontal top edge.
-			if (!belongs || std::fabs(surface.corners[0].y - surface.corners[1].y) > tolerance)
-			{ continue; }
-			point *= 0.25f;
-			point.y -= thickness + view.size.x * 0.05f;
-			return SupportTop{ point, bounds };
+			if (const std::optional<mattmath::Vector2F> point = top_tile_point(bounds, surface, thickness, view.size.x))
+			{ return SupportTop{ *point, bounds }; }
+		}
+		return std::nullopt;
+	}
+
+	// Any scoring support's top, not only the one underfoot: a slow straight
+	// tool can land its shot on a lower lip it has already climbed past.
+	inline std::optional<SupportTop> scoring_top_point(const MatchBotObservation& view,
+		const PaintSurfaceSample& surface, float thickness)
+	{
+		for (const MatchBotSupport& support : view.supports)
+		{
+			if (!support.paintable) { continue; }
+			if (const std::optional<mattmath::Vector2F> point = top_tile_point(support.bounds, surface, thickness, view.size.x))
+			{ return SupportTop{ *point, support.bounds }; }
 		}
 		return std::nullopt;
 	}

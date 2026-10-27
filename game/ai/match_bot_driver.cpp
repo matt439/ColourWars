@@ -18,10 +18,10 @@ namespace
 			state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
 	}
 
-	// A ready, grounded deliberate tool requalifies its support shot every step.
+	// A ready deliberate tool requalifies its top shot every step, airborne too.
 	bool support_shot(const MatchBot& bot, const Player& player)
 	{
-		return bot.finishing() || (bot.deliberate(player.primary_weapon().type()) && grounded(player.move_state()) &&
+		return bot.finishing() || (bot.deliberate(player.primary_weapon().type()) &&
 			player.primary_weapon().readiness() == WeaponReadiness::ready);
 	}
 
@@ -169,12 +169,27 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 				// small deck is missed by all of Easy's global random samples.
 				// Keep this separate from movement candidates and their RNG draws.
 				float best_support_cost = (std::numeric_limits<float>::max)();
+				float best_other_cost = (std::numeric_limits<float>::max)();
+				std::optional<match_bot_territory::SupportTop> other;
 				for (const PaintSurfaceSample& surface : surfaces)
 				{
 					if (surface.team == player.team()) { continue; }
 					const std::optional<match_bot_territory::SupportTop> top = match_bot_territory::support_top_point(
 						view, surface, this->tuning_->paint().thickness);
-					if (!top) { continue; }
+					if (!top)
+					{
+						// Off this support, only a slow straight shot that lands qualifies.
+						if (!deliberate) { continue; }
+						const std::optional<match_bot_territory::SupportTop> lip = match_bot_territory::scoring_top_point(
+							view, surface, this->tuning_->paint().thickness);
+						if (!lip) { continue; }
+						const Vector2F gap = lip->point - view.center;
+						const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
+						if (cost < best_other_cost && gap.length() <= view.engage_distance &&
+							match_bot_territory::top_launch_lands(view, lip->bounds, gap.angle(), *this->tuning_) &&
+							level.bot_line_of_sight(view.center, lip->point)) { best_other_cost = cost; other = lip; }
+						continue;
+					}
 					const Vector2F gap = top->point - view.center;
 					const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
 					if (gap.length() > view.engage_distance) { continue; }
@@ -186,6 +201,8 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 					view.support_open = true;
 					if (aimable) { view.support_paint = top->point; view.support_bounds = top->bounds; best_support_cost = cost; }
 				}
+				// The support underfoot keeps priority over a lower or farther lip.
+				if (!view.support_paint && other) { view.support_paint = other->point; view.support_bounds = other->bounds; }
 				// Random territory sampling stays replan-only: the same draws.
 				if (replan)
 				{
