@@ -279,9 +279,12 @@ int main(int argc, char** argv)
             " top_paint_trials=" << paint_trials << "/" << trials << '\n';
         require(trials == 90 && passed == trials,
             "A bot did not complete every named Turbulence chain within 3600 active steps");
+        // Each chain ends on upper_top_paint; the finishing window holds the
+        // bot there long enough to refill normally and pass one cooldown.
+        require(paint_trials == trials, "A bot left its final Turbulence scoring landing without owned top paint");
         std::cout << "PASS 90 bounded actual-driver Turbulence upper crossings, continuous ascents and local divider "
             "recovery chains, ordered named grounded contacts and ordinary jumps; six 3600-step final-input replays; "
-            "top paint is measured, territory usefulness remains unqualified\n";
+            "every final landing retains owned top paint; territory usefulness remains unqualified\n";
         return 0;
     }
     catch (const std::exception& error)

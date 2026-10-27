@@ -189,8 +189,11 @@ namespace
         }
         const float paint = owned_top_paint(*level, world, route.finish);
         if (std::string_view(trial.route.stage) == "crossfeed" && std::string_view(trial.route.name) == "mixer" &&
-            trial.team == PlayerTeam::b && trial.tool == WeaponType::sniper && trial.difficulty == BotDifficulty::normal)
+            trial.tool == WeaponType::sniper && (trial.difficulty == BotDifficulty::normal ? trial.team == PlayerTeam::b :
+                (trial.team == PlayerTeam::a) == (trial.difficulty == BotDifficulty::easy)))
         {
+            // Normal b, Easy a and Hard b. The latter two spent their shot on
+            // a stale or overshooting angle before the deliberate support gate.
             require(paint > 0.0f, "The retained Sniper mixer landing again failed to paint above its long muzzle");
         }
         // Named grounded contacts qualify the route. Retained scoring paint

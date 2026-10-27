@@ -199,6 +199,13 @@ namespace balance_regions
         }
     }
 
+    std::vector<double> region_pieces(const PaintSurfaceSample& sample, const Partition& partition)
+    {
+        validate(partition);
+        check(std::isfinite(sample.scored_area) && sample.scored_area > 0.0f, "Region pieces need a positive finite tile area");
+        return split(sample, partition);
+    }
+
     Partition stage_partition(std::string_view stage, const mattmath::RectangleF& arena)
     {
         check(std::isfinite(arena.left()) && std::isfinite(arena.right()) && std::isfinite(arena.top()) &&

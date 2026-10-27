@@ -42,9 +42,10 @@ namespace bot_navigation_acceptance
             throw std::runtime_error(support_error_ + name + "'");
         }
 
-        std::unique_ptr<Level> build(const MenuLevelSettings& settings)
+        // The whole-match seed reaches stage draws and then the bot seed.
+        std::unique_ptr<Level> build(const MenuLevelSettings& settings, unsigned int seed = trial_seed)
         {
-            std::srand(trial_seed);
+            std::srand(seed);
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
                 &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);

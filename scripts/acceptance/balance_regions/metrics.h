@@ -29,6 +29,9 @@ namespace balance_regions
         std::vector<Band> bands;
     };
     Partition stage_partition(std::string_view stage, const mattmath::RectangleF& arena);
+    // Measurement's exact allocation of one tile: bands in order, then
+    // outside_partition. The pieces sum to the tile's authoritative scored_area.
+    std::vector<double> region_pieces(const PaintSurfaceSample& sample, const Partition& partition);
 
     struct RosterSeat
     {

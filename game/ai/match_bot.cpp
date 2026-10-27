@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_ballistics.h"
+#include "game/ai/match_bot_territory.h"
 #include <cmath>
 #include <limits>
 
@@ -31,6 +32,36 @@ float MatchBot::random_unit()
 bool MatchBot::needs_territory() const
 {
 	return this->replan_in_ <= 0 && this->recovery_left_ == 0;
+}
+
+bool MatchBot::deliberate(WeaponType weapon) const
+{
+	const float gate = this->tuning_->bots().deliberate_shot_interval;
+	return gate > 0.0f && this->tuning_->weapon(weapon).details.shoot_interval >= gate;
+}
+
+bool MatchBot::finishing() const
+{
+	return this->finish_pending_ || this->finish_left_ > 0;
+}
+
+void MatchBot::open_finish(const MatchBotObservation& view)
+{
+	// Long enough to recover the ordinary reserve hysteresis and then pass one
+	// cooldown. Firing rules are unchanged; the bot only stays to use them.
+	const BotTuning& policy = this->tuning_->bots();
+	double refill = 0.0;
+	if (this->refilling_)
+	{
+		const double per_step = static_cast<double>(this->tuning_->ammo_regen_rate()) /
+			this->tuning_->starting_ammo() / 60.0;
+		refill = std::ceil(static_cast<double>(this->tuning_->ammo_regen_delay()) * 60.0) + (per_step > 0.0 ?
+			std::ceil(std::max(0.0, static_cast<double>(policy.reserve_resume - view.ammo)) / per_step) : 0.0);
+	}
+	const double budget = refill + std::ceil(static_cast<double>(
+		this->tuning_->weapon(view.weapon).details.shoot_interval) * 60.0) + policy.finish_dwell_steps;
+	this->finish_support_ = this->ascent_support_;
+	this->finish_left_ = static_cast<int>(std::min(budget, 3600.0));
 }
 
 void MatchBot::choose_territory(const MatchBotObservation& view)
@@ -113,7 +144,8 @@ void MatchBot::decide(const MatchBotObservation& view)
 	}
 	// Landing can happen between territory replans. Check the newly available
 	// one-way escape before a fallback obstacle jump sends us back into a loop.
-	if (!this->has_goal_ && view.on_platform && this->recovery_left_ == 0)
+	const bool was_finishing = this->finish_left_ > 0;
+	if (!was_finishing && !this->has_goal_ && view.on_platform && this->recovery_left_ == 0)
 	{ this->choose_descent(view); }
 	Vector2F goal = this->has_goal_ ? this->goal_ :
 		view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f);
@@ -146,11 +178,34 @@ void MatchBot::decide(const MatchBotObservation& view)
 		this->ascending_ = this->continue_ascent_ = false;
 		this->climbing_ramp_ = false;
 	}
-	else if (!this->ascending_ && !this->climbing_ramp_ && !this->seeking_after_descent_ &&
+	else if (!was_finishing && !this->ascending_ && !this->climbing_ramp_ && !this->seeking_after_descent_ &&
 		view.grounded && (!view.on_platform || this->continue_ascent_))
 	{
 		this->choose_ramp(view);
 		if (!this->climbing_ramp_) { this->choose_ascent(view); }
+	}
+	// Only a chain that ends on this landing opens the window; a landing with
+	// a further ascent or ramp has already chosen it above.
+	if (this->finish_pending_)
+	{
+		this->finish_pending_ = false;
+		if (!recovering && enemy == nullptr && !this->ascending_ && !this->climbing_ramp_ &&
+			view.grounded && view.support_open) { this->open_finish(view); }
+	}
+	const bool finishing = this->finish_left_ > 0;
+	if (finishing)
+	{
+		// Stay on the fully supported span, keeping a local goal when it lies
+		// on this support; otherwise explore along it, turned inward.
+		const float half = view.size.x * 0.5f, inset = std::min(2.0f, half);
+		const float low = this->finish_support_.left() + half + inset;
+		const float high = this->finish_support_.right() - half - inset;
+		if (view.center.x < low) { this->heading_ = 1.0f; }
+		else if (view.center.x > high) { this->heading_ = -1.0f; }
+		const bool local_goal = this->has_goal_ && std::fabs(this->goal_.y - view.center.y) < 0.1f;
+		const float wanted = local_goal ? this->goal_.x : view.center.x + this->heading_ * view.size.x * 4.0f;
+		this->finish_x_ = low <= high ? std::clamp(wanted, low, high) : this->finish_support_.center().x;
+		goal = Vector2F(this->finish_x_, view.center.y);
 	}
 	if (recovering) { goal = view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f); }
 	const float dx = goal.x - view.center.x;
@@ -166,7 +221,7 @@ void MatchBot::decide(const MatchBotObservation& view)
 	const bool dropping = view.on_platform && goal.y > view.center.y + view.size.y * 0.5f;
 	if (dropping && !this->ascending_ && !this->climbing_ramp_) { this->remember_descent(view, goal); }
 	if (dropping) { this->jump_left_ = 0; }
-	const bool jump = !this->ascending_ && !this->climbing_ramp_ && !dropping && view.grounded && movement != 0.0f &&
+	const bool jump = !finishing && !this->ascending_ && !this->climbing_ramp_ && !dropping && view.grounded && movement != 0.0f &&
 		(above || this->blocked_steps_ >= policy.stuck_jump_steps ||
 			this->obstacle_ahead(view) || (this->ledge_ahead(view) && goal.y <= view.center.y));
 	if (jump && !this->jump_was_held_)
@@ -183,6 +238,13 @@ void MatchBot::decide(const MatchBotObservation& view)
 		aim = match_bot_ballistics::aim_direction(tool, this->tuning_->projectile(tool.details.proj_type),
 			view.velocity, enemy->center - view.center, enemy->velocity);
 	}
+	else if (view.support_paint && (finishing || this->deliberate(view.weapon)))
+	{
+		// A finishing or slow tool requalifies its support target from the
+		// current pose rather than walking into a point fixed at the last replan.
+		this->paint_goal_ = *view.support_paint; this->has_paint_goal_ = true;
+		aim = this->paint_goal_ - view.center;
+	}
 	else if (this->has_paint_goal_)
 	{
 		aim = this->paint_goal_ - view.center;
@@ -197,6 +259,8 @@ void MatchBot::decide(const MatchBotObservation& view)
 		this->decision_.right_analog_stick = this->decision_.shoot_direction;
 	}
 	this->decision_.primary_shoot = !this->refilling_ && !view.shot_empty;
+	// The window steers each step; a held decision would count as blocked.
+	if (finishing) { this->decision_.x_movement = 0.0f; this->decision_.left_analog_stick = {}; }
 	this->react_in_ = this->tuning_->bot(this->difficulty_).reaction_steps;
 }
 
@@ -214,6 +278,8 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->ascending_ = this->ascent_airborne_ = this->continue_ascent_ = false;
 		this->climbing_ramp_ = false;
 		this->seeking_after_descent_ = false;
+		this->finish_pending_ = false;
+		this->finish_left_ = 0;
 		this->visited_supports_.clear();
 		this->decision_ = neutral;
 		return neutral;
@@ -261,11 +327,27 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->progress_origin_ = view.center;
 		this->progress_steps_ = 0;
 	}
+	// A visible enemy ends the window and keeps the ordinary reaction delay.
+	if (this->finish_left_ > 0 && !view.enemies.empty()) { this->finish_left_ = 0; }
+	else if (this->finish_left_ > 0 && (!view.grounded || this->recovery_left_ > 0))
+	{ this->finish_left_ = 0; this->react_in_ = 1; }
 	if (this->recovery_left_ == 0 && this->replan_in_-- <= 0) { this->choose_territory(view); }
 	if (--this->react_in_ <= 0) { this->decide(view); }
 	PlayerInputData input = this->decision_;
 	if (this->ascending_) { this->steer_ascent(view, input); }
 	if (this->climbing_ramp_) { this->steer_ramp(view, input); }
+	if (this->finish_left_ > 0)
+	{
+		this->steer_finish(view, input);
+		this->jump_left_ = 0;
+		if (--this->finish_left_ == 0) { this->react_in_ = 1; }
+	}
+	// One deliberate shot outlasts its decision. With a checked target on this
+	// support and no visible opponent, spend it only on an angle that lands.
+	if (view.support_paint && view.grounded && view.enemies.empty() && this->deliberate(view.weapon) &&
+		!(input.shoot_direction_requested &&
+			match_bot_territory::top_launch_lands(view, view.support_bounds, input.shoot_angle, *this->tuning_)))
+	{ input.primary_shoot = false; }
 	input.connected = true;
 	// The reserve guard is immediate, even between policy reactions. It cannot
 	// buy an unaffordable shot or inherit firing from a depleted decision.

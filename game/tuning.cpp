@@ -165,6 +165,8 @@ namespace
 		bots.recovery_steps = steps(json, "recovery_steps");
 		bots.progress_window_steps = steps(json, "progress_window_steps");
 		bots.progress_distance = read_positive(json, "progress_distance");
+		bots.finish_dwell_steps = steps(json, "finish_dwell_steps");
+		bots.deliberate_shot_interval = read_positive(json, "deliberate_shot_interval");
 		if (bots.stuck_turn_steps <= bots.stuck_jump_steps)
 		{
 			throw std::runtime_error(json.where() + ": stuck_turn_steps must exceed stuck_jump_steps.");

@@ -38,6 +38,11 @@ struct MatchBotObservation
 	// Deterministic visible top paint on the current support, aim only. It
 	// never supplies a standing/descent goal or consumes the navigation RNG.
 	std::optional<mattmath::Vector2F> support_paint;
+	// The standing support that support_paint lies on; valid only with it.
+	mattmath::RectangleF support_bounds;
+	// Visible in-range non-team top paint on the current support, even where
+	// this pose's launch clearance rejects every tile. Refreshed with it.
+	bool support_open = false;
 	std::vector<mattmath::RectangleF> obstacles;
 	// Rectangular standing surfaces, distinct from conservative sight bounds.
 	// One-way supports may be crossed by a deliberate downward route.
@@ -54,6 +59,10 @@ public:
 	MatchBot(const GameTuning* tuning, BotDifficulty difficulty, std::uint64_t seed);
 	PlayerInputData think(const MatchBotObservation& view);
 	bool needs_territory() const;
+	// A slow straight tool that qualifies each support shot before firing.
+	bool deliberate(WeaponType weapon) const;
+	// A finishing window is pending or open; the driver requalifies support aim.
+	bool finishing() const;
 	std::uint64_t random();
 
 private:
@@ -88,6 +97,12 @@ private:
 	int ramp_steps_left_ = 0;
 	MatchBotRamp ramp_;
 	mattmath::Vector2F ramp_exit_;
+	// A chain's final scoring landing holds the bot there for a finite window
+	// long enough to recover its reserve and pass one cooldown.
+	bool finish_pending_ = false;
+	int finish_left_ = 0;
+	mattmath::RectangleF finish_support_;
+	float finish_x_ = 0.0f;
 
 	float random_unit();
 	void decide(const MatchBotObservation& view);
@@ -103,6 +118,8 @@ private:
 	void remember_descent(const MatchBotObservation& view, mattmath::Vector2F goal);
 	void choose_ramp(const MatchBotObservation& view);
 	void steer_ramp(const MatchBotObservation& view, PlayerInputData& input);
+	void open_finish(const MatchBotObservation& view);
+	void steer_finish(const MatchBotObservation& view, PlayerInputData& input);
 	bool clear_ramp_path(const MatchBotObservation& view, mattmath::Vector2F from,
 		mattmath::Vector2F to, const MatchBotRamp& ramp) const;
 	bool obstacle_ahead(const MatchBotObservation& view) const;

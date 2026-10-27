@@ -32,9 +32,42 @@ namespace match_bot_territory
 		return bottom < view.size.y * 0.5f;
 	}
 
+	// One exact fired angle: the straight launch must start above this top and
+	// first reach it over the support. The jet is swept, so contact is where
+	// its centred box's bottom crosses the top. The shot leaves after this
+	// step's movement. Curved and contact tools are not judged here, and
+	// intervening cover is not checked.
+	inline bool top_launch_lands(const MatchBotObservation& view, const mattmath::RectangleF& support,
+		float angle, const GameTuning& tuning)
+	{
+		const WeaponTuning& tool = tuning.weapon(view.weapon);
+		if (tool.details.starting_vel_length <= 0.0f) { return true; }
+		const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
+		if (projectile.details.gravity != 0.0f) { return true; }
+		// Weapon::nozzle_pos from the post-move centre; ProjectileJet centres
+		// its collision box on that point.
+		const bool left = angle > mattmath::PI * 0.5f || angle < -mattmath::PI * 0.5f;
+		const mattmath::Vector2F tip = view.center + view.velocity / 60.0f +
+			mattmath::Vector2F(left ? -tool.details.offset.x : tool.details.offset.x, tool.details.offset.y) +
+			mattmath::Vector2F::rotate_vector(tool.details.nozzle_offset +
+				mattmath::Vector2F(tool.details.size.x, 0.0f), angle);
+		const mattmath::Vector2F half = projectile.details.col_rect_size * 0.5f;
+		const float drop = support.top() - (tip.y + half.y);
+		const float sine = std::sin(angle);
+		if (drop < 0.0f || sine <= 0.0f) { return false; }
+		const float x = tip.x + std::cos(angle) * (drop / sine);
+		return x - half.x >= support.left() && x + half.x <= support.right();
+	}
+
+	struct SupportTop
+	{
+		mattmath::Vector2F point;
+		mattmath::RectangleF bounds;
+	};
+
 	// Geometry qualification only; the caller still checks ownership, range
 	// and visibility before offering this aim-only point to the policy.
-	inline std::optional<mattmath::Vector2F> support_top_point(const MatchBotObservation& view,
+	inline std::optional<SupportTop> support_top_point(const MatchBotObservation& view,
 		const PaintSurfaceSample& surface, float thickness)
 	{
 		if (!view.grounded || surface.face != PaintSurfaceFace::top) { return std::nullopt; }
@@ -60,7 +93,7 @@ namespace match_bot_territory
 			{ continue; }
 			point *= 0.25f;
 			point.y -= thickness + view.size.x * 0.05f;
-			return point;
+			return SupportTop{ point, bounds };
 		}
 		return std::nullopt;
 	}

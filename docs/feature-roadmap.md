@@ -811,15 +811,131 @@ Release route diagnostics: `out/validation/road10-territory-baseline/`.
 Reproduce the new matrix with `scripts/run-acceptance.ps1 -Preset x64-debug
 -Cases bot_team_trials` (or Release).
 
-**Next implementation:** define and qualify a finite opportunity to paint a
-briefly reached scoring support, respecting normal reserves/cooldown and enemy
-priority; retain the thirteen finishing-support misses as repros. Extend opposed
-coverage to mixed tools and independent seeds, and qualify contested regional
-retention by attributing enemy paint transitions to the same exact regions.
+The next slice below qualifies the finishing opportunity, mixed-tool and
+independent-seed opposition, and regional attribution of paint transitions.
 CPU/frame-pacing, moving-support routes,
 the full suite, native bot presentation and physical-pad checks were not run for
 this slice. Attended difficulty distinction and usefulness remain the author's
 acceptance gate; values remain provisional and `ROAD#10` stays OPEN.
+
+#### Finishing window, deliberate support shots and mixed-tool opposition (2026-10-27)
+
+The thirteen retained finishing misses had two causes. The seven Easy
+Turbulence misses landed on the lip of `upper_top_paint` with only 1.67 units
+of overlap. On the step after landing, no further ascent was eligible, Easy's
+eight samples usually supplied no standing goal, and the stale pre-climb
+heading sent the bot outward. The ordinary ledge jump then left the top within
+two grounded steps. Six of those bots were in reserve hysteresis (ammo
+0.17-0.70 against a 0.80 resume), and one Bucket was cooling down.
+`readiness=0` in the earlier traces means *ready*, not empty. The six other-arena
+misses were all Sniper: its one paid shot per 60 steps was spent on a stale
+airborne decision, a support point fixed at replan time and then walked into,
+or a near tile the 110-unit muzzle had already passed.
+
+**Finishing window.** An ascent landing on a paintable support marks the next
+decision. If that decision chooses no further ascent or ramp, sees no enemy, is
+grounded and not recovering, and visible in-range non-team top paint remains on
+the support, the bot opens a finite window. The window lasts one regen delay
+plus the steps to refill to `reserve_resume` (only when already refilling), one
+tool cooldown and `bots.finish_dwell_steps` (30, provisional). During it the bot
+steers within the fully supported span of that support, turned inward, and
+suppresses jump, drop, descent, ramp and ascent selection. Each step requalifies
+the support aim point for the policy's ordinary decision cadence; difficulty
+reaction delays and the single aim-error draw per decision are unchanged. The
+window closes on expiry, airborne state or recovery, which force the next
+decision, or on a visible enemy, which retains the ordinary reaction delay.
+Firing rules are unchanged: the reserve hysteresis, the immediate empty/refill
+guard, affordability and cooldown all apply. The bot only stays long enough to
+use them. Mid-chain landings do not open a window, so route contact timing is
+unchanged except at chain ends.
+
+**Deliberate support shots.** A tool whose `shoot_interval` is at least
+`bots.deliberate_shot_interval` (0.75 s, provisional; only the Sniper today)
+is deliberate. While grounded and ready, its driver requalifies the current
+support target every step. The candidate must pass the existing launch-clearance
+check and a straight-launch landing test. That test starts from the post-move
+muzzle, centres the jet's collision box on it as `ProjectileJet` does, and
+requires the swept box's first contact with the top to lie over the support.
+With such a target and no visible enemy, the bot withholds a deliberate shot
+whose actually fired angle, including its drawn error, would not land. Curved and
+contact tools are not judged by that test. Intervening cover is not checked.
+Enemy shots and all navigation, reserve and random-draw behaviour are unchanged.
+
+| Measurement | Before (`07bd59d9`) | After |
+|---|---|---|
+| Turbulence final top paint | 83/90 | **90/90** (now a gate) |
+| Other-arena finishing paint | 144/150 | **146/150** |
+| CQ deck paint | 60/60 | 60/60 |
+| Natural-spawn paint | 120/120 | 120/120 |
+| Stationary local combat (damage / attributed eliminations) | 10/10, 10/10 | 10/10, 10/10 |
+
+The four remaining other-arena misses are King of the Hill terrace Snipers on
+Normal and Hard. Each passes the finish mid-chain for 15 grounded steps while its
+one shot, spent during the climb, cools down. No window opens mid-chain, and the
+landing gate cannot supply a cooldown; what a slow tool should spend during an
+ascent stays open. Crossfeed's mixer Sniper landings on Easy/a and Hard/b are now
+gated beside the retained Normal/b landing. Moving/opposed local combat still
+satisfies all 60 gates; its measurements move in both directions (all-seat
+health loss in moving-human trials 28.217 -> 27.380, opposed 71.952 -> 74.812, attributed opposed
+eliminations 39 -> 40). They are not evidence of balance.
+
+**Mixed tools, independent seeds and regional exchange.** `bot_team_trials` keeps
+its 40 same-tool trials byte-identical apart from trial numbering, and adds
+**120** mixed-tool trials: four arenas, five rotations, both sides and three
+whole-match seeds (`41731`, `52807`, `61403`). Across the rotations each bot seat
+holds every tool once, and the lone bot and both opponents always differ. The
+neutral human holds a Sprayer and never fires. The seed is the `std::srand`
+value that reaches stage draws and then the bot seed. Every one of the 40
+configurations gives three pairwise-different final states, so the seeds reach
+play.
+
+A new exchange ledger attributes every sampled owner change to Measurement's
+exact regional tile pieces, computed once per tile (the harness now also checks
+scored-area bits each step). For every region it reconciles the ledger's final
+holdings with Measurement's cells. It also requires each bot's regional
+transitions to sum to its existing arena-wide neutral/enemy/ally areas. These are
+the integrity gates; the conservation residual is bookkeeping. The new
+`bot_team_trials_exchanges.csv` reports per region, team and seat: initial and
+final holdings, neutral claims, enemy captures and losses, ally owner changes,
+`contested_held` (final holding on tiles the enemy held at some sampled step),
+first/last exchange steps and mutual exchange.
+
+| Arena (mixed, 30 matches) | Middle mutual capture | Middle contested-held teams | Damage matches |
+|---|---|---|---|
+| Crossfeed | 28/30 | 57/60 | 30/30 |
+| Close Quarters | 19/30 | 45/60 | 27/30 |
+| King of the Hill | 18/30 | 43/60 | 27/30 |
+| Turbulence | 11/30 | 35/60 | 20/30 |
+
+Repeatable gates: all **360/360** mixed bot actors move, buy fire and retain paint;
+all 40 seed configurations are distinct; and teams retain off-home paint in
+**239/240** observations. The single exception is a named navigation repro:
+Close Quarters, seed `61403`, human on team a, rotation 0. Its lone team-a
+Sprayer travels 16.5k units inside a 1500-unit extent without leaving its home
+band. Rotations 2 and 4 of the same seed formerly missed the same way and now
+pass. Any other miss fails the case. Middle exchange, contested holding and
+damage remain measurements. Sampling once per step hides within-step flips. The
+one-bot side and the neutral human make these interaction and territory
+capability checks, not fair opposed balance.
+
+Validation: Debug and Release builds and the fifteen selected cases pass,
+including the eight team-trial and retained replay gates. All five trial CSVs,
+including the three team reports, are byte-identical between builds. Both real-bank
+isolated startup checks pass. Evidence: `out/validation/road10-finish/`;
+the unchanged-policy harness run is `out/validation/road10-mixed-harness/`.
+Design diagnoses and an adversarial review were run first. The review's three
+confirmed landing-test defects (box origin, swept contact and post-move launch)
+are fixed above.
+
+**Next implementation:** diagnose and fix the Close Quarters `61403` home-band
+loop, which the progress check misses because motion keeps exceeding its
+distance window. Decide what a slow tool should spend during an ascent so that a
+brief mid-chain pass can paint, and qualify middle-region retention under
+sustained opposition. CPU/frame-pacing, including the per-step support scans for
+ready Snipers and finishing bots, is unmeasured. Moving-support routes, the
+full suite, native bot presentation and physical-pad checks were not run.
+Attended difficulty distinction and usefulness remain the author's acceptance
+gate; values remain provisional and `ROAD#10` stays OPEN.
 
 ### Balanced random teams
 

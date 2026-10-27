@@ -28,8 +28,8 @@ namespace
         PaintSurfaceSample tile;
         tile.corners = { Vector2F(100.0f, feet), Vector2F(125.0f, feet),
             Vector2F(125.0f, feet + thickness), Vector2F(100.0f, feet + thickness) };
-        const std::optional<Vector2F> point = match_bot_territory::support_top_point(view, tile, thickness);
-        require(point && point->x == 112.5f && point->y < feet,
+        const std::optional<match_bot_territory::SupportTop> top = match_bot_territory::support_top_point(view, tile, thickness);
+        require(top && top->point.x == 112.5f && top->point.y < feet && top->bounds.left() == view.supports[0].bounds.left(),
             "A current horizontal scoring top did not supply an outward paint aim point");
         view.supports[0].one_way = true;
         require(match_bot_territory::support_top_point(view, tile, thickness).has_value(),
@@ -157,6 +157,100 @@ namespace
             "The Roller's ordinary constrained contact pose was rejected as free flight");
     }
 
+    // A straight launch the policy accepts must reach the support's top over
+    // the support: march the jet's centred box in fine substeps.
+    void check_landing(const GameTuning& tuning)
+    {
+        MatchBotObservation view;
+        view.alive = view.grounded = true;
+        view.size = tuning.player().size;
+        view.weapon = WeaponType::sniper;
+        const WeaponTuning& tool = tuning.weapon(view.weapon);
+        const Vector2F half = tuning.projectile(tool.details.proj_type).details.col_rect_size * 0.5f;
+        const float speed = tool.details.starting_vel_length / 6000.0f;
+        const RectangleF support(-140.0f, view.size.y * 0.5f, 280.0f, 50.0f);
+        int landing = 0;
+        for (const float x : { -110.0f, 0.0f, 110.0f })
+        {
+            view.center = Vector2F(x, 0.0f);
+            for (int index = 0; index < 720; ++index)
+            {
+                const float angle = -PI + PI * 2.0f * static_cast<float>(index) / 720.0f;
+                if (!match_bot_territory::top_launch_lands(view, support, angle, tuning)) { continue; }
+                ++landing;
+                const bool left = angle > PI * 0.5f || angle < -PI * 0.5f;
+                Vector2F corner = view.center + Vector2F(left ? -tool.details.offset.x : tool.details.offset.x,
+                    tool.details.offset.y) + Vector2F::rotate_vector(tool.details.nozzle_offset +
+                    Vector2F(tool.details.size.x, 0.0f), angle);
+                require(corner.y + half.y < support.top() && std::sin(angle) > 0.0f,
+                    "An accepted straight support shot started below its top or did not descend");
+                const Vector2F velocity(std::cos(angle) * speed, std::sin(angle) * speed);
+                int steps = 0;
+                while (corner.y + half.y < support.top() && ++steps < 60000) { corner += velocity; }
+                require(steps < 60000 && corner.x - half.x >= support.left() - 0.5f &&
+                    corner.x + half.x <= support.right() + 0.5f,
+                    "An accepted straight support shot first reached the top outside its support");
+            }
+            require(!match_bot_territory::top_launch_lands(view, support, PI * 0.5f, tuning),
+                "A straight-down Sniper muzzle buried below the top was accepted");
+            require(!match_bot_territory::top_launch_lands(view, support, -PI * 0.25f, tuning) &&
+                !match_bot_territory::top_launch_lands(view, support, 0.0f, tuning),
+                "A rising or level straight shot was accepted as a support landing");
+        }
+        require(landing > 0, "No straight Sniper angle could land on a 280-wide current support");
+        view.weapon = WeaponType::bucket;
+        require(match_bot_territory::top_launch_lands(view, support, PI * 0.5f, tuning),
+            "A curved tool was judged by the straight-launch landing test");
+    }
+
+    // A deliberate tool holds a non-landing support shot without changing its
+    // movement, aim draws or a visible opponent's priority.
+    void check_deliberate_gate(const GameTuning& tuning)
+    {
+        require(tuning.bots().deliberate_shot_interval > 0.0f &&
+            tuning.weapon(WeaponType::sniper).details.shoot_interval >= tuning.bots().deliberate_shot_interval &&
+            tuning.weapon(WeaponType::bucket).details.shoot_interval < tuning.bots().deliberate_shot_interval,
+            "The shipped deliberate-tool threshold no longer selects only the Sniper");
+        for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+        {
+            for (const bool enemy : { false, true })
+            {
+                MatchBot plain(&tuning, difficulty, 41), gated(&tuning, difficulty, 41);
+                MatchBotObservation view;
+                view.alive = view.grounded = true; view.ammo = 1.0f;
+                view.size = tuning.player().size; view.engage_distance = 800.0f;
+                view.weapon = WeaponType::sniper;
+                if (enemy) { view.enemies.push_back({ Vector2F(300.0f, 0.0f), Vector2F::ZERO }); }
+                bool held = false, fired = false;
+                for (int step = 0; step < 240; ++step)
+                {
+                    PlayerInputData a = plain.think(view);
+                    MatchBotObservation local = view;
+                    // A support far below: no fired angle from here lands on it.
+                    local.support_paint = Vector2F(200.0f, 40.0f);
+                    local.support_bounds = RectangleF(5000.0f, 5000.0f, 10.0f, 10.0f);
+                    local.support_open = true;
+                    const PlayerInputData b = gated.think(local);
+                    require(a.x_movement == b.x_movement && a.jump_pressed == b.jump_pressed &&
+                        a.drop_through == b.drop_through, "The deliberate support gate changed movement");
+                    if (enemy)
+                    {
+                        require(a.primary_shoot == b.primary_shoot && a.shoot_angle == b.shoot_angle,
+                            "The deliberate support gate displaced a visible opponent's shot");
+                    }
+                    else
+                    {
+                        require(!b.primary_shoot, "A deliberate tool spent a support shot on a non-landing angle");
+                        held = held || a.primary_shoot;
+                    }
+                    fired = fired || b.primary_shoot;
+                }
+                require(enemy ? fired : held, "The deliberate support gate fixture never reached a firing decision");
+                require(plain.random() == gated.random(), "The deliberate support gate consumed policy random draws");
+            }
+        }
+    }
+
     float owned_top_paint(const Level& level, const RectangleF& support, float thickness)
     {
         float area = 0.0f;
@@ -239,8 +333,10 @@ int main(int argc, char** argv)
         require(argc == 2, "usage: bot_territory <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-territory", "Bot territory needs support '", "turbulence");
         check_geometry(world.assets.tuning); check_launch_clearance(world.assets.tuning);
-        check_aim_only(world.assets.tuning); check_driver(world);
-        std::cout << "PASS current-support paint geometry, aim-only/RNG/expiry/enemy priority and 30 finite "
+        check_aim_only(world.assets.tuning); check_landing(world.assets.tuning);
+        check_deliberate_gate(world.assets.tuning); check_driver(world);
+        std::cout << "PASS current-support paint geometry, straight-shot landing, deliberate support gate, "
+            "aim-only/RNG/expiry/enemy priority and 30 finite "
             "actual-driver paid top-paint trials; opposed territory usefulness remains unqualified\n";
         return 0;
     }

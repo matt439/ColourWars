@@ -18,6 +18,13 @@ namespace
 			state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
 	}
 
+	// A ready, grounded deliberate tool requalifies its support shot every step.
+	bool support_shot(const MatchBot& bot, const Player& player)
+	{
+		return bot.finishing() || (bot.deliberate(player.primary_weapon().type()) && grounded(player.move_state()) &&
+			player.primary_weapon().readiness() == WeaponReadiness::ready);
+	}
+
 	Vector2F paint_point(const PaintSurfaceSample& surface, float clearance)
 	{
 		Vector2F center;
@@ -111,8 +118,9 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 	for (size_t seat = 0; seat < this->bots_.size() && seat < seats.size() &&
 		seat < static_cast<size_t>(level.player_count()); ++seat)
 	{
-		wants_territory = wants_territory || (this->bots_[seat] != nullptr &&
-			this->bots_[seat]->needs_territory() && level.player(static_cast<int>(seat)).state() == PlayerState::alive);
+		const Player& player = level.player(static_cast<int>(seat));
+		wants_territory = wants_territory || (this->bots_[seat] != nullptr && player.state() == PlayerState::alive &&
+			(this->bots_[seat]->needs_territory() || support_shot(*this->bots_[seat], player)));
 	}
 	const std::vector<PaintSurfaceSample> surfaces = wants_territory ? level.paint_surfaces() :
 		std::vector<PaintSurfaceSample>{};
@@ -153,8 +161,10 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 					!level.bot_line_of_sight(view.center, candidate.center())) { continue; }
 				view.enemies.push_back({ candidate.center(), candidate.velocity() });
 			}
-			if (bot->needs_territory() && !surfaces.empty())
+			const bool replan = bot->needs_territory();
+			if ((replan || support_shot(*bot, player)) && !surfaces.empty())
 			{
+				const bool deliberate = bot->deliberate(view.weapon);
 				// Guarantee a local scoring face can be considered even when a
 				// small deck is missed by all of Easy's global random samples.
 				// Keep this separate from movement candidates and their RNG draws.
@@ -162,24 +172,32 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 				for (const PaintSurfaceSample& surface : surfaces)
 				{
 					if (surface.team == player.team()) { continue; }
-					const std::optional<Vector2F> point = match_bot_territory::support_top_point(view,
-						surface, this->tuning_->paint().thickness);
-					if (!point) { continue; }
-					const Vector2F gap = *point - view.center;
+					const std::optional<match_bot_territory::SupportTop> top = match_bot_territory::support_top_point(
+						view, surface, this->tuning_->paint().thickness);
+					if (!top) { continue; }
+					const Vector2F gap = top->point - view.center;
 					const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
-					if (cost < best_support_cost && gap.length() <= view.engage_distance &&
-						match_bot_territory::top_launch_clear(view, *point, *this->tuning_, this->difficulties_[seat]) &&
-						level.bot_line_of_sight(view.center, *point))
-					{ view.support_paint = *point; best_support_cost = cost; }
+					if (gap.length() > view.engage_distance) { continue; }
+					// A deliberate tool also needs this nominal angle to land.
+					const bool aimable = cost < best_support_cost &&
+						match_bot_territory::top_launch_clear(view, top->point, *this->tuning_, this->difficulties_[seat]) &&
+						(!deliberate || match_bot_territory::top_launch_lands(view, top->bounds, gap.angle(), *this->tuning_));
+					if ((!aimable && view.support_open) || !level.bot_line_of_sight(view.center, top->point)) { continue; }
+					view.support_open = true;
+					if (aimable) { view.support_paint = top->point; view.support_bounds = top->bounds; best_support_cost = cost; }
 				}
-				const int count = this->tuning_->bot(this->difficulties_[seat]).territory_candidates;
-				for (int index = 0; index < count; ++index)
+				// Random territory sampling stays replan-only: the same draws.
+				if (replan)
 				{
-					const PaintSurfaceSample& surface = surfaces[static_cast<size_t>(bot->random() % surfaces.size())];
-					if (surface.team == player.team()) { continue; }
-					const Vector2F point = paint_point(surface, this->tuning_->paint().thickness + view.size.x * 0.05f);
-					if (Vector2F::distance_squared(point, view.center) <= sight * sight &&
-						level.bot_line_of_sight(view.center, point)) { view.territory.push_back(point); }
+					const int count = this->tuning_->bot(this->difficulties_[seat]).territory_candidates;
+					for (int index = 0; index < count; ++index)
+					{
+						const PaintSurfaceSample& surface = surfaces[static_cast<size_t>(bot->random() % surfaces.size())];
+						if (surface.team == player.team()) { continue; }
+						const Vector2F point = paint_point(surface, this->tuning_->paint().thickness + view.size.x * 0.05f);
+						if (Vector2F::distance_squared(point, view.center) <= sight * sight &&
+							level.bot_line_of_sight(view.center, point)) { view.territory.push_back(point); }
+					}
 				}
 			}
 		}

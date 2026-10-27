@@ -362,7 +362,8 @@ namespace
 		rejects("sight_distance", [](auto& d) { d["bots"]["sight_distance"].SetInt(0); });
 		rejects("reserve_resume", [](auto& d) { d["bots"]["reserve_resume"].SetDouble(0.01); });
 		rejects("stuck_turn_steps", [](auto& d) { d["bots"]["stuck_turn_steps"].SetInt(1); });
-		for (const char* field : { "recovery_steps", "progress_window_steps", "progress_distance" })
+		for (const char* field : { "recovery_steps", "progress_window_steps", "progress_distance",
+			"finish_dwell_steps", "deliberate_shot_interval" })
 		{
 			rejects(field, [&](auto& d) { d["bots"].RemoveMember(field); });
 			rejects(field, [&](auto& d) { d["bots"][field].SetInt(0); });

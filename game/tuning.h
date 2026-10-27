@@ -66,6 +66,12 @@ struct BotTuning
 	int recovery_steps = 1;
 	int progress_window_steps = 1;
 	float progress_distance = 0.0f;
+	// Extra steps an ascent chain's final scoring landing holds the bot there,
+	// beyond the reserve refill and one tool cooldown.
+	int finish_dwell_steps = 1;
+	// A tool at least this slow spends each straight shot at its current
+	// support only on an angle that lands there. Zero makes no tool deliberate.
+	float deliberate_shot_interval = 0.0f;
 };
 
 // Match phase durations and countdown presentation.
