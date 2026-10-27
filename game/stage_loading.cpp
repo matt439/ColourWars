@@ -101,7 +101,13 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 	std::error_code error;
 	if (!std::filesystem::exists(directory, error))
 	{
-		// No folder is the usual case: nobody has saved a stage there yet.
+		// No folder is the usual case: nobody has saved a stage there yet. A
+		// folder that cannot be looked at (access denied) still says so.
+		if (error)
+		{
+			scan.refused.push_back(refusal(path_to_utf8(directory),
+				"cannot read the folder: " + error.message()));
+		}
 		return scan;
 	}
 	if (!std::filesystem::is_directory(directory, error))
