@@ -15,10 +15,13 @@ ProcessedMenuInput menu_input_for_owner(
 		return ProcessedMenuInput();
 	}
 
-	const ProcessedMenuInput& opening = inputs[static_cast<size_t>(opening_slot)];
-	if (opening.connected)
+	// A seat that a returning pad reclaimed (ROAD#4) reads that pad.
+	const int opening_device = settings.player_index_for_slot(opening_slot) != -1 ?
+		settings.device_slot(opening_slot) : opening_slot;
+	if (static_cast<size_t>(opening_device) < inputs.size() &&
+		inputs[static_cast<size_t>(opening_device)].connected)
 	{
-		return opening;
+		return inputs[static_cast<size_t>(opening_device)];
 	}
 
 	// The opening device is disconnected. Other participants may navigate;
@@ -28,7 +31,7 @@ ProcessedMenuInput menu_input_for_owner(
 	{
 		const ProcessedMenuInput& input = inputs[slot];
 		if (input.connected &&
-			settings.player_index_for_slot(static_cast<int>(slot)) != -1)
+			settings.player_index_for_device(static_cast<int>(slot)) != -1)
 		{
 			participant_connected = true;
 			if (input.action != MenuInputAction::none ||
