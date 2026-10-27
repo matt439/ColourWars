@@ -127,7 +127,7 @@ namespace
         float damage = 0, minimum_separation = 0, last_separation = 0;
         float final_paint = 0;
         int painted_sources = 0, painted_tiles = 0;
-        int movement_steps = 0, blocked_steps = 0, jumps = 0, drops = 0, fire_steps = 0, paid_shots = 0;
+        int movement_steps = 0, blocked_steps = 0, jumps = 0, drops = 0, fire_steps = 0, firing_steps = 0;
         int empty_steps = 0, low_steps = 0, recovered = 0, first_damage = -1;
         int deaths = 0;
         std::uint64_t kills = 0;
@@ -193,7 +193,7 @@ namespace
             metrics.blocked_steps += input.x_movement != 0.0f && displacement < 0.1f ? 1 : 0;
             metrics.jumps += input.jump_pressed ? 1 : 0; metrics.drops += input.drop_through ? 1 : 0;
             metrics.fire_steps += input.primary_shoot ? 1 : 0;
-            metrics.paid_shots += bot.primary_weapon().shooting_this_update() ? 1 : 0;
+            metrics.firing_steps += bot.primary_weapon().shooting_this_update() ? 1 : 0;
             const float ammo = bot.weapon_ammo() / world.assets.tuning.starting_ammo();
             metrics.minimum_ammo = std::min(metrics.minimum_ammo, ammo);
             const bool empty = bot.primary_weapon().readiness() == WeaponReadiness::empty;
@@ -262,7 +262,7 @@ namespace
             (trial.team == PlayerTeam::a ? "a" : "b") << ',' << name(trial.difficulty) << ',' << trial_seed << ',' <<
             trial_steps << ',' << m.initial.x << ',' << m.initial.y << ',' << m.max_x - m.min_x << ',' <<
             m.max_y - m.min_y << ',' << m.progress << ',' << m.path << ',' << m.movement_steps << ',' <<
-            m.blocked_steps << ',' << m.jumps << ',' << m.drops << ',' << m.fire_steps << ',' << m.paid_shots << ',' <<
+            m.blocked_steps << ',' << m.jumps << ',' << m.drops << ',' << m.fire_steps << ',' << m.firing_steps << ',' <<
             m.minimum_ammo << ',' << m.empty_steps << ',' << m.low_steps << ',' << m.recovered << ',' << m.final_paint << ',' <<
             m.painted_sources << ',' << m.painted_tiles << ',' << m.damage << ',' << m.first_damage << ',' <<
             m.minimum_separation << ',' << m.last_separation << ',' << m.deaths << ',' << m.kills << '\n';
@@ -280,7 +280,7 @@ int main(int argc, char** argv)
         require(csv.good(), "Could not open the bounded bot-trial report");
         csv << std::fixed << std::setprecision(3);
         csv << "mode,stage,tool,team,difficulty,seed,steps,start_x,start_y,x_extent,y_extent,forward_progress,path,";
-        csv << "movement_steps,blocked_steps,jumps,drop_steps,fire_steps,paid_shots,min_ammo,empty_steps,low_steps,";
+        csv << "movement_steps,blocked_steps,jumps,drop_steps,fire_steps,firing_steps,min_ammo,empty_steps,low_steps,";
         csv << "reserve_recoveries,final_paint,painted_sources,painted_tiles,opponent_damage,first_damage_step,";
         csv << "min_separation,last_separation,bot_deaths,bot_kills\n";
         int trials = 0;
@@ -294,10 +294,17 @@ int main(int argc, char** argv)
                     for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
                     {
                         const Trial trial{ stage, static_cast<WeaponType>(tool), team, difficulty };
-                        const bool replay = std::string_view(stage) == "crossfeed" && tool == 0 &&
-                            team == PlayerTeam::a && difficulty == BotDifficulty::hard;
+                        const bool replay = team == PlayerTeam::a &&
+                            ((std::string_view(stage) == "crossfeed" && tool == 0 && difficulty == BotDifficulty::hard) ||
+                            (std::string_view(stage) == "close_quarters" && tool == 2 && difficulty == BotDifficulty::normal));
                         const Metrics metrics = run(world, trial, replay);
                         write(csv, trial, metrics); ++trials; painted += metrics.final_paint > 0 ? 1 : 0;
+                        if (std::string_view(stage) == "close_quarters")
+                        {
+                            csv.flush();
+                            require(metrics.firing_steps > 0 && metrics.final_paint > 0.0f,
+                                "CQ natural-spawn bot did not pay for shots and hold paint within 600 steps");
+                        }
                     }
                 }
             }
@@ -312,17 +319,17 @@ int main(int argc, char** argv)
                 const Trial trial{ "crossfeed", static_cast<WeaponType>(tool), team, BotDifficulty::hard, true };
                 const Metrics metrics = run(world, trial, tool == 4 && team == PlayerTeam::a);
                 write(csv, trial, metrics); ++trials;
-                require(metrics.damage > 0.0f && metrics.paid_shots > 0,
+                require(metrics.damage > 0.0f && metrics.firing_steps > 0,
                     "Local combat trial did not pay for shots and damage its visible opponent within 600 steps");
                 std::cout << "MEASURE local combat " << name(trial.tool) << '/' << (team == PlayerTeam::a ? 'a' : 'b') <<
                     ": damage=" << metrics.damage << " first=" << metrics.first_damage << " closest=" <<
-                    metrics.minimum_separation << " last=" << metrics.last_separation << " paid=" << metrics.paid_shots <<
+                    metrics.minimum_separation << " last=" << metrics.last_separation << " firing_steps=" << metrics.firing_steps <<
                     " kills=" << metrics.kills << '\n';
             }
         }
         csv.flush(); require(csv.good(), "Could not complete the bounded bot-trial report");
         require(trials == 130, "Bot trial matrix did not cover its finite contract");
-        std::cout << "PASS " << trials << " bounded actual-driver trials and two 600-step final-input replays; report=" <<
+        std::cout << "PASS " << trials << " bounded actual-driver trials, CQ paid-paint gates and three 600-step final-input replays; report=" <<
             path_to_utf8(report) << "; measurements do not establish arena/difficulty quality\n";
         return 0;
     }

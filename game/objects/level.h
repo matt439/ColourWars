@@ -45,6 +45,7 @@
 #include <string_view>
 
 class MatchBotDriver;
+struct MatchBotSupport;
 
 enum class LevelState
 {
@@ -162,6 +163,7 @@ public:
 	// Conservative current structural bounds for bot planning and sight. No
 	// projectile/player state is exposed by these geometry queries.
 	std::vector<mattmath::RectangleF> bot_obstacles() const;
+	std::vector<MatchBotSupport> bot_supports() const;
 	bool bot_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to) const;
 	// Cosmetic camera by participant; player(index).camera() remains the stable aim/follow camera.
 	labrador::Camera view_camera(int view) const;

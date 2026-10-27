@@ -296,13 +296,73 @@ Evidence: `out/validation/road10-trials/`; the earlier Release baseline is in
 full suite, native bot presentation, physical-pad, performance or attended
 difficulty qualification.
 
-**Next implementation:** reproduce the Close Quarters Team A no-paint route,
-separate paint aim targets from reachable standing/movement goals, and qualify
-named platform jump/drop/recovery endpoints on the shipped geometry. Extend
-opponent trials to moving and opposed players and improve aim and territory
-value from those observations. Keep finite budgets and final-input replay
-checks. Attended difficulty distinction and usefulness remain the author's
-acceptance gate; `ROAD#10` stays OPEN.
+#### Close Quarters escape and separate standing goals (2026-10-27)
+
+The Close Quarters Team A failure is reproduced by the retained trial CSV:
+Easy/Normal bots stop at the spawn baffle, with no drop requests or owned
+paint. Their visible paint samples provide no useful route out of the spawn;
+the old fallback keeps jumping into the baffle. A paint-face contact point
+also lacks the body clearance needed by a standing destination.
+
+The shipping policy now selects paint aim and standing destinations
+independently. Visible paint within the existing tool-range estimate can be
+aimed at even when its standing destination is unavailable; more distant paint
+can still inform movement. Standing candidates require a body-sized flat top,
+clearance and a conservative direct body sweep. One-way supports are explicit;
+ramps and rotated slabs retain their obstacle bounds but are not flat-top
+candidates. Enemy visibility remains the existing conservative sight query.
+
+When no standing goal is available on a one-way platform, the bot can choose a
+known lower support and request an ordinary drop. It checks a newly landed
+platform at its next reaction rather than waiting for the next paint replan.
+Near a support boundary, the descent goal turns toward available floor space.
+A deliberate drop clears held jump and suppresses a simultaneous takeoff.
+These are local standing/descent checks, not a platform route graph or an
+exact jump/fall trajectory solver; the direct sweep can reject a legitimate
+route that needs an intervening jump.
+
+At the same fixed seed and 600 active steps, natural-spawn trials now hold
+paint in **30/30 Close Quarters configurations**, up from 19/30 at `47a70c43`.
+Crossfeed, King of the Hill and Turbulence retain 30/30 each. Close Quarters
+now requires firing and bot-owned paint in every tool/team/difficulty
+configuration. The ten stationary local combat trials retain actual opponent
+health loss in 10/10, with owner-attributed eliminations in 9/10. These counts
+do not establish useful regional coverage or opposed balance.
+
+The new default `bot_navigation` case separately qualifies 30 mirrored home
+drops using the real shipped Close Quarters geometry. It places the bot once
+at home-floor center X=500/5500; subsequent inputs come from the shipping
+driver. Within 600 active steps, it requires a drop request while grounded on
+`spawn_a_floor`/`spawn_b_floor`, a subsequent grounded contact on the named
+recovery or lower bypass, then grounded contact and owned top-face paint on
+`boundary_floor`. Landings require feet within 0.05 units and horizontal body
+overlap with the named surface; they are transient contacts, not controlled
+stops or centered landings. A visit to the recovery platform is optional.
+The human starts at its opposite natural spawn and receives neutral input.
+
+Validation: Debug and Release builds, the eight selected cases `bot_driver`,
+`bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_trials`, `bot_runtime`,
+`gameplay_tuning` and `movement`, and both real-bank isolated startup checks
+pass. The 130-trial CSVs are byte-identical between builds. Three matrix tapes
+(including the formerly failing Team A Normal Roller) and two mirrored home-drop
+tapes reproduce public player/paint state and projectile count after 600
+steps; Debug additionally checks complete fingerprints. Policy regressions
+cover separate aim/standing targets, tool-range aim, unknown/obstructed
+descents, held-jump cancellation and inward boundary escapes. The CSV now calls
+the old misleading `paid_shots` column `firing_steps`: that flag includes
+affordable held-fire presentation between launches; owned paint and opponent
+damage establish actual normal-rule projectile contacts. Evidence:
+`out/validation/road10-navigation/`. This is selected acceptance, not the full
+suite, native presentation, physical-pad, performance or attended difficulty
+qualification; CPU/frame-pacing cost remains unmeasured.
+
+**Next implementation:** qualify platform ascents and recovery returns with
+named endpoints, starting with the Close Quarters lower-floor → recovery →
+home-floor and lower/upper paint-deck routes, then the other shipped arenas.
+Extend opponent trials to moving and opposed players and improve aim and
+territory value from those observations. Keep finite budgets and final-input
+replay checks. Attended difficulty distinction and usefulness remain the
+author's acceptance gate; `ROAD#10` stays OPEN.
 
 ### Balanced random teams
 

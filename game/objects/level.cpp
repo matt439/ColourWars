@@ -905,6 +905,22 @@ std::vector<RectangleF> Level::bot_obstacles() const
 	return bounds;
 }
 
+std::vector<MatchBotSupport> Level::bot_supports() const
+{
+	std::vector<MatchBotSupport> supports;
+	for (const CollisionObject* object : this->projectile_targets_)
+	{
+		const CollisionObjectType type = to_collision_type(object->tag());
+		if (is_structure(type) && !is_structure_ramp(type) &&
+			type != CollisionObjectType::structure_fixed_slab && object->shape() != nullptr)
+		{
+			supports.push_back({ object->shape()->bounding_box(),
+				type == CollisionObjectType::structure_jump_through });
+		}
+	}
+	return supports;
+}
+
 bool Level::bot_line_of_sight(Vector2F from, Vector2F to) const
 {
 	if (!std::isfinite(from.x) || !std::isfinite(from.y) ||

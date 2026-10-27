@@ -51,6 +51,7 @@ namespace
 		view.projectile_speed = tool.details.starting_vel_length;
 		view.projectile_gravity = tuning.projectile(tool.details.proj_type).details.gravity;
 		view.obstacles.emplace_back(-2000.0f, view.size.y * 0.5f, 4000.0f, 100.0f);
+		view.supports.push_back({ view.obstacles.back(), false });
 		view.territory.push_back({ 300.0f, 50.0f });
 		return view;
 	}
@@ -128,12 +129,15 @@ namespace
 		view = fixture(tuning);
 		view.on_platform = true;
 		view.territory = { { 300.0f, view.size.y * 3.0f } };
+		view.obstacles.clear(); view.supports.clear();
+		view.obstacles.emplace_back(-2000.0f, view.size.y * 3.5f, 4000.0f, 100.0f);
+		view.supports.push_back({ view.obstacles.back(), false });
 		bool dropped = false;
 		for (int step = 0; step < 12; ++step) { const bool dropping = drop.think(view).drop_through; dropped = dropped || dropping; }
 		require(dropped, "A lower territory goal never requested an ordinary platform drop");
 		MatchBot territory(&tuning, BotDifficulty::hard, 7);
 		view = fixture(tuning);
-		view.territory = { { 200.0f, 100.0f }, { -300.0f, 0.0f } };
+		view.territory = { { 400.0f, 100.0f }, { -300.0f, 0.0f } };
 		PlayerInputData decision;
 		for (int step = 0; step < tuning.bot(BotDifficulty::hard).reaction_steps; ++step)
 		{
@@ -197,6 +201,136 @@ namespace
 		}
 	}
 
+	PlayerInputData react(MatchBot& bot, const MatchBotObservation& view,
+		const GameTuning& tuning, BotDifficulty difficulty)
+	{
+		PlayerInputData input;
+		for (int step = 0; step < tuning.bot(difficulty).reaction_steps; ++step)
+		{ input = bot.think(view); ordinary(input); }
+		return input;
+	}
+
+	MatchBotObservation platform_fixture(const GameTuning& tuning, bool lower_support)
+	{
+		MatchBotObservation view = fixture(tuning);
+		view.on_platform = true;
+		view.territory.clear(); view.obstacles.clear(); view.supports.clear();
+		view.obstacles.emplace_back(-1000.0f, view.size.y * 0.5f, 2000.0f, 10.0f);
+		view.supports.push_back({ view.obstacles.back(), true });
+		if (lower_support)
+		{
+			view.obstacles.emplace_back(-1000.0f, view.size.y * 3.5f, 2000.0f, 100.0f);
+			view.supports.push_back({ view.obstacles.back(), false });
+		}
+		return view;
+	}
+
+	void check_standing_and_descent(const GameTuning& tuning)
+	{
+		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+		{
+			for (const float face_y : { -tuning.player().size.y, tuning.player().size.y })
+			{
+				MatchBot bot(&tuning, difficulty, 7);
+				MatchBotObservation view = fixture(tuning);
+				const Vector2F face(300.0f, face_y);
+				view.territory = { face };
+				const PlayerInputData input = react(bot, view, tuning, difficulty);
+				require(input.x_movement > 0.0f && !input.jump_pressed && !input.jump_held && !input.drop_through,
+					"A high/low paint aim point changed a clear same-floor standing route into a jump/drop");
+				require(input.shoot_direction_requested &&
+					std::fabs(input.shoot_angle - face.angle()) <= tuning.bot(difficulty).aim_error_radians + 0.001f,
+					"Territory aim followed the standing center instead of the sampled paint face");
+			}
+
+			MatchBot distant(&tuning, difficulty, 7);
+			MatchBotObservation distant_view = fixture(tuning);
+			distant_view.engage_distance = 200.0f;
+			const Vector2F distant_face(600.0f, -distant_view.size.y * 2.0f);
+			distant_view.territory = { distant_face };
+			const PlayerInputData distant_input = react(distant, distant_view, tuning, difficulty);
+			require(distant_input.x_movement > 0.0f && !distant_input.jump_pressed && !distant_input.jump_held &&
+				!distant_input.drop_through, "An out-of-range paint face stopped a valid ordinary movement candidate");
+			require(distant_input.shoot_direction_requested &&
+				std::fabs(distant_input.shoot_angle - distant_face.angle()) >
+					tuning.bot(difficulty).aim_error_radians + 0.001f,
+				"An out-of-range high paint face took aim away from local fallback painting");
+
+			MatchBot unknown(&tuning, difficulty, 7);
+			MatchBotObservation view = platform_fixture(tuning, false);
+			const int window = tuning.bot(difficulty).replan_steps + tuning.bot(difficulty).reaction_steps;
+			for (int step = 0; step < window; ++step)
+			{
+				const PlayerInputData input = unknown.think(view); ordinary(input);
+				require(!input.drop_through, "A platform bot requested an exploration drop without a known lower support");
+			}
+
+			MatchBot safe(&tuning, difficulty, 7);
+			view = platform_fixture(tuning, true);
+			PlayerInputData input = react(safe, view, tuning, difficulty);
+			require(input.drop_through && !input.jump_pressed && !input.jump_held,
+				"A known clear lower support did not produce a deliberate drop without a simultaneous jump");
+
+			// These seeds propose opposite headings at the middle of the same
+			// platform. Moving that fixture to its outward edge must reverse the
+			// descent instead of clamping its destination against the boundary.
+			for (const bool left_edge : { true, false })
+			{
+				const std::uint64_t seed = left_edge ? 7 : 32;
+				const float inward = left_edge ? 1.0f : -1.0f;
+				MatchBot middle(&tuning, difficulty, seed);
+				view = platform_fixture(tuning, true);
+				input = react(middle, view, tuning, difficulty);
+				require(input.drop_through && input.x_movement * inward < 0.0f,
+					"Edge-descent control did not first propose the seeded outward heading");
+				MatchBot edge(&tuning, difficulty, seed);
+				const RectangleF& lower = view.supports.back().bounds;
+				view.center.x = left_edge ? lower.left() + view.size.x : lower.right() - view.size.x;
+				input = react(edge, view, tuning, difficulty);
+				require(input.drop_through && input.x_movement * inward > 0.0f &&
+					!input.jump_pressed && !input.jump_held,
+					"A seeded outward descent near the landing-support edge did not turn inward");
+			}
+
+			// Warm up a held jump against a local obstruction, then reveal a clear
+			// lower route. Positional progress prevents this from testing recovery.
+			MatchBot interrupted(&tuning, difficulty, 7);
+			view = platform_fixture(tuning, false);
+			view.obstacles.emplace_back(-65.0f, -10.0f, 25.0f, 20.0f);
+			view.obstacles.emplace_back(40.0f, -10.0f, 25.0f, 20.0f);
+			input = react(interrupted, view, tuning, difficulty);
+			require(input.jump_pressed && input.jump_held, "Descent interruption fixture did not first hold a jump");
+			view = platform_fixture(tuning, true);
+			bool dropped = false;
+			for (int step = 0; step < window; ++step)
+			{
+				view.center.x += 4.0f; view.velocity.x = 240.0f;
+				input = interrupted.think(view); ordinary(input);
+				if (input.drop_through)
+				{
+					require(!input.jump_pressed && !input.jump_held,
+						"A deliberate descent inherited a held or newly pressed jump");
+					dropped = true; break;
+				}
+			}
+			require(dropped, "A bot never replanned from its earlier jump to a known clear lower route");
+
+			MatchBot blocked(&tuning, difficulty, 7);
+			view = platform_fixture(tuning, true);
+			// A ramp or rotated slab keeps an obstacle AABB without advertising
+			// a flat top support. Its body-expanded bound still blocks descent.
+			view.obstacles.emplace_back(-1000.0f, view.size.y * 1.5f, 2000.0f, 20.0f);
+			input = react(blocked, view, tuning, difficulty);
+			require(!input.drop_through, "A lower endpoint behind a solid non-support obstacle was treated as a clear drop");
+
+			MatchBot covered(&tuning, difficulty, 7);
+			view = platform_fixture(tuning, true);
+			view.obstacles.emplace_back(-1000.0f, view.size.y * 3.0f, 2000.0f, view.size.y);
+			input = react(covered, view, tuning, difficulty);
+			require(!input.drop_through, "A lower landing without body clearance was accepted as a standing endpoint");
+		}
+	}
+
 	void check_tuning(const std::filesystem::path& content)
 	{
 		std::ifstream input(content / "tuning.json", std::ios::binary);
@@ -253,7 +387,8 @@ int wmain(int argc, wchar_t** argv)
 		check_recovery_and_territory(tuning);
 		check_private_sequences(tuning);
 		check_visible_approach(tuning);
-		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, death/respawn, jump/turn/drop and territory decisions, private seeded streams and contextual tuning rejection\n";
+		check_standing_and_descent(tuning);
+		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	}
 	catch (const std::exception& error)

@@ -55,10 +55,11 @@ At that point, no further concrete independent implementation was selected by an
 
 **Author-requested next implementation (2026-10-27):** playable AI bot players
 with Easy, Normal and Hard difficulty settings (`ROAD#10`). Setup, saved identity,
-human-only panes and a shipping input driver are integrated. The bounded arena matrix
-records current gaps; recovery and local combat approach checks pass. Next resolve the
-Close Quarters Team A no-paint route, qualify platform endpoints and extend opposed
-combat/territory trials; difficulty values remain provisional.
+human-only panes and a shipping input driver are integrated. Close Quarters escape,
+separate paint/standing goals and mirrored home-drop checks pass; the bounded arena
+matrix holds paint in all 120 natural-spawn trials. Next qualify platform ascents and
+recovery returns and extend moving/opposed combat/territory trials; difficulty values
+remain provisional.
 [Scope and acceptance](docs/feature-roadmap.md#ai-bot-players-road10).
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -165,7 +166,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#8` | DEFERRED | LOW | S | More team palette pairs, each checked under colour-vision simulation; later UI art pass. [Scope](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
-| `ROAD#10` | OPEN | HIGH | XL | Resolve Close Quarters Team A no-paint routes, qualify platform endpoints and extend opposed combat/territory trials; then attended Easy/Normal/Hard comparison. Bounded trials and local recovery/approach are integrated. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
+| `ROAD#10` | OPEN | HIGH | XL | Qualify platform ascents/recovery returns and moving/opposed combat/territory trials; then attended Easy/Normal/Hard comparison. CQ escape and mirrored home drops pass; difficulty values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
 | `GAP#4.2` | UNSCOPED | MED | L | Other keyboard/pad actions and trigger choices need separate contracts; keyboard Jump and per-slot pad face-button Jump are complete. [Boundary](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |

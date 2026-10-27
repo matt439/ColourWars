@@ -35,23 +35,32 @@ bool MatchBot::needs_territory() const
 void MatchBot::choose_territory(const MatchBotObservation& view)
 {
 	float best = std::numeric_limits<float>::max();
+	float best_aim = std::numeric_limits<float>::max();
 	this->has_goal_ = false;
+	this->has_paint_goal_ = false;
 	for (const Vector2F& candidate : view.territory)
 	{
-		const Vector2F gap = candidate - view.center;
-		// The first policy considers local territory; higher routes need the
-		// later arena path qualification rather than an impossible repeated jump.
-		const PlayerTuning& movement = this->tuning_->player();
-		const float gravity = std::max(movement.gravity, 1.0f);
-		const float rise = movement.jump_launch_velocity * movement.jump_launch_velocity / (2.0f * gravity) +
-			std::fabs(movement.jump_acceleration) * movement.jump_max_time * movement.jump_max_time;
-		if (gap.y < -rise || gap.length() > this->tuning_->bots().sight_distance) { continue; }
+		const Vector2F aim_gap = candidate - view.center;
+		const float aim_cost = std::fabs(aim_gap.x) + std::fabs(aim_gap.y) * 2.0f;
+		if (aim_cost < best_aim && aim_gap.length() <= view.engage_distance)
+		{
+			best_aim = aim_cost; this->paint_goal_ = candidate; this->has_paint_goal_ = true;
+		}
+		Vector2F standing;
+		if (!this->standing_goal(view, candidate, standing)) { continue; }
+		const Vector2F gap = standing - view.center;
 		// Favour nearby paint, with a cost for changing floor. Ignore the tile
 		// already directly under our feet so a single target cannot pin us there.
 		if (std::fabs(gap.x) < view.size.x && std::fabs(gap.y) < view.size.y) { continue; }
 		const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
-		if (cost < best) { best = cost; this->goal_ = candidate; this->has_goal_ = true; }
+		if (cost < best)
+		{
+			best = cost; this->goal_ = standing; this->has_goal_ = true;
+		}
 	}
+	// Occluded scoring faces must not leave a bot retrying a spawn baffle.
+	// A one-way support can offer an ordinary downward route to new sight lines.
+	if (!this->has_goal_ && view.on_platform) { this->choose_descent(view); }
 	if (!this->has_goal_ && this->random_unit() < 0.25f) { this->heading_ = -this->heading_; }
 	this->replan_in_ = this->tuning_->bot(this->difficulty_).replan_steps;
 }
@@ -93,6 +102,10 @@ void MatchBot::decide(const MatchBotObservation& view)
 		const float distance = Vector2F::distance_squared(candidate.center, view.center);
 		if (distance < nearest) { nearest = distance; enemy = &candidate; }
 	}
+	// Landing can happen between territory replans. Check the newly available
+	// one-way escape before a fallback obstacle jump sends us back into a loop.
+	if (!this->has_goal_ && view.on_platform && this->recovery_left_ == 0)
+	{ this->choose_descent(view); }
 	Vector2F goal = this->has_goal_ ? this->goal_ :
 		view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f);
 	const bool engaging = enemy != nullptr && nearest <= view.engage_distance * view.engage_distance;
@@ -113,6 +126,7 @@ void MatchBot::decide(const MatchBotObservation& view)
 		this->blocked_steps_ = this->progress_steps_ = 0;
 		this->progress_origin_ = view.center;
 		this->has_goal_ = false;
+		this->has_paint_goal_ = false;
 		this->replan_in_ = 0;
 	}
 	// Commit to leaving the failed goal before asking the sampler for another.
@@ -129,7 +143,9 @@ void MatchBot::decide(const MatchBotObservation& view)
 	this->decision_.x_movement = movement;
 	this->decision_.left_analog_stick = Vector2F(movement, 0.0f);
 	const bool above = goal.y < view.center.y - view.size.y * 0.5f;
-	const bool jump = view.grounded && movement != 0.0f &&
+	const bool dropping = view.on_platform && goal.y > view.center.y + view.size.y * 0.5f;
+	if (dropping) { this->jump_left_ = 0; }
+	const bool jump = !dropping && view.grounded && movement != 0.0f &&
 		(above || this->blocked_steps_ >= policy.stuck_jump_steps ||
 			this->obstacle_ahead(view) || (this->ledge_ahead(view) && goal.y <= view.center.y));
 	if (jump && !this->jump_was_held_)
@@ -138,7 +154,7 @@ void MatchBot::decide(const MatchBotObservation& view)
 		this->jump_left_ = std::max(1, static_cast<int>(std::min(steps,
 			static_cast<double>((std::numeric_limits<int>::max)()))));
 	}
-	this->decision_.drop_through = view.on_platform && goal.y > view.center.y + view.size.y * 1.5f;
+	this->decision_.drop_through = dropping;
 	Vector2F aim(this->heading_, 0.7f);
 	if (engaging)
 	{
@@ -149,9 +165,9 @@ void MatchBot::decide(const MatchBotObservation& view)
 		offset.y -= view.projectile_gravity * travel * travel * 0.5f;
 		aim = offset;
 	}
-	else if (this->has_goal_ && this->goal_.y >= view.center.y)
+	else if (this->has_paint_goal_)
 	{
-		aim = this->goal_ - view.center;
+		aim = this->paint_goal_ - view.center;
 	}
 	if (aim.length_squared() > 0.0f)
 	{
@@ -176,6 +192,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->react_in_ = this->replan_in_ = this->blocked_steps_ = this->jump_left_ = 0;
 		this->recovery_left_ = this->progress_steps_ = 0;
 		this->jump_was_held_ = this->refilling_ = this->has_goal_ = false;
+		this->has_paint_goal_ = false;
 		this->decision_ = neutral;
 		return neutral;
 	}
