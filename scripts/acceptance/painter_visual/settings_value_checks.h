@@ -33,9 +33,11 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     Save preferences;
     const auto reset = [&]
     {
-        auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play = PlaySettings{};
-        play.music_volume = play.sfx_volume = 0;
-        require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720,
+        // Save lends out an effective copy of its stored play settings, so a
+        // reset goes through the setter: both copies, and the file, start over.
+        PlaySettings play; play.music_volume = play.sfx_volume = 0;
+        require(preferences.set_play_settings_and_save(play) &&
+            preferences.set_display_settings_and_save(ScreenResolution::s_1280_720,
             false, TeamColourPair::blue_yellow), "Cannot seed the isolated value save");
     };
     const auto saved_bytes = [&]

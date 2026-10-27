@@ -1991,8 +1991,8 @@ horizontal only), team-gated rails and growing sponges, editor checks for the
 drive fields (the editor keeps them as metadata, and the game refuses a bad
 one at load), ferry art that shows its heading, and attended play. The
 stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
-`-StageCountsOnly`, `-StageSummaryOnly`) have not yet been run with the tenth
-stage; they run only on MattPC.
+`-StageCountsOnly`, `-StageSummaryOnly`) passed with the tenth stage on MattPC
+in Debug and Release (2026-10-28).
 
 ### Instant replay (`ROAD#19`)
 
@@ -2036,7 +2036,7 @@ On MattPC (2026-10-27), `check-painter.ps1` with `-EndMenuOnly` (which runs the 
 headings and series re-pick checks too), `-RoundHeadingOnly`, `-SeriesScoreOnly` and
 `-SessionResultOnly` passed in Debug and Release. `-EndContinuationOnly` failed because its
 fixed comparison crop sat at the old row position. The crop now starts 30 units higher with the
-rows; that switch still needs re-running on MattPC.
+rows, and `-EndContinuationOnly` passed in Debug and Release on MattPC (2026-10-28).
 
 The `instant_replay` acceptance case plays a 20 s round on each of the five
 arenas and the Ferry Trial, whose movers follow the paint, as `GameLevel` plays it: a full intro, three shipping bots, a scripted
@@ -2083,8 +2083,21 @@ write-through, cycling, rename, delete, Boost carry-back and recovery from a
 damaged section. `presentation.json` validation fits the page's copy and the
 widest worn name on Join; the Pad rows scale it to fit like any setting value.
 
-Still open: the painter checks for the Controls page and its children, which
-follow the new row but run only on MattPC, and play with real pads.
+On MattPC (2026-10-28) the painter checks the Controls page and its children
+touch (`check-painter.ps1 -ControlsMenuOnly`, `-MenuMotionOnly`,
+`-PausedOptionsOnly`, `-KeyboardJumpOnly`, `-RumbleOnly`, `-PercentageTextOnly`,
+`-StickSettingsOnly`, plus `-MenuTextOnly`) pass in Debug and Release. The first
+run found one real defect: the heading at y 54 is 115 tall and reached 3 px into
+the first row's focus-card envelope on Controls and Pad sticks, so the rows now
+start at y 186 (was 180). Startup validation checks the heading only against the
+focus padding, which is why it passed. The rest were stale probe fixtures: the
+pinned prompt list lacked the two profile prompts and Join's `X/R Profile`, a
+Home fixture still drew the card POL#37 removed, the percentage probe's exact
+update count grew by the Profiles row's nine updates (180 to 189), and two
+probe resets wrote through the working copy `play_settings()` now returns
+instead of saving.
+
+Still open: play with real pads.
 
 ## Menu navigation follow-up (GAP#4.4)
 

@@ -236,10 +236,10 @@ namespace menu_text_acceptance
         const auto status_edge = [&](rapidjson::Document& d)
         {
             row_edge(d);
-            // Eleven nominal 45-high rows plus their shadow end at 875. The
-            // 48-high text plus focus padding reaches 876 and must stay clear
+            // Eleven nominal 45-high rows plus their shadow end at 881. The
+            // 48-high text plus focus padding reaches 882 and must stay clear
             // of the status even when that nominal layout still parses.
-            d["controls_settings"]["status_position"]["y"].SetFloat(876.0f);
+            d["controls_settings"]["status_position"]["y"].SetFloat(882.0f);
         };
         const auto fits_status = variants.load(status_edge);
         fits_status.validate_resources(world.render, world.audio);
@@ -247,12 +247,12 @@ namespace menu_text_acceptance
         const float measured_back_bottom = status_look.layout.position.y + status_look.layout.spacing.y * 10.0f +
             world.render.measure_text(world.render.resolve_sprite_font(status_look.item_font), L"i").y +
             status_look.art.focus_padding.y;
-        require(measured_back_bottom == 876.0f && measured_back_bottom == status_look.status_position.y,
+        require(measured_back_bottom == 882.0f && measured_back_bottom == status_look.status_position.y,
             "Controls status boundary does not touch the actual eleventh row's measured font and focus padding");
         variants.rejects("items.back", [&](rapidjson::Document& d)
         {
             status_edge(d);
-            d["controls_settings"]["status_position"]["y"].SetFloat(875.75f);
+            d["controls_settings"]["status_position"]["y"].SetFloat(881.75f);
         }, &world);
     }
 

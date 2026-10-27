@@ -137,7 +137,8 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
             const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
                 panel_size) / 2.0f, panel_size);
             card(panel, art.paper);
-            if (focused || (page == 0 && row == 0))
+            // Only the focused action has a card; Home pins no Play card (POL#37).
+            if (focused)
             {
                 RectangleF focus_bounds = expected.bounds();
                 if (page == 1)

@@ -1,6 +1,6 @@
 // Isolated leaf probe for four preference percentages. No broad Controls matrix,
 // pad injection, gameplay state, foreground input or hardware qualification.
-// Successful run: 180 explicit StateContext updates, 87 readbacks, 52 value CSV
+// Successful run: 189 explicit StateContext updates, 87 readbacks, 52 value CSV
 // rows, four status comparisons and eight compact crops (four states x two sizes).
 void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
@@ -100,7 +100,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     size_t updates = 0, readbacks = 0, csv_rows = 0, crops = 0, status_checks = 0;
     const auto tick = [&](float elapsed = 0.0f)
     {
-        require(updates < 180, "Percentage leaf probe exceeded its explicit update budget");
+        require(updates < 189, "Percentage leaf probe exceeded its explicit update budget");
         ++updates; app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto tap = [&](Key key)
@@ -464,7 +464,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     require(stack.depth() == 1 && saved_bytes() == applied_bytes,
         "Reopened percentage discard changed persisted preferences or stack ownership");
     check_preferences(active); check_reload(applied);
-    require(updates == 180 && readbacks == 87 && csv_rows == 52 && status_checks == 4 && crops == 8 && records.good(),
+    require(updates == 189 && readbacks == 87 && csv_rows == 52 && status_checks == 4 && crops == 8 && records.good(),
         "Percentage leaf probe drifted from its frozen update/readback/CSV/crop budgets");
     std::ofstream summary(output / "percentage-summary.json");
     summary << "{\n  \"outcome\": \"passed\",\n  \"updates\": " << updates << ",\n  \"readbacks\": " << readbacks <<

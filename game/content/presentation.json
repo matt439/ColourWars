@@ -526,7 +526,7 @@
       "volume_preview": { "name": "ui.volume_preview", "volume": 0.7 }
     },
     "layout": {
-      "position": { "x": 220.0, "y": 180.0 },
+      "position": { "x": 220.0, "y": 186.0 },
       "size": { "x": 300.0, "y": 46.0 },
       "spacing": { "x": 510.0, "y": 64.0 }
     }

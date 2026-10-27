@@ -4,19 +4,19 @@
         $percentageSummary = Get-Content -LiteralPath (Join-Path $captures 'percentage-summary.json') -Raw | ConvertFrom-Json
         $percentageRows = @(Import-Csv -LiteralPath (Join-Path $captures 'percentage-values.csv'))
         $percentageCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'percentage-*.ppm' -File)
-        if ($percentageSummary.outcome -ne 'passed' -or $percentageSummary.updates -ne 180 -or
+        if ($percentageSummary.outcome -ne 'passed' -or $percentageSummary.updates -ne 189 -or
             $percentageSummary.readbacks -ne 87 -or $percentageSummary.value_csv_rows -ne 52 -or
             $percentageSummary.status_comparisons -ne 4 -or $percentageSummary.compact_crops -ne 8 -or
             $percentageRows.Count -ne 52 -or @($percentageRows | Where-Object { $_.match -ne 'true' }).Count -ne 0 -or
             $percentageCrops.Count -ne 8) {
             throw 'The percentage leaf evidence does not match its frozen update/readback/CSV/crop budgets.'
         }
-        # Controls gained Keyboard Jump and Pad Buttons before the volume rows. Sticks keeps
+        # Controls gained Keyboard Jump, Pad Buttons and Profiles before the volume rows. Sticks keeps
         # its original Move/Aim rows; every observed page still emits one pair.
         foreach ($observation in @($percentageRows | Group-Object -Property case, page, width, height)) {
             $observed = @($observation.Group)
             $expectedRows = switch ($observed[0].page) {
-                'controls' { @(3, 4) }
+                'controls' { @(4, 5) }
                 'sticks' { @(1, 2) }
                 default { throw 'The percentage leaf contains an unknown settings page.' }
             }
