@@ -379,17 +379,25 @@ void Presentation::validate_resources(const RenderResources& render,
 		throw std::runtime_error(this->source_path_ +
 			": menu_text.items.change_teams requires positive finite end_menu.layout.spacing.y.");
 	}
+	// Watch Replay is row 1 when the round has one, and the setup actions
+	// follow it; without one they move up a row.
+	check_menu_item(MenuItem::watch_replay, this->menu_.item_font, end.layout.position +
+		Vector2F(0.0f, end.layout.spacing.y), end.box_size, end.layout.spacing.y, std::nullopt,
+		end.art, 1080.0f);
 	const MenuItem end_items[]{ MenuItem::change_teams, MenuItem::change_weapons, MenuItem::change_level };
 	for (size_t index = 0; index < std::size(end_items); ++index)
 	{
-		check_menu_item(end_items[index], this->menu_.item_font, end.layout.position +
-			Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(index + 1)),
-			end.box_size, end.layout.spacing.y, std::nullopt, end.art, 1080.0f);
+		for (const size_t row : { index + 1, index + 2 })
+		{
+			check_menu_item(end_items[index], this->menu_.item_font, end.layout.position +
+				Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(row)),
+				end.box_size, end.layout.spacing.y, std::nullopt, end.art, 1080.0f);
+		}
 	}
-	// Exit is row 3 between a series' rounds and row 4 otherwise. Rows 1 and
-	// 4 bound every row between them, which also covers the setup actions
-	// moving up a row between rounds.
-	for (const int row : { 1, 4 })
+	// Exit is row 3 between a series' rounds and row 4 otherwise, a row lower
+	// with Watch Replay. Rows 1 and 5 bound every row between them, which
+	// also covers the setup actions moving up a row between rounds.
+	for (const int row : { 1, 5 })
 	{
 		check_menu_item(MenuItem::exit_to_main_menu, this->menu_.item_font, end.layout.position +
 			Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(row)),

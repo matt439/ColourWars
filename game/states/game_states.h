@@ -18,6 +18,7 @@
 #include "game/states/match_start.h"
 #include "game/display_awake.h"
 #include "game/rumble_sink.h"
+#include "game/round_tape.h"
 
 // Stack shapes during a session:
 //
@@ -98,6 +99,28 @@ private:
 	std::unique_ptr<LevelBuilder> level_builder_ = nullptr;
 	std::unique_ptr<PlayerInput> player_input_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
+
+	// The end-of-round instant replay (ROAD#19, game_level_replay.cpp). Each
+	// round is taped as it is played; Watch Replay on the End menu builds the
+	// level again from the tape, runs it silently to its last seconds, plays
+	// those and returns to the End menu.
+	RoundTape tape_;
+	RoundTapeRecorder tape_recorder_{ &this->tape_ };
+	enum class ReplayPhase { none, preparing, playing };
+	ReplayPhase replay_phase_ = ReplayPhase::none;
+	std::unique_ptr<RoundTapePlayer> replay_player_;
+	int replay_first_ = 0;
+	void start_replay();
+	// True while a replay owns this update.
+	bool update_replay(float dt);
+	void step_replay();
+	// Back to the End menu over the replay's last frame.
+	void finish_replay();
+	// Drops any replay and gives the player's volumes back to the sound groups.
+	void end_replay();
+	// Every suspend of the live round, so the tape has it.
+	void suspend_level();
+
 	bool covered_ = false;
 	bool pause_menu_open_ = false;
 	bool focus_interrupted_ = false;

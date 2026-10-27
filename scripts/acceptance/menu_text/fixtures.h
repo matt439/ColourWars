@@ -343,6 +343,7 @@ namespace menu_text_acceptance
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
         { "keyboard_jump", L"Keyboard Jump" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
+        { "watch_replay", L"Watch Replay" },
         { "profiles", L"Profiles" }
     };
 

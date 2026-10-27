@@ -366,6 +366,7 @@
       "keyboard_jump": "Keyboard Jump",
       "pad_buttons": "Pad Buttons",
       "rumble": "Rumble",
+      "watch_replay": "Watch Replay",
       "profiles": "Profiles"
     }
   },
@@ -561,8 +562,8 @@
   },
 
   "end_menu": {
-    "box_size": { "x": 980.0, "y": 820.0 },
-    "heading_y": 170.0,
+    "box_size": { "x": 980.0, "y": 900.0 },
+    "heading_y": 130.0,
     "art": {
       "ink": "1B1C20",
       "paper": "F0F0ED",
@@ -577,9 +578,9 @@
       "series": { "name": "end.series", "volume": 0.7 }
     },
     "layout": {
-      "position": { "x": 700.0, "y": 330.0 },
+      "position": { "x": 700.0, "y": 300.0 },
       "size": { "x": 100.0, "y": 50.0 },
-      "spacing": { "x": 100.0, "y": 125.0 }
+      "spacing": { "x": 100.0, "y": 118.0 }
     }
   },
 

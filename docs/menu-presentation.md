@@ -853,14 +853,19 @@ change navigation, Back/cancel, restart or quit actions, or interruption handlin
 
 ### End Menu actions
 
-Four required `menu_text.items` roles supply the static End Menu actions:
+Five required `menu_text.items` roles supply the static End Menu actions:
 
 | Key | Shipped text | Use |
 |---|---|---|
+| `watch_replay` | `Watch Replay` | Row 1 when the round can be replayed (`ROAD#19`) |
 | `change_teams` | `Change Teams` | Completed-match/series row 1 |
 | `change_weapons` | `Change Weapons` | Ongoing-series row 1; completed-match/series row 2 |
 | `change_level` | `Change Level` | Ongoing-series row 2; completed-match/series row 3 |
 | `exit_to_main_menu` | `Exit to Main Menu` | Ongoing-series row 3; completed-match/series row 4 |
+
+Under Watch Replay the other four move down a row, so Exit can be on row 5.
+Every timed round can be replayed unless a Debug tool spoiled its tape; see the
+[instant replay](feature-roadmap.md#instant-replay-road19).
 
 Change Teams stays hidden during an ongoing series, whose ledger counts team
 wins. Its Change Weapons and Change Level reopen Weapon and Stage Select above
@@ -879,8 +884,9 @@ area. Rows begin at `end_menu.layout.position` and use its authored spacing.
 The vertical spacing must be finite and positive, and each padded text height
 must fit within it:
 `measured_height + 2 * end_menu.art.focus_padding.y <= end_menu.layout.spacing.y`.
-Both Exit positions are checked, along with all three configuration actions,
-including when those actions would be hidden during a series. Equality is
+Watch Replay is checked on row 1, the three configuration actions on both of
+their rows, and Exit on rows 1 and 5, which bound every row between, including
+actions that would be hidden during a series. Equality is
 accepted; these plain actions add no item-text shadow or fitting scale.
 
 An End page takes its labels from the captured `MenuText` and resolves their
@@ -906,7 +912,7 @@ The shipped heading font remains `lato_black_72`.
 Headings keep their plain, unscaled drawing style. Their actual glyph rectangle
 is centered horizontally within the full 1920 by 1080 design area at
 `end_menu.heading_y`. It must fit the outer End paper: `end_menu.box_size`,
-centered in that same full design area, shipped as 980 by 820. The heading's
+centered in that same full design area, shipped as 980 by 900. The heading's
 bottom edge must be at or above the first continuation action's padded top,
 `end_menu.layout.position.y - end_menu.art.focus_padding.y`. Equality is
 accepted. The heading itself has no added padding or text shadow, and no

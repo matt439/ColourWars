@@ -43,7 +43,9 @@ void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, f
 {
 	this->data()->debug().sync_background_audio(this->context()->active());
 	this->sync_rumble();
-	this->level_->update(inputs, dt, seats);
+	// The tape sees each step's final input, after the Debug filter's.
+	this->tape_recorder_.prepare(seats, dt);
+	this->level_->update(inputs, dt, &this->tape_recorder_);
 	if (!this->context()->active()) { this->level_->pause_audio(); }
 	this->drain_rumble(dt);
 }
@@ -77,7 +79,7 @@ void GameLevel::debug_sync_audio()
 	else if (this->covered_ || (!this->context()->active() &&
 		!this->data()->debug().background_updates_allowed()))
 	{
-		this->level_->suspend();
+		this->suspend_level();
 		this->data()->debug().match_suspended(*this);
 	}
 	else
@@ -109,7 +111,7 @@ void GameLevel::debug_background_changed()
 	{
 		this->background_continuing_ = false;
 		this->focus_interrupted_ = this->level_->state() == LevelState::active;
-		this->level_->suspend();
+		this->suspend_level();
 		this->data()->debug().match_suspended(*this);
 	}
 }
@@ -142,6 +144,7 @@ void GameLevel::debug_set_player_text(bool showing)
 
 void GameLevel::debug_set_cheats(bool damage_immune, bool infinite_ammo)
 {
+	this->tape_.set_cheats(damage_immune, infinite_ammo);
 	this->level_->set_player_cheats(damage_immune, infinite_ammo);
 }
 
@@ -150,18 +153,22 @@ std::vector<LevelStation> GameLevel::debug_stations() const
 	return this->data()->level_infos()->get(this->settings_.stage())->stations();
 }
 
+// A player moved between steps is a round the tape cannot build again.
 bool GameLevel::debug_place(int seat, const mattmath::Vector2F& top_left)
 {
+	this->tape_.spoil();
 	return this->level_->place_player(seat, top_left);
 }
 
 bool GameLevel::debug_respawn(int seat)
 {
+	this->tape_.spoil();
 	return this->level_->respawn_player(seat);
 }
 
 bool GameLevel::debug_kill(int seat)
 {
+	this->tape_.spoil();
 	return this->level_->kill_player(seat);
 }
 

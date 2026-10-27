@@ -35,12 +35,17 @@ Level::~Level()
 
 void Level::suspend() const
 {
+	this->interrupt_players();
+	this->pause_audio();
+}
+
+void Level::interrupt_players() const
+{
 	for (Player* player : this->players_)
 	{
 		player->reset_jump_input();
 		player->clear_view_shake();
 	}
-	this->pause_audio();
 }
 
 void Level::pause_audio() const

@@ -15,7 +15,9 @@ void GameLevel::stop_rumble() const noexcept
 void GameLevel::sync_rumble()
 {
     if (this->rumble_ == nullptr) { return; }
-    const bool playing = this->level_ != nullptr && this->level_->state() == LevelState::active;
+    // An instant replay's hits were felt when they happened.
+    const bool playing = this->level_ != nullptr && this->level_->state() == LevelState::active &&
+        this->replay_phase_ == ReplayPhase::none;
     const bool paused = this->covered_ || this->pause_menu_open_ || this->resume_countdown_.active() ||
         this->data()->debug().match_audio_paused();
     const bool focused = this->context()->active();

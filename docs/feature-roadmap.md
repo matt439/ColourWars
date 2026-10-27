@@ -1865,10 +1865,10 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
 - **Off-screen teammate and threat markers (`ROAD#18`).** Splatoon shows
   allies through walls. Relates to the `POL#3` rear-threat review and the
   `ROAD#10` label-clamping question.
-- **End-of-round instant replay (`ROAD#19`).** TowerFall replays each round's
-  final seconds and can save a GIF. Record and play exist only in Debug; their
-  limit (same build and machine, within one round, `DBG#2`) is what an instant
-  replay needs, but the recorder would have to ship in Release.
+- **End-of-round instant replay (`ROAD#19`, done 2026-10-27).** TowerFall
+  replays each round's final seconds and can save a GIF. The End menu now
+  offers Watch Replay; see [Instant replay](#instant-replay-road19) below.
+  Saving a clip was not taken up.
 
 ### Sessions and setup
 
@@ -1993,6 +1993,58 @@ one at load), ferry art that shows its heading, and attended play. The
 stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
 `-StageCountsOnly`, `-StageSummaryOnly`) have not yet been run with the tenth
 stage; they run only on MattPC.
+
+### Instant replay (`ROAD#19`)
+
+**Done 2026-10-27.** After a timed round, the End menu offers **Watch Replay**
+on row 1, under the continuation, and the setup actions and Exit move down a
+row. It plays the round's last `match.replay` seconds (8 in `tuning.json`)
+with a REPLAY card at the top of the screen, then opens the End menu again over
+the moment time ran out. Confirm, Back or Start ends it early. The panes are the
+round's own: the same human panes, HUDs, clock and paint. The arena music and
+the round's sounds play, and pads do not rumble. Watch it as often as you like.
+Untimed practice has no End menu and so no replay.
+
+**How.** It is the Debug record/play idea (`DBG#2`) in Release, held in memory.
+Each round draws its own seed from the running `rand()` sequence just before
+it is built, and `RoundTape` (`game/round_tape.h`) keeps that seed, a copy of
+the setup (a re-pick page can change the match's own and then be backed out
+of), every participant's final input on every logic step, and where the round was
+suspended (which clears jump buffers) or resumed (which re-reads held jumps).
+`GameLevel` records through `RoundTapeRecorder`, the seat filter every live
+update passes through, behind the Debug filter when there is one. Watch Replay
+destroys the finished level and builds it again from the seed, with no intro
+and the countdown skipped. It runs the steps before the replay's window with
+the sound groups at zero, up to 12 ms of steps a frame, which draws the round
+at speed under the REPLAY card. Then it plays the window at the normal rate.
+The rebuilt level's bots do not run; every seat comes from the tape. The tape
+is the same build, machine and step, within one round, so nothing is written
+to disk and no format is versioned.
+
+The Debug tools can change a round between steps. Place, respawn and kill
+spoil the tape, and so does changing a cheat after the first step. A spoiled
+tape is not offered, and the End menu then has its usual rows. A live `tune`
+edit or a suspend injected by `play` is not seen. A replay of such a round may
+differ from what was played, which is acceptable for a developer build.
+
+The End paper grew from 820 to 900 units tall, with rows 118 apart from y 300
+(previously 125 from 330), so six rows fit with the item font's descenders.
+Validation checks Watch Replay on row 1, the setup actions on both their rows,
+and Exit on rows 1 and 5.
+
+On MattPC (2026-10-27), `check-painter.ps1` with `-EndMenuOnly` (which runs the End
+headings and series re-pick checks too), `-RoundHeadingOnly`, `-SeriesScoreOnly` and
+`-SessionResultOnly` passed in Debug and Release. `-EndContinuationOnly` failed because its
+fixed comparison crop sat at the old row position. The crop now starts 30 units higher with the
+rows; that switch still needs re-running on MattPC.
+
+The `instant_replay` acceptance case plays a 20 s round on each of the five
+arenas and the Ferry Trial, whose movers follow the paint, as `GameLevel` plays it: a full intro, three shipping bots, a scripted
+pad human and a pause with a held jump. It then rebuilds the round as Watch
+Replay does and requires every taped step to match: player boxes, states, team
+colours and projectile count, then the final paint. Leaving out the pause's
+gaps diverges on Press Tower, and a wrong seed diverges at the first step. The
+case also checks the tape rules.
 
 ### Player profiles (`ROAD#21`)
 

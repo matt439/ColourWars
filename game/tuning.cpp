@@ -263,6 +263,7 @@ namespace
 		// the match, so neither is compared with its duration.
 		match.countdown = read_non_negative(json, "countdown");
 		match.overview = read_non_negative(json, "overview");
+		match.replay = read_positive(json, "replay");
 
 		const JsonValue controls = json.object("controls_text");
 		match.controls_font = controls.string("font");
