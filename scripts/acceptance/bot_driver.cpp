@@ -2,6 +2,7 @@
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_driver.h"
 #include "scripts/acceptance/bot_driver/ascent_checks.h"
+#include "scripts/acceptance/bot_driver/ramp_checks.h"
 #include "engine/assets/json.h"
 #include <cstdlib>
 #include <filesystem>
@@ -390,6 +391,7 @@ int wmain(int argc, wchar_t** argv)
 		check_visible_approach(tuning);
 		check_standing_and_descent(tuning);
 		bot_ascent_acceptance::check(tuning);
+		bot_ramp_acceptance::check(tuning);
 		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	}

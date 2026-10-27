@@ -490,13 +490,92 @@ expiry and failed-target exclusion contain failed attempts. The full suite,
 native bot presentation, physical-pad, performance and attended difficulty
 acceptance were not run; initial Easy/Normal/Hard values remain provisional.
 
-**Next implementation:** extend required ascent/recovery chains, starting with
-King of the Hill's ramp approach and castle interior and Turbulence's upper
-crossing. Extend opponent trials to moving and opposed players and improve aim
-and territory value from those observations, including retained deck-paint
-misses. Keep finite budgets and final-input replay checks. Attended difficulty
-distinction and usefulness remain the author's acceptance gate; `ROAD#10`
-stays OPEN.
+#### King of the Hill ramp and castle chains (2026-10-27)
+
+The new opt-in `bot_hill_routes` case starts at three independent endpoints in
+the shipped King of the Hill, with initial placement only. Each chain runs both
+sides, all five tools and all three difficulties, for **90/90** route gates.
+Every trial has a fixed 1800-active-step budget; the opposite human receives
+neutral input at its natural spawn. No route names, destinations, resources or
+subsequent placements enter the shipping policy.
+
+| Chain | Ordered grounded contacts | Starting center X (A / B) |
+|---|---|---|
+| Ramp approach | `boundary_floor` -> authored east/west ramp -> `mountain_level_1_centre` -> `mountain_level_5` | 200 / 5800 |
+| Summit and entrance | `mountain_level_7` -> levels 8, 9, 10, 11 -> `castle_entrance` | 2350 / 3650 |
+| Castle interior | `castle_floor_left/right` -> `castle_platform_left/right` -> `castle_platform_mid` -> `castle_room_entrance` | 2775 / 3225 |
+
+Flat contacts retain the 0.05-unit feet-height tolerance and body overlap.
+Ramp contact additionally requires the actual ramp movement state and the
+uphill body corner on the authored hypotenuse. The chains require at least
+one, five and three ordinary jump presses respectively. Final required
+contacts occur by step 211, 276 and 171 respectively across the matrix;
+the simulation continues for the full budget. These remain separate starts,
+not one continuous boundary-floor-to-castle-room qualification.
+
+The unchanged policy at `88aa901a` passes only **37/90**: 23 ramp approaches,
+13 summit/entrance chains and one castle-interior chain. The failures exposed
+four arena-independent policy gaps, repaired without geometry, tuning or tool
+changes:
+
+- Upright ramps now have explicit bounds and uphill direction observations,
+  separate from flat standing supports. A bot can approach a known toe, walk
+  the hypotenuse using its ordinary supporting corner, and leave onto known
+  crest support. The selected ramp's AABB is bypassed only for these checked
+  slope paths; other solid bounds remain conservative barriers. Remaining path
+  clearance, ramp presence and crest support are rechecked each step. A finite
+  travel budget derives from path length and normal initial movement speed;
+  expiry, obstruction or disappearance cancels the walk, and death clears its
+  visited-ramp exclusion. Enemy engagement retains normal reaction priority.
+- Short positive steps are eligible. The previous half-body-height minimum
+  excluded the 50-unit step above the ramp crest.
+- Ascent clearance checks a crossing just above the destination lip rather
+  than demanding room for the entire maximum held-jump apex. Ordinary ceiling
+  collision may shorten a jump after it has reached usable crossing height;
+  insufficient landing body clearance still rejects it.
+- One-step geometric lookahead prefers an available continuing ascent over
+  a dead-end shelf, retaining local climb/gap/approach ranking within each
+  group. Visited or failed supports cannot supply that continuation. Solid
+  gap crossings carry normal run-up speed into takeoff inside the known
+  source lip and steer across immediately, instead of braking to rest first.
+
+Validation: Debug and Release builds and the eleven selected consumer cases
+`bot_driver`, `bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_ascents`,
+`bot_arena_routes`, `bot_hill_routes`, `bot_trials`, `bot_runtime`,
+`gameplay_tuning` and `movement` pass. New direct policy checks cover mirrored
+ramps, reaction/priority, obstruction/disappearance, finite expiry and
+death/respawn, short steps, low-headroom acceptance/rejection, continuing-chain
+selection and solid-gap run-up. Actual-object checks retain the authored ramp
+bounds/directions and their separate obstacle/standing roles in Crossfeed and
+King of the Hill. Six new 1800-step final-input tapes reproduce public player,
+projectile count and exact paint state in both builds, with complete
+fingerprints additionally checked in Debug. Both real-bank isolated startup
+checks pass. New hill measurements and the 130-trial CSV are identical between
+builds. Evidence: `out/validation/road10-hill/`; the unchanged Release
+baseline is in `out/validation/road10-hill-baseline/`. Reproduce the new matrix
+with `scripts/run-acceptance.ps1 -Preset x64-debug -Cases bot_hill_routes`
+(or Release).
+
+The retained 90 CQ ascents, 30 home drops and 150 other-arena route gates still
+pass. CQ final deck-paint retention changes from 59/60 to **60/60**, while the
+other-arena finishing-support measurement changes from 139/150 to **135/150**.
+These paint counts are recorded separately from traversal success; retained
+paint misses and regional usefulness remain open. Natural-spawn trials retain
+paint in 120/120 configurations; stationary local combat retains damage in
+10/10 and attributed eliminations in 9/10.
+
+The clearance and crossing estimates remain local heuristics, not a general
+route graph or trajectory solver. Arbitrary slopes, moving supports, rotated
+slabs and opposed routes remain unqualified. The full suite, native bot
+presentation, physical-pad, CPU/frame-pacing and attended difficulty acceptance
+were not run; the lookahead's runtime cost has not been measured.
+
+**Next implementation:** qualify Turbulence's upper crossing and continuous
+ascent/recovery chains. Extend opponent trials to moving and opposed players
+and improve aim and territory value from those observations, including retained
+paint misses. Keep finite budgets and final-input replay checks. Attended
+difficulty distinction and usefulness remain the author's acceptance gate;
+initial Easy/Normal/Hard values remain provisional and `ROAD#10` stays OPEN.
 
 ### Balanced random teams
 

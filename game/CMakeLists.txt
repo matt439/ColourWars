@@ -8,6 +8,7 @@ add_executable(ColourWars WIN32
     ai/match_bot_ascent.cpp
     ai/match_bot_driver.cpp
     ai/match_bot_navigation.cpp
+    ai/match_bot_ramp.cpp
     action_bindings.cpp
     input_bindings.cpp
     content_validation.cpp

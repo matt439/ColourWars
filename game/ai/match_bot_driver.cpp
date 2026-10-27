@@ -116,6 +116,7 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 		std::vector<PaintSurfaceSample>{};
 	const std::vector<RectangleF> obstacles = level.bot_obstacles();
 	const std::vector<MatchBotSupport> supports = level.bot_supports();
+	const std::vector<MatchBotRamp> ramps = level.bot_ramps();
 	for (size_t seat = 0; seat < this->bots_.size() && seat < seats.size() &&
 		seat < static_cast<size_t>(level.player_count()); ++seat)
 	{
@@ -140,6 +141,7 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 		view.projectile_gravity = projectile.details.gravity;
 		view.obstacles = obstacles;
 		view.supports = supports;
+		view.ramps = ramps;
 		const float sight = this->tuning_->bots().sight_distance;
 		if (view.alive)
 		{

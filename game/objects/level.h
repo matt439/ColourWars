@@ -46,6 +46,7 @@
 
 class MatchBotDriver;
 struct MatchBotSupport;
+struct MatchBotRamp;
 
 enum class LevelState
 {
@@ -164,6 +165,7 @@ public:
 	// projectile/player state is exposed by these geometry queries.
 	std::vector<mattmath::RectangleF> bot_obstacles() const;
 	std::vector<MatchBotSupport> bot_supports() const;
+	std::vector<MatchBotRamp> bot_ramps() const;
 	bool bot_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to) const;
 	// Cosmetic camera by participant; player(index).camera() remains the stable aim/follow camera.
 	labrador::Camera view_camera(int view) const;

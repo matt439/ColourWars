@@ -179,6 +179,40 @@ namespace bot_ascent_acceptance
             "A lower deck across a distant gap displaced a feasible higher ascent above the source floor");
     }
 
+    inline void check_short_steps_and_headroom(const GameTuning& tuning, BotDifficulty difficulty)
+    {
+        MatchBot short_step(&tuning, difficulty, 7);
+        MatchBotObservation view = floor_fixture(tuning);
+        raised_support(view, 50.0f, 300.0f);
+        const PlayerInputData short_jump = first_decision(short_step, view, tuning, difficulty);
+        // A centered destination needs no walking. This also distinguishes the
+        // selected ascent from an unrelated forward-obstacle recovery jump.
+        require(short_jump.jump_pressed && short_jump.jump_held && !short_jump.drop_through &&
+            short_jump.x_movement == 0.0f,
+            "A reachable 50-unit step below half a body height did not receive a centered ascent jump");
+
+        for (const bool enough_headroom : { true, false })
+        {
+            MatchBot ceiling(&tuning, difficulty, 7);
+            view = floor_fixture(tuning);
+            constexpr float rise = 140.0f;
+            raised_support(view, rise, 300.0f);
+            const float landing_head = view.center.y - view.size.y * 0.5f - rise;
+            // The accepted ceiling leaves ten units above the landing body,
+            // while blocking the normal full held-jump apex. Its rejecting
+            // control intrudes ten units into the required landing headroom.
+            // Normal collision owns the truncated jump in actual-player trials.
+            const float ceiling_bottom = landing_head + (enough_headroom ? -10.0f : 10.0f);
+            view.obstacles.emplace_back(-1000.0f, ceiling_bottom - 20.0f, 2000.0f, 20.0f);
+            const PlayerInputData input = first_decision(ceiling, view, tuning, difficulty);
+            require(input.jump_pressed == enough_headroom && input.jump_held == enough_headroom &&
+                !input.drop_through && (!enough_headroom || input.x_movement == 0.0f),
+                enough_headroom ?
+                "A body-clear landing beneath a low ceiling was rejected because the full held-jump apex was blocked" :
+                "A ceiling below the required landing headroom still produced an ascent jump");
+        }
+    }
+
     inline void check_lifetime(const GameTuning& tuning, BotDifficulty difficulty)
     {
         for (const bool airborne : { false, true })
@@ -266,13 +300,55 @@ namespace bot_ascent_acceptance
             "Respawn retained the failed-support exclusion from the previous life");
     }
 
+    inline void check_continuing_chain_and_runup(const GameTuning& tuning, BotDifficulty difficulty)
+    {
+        for (const bool continuation : { false, true })
+        {
+            MatchBot bot(&tuning, difficulty, 7);
+            MatchBotObservation view = floor_fixture(tuning);
+            const float feet = view.size.y * 0.5f;
+            view.obstacles.emplace_back(-400.0f, feet - 105.0f, 150.0f, 10.0f);
+            view.supports.push_back({ view.obstacles.back(), true });
+            view.obstacles.emplace_back(100.0f, feet - 160.0f, 300.0f, 10.0f);
+            view.supports.push_back({ view.obstacles.back(), true });
+            if (continuation)
+            {
+                view.obstacles.emplace_back(100.0f, feet - 335.0f, 300.0f, 10.0f);
+                view.supports.push_back({ view.obstacles.back(), true });
+            }
+            const PlayerInputData input = first_decision(bot, view, tuning, difficulty);
+            require(continuation ? input.x_movement > 0.0f : input.x_movement < 0.0f,
+                "Ascent failed to prefer a reachable continuing chain over a lower dead-end shelf, or lost local ranking without it");
+        }
+
+        MatchBot crossing(&tuning, difficulty, 7);
+        MatchBotObservation view = floor_fixture(tuning);
+        const float feet = view.size.y * 0.5f;
+        view.obstacles.front() = mattmath::RectangleF(-100.0f, feet, 150.0f, 100.0f);
+        view.supports.front().bounds = view.obstacles.front();
+        view.obstacles.emplace_back(175.0f, feet - 160.0f, 250.0f, 100.0f);
+        view.supports.push_back({ view.obstacles.back(), false });
+        require(first_decision(crossing, view, tuning, difficulty).x_movement > 0.0f,
+            "Solid-gap fixture did not begin its known-floor approach");
+        view.center.x = 44.0f; view.velocity.x = 200.0f;
+        PlayerInputData input = crossing.think(view);
+        require(input.x_movement > 0.0f && input.jump_pressed && input.jump_held,
+            "A solid-gap takeoff braked away ordinary run-up speed instead of jumping inside the source lip");
+        view.grounded = false; view.center.y -= 10.0f;
+        input = crossing.think(view);
+        require(input.x_movement > 0.0f && !input.drop_through,
+            "A solid-gap jump stopped steering across before its feet cleared the target lip");
+    }
+
     inline void check(const GameTuning& tuning)
     {
         for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
         {
+            check_continuing_chain_and_runup(tuning, difficulty);
             check_lifetime(tuning, difficulty);
             check_scoring_descent_landing(tuning, difficulty);
             check_jump_boundary_and_local_routes(tuning, difficulty);
+            check_short_steps_and_headroom(tuning, difficulty);
             // A centered one-way ascent needs a vertical takeoff, even though
             // the desired horizontal movement is zero. It must not become a
             // deliberate descent or inherit a jump before the reaction ends.

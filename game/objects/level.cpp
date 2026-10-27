@@ -922,6 +922,21 @@ std::vector<MatchBotSupport> Level::bot_supports() const
 	return supports;
 }
 
+std::vector<MatchBotRamp> Level::bot_ramps() const
+{
+	std::vector<MatchBotRamp> ramps;
+	for (const CollisionObject* object : this->projectile_targets_)
+	{
+		const CollisionObjectType type = to_collision_type(object->tag());
+		if (is_structure_ramp(type) && object->shape() != nullptr)
+		{
+			ramps.push_back({ object->shape()->bounding_box(),
+				type == CollisionObjectType::structure_ramp_right });
+		}
+	}
+	return ramps;
+}
+
 bool Level::bot_line_of_sight(Vector2F from, Vector2F to) const
 {
 	if (!std::isfinite(from.x) || !std::isfinite(from.y) ||

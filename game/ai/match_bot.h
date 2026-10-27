@@ -39,6 +39,7 @@ struct MatchBotObservation
 	// Rectangular standing surfaces, distinct from conservative sight bounds.
 	// One-way supports may be crossed by a deliberate downward route.
 	std::vector<MatchBotSupport> supports;
+	std::vector<MatchBotRamp> ramps;
 };
 
 // One opponent's match-lifetime decisions, independent of cameras and devices.
@@ -80,6 +81,10 @@ private:
 	mattmath::RectangleF ascent_support_;
 	mattmath::Vector2F ascent_takeoff_;
 	std::vector<mattmath::RectangleF> visited_supports_;
+	bool climbing_ramp_ = false;
+	int ramp_steps_left_ = 0;
+	MatchBotRamp ramp_;
+	mattmath::Vector2F ramp_exit_;
 
 	float random_unit();
 	void decide(const MatchBotObservation& view);
@@ -93,6 +98,10 @@ private:
 	void choose_ascent(const MatchBotObservation& view);
 	void steer_ascent(const MatchBotObservation& view, PlayerInputData& input);
 	void remember_descent(const MatchBotObservation& view, mattmath::Vector2F goal);
+	void choose_ramp(const MatchBotObservation& view);
+	void steer_ramp(const MatchBotObservation& view, PlayerInputData& input);
+	bool clear_ramp_path(const MatchBotObservation& view, mattmath::Vector2F from,
+		mattmath::Vector2F to, const MatchBotRamp& ramp) const;
 	bool obstacle_ahead(const MatchBotObservation& view) const;
 	bool ledge_ahead(const MatchBotObservation& view) const;
 };

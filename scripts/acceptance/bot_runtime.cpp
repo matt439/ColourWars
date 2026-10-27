@@ -141,7 +141,8 @@ namespace
                 }
             }
             require(scoring_solid && plain_solid, "Bot support observations lost solid scoring/boundary roles");
-            if (std::string_view(stage) == "crossfeed")
+            const bool crossfeed = std::string_view(stage) == "crossfeed";
+            if (crossfeed)
             {
                 require(scoring_one_way == 6 && plain_one_way == 0,
                     "Crossfeed paintable one-way platforms lost their independent scoring role");
@@ -150,8 +151,32 @@ namespace
             {
                 require(plain_one_way > 0, "Non-scoring one-way supports acquired an invented paint role");
             }
+            const std::vector<MatchBotRamp> ramps = level->bot_ramps();
+            require(ramps.size() == 2, "An arena did not expose its two authored upright ramps");
+            for (const bool rises_right : { false, true })
+            {
+                const RectangleF expected = crossfeed ?
+                    RectangleF(rises_right ? 1300.0f : 1980.0f, 1120.0f, 320.0f, 160.0f) :
+                    RectangleF(rises_right ? 300.0f : 4300.0f, 5550.0f, 1400.0f, 450.0f);
+                int matching = 0;
+                for (const MatchBotRamp& ramp : ramps)
+                {
+                    matching += ramp.rises_right == rises_right && ramp.bounds == expected ? 1 : 0;
+                }
+                require(matching == 1, "Actual ramp observation changed its authored bounds or uphill direction");
+                int obstacles = 0;
+                for (const RectangleF& obstacle : level->bot_obstacles())
+                { obstacles += obstacle == expected ? 1 : 0; }
+                require(obstacles == 1, "A ramp lost its conservative obstacle bound");
+                for (const MatchBotSupport& support : level->bot_supports())
+                {
+                    require(!(support.bounds == expected),
+                        "An upright ramp was incorrectly advertised as a flat standing support");
+                }
+            }
         }
-        std::cout << "PASS actual scoring/non-scoring support roles remain independent of one-way collision\n";
+        std::cout << "PASS actual scoring/non-scoring support roles remain independent of one-way collision; "
+            "authored upright ramps retain their bounds/directions and are separate from flat standing supports\n";
     }
 
     void check_inputs(World& world)
