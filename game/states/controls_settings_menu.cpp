@@ -3,6 +3,7 @@
 #include "game/states/stick_settings_menu.h"
 #include "game/states/keyboard_jump_menu.h"
 #include "game/states/pad_buttons_menu.h"
+#include "game/states/profiles_menu.h"
 #include "game/objects/crude_drawing.h"
 #include "game/controls_text.h"
 #include "game/sound_groups.h"
@@ -104,12 +105,21 @@ void ControlsSettingsMenu::init()
 		this->input()->reset_actions();
 		this->context()->push(std::make_unique<PadButtonsMenu>(this->menu_context(), this->pausing_player()));
 	});
+	UiText* profiles = add_text("profiles", this->text().item(MenuItem::profiles), style.item_font,
+		this->calculate_widget_position(0, 3), look.art.ink);
+	fit_action(profiles);
+	this->focus_.add(profiles, [this]
+	{
+		this->play_wave(this->confirm_sound_);
+		this->input()->reset_actions();
+		this->context()->push(std::make_unique<ProfilesMenu>(this->menu_context(), this->pausing_player()));
+	});
 	this->music_ = make_row("music", this->text().item(MenuItem::music_volume),
-		3, this->selection_.music_volume, 0, 100, 10);
+		4, this->selection_.music_volume, 0, 100, 10);
 	this->sfx_ = make_row("sfx", this->text().item(MenuItem::sfx_volume),
-		4, this->selection_.sfx_volume, 0, 100, 10);
+		5, this->selection_.sfx_volume, 0, 100, 10);
 	this->view_shake_ = std::make_unique<OptionRow>("view_shake", this->text().item(MenuItem::view_shake),
-		this->calculate_widget_position(0, 5), this->calculate_widget_position(1, 5),
+		this->calculate_widget_position(0, 6), this->calculate_widget_position(1, 6),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -119,7 +129,7 @@ void ControlsSettingsMenu::init()
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->aim_marker_ = std::make_unique<OptionRow>("aim_marker", this->text().item(MenuItem::aim_marker),
-		this->calculate_widget_position(0, 6), this->calculate_widget_position(1, 6),
+		this->calculate_widget_position(0, 7), this->calculate_widget_position(1, 7),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -129,7 +139,7 @@ void ControlsSettingsMenu::init()
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", this->text().item(MenuItem::reduce_effects),
-		this->calculate_widget_position(0, 7), this->calculate_widget_position(1, 7),
+		this->calculate_widget_position(0, 8), this->calculate_widget_position(1, 8),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -146,10 +156,10 @@ void ControlsSettingsMenu::init()
 	}
 	this->refresh_values();
 	UiText* apply = add_text("apply", this->text().item(MenuItem::apply), style.item_font,
-		this->calculate_widget_position(0, 8), look.art.ink);
+		this->calculate_widget_position(0, 9), look.art.ink);
 	fit_action(apply);
 	UiText* back = add_text("back", this->text().item(MenuItem::back), style.item_font,
-		this->calculate_widget_position(0, 9), look.art.ink);
+		this->calculate_widget_position(0, 10), look.art.ink);
 	this->status_ = add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
 	this->set_status(this->text().status.controls_pending, look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });

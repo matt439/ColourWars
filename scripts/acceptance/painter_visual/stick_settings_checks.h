@@ -373,8 +373,8 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     // The child saves only sticks into the current settings. The suspended
     // parent later saves its older pending music choice without reverting them.
     resize_page({ 1280, 720 }); open_parent();
-    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right);
-    tap(Key::up); tap(Key::up); tap(Key::up); open_child();
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right);
+    tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up); open_child();
     const std::string original = saved_bytes();
     Values values = initial;
     tap(Key::down);
@@ -423,7 +423,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         play.sticks[3].movement_deadzone == -1 && play.sticks[3].aim_deadzone == -1,
         "Pad sticks Back saved an unapplied edit to another pad");
     tick();
-    for (int row = 0; row < 8; ++row) { tap(Key::down); }
+    for (int row = 0; row < 9; ++row) { tap(Key::down); }
     tap(Key::enter);
     require(play.music_volume == 10 && play.sticks[0].movement_deadzone == 30 && play.sticks[0].aim_deadzone == 70 &&
         play.sticks[3].movement_deadzone == -1 && play.sticks[3].aim_deadzone == -1,
@@ -433,7 +433,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     require(reloaded.play_settings().music_volume == 10 && reloaded.play_settings().sticks[0].movement_deadzone == 30 &&
         reloaded.play_settings().sticks[0].aim_deadzone == 70,
         "Parent Apply failed to persist both independent settings edits");
-    for (int row = 0; row < 8; ++row) { tap(Key::up); }
+    for (int row = 0; row < 9; ++row) { tap(Key::up); }
     open_child(); values = { L"Pad 1", L"30%", L"70%", L"On", L"Shared (On)", L"Shared (On)", L"Shared (Off)" };
     capture("reopened", 0, values, pending, art.focus_ink);
     tap(Key::down); tap(Key::right); tap(Key::escape);

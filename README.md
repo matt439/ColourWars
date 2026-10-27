@@ -94,14 +94,19 @@ Its **Rumble** row switches feedback On or Off for that physical pad slot
 (default On); Apply saves the choice. Pausing, losing focus or disabling the
 slot stops feedback immediately. Physical-pad feel remains under review.
 Use D-pad/arrows on that page so the sticks stay free for testing.
-Profiles follow the pad slot, independently of player numbers; check the slot
-after reconnecting. Old saves keep their existing deadzones until edited.
+These settings follow the pad slot, independently of player numbers, unless the
+pad wears a **profile**. Old saves keep their existing deadzones until edited.
 Mouse aim follows the cursor and the roller keeps its fixed aim.
 Open **Pad Buttons** to choose Jump, Shoot and Pause for each Pad 1-4 slot, each
 with an optional second control: A/B/X/Y, LB/RB, LT/RT, a stick press (LS/RS) or
 Start. The defaults are A / LT Jump, RT Shoot and Start Pause, and a control in use
 on that pad is skipped. **Keyboard Jump** changes the shared keyboard player's Jump
 key. These choices leave menu and intro controls unchanged.
+**Profiles** keeps up to eight named profiles, each carrying a person's
+deadzones, rumble, comfort switches, pad buttons and Boost. Choose which pad
+wears one there, or press X/R on Join to cycle a joined pad through them; the
+pad's settings pages then edit the profile. Wearing lasts until the game closes,
+and a pad that reconnects keeps its profile. Profile changes save at once.
 Use Left/Right to adjust; Apply saves the current page's changes for future launches.
 Back discards unapplied changes. From Pause, Back returns to the pause menu;
 Resume uses the new settings in the current match. Volume is 0-100% of the

@@ -26,7 +26,7 @@ namespace presentation_read
 	inline constexpr std::array<const char*, static_cast<size_t>(MenuPrompt::count)> menu_prompt_keys{
 		"title", "select_back", "options", "controls", "sticks", "mode", "join", "team", "team_shuffle",
 		"weapon", "arena_browse", "arena_locked", "missing_player", "pause", "pause_missing", "select", "credits",
-		"bot_team", "bot_weapon"
+		"bot_team", "bot_weapon", "profiles", "profile_name"
 	};
 	inline constexpr std::array<const char*, static_cast<size_t>(MenuItem::count)> menu_item_keys{
 		"play", "options", "credits", "exit", "resolution", "fullscreen", "team_palette",
@@ -34,7 +34,7 @@ namespace presentation_read
 		"match_length", "one_player_practice", "two_players", "three_players", "four_players",
 		"resume", "restart", "quit", "yes", "no", "change_teams", "change_weapons", "change_level",
 		"exit_to_main_menu", "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-		"reduce_effects", "pad", "move_deadzone", "aim_deadzone", "restore_defaults", "keep", "revert", "keyboard_jump", "pad_buttons", "rumble"
+		"reduce_effects", "pad", "move_deadzone", "aim_deadzone", "restore_defaults", "keep", "revert", "keyboard_jump", "pad_buttons", "rumble", "profiles"
 	};
 
 	struct LabelToken

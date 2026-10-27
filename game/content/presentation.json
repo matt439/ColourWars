@@ -150,6 +150,25 @@
       "saved_status": "Edited pads' buttons applied and saved.",
       "conflict_status": "Controls in use on this pad were skipped."
     },
+    "profiles": {
+      "heading": "Profiles",
+      "profile": "Profile",
+      "none": "None yet",
+      "name": "Name",
+      "boost": "Boost",
+      "worn_by": "Worn by",
+      "nobody": "Nobody",
+      "new_profile": "New profile",
+      "delete_profile": "Delete profile",
+      "help": "A profile carries one person's stick\ndeadzones, rumble, comfort switches,\npad buttons and Boost from pad to pad.\nWear it on Join Players with X/R,\nor choose a pad under Worn by.\nWhile a pad wears a profile, Pad sticks\nand Pad buttons edit the profile.\nNew profile copies the pressing pad.\nWearing lasts until the game closes.",
+      "idle_status": "Changes here save straight away.",
+      "saved_status": "Profile saved.",
+      "editing_status": "Editing the name. A keeps it; B puts the old one back.",
+      "name_taken_status": "Another profile has that name.",
+      "full_status": "Eight profiles is the most there can be.",
+      "delete_confirm_status": "Press A again to delete this profile.",
+      "deleted_status": "Profile deleted."
+    },
     "status": {
       "options_pending": "Apply to save changes.",
       "options_saved": "Settings applied and saved.",
@@ -247,7 +266,8 @@
       "bot_hard": "Hard",
       "handicap_none": "Boost: Off",
       "handicap_plus_one": "Boost: +1",
-      "handicap_plus_two": "Boost: +2"
+      "handicap_plus_two": "Boost: +2",
+      "worn_profile": "{device} ({name})"
     },
     "connection": {
       "join_reconnect_suffix": " - Reconnect",
@@ -287,7 +307,7 @@
       "controls": "Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)",
       "sticks": "D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)",
       "mode": "A/Enter Select    Left/Right Match length    B/Esc Back",
-      "join": "A/Enter Join / P1 continue    B/Esc Leave / back    P1: Up/Down Row, Left/Right Human / Bot",
+      "join": "A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
       "team": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
       "team_shuffle": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",
       "weapon": "Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel",
@@ -299,7 +319,9 @@
       "select": "A/Enter Select",
       "credits": "A/Enter Back    B/Esc Back",
       "bot_team": "P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams",
-      "bot_weapon": "P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel"
+      "bot_weapon": "P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel",
+      "profiles": "D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back",
+      "profile_name": "Up/Down Letter    Left/Right Move    A/Enter Done    B/Esc Cancel"
     },
     "items": {
       "play": "Play",
@@ -343,7 +365,8 @@
       "revert": "Revert",
       "keyboard_jump": "Keyboard Jump",
       "pad_buttons": "Pad Buttons",
-      "rumble": "Rumble"
+      "rumble": "Rumble",
+      "profiles": "Profiles"
     }
   },
 
@@ -483,7 +506,7 @@
       "shadow_offset": 2.0,
       "focus_padding": { "x": 28.0, "y": 8.0 }
     },
-    "heading_position": { "x": 220.0, "y": 60.0 },
+    "heading_position": { "x": 220.0, "y": 50.0 },
     "controls_position": { "x": 1120.0, "y": 210.0 },
     "controls_size": { "x": 620.0, "y": 700.0 },
     "status_position": { "x": 220.0, "y": 888.0 },
@@ -502,7 +525,7 @@
       "volume_preview": { "name": "ui.volume_preview", "volume": 0.7 }
     },
     "layout": {
-      "position": { "x": 220.0, "y": 210.0 },
+      "position": { "x": 220.0, "y": 180.0 },
       "size": { "x": 300.0, "y": 46.0 },
       "spacing": { "x": 510.0, "y": 64.0 }
     }

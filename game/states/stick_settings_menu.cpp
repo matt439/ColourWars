@@ -253,7 +253,10 @@ void StickSettingsMenu::set_status(const std::wstring& text, bool warning)
 
 void StickSettingsMenu::refresh_values()
 {
-	this->pad_->set_value(this->text().device_label(this->slot_));
+	// A pad wearing a profile edits the profile, so the row names it.
+	const int worn = this->save()->worn_profile(this->slot_);
+	this->pad_->set_value(this->text().worn_profile_label(this->text().device_label(this->slot_),
+		worn < 0 ? std::string_view() : std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)));
 	this->movement_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.movement_deadzone(this->slot_,
 		this->data()->tuning()->input().movement_deadzone))));
 	this->aim_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.aim_deadzone(this->slot_))));

@@ -356,8 +356,9 @@ namespace menu_text_acceptance
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
             for (const auto& entry : status_text) { d["menu_text"]["status"][entry.key].SetString("Fit"); }
             d["menu_text"]["help"]["controls"].SetString("Fit {jump}");
-            d["controls_settings"]["heading_position"]["y"].SetFloat(40.0f);
-            d["controls_settings"]["layout"]["position"]["y"].SetFloat(70.0f);
+            // Eleven 22-high Controls rows end where ten did from y=70.
+            d["controls_settings"]["heading_position"]["y"].SetFloat(26.0f);
+            d["controls_settings"]["layout"]["position"]["y"].SetFloat(48.0f);
             d["controls_settings"]["layout"]["size"]["y"].SetFloat(1.0f);
             d["controls_settings"]["layout"]["spacing"]["y"].SetFloat(22.0f);
             d["controls_settings"]["art"]["focus_padding"]["y"].SetFloat(1.0f);

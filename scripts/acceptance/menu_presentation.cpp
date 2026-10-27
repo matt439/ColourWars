@@ -56,6 +56,14 @@ namespace
         }
     }
 
+    void short_worn_join_rows(rapidjson::Document& d)
+    {
+        // So are Join's rows for a pad wearing the widest profile name, which
+        // would otherwise own the moved origin's right edge.
+        d["menu_text"]["connection"]["join_reconnect_suffix"].SetString(" R");
+        d["menu_text"]["labels"]["worn_profile"].SetString("{device}{name}");
+    }
+
     struct World
     {
         RenderResources render;

@@ -266,6 +266,21 @@ namespace presentation_read
 			std::pair{ "saved_status", &PadButtonsMenuText::saved_status }, std::pair{ "conflict_status", &PadButtonsMenuText::conflict_status } })
 		{ buttons.*field.second = read_menu_line(pad_buttons, field.first); }
 		buttons.help = read_menu_block(pad_buttons, "help");
+		const JsonValue profiles = json.object("profiles");
+		ProfilesMenuText& profile_text = text.profiles;
+		for (const auto& field : { std::pair{ "heading", &ProfilesMenuText::heading },
+			std::pair{ "profile", &ProfilesMenuText::profile }, std::pair{ "none", &ProfilesMenuText::none },
+			std::pair{ "name", &ProfilesMenuText::name }, std::pair{ "boost", &ProfilesMenuText::boost },
+			std::pair{ "worn_by", &ProfilesMenuText::worn_by }, std::pair{ "nobody", &ProfilesMenuText::nobody },
+			std::pair{ "new_profile", &ProfilesMenuText::new_profile }, std::pair{ "delete_profile", &ProfilesMenuText::delete_profile },
+			std::pair{ "idle_status", &ProfilesMenuText::idle_status }, std::pair{ "saved_status", &ProfilesMenuText::saved_status },
+			std::pair{ "editing_status", &ProfilesMenuText::editing_status },
+			std::pair{ "name_taken_status", &ProfilesMenuText::name_taken_status },
+			std::pair{ "full_status", &ProfilesMenuText::full_status },
+			std::pair{ "delete_confirm_status", &ProfilesMenuText::delete_confirm_status },
+			std::pair{ "deleted_status", &ProfilesMenuText::deleted_status } })
+		{ profile_text.*field.second = read_menu_line(profiles, field.first); }
+		profile_text.help = read_menu_block(profiles, "help");
 		text.status.options_pending = read_menu_line(status, "options_pending");
 		text.status.options_saved = read_menu_line(status, "options_saved");
 		text.status.options_save_failed = read_menu_line(status, "options_save_failed");
@@ -472,6 +487,7 @@ namespace presentation_read
 		text.labels.handicap_none = read_label("handicap_none", {});
 		text.labels.handicap_plus_one = read_label("handicap_plus_one", {});
 		text.labels.handicap_plus_two = read_label("handicap_plus_two", {});
+		text.labels.worn_profile = read_label("worn_profile", { { L"{device}", L"Pad 1" }, { L"{name}", L"ALEX" } });
 		const JsonValue connection = json.object("connection");
 		text.connection.join_reconnect_suffix = read_menu_line(connection, "join_reconnect_suffix");
 		text.connection.join_ready = read_menu_line(connection, "join_ready");
@@ -774,6 +790,13 @@ std::wstring MenuText::handicap_label(int level) const
 	}
 	static_assert(handicaps::count == 3);
 	return format_label_template(*words, {});
+}
+
+std::wstring MenuText::worn_profile_label(const std::wstring& label, std::string_view name) const
+{
+	if (name.empty()) { return label; }
+	return format_label_template(this->labels.worn_profile,
+		{ { L"{device}", label }, { L"{name}", std::wstring(name.begin(), name.end()) } });
 }
 
 std::wstring MenuText::stick_connection(int pad_slot, bool connected) const

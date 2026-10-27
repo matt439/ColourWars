@@ -225,7 +225,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(preferences.set_play_settings_and_save(quiet), "Cannot reset private Jump volumes");
         size_to(size); open_controls();
         // Parent audio is pending when its independent child is entered.
-        move(Key::down, 3); tap(Key::right); move(Key::up, 2); child();
+        move(Key::down, 4); tap(Key::right); move(Key::up, 3); child();
         const std::string unapplied = bytes();
         copy_check("entry", original, help_copy(copy, Key::space, Key::space), copy.pending_status,
             false, Key::space, Key::space);
@@ -313,11 +313,11 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const std::wstring parent_help = substitute(original.menu_text().help.controls, L"{jump}", L"J");
         copy_check("parent-refreshed-j", original, parent_help, original.menu_text().status.controls_pending,
             false, Key::j, Key::j);
-        move(Key::down, 7); tap(Key::enter); tick();
+        move(Key::down, 8); tap(Key::enter); tick();
         require(preferences.play_settings().music_volume == 10 && preferences.input_bindings().keyboard_jump == Key::j,
             "Parent Apply lost its pending audio or independently applied Jump key");
         reload(Key::j, 10);
-        move(Key::up, 7); child();
+        move(Key::up, 8); child();
         // A refused write leaves the effective choice active and the old JSON
         // intact. The same real Apply widget retries after the refusal clears.
         tap(Key::enter); tick(); tap(Key::k); tick(); move(Key::down, 2);

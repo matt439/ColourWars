@@ -64,7 +64,7 @@ namespace menu_text_acceptance
         { "controls", L"Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)" },
         { "sticks", L"D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)" },
         { "mode", L"A/Enter Select    Left/Right Match length    B/Esc Back" },
-        { "join", L"A/Enter Join / P1 continue    B/Esc Leave / back    P1: Up/Down Row, Left/Right Human / Bot" },
+        { "join", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot" },
         { "team", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" },
         { "team_shuffle", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams" },
         { "weapon", L"Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel" },
@@ -75,7 +75,9 @@ namespace menu_text_acceptance
         { "pause_missing", L" Reconnect, then Start    A/Enter Select" },
         { "select", L"A/Enter Select" }, { "credits", L"A/Enter Back    B/Esc Back" },
         { "bot_team", L"P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams" },
-        { "bot_weapon", L"P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel" }
+        { "bot_weapon", L"P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel" },
+        { "profiles", L"D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back" },
+        { "profile_name", L"Up/Down Letter    Left/Right Move    A/Enter Done    B/Esc Cancel" }
     };
     constexpr wchar_t brand[] = L"C O L O U R W A R S   /   LOCAL PAINT BATTLES";
     constexpr wchar_t practice_hint[] = L"Solo practice: choose Single Match";
@@ -340,7 +342,8 @@ namespace menu_text_acceptance
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
-        { "keyboard_jump", L"Keyboard Jump" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" }
+        { "keyboard_jump", L"Keyboard Jump" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
+        { "profiles", L"Profiles" }
     };
 
     struct World

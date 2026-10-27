@@ -1883,10 +1883,12 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   team wins and a seat swap would change who is winning. The re-picks last for
   the rest of the series only; the setup the main menu remembers is the one
   that started it. Still open: a stage rotation or loser's pick rule.
-- **Player profiles (`ROAD#21`).** Smash name tags carry a person's controls,
-  rumble and records. Deadzones, rumble, binds and accessibility toggles
-  follow the pad slot here (`POL#18`, `ROAD#7`, `ROAD#9`, `GAP#4.2`), so
-  swapping controllers swaps settings.
+- **Player profiles (`ROAD#21`, done 2026-10-27).** Smash name tags carry a
+  person's controls, rumble and records. Deadzones, rumble, binds and
+  accessibility toggles followed the pad slot (`POL#18`, `ROAD#7`, `ROAD#9`,
+  `GAP#4.2`), so swapping controllers swapped settings. A pad can now wear a
+  named profile that carries them. See [Player profiles](#player-profiles-road21)
+  below.
 - **Match variants (`ROAD#22`, decision).** TowerFall variants, Smash rules
   and INVERSUS custom rules: low gravity, endless paint, tool roulette. Scoring
   stays painted surface and many are tuning override sets, but the match scope
@@ -1991,6 +1993,43 @@ one at load), ferry art that shows its heading, and attended play. The
 stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
 `-StageCountsOnly`, `-StageSummaryOnly`) have not yet been run with the tenth
 stage; they run only on MattPC.
+
+### Player profiles (`ROAD#21`)
+
+**Done 2026-10-27.** A profile is a name of up to ten characters (A-Z, 0-9 and
+spaces) carrying everything a person sets for their pad: both stick deadzones,
+rumble, the three comfort switches (View shake, Aim marker, Reduce effects),
+the pad buttons and a Boost. There are at most eight, saved in a `"profiles"`
+section; the save is version 4. A damaged entry keeps the fields that read and
+falls back for the rest, and an entry with no usable name, or a name already
+taken, is dropped.
+
+A pad wears at most one profile and a profile is worn by at most one pad. While
+a pad wears one, the pad-slot settings every reader already uses (`Save::play_settings`,
+`Save::input_bindings`) show the profile's values for that slot. Pad sticks and
+Pad buttons edit the worn profile rather than the slot, and their Pad row
+names it. The slot's own settings stay saved underneath and come back when the
+profile comes off. Wearing lasts for the run and is not saved, because a pad
+slot is not a person: the next session starts with every pad bare. A seat that
+reclaims its player after a disconnect (`ROAD#4`) keeps its identity slot, so
+the profile it wore comes back with it. The keyboard and mouse seat has one set
+of settings already and wears nothing.
+
+Profiles live under Options, Controls, Profiles. The page chooses a profile,
+renames it with the pad (Up and Down change the letter, Left and Right move,
+A keeps, B cancels), sets its Boost, chooses which pad wears it, makes a new
+one and deletes one (press twice). A new profile copies the settings of the
+pad that pressed, so a person who has already tuned a slot keeps that tuning.
+Every change saves at once, so the page has no Apply. On Join, X or R cycles a
+joined pad through the profiles no other pad is wearing; the row shows the
+profile's name, and the seat takes the profile's Boost. A menu-started match
+writes each human pad seat's Boost back to its profile, so a handicap chosen
+on Weapon Select is there next time. Records stay per stage, not per person.
+
+The `player_profiles` acceptance case checks the names, the overlay and its
+write-through, cycling, rename, delete, Boost carry-back and recovery from a
+damaged section. `presentation.json` validation fits the page's copy and the
+widest worn name on Join; the Pad rows scale it to fit like any setting value.
 
 ## Menu navigation follow-up (GAP#4.4)
 
