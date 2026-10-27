@@ -2025,10 +2025,11 @@ array belong to **XInput device slots**, labelled **Pad 1-4** on the page; they
 are independent of the roster/view's player number. Opening from a pad's pause
 selects that slot; otherwise the first connected pad, or Pad 1 when none is
 connected. Disconnected slots stay editable and show **disconnected**, with
-neutral input. A reconnect to a different slot uses that slot's profile, so the
-page explicitly asks players to check their slot after reconnecting. This is
-slot persistence, with no claim of physical device identity or automatic
-mid-match reassignment (`ROAD#4`).
+neutral input. This is slot persistence, with no claim of physical device
+identity. A pad that reconnects to a different slot mid-match and reclaims its
+seat with Start (`ROAD#4`) keeps using the seat's original slot's profile, and
+a pause it opens selects that slot; between matches, a pad in a new slot uses
+that slot's profile, so the page still asks players to check their slot.
 
 Absent or individually malformed profile fields inherit the authored movement
 threshold and the old save's shared aim sensitivity. Editing a threshold makes

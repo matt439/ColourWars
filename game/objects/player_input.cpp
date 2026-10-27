@@ -42,10 +42,10 @@ const ActionBindings& PlayerInput::effective_pad_bindings(int slot) const
 	return this->pad_bindings_[slot];
 }
 
-PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
+PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot) const
 {
-	const GamepadState& pad = gamepads.state(slot);
-	const GamepadState& before = gamepads.previous_state(slot);
+	const GamepadState& pad = gamepads.state(device);
+	const GamepadState& before = gamepads.previous_state(device);
 	const ActionBindings& bindings = this->effective_pad_bindings(slot);
 	const auto action = [&](GameAction name)
 	{
@@ -60,7 +60,7 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 	// button would otherwise look newly pressed. Preserve the held state.
 	const ActionSample jump = action(GameAction::jump);
 	result.jump_held = jump.held;
-	result.jump_pressed = !gamepads.just_connected(slot) && jump.pressed;
+	result.jump_pressed = !gamepads.just_connected(device) && jump.pressed;
 	result.primary_shoot = action(GameAction::shoot).held;
 
 	// Open menus on release so the opening button is no longer held.
@@ -135,13 +135,22 @@ PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 
 std::vector<PlayerInputData> PlayerInput::player_inputs() const
 {
+	std::array<int, input_slots::pad_count> own{};
+	for (int slot = 0; slot < input_slots::pad_count; ++slot) { own[slot] = slot; }
+	return this->player_inputs(own);
+}
+
+std::vector<PlayerInputData> PlayerInput::player_inputs(
+	const std::array<int, input_slots::pad_count>& devices) const
+{
 	this->input_bindings_->validate();
 	std::vector<PlayerInputData> result(input_slots::count);
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
-		if (this->gamepads_->connected(slot))
+		const int device = input_slots::is_pad(devices[slot]) ? devices[slot] : slot;
+		if (this->gamepads_->connected(device))
 		{
-			result[slot] = this->pad_input(*this->gamepads_, slot);
+			result[slot] = this->pad_input(*this->gamepads_, device, slot);
 		}
 	}
 

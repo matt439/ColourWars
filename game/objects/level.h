@@ -203,6 +203,9 @@ public:
 	// What each view's HUD names instead of its device ("Bot: paint");
 	// empty entries, or no list, keep the device name.
 	void set_seat_labels(std::vector<std::wstring> labels);
+	// The pad each pad input slot reads (MenuLevelSettings::pad_devices), so
+	// a HUD names the pad a reclaimed seat now uses. Rebuilds only on change.
+	void set_pad_devices(const std::array<int, input_slots::pad_count>& devices);
 	// The countdown's opening cards in window pixels while they are drawn,
 	// else none: what a developer panel must not cover.
 	std::vector<mattmath::RectangleF> opening_cards() const;
@@ -349,9 +352,12 @@ private:
 	// By participant; see set_seat_labels. Present in every build, only ever set by
 	// the Debug director, so empty in Release.
 	std::vector<std::wstring> seat_labels_;
+	// See set_pad_devices; -1 until set, which is the slot's own pad.
+	std::array<int, input_slots::pad_count> pad_devices_ = { -1, -1, -1, -1 };
 	// By participant: each HUD identity box's whole text. Built from the seat, the
-	// player's team and pad slot (all fixed for the match) and seat_labels_,
-	// so only construction and set_seat_labels rebuild it; draws only read it.
+	// player's team, pad (fixed unless a seat is reclaimed) and seat_labels_,
+	// so only construction, set_seat_labels and set_pad_devices rebuild it;
+	// draws only read it.
 	std::vector<std::wstring> identity_texts_;
 
 	// Borrowed shell services; both outlive every level.
@@ -512,6 +518,7 @@ private:
 	void update_player_identity(float dt);
 	// Rebuilds identity_texts_. Main thread, never from a draw.
 	void refresh_identity_texts();
+	int pad_device(int slot) const;
 	// Makes the labels on first use, then applies overlays_.stations and the
 	// current presentation (so tune is live). Main thread, between updates.
 	void refresh_station_labels();

@@ -1287,9 +1287,18 @@ Implemented:
   take over a player. If all participants disconnect, any available device can
   navigate Quit and its confirmation.
 
-Identity is bound to an XInput slot for the match. A controller returning in a
-different slot requires quitting and joining again. Physical-device identity
-and reassignment during a match are follow-up work if this proves inconvenient.
+Identity is bound to an XInput slot for the match: paint, scores, the seat's
+jump binding, stick profile and rumble preference are keyed on it. A controller
+that comes back in a different slot reclaims its player (`ROAD#4`, 2026-10-27):
+while the pause waits, Start on a pad that no seat reads hands it the first
+missing seat in roster order, and the seat reads that pad from then on, through
+restarts, until the match is left. XInput cannot tell a returning controller
+from a spare one, so the press is the claim; the prompt bar says "Reconnect,
+then Start". The HUD and the missing list name the pad the seat now uses, and
+the seat's "back" cue plays. Setup never moves a seat. A pad back in its own
+slot needs no press, as before. The rule and its edge cases are checked by
+`menu_navigation` (`check_seat_reclaim`); unplugging a real pad into another
+slot is part of `ROAD#2`.
 
 The [shared resume count-in](polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds)
 (`POL#18`, 2026-10-15) now holds the whole live match for two seconds after

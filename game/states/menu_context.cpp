@@ -75,11 +75,13 @@ void MenuContext::update_connection_audio()
 	if (!this->connection_audio_) { return; }
 	ConnectionAudio::Pads eligible{};
 	ConnectionAudio::Pads connected{};
+	// By seat: a seat a returning pad reclaimed sounds "back", not a new pad.
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		eligible[slot] = this->level_settings_->player_index_for_slot(slot) != -1 &&
 			!this->data_->debug().drives_slot(slot);
-		connected[slot] = this->data_->gamepads()->connected(slot);
+		connected[slot] = this->data_->gamepads()->connected(
+			this->level_settings_->device_slot(slot));
 	}
 	this->connection_audio_->update(eligible, connected);
 }
