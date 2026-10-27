@@ -67,6 +67,7 @@ void MenuLevelSettings::set_player_bot(int player_index, BotDifficulty difficult
 	player.controller = PlayerController::bot;
 	player.difficulty = difficulty;
 	player.num = -1;
+	this->reset_devices();
 }
 
 void MenuLevelSettings::set_player_human(int player_index)
@@ -76,6 +77,7 @@ void MenuLevelSettings::set_player_human(int player_index)
 	{
 		player.controller = PlayerController::human;
 		player.num = -1;
+		this->reset_devices();
 	}
 }
 
@@ -138,6 +140,20 @@ WeaponType MenuLevelSettings::player_weapon(int player_index) const
 	return this->player_settings_.at(static_cast<size_t>(player_index)).weapon;
 }
 
+void MenuLevelSettings::set_player_handicap(int player_index, int handicap)
+{
+	MenuPlayerSettings& player = this->player_settings_.at(static_cast<size_t>(player_index));
+	if (!handicaps::valid(handicap))
+	{
+		throw std::invalid_argument("Handicap level must be none, +1 or +2");
+	}
+	player.handicap = handicap;
+}
+int MenuLevelSettings::player_handicap(int player_index) const
+{
+	return this->player_settings_.at(static_cast<size_t>(player_index)).handicap;
+}
+
 void MenuLevelSettings::begin_input_claims(int initiating_slot)
 {
 	if (this->player_settings_.empty() ||
@@ -150,6 +166,7 @@ void MenuLevelSettings::begin_input_claims(int initiating_slot)
 		player.num = -1;
 	}
 	this->player_settings_.front().num = initiating_slot;
+	this->reset_devices();
 }
 
 bool MenuLevelSettings::claim_input_slot(int slot)
@@ -164,6 +181,7 @@ bool MenuLevelSettings::claim_input_slot(int slot)
 		if (player.controller == PlayerController::human && player.num == -1)
 		{
 			player.num = slot;
+			this->reset_devices();
 			return true;
 		}
 	}
@@ -178,6 +196,7 @@ bool MenuLevelSettings::release_input_slot(int slot)
 		return false;
 	}
 	this->player_settings_[static_cast<size_t>(player)].num = -1;
+	this->reset_devices();
 	return true;
 }
 
@@ -205,6 +224,64 @@ int MenuLevelSettings::player_index_for_slot(int slot) const
 	return -1;
 }
 
+int MenuLevelSettings::device_slot(int slot) const
+{
+	if (!input_slots::is_pad(slot) || this->devices_[static_cast<size_t>(slot)] < 0)
+	{
+		return slot;
+	}
+	return this->devices_[static_cast<size_t>(slot)];
+}
+
+std::array<int, input_slots::pad_count> MenuLevelSettings::pad_devices() const
+{
+	std::array<int, input_slots::pad_count> devices{};
+	for (int slot = 0; slot < input_slots::pad_count; ++slot)
+	{
+		devices[static_cast<size_t>(slot)] = this->device_slot(slot);
+	}
+	return devices;
+}
+
+int MenuLevelSettings::player_index_for_device(int device) const
+{
+	if (device < 0 || device >= input_slots::count)
+	{
+		return -1;
+	}
+	for (int player = 0; player < this->player_count(); ++player)
+	{
+		const int slot = this->player_settings_[player].num;
+		if (slot >= 0 && this->device_slot(slot) == device)
+		{
+			return player;
+		}
+	}
+	return -1;
+}
+
+bool MenuLevelSettings::move_to_device(int slot, int device)
+{
+	const int player = this->player_index_for_slot(slot);
+	if (player == -1 || !input_slots::is_pad(slot) || !input_slots::is_pad(device) ||
+		this->player_settings_[player].controller != PlayerController::human)
+	{
+		return false;
+	}
+	const int reading = this->player_index_for_device(device);
+	if (reading != -1 && reading != player)
+	{
+		return false;
+	}
+	this->devices_[static_cast<size_t>(slot)] = device == slot ? -1 : device;
+	return true;
+}
+
+void MenuLevelSettings::reset_devices()
+{
+	this->devices_.fill(-1);
+}
+
 std::wstring MenuLevelSettings::player_label(int player_index, const MenuText& text) const
 {
 	const MenuPlayerSettings& player =
@@ -213,7 +290,7 @@ std::wstring MenuLevelSettings::player_label(int player_index, const MenuText& t
 	{
 		return text.bot_roster_label(player_index, player.difficulty);
 	}
-	return text.roster_label(player_index, player.num);
+	return text.roster_label(player_index, this->device_slot(player.num));
 }
 
 int MenuLevelSettings::best_of() const

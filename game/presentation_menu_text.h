@@ -30,7 +30,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_jump, rumble, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, count
 };
 
 struct MenuTitleText
@@ -59,12 +59,14 @@ struct KeyboardJumpMenuText
 	std::wstring help_block(std::wstring_view current_label, std::wstring_view pending_label) const;
 };
 
-struct PadJumpMenuText
+// The Pad Buttons page: one row per action entry, in PadAction order with the
+// alternate after each primary. Control labels are the game's (input_bindings.h).
+struct PadButtonsMenuText
 {
-	std::wstring heading, button, reset, current, pending, help, pending_status, saved_status;
-	std::wstring current_button(std::wstring_view label) const;
-	std::wstring pending_button(std::wstring_view label) const;
-	std::wstring help_block(std::wstring_view current_label, std::wstring_view pending_label) const;
+	std::wstring heading, jump, jump_alternate, shoot, shoot_alternate, pause, pause_alternate;
+	std::wstring reset, help, pending_status, saved_status, conflict_status;
+	// Index 0-5: jump, jump_alternate, shoot, shoot_alternate, pause, pause_alternate.
+	const std::wstring& row(size_t index) const;
 };
 
 struct MenuStatusText
@@ -189,6 +191,10 @@ struct MenuLabelText
 	std::wstring bot_easy;
 	std::wstring bot_normal;
 	std::wstring bot_hard;
+	// A seat's handicap on Weapon Select, one per level from none upward.
+	std::wstring handicap_none;
+	std::wstring handicap_plus_one;
+	std::wstring handicap_plus_two;
 };
 
 // Authored connection copy; the missing roster is assembled by the menu.
@@ -228,7 +234,7 @@ struct MenuText
 	std::wstring options_palette_timing;
 	MenuHelpText help;
 	KeyboardJumpMenuText keyboard_jump;
-	PadJumpMenuText pad_jump;
+	PadButtonsMenuText pad_buttons;
 	MenuStatusText status;
 	MenuValueText values;
 	MenuConfirmationText confirmations;
@@ -268,6 +274,8 @@ struct MenuText
 	std::wstring roster_label(int roster_index, int slot) const;
 	std::wstring bot_label(BotDifficulty difficulty) const;
 	std::wstring bot_roster_label(int roster_index, BotDifficulty difficulty) const;
+	// Throws invalid_argument outside handicaps::valid.
+	std::wstring handicap_label(int level) const;
 	// Player numbers are the visible roster numbers 1-4, never device slots.
 	std::wstring pause_title_for_player(int number) const;
 	// Pad slots are 0-3; rounded percentages are -100 through 100 inclusive.

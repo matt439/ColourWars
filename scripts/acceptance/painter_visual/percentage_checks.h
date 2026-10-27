@@ -167,7 +167,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const Presentation& snapshot, PercentageVariant variant, int first, int second, bool save_crop)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.controls_settings(); const auto& art = look.art;
-        const std::array<const wchar_t*, 10> control_labels{ L"Pad sticks", L"Keyboard Jump", L"Pad Jump", L"Music volume", L"SFX volume",
+        const std::array<const wchar_t*, 10> control_labels{ L"Pad sticks", L"Keyboard Jump", L"Pad Buttons", L"Music volume", L"SFX volume",
             L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
         const std::array<const wchar_t*, 9> stick_labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
             L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };

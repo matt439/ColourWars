@@ -67,15 +67,15 @@ namespace menu_text_acceptance
         { "join", L"A/Enter Join / P1 continue    B/Esc Leave / back    P1: Up/Down Row, Left/Right Human / Bot" },
         { "team", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" },
         { "team_shuffle", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams" },
-        { "weapon", L"Left/Right Change weapon    A/Enter Confirm    B/Esc Cancel" },
+        { "weapon", L"Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel" },
         { "arena_browse", L"Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back" },
         { "arena_locked", L"A/Enter Start match    B/Esc Unlock arena" },
         { "missing_player", L" Reconnect controller    B/Esc Change players" },
         { "pause", L"A/Enter Select    B/Start/Esc Resume" },
-        { "pause_missing", L" Reconnect pads to resume    A/Enter Select" },
+        { "pause_missing", L" Reconnect, then Start    A/Enter Select" },
         { "select", L"A/Enter Select" }, { "credits", L"A/Enter Back    B/Esc Back" },
         { "bot_team", L"P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams" },
-        { "bot_weapon", L"P1 Up/Down Row    Left/Right Tool    A/Enter Ready    B/Esc Cancel" }
+        { "bot_weapon", L"P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel" }
     };
     constexpr wchar_t brand[] = L"C O L O U R W A R S   /   LOCAL PAINT BATTLES";
     constexpr wchar_t practice_hint[] = L"Solo practice: choose Single Match";
@@ -91,7 +91,7 @@ namespace menu_text_acceptance
     struct HelpText { const char* key; const wchar_t* text; std::wstring MenuHelpText::* field; bool multiline; };
     constexpr HelpText help_text[]{
         { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\n"
-            L"Jump: Pad Jump choice / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\n"
+            L"Jump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\n"
             L"Move: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\n"
             L"Jump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\n"
             L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
@@ -125,21 +125,26 @@ namespace menu_text_acceptance
         { "capture_cancelled", L"Gesture cancelled; pending key unchanged.", &KeyboardJumpMenuText::capture_cancelled },
         { "debug_collision", L"Jump key also has a developer bind.", &KeyboardJumpMenuText::debug_collision }
     };
-    struct PadJumpText {
-        const char* key; const wchar_t* text; std::wstring PadJumpMenuText::* field;
-        bool multiline = false; bool button_template = false;
+    struct PadButtonsText {
+        const char* key; const wchar_t* text; std::wstring PadButtonsMenuText::* field;
+        bool multiline = false; bool row = false; bool status = false;
     };
-    constexpr PadJumpText pad_jump_text[]{
-        { "heading", L"Pad Jump", &PadJumpMenuText::heading },
-        { "button", L"Jump button", &PadJumpMenuText::button },
-        { "reset", L"Reset this pad to A", &PadJumpMenuText::reset },
-        { "current", L"Current: {button} / LT", &PadJumpMenuText::current, false, true },
-        { "pending", L"Pending: {button} / LT", &PadJumpMenuText::pending, false, true },
-        { "help", L"Choose A, B, X or Y for this pad.\nLT also jumps; hold for height.\n"
-            L"Apply saves edited pads.\nBack discards unapplied changes.\nMenus: A selects; B goes back.\n"
-            L"Intro skip keeps A / B / Start.\nProfiles follow Pad 1-4 slots.", &PadJumpMenuText::help, true },
-        { "pending_status", L"Apply to activate edited pads' Jump buttons.", &PadJumpMenuText::pending_status },
-        { "saved_status", L"Edited pads' Jump buttons applied and saved.", &PadJumpMenuText::saved_status }
+    constexpr PadButtonsText pad_buttons_text[]{
+        { "heading", L"Pad Buttons", &PadButtonsMenuText::heading },
+        { "jump", L"Jump", &PadButtonsMenuText::jump, false, true },
+        { "jump_alternate", L"Jump (also)", &PadButtonsMenuText::jump_alternate, false, true },
+        { "shoot", L"Shoot", &PadButtonsMenuText::shoot, false, true },
+        { "shoot_alternate", L"Shoot (also)", &PadButtonsMenuText::shoot_alternate, false, true },
+        { "pause", L"Pause", &PadButtonsMenuText::pause, false, true },
+        { "pause_alternate", L"Pause (also)", &PadButtonsMenuText::pause_alternate, false, true },
+        { "reset", L"Reset this pad", &PadButtonsMenuText::reset },
+        { "help", L"Choose Jump, Shoot and Pause for this\npad, each with an optional second control.\n"
+            L"One control does one action per pad;\ncontrols in use are skipped.\nLS / RS mean pressing a stick in.\n"
+            L"Apply saves edited pads.\nBack discards unapplied changes.\nMenus and intro skip keep A / B / Start.\n"
+            L"Profiles follow Pad 1-4 slots.", &PadButtonsMenuText::help, true },
+        { "pending_status", L"Apply to activate edited pads' buttons.", &PadButtonsMenuText::pending_status, false, false, true },
+        { "saved_status", L"Edited pads' buttons applied and saved.", &PadButtonsMenuText::saved_status, false, false, true },
+        { "conflict_status", L"Controls in use on this pad were skipped.", &PadButtonsMenuText::conflict_status, false, false, true }
     };
     struct StatusText { const char* key; const wchar_t* text; std::wstring MenuStatusText::* field; bool options; };
     constexpr StatusText status_text[]{
@@ -335,7 +340,7 @@ namespace menu_text_acceptance
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
-        { "keyboard_jump", L"Keyboard Jump" }, { "pad_jump", L"Pad Jump" }, { "rumble", L"Rumble" }
+        { "keyboard_jump", L"Keyboard Jump" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" }
     };
 
     struct World
@@ -452,7 +457,7 @@ namespace menu_text_acceptance
     void check_end_heading_bounds(Variants& variants, World& world);
     void check_controls_text(Variants& variants, World& world);
     void check_controls_option_rows(Variants& variants, World& world);
-    void check_pad_jump_text(Variants& variants, World& world);
+    void check_pad_buttons_text(Variants& variants, World& world);
     void check_setting_percentage_text(Variants& variants, World& world, const MenuText& defaults);
     void check_setting_percentage_rows(Variants& variants, World& world);
     void check_value_text(Variants& variants, World& world);

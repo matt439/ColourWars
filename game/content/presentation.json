@@ -8,18 +8,27 @@
   ],
 
   "team_palette": {
-    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw.",
+    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw. Every pair except pink_green and blue_yellow must pass the team_palette colour-vision check.",
     "colours": [
       { "name": "blue", "colour": "0634CC" },
       { "name": "yellow", "colour": "FFFF00" },
       { "name": "orange", "colour": "FF7F00" },
       { "name": "pink", "colour": "FF007F" },
-      { "name": "green", "colour": "00FF00" }
+      { "name": "green", "colour": "00FF00" },
+      { "name": "purple", "colour": "7B1FA2" },
+      { "name": "gold", "colour": "FFC20A" },
+      { "name": "red", "colour": "E0201B" },
+      { "name": "azure", "colour": "1E90FF" },
+      { "name": "magenta", "colour": "FF00FF" },
+      { "name": "forest", "colour": "269900" }
     ],
     "pairs": [
       { "key": "blue_orange", "label": "A: Blue / B: Orange", "team_a": "blue", "team_b": "orange" },
       { "key": "pink_green", "label": "A: Pink / B: Green", "team_a": "pink", "team_b": "green" },
-      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow" }
+      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow" },
+      { "key": "purple_gold", "label": "A: Purple / B: Gold", "team_a": "purple", "team_b": "gold" },
+      { "key": "red_azure", "label": "A: Red / B: Azure", "team_a": "red", "team_b": "azure" },
+      { "key": "magenta_forest", "label": "A: Magenta / B: Forest", "team_a": "magenta", "team_b": "forest" }
     ]
   },
 
@@ -105,7 +114,7 @@
     "home_subtitle": "Paint the arena. Claim the win.",
     "display_trial_countdown": "Reverting in {seconds}s",
     "help": {
-      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: Pad Jump choice / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
       "pad_association": "Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
       "aim_cutoff": "Right stick: radial cutoff"
     },
@@ -126,15 +135,19 @@
       "capture_cancelled": "Gesture cancelled; pending key unchanged.",
       "debug_collision": "Jump key also has a developer bind."
     },
-    "pad_jump": {
-      "heading": "Pad Jump",
-      "button": "Jump button",
-      "reset": "Reset this pad to A",
-      "current": "Current: {button} / LT",
-      "pending": "Pending: {button} / LT",
-      "help": "Choose A, B, X or Y for this pad.\nLT also jumps; hold for height.\nApply saves edited pads.\nBack discards unapplied changes.\nMenus: A selects; B goes back.\nIntro skip keeps A / B / Start.\nProfiles follow Pad 1-4 slots.",
-      "pending_status": "Apply to activate edited pads' Jump buttons.",
-      "saved_status": "Edited pads' Jump buttons applied and saved."
+    "pad_buttons": {
+      "heading": "Pad Buttons",
+      "jump": "Jump",
+      "jump_alternate": "Jump (also)",
+      "shoot": "Shoot",
+      "shoot_alternate": "Shoot (also)",
+      "pause": "Pause",
+      "pause_alternate": "Pause (also)",
+      "reset": "Reset this pad",
+      "help": "Choose Jump, Shoot and Pause for this\npad, each with an optional second control.\nOne control does one action per pad;\ncontrols in use are skipped.\nLS / RS mean pressing a stick in.\nApply saves edited pads.\nBack discards unapplied changes.\nMenus and intro skip keep A / B / Start.\nProfiles follow Pad 1-4 slots.",
+      "pending_status": "Apply to activate edited pads' buttons.",
+      "saved_status": "Edited pads' buttons applied and saved.",
+      "conflict_status": "Controls in use on this pad were skipped."
     },
     "status": {
       "options_pending": "Apply to save changes.",
@@ -226,7 +239,10 @@
       "bot": "Bot ({difficulty})",
       "bot_easy": "Easy",
       "bot_normal": "Normal",
-      "bot_hard": "Hard"
+      "bot_hard": "Hard",
+      "handicap_none": "Boost: Off",
+      "handicap_plus_one": "Boost: +1",
+      "handicap_plus_two": "Boost: +2"
     },
     "connection": {
       "join_reconnect_suffix": " - Reconnect",
@@ -269,16 +285,16 @@
       "join": "A/Enter Join / P1 continue    B/Esc Leave / back    P1: Up/Down Row, Left/Right Human / Bot",
       "team": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
       "team_shuffle": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",
-      "weapon": "Left/Right Change weapon    A/Enter Confirm    B/Esc Cancel",
+      "weapon": "Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel",
       "arena_browse": "Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back",
       "arena_locked": "A/Enter Start match    B/Esc Unlock arena",
       "missing_player": " Reconnect controller    B/Esc Change players",
       "pause": "A/Enter Select    B/Start/Esc Resume",
-      "pause_missing": " Reconnect pads to resume    A/Enter Select",
+      "pause_missing": " Reconnect, then Start    A/Enter Select",
       "select": "A/Enter Select",
       "credits": "A/Enter Back    B/Esc Back",
       "bot_team": "P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams",
-      "bot_weapon": "P1 Up/Down Row    Left/Right Tool    A/Enter Ready    B/Esc Cancel"
+      "bot_weapon": "P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel"
     },
     "items": {
       "play": "Play",
@@ -321,7 +337,7 @@
       "keep": "Keep",
       "revert": "Revert",
       "keyboard_jump": "Keyboard Jump",
-      "pad_jump": "Pad Jump",
+      "pad_buttons": "Pad Buttons",
       "rumble": "Rumble"
     }
   },

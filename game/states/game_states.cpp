@@ -251,6 +251,7 @@ void GameLevel::build_and_enter_level()
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->data()->save()->team_palette(), opening);
 	this->data()->debug().after_level_build(*this);
+	this->level_->set_pad_devices(this->settings_.pad_devices());
 	this->menu_context_->reset_connection_audio();
 	this->resume_audio_ = std::make_unique<ResumeAudio>(this->data()->audio_resources(),
 		*this->data()->presentation());
@@ -359,7 +360,10 @@ void GameLevel::update(float dt)
 	}
 
 	std::vector<PlayerInputData> player_inputs;
-	if (this->context()->active()) { player_inputs = this->player_input_->player_inputs(); }
+	if (this->context()->active())
+	{
+		player_inputs = this->player_input_->player_inputs(this->settings_.pad_devices());
+	}
 	else
 	{
 		// Neutral physical baseline, then the normal seat filter supplies bots
@@ -368,7 +372,8 @@ void GameLevel::update(float dt)
 		for (int slot = 0; slot < input_slots::count; ++slot)
 		{
 			player_inputs[static_cast<size_t>(slot)].connected =
-				input_slots::is_keyboard_and_mouse(slot) || this->data()->gamepads()->connected(slot);
+				input_slots::is_keyboard_and_mouse(slot) ||
+				this->data()->gamepads()->connected(this->settings_.device_slot(slot));
 		}
 	}
 	// A pad's Back and Start edges consumed by the debug-menu chord reach
@@ -385,6 +390,8 @@ void GameLevel::update(float dt)
 	// A seat a Debug bot or replay drives never waits for its pad.
 	const int missing_slot = disconnected_player_slot(this->settings_,
 		*this->data()->gamepads(), this->data()->debug());
+	// The pause page may have handed a seat to a returning pad (ROAD#4).
+	this->level_->set_pad_devices(this->settings_.pad_devices());
 	if (dt > 0.0f && this->context()->active())
 	{
 		this->menu_context_->update_connection_audio();

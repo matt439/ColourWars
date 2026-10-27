@@ -20,6 +20,8 @@ struct LastMatchPlayer
 	PlayerController controller = PlayerController::human;
 	// Only bots have a difficulty; human entries use the canonical Normal value.
 	BotDifficulty difficulty = BotDifficulty::normal;
+	// handicaps::valid, humans and bots alike; 0 is none.
+	int handicap = 0;
 };
 
 // Preferences from one normally started match, independent of its progress.
@@ -49,11 +51,12 @@ struct LastMatchSetup
 };
 
 // "last_match": { "players": [ { "team": "a", "weapon": "sprayer",
-// "controller": "human", "difficulty": "normal" } ],
+// "controller": "human", "difficulty": "normal", "handicap": 1 } ],
 // "stage": "...", "layout": "one_player", "best_of": 1, "duration": ... }.
 // Default duration is represented by omitting duration. Invalid whole sections
 // or counts reset to absent; recoverable fields are normalised independently.
-// Legacy seats without controller/difficulty are human/Normal. P1 is human,
+// Legacy seats without controller/difficulty are human/Normal. Handicap is
+// written only when a seat has one; absent or invalid is none. P1 is human,
 // and the layout follows the number of humans rather than all participants.
 class LastMatchSetupSection final : public SaveSection
 {

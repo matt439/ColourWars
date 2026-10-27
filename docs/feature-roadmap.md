@@ -1264,12 +1264,51 @@ not close the physical-pad session (`ROAD#2`) or human readability/listening gat
 
 ### Handicaps
 
-**ROAD#5 — DEFERRED**, split from the remaining `GAP#1.5` scope, until the
-physical multiplayer sessions (`ROAD#2`) identify a skill imbalance that needs
-a handicap. Those observations must establish the
-need and the mechanic before implementation is scoped. No per-player paint or
-score multiplier has been chosen; the current score remains painted surface.
-`ROAD#5` tracks this deferred work separately from the random-team action.
+**ROAD#5 - DECISION (reopened by the author 2026-10-27).** It was deferred on
+2026-10-15 until couch sessions (`ROAD#2`) showed a need; with bots now offering
+Easy, Normal and Hard, the author asked for it to be built.
+
+**Mechanic (chosen by the author 2026-10-27).** Each seat, human or
+bot, has a handicap level: Off, +1 or +2, shown as **Boost**. A boost makes the
+player take less damage from every hit and refill paint faster. Score stays
+painted surface at every level; there is no paint or score multiplier, so a
+boosted player still has to cover the ground themselves. The two numbers per
+level are `tuning.json` `handicaps` (`none`, `plus_one`, `plus_two`):
+
+| level | `damage_taken` | `paint_refill` | in practice |
+|---|---|---|---|
+| Off | 1.0 | 1.0 | the unchanged game |
+| +1 | 0.8 | 1.25 | survives a quarter more paint |
+| +2 | 0.65 | 1.5 | survives about half as much again |
+
+`none` must be exactly neutral, `damage_taken` is in (0, 1], `paint_refill` is
+at least 1, and each level must boost at least as much as the one below it.
+The refill boost multiplies paint underfoot rather than replacing it. Both are
+applied by `Player`, so a boosted bot gets the same help as a boosted human
+and its refill dwell estimate counts the boost.
+
+**Setup.** Weapon Select shows each row's level under its label. X / R, the
+Team Select random-teams button, cycles that row Off, +1, +2 while the row is
+unready; P1 reaches bot rows through the existing host-row routing. The
+`weapon` and `bot_weapon` prompts name the button. The level belongs to the
+seat: it survives bot/human conversion, difficulty changes, resizes, random
+teams, fresh claims and restarts or the next round of a series.
+
+**Persistence.** The remembered setup and Debug replays write `"handicap"` on
+a seat only when it has one, so setups and replays without handicaps keep
+their bytes. Absent or malformed saved values recover to Off; a replay with
+an unknown level is refused.
+
+**Validation.** The `handicap` case checks the tuning shape and refusals,
+the roster field, the Weapon Select copy and prompts, bit-exact damage at
+every level (Off unchanged), the refill multiplier and respawn retention;
+`remembered_setup` round-trips and recovers handicaps. Presentation
+validation fits every level's text under every Weapon Select label.
+
+**Still the author's:** judge in attended play whether +1 and +2 are worth
+having and the values feel fair against Easy/Normal/Hard bots. The author
+picked one Boost for health and refill over health-only, refill-only or
+two-way levels; the values remain provisional until that play.
 
 ## First increment: explicit joining and reconnect pause
 
@@ -1287,9 +1326,18 @@ Implemented:
   take over a player. If all participants disconnect, any available device can
   navigate Quit and its confirmation.
 
-Identity is bound to an XInput slot for the match. A controller returning in a
-different slot requires quitting and joining again. Physical-device identity
-and reassignment during a match are follow-up work if this proves inconvenient.
+Identity is bound to an XInput slot for the match: paint, scores, the seat's
+jump binding, stick profile and rumble preference are keyed on it. A controller
+that comes back in a different slot reclaims its player (`ROAD#4`, 2026-10-27):
+while the pause waits, Start on a pad that no seat reads hands it the first
+missing seat in roster order, and the seat reads that pad from then on, through
+restarts, until the match is left. XInput cannot tell a returning controller
+from a spare one, so the press is the claim; the prompt bar says "Reconnect,
+then Start". The HUD and the missing list name the pad the seat now uses, and
+the seat's "back" cue plays. Setup never moves a seat. A pad back in its own
+slot needs no press, as before. The rule and its edge cases are checked by
+`menu_navigation` (`check_seat_reclaim`); unplugging a real pad into another
+slot is part of `ROAD#2`.
 
 The [shared resume count-in](polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds)
 (`POL#18`, 2026-10-15) now holds the whole live match for two seconds after
@@ -1598,12 +1646,35 @@ viewer's badge emphasis). The painter fixtures cover the longer page.
 
 ### More team palette pairs (`ROAD#8`)
 
-**DEFERRED** to the later UI art pass. Three pairs ship. Adding one is a content
-edit to the [team palette block](#team-palette-content-gap22-2026-10-15), and
-each extra pair widens the colour-vision route around the random roll. Making
-one a fixed Options choice still needs an enum entry and save key. Check each
-candidate pair against the arena art under deutan, protan and tritan simulation
-before shipping it.
+**Done 2026-10-27; the author accepted the three new pairs after seeing them.** Six pairs
+ship. The three new ones are fixed Options choices (an enum entry and save key
+each) as well as members of the Random draw, so each one widens the
+colour-vision route around the roll:
+
+| key | Team A | Team B | worst pair difference | nearest surrounding |
+|---|---|---|---|---|
+| `purple_gold` | purple `7B1FA2` | gold `FFC20A` | 43.6 (tritan) | 18.9 |
+| `red_azure` | red `E0201B` | azure `1E90FF` | 50.9 (normal) | 18.5 |
+| `magenta_forest` | magenta `FF00FF` | forest `269900` | 55.6 (deutan) | 23.2 |
+
+**The bar.** The `team_palette` case simulates protan, deutan and tritan vision
+with the Machado, Oliveira and Fernandes (2009) full-severity matrices in
+linear sRGB and measures CIEDE2000. A pair passes when its two teams stay at
+least 40 apart under normal and all three simulations, and each team colour
+stays at least 15 from every surface colour the levels author (read from
+`game/content/levels/`) and from the HUD health bar. Every shipped pair must
+pass except the two legacy pairs, which are kept as they shipped and listed by
+name: `pink_green` (27.3 under deutan, and its green is 5.9 from the health bar
+under tritan) and `blue_yellow` (yellow is 10.3 from white). The exemption
+list fails if either one starts passing, so a recolour has to take it off.
+`blue_orange` passes (58.1, 22.9).
+
+A content-only extra pair still joins Random without a rebuild, and now has to
+pass the same bar. [The preview sheet](images/road8/team-pairs-colour-vision.png)
+shows every pair on a Gainsboro surface under each simulation. Nothing here
+qualifies the colours on screen: the opt-in visual cases that capture palettes
+(`paint_fx_visual`, `painter_visual`, the console's opening art check) still
+name the original three.
 
 ### Controller rumble (`ROAD#9`)
 
@@ -1907,10 +1978,10 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 ## Action bindings (`GAP#4.2`)
 
 **Default evaluators and keyboard Jump rebinding are implemented and validated.**
-**Keyboard and per-slot Pad Jump selection are implemented and qualified (`GAP#4.2`).**
-The face button defaults to A; the existing LT alias remains alongside every
-choice. Broader action and trigger rebinding remain unscoped; the bounded contract is
-[below](#pad-jump-face-button-slice-gap42).
+**Keyboard Jump and per-slot pad Jump/Shoot/Pause rebinding are implemented (`GAP#4.2`).**
+The pad defaults are unchanged (A / LT Jump, RT Shoot, Start Pause). Keyboard
+actions other than Jump remain unscoped; the pad contract is
+[below](#pad-buttons-slice-gap42), after the face-button slice it replaced.
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
@@ -2135,18 +2206,70 @@ establish mapping behavior. Physical-pad comfort
 remains `ROAD#2`, and attended readability, balance and hardware acceptance stay
 open.
 
-**Remaining scope after this slice: UNSCOPED.** Other keyboard actions, pad
-actions and trigger choices still need separate contracts. Rebinding artwork
-belongs to the later UI pass using the approved gameplay style. Neither the
-completed keyboard slice nor this bounded pad slice closes the broader
-`GAP#4.2` capability.
+The [pad buttons slice](#pad-buttons-slice-gap42) below generalises this one and
+replaces its page.
+
+### Pad buttons slice (`GAP#4.2`)
+
+**Implemented 2026-10-27; replaces the Pad Jump page.** Each XInput slot has a
+`PadProfile`: Jump, Shoot and Pause, each with a required primary control and an
+optional alternate. The domain is eleven controls: A, B, X, Y, LB, RB, LT, RT, LS
+and RS (pressing a stick in) and Start. Back stays the debug control and the
+D-pad stays menu-only. The defaults are the controls the game always had, so an
+untouched pad behaves exactly as before: A / LT Jump, RT Shoot, Start Pause.
+
+One control does one action per pad: a profile with an unbound action, an
+alternate equal to its primary, or a control used twice is invalid, and
+`Save::set_input_bindings_and_save` refuses it before mutation. Movement, aim and
+the stick-down drop stay on the sticks. Menus keep A/B/X/Start and the intro skip
+keeps A/B/Start whatever the profile says, as Jump's face choice did before. A
+trigger keeps its strict live threshold: the shoot threshold when it shoots, the
+jump threshold when it jumps or pauses.
+
+`effective_action_bindings(preferences, slot)` writes the profile into Jump,
+Shoot and Pause's pad sources; `PlayerInput` rebuilds a slot's copy only when
+its profile changes, so adopting an already held control still makes no edge.
+Replay keeps storing post-mapping input, so recordings are unaffected.
+
+**Page.** Controls / audio opens **Pad Buttons** in the Pad Jump row's place:
+Pad, Jump, Jump (also), Shoot, Shoot (also), Pause, Pause (also), Reset this pad,
+Apply, Back, on the same ten-row Controls layout. Left/Right cycles a row through
+the domain (alternates add None first) and skips any control another row of the
+same pad already uses, with a status saying so, so a pending profile is always
+valid. A discrete choice was kept over a press-to-capture gesture, as for the
+face slice. Pending profiles survive slot changes; Apply merges only edited
+slots into the latest preferences; Reset is pending for the selected pad; Back
+discards. Default selection still follows the pausing slot, then the first
+connected pad. The match-opening reminder names each slot's saved controls,
+in two columns for a shared profile and one line per pad when they differ.
+
+**Save.** `input_bindings` gains a `pads` array of four objects, each with
+`jump`, `shoot` and `pause` arrays of one or two canonical tokens (`"a"`, `"lb"`,
+`"lt"`, `"ls"`, `"start"`, ...). It stays save version 3. A slot that fails to
+parse or validate recovers to the defaults alone; a malformed array recovers
+every slot without touching the keyboard key. When `pads` is absent, the older
+`pad_jump` face array migrates per slot into Jump's primary.
+
+**Checks.** `input_bindings` covers every control on every entry of every slot
+against an independent oracle, the conflict query, invalid profiles, tokens,
+thresholds, the actual reader (sparse slots, remap, reconnect, resume, and moved
+Shoot/Pause with Start keeping its intro and menu roles), legacy migration,
+per-slot recovery and failed writes. `menu_text` checks the copy and every
+control label in the actual OptionRow. `check-painter.ps1 -KeyboardJumpOnly`
+ports the Pad Jump native matrix to the new page, adding a skipped-conflict
+Shoot Apply. Physical-pad comfort remains `ROAD#2`, and rebinding artwork belongs
+to the later UI pass.
+
+**Remaining scope: UNSCOPED.** Keyboard actions other than Jump (move, drop,
+shoot, pause) still need their own contract.
 
 Labrador declined the action-evaluation request (engine report 21, formerly
 `GAP#F2`) in `197aff1`: evaluating a binding table is the action map, which its
 boundary table gives to the game, and its clients already combine sources by
 rules that disagree. The evaluator stays client code; see the
 [closed entry](review/engine-reports.md#21-digital-action-evaluation-remains-client-code--declined-197aff1).
-A pad-capture request still needs a real pad-rebinding caller.
+Pad Buttons is now a real pad-rebinding caller, but it chose discrete cycling
+over capture, so a pad-capture request still has no caller.
 
 ## Per-player menu focus (`GAP#D1`)
 

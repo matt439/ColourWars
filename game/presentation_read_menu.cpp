@@ -626,7 +626,7 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": controls_position and controls_size must fit inside box_size.");
 		}
 
-		// Six settings, Keyboard/Pad Jump and Apply/Back share the left column. Reserve their
+		// Six settings, Keyboard Jump/Pad Buttons and Apply/Back share the left column. Reserve their
 		// authored size, focus card and shadow before the help and status text.
 		const Vector2F last_row_bottom = menu.layout.position + menu.layout.size +
 			Vector2F(menu.layout.spacing.x, menu.layout.spacing.y * 9.0f);

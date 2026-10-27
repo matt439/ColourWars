@@ -79,7 +79,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
             play.sticks[1].movement_deadzone == 25 && play.sticks[1].aim_deadzone == 35 &&
             play.sticks[3].movement_deadzone == 30 && play.sticks[3].aim_deadzone == 40 &&
             preferences.input_bindings().keyboard_jump == bindings.keyboard_jump &&
-            preferences.input_bindings().pad_jump == bindings.pad_jump,
+            preferences.input_bindings().pads == bindings.pads,
             "Rumble edit replaced unrelated audio, comfort, sticks or Jump preferences");
         records << name << ",3," << active[0] << ',' << active[1] << ',' << active[2] << ',' << active[3] << ',' <<
             active_music << ',' << (active == disk && active_music == disk_music) << '\n';

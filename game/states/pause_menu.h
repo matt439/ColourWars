@@ -21,10 +21,18 @@ bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot);
 // the developer tools do not drive (a Debug bot or replay; never in Release).
 // The one rule behind the missing-pad pause, the pause page's "Controller
 // lost" and the restart confirmation's fallback.
-bool pad_seat_missing(int slot, const labrador::Gamepads& gamepads,
-	const DebugDirector& debug);
+bool pad_seat_missing(const MenuLevelSettings& settings, int slot,
+	const labrador::Gamepads& gamepads, const DebugDirector& debug);
 int disconnected_player_slot(const MenuLevelSettings& settings,
 	const labrador::Gamepads& gamepads, const DebugDirector& debug);
+
+// ROAD#4. XInput cannot tell a controller that came back in another slot from
+// a spare one, so the press is the claim: while the match waits, Start on a
+// pad that no seat reads takes the first missing seat in roster order
+// (missing_seats has a bit per roster index). Returns that seat's input slot,
+// or -1 with the settings unchanged.
+int reclaim_missing_seat(MenuLevelSettings& settings,
+	const std::vector<ProcessedMenuInput>& inputs, unsigned int missing_seats);
 
 // Over the intro, Start (Escape) skips it rather than pausing. A press that
 // begins while the intro plays is latched for its device slot, and its

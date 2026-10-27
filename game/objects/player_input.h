@@ -8,6 +8,8 @@
 #include "engine/input/mouse.h"
 #include "game/objects/player_input_data.h"
 #include "game/tuning.h"
+#include "game/input_slots.h"
+#include <array>
 #include <vector>
 
 // Map engine input snapshots to gameplay actions, one entry per device slot.
@@ -27,11 +29,16 @@ public:
 	// contain neutral data. Jump uses a press edge; pause and debug use release edges.
 	// Keyboard aim remains unrequested until Level supplies the camera-dependent
 	// direction from the player's on-screen centre to the cursor.
+	// devices[slot] is the pad that slot's entry reads, for a seat a
+	// controller reclaimed from another slot; that slot's bindings and stick
+	// preferences still apply. Omitted, every slot reads its own pad.
 	std::vector<PlayerInputData> player_inputs() const;
+	std::vector<PlayerInputData> player_inputs(
+		const std::array<int, input_slots::pad_count>& devices) const;
 
 private:
 	PlayerInputData pad_input(const labrador::Gamepads& gamepads,
-		int slot) const;
+		int device, int slot) const;
 	PlayerInputData keyboard_and_mouse_input(
 		const labrador::Keyboard& keyboard, const labrador::Mouse& mouse) const;
 	const ActionBindings& effective_bindings() const;
@@ -43,10 +50,10 @@ private:
 	const GameTuning* tuning_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 	const InputBindings* input_bindings_ = nullptr;
-	// Reading a frame is const. Only a changed saved key rebuilds this copy;
+	// Reading a frame is const. Only a changed saved key or pad profile rebuilds a copy;
 	// edges always come from the engine's continuously sampled snapshots.
 	mutable labrador::Key keyboard_jump_ = labrador::Key::none;
 	mutable ActionBindings keyboard_bindings_;
-	mutable std::array<labrador::GamepadButton, input_slots::pad_count> pad_jump_{};
+	mutable std::array<PadProfile, input_slots::pad_count> pad_profiles_{};
 	mutable std::array<ActionBindings, input_slots::pad_count> pad_bindings_;
 };

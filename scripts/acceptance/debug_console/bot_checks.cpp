@@ -134,7 +134,7 @@ namespace debug_console_acceptance
 			"An unplugged pad seat pauses the match");
 		impl.execute("bot 1 walk");
 		require(director.drives_slot(0) && disconnected_player_slot(pad_match.settings, pads, director) == -1 &&
-			!pad_seat_missing(0, pads, director), "A bot on that seat keeps it from pausing");
+			!pad_seat_missing(pad_match.settings, 0, pads, director), "A bot on that seat keeps it from pausing");
 		impl.execute("bot off");
 		director.detach_match(pad_match);
 	}

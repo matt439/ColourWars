@@ -90,6 +90,17 @@ namespace
 		return BotDifficulty::normal;
 	}
 
+	// Out-of-range values survive to normalised(), which repairs them to none.
+	int read_handicap(const JsonValue& player)
+	{
+		try
+		{
+			if (player.has("handicap")) { return player.integer("handicap"); }
+		}
+		catch (const std::runtime_error&) {}
+		return 0;
+	}
+
 	const char* difficulty_key(BotDifficulty difficulty)
 	{
 		for (size_t index = 0; index < difficulties.size(); ++index)
@@ -158,7 +169,8 @@ LastMatchSetup LastMatchSetup::capture(const MenuLevelSettings& settings)
 	for (const MenuPlayerSettings& player : settings.player_settings())
 	{
 		setup.players.push_back({ player.team, player.weapon, player.controller,
-			player.controller == PlayerController::bot ? player.difficulty : BotDifficulty::normal });
+			player.controller == PlayerController::bot ? player.difficulty : BotDifficulty::normal,
+			player.handicap });
 	}
 	setup.stage = settings.stage();
 	setup.layout = settings.screen_layout();
@@ -194,6 +206,10 @@ void LastMatchSetup::validate() const
 		{
 			throw std::invalid_argument("Remembered weapons must be resolved primary weapons");
 		}
+		if (!handicaps::valid(player.handicap))
+		{
+			throw std::invalid_argument("Remembered handicaps must be none, +1 or +2");
+		}
 	}
 	if (this->stage.empty() || this->stage.find('\0') != std::string::npos)
 	{
@@ -217,6 +233,7 @@ LastMatchSetup LastMatchSetup::normalised() const
 	{
 		if (!valid_controller(player.controller)) { player.controller = PlayerController::human; }
 		if (!valid_difficulty(player.difficulty)) { player.difficulty = BotDifficulty::normal; }
+		if (!handicaps::valid(player.handicap)) { player.handicap = 0; }
 	}
 	setup.players.front().controller = PlayerController::human;
 	for (LastMatchPlayer& player : setup.players)
@@ -261,6 +278,7 @@ MenuLevelSettings LastMatchSetup::restore(const StageList& stages) const
 		settings.set_player_team(index, player.team);
 		settings.set_player_weapon(index, player.weapon);
 		if (player.controller == PlayerController::bot) { settings.set_player_bot(index, player.difficulty); }
+		settings.set_player_handicap(index, player.handicap);
 	}
 	settings.set_stage(chosen_stage == stages.end() ? stages.front().name : chosen_stage->name);
 	settings.set_screen_layout(setup.layout);
@@ -288,7 +306,7 @@ void LastMatchSetupSection::read(const JsonValue& root, SaveData& data) const
 	{
 		const JsonValue player = players.at(index);
 		setup.players.push_back({ read_team(player), read_weapon(player),
-			read_controller(player), read_difficulty(player) });
+			read_controller(player), read_difficulty(player), read_handicap(player) });
 	}
 	try
 	{
@@ -344,6 +362,11 @@ void LastMatchSetupSection::write(SaveWriter& writer, const SaveData& data) cons
 		writer.string(player.controller == PlayerController::bot ? "bot" : "human");
 		writer.key("difficulty");
 		writer.string(difficulty_key(player.difficulty));
+		if (player.handicap != 0)
+		{
+			writer.key("handicap");
+			writer.integer(player.handicap);
+		}
 		writer.end_object();
 	}
 	writer.end_array();

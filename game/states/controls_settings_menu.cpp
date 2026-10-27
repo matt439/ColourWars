@@ -2,7 +2,7 @@
 #include "game/states/controls_settings_menu.h"
 #include "game/states/stick_settings_menu.h"
 #include "game/states/keyboard_jump_menu.h"
-#include "game/states/pad_jump_menu.h"
+#include "game/states/pad_buttons_menu.h"
 #include "game/objects/crude_drawing.h"
 #include "game/controls_text.h"
 #include "game/sound_groups.h"
@@ -95,14 +95,14 @@ void ControlsSettingsMenu::init()
 		this->input()->reset_actions();
 		this->context()->push(std::make_unique<KeyboardJumpMenu>(this->menu_context(), this->pausing_player()));
 	});
-	UiText* pad_jump = add_text("pad_jump", this->text().item(MenuItem::pad_jump), style.item_font,
+	UiText* pad_buttons = add_text("pad_buttons", this->text().item(MenuItem::pad_buttons), style.item_font,
 		this->calculate_widget_position(0, 2), look.art.ink);
-	fit_action(pad_jump);
-	this->focus_.add(pad_jump, [this]
+	fit_action(pad_buttons);
+	this->focus_.add(pad_buttons, [this]
 	{
 		this->play_wave(this->confirm_sound_);
 		this->input()->reset_actions();
-		this->context()->push(std::make_unique<PadJumpMenu>(this->menu_context(), this->pausing_player()));
+		this->context()->push(std::make_unique<PadButtonsMenu>(this->menu_context(), this->pausing_player()));
 	});
 	this->music_ = make_row("music", this->text().item(MenuItem::music_volume),
 		3, this->selection_.music_volume, 0, 100, 10);

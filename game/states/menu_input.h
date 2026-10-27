@@ -33,7 +33,8 @@ struct ProcessedMenuInput
 	bool connected = false;
 };
 
-// Retain the opening device while connected. Otherwise accept another match
+// Retain the opening device while connected; for a seat, that is the pad the
+// seat reads now (MenuLevelSettings::device_slot). Otherwise accept another match
 // participant, or any device if all participants are missing. Invalid owners
 // return neutral input.
 ProcessedMenuInput menu_input_for_owner(

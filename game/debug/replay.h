@@ -17,7 +17,8 @@
 // %LOCALAPPDATA%\ColourWars\replays\<name>.json. Debug-only.
 //
 // Format version 4 (also reads legacy human-only version 3):
-//   settings preserves each seat's controller kind and bot difficulty;
+//   settings preserves each seat's controller kind, bot difficulty and
+//   handicap (written only when a seat has one);
 //   layout counts human views, while inputs remain indexed by participant.
 //   inputs:  one array per seat, each a run-length list of
 //            "[count*]flags|x|aim_x|aim_y|angle|lx|ly|rx|ry" with the floats as

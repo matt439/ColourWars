@@ -15,10 +15,10 @@ namespace menu_text_acceptance
     void check_controls_text(Variants& variants, World& world)
     {
         constexpr const char* controls_keys[]{ "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_jump", "rumble" };
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_buttons", "rumble" };
         constexpr MenuItem controls_roles[]{ MenuItem::pad_sticks, MenuItem::music_volume, MenuItem::sfx_volume,
             MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad,
-            MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::keyboard_jump, MenuItem::pad_jump, MenuItem::rumble };
+            MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::keyboard_jump, MenuItem::pad_buttons, MenuItem::rumble };
         const auto normalized = variants.load([&](rapidjson::Document& d)
         {
             for (const char* key : controls_keys)
@@ -43,7 +43,7 @@ namespace menu_text_acceptance
             }
         }
         for (const char* key : { "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_jump", "rumble", "apply", "back" })
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_buttons", "rumble", "apply", "back" })
         {
             // The main-menu font can draw this glyph. Controls' independently
             // selected item font must also support shared Apply and Back.
@@ -122,13 +122,19 @@ namespace menu_text_acceptance
         require(action_width == 842.0f && action_height == 48.0f,
             "Controls actions lost their authored full-column width or row-height limit");
         const auto action_font = world.render.resolve_sprite_font(real_controls.item_font);
-        for (const MenuItem item : { MenuItem::keyboard_jump, MenuItem::pad_jump, MenuItem::apply })
+        for (const MenuItem item : { MenuItem::keyboard_jump, MenuItem::pad_buttons, MenuItem::apply })
         {
             const auto& copy = real_actions.menu_text().item(item);
             const auto shipped = world.render.measure_text(world.render.resolve_sprite_font("lato_black_24"), copy);
             require(shipped.y > 0.0f && shipped.y <= action_height,
                 "Shipped Controls action no longer fits its 48-high row unscaled");
             const auto raw = world.render.measure_text(action_font, copy);
+            if (copy.find_first_of(L"gjpqy") == std::wstring::npos)
+            {
+                // "Pad Buttons" has no deep glyph; Keyboard Jump and Apply keep the regression.
+                require(raw == shipped, "A Controls action without deep glyphs changed its shipped metrics");
+                continue;
+            }
             require(raw == mattmath::Vector2F(shipped.x, 52.0f) &&
                 raw.y + real_controls.art.focus_padding.y * 2.0f == 68.0f &&
                 raw.y + real_controls.art.focus_padding.y * 2.0f > real_controls.layout.spacing.y,
@@ -161,11 +167,12 @@ namespace menu_text_acceptance
             world.render.add_font(nonfinite ? "menu_controls_action_nonfinite" : "menu_controls_action_zero",
                 std::make_unique<Font>(TextureHandle{}, std::move(invalid_glyphs), 20.0f));
         }
-        for (const char* key : { "keyboard_jump", "pad_jump", "apply" })
+        for (const char* key : { "keyboard_jump", "pad_buttons", "apply" })
         {
             const bool keyboard = std::string(key) == "keyboard_jump";
-            const bool pad_jump = std::string(key) == "pad_jump";
-            const std::array<int, 2> rows{ keyboard ? 1 : (pad_jump ? 2 : 8), keyboard || pad_jump ? -1 : 4 };
+            const bool pad_buttons = std::string(key) == "pad_buttons";
+            // Apply is row 8 on Controls and Pad Buttons and row 4 on Sticks.
+            const std::array<int, 2> rows{ keyboard ? 1 : (pad_buttons ? 2 : 8), keyboard || pad_buttons ? -1 : 4 };
             for (const char* copy : { "i", "F", "Fi", "FF", "H" })
             {
                 const auto fitted = variants.load([&](rapidjson::Document& d)
@@ -276,7 +283,7 @@ namespace menu_text_acceptance
             "Controls fitted-row fixture no longer exercises the shipped column and height limits");
         for (size_t index = 0; index < std::size(controls_fitted_items); ++index)
         {
-            // Controls keeps Sticks/Keyboard Jump/Pad Jump first; its five
+            // Controls keeps Sticks/Keyboard Jump/Pad Buttons first; its five
             // shared settings occupy rows3-7. The Sticks child occupies rows0-3.
             const int row_index = index < 5 ? static_cast<int>(index) + 3 : static_cast<int>(index) - 5;
             const auto position = controls.layout.position + mattmath::Vector2F(0.0f,
