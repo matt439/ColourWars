@@ -14,12 +14,22 @@ class TranslatingStructurePaintable;
 // snapshot-local paint-source index. Level binds positive IDs once on admission.
 using HorizontalMotionId = std::uint32_t;
 
+// What advances the phase. A cycle runs the triangular round trip forever. A
+// paint drive travels the same path at the same speed, but only while one team
+// holds more of the mover's own paint: toward that team's heading, stopping at
+// either end, and holding still on a tie (including no paint at all).
+enum class HorizontalDrive : std::uint8_t { cycle, paint };
+
 struct HorizontalMotionSpec
 {
     mattmath::RectangleF anchor = mattmath::RectangleF::ZERO;
     float travel_x = 0.0f;
     float period_seconds = 0.0f;
     float initial_phase = 0.0f;
+    HorizontalDrive drive = HorizontalDrive::cycle;
+    // Paint drive only: +1 when team A's paint carries the mover right, -1
+    // when it carries it left. Team B's paint always heads the other way.
+    int team_a_heading = 1;
 };
 
 struct HorizontalMotionSegment
@@ -97,13 +107,17 @@ public:
     static void validate_spec(const HorizontalMotionSpec& spec);
     static void validate_dt(float dt);
     HorizontalMotionState state() const;
-    HorizontalPreparedStep prepare(float dt) const;
+    // heading is read only by a paint drive: +1 right, -1 left, 0 hold.
+    HorizontalPreparedStep prepare(float dt, int heading = 0) const;
     mattmath::RectangleF bounds() const;
+    // The paint drive's heading for this paint, before any end stop.
+    static int paint_heading(const HorizontalMotionSpec& spec, float team_a, float team_b);
 
 private:
     friend class TranslatingStructurePaintable;
     void apply(const HorizontalPreparedStep& prepared) noexcept;
     static float offset_at(const HorizontalMotionSpec& spec, double phase);
     static mattmath::RectangleF at_offset(const HorizontalMotionSpec& spec, float offset);
+    HorizontalPreparedStep prepare_driven(float dt, int heading) const;
     HorizontalMotionState state_;
 };

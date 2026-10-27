@@ -415,6 +415,12 @@ namespace
                 state.spec.travel_x == 120.0f && state.spec.period_seconds == 6.4f &&
                 state.spec.initial_phase == 0.25f && moving->bounds().x == 660.0f &&
                 moving->motion_id() == 0, "Motion fields, initial phase or admission boundary changed");
+            const auto& fields = document["collision_objects"][0]["motion"];
+            const bool paint = fields.HasMember("drive") && std::string(fields["drive"].GetString()) == "paint";
+            require(state.spec.drive == (paint ? HorizontalDrive::paint : HorizontalDrive::cycle) &&
+                (!paint || state.spec.team_a_heading ==
+                    (std::string(fields["team_a_heads"].GetString()) == "right" ? 1 : -1)),
+                "Motion drive or paint heading changed");
         };
         check("motion-solid", true, true, [](rapidjson::Document&) {});
         check("motion-jump-through", true, true, [](rapidjson::Document& d)
@@ -434,6 +440,24 @@ namespace
         });
         check("motion-rectangle-precedence", true, true, [](rapidjson::Document& d)
         { d["collision_objects"][0].AddMember("rectangle_tlbr", "ignored", d.GetAllocator()); });
+        const auto drive = [](rapidjson::Document& d, const char* value, const char* heads)
+        {
+            auto& fields = d["collision_objects"][0]["motion"];
+            fields.AddMember("drive", rapidjson::StringRef(value), d.GetAllocator());
+            if (heads != nullptr) { fields.AddMember("team_a_heads", rapidjson::StringRef(heads), d.GetAllocator()); }
+        };
+        check("motion-cycle-drive", true, true, [&](rapidjson::Document& d) { drive(d, "cycle", nullptr); });
+        check("motion-paint-drive-left", true, true, [&](rapidjson::Document& d) { drive(d, "paint", "left"); });
+        check("motion-paint-drive-right", true, true, [&](rapidjson::Document& d) { drive(d, "paint", "right"); });
+        check("motion-paint-no-heading", true, false, [&](rapidjson::Document& d) { drive(d, "paint", nullptr); });
+        check("motion-paint-bad-heading", false, false, [&](rapidjson::Document& d) { drive(d, "paint", "up"); });
+        check("motion-unknown-drive", false, false, [&](rapidjson::Document& d) { drive(d, "wind", nullptr); });
+        check("motion-cycle-heading", true, false, [&](rapidjson::Document& d) { drive(d, "cycle", "right"); });
+        check("motion-paint-return-leg", true, false, [&](rapidjson::Document& d)
+        {
+            drive(d, "paint", "right");
+            d["collision_objects"][0]["motion"]["phase"].SetDouble(0.75);
+        });
         for (const char* field : { "type", "travel_x", "period", "phase" })
         {
             check((std::string("motion-missing-") + field).c_str(), false, false,
@@ -585,7 +609,7 @@ int main(int argc, char** argv)
         const auto staged_levels = manifest_levels(content);
         const auto source_levels = manifest_levels(repo / "game/content");
         require(staged_levels == source_levels, "Source and staged manifests differ in level inventory or order");
-        require(staged_levels.size() == 9, "Current format acceptance needs all nine registered stages");
+        require(staged_levels.size() == 10, "Current format acceptance needs all ten registered stages");
         for (const auto& file : staged_levels)
         {
             check_compatible(content / file);

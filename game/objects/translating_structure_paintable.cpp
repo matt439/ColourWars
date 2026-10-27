@@ -64,7 +64,14 @@ void TranslatingStructurePaintable::bind_motion_id(HorizontalMotionId id)
 }
 HorizontalPreparedStep TranslatingStructurePaintable::prepare_motion(float dt) const
 {
-    return this->motion_.prepare(dt);
+    return this->motion_.prepare(dt, this->drive_heading());
+}
+int TranslatingStructurePaintable::drive_heading() const
+{
+    const HorizontalMotionSpec& spec = this->motion_.state_.spec;
+    if (spec.drive != HorizontalDrive::paint) { return 0; }
+    const PaintTotal paint = this->paint_total();
+    return HorizontalMotion::paint_heading(spec, paint.team_a, paint.team_b);
 }
 void TranslatingStructurePaintable::commit_motion(const HorizontalPreparedStep& prepared) noexcept
 {

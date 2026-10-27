@@ -463,9 +463,9 @@ int main(int argc, char** argv)
 		const GameTuning tuning((content / "tuning.json").string().c_str());
 		size_t stages = 0;
 		const auto levels = shipped_levels(content);
-		require(levels.size() == 9, "Terrain acceptance needs all nine registered stages");
+		require(levels.size() == 10, "Terrain acceptance needs all ten registered stages");
 		for (const char* stage : {"movement_course", "king_of_the_hill", "turbulence", "close_quarters", "crossfeed", "press_tower",
-			"turbulence_blockout", "turbulence_mover_trial", "turbulence_slab_trial"})
+			"turbulence_blockout", "turbulence_mover_trial", "turbulence_slab_trial", "turbulence_ferry_trial"})
 		{
 			require(std::count_if(levels.begin(), levels.end(), [&](const auto& path) { return path.stem().string() == stage; }) == 1,
 				std::string("Landmark acceptance needs each shipped arena exactly once: ") + stage);
