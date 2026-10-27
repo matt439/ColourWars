@@ -1798,18 +1798,114 @@ that its four candidate pulses feel distinct or comfortable.
 
 ### Input devices and seats
 
-No rows. These are known limits, recorded so a later gap list does not file
-them again.
+Known limits, recorded so a later gap list does not file them again. The first
+now has a row.
 
 - **XInput only.** DualShock, DualSense and Switch Pro pads work only through
   Steam Input or a wrapper. The engine's reader seam is one function wide
   (`engine/input/gamepad_reader.h`), so a GameInput backend is Labrador work and
   would need an exhibit before it is a report. `ROAD#2` observes the limit
-  (item 6 above).
+  (item 6 above). The author asked for it to be tracked on 2026-10-27
+  (`ROAD#23`, [comparable-game gaps](#comparable-game-gaps-2026-10-27)).
 - **One keyboard seat.** That seat aims with the mouse, so a second keyboard
   player needs a keyboard-only aim model. That is a design question, not a
   missing binding. It gets a row only if the author asks for two players on one
   keyboard.
+
+## Comparable-game gaps (2026-10-27)
+
+A 2026-10-27 comparison against Splatoon, TowerFall, INVERSUS, Super Smash
+Bros. and Paint Rumble listed what those games have and ColourWars lacks.
+Online play and new game modes were out of scope. The author asked for every
+gap rated medium value or above to be tracked; the rows are `ROAD#11` to
+`ROAD#24`. Value is how much a couch group would notice the feature; the size
+is a first slice, before attended review. None is scoped yet.
+
+Two gaps were already tracked and get no new row: a special charged by
+painting is `POL#30`, and more arenas are the current aim (`POL#21`,
+`POL#31`).
+
+### Combat and tools
+
+- **Sub weapons (`ROAD#11`).** Splatoon pairs each main weapon with a sub
+  (bombs, Splash Wall, Sprinkler) that costs a large slice of ink. `Player`
+  already takes a secondary weapon (always `grenade_std`) and ignores it.
+  A sub changes the reserve and balance game, so it waits for `POL#27`; bots
+  (`ROAD#10`) would need to use it.
+- **Results awards (`ROAD#12`).** Splatoon 3 medals and TowerFall awards give
+  each player a few call-outs after a match. Paint-based awards (most laid,
+  most recaptured, longest airtime) need new per-player counters. A
+  splat-based award is the splat tally that `POL#30` decides.
+- **More tool archetypes (`ROAD#13`).** Splatoon's brush, blaster, splatling,
+  dualies and brella have no counterpart among the five tools; a fast-moving
+  painter or a shield tool would differ most. Each new tool needs art, audio
+  and bot ballistics, and waits for `POL#27`. A new subclass suits the OOP
+  rule.
+- **Map pickups (`ROAD#14`).** TowerFall chests, Paint Rumble power-ups and
+  Smash items. Needs a match toggle and bot awareness, and waits for `POL#27`.
+
+### Stages
+
+- **Paint-activated stage objects (`ROAD#15`).** Splatoon's propeller lifts
+  rise while inked, inkrails open for the team that inks their bulb, and
+  sponges grow. The [horizontal movement capability](#horizontal-movement-capability-2026-10-26)
+  supplies the motion; paint ownership driving it is new. Arena use follows
+  `POL#21`, and bots must ride the objects.
+- **Player-made stages without rebuilding (`ROAD#16`).** A stage saved by the
+  editor plays only after a manifest edit and a rebuild. User stages need
+  their own folder, validated individually so that a broken one is refused
+  without stopping startup; manifest stages stay never-optional.
+
+### Awareness and presentation
+
+- **Overview map (`ROAD#17`, decision).** Splatoon's map shows ink and
+  teammates. The three-player layout leaves the fourth quadrant unused, which
+  makes it the natural place. A map shows territory mid-match, which bends the
+  withheld-score decision (gap audit 1.1), so the author decides first.
+- **Off-screen teammate and threat markers (`ROAD#18`).** Splatoon shows
+  allies through walls. Relates to the `POL#3` rear-threat review and the
+  `ROAD#10` label-clamping question.
+- **End-of-round instant replay (`ROAD#19`).** TowerFall replays each round's
+  final seconds and can save a GIF. Record and play exist only in Debug; their
+  limit (same build and machine, within one round, `DBG#2`) is what an instant
+  replay needs, but the recorder would have to ship in Release.
+
+### Sessions and setup
+
+- **Re-pick between series rounds (`ROAD#20`).** A series keeps teams, tools
+  and stage until it ends. Smash re-picks each game and TowerFall rotates
+  levels. Add a tool re-pick step and a stage rotation or loser's pick between
+  rounds.
+- **Player profiles (`ROAD#21`).** Smash name tags carry a person's controls,
+  rumble and records. Deadzones, rumble, binds and accessibility toggles
+  follow the pad slot here (`POL#18`, `ROAD#7`, `ROAD#9`, `GAP#4.2`), so
+  swapping controllers swaps settings.
+- **Match variants (`ROAD#22`, decision).** TowerFall variants, Smash rules
+  and INVERSUS custom rules: low gravity, endless paint, tool roulette. Scoring
+  stays painted surface and many are tuning override sets, but the match scope
+  decisions rule out a speculative `MatchRules` seam. The author decides
+  whether variants count as modes.
+
+### Input
+
+- **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases
+  accept PlayStation and Switch Pro pads. The reader is Labrador's (see
+  [Input devices and seats](#input-devices-and-seats)), so the engine part is a
+  report with an exhibit; Steam Input covers it if the game ships on Steam.
+- **Pad aim assist (`ROAD#24`).** One mouse player can join pad players, and
+  mouse aim is much more precise. Relates to `POL#3`, `POL#18` and the
+  `ROAD#5` handicaps.
+
+### Not tracked, by choice
+
+The author left out the gaps rated low or low-to-medium value: respawn travel
+to a teammate (Splatoon Super Jump), automatic catch-up for the team behind
+(TowerFall autobalance), a last-minute music change, quick signals ("This
+way!"), a lifetime stats screen, and cosmetics or unlocks. New modes
+(Splatoon's objective modes, Tricolor and Salmon Run, free-for-all painting,
+TowerFall's elimination and co-op modes, INVERSUS arcade, Smash stock
+battles) stay excluded by the [match scope decisions](#match-scope-decisions-2026-10-15).
+A later gap list should read these absences as intended.
 
 ## Menu navigation follow-up (GAP#4.4)
 

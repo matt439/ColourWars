@@ -81,6 +81,8 @@ difficulty comparison; difficulty values remain provisional.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
+- **Overview map and match variants:** whether a mid-match map may show territory
+  (`ROAD#17`), and whether variants count as modes (`ROAD#22`).
 - **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
   treatment (`POL#34`); current behavior is documented, with no candidate accepted.
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
@@ -177,6 +179,30 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
+
+## Comparable-game gaps
+
+**Owner:** [docs/feature-roadmap.md, Comparable-game gaps](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). Features that
+Splatoon and couch party shooters have and ColourWars lacks, rated medium value
+or above (2026-10-27). The owner records the gaps left out by choice and the
+excluded modes.
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#12` | UNSCOPED | MED | M | Results awards: a few per-player call-outs (most paint laid, most recaptured, longest airtime). A splat-based award is `POL#30`'s splat tally. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#15` | UNSCOPED | MED | L | Paint-activated stage objects (Splatoon propeller lifts, inkrails, sponges) over the horizontal-movement capability; arena use follows `POL#21`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#16` | UNSCOPED | LOW | M | Play editor-saved stages without rebuilding: a user-stage folder validated per stage, refusing a broken one without stopping startup. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#17` | DECISION | LOW | M | Overview map in the unused three-player quadrant (Splatoon turf map). Shows territory mid-match, against gap audit 1.1: decide first. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#18` | UNSCOPED | LOW | M | Off-screen teammate and threat markers (Splatoon ally silhouettes); relates to `POL#3` rear threats and `ROAD#10` label clamping. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#19` | UNSCOPED | MED | L | End-of-round instant replay (TowerFall), building on Debug record/play, whose `DBG#2` limits fit; the recorder must ship in Release. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#20` | UNSCOPED | MED | M | Re-pick tools between series rounds, plus a stage rotation or loser's pick; a series currently locks teams, tools and stage. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#21` | UNSCOPED | LOW | M | Player profiles (Smash name tags) carrying deadzones, rumble, binds and accessibility, which now follow the pad slot. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#22` | DECISION | LOW | M | Match variants (low gravity, endless paint, tool roulette), mostly tuning overrides. Decide whether they count as modes, which are ruled out. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#23` | UNSCOPED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The reader is Labrador's, so the engine part is a report with an exhibit; Steam Input covers a Steam release. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#24` | UNSCOPED | LOW | M | Pad aim assist so pad players can hold their own against the one mouse player; relates to `POL#3`, `POL#18` and `ROAD#5`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 
 ## Engine demonstration
 
