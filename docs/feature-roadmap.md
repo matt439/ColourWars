@@ -2030,6 +2030,12 @@ The End paper grew from 820 to 900 units tall, with rows 118 apart from y 300
 Validation checks Watch Replay on row 1, the setup actions on both their rows,
 and Exit on rows 1 and 5.
 
+On MattPC (2026-10-27), `check-painter.ps1` with `-EndMenuOnly` (which runs the End
+headings and series re-pick checks too), `-RoundHeadingOnly`, `-SeriesScoreOnly` and
+`-SessionResultOnly` passed in Debug and Release. `-EndContinuationOnly` failed because its
+fixed comparison crop sat at the old row position. The crop now starts 30 units higher with the
+rows; that switch still needs re-running on MattPC.
+
 The `instant_replay` acceptance case plays a 20 s round on each of the five
 arenas and the Ferry Trial, whose movers follow the paint, as `GameLevel` plays it: a full intro, three shipping bots, a scripted
 pad human and a pause with a held jump. It then rebuilds the round as Watch
