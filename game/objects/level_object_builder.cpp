@@ -157,8 +157,27 @@ namespace
 				throw std::runtime_error(motion.where() + ": unsupported motion field '" + key + "'");
 			}
 		}
-		const HorizontalMotionSpec result{ anchor, motion.number("travel_x"),
+		HorizontalMotionSpec result{ anchor, motion.number("travel_x"),
 			motion.number("period"), motion.number("phase") };
+		const std::string drive = motion.has("drive") ? motion.string("drive") : "cycle";
+		if (drive == "paint")
+		{
+			const std::string heads = motion.string("team_a_heads");
+			if (heads != "right" && heads != "left")
+			{
+				throw std::runtime_error(motion.where() + ": team_a_heads must be 'right' or 'left'");
+			}
+			result.drive = HorizontalDrive::paint;
+			result.team_a_heading = heads == "right" ? 1 : -1;
+		}
+		else if (drive != "cycle")
+		{
+			throw std::runtime_error(motion.where() + ": drive must be 'cycle' or 'paint'");
+		}
+		else if (motion.has("team_a_heads"))
+		{
+			throw std::runtime_error(motion.where() + ": team_a_heads belongs only on a paint drive");
+		}
 		try { HorizontalMotion::validate_spec(result); }
 		catch (const std::invalid_argument& error)
 		{

@@ -1849,7 +1849,8 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   rise while inked, inkrails open for the team that inks their bulb, and
   sponges grow. The [horizontal movement capability](#horizontal-movement-capability-2026-10-26)
   supplies the motion; paint ownership driving it is new. Arena use follows
-  `POL#21`, and bots must ride the objects.
+  `POL#21`, and bots must ride the objects. The first slice, the
+  [paint ferry](#paint-ferry-road15-first-slice), is on an explicit trial stage.
 - **Player-made stages without rebuilding (`ROAD#16`).** A stage saved by the
   editor plays only after a manifest edit and a rebuild. User stages need
   their own folder, validated individually so that a broken one is refused
@@ -1951,6 +1952,45 @@ The `results_awards` acceptance case checks the choice, the capture credit, the
 airtime of a real jump on a floor, the default copy, and that every shipped
 award clears the widest possible row by at least 24 units (28 at present, for
 Most paint laid). `paint` checks credit on a real structure.
+
+### Paint ferry (`ROAD#15`, first slice)
+
+**2026-10-27.** The first paint-activated stage object is the **paint ferry**:
+a [horizontal mover](#horizontal-movement-capability-2026-10-26) that travels
+only while one team holds more of its own paint, toward that team's heading.
+Team A's heading is authored (`team_a_heads`); team B's paint always pushes the
+other way. On a tie, including an unpainted ferry, it holds still, and it stops
+at either end of its travel. It moves at a cycling mover's leg speed, so the
+existing admission and displacement budget is unchanged.
+
+Paint in ColourWars stays where it lands, so a ferry is a tug of war rather
+than Splatoon's ink-to-power lift: the team that owns it rides it forward, and
+the other team takes it back by painting over it. Riders, carry, paint,
+shadows and projectile sweeps are the mover's own; each step reads the paint
+held before the step, so a shot that lands this step steers the next one.
+
+It ships on one explicit-only stage, **Turbulence Yard - Ferry Trial**
+(`turbulence_ferry_trial`): the Mover Trial with both movers turned into
+ferries, team A heading right. Each starts at its own team's end, so painting
+your own ferry carries you toward the middle. Arena use still follows
+`POL#21`. The format is in
+[Horizontal paintable motion](level-format.md#horizontal-paintable-motion).
+
+Bots need no new policy. A ferry is a moving support, so a bot that rides one
+holds there to paint it, which drives it. The `paint_ferry` acceptance case
+checks the motion rules directly, then plays three whole 120-second matches
+with three bots on the trial stage and holds every step of both ferries to the
+paint held before it. In a Linux build of the same objects, ferries moved in
+all three matches and bots rode a moving ferry in two of them (121 to 136
+steps). Riding is a measurement, not a requirement.
+
+Still open in `ROAD#15`: lifts and other vertical motion (the mover is
+horizontal only), team-gated rails and growing sponges, editor checks for the
+drive fields (the editor keeps them as metadata, and the game refuses a bad
+one at load), ferry art that shows its heading, and attended play. The
+stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
+`-StageCountsOnly`, `-StageSummaryOnly`) have not yet been run with the tenth
+stage; they run only on MattPC.
 
 ## Menu navigation follow-up (GAP#4.4)
 

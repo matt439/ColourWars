@@ -115,7 +115,7 @@ namespace turbulence_slab_stage_acceptance
                     infos.add(name, std::move(info));
                 }
             }
-            require(result.size() == 9, "Registered slab catalog must expose nine explicit stages");
+            require(result.size() == 10, "Registered slab catalog must expose ten explicit stages");
             const auto random = random_stage_indices(result);
             require(random.size() == 4, "Registered slab comparison must preserve the four accepted Random arenas");
             bool found = false;

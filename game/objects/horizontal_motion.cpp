@@ -19,6 +19,21 @@ namespace
 void HorizontalMotion::validate_spec(const HorizontalMotionSpec& spec)
 {
     horizontal_motion_contract::validate_spec(contract_spec(spec));
+    if (spec.drive == HorizontalDrive::cycle) { return; }
+    if (spec.drive != HorizontalDrive::paint)
+    { throw std::invalid_argument("Horizontal motion drive must be a cycle or paint."); }
+    // A paint drive keeps to the outgoing leg, where phase 0 is the left end
+    // and 0.5 the right, so phase alone still names its pose.
+    if (!(spec.initial_phase <= 0.5f))
+    { throw std::invalid_argument("A paint-driven mover starts at phase 0 (left end) to 0.5 (right end)."); }
+    if (spec.team_a_heading != 1 && spec.team_a_heading != -1)
+    { throw std::invalid_argument("A paint-driven mover needs team A heading right or left."); }
+}
+
+int HorizontalMotion::paint_heading(const HorizontalMotionSpec& spec, float team_a, float team_b)
+{
+    if (spec.drive != HorizontalDrive::paint || team_a == team_b) { return 0; }
+    return team_a > team_b ? spec.team_a_heading : -spec.team_a_heading;
 }
 
 void HorizontalMotion::validate_dt(float dt)
@@ -61,9 +76,10 @@ RectangleF HorizontalMotion::bounds() const
     return at_offset(this->state_.spec, this->state_.current_offset.x);
 }
 
-HorizontalPreparedStep HorizontalMotion::prepare(float dt) const
+HorizontalPreparedStep HorizontalMotion::prepare(float dt, int heading) const
 {
     validate_dt(dt);
+    if (this->state_.spec.drive == HorizontalDrive::paint) { return this->prepare_driven(dt, heading); }
     HorizontalPreparedStep prepared;
     prepared.after_state = this->state_;
     HorizontalMotionStep& step = prepared.collision;
@@ -93,6 +109,51 @@ HorizontalPreparedStep HorizontalMotion::prepare(float dt) const
     else
     {
         step.segments[0] = { 0.0, 1.0, this->state_.current_offset.x, after_offset };
+        step.segment_count = 1;
+    }
+    prepared.after_state.phase = after;
+    prepared.after_state.direction = after < 0.5 ? 1 : -1;
+    prepared.after_state.previous_offset = this->state_.current_offset;
+    prepared.after_state.current_offset = { after_offset, 0.0f };
+    step.after = at_offset(this->state_.spec, after_offset);
+    return prepared;
+}
+
+HorizontalPreparedStep HorizontalMotion::prepare_driven(float dt, int heading) const
+{
+    HorizontalPreparedStep prepared;
+    prepared.after_state = this->state_;
+    HorizontalMotionStep& step = prepared.collision;
+    step.dt = dt;
+    step.before = this->bounds();
+    step.after = step.before;
+    if (dt == 0.0f) { return prepared; }
+
+    // The same speed as a cycle's leg, so the admission budget still holds.
+    const double advance = static_cast<double>(dt) /
+        static_cast<double>(this->state_.spec.period_seconds);
+    const double before = this->state_.phase;
+    const double target = heading > 0 ? 0.5 : heading < 0 ? 0.0 : before;
+    const double remaining = std::abs(target - before);
+    const float current = this->state_.current_offset.x;
+    double after = before;
+    if (remaining > 0.0)
+    {
+        after = advance >= remaining ? target : before + (heading > 0 ? advance : -advance);
+    }
+    const float after_offset = after == before ? current : offset_at(this->state_.spec, after);
+    if (remaining > 0.0 && advance > remaining)
+    {
+        // Reaches its end stop inside the step, then holds there.
+        const double split = std::min(std::nextafter(1.0, 0.0), remaining / advance);
+        step.segments[0] = { 0.0, split, current, after_offset };
+        step.segments[1] = { split, 1.0, after_offset, after_offset };
+        step.segment_count = 2;
+    }
+    else
+    {
+        // A held mover still publishes its positive-time interval.
+        step.segments[0] = { 0.0, 1.0, current, after_offset };
         step.segment_count = 1;
     }
     prepared.after_state.phase = after;

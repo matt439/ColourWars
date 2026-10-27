@@ -149,8 +149,26 @@ simulation steps (currently 1/30 second); phase must remain in [0,1) after float
 conversion. The anchor and endpoint must have finite, positive represented
 edges. Both solid and jump-through paintables are supported. Motion on plain
 structures, ramps or visuals, another motion `type`, and `axis`, `travel_y` or
-`rotation` in the record are errors. Other unknown keys remain ignored metadata,
+`rotation` in the record are errors, as are a `drive` other than the two above
+and the paint-drive rules below. Other unknown keys remain ignored metadata,
 as elsewhere in format 1; they do not add motion capabilities.
+
+A mover may instead be a **paint ferry**:
+
+```json
+"motion": { "type": "horizontal", "travel_x": 320, "period": 4, "phase": 0,
+            "drive": "paint", "team_a_heads": "right" }
+```
+
+`drive` is `"cycle"` (the default, the triangular round trip above) or
+`"paint"`. A paint drive moves along the outgoing leg only while one team holds
+more of the mover's own paint, by area over all its faces: toward
+`team_a_heads` (`"right"` or `"left"`) for team A, and the other way for team
+B. It holds on a tie, including no paint, and stops at either end. Its speed is
+a cycle's leg speed, `2 * travel_x / period`. `phase` must be in [0, 0.5],
+where 0 is the left end and 0.5 the right. `team_a_heads` is required with a
+paint drive and refused with a cycle. The editor keeps both fields as metadata
+but does not check them yet; the game refuses a bad record at load.
 
 This is the existing horizontal triangular mover, with its existing safety
 limits. On actual Level admission the entire platform envelope and expanded

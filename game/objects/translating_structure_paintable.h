@@ -8,6 +8,8 @@ class Projectile;
 
 // Rigid horizontal translation of anchored scoring/material geometry. This
 // capability is fixed for a Level lifetime; it is not a lift or a rotating body.
+// A paint-driven one (a paint ferry) reads its own held paint each step, before
+// any of the step's paint lands, to choose which way it travels.
 class TranslatingStructurePaintable final : public StructurePaintable
 {
 public:
@@ -31,6 +33,8 @@ public:
     HorizontalMotionState motion_state() const;
     HorizontalMotionStep collision_step() const;
     mattmath::Vector2F translation() const;
+    // +1 right, -1 left or 0 still, from the paint held now; 0 for a cycle.
+    int drive_heading() const;
     void append_anchor_paint_surfaces(std::vector<PaintSurfaceSample>& samples) const;
 
     void draw(labrador::DrawList& draw_list) const override;

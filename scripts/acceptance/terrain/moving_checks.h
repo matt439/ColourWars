@@ -20,7 +20,7 @@ namespace
 		// The constructed collision owners above outlive these borrowed wrappers.
 		const auto shadows = builder.build_moving_shadows(collision_json, objects);
 		require(shadows.size() == casters.size(), stage + ": moving shadow/caster count differs");
-		if (stage == "turbulence_mover_trial")
+		if (stage == "turbulence_mover_trial" || stage == "turbulence_ferry_trial")
 		{ require(casters.size() == 2, stage + ": comparison lost its paired moving shadow owners"); }
 		for (size_t index = 0; index < shadows.size(); ++index)
 		{

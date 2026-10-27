@@ -154,7 +154,7 @@
             "additionalProperties": true
         },
         "motion": {
-            "description": "Horizontal triangular translation of a flat paintable from its left anchor; period is the full round trip in seconds and phase is cycles. Float representability and scene/player admission remain runtime checks. Unknown metadata is ignored; axis, travel_y and rotation are unsupported requests.",
+            "description": "Horizontal triangular translation of a flat paintable from its left anchor; period is the full round trip in seconds and phase is cycles. Float representability and scene/player admission remain runtime checks. drive is cycle (default) or paint; a paint drive moves only while one team holds more of its paint, toward team_a_heads for team A and the other way for team B, and starts at phase 0 to 0.5. Unknown metadata is ignored; axis, travel_y and rotation are unsupported requests.",
             "type": "object",
             "required": ["type", "travel_x", "period", "phase"],
             "properties": {
@@ -162,6 +162,8 @@
                 "travel_x": { "type": "number", "minimum": 0, "exclusiveMinimum": true },
                 "period": { "type": "number", "minimum": 0.03333333333333333 },
                 "phase": { "type": "number", "minimum": 0, "maximum": 1, "exclusiveMaximum": true },
+                "drive": { "enum": ["cycle", "paint"] },
+                "team_a_heads": { "enum": ["right", "left"] },
                 "axis": { "not": {} },
                 "travel_y": { "not": {} },
                 "rotation": { "not": {} }
