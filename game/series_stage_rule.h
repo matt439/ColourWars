@@ -20,7 +20,7 @@ enum class SeriesStageRule
 	losers_pick
 };
 
-// The save's and the Debug console's spelling: "same", "rotate", "losers_pick".
+// The save's spelling: "same", "rotate", "losers_pick".
 const char* series_stage_rule_key(SeriesStageRule rule);
 // False for an unknown spelling, leaving `rule` unchanged.
 bool read_series_stage_rule(const std::string& key, SeriesStageRule& rule);

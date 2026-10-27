@@ -755,7 +755,7 @@ Series stage. The separate required `menu_text.solo_practice_hint` defaults to
 `Solo practice: choose Single Match` and sits on Single Match's row 2, one
 `setup_focus_padding.x` after that row's complete focus card (label, padding
 and shade), so it never touches the card; it must fit the paper and the right
-margin. It moved there from row 7
+margin and stay clear of every lower Mode row's complete card. It moved there from row 7
 when Series stage took a row, and Mode's shipped
 `main_menu.mode_select_spacing.y` went from 100 to 96 so that Back on row 7
 still fits the 920-high paper. Rows use the existing widget origin and each

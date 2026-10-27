@@ -529,11 +529,13 @@ void Presentation::validate_resources(const RenderResources& render,
 	const MenuItem mode_items[]{ MenuItem::single_match, MenuItem::best_of_three, MenuItem::best_of_five,
 		MenuItem::match_length, MenuItem::series_stage, MenuItem::back };
 	float single_match_right = 0.0f;
+	std::vector<RectangleF> mode_cards;
 	for (size_t index = 0; index < std::size(mode_items); ++index)
 	{
 		const RectangleF card = check_setup_item(mode_items[index], main.mode_select_spacing, static_cast<int>(index) + 2,
 			mode_items[index] == MenuItem::match_length || mode_items[index] == MenuItem::series_stage);
 		if (mode_items[index] == MenuItem::single_match) { single_match_right = card.right(); }
+		else { mode_cards.push_back(card); }
 	}
 	const MenuItem player_items[]{ MenuItem::one_player_practice, MenuItem::two_players,
 		MenuItem::three_players, MenuItem::four_players, MenuItem::back };
@@ -548,9 +550,17 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->menu_.layout.position.y + main.mode_select_spacing.y * 2.0f);
 	check_menu_line("menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
 		hint_position, this->menu_.footer_y, this->menu_.item_shadow_offset);
-	std::ignore = check_setup_paper(
+	const RectangleF practice_hint = check_setup_paper(
 		"menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
 		hint_position, this->menu_.item_shadow_offset, false, 0.0f);
+	// Beside Single Match it must still keep clear of every lower row's card,
+	// as it once had to follow Back's.
+	if (std::any_of(mode_cards.begin(), mode_cards.end(),
+		[&practice_hint](const RectangleF& card) { return card.intersects(practice_hint); }))
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.solo_practice_hint must stay clear of the Mode rows' complete focus cards and shade.");
+	}
 	const auto fixed_menu_size = [&](const std::string& key, const std::wstring& text, const std::string& font)
 	{
 		const std::string where = this->source_path_ + ": " + key;
