@@ -43,10 +43,10 @@ private:
 	const GameTuning* tuning_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 	const InputBindings* input_bindings_ = nullptr;
-	// Reading a frame is const. Only a changed saved key rebuilds this copy;
+	// Reading a frame is const. Only a changed saved key or pad profile rebuilds a copy;
 	// edges always come from the engine's continuously sampled snapshots.
 	mutable labrador::Key keyboard_jump_ = labrador::Key::none;
 	mutable ActionBindings keyboard_bindings_;
-	mutable std::array<labrador::GamepadButton, input_slots::pad_count> pad_jump_{};
+	mutable std::array<PadProfile, input_slots::pad_count> pad_profiles_{};
 	mutable std::array<ActionBindings, input_slots::pad_count> pad_bindings_;
 };

@@ -328,7 +328,7 @@ private:
 	std::wstring keyboard_jump_label_;
 	labrador::TextDropShadow* gamepad_controls_ = nullptr;
 	std::vector<int> gamepad_slots_;
-	std::array<labrador::GamepadButton, input_slots::pad_count> gamepad_jump_{};
+	std::array<PadProfile, input_slots::pad_count> gamepad_pads_{};
 	struct ControlsReminderLook
 	{
 		mattmath::Vector2F reference_size, margin, padding, heading_shadow, text_shadow;

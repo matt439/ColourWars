@@ -11,7 +11,7 @@
             $percentageCrops.Count -ne 8) {
             throw 'The percentage leaf evidence does not match its frozen update/readback/CSV/crop budgets.'
         }
-        # Controls gained Keyboard Jump and Pad Jump before the volume rows. Sticks keeps
+        # Controls gained Keyboard Jump and Pad Buttons before the volume rows. Sticks keeps
         # its original Move/Aim rows; every observed page still emits one pair.
         foreach ($observation in @($percentageRows | Group-Object -Property case, page, width, height)) {
             $observed = @($observation.Group)

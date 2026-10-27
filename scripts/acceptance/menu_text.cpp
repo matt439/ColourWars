@@ -42,7 +42,7 @@ int main(int argc, char** argv)
         check_end_heading_bounds(variants, world);
         check_controls_text(variants, world);
         check_controls_option_rows(variants, world);
-        check_pad_jump_text(variants, world);
+        check_pad_buttons_text(variants, world);
         check_setting_percentage_text(variants, world, defaults.menu_text());
         check_setting_percentage_rows(variants, world);
         check_value_text(variants, world);

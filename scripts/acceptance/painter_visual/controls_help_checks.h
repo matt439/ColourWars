@@ -6,7 +6,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
 {
     using Help = decltype(MenuText{}.help);
     const Help legacy{
-        L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: Pad Jump choice / LT (hold for height)\n"
+        L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\n"
         L"Pause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\n"
         L"Aim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\n"
         L"MENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
