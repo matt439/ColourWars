@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/end_menu.h"
 #include "game/states/menu_panel.h"
+#include "game/states/main_menu.h"
 
 using namespace mattmath;
 using namespace menu_consts;
@@ -95,7 +96,7 @@ void EndMenuInitial::init()
 		"change_weapons",
 		this->text().item(MenuItem::change_weapons),
 		style.item_font,
-		this->calculate_widget_position(0, 2),
+		this->calculate_widget_position(0, ongoing ? 1 : 2),
 		this->render_resources(),
 		look.art.ink);
 
@@ -103,7 +104,7 @@ void EndMenuInitial::init()
 		"change_level",
 		this->text().item(MenuItem::change_level),
 		style.item_font,
-		this->calculate_widget_position(0, 3),
+		this->calculate_widget_position(0, ongoing ? 2 : 3),
 		this->render_resources(),
 		look.art.ink);
 
@@ -119,7 +120,7 @@ void EndMenuInitial::init()
 		"exit",
 		this->text().item(MenuItem::exit_to_main_menu),
 		style.item_font,
-		this->calculate_widget_position(0, ongoing ? 1 : 4),
+		this->calculate_widget_position(0, ongoing ? 3 : 4),
 		this->render_resources(),
 		look.art.ink);
 
@@ -150,12 +151,33 @@ void EndMenuInitial::init()
 			this->finish(action);
 		};
 
+	// Between rounds the teams hold, since the ledger counts their wins, but
+	// tools, boosts and the stage may change. Those pages replace this one in
+	// its frame: Back returns here and their last confirmation plays on.
+	const auto repick = [this](bool tools)
+		{
+			this->play_wave(this->confirm_sound_);
+			if (tools)
+			{
+				this->context()->transition_to(std::make_unique<MainMenuWeaponSelect>(
+					this->menu_context(), this->session_));
+			}
+			else
+			{
+				this->context()->transition_to(std::make_unique<MainMenuStageSelect>(
+					this->menu_context(), this->session_));
+			}
+		};
+
 	this->change_teams_->set_hidden(ongoing);
-	this->change_weapons_->set_hidden(ongoing);
-	this->change_level_->set_hidden(ongoing);
 	this->focus_.add(this->restart_.get(),
 		[choose] { choose(EndMenuAction::restart, true); });
-	if (!ongoing)
+	if (ongoing)
+	{
+		this->focus_.add(this->change_weapons_.get(), [repick] { repick(true); });
+		this->focus_.add(this->change_level_.get(), [repick] { repick(false); });
+	}
+	else
 	{
 		this->focus_.add(this->change_teams_.get(),
 			[choose] { choose(EndMenuAction::change_teams, true); });

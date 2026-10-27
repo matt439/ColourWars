@@ -858,11 +858,14 @@ Four required `menu_text.items` roles supply the static End Menu actions:
 | Key | Shipped text | Use |
 |---|---|---|
 | `change_teams` | `Change Teams` | Completed-match/series row 1 |
-| `change_weapons` | `Change Weapons` | Completed-match/series row 2 |
-| `change_level` | `Change Level` | Completed-match/series row 3 |
-| `exit_to_main_menu` | `Exit to Main Menu` | Ongoing-series row 1; completed-match/series row 4 |
+| `change_weapons` | `Change Weapons` | Ongoing-series row 1; completed-match/series row 2 |
+| `change_level` | `Change Level` | Ongoing-series row 2; completed-match/series row 3 |
+| `exit_to_main_menu` | `Exit to Main Menu` | Ongoing-series row 3; completed-match/series row 4 |
 
-The configuration actions remain hidden during an ongoing series. Session
+Change Teams stays hidden during an ongoing series, whose ledger counts team
+wins. Its Change Weapons and Change Level reopen Weapon and Stage Select above
+the match between rounds (`ROAD#20`, see the
+[roadmap](feature-roadmap.md#comparable-game-gaps-2026-10-27)). Session
 selects row 0 from the four [continuation labels](#end-continuation-labels-gap84).
 Editing these four labels does not change which actions are available, their
 order, navigation, session continuation or music transitions.

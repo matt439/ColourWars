@@ -385,7 +385,9 @@ void Presentation::validate_resources(const RenderResources& render,
 			Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(index + 1)),
 			end.box_size, end.layout.spacing.y, std::nullopt, end.art, 1080.0f);
 	}
-	// Exit moves up while a series is ongoing; both layouts share this text.
+	// Exit is row 3 between a series' rounds and row 4 otherwise. Rows 1 and
+	// 4 bound every row between them, which also covers the setup actions
+	// moving up a row between rounds.
 	for (const int row : { 1, 4 })
 	{
 		check_menu_item(MenuItem::exit_to_main_menu, this->menu_.item_font, end.layout.position +

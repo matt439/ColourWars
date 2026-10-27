@@ -21,7 +21,7 @@
             'round', 'a_wins', 'b_wins', 'music_pending', 'expected_value', 'font', 'raw_width', 'raw_height',
             'scale', 'primary_persistent', 'full_ornament_match', 'frozen_session_setup_save_rng')
         if ($endContinuationSummary.outcome -ne 'passed' -or $endContinuationSummary.scope -ne 'end-continuation-only' -or
-            $endContinuationSummary.updates -ne 68 -or $endContinuationSummary.readbacks -ne 94 -or
+            $endContinuationSummary.updates -ne 72 -or $endContinuationSummary.readbacks -ne 94 -or
             $endContinuationSummary.csv_rows -ne 31 -or $endContinuationSummary.compact_crops -ne 6 -or
             $endContinuationSummary.page_openings -ne 14 -or $endContinuationSummary.font_negative_controls -ne 1 -or
             $endContinuationSummary.resize_updates -ne 0 -or $endContinuationSummary.save_calls -ne 1 -or
@@ -111,7 +111,7 @@
         }
         $result['observed_counts'] = [ordered]@{
             fixture = $endContinuationSummary
-            updates = 68
+            updates = 72
             readbacks = 94
             csv_rows = 31
             crops = 6

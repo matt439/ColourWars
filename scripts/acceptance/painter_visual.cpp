@@ -221,6 +221,7 @@ namespace
 #include "scripts/acceptance/painter_visual/team_setup_checks.h"
 #include "scripts/acceptance/painter_visual/remembered_setup_checks.h"
 #include "scripts/acceptance/painter_visual/bot_setup_checks.h"
+#include "scripts/acceptance/painter_visual/series_repick_checks.h"
 #include "scripts/acceptance/painter_visual/bot_runtime_checks.h"
 #include "scripts/acceptance/painter_visual/connection_text_checks.h"
 #include "scripts/acceptance/painter_visual/stick_readout_checks.h"
@@ -1068,6 +1069,7 @@ int wmain(int argc, wchar_t** argv)
         if (end_menu_only)
         {
             end_menu_matrix(app, canvas, tuning, presentation, output);
+            series_repick_checks(app, levels, canvas, tuning, presentation, output);
             std::cout << "PASS end-menu-only hardware check; other painter matrices were not run\n";
             return 0;
         }
@@ -1319,6 +1321,7 @@ int wmain(int argc, wchar_t** argv)
         capture(app, *level, canvas, output, "1p-respawn", records);
         resume_matrix(app, levels, tuning, presentation, content, output);
         end_menu_matrix(app, canvas, tuning, presentation, output);
+        series_repick_checks(app, levels, canvas, tuning, presentation, output);
         pause_menu_matrix(app, canvas, tuning, presentation, output);
         results_menu_matrix(app, canvas, tuning, presentation, output);
         settings_menu_matrix(app, canvas, tuning, presentation, output);

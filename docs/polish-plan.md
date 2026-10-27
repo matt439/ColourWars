@@ -1978,8 +1978,9 @@ or **Replay Draw** for an unfinished series, and **Play Series Again** after a
 series completes. The existing restart result still rebuilds with the same
 settings and advances or resets the series through `GameLevel`; no extra ready
 step is introduced. Change Teams, Change Weapons, Change Level and Exit to Main
-Menu remain directly accessible below it. An unfinished series keeps only
-continuation and Exit, preserving its fixed roster and setup.
+Menu remain directly accessible below it. An unfinished series keeps its
+roster and teams, but offers Change Weapons and Change Level between rounds
+(`ROAD#20`, 2026-10-27).
 
 The page carries the countdown/HUD drawing language into a static, pale stepped
 panel with dark text, a black keyline, offset shade and restrained lower/right

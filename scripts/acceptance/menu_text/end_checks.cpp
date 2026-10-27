@@ -53,8 +53,9 @@ namespace menu_text_acceptance
         const auto bottom = top + end.box_size;
         const float left_position = top.x + end.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - end.art.focus_padding.x;
-        // The first static label is row 1. Exit moves from row 1 during an
-        // ongoing series to row 4 after a completed match or series.
+        // The first static label is row 1. Exit sits on row 3 between a
+        // series' rounds and row 4 after a completed match or series; the
+        // validation checks rows 1 and 4, which bound every row between.
         const float bottom_position = bottom.y - 4.0f * end.layout.spacing.y -
             20.0f - end.art.focus_padding.y;
         const auto paper_edge = [&](const char* axis, float position, const char* field, float outside)
