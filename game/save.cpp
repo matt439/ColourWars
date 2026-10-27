@@ -7,6 +7,7 @@
 #include <system_error>
 #include <array>
 #include <cmath>
+#include <optional>
 // The engine reads JSON; the game uses RapidJSON to write player settings.
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/writer.h"
@@ -131,6 +132,26 @@ namespace
         }
     };
 
+    const char* seat_switch_key(SeatSwitch value)
+    {
+        switch (value)
+        {
+        case SeatSwitch::off: return "off";
+        case SeatSwitch::on: return "on";
+        case SeatSwitch::shared: break;
+        }
+        return "shared";
+    }
+
+    std::optional<SeatSwitch> seat_switch_from_key(const std::string& key)
+    {
+        for (const SeatSwitch value : { SeatSwitch::off, SeatSwitch::shared, SeatSwitch::on })
+        {
+            if (key == seat_switch_key(value)) { return value; }
+        }
+        return std::nullopt;
+    }
+
     // Aim, volumes, per-pad sticks and comfort switches: flat root keys too.
     class PlaySection final : public SaveSection
     {
@@ -206,6 +227,32 @@ namespace
             }
             catch (const std::runtime_error&) {}
 
+            // Per-slot comfort overrides, also by physical slot. A missing or
+            // unknown entry keeps following the shared switch.
+            try
+            {
+                const JsonValue slots = root.array("pad_comfort");
+                const size_t count = std::min(slots.size(), data.play.pad_comfort.size());
+                for (size_t slot = 0; slot < count; ++slot)
+                {
+                    const JsonValue entry = slots.at(slot);
+                    const auto read_seat_switch = [&entry](const char* key, SeatSwitch& destination)
+                    {
+                        try
+                        {
+                            const std::optional<SeatSwitch> value = seat_switch_from_key(entry.string(key));
+                            if (value) { destination = *value; }
+                        }
+                        catch (const std::runtime_error&) {}
+                    };
+                    SeatComfort& comfort = data.play.pad_comfort[slot];
+                    read_seat_switch("view_shake", comfort.view_shake);
+                    read_seat_switch("aim_marker", comfort.aim_marker);
+                    read_seat_switch("reduce_effects", comfort.reduce_effects);
+                }
+            }
+            catch (const std::runtime_error&) {}
+
             const auto read_switch = [&root](const char* key, bool& destination)
             {
                 try
@@ -244,6 +291,20 @@ namespace
                 writer.begin_object();
                 writer.key("enabled");
                 writer.boolean(enabled);
+                writer.end_object();
+            }
+            writer.end_array();
+            writer.key("pad_comfort");
+            writer.begin_array();
+            for (const SeatComfort& comfort : data.play.pad_comfort)
+            {
+                writer.begin_object();
+                writer.key("view_shake");
+                writer.string(seat_switch_key(comfort.view_shake));
+                writer.key("aim_marker");
+                writer.string(seat_switch_key(comfort.aim_marker));
+                writer.key("reduce_effects");
+                writer.string(seat_switch_key(comfort.reduce_effects));
                 writer.end_object();
             }
             writer.end_array();

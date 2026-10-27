@@ -88,7 +88,7 @@ difficulty comparison; difficulty values remain provisional.
 - **Report filing:** the guarded resize request and example (`ENG#23`) are
   prepared and locally qualified, alongside the vibration-output draft (`ENG#25`).
   Filing needs separate author authorization.
-- **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#9`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
+- **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
 ## Art direction, characters and the UI
@@ -167,7 +167,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#7` | DEFERRED | LOW | M | Per-seat view shake, aim marker and Reduce effects, after the stick-profile pattern; after `POL#27`. [Scope](docs/feature-roadmap.md#per-seat-accessibility-toggles-road7). |
+| `ROAD#7` | DECISION | LOW | S | Review the per-pad View shake, Aim marker and Reduce effects overrides on 1-4P panes with pads; the settings, save and CPU checks are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#per-seat-accessibility-toggles-road7). |
 | `ROAD#5` | DECISION | LOW | S | Per-seat Boost (Off/+1/+2: less damage taken, faster paint refill) is built on Weapon Select (mechanic chosen 2026-10-27); judge the provisional values in attended play against bots. [Scope](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
 | `ROAD#10` | OPEN | HIGH | XL | Attended difficulty comparison and usefulness; decide whether bots hold and paint movers and whether world labels clamp to the pane; physical-pad check. Latch, refill retreat (margin 600), scan cost and mover identity are done; values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |

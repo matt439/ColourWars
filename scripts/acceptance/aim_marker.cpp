@@ -231,6 +231,25 @@ namespace
         world.preferences.aim_marker = false;
         require(!level->aim_marker_visible(0), "Live preference disable retained the marker");
         world.preferences.aim_marker = true;
+        // ROAD#7: views 0-3 hold pads 4, 2, 3 and 1. Each pane follows its own
+        // pad's override, and a pad left on Shared follows the Options switch.
+        world.preferences.pad_comfort[1].aim_marker = SeatSwitch::off;
+        require(level->aim_marker_visible(0) && !level->aim_marker_visible(1) &&
+            level->aim_marker_visible(2) && level->aim_marker_visible(3),
+            "Pad 2's aim-marker opt-out did not hide only its own pane's marker");
+        world.preferences.aim_marker = false;
+        world.preferences.pad_comfort[2].aim_marker = SeatSwitch::on;
+        require(!level->aim_marker_visible(0) && !level->aim_marker_visible(1) &&
+            level->aim_marker_visible(2) && !level->aim_marker_visible(3),
+            "Pad 3's aim-marker opt-in did not win over the shared Off");
+        world.preferences.pad_comfort[2].reduce_effects = SeatSwitch::on;
+        require(level->aim_marker_visible(2), "A pad's Reduce effects hid its separate aim-marker choice");
+        world.preferences.pad_comfort = {};
+        world.preferences.aim_marker = true;
+        for (int view = 0; view < 4; ++view)
+        {
+            require(level->aim_marker_visible(view), "Returning every pad to Shared did not restore the markers");
+        }
         auto& look = const_cast<WeaponFeedbackPresentation&>(world.presentation.weapon_feedback());
         look.enabled = false;
         require(!level->aim_marker_visible(0), "Disabled presentation retained the marker");

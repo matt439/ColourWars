@@ -39,7 +39,11 @@ private:
 	std::unique_ptr<OptionRow> movement_;
 	std::unique_ptr<OptionRow> aim_;
 	std::unique_ptr<OptionRow> rumble_;
+	std::unique_ptr<OptionRow> view_shake_;
+	std::unique_ptr<OptionRow> aim_marker_;
+	std::unique_ptr<OptionRow> reduce_effects_;
 	std::array<bool, input_slots::pad_count> rumble_edited_{};
+	std::array<bool, input_slots::pad_count> comfort_edited_{};
 	labrador::UiText* status_ = nullptr;
 	labrador::UiText* connection_ = nullptr;
 	labrador::UiText* raw_movement_ = nullptr;

@@ -1616,13 +1616,33 @@ produced for this increment.
 
 ### Per-seat accessibility toggles (`ROAD#7`)
 
-**DEFERRED** until after the coupled `POL#27` pass. View shake, the aim marker
-and Reduce effects are single `PlaySettings` fields that apply to every pane,
-while stick deadzones are already per slot (`StickSettings`). On a shared screen
-a motion-sensitive player cannot opt out alone. The shape is the stick-profile
-pattern: per-slot copies with the global value as the default, edited from the
-same per-pad page. Before scoping, decide whether Reduce effects is per pane
-(view shake, flashes) or global (shared overlays, the resume signal).
+**Implemented 2026-10-27; a look on 1-4P panes with pads remains (`ROAD#2`).**
+View shake, the aim marker and Reduce effects were single `PlaySettings` fields
+that applied to every pane, so on a shared screen a motion-sensitive player
+could not opt out alone. Each pad slot now has its own **Off / Shared / On**
+override for all three, following the stick-profile and rumble pattern.
+
+- **Shared** is the default and follows the Options switch, so an older save
+  behaves exactly as before. The Pad sticks page shows it as `Shared (On)` or
+  `Shared (Off)` so the effective value is never hidden.
+- **Reduce effects is both.** The Options switch still governs everything on
+  the shared screen: menus, the intro, the countdown, the reveal and world
+  effects every pane draws (muzzle flash, figure motion, drips, structures). A
+  pad's override governs only what that pad's player sees: its own view shake,
+  its pane's HUD pulses, and the badge emphasis in its pane, including bot
+  badges drawn there. A pad's Reduce effects still suppresses its own shake
+  while keeping its separate View shake choice.
+- The keyboard seat, bots and unknown slots always follow the shared switches.
+- Edited on the Pad sticks page (rows 4-6, after Rumble), committed by its
+  Apply for the edited slots only; the Controls page's Apply keeps them. Saved
+  as `pad_comfort`: four `{"view_shake", "aim_marker", "reduce_effects"}`
+  records holding `"off"`, `"shared"` or `"on"`, each field recovering to
+  Shared independently.
+
+CPU acceptance: `settings` (resolution, slot isolation, recovery, canonical
+writing), `view_shake` (per-slot shake, Shared fallback, keyboard/bot),
+`aim_marker` (sparse-slot panes) and `player_identity` (own versus other
+viewer's badge emphasis). The painter fixtures cover the longer page.
 
 ### More team palette pairs (`ROAD#8`)
 

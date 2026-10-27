@@ -223,6 +223,26 @@ namespace
             close_to(level->player_identity_bounds(0).height, quiet.height),
             "Reduced effects hid identity or retained the emphasis enlargement");
         world.preferences.reduce_effects = false;
+        // ROAD#7: view 0 holds Pad 4. Its own Reduce effects calms its badge;
+        // another pane's viewer still sees the emphasis, and the reverse holds.
+        const int own = level->player(0).player_num();
+        const int other = own == 0 ? 1 : 0;
+        require(own == 3, "Identity fixture did not seat Pad 4 in view 0");
+        world.preferences.pad_comfort[static_cast<size_t>(own)].reduce_effects = SeatSwitch::on;
+        require(level->player_identity_emphasis(0) == 0.0f &&
+            close_to(level->player_identity_bounds(0).width, quiet.width) &&
+            close_to(level->player_identity_emphasis_for(0, other), 1.0f) &&
+            level->player_identity_bounds_for(0, other).width > quiet.width,
+            "One pad's Reduce effects calmed another viewer's badge or missed its own");
+        world.preferences.reduce_effects = true;
+        world.preferences.pad_comfort[static_cast<size_t>(own)].reduce_effects = SeatSwitch::off;
+        require(close_to(level->player_identity_emphasis(0), 1.0f) &&
+            level->player_identity_emphasis_for(0, other) == 0.0f &&
+            level->player_identity_emphasis_for(0, input_slots::keyboard_and_mouse) == 0.0f &&
+            level->player_identity_emphasis_for(0, -1) == 0.0f,
+            "A pad's Reduce effects Off did not win over the shared switch, or leaked to other viewers");
+        world.preferences.reduce_effects = false;
+        world.preferences.pad_comfort = {};
         auto& look = const_cast<PlayerIdentityPresentation&>(world.presentation.player_identity());
         look.enabled = false;
         require(!level->player_identity_visible(0), "Disabled identity presentation retained a world badge");
