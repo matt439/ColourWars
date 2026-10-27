@@ -506,7 +506,7 @@
       "shadow_offset": 2.0,
       "focus_padding": { "x": 28.0, "y": 8.0 }
     },
-    "heading_position": { "x": 220.0, "y": 50.0 },
+    "heading_position": { "x": 220.0, "y": 54.0 },
     "controls_position": { "x": 1120.0, "y": 210.0 },
     "controls_size": { "x": 620.0, "y": 700.0 },
     "status_position": { "x": 220.0, "y": 888.0 },
