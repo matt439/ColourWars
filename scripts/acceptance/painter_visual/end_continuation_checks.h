@@ -101,7 +101,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
     resize({ 1280, 720 });
     const auto tick = [&]
     {
-        require(updates < 68, "End continuation exceeded its fixed update budget");
+        require(updates < 72, "End continuation exceeded its fixed update budget");
         ++updates; app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f);
     };
     const auto tap = [&](Key key)
@@ -140,7 +140,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         UiText primary("independent-end-continuation", literal, font, look.layout.position,
             app.render_resources(), focused == 0 ? art.focus_ink : art.ink);
         const bool ongoing = fixture.session.is_series() && !fixture.session.complete();
-        UiText secondary("independent-end-secondary", ongoing ? L"Exit to Main Menu" : L"Change Teams", font,
+        UiText secondary("independent-end-secondary", ongoing ? L"Change Weapons" : L"Change Teams", font,
             look.layout.position + Vector2F(0.0f, look.layout.spacing.y), app.render_resources(),
             focused == 1 ? art.focus_ink : art.ink);
         metrics.raw = primary.bounds().size();
@@ -272,7 +272,8 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
             index == 4 ? "end-continuation-replay-draw.ppm" : index == 5 ? "end-continuation-next-round.ppm" : "";
         compare("legacy-primary", fixture, original, fixture.literal, 0, crop);
         tap(Key::down); compare("legacy-secondary", fixture, original, fixture.literal, 1);
-        if (index == 5) { tap(Key::enter); delivered_once(EndMenuAction::exit); }
+        // Between rounds Exit sits under Change Weapons and Change Level.
+        if (index == 5) { tap(Key::down); tap(Key::down); tap(Key::enter); delivered_once(EndMenuAction::exit); }
         else { tap(Key::up); tap(Key::enter); delivered_once(EndMenuAction::restart); }
     }
     const std::array<const wchar_t*, 4> old_words{ L"Rematch~ {1}", L"Again~ {3}", L"Draw~ {0}", L"Next~ {2}" };
@@ -343,11 +344,11 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         }
         tap(Key::enter); delivered_once(EndMenuAction::restart);
     }
-    require(updates == 68 && readbacks == 94 && rows == 31 && crops == 6 && openings == 14 && font_controls == 1 &&
+    require(updates == 72 && readbacks == 94 && rows == 31 && crops == 6 && openings == 14 && font_controls == 1 &&
         actions == 14 && restart_actions == 13 && exit_actions == 1 && deferred_actions == 4 && music_starts == 4 && records.good(),
         "End continuation drifted from its fixed update/readback/action/crop budget");
     std::ofstream summary(output / "end-continuation-summary.json");
-    summary << "{\"outcome\":\"passed\",\"scope\":\"end-continuation-only\",\"updates\":68,\"readbacks\":94,"
+    summary << "{\"outcome\":\"passed\",\"scope\":\"end-continuation-only\",\"updates\":72,\"readbacks\":94,"
         "\"csv_rows\":31,\"compact_crops\":6,\"page_openings\":14,\"font_negative_controls\":1,"
         "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":311040,\"typed_actions\":14,"
         "\"restart_actions\":13,\"exit_actions\":1,\"deferred_actions\":4,\"music_starts\":4}\n";
@@ -356,6 +357,6 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         "and persistent primary off focus; literal-brace custom copy and numeric/letter font through assignment/reopen/reversal, "
         "point sampler and zero-update720/1080/720 resize; frozen Session/setup/private Save/RNG; "
         "14 actual typed callbacks (13 restart/one exit), four owner-controlled music deferrals/repeated completions; "
-        "68 updates,94 readbacks,31 CSV rows,six compact crops,one private Play seed Save. "
+        "72 updates,94 readbacks,31 CSV rows,six compact crops,one private Play seed Save. "
         "No match launch/global-input/physical-pad/display/hardware/listening/human/performance acceptance.\n";
 }

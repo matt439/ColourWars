@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/states/match_start.h"
+#include "game/states/end_menu.h"
 #include "game/build_info.h"
 #include "game/objects/crude_drawing.h"
 #include "game/drawable_text.h"
@@ -10,8 +11,8 @@ using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
 
-MainMenuPage::MainMenuPage(MenuContext* context) :
-	MenuPage(context)
+MainMenuPage::MainMenuPage(MenuContext* context, std::optional<Session> between_rounds) :
+	MenuPage(context), between_rounds_(std::move(between_rounds))
 {
 	const MainMenuPresentation& look = this->look();
 
@@ -22,10 +23,34 @@ MainMenuPage::MainMenuPage(MenuContext* context) :
 
 bool MainMenuPage::debug_start_match(const MenuLevelSettings& plan)
 {
+	// Between rounds this frame belongs to the match, which takes the plan.
+	if (this->between_rounds_) { return false; }
 	this->menu_context()->cancel_music_exit();
 	*this->level_settings() = plan;
 	this->context()->pop(MatchStart::developer);
 	return true;
+}
+
+bool MainMenuPage::debug_dismiss(bool leaving_match)
+{
+	if (!this->between_rounds_)
+	{
+		return MenuPage::debug_dismiss(leaving_match);
+	}
+	this->menu_context()->cancel_music_exit();
+	this->context()->pop(leaving_match ? EndMenuAction::exit : EndMenuAction::restart);
+	return true;
+}
+
+const std::optional<Session>& MainMenuPage::between_rounds() const
+{
+	return this->between_rounds_;
+}
+
+void MainMenuPage::return_to_round_menu()
+{
+	this->context()->transition_to(
+		std::make_unique<EndMenuInitial>(this->menu_context(), *this->between_rounds_));
 }
 
 const MainMenuPresentation& MainMenuPage::look() const
@@ -140,8 +165,16 @@ bool MainMenuPage::wait_for_players(
 			if (input.action == MenuInputAction::back)
 			{
 				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+				// Between rounds the roster is the series': keep it.
+				if (this->between_rounds_)
+				{
+					this->return_to_round_menu();
+				}
+				else
+				{
+					this->context()->transition_to(
+						std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+				}
 				break;
 			}
 		}

@@ -1871,10 +1871,17 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
 
 ### Sessions and setup
 
-- **Re-pick between series rounds (`ROAD#20`).** A series keeps teams, tools
-  and stage until it ends. Smash re-picks each game and TowerFall rotates
-  levels. Add a tool re-pick step and a stage rotation or loser's pick between
-  rounds.
+- **Re-pick between series rounds (`ROAD#20`).** Smash re-picks each game
+  and TowerFall rotates levels. Done 2026-10-27: an unfinished series' End
+  menu offers Change Weapons and Change Level under Next Round. They open the
+  setup's own Weapon and Stage Select above the match, in the End menu's
+  frame, so the series ledger survives. Weapon Select carries each seat's
+  Boost, so handicaps re-pick too; Back from either page returns to the End
+  menu, and the Stage confirmation plays the next round with the new picks.
+  Teams, the roster and bot difficulty stay locked, because the ledger counts
+  team wins and a seat swap would change who is winning. The re-picks last for
+  the rest of the series only; the setup the main menu remembers is the one
+  that started it. Still open: a stage rotation or loser's pick rule.
 - **Player profiles (`ROAD#21`).** Smash name tags carry a person's controls,
   rumble and records. Deadzones, rumble, binds and accessibility toggles
   follow the pad slot here (`POL#18`, `ROAD#7`, `ROAD#9`, `GAP#4.2`), so

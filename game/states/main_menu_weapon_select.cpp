@@ -9,8 +9,9 @@ using namespace labrador;
 
 #pragma region MainMenuWeaponSelect
 
-MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context) :
-	MainMenuPage(context)
+MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context,
+	std::optional<Session> between_rounds) :
+	MainMenuPage(context, std::move(between_rounds))
 {
 
 }
@@ -41,7 +42,11 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 			if (can_leave)
 			{
 				this->play_wave(this->cancel_sound_);
-				if (this->player_count() == 1)
+				if (this->between_rounds())
+				{
+					this->return_to_round_menu();
+				}
+				else if (this->player_count() == 1)
 				{
 					this->context()->transition_to(
 						std::make_unique<MainMenuModeSelect>(
@@ -109,7 +114,7 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 		}
 		this->set_level_settings();
 		this->context()->transition_to(
-			std::make_unique<MainMenuStageSelect>(this->menu_context()));
+			std::make_unique<MainMenuStageSelect>(this->menu_context(), this->between_rounds()));
 		return;
 	}
 	this->update_weapon_select_visuals();

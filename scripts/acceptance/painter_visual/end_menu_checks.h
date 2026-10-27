@@ -117,8 +117,9 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
             look.layout.position, app.render_resources(), focus == 0 ? art.focus_ink : art.ink));
         for (size_t index = 0; index < labels.size(); ++index)
         {
-            if (ongoing && index != 3) { continue; }
-            const int row = ongoing ? 1 : static_cast<int>(index) + 1;
+            // An ongoing series hides only Change Teams; the rest move up a row.
+            if (ongoing && index == 0) { continue; }
+            const int row = ongoing ? static_cast<int>(index) : static_cast<int>(index) + 1;
             rows.push_back(std::make_unique<UiText>("reference-end-item", labels[index], style.item_font,
                 look.layout.position + Vector2F(0.0f, look.layout.spacing.y * static_cast<float>(row)),
                 app.render_resources(), row == focus ? art.focus_ink : art.ink));
@@ -194,15 +195,15 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
         compare_bounds(rows[0]->bounds(), -1, 0);
         for (size_t row = 1; row < rows.size(); ++row)
         {
-            compare_bounds(rows[row]->bounds(), ongoing ? 3 : static_cast<int>(row) - 1, static_cast<int>(row));
+            compare_bounds(rows[row]->bounds(), ongoing ? static_cast<int>(row) : static_cast<int>(row) - 1,
+                static_cast<int>(row));
         }
         if (ongoing)
         {
             const float height = app.render_resources()->measure_text(
-                app.render_resources()->resolve_sprite_font(style.item_font), L"Change Weapons").y;
-            compare_bounds(RectangleF(look.layout.position.x, look.layout.position.y + look.layout.spacing.y * 2.0f,
-                panel.right() - look.layout.position.x - art.keyline_width * 3.0f,
-                look.layout.spacing.y * 2.0f + height), 4, 2);
+                app.render_resources()->resolve_sprite_font(style.item_font), L"Change Teams").y;
+            compare_bounds(RectangleF(look.layout.position.x, look.layout.position.y + look.layout.spacing.y * 4.0f,
+                panel.right() - look.layout.position.x - art.keyline_width * 3.0f, height), 4, 4);
         }
         std::srand(6089); const int next_random = std::rand(); std::srand(6089);
         require(actual.pixels == end_menu_frame(app).pixels && std::rand() == next_random,
@@ -255,12 +256,16 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
     {
         const auto& fixture = cases[index];
         const bool ongoing = fixture.session.is_series() && !fixture.session.complete();
-        const std::vector<EndMenuAction> actions = ongoing ?
-            std::vector<EndMenuAction>{ EndMenuAction::restart, EndMenuAction::exit } :
-            std::vector<EndMenuAction>{ EndMenuAction::restart, EndMenuAction::change_teams,
+        // Between rounds Change Weapons and Change Level replace this page in
+        // its frame rather than closing it (repick_checks covers them).
+        const std::vector<std::optional<EndMenuAction>> actions = ongoing ?
+            std::vector<std::optional<EndMenuAction>>{ EndMenuAction::restart, std::nullopt, std::nullopt,
+                EndMenuAction::exit } :
+            std::vector<std::optional<EndMenuAction>>{ EndMenuAction::restart, EndMenuAction::change_teams,
                 EndMenuAction::change_weapons, EndMenuAction::change_level, EndMenuAction::exit };
         for (size_t selected = 0; selected < actions.size(); ++selected)
         {
+            if (!actions[selected]) { continue; }
             presentation = old; open(fixture);
             for (size_t move = 0; move < selected; ++move) { tap(Key::down); }
             const int focus = static_cast<int>(selected);
@@ -447,9 +452,12 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
         require(fixture.session.continue_string(presentation.menu_text().end) == fixture.continuation,
             "End-menu continuation label did not match its single/series state");
         const bool ongoing = fixture.session.is_series() && !fixture.session.complete();
-        const std::vector<EndMenuAction> actions = ongoing ?
-            std::vector<EndMenuAction>{ EndMenuAction::restart, EndMenuAction::exit } :
-            std::vector<EndMenuAction>{ EndMenuAction::restart, EndMenuAction::change_teams,
+        // Between rounds Change Weapons and Change Level open their pages in
+        // this frame instead of closing it (series_repick_checks).
+        const std::vector<std::optional<EndMenuAction>> actions = ongoing ?
+            std::vector<std::optional<EndMenuAction>>{ EndMenuAction::restart, std::nullopt, std::nullopt,
+                EndMenuAction::exit } :
+            std::vector<std::optional<EndMenuAction>>{ EndMenuAction::restart, EndMenuAction::change_teams,
                 EndMenuAction::change_weapons, EndMenuAction::change_level, EndMenuAction::exit };
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080),
             Vector2I(2560, 1440), Vector2I(1600, 1200), Vector2I(1920, 1200), Vector2I(2560, 1080) })
@@ -481,7 +489,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
                 "End-menu heading overlaps the first card or escapes its panel");
             const Vector2F exit_size = app.render_resources()->measure_text(font, L"Exit to Main Menu");
             RectangleF exit(look.layout.position + Vector2F(0.0f,
-                look.layout.spacing.y * (ongoing ? 1.0f : 4.0f)), exit_size);
+                look.layout.spacing.y * (ongoing ? 3.0f : 4.0f)), exit_size);
             exit.inflate(art.focus_padding);
             require(panel.contains(exit), "End-menu last action card escapes its panel");
             RectangleF primary(look.layout.position, measured);
@@ -494,13 +502,13 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             const Frame normal = end_menu_frame(app);
             if (ongoing)
             {
-                // Rows below the compact continuation/Exit pair must contain
-                // paper, not merely unfocusable setup labels. Compare with
-                // neighbouring paper on the same scanline so the authored
-                // lower-edge airbrush shading remains valid too.
-                const Vector2F absent_size = app.render_resources()->measure_text(font, L"Change Weapons");
-                const RectangleF absent(look.layout.position + Vector2F(0.0f, look.layout.spacing.y * 2.0f),
-                    Vector2F(absent_size.x, look.layout.spacing.y * 2.0f + absent_size.y));
+                // The row below Exit must contain paper, not merely an
+                // unfocusable Change Teams. Compare with neighbouring paper
+                // on the same scanline so the authored lower-edge airbrush
+                // shading remains valid too.
+                const Vector2F absent_size = app.render_resources()->measure_text(font, L"Change Teams");
+                const RectangleF absent(look.layout.position + Vector2F(0.0f, look.layout.spacing.y * 4.0f),
+                    absent_size);
                 const RectangleI empty_rows = countdown_crop_bounds(camera.calculate_view_rectangle(absent));
                 const int sample_x = static_cast<int>(camera.calculate_view_position(
                     Vector2F((panel.x + look.layout.position.x) * 0.5f, 0.0f)).x);
@@ -521,7 +529,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
                             std::cerr << "Hidden-row raster mismatch at " << x << ',' << y << "; row bounds " <<
                                 empty_rows.x << ',' << empty_rows.y << ',' << empty_rows.width << ',' << empty_rows.height << '\n';
                         }
-                        require(empty, "Ongoing series still rendered setup choices below its compact two-row menu");
+                        require(empty, "Ongoing series still rendered Change Teams below its Exit row");
                     }
                 }
             }
@@ -602,12 +610,13 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
         }
 
         // Every remaining action is reached from a newly opened actual page.
-        // Ongoing sessions therefore prove the three setup choices are absent
-        // from navigation: one Down must go directly to Exit.
+        // Ongoing sessions therefore prove Change Teams is absent from
+        // navigation: three Downs go directly to Exit.
         app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
         std::ignore = app.renderer()->window_size_changed(1280, 720);
         for (size_t selected = 1; selected < actions.size(); ++selected)
         {
+            if (!actions[selected]) { continue; }
             open(fixture.session);
             const Frame initial = end_menu_frame(app);
             for (size_t move = 0; move < selected; ++move) { tap(Key::down); }

@@ -5,6 +5,7 @@
 #include "engine/render/text_encoding.h"
 #include "game/objects/player_team.h"
 #include "game/states/confirmation_state.h"
+#include "game/session.h"
 #include "game/states/menu_page.h"
 #include "game/states/menu_panel.h"
 #include "game/states/option_row.h"
@@ -34,18 +35,29 @@ enum class MainMenuScreen
 class MainMenuPage : public MenuPage
 {
 public:
-	explicit MainMenuPage(MenuContext* context);
+	// A series between rounds reopens Weapon and Stage Select above its
+	// match, in the End menu's frame: Back returns to that menu and the
+	// Stage confirmation plays the next round (ROAD#20).
+	explicit MainMenuPage(MenuContext* context,
+		std::optional<Session> between_rounds = std::nullopt);
 	~MainMenuPage() override = default;
 	void init() override = 0;
 
 	// Main-menu frames start a match with the shared plan when they pop.
 	// Options also serves as a paused child and guards that route separately.
 	bool debug_start_match(const MenuLevelSettings& plan) override;
+	// Between rounds these pages close like the End menu they replaced.
+	bool debug_dismiss(bool leaving_match) override;
 protected:
 	void update_page(float dt) override = 0;
 	const MainMenuPresentation& look() const;
 
 	int player_count() const;
+
+	// The unfinished series this page re-picks for, or empty during setup.
+	const std::optional<Session>& between_rounds() const;
+	// Back to the End menu this page replaced; only between rounds.
+	void return_to_round_menu();
 
 	// Available input slots, including keyboard/mouse.
 	std::vector<int> connected_slots() const;
@@ -67,6 +79,7 @@ protected:
 private:
 	MenuPrompt player_prompts_ = MenuPrompt::select_back;
 	bool waiting_for_players_ = false;
+	std::optional<Session> between_rounds_;
 };
 
 class MainMenuTitle final : public MainMenuPage
@@ -364,7 +377,8 @@ private:
 class MainMenuWeaponSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuWeaponSelect(MenuContext* context);
+	explicit MainMenuWeaponSelect(MenuContext* context,
+		std::optional<Session> between_rounds = std::nullopt);
 	void update_page(float dt) override;
 	void init() override;
 protected:
@@ -420,7 +434,8 @@ private:
 class MainMenuStageSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuStageSelect(MenuContext* context);
+	explicit MainMenuStageSelect(MenuContext* context,
+		std::optional<Session> between_rounds = std::nullopt);
 	void update_page(float dt) override;
 	void init() override;
 protected:

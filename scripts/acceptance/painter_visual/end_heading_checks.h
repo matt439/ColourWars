@@ -217,7 +217,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             "End heading pending music completion lost or duplicated its continuation action");
 
         presentation = next; open(fixture);
-        for (int move = 0; move < (ongoing ? 1 : 4); ++move) { tap(Key::down); }
+        for (int move = 0; move < (ongoing ? 3 : 4); ++move) { tap(Key::down); }
         const Frame adopted = compare("reopened-new-font-exit", fixture, next, new_words);
         presentation = old; tick(); tap(Key::up); tap(Key::down);
         require(adopted.pixels == end_menu_frame(app).pixels,

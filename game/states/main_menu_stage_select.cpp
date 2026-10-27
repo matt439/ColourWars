@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/states/match_start.h"
+#include "game/states/end_menu_action.h"
 #include "game/drawable_text.h"
 #include "game/save.h"
 #include "game/objects/level_end_info.h"
@@ -13,8 +14,9 @@ using namespace labrador;
 
 #pragma region MainMenuStageSelect
 
-MainMenuStageSelect::MainMenuStageSelect(MenuContext* context) :
-	MainMenuPage(context),
+MainMenuStageSelect::MainMenuStageSelect(MenuContext* context,
+	std::optional<Session> between_rounds) :
+	MainMenuPage(context, std::move(between_rounds)),
 	stage_motion_(context->data()->presentation()->menu().motion)
 {
 
@@ -38,9 +40,16 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 			if (this->select_state_.state == ConfirmationState::unconfirmed)
 			{
 				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuWeaponSelect>(
-						this->menu_context()));
+				if (this->between_rounds())
+				{
+					this->return_to_round_menu();
+				}
+				else
+				{
+					this->context()->transition_to(
+						std::make_unique<MainMenuWeaponSelect>(
+							this->menu_context()));
+				}
 				return;
 			}
 			if (this->select_state_.state == ConfirmationState::confirmed)
@@ -68,12 +77,23 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 				// unfinished lock response without refreshing Random's visuals.
 				this->stage_motion_.reset();
 
-				// Settings are already in GameMenu's context. Pop once and return so
-				// simultaneous inputs cannot also pop the state underneath.
-				this->menu_context()->finish_with_music([context = this->context()]
+				// Settings are already in the owner's context. Pop once and return
+				// so simultaneous inputs cannot also pop the state underneath.
+				// Between rounds the End menu's frame plays the next round.
+				if (this->between_rounds())
 				{
-					context->pop(MatchStart::menu);
-				});
+					this->menu_context()->finish_with_music([context = this->context()]
+					{
+						context->pop(EndMenuAction::restart);
+					});
+				}
+				else
+				{
+					this->menu_context()->finish_with_music([context = this->context()]
+					{
+						context->pop(MatchStart::menu);
+					});
+				}
 				return;
 			}
 			else
