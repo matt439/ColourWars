@@ -95,6 +95,7 @@ int main(int argc, char** argv)
         check_result_percentage_text(variants, defaults.menu_text());
         check_result_percentage_numbers(defaults.menu_text());
         check_result_percentage_resources(variants, world, defaults);
+        check_award_text(variants, world, defaults.menu_text());
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
             "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "

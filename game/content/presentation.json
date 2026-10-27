@@ -203,6 +203,10 @@
       "competitive_draw": "Draw!",
       "contribution_team_a": " | Team A | ",
       "contribution_team_b": " | Team B | ",
+      "award_paint_laid": "Most paint laid",
+      "award_recaptured": "Most retaken",
+      "award_airtime": "Best airtime",
+      "award_splats": "Most splats",
       "solo_coverage": "{percentage} Painted",
       "team_a_percentage": "A {percentage}",
       "team_b_percentage": "B {percentage}"

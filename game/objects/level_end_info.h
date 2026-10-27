@@ -1,7 +1,11 @@
 #pragma once
 
+#include "game/match_award.h"
 #include "game/paint_owners.h"
 #include <array>
+#include <cstdint>
+#include <optional>
+#include <vector>
 
 #include "game/objects/team_colour.h"
 #include "game/objects/player_team.h"
@@ -45,4 +49,18 @@ struct LevelEndInfo
 
 	// Fraction of the arena painted by either team.
 	float coverage_ratio() const;
+
+	// Match-long tallies behind the awards, indexed by paint owner like
+	// player_areas. Laid counts every capture, recaptured only those taken
+	// from the other team; airtime is the longest flight that landed.
+	std::array<float, paint_owners::count> laid_areas{};
+	std::array<float, paint_owners::count> recaptured_areas{};
+	std::array<float, paint_owners::count> longest_airtimes{};
+	std::array<std::uint64_t, paint_owners::count> splats{};
+
+	// One entry per listed owner (a results row): the call-out it shows, if
+	// any. Each award goes to every player tied for the lead with a nonzero
+	// tally, unless that player already shows an earlier award; it is never
+	// passed down to a runner-up. A lone player gets none.
+	std::vector<std::optional<MatchAward>> awards(const std::vector<int>& owners) const;
 };

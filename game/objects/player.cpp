@@ -1023,6 +1023,7 @@ void Player::update(float dt)
         // Damage arrives during contacts, after update. Retire input before the
         // next movement tick so a fatal hit cannot produce a final jump.
         this->state_ = PlayerState::dead;
+        this->flight_time_ = 0.0f;
         this->primary_->reset_motion();
         this->movement_audio_.reset();
         this->movement_feedback_.clear();
@@ -1058,6 +1059,7 @@ void Player::update(float dt)
         }
 
         this->damage_sound_timer_ += dt;
+        this->update_flight(dt);
     }
     else if (this->state_ == PlayerState::dead)
     {
@@ -1532,6 +1534,7 @@ void Player::place_at(const Vector2F& top_left)
     this->projected_fixed_slab_support_ = false;
     this->rectangle_.set_position(top_left);
     this->prev_rectangle_ = this->rectangle_;
+    this->flight_time_ = 0.0f;
     this->reset_jump_input();
     this->set_move_state(PlayerMoveState::in_air);
     this->set_air_time(0.0f);
@@ -1727,6 +1730,24 @@ void Player::set_camera(const Camera& camera)
 const PlayerLethalProjectiles& Player::lethal_projectiles() const
 {
     return this->lethal_projectiles_;
+}
+
+float Player::longest_airtime() const
+{
+    return this->longest_flight_;
+}
+
+void Player::update_flight(float dt)
+{
+    const PlayerMoveState move = this->move_state();
+    if (move == PlayerMoveState::jumping || move == PlayerMoveState::in_air ||
+        move == PlayerMoveState::dropping_down)
+    {
+        this->flight_time_ += std::max(dt, 0.0f);
+        return;
+    }
+    this->longest_flight_ = std::max(this->longest_flight_, this->flight_time_);
+    this->flight_time_ = 0.0f;
 }
 
 float Player::weapon_ammo() const

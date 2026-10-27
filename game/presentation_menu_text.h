@@ -4,6 +4,7 @@
 // heading, prompt and item roles, the per-screen text records, and MenuText.
 // Text, not layout; the formatters are defined in presentation_menu_text.cpp.
 
+#include "game/match_award.h"
 #include <array>
 #include <cstddef>
 #include <string>
@@ -134,6 +135,12 @@ struct MenuResultsText
 	std::wstring solo_coverage;
 	std::wstring team_a_percentage;
 	std::wstring team_b_percentage;
+	// The call-outs at the right of the contribution rows, one per award.
+	std::wstring award_paint_laid;
+	std::wstring award_recaptured;
+	std::wstring award_airtime;
+	std::wstring award_splats;
+	const std::wstring& award_line(MatchAward award) const;
 	// The caller renders the percentage. These wrappers preserve that string,
 	// including unusual numeric spellings, without imposing a numeric domain.
 	std::wstring solo_coverage_line(const std::wstring& percentage) const;

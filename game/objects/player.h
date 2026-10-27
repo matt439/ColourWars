@@ -217,6 +217,9 @@ public:
     float health() const;
     // Fatal projectile contacts, before the later dead-state transition.
     const PlayerLethalProjectiles& lethal_projectiles() const;
+    // The longest flight that ended in a landing this match, in seconds.
+    // Passive like the lethal counts: a fall to elimination never lands.
+    float longest_airtime() const;
 
     float weapon_ammo() const;
     const labrador::Colour& team_colour() const;
@@ -500,4 +503,7 @@ private:
 	bool is_on_ground() const;
     bool is_on_ramp() const;
     PlayerLethalProjectiles lethal_projectiles_{};
+    float flight_time_ = 0.0f;
+    float longest_flight_ = 0.0f;
+    void update_flight(float dt);
 };

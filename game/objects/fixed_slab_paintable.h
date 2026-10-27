@@ -55,6 +55,7 @@ private:
     TeamColour team_colours_;
     PaintSplashClips splash_clips_;
     std::vector<Tile> tiles_;
+    PaintCredit credit_;
     std::vector<Strip> strips_;
     std::vector<std::pair<float, float>> exposed_bottom_;
     std::unique_ptr<const TerrainMaterial> local_material_;

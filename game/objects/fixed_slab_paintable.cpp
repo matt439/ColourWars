@@ -202,8 +202,10 @@ void FixedSlabPaintable::on_contact(const CollisionObject& other,
     for (Tile& tile : this->tiles_)
     {
         if (!narrow_phase(tile.paint.bounds(), footprint)) { continue; }
-        captured |= tile.paint.team() != team;
+        const PlayerTeam before = tile.paint.team();
+        captured |= before != team;
         tile.paint.paint(team, projectile.player_num(), projectile.projectile_type());
+        this->credit_.add(projectile.player_num(), before, team, tile.paint.area());
         painted = true;
     }
     projectile.note_paint_contact(painted, captured);
@@ -212,6 +214,7 @@ void FixedSlabPaintable::on_contact(const CollisionObject& other,
 PaintTotal FixedSlabPaintable::paint_total() const
 {
     PaintTotal result;
+    result.credit = this->credit_;
     for (const Tile& tile : this->tiles_)
     {
         const float area = tile.paint.area();
