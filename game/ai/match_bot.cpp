@@ -181,6 +181,11 @@ void MatchBot::decide(const MatchBotObservation& view)
 	if (this->recovery_left_ == 0 && this->blocked_steps_ >= policy.stuck_turn_steps)
 	{
 		this->heading_ = -this->heading_;
+		// A completed descent onto non-scoring ground keeps the latch while
+		// the bot can walk on; a stuck turn there means the floor's only exit
+		// may be a climb, so ascents become eligible once recovery ends.
+		if (this->seeking_after_descent_ && this->descent_airborne_)
+		{ this->seeking_after_descent_ = this->descent_airborne_ = false; }
 		this->recovery_left_ = policy.recovery_steps;
 		this->blocked_steps_ = this->progress_steps_ = 0;
 		this->progress_origin_ = view.center;
@@ -318,12 +323,16 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	const BotTuning& policy = this->tuning_->bots();
 	if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
 	else if (this->refilling_ && view.ammo >= policy.reserve_resume) { this->refilling_ = false; }
-	// Any completed descent ends the latch, scoring landing or not. The
-	// supports dropped through stay visited, so this cannot climb straight
-	// back; it only lets a non-scoring floor's sole exit be a climb.
 	if (this->seeking_after_descent_ && !view.grounded) { this->descent_airborne_ = true; }
-	else if (this->seeking_after_descent_ && this->descent_airborne_)
-	{ this->seeking_after_descent_ = this->descent_airborne_ = false; }
+	if (this->seeking_after_descent_ && view.grounded)
+	{
+		for (const MatchBotSupport& support : view.supports)
+		{
+			if (support.paintable && std::fabs(view.center.y + view.size.y * 0.5f - support.bounds.top()) < 0.1f &&
+				view.center.x >= support.bounds.left() && view.center.x <= support.bounds.right())
+			{ this->seeking_after_descent_ = this->descent_airborne_ = false; }
+		}
+	}
 	if (!this->ascending_ && !this->climbing_ramp_ && this->decision_.x_movement != 0.0f && std::fabs(view.velocity.x) < 1.0f)
 	{
 		++this->blocked_steps_;

@@ -158,7 +158,7 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 
 void MatchBot::remember_descent(const MatchBotObservation& view, Vector2F goal)
 {
-	// A fresh drop must leave the ground before its landing ends the latch.
+	// A fresh drop must leave the ground before a stuck turn ends the latch.
 	if (!this->seeking_after_descent_) { this->descent_airborne_ = false; }
 	this->seeking_after_descent_ = true;
 	// A deliberate escape has already considered the one-way supports in its

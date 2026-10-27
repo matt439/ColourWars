@@ -239,17 +239,17 @@ namespace
 		const float threat = reach + tuning.bots().refill_retreat_margin;
 		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
 		{
-			for (const bool near : { true, false })
+			for (const bool close : { true, false })
 			{
 				MatchBot bot(&tuning, difficulty, 7);
 				MatchBotObservation view = fixture(tuning);
 				view.ammo = tuning.bots().reserve_low * 0.5f;
 				view.engage_distance = 200.0f;
-				const float x = near ? threat - 50.0f : threat + 400.0f;
+				const float x = close ? threat - 50.0f : threat + 400.0f;
 				view.enemies.push_back({ { x, 0.0f }, {}, reach });
 				const PlayerInputData input = react(bot, view, tuning, difficulty);
 				require(!input.primary_shoot, "A refilling bot fired before reaching its resume reserve");
-				require(near ? input.x_movement < 0.0f : input.x_movement > 0.0f, near ?
+				require(close ? input.x_movement < 0.0f : input.x_movement > 0.0f, close ?
 					"A refilling bot did not back away from an enemy within that enemy's reach" :
 					"A refilling bot retreated from an enemy well outside that enemy's reach");
 			}
