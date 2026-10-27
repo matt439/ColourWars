@@ -101,7 +101,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
             auto detail = std::make_unique<UiTextDropShadow>("independent-weapon-description", look.weapon_descriptions[static_cast<size_t>(choices[i])], look.weapon_description_font,
                 box.position() + Vector2F(look.weapon_description_x_offset, 0.0f), app.render_resources(), look.weapon_description_colour, Colour{}, look.weapon_description_shadow_offset);
             const RectangleF bounds = label->bounds(); const auto& identity = snapshot.player_identity();
-            auto handicap = std::make_unique<UiTextDropShadow>("independent-weapon-handicap", snapshot.menu_text().handicap_label(settings.player_handicap(static_cast<int>(i))), style.detail_font, Vector2F(position(0, static_cast<int>(i) + 2).x, bounds.bottom()), app.render_resources(), art.ink, Colour{}, Vector2F(2.0f));
+            auto handicap = std::make_unique<UiTextDropShadow>("independent-weapon-handicap", snapshot.menu_text().handicap_label(settings.player_handicap(static_cast<int>(i))), look.weapon_description_font, Vector2F(position(0, static_cast<int>(i) + 2).x, bounds.bottom()), app.render_resources(), art.ink, Colour{}, Vector2F(2.0f));
             const RectangleF badge(bounds.x - identity.ui_size.x - identity.ui_gap, bounds.y + (bounds.height - identity.ui_size.y) / 2.0f, identity.ui_size.x, identity.ui_size.y);
             RectangleF tile = box; tile.inflate(style.icon_padding + Vector2F(style.rule_height));
             RectangleF row = RectangleF::union_of(RectangleF::union_of(RectangleF::union_of(bounds, handicap->bounds()), badge), RectangleF::union_of(tile, RectangleF::union_of(tool_name->bounds(), detail->bounds())));

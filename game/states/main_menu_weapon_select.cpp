@@ -324,7 +324,7 @@ void MainMenuWeaponSelect::init()
 		widgets->handicap = std::make_unique<UiTextDropShadow>(
 			name + "_handicap",
 			this->text().handicap_label(state.handicap),
-			this->menu_style().detail_font,
+			this->look().weapon_description_font,
 			Vector2F(this->calculate_widget_position(0, i + 2).x, widgets->player->bounds().bottom()),
 			this->render_resources(),
 			this->paper_art_.ink,
