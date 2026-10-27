@@ -1,8 +1,11 @@
 #include "game/pch.h"
 #include "game/ai/match_bot_ballistics.h"
+#include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/objects/weapon_builder.h"
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 
 namespace
 {
@@ -81,6 +84,87 @@ namespace
 		require_near(match_bot_ballistics::horizontal_reach(tool, projectile), 0.0f, 0.0f,
 			"A zero-speed gravity projectile gained travel");
 	}
+
+	void check_actual_flight(paint_surfaces_acceptance::World& world)
+	{
+		using namespace mattmath;
+		const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
+			labrador::StepTimer::TicksPerSecond / 60));
+		int contacts = 0;
+		for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper,
+			WeaponType::mister, WeaponType::bucket })
+		{
+			for (const float side : { -1.0f, 1.0f })
+			{
+				for (const bool moving : { false, true })
+				{
+					const WeaponTuning& tool = world.tuning.weapon(type);
+					const ProjectileTuning& projectile = world.tuning.projectile(tool.details.proj_type);
+					const Vector2F shooter_velocity(side * (moving ? 120.0f : 0.0f), 0.0f);
+					const Vector2F target(side * 280.0f, -35.0f);
+					const Vector2F target_velocity(side * (moving ? 80.0f : 0.0f), moving ? -80.0f : 0.0f);
+					const Vector2F aim = match_bot_ballistics::aim_direction(tool, projectile,
+						shooter_velocity, target, target_velocity);
+					require_near(aim.length(), 1.0f, 0.001f, "Bot flight search returned a non-unit aim");
+					std::unique_ptr<Weapon> weapon = WeaponBuilder::build_weapon(&world.tuning, PlayerTeam::a,
+						0, 0, labrador::Colour::white, type, {}, &world.render, &world.audio, &world.preferences);
+					PlayerInputData input;
+					input.primary_shoot = input.shoot_direction_requested = true;
+					input.shoot_direction = aim; input.shoot_angle = aim.angle();
+					std::vector<std::unique_ptr<Projectile>> shots;
+					// Advance only the weapon's normal cooldown until it buys its first shot.
+					for (int tick = 0; tick < 120 && shots.empty(); ++tick)
+					{ shots = weapon->update_and_get_projectiles(input, {}, shooter_velocity, side > 0.0f, dt); }
+					require(!shots.empty() && weapon->ammo() < world.tuning.starting_ammo(),
+						"Actual bot aim flight did not buy an ordinary shot");
+					// Mist is emitted center-out; the first pellet is its actual centerline.
+					Projectile& shot = *shots.front();
+					Vector2F previous = shot.shape()->bounding_box().center() - target;
+					float closest = (std::numeric_limits<float>::max)();
+					for (int tick = 0; tick < 60; ++tick)
+					{
+						shot.update(dt);
+						if (shot.for_deletion()) { break; }
+						const Vector2F current = shot.shape()->bounding_box().center() - target -
+							target_velocity * (dt * static_cast<float>(tick + 1));
+						const Vector2F delta = current - previous;
+						const float along = delta.length_squared() > 0.0f ?
+							std::clamp(-previous.dot(delta) / delta.length_squared(), 0.0f, 1.0f) : 0.0f;
+						closest = std::min(closest, (previous + delta * along).length());
+						previous = current;
+					}
+					std::cout << "MEASURE actual centerline " << static_cast<int>(type) << '/' << side << '/' << moving <<
+						" miss=" << closest << '\n';
+					require(closest < 2.0f, "Bot local aim missed a reachable stationary/moving target with the actual weapon projectile");
+					++contacts;
+				}
+			}
+		}
+		require(contacts == 16, "Actual projectile aim matrix lost a mirrored/tool/motion case");
+		const WeaponTuning& roller = world.tuning.weapon(WeaponType::roller);
+		require(match_bot_ballistics::aim_direction(roller, world.tuning.projectile(roller.details.proj_type),
+			{}, {}, {}).x == 1.0f, "Stationary contact aim did not handle coincident centers");
+	}
+
+	void check_finite_fallbacks(const GameTuning& tuning)
+	{
+		using namespace mattmath;
+		for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
+			WeaponType::mister, WeaponType::bucket })
+		{
+			const WeaponTuning& tool = tuning.weapon(type);
+			const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
+			for (const Vector2F target : { Vector2F::ZERO, Vector2F(1.0f, 0.0f),
+				Vector2F(-1.0f, 0.0f), Vector2F(0.0f, -300.0f), Vector2F(0.0f, 300.0f),
+				Vector2F(100000.0f, -100000.0f) })
+			{
+				const Vector2F aim = match_bot_ballistics::aim_direction(tool, projectile,
+					{ -1200.0f, 500.0f }, target, { 2000.0f, -1000.0f });
+				require_near(aim.length(), 1.0f, 0.001f,
+					"Close, vertical, unreachable or coincident target produced invalid bot aim");
+			}
+		}
+	}
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -91,7 +175,10 @@ int wmain(int argc, wchar_t** argv)
 		const std::filesystem::path content(argv[1]);
 		const GameTuning tuning((content / "tuning.json").string().c_str());
 		check_shipped_tools(tuning); check_limits(tuning);
-		std::cout << "PASS bot projectile reach: shipped five tools, gravity, reversed launch, lifetime, drag and stationary contact volume\n";
+		check_finite_fallbacks(tuning);
+		paint_surfaces_acceptance::World world(content);
+		check_actual_flight(world);
+		std::cout << "PASS bot projectile reach and 16 actual paid-shot centerlines: five tools, gravity, reversed launch, lifetime, drag, stationary contact volume, muzzle and inherited/target motion\n";
 		return 0;
 	}
 	catch (const std::exception& error)

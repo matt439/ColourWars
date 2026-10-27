@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_driver.h"
+#include "game/ai/match_bot_ballistics.h"
 #include "scripts/acceptance/bot_driver/ascent_checks.h"
 #include "scripts/acceptance/bot_driver/ascent_approach_checks.h"
 #include "scripts/acceptance/bot_driver/ramp_checks.h"
@@ -50,9 +51,7 @@ namespace
 		view.size = tuning.player().size;
 		view.ammo = 1.0f;
 		view.engage_distance = 800.0f;
-		const WeaponTuning& tool = tuning.weapon(type);
-		view.projectile_speed = tool.details.starting_vel_length;
-		view.projectile_gravity = tuning.projectile(tool.details.proj_type).details.gravity;
+		view.weapon = type;
 		view.obstacles.emplace_back(-2000.0f, view.size.y * 0.5f, 4000.0f, 100.0f);
 		view.supports.push_back({ view.obstacles.back(), false });
 		view.territory.push_back({ 300.0f, 50.0f });
@@ -79,10 +78,14 @@ namespace
 				PlayerInputData input = bot.think(view); ordinary(input);
 				require(input.primary_shoot && input.shoot_direction_requested,
 					"A living visible opponent did not receive an ordinary fire/aim decision after reaction");
-				const float travel = view.projectile_speed > 0.0f ? std::min(100.0f / view.projectile_speed, 0.5f) : 0.0f;
-				const float expected_angle = Vector2F(100.0f, -view.projectile_gravity * travel * travel * 0.5f).angle();
-				require(std::fabs(input.shoot_angle - expected_angle) <= tuning.bot(difficulty).aim_error_radians + 0.001f,
-					"The stationary horizontal enemy aim escaped its authored accuracy bound");
+				require(input.shoot_direction.x > 0.0f,
+					"A nearby visible enemy received aim in the opposite horizontal direction");
+				const WeaponTuning& record = tuning.weapon(tool);
+				const Vector2F nominal = match_bot_ballistics::aim_direction(record,
+					tuning.projectile(record.details.proj_type), view.velocity, { 100.0f, 0.0f }, {});
+				require(std::acos(std::clamp(nominal.dot(input.shoot_direction), -1.0f, 1.0f)) <=
+					tuning.bot(difficulty).aim_error_radians + 0.001f,
+					"Combat prediction bypassed the selected difficulty's authored aim-error envelope");
 				view.ammo = 0.0f;
 				require(!bot.think(view).primary_shoot, "A bot kept firing between reactions after depletion");
 				view.ammo = (tuning.bots().reserve_low + tuning.bots().reserve_resume) * 0.5f;

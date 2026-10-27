@@ -7,6 +7,7 @@
 #include "game/ai/match_bot_support.h"
 #include "engine/math/rectanglef.h"
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 // Value observations for the shipping decision policy. The driver includes
@@ -30,11 +31,13 @@ struct MatchBotObservation
 	float ammo = 0.0f;
 	bool shot_empty = false;
 	float engage_distance = 0.0f;
-	float projectile_speed = 0.0f;
-	float projectile_gravity = 0.0f;
+	WeaponType weapon = WeaponType::sprayer;
 	std::vector<Enemy> enemies;
 	// Sampled visible non-team scoring tiles, refreshed only for a replan.
 	std::vector<mattmath::Vector2F> territory;
+	// Deterministic visible top paint on the current support, aim only. It
+	// never supplies a standing/descent goal or consumes the navigation RNG.
+	std::optional<mattmath::Vector2F> support_paint;
 	std::vector<mattmath::RectangleF> obstacles;
 	// Rectangular standing surfaces, distinct from conservative sight bounds.
 	// One-way supports may be crossed by a deliberate downward route.

@@ -638,13 +638,94 @@ trials retain paint in 120/120 configurations; stationary local combat retains
 damage in 10/10 and attributed eliminations in 9/10. Traversal does not
 establish regional value or contested ownership; paint misses remain open.
 
-**Next implementation:** extend opponent trials to moving and opposed players
-and improve aim and territory choices from those observations, including the
-retained paint misses. Keep finite budgets and final-input replay checks.
-Moving supports, rotated slabs, arbitrary slopes and general navigation remain
-unqualified. The full suite, native bot presentation, physical-pad and
-CPU/frame-pacing checks were not run for this slice. Attended difficulty
-distinction and usefulness remain the author's acceptance gate; initial
+Moving and opposed local combat are qualified in the next slice below. Moving
+supports, rotated slabs, arbitrary slopes and general navigation remain
+unqualified. This route slice did not run the full suite, native bot presentation,
+physical-pad or CPU/frame-pacing checks.
+
+#### Moving opponents, opposed bots and local scoring paint (2026-10-27)
+
+The opt-in `bot_combat_trials` case adds **60** fixed-seed Crossfeed trials:
+both mirrored lower-floor starts, all five tools and all three difficulties,
+with 1200 active steps per trial. Thirty have one shipping bot against an
+ordinary human input script that shuttles and jumps without firing. The other
+thirty have two opposed shipping bots; P1 remains a neutral human at its natural
+spawn in that three-seat roster. Only the two combatants' initial positions are
+placed. Death, respawn, resources and subsequent movement follow normal rules.
+The human's short jumps can hit the authored ceiling, and a killed human's
+ordinary respawn can take it outside the initial shuttle band.
+
+Every bot must move, fire with normal reserves and retain owned paint; every
+trial must produce opponent health loss. All thirty moving humans additionally
+lose health while already moving. Damage, its first step and moving/airborne
+context are observed health changes; only lethal contacts have owner attribution.
+The CSV also records per-actor reserve recovery, owned area and observed
+neutral/enemy tile transitions. These transitions are sampled once per step,
+not total shots or every within-step paint exchange.
+
+Combat aim now searches a finite free-flight prediction using the actual
+weapon's muzzle offsets, inherited velocity, projectile gravity, horizontal
+drag, velocity caps and lifetime. The old distance/speed lead omitted these
+launch details and capped prediction at half a second. The new search evaluates
+32 directions/refinements, each for at most 60 integration steps. It uses only
+the currently visible enemy's observed position/velocity. Reaction intervals
+and one authored difficulty-error draw per decision are unchanged. Sixteen
+mirrored actual paid-shot centerlines pass within 0.26 units of stationary or
+constant-velocity targets before difficulty error; separate checks cover close,
+vertical, unreachable and coincident targets.
+
+Territory replans now supplement the existing random movement candidates with
+the nearest visible non-team top tile on the bot's current grounded scoring
+support. This deterministic candidate supplies paint aim only; it adds no
+standing/descent goal or random draws. Existing territory replanning/reaction
+timing clears it, so short transient landings can still be missed. Geometry
+checks exclude non-scoring supports, other faces and rotated tops. Paired policy
+checks retain navigation and random streams; **30/30** actual-driver starts on
+Turbulence's `upper_top_paint` buy shots and paint that top within 180 active steps.
+These starts qualify local painting, not reaching that platform.
+
+The unchanged Release baseline at `07fd8450` and the updated policy both damage
+the designated opponent in 30/30 trials of each combat mode. Moving-human health
+loss totals 27.714 -> 28.287; opposed-bot health loss totals 73.375 -> 70.639,
+with attributed eliminations 40 -> 38. The updated opposed trials damage
+59/60 bot actors: in one Normal Sniper trial P2 eliminates P3 without taking
+damage. The gate allows that clean win rather than requiring retaliation.
+Either opposed bot repaints enemy tiles in 27/30 trials in both versions; P2's
+repaint-positive trials change from 24/30 to 25/30. These are local capability
+checks and mixed measurements, not evidence of an overall balance improvement
+or monotonic difficulty strength.
+
+All **450** retained static route gates pass. Final finishing-support paint
+remains a separate measurement: CQ deck paint stays 60/60, the other-arena
+matrix changes 139/150 -> **144/150**, and the Turbulence upper/continuous matrix
+changes 82/90 -> **79/90**. The eleven Turbulence misses and six other-arena
+misses remain open; a local paint opportunity does not ensure painting during a
+brief landing. Natural-spawn paint remains 120/120. The ten retained stationary
+local combat trials still damage in 10/10, now with attributed eliminations
+in 10/10 rather than 9/10.
+
+Validation: Debug and Release builds and fourteen selected cases pass:
+`bot_driver`, `bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_ascents`,
+`bot_arena_routes`, `bot_hill_routes`, `bot_turbulence_routes`, `bot_trials`,
+`bot_runtime`, `gameplay_tuning`, `movement`, `bot_territory` and
+`bot_combat_trials`. Six new 1200-step final-input tapes reproduce public
+players, projectile count and exact paint state in both builds, with complete
+fingerprints additionally checked in Debug; retained replay gates also pass.
+Both trial CSVs are byte-identical between builds. Both real-bank isolated
+startup checks pass. Evidence: `out/validation/road10-combat/`; unchanged Release
+baseline: `out/validation/road10-combat-baseline/`. Reproduce the new matrix with
+`scripts/run-acceptance.ps1 -Preset x64-debug -Cases bot_combat_trials` (or Release).
+The short `bot_territory` case joins the default suite.
+
+**Next implementation:** extend opposed trials beyond local Crossfeed starts
+to arena routes, team interactions and useful regional territory; investigate
+the retained finishing-support paint misses. Keep finite budgets and final-input
+replay checks. Prediction assumes constant target velocity for one second,
+ignores intervening cover/bounces and can prefer a slower arc; it does not prove
+reachability. CPU/frame-pacing cost remains unmeasured, including the added
+bounded flight search and local surface scan. The full suite, native bot
+presentation and physical-pad checks were not run for this slice. Attended
+difficulty distinction and usefulness remain the author's acceptance gate;
 Easy/Normal/Hard values stay provisional and `ROAD#10` stays OPEN.
 
 ### Balanced random teams

@@ -19,7 +19,6 @@ namespace
         view.size = tuning.player().size;
         view.ammo = 1.0f;
         view.engage_distance = 800.0f;
-        view.projectile_speed = 1000.0f;
         view.territory.push_back({ 500.0f, 50.0f });
         view.obstacles.emplace_back(-4000.0f, view.size.y * 0.5f, 8000.0f, 100.0f);
         view.supports.push_back({ view.obstacles.back(), false });

@@ -1,10 +1,12 @@
 #include "game/pch.h"
 #include "game/ai/match_bot_driver.h"
 #include "game/ai/match_bot_ballistics.h"
+#include "game/ai/match_bot_territory.h"
 #include "game/objects/level.h"
 #include "game/objects/weapon.h"
 #include "engine/core/step_timer.h"
 #include <cmath>
+#include <limits>
 
 using namespace mattmath;
 
@@ -124,8 +126,6 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 		if (bot == nullptr) { continue; }
 		const Player& player = level.player(static_cast<int>(seat));
 		const Weapon& weapon = player.primary_weapon();
-		const WeaponTuning& tool = this->tuning_->weapon(weapon.type());
-		const ProjectileTuning& projectile = this->tuning_->projectile(tool.details.proj_type);
 		MatchBotObservation view;
 		view.center = player.center();
 		view.velocity = player.velocity();
@@ -137,8 +137,7 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 		view.ammo = player.weapon_ammo() / this->tuning_->starting_ammo();
 		view.shot_empty = weapon.readiness() == WeaponReadiness::empty;
 		view.engage_distance = engagement_distance(player, *this->tuning_);
-		view.projectile_speed = tool.details.starting_vel_length;
-		view.projectile_gravity = projectile.details.gravity;
+		view.weapon = weapon.type();
 		view.obstacles = obstacles;
 		view.supports = supports;
 		view.ramps = ramps;
@@ -156,6 +155,22 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 			}
 			if (bot->needs_territory() && !surfaces.empty())
 			{
+				// Guarantee a local scoring face can be considered even when a
+				// small deck is missed by all of Easy's global random samples.
+				// Keep this separate from movement candidates and their RNG draws.
+				float best_support_cost = (std::numeric_limits<float>::max)();
+				for (const PaintSurfaceSample& surface : surfaces)
+				{
+					if (surface.team == player.team()) { continue; }
+					const std::optional<Vector2F> point = match_bot_territory::support_top_point(view,
+						surface, this->tuning_->paint().thickness);
+					if (!point) { continue; }
+					const Vector2F gap = *point - view.center;
+					const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
+					if (cost < best_support_cost && gap.length() <= view.engage_distance &&
+						level.bot_line_of_sight(view.center, *point))
+					{ view.support_paint = *point; best_support_cost = cost; }
+				}
 				const int count = this->tuning_->bot(this->difficulties_[seat]).territory_candidates;
 				for (int index = 0; index < count; ++index)
 				{

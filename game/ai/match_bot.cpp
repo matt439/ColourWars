@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/ai/match_bot.h"
+#include "game/ai/match_bot_ballistics.h"
 #include <cmath>
 #include <limits>
 
@@ -57,6 +58,13 @@ void MatchBot::choose_territory(const MatchBotObservation& view)
 		{
 			best = cost; this->goal_ = standing; this->has_goal_ = true;
 		}
+	}
+	if (view.support_paint)
+	{
+		const Vector2F gap = *view.support_paint - view.center;
+		const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
+		if (cost < best_aim && gap.length() <= view.engage_distance)
+		{ this->paint_goal_ = *view.support_paint; this->has_paint_goal_ = true; }
 	}
 	// Occluded scoring faces must not leave a bot retrying a spawn baffle.
 	// A one-way support can offer an ordinary downward route to new sight lines.
@@ -170,12 +178,9 @@ void MatchBot::decide(const MatchBotObservation& view)
 	Vector2F aim(this->heading_, 0.7f);
 	if (engaging)
 	{
-		Vector2F offset = enemy->center - view.center;
-		const float travel = view.projectile_speed > 0.0f ?
-			std::min(offset.length() / view.projectile_speed, 0.5f) : 0.0f;
-		offset += enemy->velocity * travel;
-		offset.y -= view.projectile_gravity * travel * travel * 0.5f;
-		aim = offset;
+		const WeaponTuning& tool = this->tuning_->weapon(view.weapon);
+		aim = match_bot_ballistics::aim_direction(tool, this->tuning_->projectile(tool.details.proj_type),
+			view.velocity, enemy->center - view.center, enemy->velocity);
 	}
 	else if (this->has_paint_goal_)
 	{
