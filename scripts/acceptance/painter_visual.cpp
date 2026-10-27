@@ -33,7 +33,7 @@
 #include "game/states/controls_settings_menu.h"
 #include "game/states/stick_settings_menu.h"
 #include "game/states/keyboard_jump_menu.h"
-#include "game/states/pad_jump_menu.h"
+#include "game/states/pad_buttons_menu.h"
 #include "game/controls_text.h"
 #include "game/objects/stick_response.h"
 #include "game/build_info.h"
@@ -196,7 +196,7 @@ namespace
 #include "scripts/acceptance/painter_visual/stick_settings_checks.h"
 #include "scripts/acceptance/painter_visual/keyboard_jump_checks.h"
 #include "scripts/acceptance/painter_visual/keyboard_jump_ownership_checks.h"
-#include "scripts/acceptance/painter_visual/pad_jump_checks.h"
+#include "scripts/acceptance/painter_visual/pad_buttons_checks.h"
 #include "scripts/acceptance/painter_visual/rumble_settings_checks.h"
 #include "scripts/acceptance/painter_visual/rumble_owner_checks.h"
 #include "scripts/acceptance/painter_visual/debug_background_checks.h"
@@ -793,7 +793,7 @@ int wmain(int argc, wchar_t** argv)
             keyboard_jump_matrix(app, levels, canvas, tuning, presentation, content, output);
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
             keyboard_jump_ownership_matrix(app, levels, canvas, tuning, presentation, content, output);
-            pad_jump_matrix(app, levels, canvas, tuning, presentation, content, output);
+            pad_buttons_matrix(app, levels, canvas, tuning, presentation, content, output);
 #else
             throw std::runtime_error("KeyboardJumpOnly requires the scripted gamepad reader seam");
 #endif

@@ -1919,10 +1919,10 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 ## Action bindings (`GAP#4.2`)
 
 **Default evaluators and keyboard Jump rebinding are implemented and validated.**
-**Keyboard and per-slot Pad Jump selection are implemented and qualified (`GAP#4.2`).**
-The face button defaults to A; the existing LT alias remains alongside every
-choice. Broader action and trigger rebinding remain unscoped; the bounded contract is
-[below](#pad-jump-face-button-slice-gap42).
+**Keyboard Jump and per-slot pad Jump/Shoot/Pause rebinding are implemented (`GAP#4.2`).**
+The pad defaults are unchanged (A / LT Jump, RT Shoot, Start Pause). Keyboard
+actions other than Jump remain unscoped; the pad contract is
+[below](#pad-buttons-slice-gap42), after the face-button slice it replaced.
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
@@ -2147,18 +2147,70 @@ establish mapping behavior. Physical-pad comfort
 remains `ROAD#2`, and attended readability, balance and hardware acceptance stay
 open.
 
-**Remaining scope after this slice: UNSCOPED.** Other keyboard actions, pad
-actions and trigger choices still need separate contracts. Rebinding artwork
-belongs to the later UI pass using the approved gameplay style. Neither the
-completed keyboard slice nor this bounded pad slice closes the broader
-`GAP#4.2` capability.
+The [pad buttons slice](#pad-buttons-slice-gap42) below generalises this one and
+replaces its page.
+
+### Pad buttons slice (`GAP#4.2`)
+
+**Implemented 2026-10-27; replaces the Pad Jump page.** Each XInput slot has a
+`PadProfile`: Jump, Shoot and Pause, each with a required primary control and an
+optional alternate. The domain is eleven controls: A, B, X, Y, LB, RB, LT, RT, LS
+and RS (pressing a stick in) and Start. Back stays the debug control and the
+D-pad stays menu-only. The defaults are the controls the game always had, so an
+untouched pad behaves exactly as before: A / LT Jump, RT Shoot, Start Pause.
+
+One control does one action per pad: a profile with an unbound action, an
+alternate equal to its primary, or a control used twice is invalid, and
+`Save::set_input_bindings_and_save` refuses it before mutation. Movement, aim and
+the stick-down drop stay on the sticks. Menus keep A/B/X/Start and the intro skip
+keeps A/B/Start whatever the profile says, as Jump's face choice did before. A
+trigger keeps its strict live threshold: the shoot threshold when it shoots, the
+jump threshold when it jumps or pauses.
+
+`effective_action_bindings(preferences, slot)` writes the profile into Jump,
+Shoot and Pause's pad sources; `PlayerInput` rebuilds a slot's copy only when
+its profile changes, so adopting an already held control still makes no edge.
+Replay keeps storing post-mapping input, so recordings are unaffected.
+
+**Page.** Controls / audio opens **Pad Buttons** in the Pad Jump row's place:
+Pad, Jump, Jump (also), Shoot, Shoot (also), Pause, Pause (also), Reset this pad,
+Apply, Back, on the same ten-row Controls layout. Left/Right cycles a row through
+the domain (alternates add None first) and skips any control another row of the
+same pad already uses, with a status saying so, so a pending profile is always
+valid. A discrete choice was kept over a press-to-capture gesture, as for the
+face slice. Pending profiles survive slot changes; Apply merges only edited
+slots into the latest preferences; Reset is pending for the selected pad; Back
+discards. Default selection still follows the pausing slot, then the first
+connected pad. The match-opening reminder names each slot's saved controls,
+in two columns for a shared profile and one line per pad when they differ.
+
+**Save.** `input_bindings` gains a `pads` array of four objects, each with
+`jump`, `shoot` and `pause` arrays of one or two canonical tokens (`"a"`, `"lb"`,
+`"lt"`, `"ls"`, `"start"`, ...). It stays save version 3. A slot that fails to
+parse or validate recovers to the defaults alone; a malformed array recovers
+every slot without touching the keyboard key. When `pads` is absent, the older
+`pad_jump` face array migrates per slot into Jump's primary.
+
+**Checks.** `input_bindings` covers every control on every entry of every slot
+against an independent oracle, the conflict query, invalid profiles, tokens,
+thresholds, the actual reader (sparse slots, remap, reconnect, resume, and moved
+Shoot/Pause with Start keeping its intro and menu roles), legacy migration,
+per-slot recovery and failed writes. `menu_text` checks the copy and every
+control label in the actual OptionRow. `check-painter.ps1 -KeyboardJumpOnly`
+ports the Pad Jump native matrix to the new page, adding a skipped-conflict
+Shoot Apply. Physical-pad comfort remains `ROAD#2`, and rebinding artwork belongs
+to the later UI pass.
+
+**Remaining scope: UNSCOPED.** Keyboard actions other than Jump (move, drop,
+shoot, pause) still need their own contract.
 
 Labrador declined the action-evaluation request (engine report 21, formerly
 `GAP#F2`) in `197aff1`: evaluating a binding table is the action map, which its
 boundary table gives to the game, and its clients already combine sources by
 rules that disagree. The evaluator stays client code; see the
 [closed entry](review/engine-reports.md#21-digital-action-evaluation-remains-client-code--declined-197aff1).
-A pad-capture request still needs a real pad-rebinding caller.
+Pad Buttons is now a real pad-rebinding caller, but it chose discrete cycling
+over capture, so a pad-capture request still has no caller.
 
 ## Per-player menu focus (`GAP#D1`)
 

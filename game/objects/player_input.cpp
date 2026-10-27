@@ -15,7 +15,7 @@ PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
 	if (this->input_bindings_ == nullptr) { throw std::invalid_argument("PlayerInput requires input bindings"); }
 	this->keyboard_bindings_ = effective_action_bindings(*this->input_bindings_);
 	this->keyboard_jump_ = this->input_bindings_->keyboard_jump;
-	this->pad_jump_ = this->input_bindings_->pad_jump;
+	this->pad_profiles_ = this->input_bindings_->pads;
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		this->pad_bindings_[slot] = effective_action_bindings(*this->input_bindings_, slot);
@@ -34,10 +34,10 @@ const ActionBindings& PlayerInput::effective_bindings() const
 
 const ActionBindings& PlayerInput::effective_pad_bindings(int slot) const
 {
-	if (this->pad_jump_[slot] != this->input_bindings_->pad_jump[slot])
+	if (this->pad_profiles_[slot] != this->input_bindings_->pads[slot])
 	{
 		this->pad_bindings_[slot] = effective_action_bindings(*this->input_bindings_, slot);
-		this->pad_jump_[slot] = this->input_bindings_->pad_jump[slot];
+		this->pad_profiles_[slot] = this->input_bindings_->pads[slot];
 	}
 	return this->pad_bindings_[slot];
 }
@@ -55,7 +55,7 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int device, int
 	PlayerInputData result;
 	result.connected = true;
 
-	// Jump uses this slot's face button or LT crossing its threshold. Suppress press
+	// Jump uses this slot's chosen controls (A / LT by default). Suppress press
 	// edges on reconnect: the previous state is neutral, so an already-held
 	// button would otherwise look newly pressed. Preserve the held state.
 	const ActionSample jump = action(GameAction::jump);

@@ -97,7 +97,7 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		const InputBindings bindings = this->input_bindings_ ? *this->input_bindings_ : InputBindings{};
 		add_reminder(L"GAMEPAD", controls_text::pad_controls_reminder(bindings, this->gamepad_slots_));
 		this->gamepad_controls_ = this->controls_reminders_.back().text.get();
-		this->gamepad_jump_ = bindings.pad_jump;
+		this->gamepad_pads_ = bindings.pads;
 	}
 	if (anyone_on_keyboard)
 	{
@@ -114,10 +114,10 @@ void Level::build_opening_frame(RenderResources* render_resources)
 void Level::refresh_keyboard_controls()
 {
 	bool changed = false;
-	if (this->gamepad_controls_ && this->input_bindings_ && this->gamepad_jump_ != this->input_bindings_->pad_jump)
+	if (this->gamepad_controls_ && this->input_bindings_ && this->gamepad_pads_ != this->input_bindings_->pads)
 	{
 		this->gamepad_controls_->set_text(controls_text::pad_controls_reminder(*this->input_bindings_, this->gamepad_slots_));
-		this->gamepad_jump_ = this->input_bindings_->pad_jump;
+		this->gamepad_pads_ = this->input_bindings_->pads;
 		changed = true;
 	}
 	if (this->keyboard_controls_)
