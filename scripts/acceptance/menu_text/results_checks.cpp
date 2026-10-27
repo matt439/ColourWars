@@ -702,4 +702,34 @@ namespace menu_text_acceptance
             d["menu_text"]["results"]["contribution_heading"].SetString("~"); d["menu_text"]["results"]["contribution_team_a"].SetString("~");
         }, &world);
     }
+    // ROAD#12: the four award lines are required, plain single-line copy that
+    // must fit the Results panel at the end of every contribution row.
+    void check_award_text(Variants& variants, World& world, const MenuText& defaults)
+    {
+        struct AwardText { const char* key; MatchAward award; const wchar_t* text; };
+        constexpr AwardText awards[]{
+            { "award_paint_laid", MatchAward::paint_laid, L"Most paint laid" },
+            { "award_recaptured", MatchAward::recaptured, L"Most retaken" },
+            { "award_airtime", MatchAward::airtime, L"Best airtime" },
+            { "award_splats", MatchAward::splats, L"Most splats" }
+        };
+        for (const AwardText& entry : awards)
+        {
+            const std::string field = std::string("results.") + entry.key;
+            require(defaults.results.award_line(entry.award) == entry.text, "Award default changed: " + field);
+            variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"].RemoveMember(entry.key); });
+            variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"][entry.key].SetInt(3); });
+            for (const char* invalid : { "", "   ", "line\nbreak" })
+                variants.rejects(field, [&](rapidjson::Document& d) { d["menu_text"]["results"][entry.key].SetString(invalid, d.GetAllocator()); });
+            const auto custom = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString("Top"); });
+            custom.validate_resources(world.render, world.audio);
+            require(custom.menu_text().results.award_line(entry.award) == L"Top", "Award copy was not read: " + field);
+            const std::string wide(120, 'W');
+            variants.rejects(field, [&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString(wide.c_str(), d.GetAllocator()); }, &world);
+            variants.rejects(field, [&](rapidjson::Document& d)
+                { d["menu_text"]["results"][entry.key].SetString("Most \xE2\x98\x85", d.GetAllocator()); });
+        }
+    }
 }

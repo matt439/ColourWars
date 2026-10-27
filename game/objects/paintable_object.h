@@ -7,6 +7,36 @@
 #include <cstddef>
 #include <vector>
 
+// Match-long capture tallies by paint owner, for the results awards. A tile
+// changing colour credits its area as laid; taking it from the other team
+// credits it as recaptured too. Friendly repaint and neutral answers add nothing.
+struct PaintCredit
+{
+	std::array<float, paint_owners::count> laid{};
+	std::array<float, paint_owners::count> recaptured{};
+	void add(int owner, PlayerTeam before, PlayerTeam after, float area)
+	{
+		if (before == after || after == PlayerTeam::none ||
+			owner < 0 || owner >= paint_owners::count)
+		{
+			return;
+		}
+		this->laid[static_cast<std::size_t>(owner)] += area;
+		if (before != PlayerTeam::none)
+		{
+			this->recaptured[static_cast<std::size_t>(owner)] += area;
+		}
+	}
+	void merge(const PaintCredit& other)
+	{
+		for (std::size_t owner = 0; owner < this->laid.size(); ++owner)
+		{
+			this->laid[owner] += other.laid[owner];
+			this->recaptured[owner] += other.recaptured[owner];
+		}
+	}
+};
+
 struct PaintTotal
 {
 	float team_a = 0.0f;
@@ -16,6 +46,9 @@ struct PaintTotal
 
 	// All paintable area, including neutral tiles, for the arena coverage score.
 	float total = 0.0f;
+
+	// What was captured over the match, not what is held now.
+	PaintCredit credit;
 };
 
 // Authored/local face identity; a future rigid pose may change its world normal.
@@ -40,7 +73,8 @@ struct PaintSurfaceSample
     std::size_t source_index = 0;
 };
 // A scoring role independent of the object's collision/rendering hierarchy.
-// Report current held area, including neutral area in total, not paint events.
+// Report current held area, including neutral area in total, and the match's
+// capture tallies; no other paint events.
 // Level discovers this role on its collision objects, independently of their
 // collision tag: solid and jump-through paintable supports both contribute.
 class PaintableObject

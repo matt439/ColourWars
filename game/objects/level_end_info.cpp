@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level_end_info.h"
 #include "game/presentation.h"
+#include <algorithm>
 using namespace labrador;
 
 namespace
@@ -143,4 +144,54 @@ std::wstring LevelEndInfo::player_percentage_string(int slot) const
 	}
 	return percentage_text(this->total_area > 0.0f ?
 		100.0f * this->player_areas.at(static_cast<size_t>(slot)) / this->total_area : 0.0f);
+}
+
+std::vector<std::optional<MatchAward>> LevelEndInfo::awards(const std::vector<int>& owners) const
+{
+	std::vector<std::optional<MatchAward>> result(owners.size());
+	if (owners.size() < 2)
+	{
+		return result;
+	}
+	const auto tally = [this](MatchAward award, int owner) -> double
+	{
+		if (owner < 0 || owner >= paint_owners::count)
+		{
+			return 0.0;
+		}
+		const auto index = static_cast<size_t>(owner);
+		switch (award)
+		{
+		case MatchAward::paint_laid:
+			return this->laid_areas[index];
+		case MatchAward::recaptured:
+			return this->recaptured_areas[index];
+		case MatchAward::airtime:
+			return this->longest_airtimes[index];
+		case MatchAward::splats:
+			return static_cast<double>(this->splats[index]);
+		}
+		return 0.0;
+	};
+	for (int a = 0; a < match_award_count; ++a)
+	{
+		const auto award = static_cast<MatchAward>(a);
+		double best = 0.0;
+		for (const int owner : owners)
+		{
+			best = std::max(best, tally(award, owner));
+		}
+		if (!(best > 0.0))
+		{
+			continue;
+		}
+		for (size_t row = 0; row < owners.size(); ++row)
+		{
+			if (!result[row].has_value() && tally(award, owners[row]) == best)
+			{
+				result[row] = award;
+			}
+		}
+	}
+	return result;
 }

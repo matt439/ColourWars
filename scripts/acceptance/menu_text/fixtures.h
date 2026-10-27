@@ -510,4 +510,5 @@ namespace menu_text_acceptance
     void check_result_percentage_text(Variants& variants, const MenuText& defaults);
     void check_result_percentage_numbers(const MenuText& defaults);
     void check_result_percentage_resources(Variants& variants, World& world, const Presentation& defaults);
+    void check_award_text(Variants& variants, World& world, const MenuText& defaults);
 }

@@ -73,8 +73,8 @@ difficulty comparison; difficulty values remain provisional.
 - **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
   recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
   five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
-- **Unborrowed Splatoon mechanics:** paint underfoot, a painting-charged special and a
-  splat tally, each yes or no, with or after `POL#27` (`POL#30`).
+- **Unborrowed Splatoon mechanics:** paint underfoot and a painting-charged special, each
+  yes or no, with or after `POL#27` (`POL#30`). The results awards answered the splat tally.
 - **Low-paint warning:** listen to the provisional cue in the 1/2/4P mix and look at the
   HUD tag and figure tank at 4P with sound muted (`POL#38`).
 - **Cursor marker:** judge the pointer marquee in play at 1/2/4P (`POL#39`).
@@ -129,7 +129,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains; the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
-| `POL#30` | DECISION | MED | S | Decide paint underfoot (with its no-regen-on-enemy-paint and bot-refill switches), a painting-charged special and a splat tally, with or after `POL#27`; "no" is a valid answer. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
+| `POL#30` | DECISION | MED | S | Decide paint underfoot (with its no-regen-on-enemy-paint and bot-refill switches) and a painting-charged special, with or after `POL#27`; "no" is a valid answer. The splat tally is answered by the results awards. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
@@ -190,7 +190,6 @@ excluded modes.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#12` | UNSCOPED | MED | M | Results awards: a few per-player call-outs (most paint laid, most recaptured, longest airtime). A splat-based award is `POL#30`'s splat tally. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#15` | UNSCOPED | MED | L | Paint-activated stage objects (Splatoon propeller lifts, inkrails, sponges) over the horizontal-movement capability; arena use follows `POL#21`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |

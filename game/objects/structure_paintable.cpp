@@ -204,8 +204,10 @@ void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 				continue;
 			}
 
-			tile_captured |= paint_tile.team() != team;
+			const PlayerTeam before = paint_tile.team();
+			tile_captured |= before != team;
 			paint_tile.paint(team, projectile.player_num(), projectile.projectile_type());
+			this->credit_.add(projectile.player_num(), before, team, paint_tile.area());
 			tile_painted = true;
 			if (first_painted < 0) { first_painted = i; }
 			last_painted = i;
@@ -442,6 +444,7 @@ std::optional<Colour> StructurePaintable::top_paint_colour(float x) const
 PaintTotal StructurePaintable::paint_total() const
 {
 	auto total = PaintTotal();
+	total.credit = this->credit_;
 	for (auto& paint_tile : this->paint_tiles_)
 	{
 		total.total += paint_tile.area();

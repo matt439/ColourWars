@@ -1757,7 +1757,7 @@ follows Splatoon on purpose in places (no live score, random pairs). The
 [level research](level-design-research.md) lists the mechanics it does not
 borrow as constraints on maps, but nothing records whether that absence is a
 decision. A 2026-10-24 review named three. Each changes balance, so none should
-be added ahead of `POL#27`.
+be added ahead of `POL#27`. The splat tally has since been answered.
 
 - **Paint underfoot.** Shipped tuning keeps movement and ammunition recovery
   independent of paint. The default-off trial below lets the author judge whether
@@ -1766,10 +1766,12 @@ be added ahead of `POL#27`.
 - **A special charged by painting.** There are five primaries and nothing else.
   Splatoon uses a special to answer "why keep painting when nobody is here".
   The arena briefs currently answer that with geometry alone.
-- **A splat tally on results.** Results show surface held only. A per-owner
-  count on the contribution rows is small, since the damage path knows the
-  projectile's owner. It also nudges the game toward the kill emphasis it has
-  avoided ("eliminations make space to paint", below).
+- **A splat tally on results. Answered 2026-10-27: no tally.** A per-owner
+  count on the contribution rows would nudge the game toward the kill emphasis
+  it has avoided ("eliminations make space to paint", below). The results
+  awards (`ROAD#12`) name splats instead, as the last of four call-outs and
+  without a number, so only a player who led no paint award can get it. See
+  [Results awards](feature-roadmap.md#results-awards-road12).
 
 The decision may be "no" for any of them. Record it here either way, so a later
 gap list reads the absence as intended.

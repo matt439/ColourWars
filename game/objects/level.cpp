@@ -1031,6 +1031,24 @@ LevelEndInfo Level::level_end_info() const
 		for (size_t slot = 0; slot < result.player_areas.size(); ++slot)
 		{
 			result.player_areas[slot] += paint.player_areas[slot];
+			result.laid_areas[slot] += paint.credit.laid[slot];
+			result.recaptured_areas[slot] += paint.credit.recaptured[slot];
+		}
+	}
+
+	// The award tallies the players keep. Lethal credit is already by owner.
+	for (size_t participant = 0; participant < this->players_.size(); ++participant)
+	{
+		const Player* player = this->players_[participant];
+		const int owner = paint_owners::index(player->player_num(), static_cast<int>(participant));
+		if (owner >= 0)
+		{
+			result.longest_airtimes[static_cast<size_t>(owner)] = player->longest_airtime();
+		}
+		const PlayerLethalProjectiles& lethal = player->lethal_projectiles();
+		for (size_t slot = 0; slot < result.splats.size(); ++slot)
+		{
+			result.splats[slot] += lethal.enemy_by_owner[slot];
 		}
 	}
 

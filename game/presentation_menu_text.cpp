@@ -358,6 +358,10 @@ namespace presentation_read
 		text.results.competitive_draw = read_menu_line(results, "competitive_draw");
 		text.results.contribution_team_a = read_menu_line(results, "contribution_team_a");
 		text.results.contribution_team_b = read_menu_line(results, "contribution_team_b");
+		text.results.award_paint_laid = read_menu_line(results, "award_paint_laid");
+		text.results.award_recaptured = read_menu_line(results, "award_recaptured");
+		text.results.award_airtime = read_menu_line(results, "award_airtime");
+		text.results.award_splats = read_menu_line(results, "award_splats");
 		const auto read_results_percentage = [&](const char* key)
 		{
 			const std::wstring value = read_menu_line(results, key);
@@ -614,6 +618,22 @@ std::wstring MenuResultsText::team_a_percentage_line(const std::wstring& percent
 std::wstring MenuResultsText::team_b_percentage_line(const std::wstring& percentage) const
 {
 	return format_label_template(this->team_b_percentage, { { L"{percentage}", percentage } });
+}
+
+const std::wstring& MenuResultsText::award_line(MatchAward award) const
+{
+	switch (award)
+	{
+	case MatchAward::paint_laid:
+		return this->award_paint_laid;
+	case MatchAward::recaptured:
+		return this->award_recaptured;
+	case MatchAward::airtime:
+		return this->award_airtime;
+	case MatchAward::splats:
+		return this->award_splats;
+	}
+	throw std::invalid_argument("Unknown results award");
 }
 
 std::wstring MenuResultsText::score_line(int team_a_wins, int team_b_wins, int target) const

@@ -98,6 +98,7 @@ private:
 		const mattmath::RectangleF& splash, PlayerTeam team);
 	void draw_paint(labrador::DrawList& draw_list) const;
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
+	PaintCredit credit_;
 	TeamColour team_colours_ = TeamColour();
 	PaintableFaces faces_ = PaintableFaces();
 	// Borrowed, and outlives the level: main() owns it.

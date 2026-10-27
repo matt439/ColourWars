@@ -1944,6 +1944,30 @@ void Presentation::validate_resources(const RenderResources& render,
 	}
 	check_roster_rows(results_rows, contribution_heading.bottom(), results.proceed_y,
 		"Results with menu_text.results.contribution_team_a and menu_text.results.contribution_team_b");
+	// An award sits at the right of a contribution row, right-aligned to the
+	// score bar. The page leaves out one that would meet its own row's text,
+	// so the rows above stay the only bound on how long a label may be.
+	for (const auto& [award, key] : { std::pair{ MatchAward::paint_laid, "award_paint_laid" },
+		std::pair{ MatchAward::recaptured, "award_recaptured" },
+		std::pair{ MatchAward::airtime, "award_airtime" },
+		std::pair{ MatchAward::splats, "award_splats" } })
+	{
+		const std::string award_key = std::string("menu_text.results.") + key;
+		const Vector2F size = fixed_menu_size(award_key,
+			this->menu_text_.results.award_line(award), results.contribution_font);
+		for (int player = 0; player < 4; ++player)
+		{
+			const RectangleF bounds(Vector2F(results_fill_right - size.x,
+				results.contribution_position.y +
+					results.contribution_spacing * static_cast<float>(player + 1)), size);
+			if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+				!results_panel.contains(bounds) || bounds.bottom() > results.proceed_y)
+			{
+				throw std::runtime_error(this->source_path_ + ": " + award_key +
+					" must fit the Results panel at the end of every contribution row, above the prompt.");
+			}
+		}
+	}
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		const std::string key = "menu_text.labels.pad at Pad Sticks value";

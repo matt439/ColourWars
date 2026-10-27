@@ -330,20 +330,47 @@ void ResultsMenuInitial::init()
 		look.contribution_position, look.contribution_font);
 	const std::vector<MenuPlayerSettings> players =
 		this->level_settings()->player_settings();
+	std::vector<int> owners;
+	std::vector<const UiTextDropShadow*> rows;
 	for (size_t i = 0; i < players.size(); ++i)
 	{
 		const MenuPlayerSettings& player = players[i];
+		owners.push_back(paint_owners::index(player.num, static_cast<int>(i)));
 		add_detail(this->level_settings()->player_label(static_cast<int>(i), this->text()) +
 			(player.team == PlayerTeam::a ? this->text().results.contribution_team_a :
 				this->text().results.contribution_team_b) +
-			end_info.player_percentage_string(paint_owners::index(player.num, static_cast<int>(i))),
+			end_info.player_percentage_string(owners[i]),
 			look.contribution_position + Vector2F(0.0f,
 				look.contribution_spacing * static_cast<float>(i + 1)), look.contribution_font);
+		rows.push_back(this->details_.back().get());
 		this->player_badges_.push_back(std::make_unique<UiPlayerBadge>(
 			"player_badge_" + std::to_string(i + 1),
 			UiPlayerBadge::before(this->details_.back()->bounds(), this->presentation().player_identity()),
 			static_cast<int>(i), &this->presentation().player_identity(), this->render_resources(), true));
 		this->texture_container_->add_child(this->player_badges_.back().get());
+	}
+	// Each award sits at the right of its player's contribution row, aligned
+	// to the score bar like the record line, and is revealed with the details.
+	// A row long enough to reach it keeps its text and goes without.
+	const std::vector<std::optional<MatchAward>> awards = end_info.awards(owners);
+	for (size_t i = 0; i < awards.size(); ++i)
+	{
+		if (!awards[i].has_value())
+		{
+			continue;
+		}
+		auto line = std::make_unique<UiTextDropShadow>("award_" + std::to_string(i + 1),
+			this->text().results.award_line(*awards[i]), look.contribution_font, Vector2F::ZERO,
+			this->render_resources(), look.art.ink, Colour(), Vector2F::ZERO, true);
+		line->set_position(Vector2F(this->fill_box_->rectangle().right() -
+			line->bounds().width, look.contribution_position.y +
+				look.contribution_spacing * static_cast<float>(i + 1)));
+		if (line->bounds().left() <= rows[i]->bounds().right())
+		{
+			continue;
+		}
+		this->details_.push_back(std::move(line));
+		this->text_container_->add_child(this->details_.back().get());
 	}
 	// The stage record sits on the contribution heading's row, right-aligned
 	// to the score bar, and is revealed with the other details.

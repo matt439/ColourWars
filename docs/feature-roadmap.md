@@ -1832,10 +1832,9 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   already takes a secondary weapon (always `grenade_std`) and ignores it.
   A sub changes the reserve and balance game, so it waits for `POL#27`; bots
   (`ROAD#10`) would need to use it.
-- **Results awards (`ROAD#12`).** Splatoon 3 medals and TowerFall awards give
-  each player a few call-outs after a match. Paint-based awards (most laid,
-  most recaptured, longest airtime) need new per-player counters. A
-  splat-based award is the splat tally that `POL#30` decides.
+- **Results awards (`ROAD#12`, done 2026-10-27).** Splatoon 3 medals and
+  TowerFall awards give each player a few call-outs after a match. See
+  [Results awards](#results-awards-road12) below.
 - **More tool archetypes (`ROAD#13`).** Splatoon's brush, blaster, splatling,
   dualies and brella have no counterpart among the five tools; a fast-moving
   painter or a shield tool would differ most. Each new tool needs art, audio
@@ -1906,6 +1905,45 @@ way!"), a lifetime stats screen, and cosmetics or unlocks. New modes
 TowerFall's elimination and co-op modes, INVERSUS arcade, Smash stock
 battles) stay excluded by the [match scope decisions](#match-scope-decisions-2026-10-15).
 A later gap list should read these absences as intended.
+
+
+### Results awards (`ROAD#12`)
+
+**Done 2026-10-27.** The results page gives each player at most one call-out,
+right-aligned to the score bar on that player's contribution row and revealed
+with the other details. There are four awards, in this order:
+
+1. **Most paint laid**: the most area captured over the match, from neutral or
+   from the other team. Friendly repaint lays nothing.
+2. **Most retaken**: the most area recaptured from the other team.
+3. **Best airtime**: the longest flight that ended in a landing. A fall to
+   elimination never lands, so it never counts.
+4. **Most splats**: the most eliminations credited to the player's projectiles.
+
+Each award goes to every player tied for the lead with a nonzero tally, unless
+that player already shows an earlier award. It is never passed down to a
+runner-up, so a player who leads everything shows only Most paint laid and
+nobody gets the rest. A lone player gets no award. Values are not shown.
+
+The order is the design. Paint comes first and splats last, so a splat is
+named only for a player who led nothing else, and no count of eliminations
+appears anywhere. That is the answer to the splat-tally lever in
+[`POL#30`](polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30).
+
+The tallies are passive. Paintable structures add a tile's area to the
+capturing owner when it changes colour (`PaintCredit`, reported with
+`paint_total()`), the player banks its longest landed flight, and splats reuse
+the existing lethal-projectile credit. Level gathers them into `LevelEndInfo`
+by paint owner, and `LevelEndInfo::awards` picks the call-outs. The award copy is
+`menu_text.results.award_*` in `presentation.json`; validation requires each to
+fit the Results panel at the end of every row. A row whose own text is long
+enough to reach the award keeps its text, and the page leaves that award out;
+the shipped copy is short enough that this never happens.
+
+The `results_awards` acceptance case checks the choice, the capture credit, the
+airtime of a real jump on a floor, the default copy, and that every shipped
+award clears the widest possible row by at least 24 units (28 at present, for
+Most paint laid). `paint` checks credit on a real structure.
 
 ## Menu navigation follow-up (GAP#4.4)
 

@@ -152,6 +152,12 @@ int main(int argc, char** argv)
         paint(*split, {0, 0, 100, thickness}, PlayerTeam::b, 1);
         area_is(split->paint_total().team_a, 0);
         area_is(split->paint_total().player_areas[1], split->paint_total().total);
+        // Award credit: owner 0 laid the face from neutral, owner 1's friendly
+        // repaint laid nothing, then owner 1 recaptured all of it.
+        area_is(split->paint_total().credit.laid[0], split->paint_total().total);
+        area_is(split->paint_total().credit.recaptured[0], 0);
+        area_is(split->paint_total().credit.laid[1], split->paint_total().total);
+        area_is(split->paint_total().credit.recaptured[1], split->paint_total().total);
 
         // Sparse devices and multiple device-less seats must never share credit.
         const int first_dummy = paint_owners::index(-1, 1);
