@@ -15,6 +15,8 @@ public:
 	MatchBotDriver(const GameTuning* tuning, const MenuLevelSettings& settings,
 		std::uint64_t seed);
 	bool drives(int participant) const;
+	// The seat's policy, or null for a human seat. Read-only, for measurement.
+	const MatchBot* bot(int participant) const;
 	void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override;
 
 private:

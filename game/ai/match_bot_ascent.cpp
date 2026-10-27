@@ -7,11 +7,6 @@ using namespace mattmath;
 
 namespace
 {
-	bool same_support(const RectangleF& a, const RectangleF& b)
-	{
-		return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
-	}
-
 	float steer(float target, const MatchBotObservation& view, const PlayerTuning& tuning)
 	{
 		const float dx = target - view.center.x;
@@ -119,8 +114,8 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 	for (const MatchBotSupport& support : view.supports)
 	{
 		bool visited = false;
-		for (const RectangleF& previous : this->visited_supports_)
-		{ visited = visited || same_support(previous, support.bounds); }
+		for (const MatchBotSupport& previous : this->visited_supports_)
+		{ visited = visited || same_support(previous, support); }
 		if (visited) { continue; }
 		Vector2F takeoff, landing;
 		float cost = 0.0f, approach = 0.0f;
@@ -129,8 +124,8 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 		for (const MatchBotSupport& next : view.supports)
 		{
 			bool next_visited = false;
-			for (const RectangleF& previous : this->visited_supports_)
-			{ next_visited = next_visited || same_support(previous, next.bounds); }
+			for (const MatchBotSupport& previous : this->visited_supports_)
+			{ next_visited = next_visited || same_support(previous, next); }
 			if (next_visited) { continue; }
 			Vector2F next_takeoff, next_landing;
 			float next_cost = 0.0f, next_approach = 0.0f;
@@ -141,7 +136,7 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 			(cost < best || (cost == best && approach < best_approach))))
 		{
 			best = cost; best_approach = approach; best_continues = continues;
-			this->ascent_support_ = support.bounds; this->ascent_takeoff_ = takeoff;
+			this->ascent_support_ = support; this->ascent_takeoff_ = takeoff;
 			this->ascending_ = true; this->ascent_airborne_ = false;
 			// Allow the supported approach at ordinary minimum moving speed,
 			// then retain the existing finite jump/recovery allowance.
@@ -170,15 +165,22 @@ void MatchBot::remember_descent(const MatchBotObservation& view, Vector2F goal)
 			bounds.top() > goal.y + view.size.y * 0.5f ||
 			view.center.x < bounds.left() || view.center.x > bounds.right()) { continue; }
 		bool visited = false;
-		for (const RectangleF& previous : this->visited_supports_)
-		{ visited = visited || same_support(previous, bounds); }
-		if (!visited) { this->visited_supports_.push_back(bounds); }
+		for (const MatchBotSupport& previous : this->visited_supports_)
+		{ visited = visited || same_support(previous, support); }
+		if (!visited) { this->visited_supports_.push_back(support); }
 	}
 }
 
 void MatchBot::steer_finish(const MatchBotObservation& view, PlayerInputData& input)
 {
-	input.x_movement = steer(this->finish_x_, view, this->tuning_->player());
+	// Hold the chosen spot on a moving support, not where it was in the world.
+	float target = this->finish_x_;
+	for (const MatchBotSupport& support : view.supports)
+	{
+		if (same_support(this->finish_support_, support) && support.bounds.left() != this->finish_anchor_)
+		{ target += support.bounds.left() - this->finish_anchor_; }
+	}
+	input.x_movement = steer(target, view, this->tuning_->player());
 	input.left_analog_stick = Vector2F(input.x_movement, 0.0f);
 	input.drop_through = false;
 }
@@ -187,20 +189,20 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 {
 	const PlayerTuning& movement = this->tuning_->player();
 	const Vector2F half = view.size * 0.5f;
-	const RectangleF& target = this->ascent_support_;
 	bool present = false;
 	bool one_way = false;
 	bool paintable = false;
 	for (const MatchBotSupport& support : view.supports)
 	{
-		if (same_support(target, support.bounds))
-		{ present = true; one_way = support.one_way; paintable = support.paintable; }
+		if (same_support(this->ascent_support_, support))
+		{ present = true; one_way = support.one_way; paintable = support.paintable; this->ascent_support_ = support; }
 	}
+	const RectangleF& target = this->ascent_support_.bounds;
 	const Vector2F landing(std::clamp(this->ascent_takeoff_.x, target.left() + half.x,
 		target.right() - half.x), target.top() - half.y);
 	if (!present || !this->clear_standing(view, landing) || --this->ascent_steps_left_ <= 0)
 	{
-		if (present) { this->visited_supports_.push_back(target); }
+		if (present) { this->visited_supports_.push_back(this->ascent_support_); }
 		this->ascending_ = this->continue_ascent_ = false;
 		this->jump_left_ = 0;
 		this->react_in_ = 1;
@@ -216,7 +218,7 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 	if (!view.grounded) { this->ascent_airborne_ = true; }
 	if (this->ascent_airborne_ && view.grounded)
 	{
-		this->visited_supports_.push_back(target);
+		this->visited_supports_.push_back(this->ascent_support_);
 		this->continue_ascent_ = std::fabs(feet - target.top()) < 0.1f &&
 			view.center.x + half.x > target.left() && view.center.x - half.x < target.right();
 		// The next decision opens a finishing window if the chain ends here.

@@ -119,6 +119,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         tap(Key::down); tap(Key::right); tap(Key::right); bot(2, BotDifficulty::hard);
         save(frame(), output / ("bot-setup-join-" + std::to_string(size.x) + "x" + std::to_string(size.y) + ".ppm"));
         tap(Key::enter); expect_page(1, "Completed human/bot Join did not open Team Select");
+        save(frame(), output / ("bot-setup-teams-" + std::to_string(size.x) + "x" + std::to_string(size.y) + ".ppm"));
         tap(Key::enter); tap(Key::down); tap(Key::enter); tap(Key::down); tap(Key::enter);
         require(settings.player_team(2) == PlayerTeam::a, "Team choices committed despite leaving an empty team");
         tap(Key::right); tap(Key::right); tap(Key::enter);

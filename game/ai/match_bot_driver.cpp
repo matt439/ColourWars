@@ -66,6 +66,11 @@ bool MatchBotDriver::drives(int participant) const
 		this->bots_[static_cast<size_t>(participant)] != nullptr;
 }
 
+const MatchBot* MatchBotDriver::bot(int participant) const
+{
+	return this->drives(participant) ? this->bots_[static_cast<size_t>(participant)].get() : nullptr;
+}
+
 float match_bot_ballistics::horizontal_reach(const WeaponTuning& tool,
 	const ProjectileTuning& projectile)
 {

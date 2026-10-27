@@ -221,14 +221,18 @@ void MatchBot::decide(const MatchBotObservation& view)
 	{
 		// Stay on the fully supported span, keeping a local goal when it lies
 		// on this support; otherwise explore along it, turned inward.
+		for (const MatchBotSupport& support : view.supports)
+		{ if (same_support(this->finish_support_, support)) { this->finish_support_ = support; } }
+		const RectangleF& span = this->finish_support_.bounds;
+		this->finish_anchor_ = span.left();
 		const float half = view.size.x * 0.5f, inset = std::min(2.0f, half);
-		const float low = this->finish_support_.left() + half + inset;
-		const float high = this->finish_support_.right() - half - inset;
+		const float low = span.left() + half + inset;
+		const float high = span.right() - half - inset;
 		if (view.center.x < low) { this->heading_ = 1.0f; }
 		else if (view.center.x > high) { this->heading_ = -1.0f; }
 		const bool local_goal = this->has_goal_ && std::fabs(this->goal_.y - view.center.y) < 0.1f;
 		const float wanted = local_goal ? this->goal_.x : view.center.x + this->heading_ * view.size.x * 4.0f;
-		this->finish_x_ = low <= high ? std::clamp(wanted, low, high) : this->finish_support_.center().x;
+		this->finish_x_ = low <= high ? std::clamp(wanted, low, high) : span.center().x;
 		goal = Vector2F(this->finish_x_, view.center.y);
 	}
 	if (recovering) { goal = view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f); }

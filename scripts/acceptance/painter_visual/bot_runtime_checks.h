@@ -146,6 +146,18 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
     }
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
+    // Inspection captures only: drawing at each size, then back to 720p.
+    const auto capture = [&](const std::string& name)
+    {
+        for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
+        {
+            app.resolution_manager()->set_resolution_exactly(size);
+            std::ignore = app.renderer()->window_size_changed(size.x, size.y);
+            save(resume_stack_frame(app), output / ("bot-players-" + name + "-" + std::to_string(size.y) + "-detail.ppm"));
+        }
+        app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
+        std::ignore = app.renderer()->window_size_changed(1280, 720);
+    };
     for (int round = 1; round <= 2; ++round)
     {
         if (game->level().intro_playing()) { tap(Key::enter); }
@@ -154,6 +166,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
             "Mixed match did not reach Results");
         mapping(round == 1 ? "round-one-results" : "round-two-results");
         for (int step = 0; step < 360; ++step) { tick(); }
+        if (round == 1) { capture("results"); }
         tap(Key::enter); tick(0.0f); tap(Key::enter);
         for (int step = 0; step < 180 && stack.depth() == 3; ++step) { tick(); }
         require(stack.depth() == 2, "Mixed series did not continue from End");
@@ -164,5 +177,25 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         remembered_setup_matches(*preferences.last_match_setup(), settings),
         "Restart/series changed remembered bot metadata");
     stack.clear();
-    std::cout << "PASS actual mixed GameLevel: sparse human panes, bot world labels at720/1080, Pause/Restart, focus count-in, human disconnect/reconnect and two Results/series continuations\n";
+
+    // One human pane beside two bots, captured live for label inspection.
+    MenuLevelSettings solo; solo.set_player_count(3);
+    solo.set_player_bot(1, BotDifficulty::normal); solo.set_player_bot(2, BotDifficulty::hard);
+    solo.begin_input_claims(input_slots::keyboard_and_mouse);
+    solo.set_screen_layout(ScreenLayout::one_player); solo.set_stage("crossfeed"); solo.set_duration(60.0f);
+    for (int participant = 0; participant < 3; ++participant)
+    {
+        solo.set_player_team(participant, participant == 2 ? PlayerTeam::b : PlayerTeam::a);
+        solo.set_player_weapon(participant, static_cast<WeaponType>(participant));
+    }
+    stack.push(std::make_unique<ResumeProbeRoot>());
+    auto solo_owned = std::make_unique<GameLevel>(&data, solo, MatchStart::menu);
+    game = solo_owned.get(); stack.push(std::move(solo_owned));
+    live();
+    for (int step = 0; step < 150; ++step) { tick(); }
+    require(game->level().view_count() == 1 && game->level().bot_identity(1) == L"P2 - Bot (Normal)" &&
+        game->level().bot_identity(2) == L"P3 - Bot (Hard)", "One-pane bot match lost its pane or bot labels");
+    capture("one-pane");
+    stack.clear();
+    std::cout << "PASS actual mixed GameLevel: sparse human panes, bot world labels at720/1080, Pause/Restart, focus count-in, human disconnect/reconnect and two Results/series continuations; one-pane bot match and Results captured\n";
 }
