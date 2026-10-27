@@ -517,6 +517,9 @@ private:
 	void refresh_station_labels();
 
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
+	// POL#39: the marquee around the mouse pointer, in window pixels.
+	bool cursor_marker_visible() const;
+	void draw_cursor_marker(labrador::DrawList& draw_list) const;
 	void draw_opening_card(labrador::DrawList& draw_list,
 		const mattmath::RectangleF& rectangle, float scale) const;
 	float opening_scale() const;

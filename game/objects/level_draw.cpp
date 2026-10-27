@@ -2,6 +2,7 @@
 #include "game/objects/level.h"
 #include "game/debug/debug_overlay_draw.h"
 #include "game/input_slots.h"
+#include "game/objects/crude_drawing.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -34,6 +35,13 @@ void Level::draw(Renderer& renderer) const
 			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
 			list.set_camera(Camera::DEFAULT_CAMERA);
 			this->draw_countdown_text(list);
+		}
+		if (this->cursor_marker_visible())
+		{
+			DrawList list = renderer.view(renderer.view_count() - 1);
+			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
+			list.set_camera(Camera::DEFAULT_CAMERA);
+			this->draw_cursor_marker(list);
 		}
 	}
 	else
@@ -128,6 +136,55 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		this->debug_text_->draw_debug_info(list, player,
 			this->projectile_count_, this->simulation_dt_, this->debug_frame_ms_);
 	}
+}
+
+bool Level::cursor_marker_visible() const
+{
+	if (!this->presentation_->hud().cursor_marker.enabled || this->mouse_ == nullptr || !this->mouse_->focused())
+	{
+		return false;
+	}
+	const Vector2F size = this->resolution_manager_->resolution_vec();
+	const Vector2F at(static_cast<float>(this->mouse_->state().position.x),
+		static_cast<float>(this->mouse_->state().position.y));
+	if (at.x < 0.0f || at.y < 0.0f || at.x >= size.x || at.y >= size.y) { return false; }
+	for (int participant = 0; participant < this->player_count(); ++participant)
+	{
+		if (!this->is_bot(participant) &&
+			input_slots::is_keyboard_and_mouse(this->player(participant).player_num()))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void Level::draw_cursor_marker(DrawList& list) const
+{
+	// Whole pixels keep the marquee's edges crisp while the pointer moves.
+	const CursorMarkerPresentation& look = this->presentation_->hud().cursor_marker;
+	const float scale = this->resolution_manager_->resolution_vec().y / 1080.0f;
+	const float ink = std::max(1.0f, std::round(look.ink_width * scale));
+	const float paper = std::max(1.0f, std::round(look.paper_width * scale));
+	const float half = std::round(look.size * scale * 0.5f);
+	const Vector2F at(static_cast<float>(this->mouse_->state().position.x),
+		static_cast<float>(this->mouse_->state().position.y));
+	const SpriteSheet* sheet = this->render_resources_->sprite_sheet(this->overlay_sheet_);
+	const auto frame = [&](float inset, float width, const Colour& colour)
+	{
+		const RectangleF box(at.x - half + inset, at.y - half + inset,
+			(half - inset) * 2.0f, (half - inset) * 2.0f);
+		const Colour tint = CrudeDrawing::premultiplied(colour);
+		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.y, box.width, width), tint);
+		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.bottom() - width, box.width, width), tint);
+		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.y + width, width, box.height - width * 2.0f), tint);
+		sheet->draw(list, this->overlay_fill_, RectangleF(box.right() - width, box.y + width, width, box.height - width * 2.0f), tint);
+	};
+	list.set_filter(TextureFilter::point);
+	// Ink outside and inside the paper rim reads on pale and dark ground alike.
+	frame(0.0f, ink, look.ink);
+	frame(ink, paper, look.paper);
+	frame(ink + paper, ink, look.ink);
 }
 
 bool Level::player_identity_visible(int view) const

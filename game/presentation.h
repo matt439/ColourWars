@@ -134,6 +134,20 @@ struct HudLowPaintPresentation
 	float blink_period = 0.0f;
 };
 
+// A hollow marquee centred on the mouse pointer's hotspot (POL#39), so the
+// small system cursor can be found over pale, dark or painted scenes. It
+// surrounds the aim point without covering it, and never moves aim. Window
+// reference pixels at 1080 lines; steady, so Reduce effects keeps it as is.
+struct CursorMarkerPresentation
+{
+	bool enabled = true;
+	labrador::Colour ink;
+	labrador::Colour paper;
+	float size = 0.0f;
+	float ink_width = 0.0f;
+	float paper_width = 0.0f;
+};
+
 // Static paper backing for the live HUD, in HUD reference pixels.
 struct HudPaperPresentation
 {
@@ -175,6 +189,7 @@ struct HudPresentation
 	float timer_reference_width = 1920.0f;
 	ClosingClockPresentation closing_clock;
 	HudLowPaintPresentation low_paint;
+	CursorMarkerPresentation cursor_marker;
 
 	std::string player_identity_font;
 	mattmath::Vector2F player_identity_offset = { 0.0f, 0.0f };

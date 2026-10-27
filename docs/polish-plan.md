@@ -1588,16 +1588,26 @@ Keep the first polished match as the next deliverable.
 
 ### Mouse-cursor visibility (`POL#39`)
 
-**OPEN, reported by the author 2026-10-27.** The small white Windows cursor
-is easy to lose during play. Prototype a contrasting indicator beneath the
-cursor, such as a backing or halo, to make it easy to locate while aiming.
-This concerns the mouse pointer itself, alongside the existing nozzle-direction
-and readiness marker.
+**Prototyped 2026-10-27, reported by the author the same day; the attended
+look remains.** The small white Windows cursor was easy to lose during play.
+While a keyboard/mouse human is in the match, the window has the mouse and the
+pointer is inside it, `Level` now draws a hollow Paint.exe marquee centred on
+the pointer's hotspot in its final full-screen pass, under the system cursor:
+an ink frame, a white rim and an inner ink line, open in the middle so the aim
+point stays visible. It reads the same client position aim does and changes
+nothing about aim. It is steady, so Reduce effects keeps it unchanged, and it is
+drawn once in window space whatever the 1/2/4-player layout.
 
-Next, inspect how the gameplay cursor is drawn and add the backing at the
-actual pointer position. Acceptance: it stays visible over pale, dark and
-heavily painted scenes in 1/2/4-player layouts without obscuring the target or
-changing the aiming point. Reduced effects should retain a steady indicator.
+`presentation.json.hud.cursor_marker` holds the enable flag, ink/paper colours
+and the size and widths in window pixels at 1080 lines (44, 3 and 2), rounded to
+whole pixels as the window scales. Startup requires opaque, distinct
+colours and at least half the marquee left open. Debug Crossfeed launches with
+a scripted pointer show it over pale sky and mid-grey walls at 2P and 4P.
+
+The marquee follows the last polled position, so it can trail the hardware
+cursor by about a frame while the mouse moves fast. **Remaining (`DECISION`):**
+judge it in play over pale, dark and heavily painted scenes at 1/2/4P,
+including that trail; size and colours are provisional.
 
 ### Help players read the tool and the fight
 

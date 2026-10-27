@@ -75,6 +75,7 @@ fire and sustained middle retention; difficulty values remain provisional.
   splat tally, each yes or no, with or after `POL#27` (`POL#30`).
 - **Low-paint warning:** listen to the provisional cue in the 1/2/4P mix and look at the
   HUD tag and figure tank at 4P with sound muted (`POL#38`).
+- **Cursor marker:** judge the pointer marquee in play at 1/2/4P (`POL#39`).
 - **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
   treatment (`POL#34`); current behavior is documented, with no candidate accepted.
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
@@ -111,7 +112,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 | `POL#38` | DECISION | MED | S | Implemented: HUD tag, figure tank and a once-per-descent cue before exhaustion. Listen to the provisional `tool.drip` cue in the 1/2/4P mix (with `POL#23`) and check tag/tank readability muted at 4P. [Record](docs/polish-weapon-feedback.md#low-paint-advance-warning-pol38). |
-| `POL#39` | OPEN | MED | M | Make the small white mouse cursor easier to find during play; prototype a contrasting indicator beneath it. [Scope](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
+| `POL#39` | DECISION | MED | S | A hollow marquee now marks the mouse pointer in matches. Judge it in play over pale, dark and painted scenes at 1/2/4P, including its one-frame trail. [Record](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
 
 ## Levels and the editor
 

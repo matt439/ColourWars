@@ -634,6 +634,15 @@
       "shadow_colour": "00000022",
       "reference_width": 1920.0
     },
+    "cursor_marker": {
+      "_comment": "POL#39: a hollow Paint.exe marquee centred on the mouse pointer's hotspot while a keyboard/mouse player is in the match, so the small system cursor stays findable. Window pixels at 1080 lines: an ink frame with a paper rim inside it, open in the middle so the aim point stays visible. It never changes aim.",
+      "enabled": true,
+      "ink": "141414",
+      "paper": "FFFFFF",
+      "size": 44.0,
+      "ink_width": 3.0,
+      "paper_width": 2.0
+    },
     "low_paint": {
       "_comment": "POL#38: while the tool is low, the PAINT label becomes an ink tag with paper lettering, blinking at blink_period seconds. HUD reference pixels; Reduce effects holds it steady.",
       "tag": "141414",

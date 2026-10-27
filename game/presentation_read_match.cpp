@@ -133,6 +133,24 @@ namespace presentation_read
 				"tag/text required.");
 		}
 
+		const JsonValue marker = json.object("cursor_marker");
+		CursorMarkerPresentation& cursor = hud.cursor_marker;
+		cursor.enabled = marker.boolean("enabled");
+		cursor.ink = read_colour(marker, "ink");
+		cursor.paper = read_colour(marker, "paper");
+		cursor.size = read_positive(marker, "size");
+		cursor.ink_width = read_positive(marker, "ink_width");
+		cursor.paper_width = read_positive(marker, "paper_width");
+		// The hollow centre must stay open around the hotspot.
+		if (cursor.size > 96.0f || cursor.ink_width > 8.0f || cursor.paper_width > 8.0f ||
+			(cursor.ink_width * 2.0f + cursor.paper_width) * 2.0f >= cursor.size * 0.5f ||
+			cursor.ink.a != 1.0f || cursor.paper.a != 1.0f || cursor.ink == cursor.paper)
+		{
+			throw std::runtime_error(marker.where() +
+				": size <= 96 with ink/paper widths <= 8 leaving at least half the marquee open, "
+				"and distinct opaque ink/paper required.");
+		}
+
 		const JsonValue identity = json.object("player_identity");
 		hud.player_identity_font = identity.string("font");
 		hud.player_identity_offset = read_vector_unchecked(identity, "offset");
