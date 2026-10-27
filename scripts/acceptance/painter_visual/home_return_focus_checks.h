@@ -99,11 +99,10 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         sheet->draw(list, pixel, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), look.home_background_colour);
         const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f, look.home_box_size);
         setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
+        // Only the focused action has a card; Play is not pinned (POL#37).
         auto card_art = art; card_art.paper = art.focus_fill;
-        RectangleF primary = rows[0]; primary.inflate(art.focus_padding);
-        setup_paper_reference(list, *app.render_resources(), style, card_art, primary, RectangleF());
         RectangleF focused = rows[static_cast<size_t>(selected)]; focused.inflate(art.focus_padding);
-        if (selected != 0) { setup_paper_reference(list, *app.render_resources(), style, card_art, focused, RectangleF()); }
+        setup_paper_reference(list, *app.render_resources(), style, card_art, focused, RectangleF());
         const auto ink = [&](RectangleF bounds)
         {
             sheet->draw(list, pixel, bounds, Colour(art.ink.r * art.ink.a, art.ink.g * art.ink.a, art.ink.b * art.ink.a, art.ink.a));

@@ -287,7 +287,7 @@ void MainMenuHome::init()
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f,
 			look.home_box_size),
-		this->render_resources(), &style, &look.art, &this->focus_, this->play_.get(),
+		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
 		&this->focus_motion_, &this->save()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");

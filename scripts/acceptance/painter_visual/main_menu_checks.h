@@ -299,7 +299,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
                 "Native 720p title/home sampler comparison did not distinguish point and linear text");
         }
     };
-    const auto assert_focus = [&](const Frame& normal, const RectangleF& text, bool home = false)
+    const auto assert_focus = [&](const Frame& normal, const RectangleF& text)
     {
         const Colour original = art.focus_fill;
         art.focus_fill = Colour(0.0f, 1.0f, 1.0f);
@@ -307,7 +307,6 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         art.focus_fill = original;
         const RectangleI changed = foreground_delta_bounds(normal, tinted);
         const RectangleI expected = countdown_crop_bounds(project(card(text)));
-        const RectangleI primary = countdown_crop_bounds(project(card(home_rows[0])));
         require(changed.width > 0 && changed.height > 0,
             "Actual title/home focus card disappeared");
         size_t fill_pixels = 0;
@@ -316,13 +315,11 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             for (int x = changed.x; x < changed.right(); ++x)
             {
                 if (same_pixel(normal, tinted, hud_pixel_offset(normal, x, y))) { continue; }
-                const bool current = x >= expected.x && x < expected.right() &&
-                    y >= expected.y && y < expected.bottom();
-                const bool pinned = home && x >= primary.x && x < primary.right() &&
-                    y >= primary.y && y < primary.bottom();
-                require(current || pinned,
-                    "Actual title/home focus fill escaped its action and pinned Play card");
-                if (current) { ++fill_pixels; }
+                // One card only: Home pins no Play card off focus (POL#37).
+                require(x >= expected.x && x < expected.right() &&
+                    y >= expected.y && y < expected.bottom(),
+                    "Actual title/home focus fill escaped its focused action");
+                ++fill_pixels;
             }
         }
         require(fill_pixels > 30, "Title/home focus card had no visible paper fill");
@@ -382,7 +379,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         const Frame home = main_menu_frame(app);
         try
         {
-            require(assert_focus(home, home_rows[static_cast<size_t>(destination)], true) > 30,
+            require(assert_focus(home, home_rows[static_cast<size_t>(destination)]) > 30,
                 "Home route fixture did not focus its requested destination");
         }
         catch (...)
@@ -412,7 +409,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         require(stack.depth() == 2 && expected.pixels == actual.pixels,
             "Home Play/Options/Credits reached the wrong actual page");
         tap(Key::escape);
-        require(assert_focus(main_menu_frame(app), home_rows[static_cast<size_t>(destination)], true) > 30,
+        require(assert_focus(main_menu_frame(app), home_rows[static_cast<size_t>(destination)]) > 30,
             "Returning from Play/Options/Credits did not restore its corresponding Home action");
     }
 
@@ -443,7 +440,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             const size_t paper_pixels = foreground_local_delta(normal, tinted,
                 RectangleF(Vector2F(pixels.position()), Vector2F(pixels.size())));
             require(paper_pixels > 100, "Title/home paper has no substantial visible fill");
-            const size_t focus_pixels = assert_focus(normal, focus_text, std::string(page) == "home");
+            const size_t focus_pixels = assert_focus(normal, focus_text);
             text_contrast(normal, focus_text);
             const std::string stem = std::string("main-menu-") + page + '-' + focused + '-' +
                 std::to_string(size.x) + 'x' + std::to_string(size.y);
@@ -477,7 +474,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             if (row + 1 < home_rows.size()) { tap(Key::down); }
         }
         tap(Key::up);
-        require(assert_focus(main_menu_frame(app), home_rows[2], true) > 30,
+        require(assert_focus(main_menu_frame(app), home_rows[2]) > 30,
             "Home Up did not return focus to Credits");
         tap(Key::escape);
         require(title_frame.pixels == main_menu_frame(app).pixels,

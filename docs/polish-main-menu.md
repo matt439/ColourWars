@@ -5,7 +5,7 @@ the same pale stepped paper, dark ink, black keyline and quiet edge shade as
 the match menus. A solid neutral surround replaces the textured backdrop on
 these two pages. The title, subtitle, start action and build label center from
 actual font measurements. Home keeps its existing heading and four actions;
-Play has a persistent paper card, and a detached ink arrow follows focus.
+only the focused action has a paper card, and a detached ink arrow follows it.
 
 `MenuPaperArtwork` draws both panels and their action cards from the existing
 solid texel. The paper belongs to the texture layer, with point sampling;
@@ -34,15 +34,21 @@ position and font bounds are retained for that existing hint.
 
 ## Main-menu duplicate highlight (`POL#37`)
 
-**OPEN, reported by the author 2026-10-27.** On the main menu, press Down
-from the first item: its highlight remains while a second highlight appears
-on the second item, making both look selected.
+**Fixed 2026-10-27, reported by the author the same day.** Pressing Down from
+Play left Play's paper card in place while Options gained its own, so two
+actions looked selected. Home was the one page passing Play as
+`MenuPaperArtwork`'s *primary* action, whose card is drawn whether or not it
+has focus; the text colour already followed focus. Home now passes no primary
+action, so the focused action alone has a card and arrow. The title page's
+only action is always focused, so it is unchanged. The End menu keeps its
+deliberately persistent continuation card ([End continuation labels](menu-presentation.md#end-continuation-labels-gap84)).
 
-Next, reproduce this on Home and check the persistent Play paper card described
-above against the actual focus drawing. Correct the treatment so only the
-current action looks selected. Acceptance: Down/Up through all four actions,
-including wraparound and returning from a child page, leaves one unambiguous
-selection indicator on the action that confirmation activates.
+`MainMenuOnly` now fails if any focus-fill pixel lies outside the focused
+action's card on Home, where it used to permit a pinned Play card; the
+independent `HomeReturnFocusOnly` reference no longer draws one. Both pass on
+D3D11 in Debug for Down/Up through all four actions and for every child-page
+return. The retained [Options capture](images/polish-main-menu/options-720p.png)
+is replaced.
 
 ## Validation
 
