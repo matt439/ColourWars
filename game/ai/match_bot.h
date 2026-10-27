@@ -38,7 +38,7 @@ struct MatchBotObservation
 };
 
 // One opponent's match-lifetime decisions, independent of cameras and devices.
-// The small reactive route policy is a foundation for the arena navigation
+// The local route policy is a foundation for the arena navigation
 // qualification, not a claim of complete platform path finding.
 class MatchBot
 {
@@ -55,6 +55,9 @@ private:
 	int react_in_ = 0;
 	int replan_in_ = 0;
 	int blocked_steps_ = 0;
+	int recovery_left_ = 0;
+	int progress_steps_ = 0;
+	mattmath::Vector2F progress_origin_;
 	int jump_left_ = 0;
 	bool jump_was_held_ = false;
 	bool refilling_ = false;

@@ -29,7 +29,7 @@ float MatchBot::random_unit()
 
 bool MatchBot::needs_territory() const
 {
-	return this->replan_in_ <= 0;
+	return this->replan_in_ <= 0 && this->recovery_left_ == 0;
 }
 
 void MatchBot::choose_territory(const MatchBotObservation& view)
@@ -96,28 +96,36 @@ void MatchBot::decide(const MatchBotObservation& view)
 	Vector2F goal = this->has_goal_ ? this->goal_ :
 		view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f);
 	const bool engaging = enemy != nullptr && nearest <= view.engage_distance * view.engage_distance;
-	if (engaging && !this->refilling_) { goal = enemy->center; }
+	// A visible opponent outside this tool's range still needs an approach.
+	// Using the firing radius as the pursuit gate stranded short-range tools
+	// on unrelated paint goals before they could ever enter combat.
+	if (enemy != nullptr && !this->refilling_) { goal = enemy->center; }
 	if (this->refilling_ && enemy != nullptr)
 	{
 		goal = view.center + Vector2F(enemy->center.x > view.center.x ? -view.size.x * 4.0f :
 			view.size.x * 4.0f, 0.0f);
 	}
+	const BotTuning& policy = this->tuning_->bots();
+	if (this->recovery_left_ == 0 && this->blocked_steps_ >= policy.stuck_turn_steps)
+	{
+		this->heading_ = -this->heading_;
+		this->recovery_left_ = policy.recovery_steps;
+		this->blocked_steps_ = this->progress_steps_ = 0;
+		this->progress_origin_ = view.center;
+		this->has_goal_ = false;
+		this->replan_in_ = 0;
+	}
+	// Commit to leaving the failed goal before asking the sampler for another.
+	// Otherwise a fast replan can turn back into the same obstruction at once.
+	const bool recovering = this->recovery_left_ > 0;
+	if (recovering) { goal = view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f); }
 	const float dx = goal.x - view.center.x;
 	float movement = std::fabs(dx) > view.size.x * 0.4f ? (dx > 0.0f ? 1.0f : -1.0f) : 0.0f;
-	if (engaging && !this->refilling_ && std::fabs(dx) <= view.engage_distance * 0.55f)
+	if (engaging && !this->refilling_ && !recovering && std::fabs(dx) <= view.engage_distance * 0.55f)
 	{
 		movement = 0.0f;
 	}
 	if (movement != 0.0f) { this->heading_ = movement; }
-	const BotTuning& policy = this->tuning_->bots();
-	if (this->blocked_steps_ >= policy.stuck_turn_steps)
-	{
-		this->heading_ = -this->heading_;
-		movement = this->heading_;
-		this->blocked_steps_ = 0;
-		this->has_goal_ = false;
-		this->replan_in_ = 0;
-	}
 	this->decision_.x_movement = movement;
 	this->decision_.left_analog_stick = Vector2F(movement, 0.0f);
 	const bool above = goal.y < view.center.y - view.size.y * 0.5f;
@@ -166,6 +174,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	{
 		this->had_alive_step_ = false;
 		this->react_in_ = this->replan_in_ = this->blocked_steps_ = this->jump_left_ = 0;
+		this->recovery_left_ = this->progress_steps_ = 0;
 		this->jump_was_held_ = this->refilling_ = this->has_goal_ = false;
 		this->decision_ = neutral;
 		return neutral;
@@ -174,6 +183,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	{
 		this->had_alive_step_ = true;
 		this->react_in_ = this->tuning_->bot(this->difficulty_).reaction_steps;
+		this->progress_origin_ = view.center;
 	}
 	const BotTuning& policy = this->tuning_->bots();
 	if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
@@ -183,7 +193,27 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		++this->blocked_steps_;
 	}
 	else { this->blocked_steps_ = 0; }
-	if (this->replan_in_-- <= 0) { this->choose_territory(view); }
+	if (this->decision_.x_movement != 0.0f && this->recovery_left_ == 0)
+	{
+		if (Vector2F::distance_squared(view.center, this->progress_origin_) >=
+			policy.progress_distance * policy.progress_distance)
+		{
+			this->progress_origin_ = view.center;
+			this->progress_steps_ = 0;
+		}
+		else if (++this->progress_steps_ >= policy.progress_window_steps)
+		{
+			// Velocity alone misses pacing or a moving support carrying us back
+			// and forth without making progress toward any new territory.
+			this->blocked_steps_ = std::max(this->blocked_steps_, policy.stuck_turn_steps);
+		}
+	}
+	else
+	{
+		this->progress_origin_ = view.center;
+		this->progress_steps_ = 0;
+	}
+	if (this->recovery_left_ == 0 && this->replan_in_-- <= 0) { this->choose_territory(view); }
 	if (--this->react_in_ <= 0) { this->decide(view); }
 	PlayerInputData input = this->decision_;
 	input.connected = true;
@@ -194,5 +224,6 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	input.jump_pressed = input.jump_held && !this->jump_was_held_;
 	this->jump_was_held_ = input.jump_held;
 	if (this->jump_left_ > 0) { --this->jump_left_; }
+	if (this->recovery_left_ > 0) { --this->recovery_left_; }
 	return input;
 }

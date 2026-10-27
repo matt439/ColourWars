@@ -131,8 +131,8 @@ Slices, in order:
 2. **A `skirmish` bot (implemented).** `paint` and `chase` each play half the game. A bot that
    paints, engages an opponent in range, retreats to refill and returns is the
    minimum for the numbers to say anything about tools rather than bots. It
-   stays a developer tool: shipping AI opponents is outside the chosen scope
-   ([match scope](feature-roadmap.md#match-scope-decisions-2026-10-15)).
+   stays a developer tool; the separately requested shipping AI opponents use
+   their own driver and [ROAD#10 qualification](feature-roadmap.md#ai-bot-players-road10).
 3. **First report (complete 2026-10-26).** All 25 ordered tool pairs on
    `crossfeed` and `press_tower`, five fixed seeds each: 250 matches, with the
    findings in [Crossfeed](polish-crossfeed.md#first-headless-five-tool-report-2026-10-26)

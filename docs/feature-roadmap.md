@@ -232,12 +232,77 @@ build logs at `out/road10-build-debug.log` and `out/road10-build-release.log`.
 This is selected acceptance, not the full suite, physical-pad, performance or
 attended difficulty qualification.
 
-**Next implementation:** build repeatable spawn-to-territory and opponent trials
-on Crossfeed and the shipped arenas, for all five tools. Use observed failures
-to improve reachable route selection, platform jumps/drops, stuck recovery,
-territory value, combat approach/aim and reserve use. Keep finite per-trial step
-budgets and final-input replay checks. Attended difficulty distinction and
-usefulness remain the author's acceptance gate; `ROAD#10` stays OPEN.
+#### Bounded arena trials, recovery and combat approach (2026-10-27)
+
+The opt-in `bot_trials` consumer case now runs the shipping driver through
+120 natural-spawn trials: Crossfeed, Close Quarters, King of the Hill and
+Turbulence, all five tools, both bot teams and three difficulties. Each trial
+has a fixed seed and 600 active simulation steps. Ten separate Hard combat
+trials start the bot and a stationary human opponent 700 units apart on the
+mirrored Crossfeed lower floors. Those trials use initial placement only;
+natural-spawn trials never inject positions, and neither mode uses live cheats.
+The CSV records movement, jump/drop requests, blocked steps, paid fire,
+reserves/recovery, owned paint, opponent health loss and attributed eliminations.
+
+Two policy defects are fixed. Recovery now holds an escape direction before
+sampling another territory goal, rather than immediately choosing the same
+obstruction again. Positional progress also detects small oscillations even
+when collision velocity is nonzero. Validated `bots.recovery_steps` (60),
+`progress_window_steps` (60) and `progress_distance` (52 units) own the new
+thresholds. Death clears the recovery; intentional combat stops do not trigger
+it. Ordinary reaction timing can retain the escape direction briefly after the
+holdoff ends. This remains local recovery, with no platform route graph.
+
+Combat approach now pursues a living visible opponent outside firing range;
+previously short-range tools ignored that opponent until already close enough.
+It drops the pursuit on lost visibility after the normal reaction interval.
+The range estimate also caps gravity-affected travel at its ideal same-height
+ballistic reach, retaining the existing drag/lifetime limit. This prevents
+Sprayer and Bucket from stopping at an impossible nominal range. Neither the
+cap nor the existing aim lead is an exact trajectory solver.
+
+The Release baseline at `74f271b2` produced opponent health loss in 6/10 local
+combat trials. The updated policy produces health loss in **10/10**, with
+owner-attributed eliminations in 8/10; Sprayer damages but does not eliminate
+within this budget. All ten now require actual paid fire and opponent health
+loss to pass. These are stationary local opponents, not opposed-match balance.
+
+Natural-spawn paint results remain measurements, not route-success gates:
+
+| Arena | Trials holding owned paint before | After |
+|---|---|---|
+| Crossfeed | 30/30 | 30/30 |
+| Close Quarters | 20/30 | 19/30 |
+| King of the Hill | 30/30 | 30/30 |
+| Turbulence | 30/30 | 30/30 |
+
+The eleven zero-paint results are all Close Quarters Team A: Easy/Normal with
+every tool, plus Hard Roller. Recovery alone does not resolve that route and
+territory failure; the decreased count is retained as evidence rather than
+hidden behind a passing execution check. Turbulence's mean inward progress
+increases from 1834 to 2180 units, but these trials do not prove required
+platform landings, useful regional coverage or general navigation quality.
+
+Validation: Debug and Release builds, the seven selected consumer cases
+`bot_driver`, `bot_recovery`, `bot_ballistics`, `bot_trials`, `bot_runtime`,
+`gameplay_tuning` and `movement`, and both real-bank isolated startup checks
+pass. The 130-trial CSVs are byte-identical between builds. Two selected
+600-step final-input tapes reproduce public actor/projectile/paint state in
+both builds, with complete fingerprints additionally checked in Debug. The
+short recovery/range cases join the default suite; the matrix stays opt-in:
+`scripts/run-acceptance.ps1 -Preset x64-debug -Cases bot_trials` (or Release).
+Evidence: `out/validation/road10-trials/`; the earlier Release baseline is in
+`out/validation/road10-trials-baseline/`. This is selected acceptance, not the
+full suite, native bot presentation, physical-pad, performance or attended
+difficulty qualification.
+
+**Next implementation:** reproduce the Close Quarters Team A no-paint route,
+separate paint aim targets from reachable standing/movement goals, and qualify
+named platform jump/drop/recovery endpoints on the shipped geometry. Extend
+opponent trials to moving and opposed players and improve aim and territory
+value from those observations. Keep finite budgets and final-input replay
+checks. Attended difficulty distinction and usefulness remain the author's
+acceptance gate; `ROAD#10` stays OPEN.
 
 ### Balanced random teams
 

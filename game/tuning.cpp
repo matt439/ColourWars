@@ -162,6 +162,9 @@ namespace
 		};
 		bots.stuck_jump_steps = steps(json, "stuck_jump_steps");
 		bots.stuck_turn_steps = steps(json, "stuck_turn_steps");
+		bots.recovery_steps = steps(json, "recovery_steps");
+		bots.progress_window_steps = steps(json, "progress_window_steps");
+		bots.progress_distance = read_positive(json, "progress_distance");
 		if (bots.stuck_turn_steps <= bots.stuck_jump_steps)
 		{
 			throw std::runtime_error(json.where() + ": stuck_turn_steps must exceed stuck_jump_steps.");

@@ -63,6 +63,9 @@ struct BotTuning
 	float reserve_resume = 0.0f;
 	int stuck_jump_steps = 1;
 	int stuck_turn_steps = 1;
+	int recovery_steps = 1;
+	int progress_window_steps = 1;
+	float progress_distance = 0.0f;
 };
 
 // Match phase durations and countdown presentation.

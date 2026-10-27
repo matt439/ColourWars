@@ -177,6 +177,26 @@ namespace
 			!driver.drives(-1) && !driver.drives(4), "Driver confused an unclaimed human with an explicit bot");
 	}
 
+	void check_visible_approach(const GameTuning& tuning)
+	{
+		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+		{
+			MatchBot bot(&tuning, difficulty, 7);
+			MatchBotObservation view = fixture(tuning);
+			view.engage_distance = 200.0f;
+			view.territory = { { -300.0f, 0.0f } };
+			view.enemies.push_back({ { 600.0f, 0.0f }, {} });
+			PlayerInputData input;
+			for (int step = 0; step < tuning.bot(difficulty).reaction_steps; ++step) { input = bot.think(view); }
+			require(input.x_movement > 0.0f,
+				"A visible opponent outside firing range never received an ordinary approach");
+			view.enemies.clear();
+			view.velocity.x = 120.0f;
+			for (int step = 0; step < tuning.bot(difficulty).reaction_steps; ++step) { input = bot.think(view); }
+			require(input.x_movement < 0.0f, "An unseen opponent retained a pursuit goal after reaction");
+		}
+	}
+
 	void check_tuning(const std::filesystem::path& content)
 	{
 		std::ifstream input(content / "tuning.json", std::ios::binary);
@@ -202,6 +222,11 @@ namespace
 		rejects("sight_distance", [](auto& d) { d["bots"]["sight_distance"].SetInt(0); });
 		rejects("reserve_resume", [](auto& d) { d["bots"]["reserve_resume"].SetDouble(0.01); });
 		rejects("stuck_turn_steps", [](auto& d) { d["bots"]["stuck_turn_steps"].SetInt(1); });
+		for (const char* field : { "recovery_steps", "progress_window_steps", "progress_distance" })
+		{
+			rejects(field, [&](auto& d) { d["bots"].RemoveMember(field); });
+			rejects(field, [&](auto& d) { d["bots"][field].SetInt(0); });
+		}
 		for (const char* difficulty : { "easy", "normal", "hard" })
 		{
 			rejects(difficulty, [&](auto& d) { d["bots"].RemoveMember(difficulty); });
@@ -227,6 +252,7 @@ int wmain(int argc, wchar_t** argv)
 		check_reactions_and_reserves(tuning);
 		check_recovery_and_territory(tuning);
 		check_private_sequences(tuning);
+		check_visible_approach(tuning);
 		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, death/respawn, jump/turn/drop and territory decisions, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	}

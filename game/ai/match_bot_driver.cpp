@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/ai/match_bot_driver.h"
+#include "game/ai/match_bot_ballistics.h"
 #include "game/objects/level.h"
 #include "game/objects/weapon.h"
 #include "engine/core/step_timer.h"
@@ -56,11 +57,9 @@ bool MatchBotDriver::drives(int participant) const
 		this->bots_[static_cast<size_t>(participant)] != nullptr;
 }
 
-float MatchBotDriver::engagement_distance(const Player& player, const GameTuning& tuning)
+float match_bot_ballistics::horizontal_reach(const WeaponTuning& tool,
+	const ProjectileTuning& projectile)
 {
-	const Weapon& weapon = player.primary_weapon();
-	const WeaponTuning& tool = tuning.weapon(weapon.type());
-	const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
 	const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
 		labrador::StepTimer::TicksPerSecond / 60));
 	float speed = tool.details.starting_vel_length;
@@ -80,7 +79,27 @@ float MatchBotDriver::engagement_distance(const Player& player, const GameTuning
 		speed = std::clamp(speed, -projectile.max_velocity.x, projectile.max_velocity.x);
 		distance += std::fabs(speed * dt);
 	}
-	return distance + Vector2F::distance(weapon.nozzle_pos(), player.center()) +
+	if (projectile.details.gravity != 0.0f)
+	{
+		// Horizontal speed integrated for a whole second overstates a curved
+		// shot's useful range: the bot otherwise stops while the shot falls
+		// short. The ideal same-height maximum is v^2 / |g|; drag and short
+		// lifetimes may reduce the existing local estimate further.
+		const double speed_squared = static_cast<double>(tool.details.starting_vel_length) *
+			tool.details.starting_vel_length;
+		const double ballistic = speed_squared / std::fabs(static_cast<double>(projectile.details.gravity));
+		distance = static_cast<float>(std::min(static_cast<double>(distance), ballistic));
+	}
+	return distance;
+}
+
+float MatchBotDriver::engagement_distance(const Player& player, const GameTuning& tuning)
+{
+	const Weapon& weapon = player.primary_weapon();
+	const WeaponTuning& tool = tuning.weapon(weapon.type());
+	const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
+	return match_bot_ballistics::horizontal_reach(tool, projectile) +
+		Vector2F::distance(weapon.nozzle_pos(), player.center()) +
 		projectile.details.col_rect_size.x * 0.5f + tuning.player().size.x * 0.5f;
 }
 
