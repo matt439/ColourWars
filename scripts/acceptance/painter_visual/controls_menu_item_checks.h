@@ -4,12 +4,12 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     Presentation& presentation, const std::filesystem::path& output, const std::filesystem::path& save_path)
 {
     using Labels = std::array<std::wstring, static_cast<size_t>(MenuItem::count)>;
-    constexpr std::array<MenuItem, 10> controls_roles{ MenuItem::pad_sticks, MenuItem::keyboard_jump, MenuItem::pad_jump, MenuItem::music_volume,
+    constexpr std::array<MenuItem, 10> controls_roles{ MenuItem::pad_sticks, MenuItem::keyboard_jump, MenuItem::pad_buttons, MenuItem::music_volume,
         MenuItem::sfx_volume, MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects,
         MenuItem::apply, MenuItem::back };
     constexpr std::array<MenuItem, 6> stick_roles{ MenuItem::pad, MenuItem::move_deadzone,
         MenuItem::aim_deadzone, MenuItem::rumble, MenuItem::apply, MenuItem::back };
-    const std::array<const wchar_t*, 10> controls_legacy{ L"Pad sticks", L"Keyboard Jump", L"Pad Jump", L"Music volume", L"SFX volume",
+    const std::array<const wchar_t*, 10> controls_legacy{ L"Pad sticks", L"Keyboard Jump", L"Pad Buttons", L"Music volume", L"SFX volume",
         L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
     const std::array<const wchar_t*, 6> stick_legacy{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble", L"Apply", L"Back" };
     const Presentation original = presentation;
@@ -109,7 +109,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
             auto label = std::make_unique<UiText>("reference-settings-item", labels[static_cast<size_t>(role)],
                 look.item_font, position, app.render_resources(), row == focused ? art.focus_ink : art.ink);
             float scale = 1.0f;
-            const bool fitted_action = role == MenuItem::keyboard_jump || role == MenuItem::pad_jump || role == MenuItem::apply;
+            const bool fitted_action = role == MenuItem::keyboard_jump || role == MenuItem::pad_buttons || role == MenuItem::apply;
             if (!values[row].empty() || fitted_action)
             {
                 const RectangleF raw = label->bounds();

@@ -68,14 +68,75 @@ namespace
         { Key::y, "y", L"Y" }, { Key::z, "z", L"Z" }, { Key::space, "space", L"Space" }
     }};
 
-    struct ExpectedButton { GamepadButton button; const char* name; const wchar_t* label; };
-    constexpr std::array<ExpectedButton, 4> expected_buttons{{
-        { GamepadButton::a, "a", L"A" }, { GamepadButton::b, "b", L"B" },
-        { GamepadButton::x, "x", L"X" }, { GamepadButton::y, "y", L"Y" }
+    struct ExpectedControl { PadControl control; const char* name; const wchar_t* label; };
+    // Explicit tokens and labels in page order, with None first: independent of
+    // the production table and of PadControl ordinals.
+    constexpr std::array<ExpectedControl, 12> expected_controls{{
+        { PadControl::none, "none", L"None" }, { PadControl::a, "a", L"A" }, { PadControl::b, "b", L"B" },
+        { PadControl::x, "x", L"X" }, { PadControl::y, "y", L"Y" },
+        { PadControl::left_shoulder, "lb", L"LB" }, { PadControl::right_shoulder, "rb", L"RB" },
+        { PadControl::left_trigger, "lt", L"LT" }, { PadControl::right_trigger, "rt", L"RT" },
+        { PadControl::left_stick, "ls", L"LS" }, { PadControl::right_stick, "rs", L"RS" },
+        { PadControl::start, "start", L"Start" }
     }};
+    constexpr std::array<PadControl, 4> faces{ PadControl::a, PadControl::b, PadControl::x, PadControl::y };
+    constexpr std::array<PadAction, 3> pad_actions{ PadAction::jump, PadAction::shoot, PadAction::pause };
 
     uint16_t button_bit(GamepadButton button)
     { return uint16_t(1u << static_cast<unsigned int>(button)); }
+
+    bool is_trigger(PadControl control)
+    { return control == PadControl::left_trigger || control == PadControl::right_trigger; }
+
+    // The oracle's own physical mapping for a non-trigger control.
+    GamepadButton oracle_button(PadControl control)
+    {
+        switch (control)
+        {
+        case PadControl::a: return GamepadButton::a;
+        case PadControl::b: return GamepadButton::b;
+        case PadControl::x: return GamepadButton::x;
+        case PadControl::y: return GamepadButton::y;
+        case PadControl::left_shoulder: return GamepadButton::left_shoulder;
+        case PadControl::right_shoulder: return GamepadButton::right_shoulder;
+        case PadControl::left_stick: return GamepadButton::left_stick;
+        case PadControl::right_stick: return GamepadButton::right_stick;
+        case PadControl::start: return GamepadButton::start;
+        default: throw std::logic_error("Oracle asked for a trigger or None as a button");
+        }
+    }
+
+    // Presses one control fully: a button bit or a trigger at 1.0.
+    GamepadState pressing(PadControl control, GamepadState state = {})
+    {
+        state.connected = true;
+        if (control == PadControl::left_trigger) { state.left_trigger = 1.0f; }
+        else if (control == PadControl::right_trigger) { state.right_trigger = 1.0f; }
+        else if (control != PadControl::none) { state.buttons |= button_bit(oracle_button(control)); }
+        return state;
+    }
+
+    PadProfile profile(PadControl jump, PadControl jump_also, PadControl shoot, PadControl shoot_also,
+        PadControl pause, PadControl pause_also)
+    {
+        PadProfile result;
+        result[PadAction::jump] = { jump, jump_also };
+        result[PadAction::shoot] = { shoot, shoot_also };
+        result[PadAction::pause] = { pause, pause_also };
+        return result;
+    }
+
+    PadProfile jump_on(PadControl primary)
+    { PadProfile result; result[PadAction::jump].primary = primary; return result; }
+
+    std::array<PadProfile, input_slots::pad_count> jump_faces(const std::array<PadControl, input_slots::pad_count>& primaries)
+    {
+        std::array<PadProfile, input_slots::pad_count> result{};
+        for (size_t slot = 0; slot < result.size(); ++slot) { result[slot] = jump_on(primaries[slot]); }
+        return result;
+    }
+
+    const std::array<PadProfile, input_slots::pad_count> default_pads{};
 
     bool conflicting(Key key) { return key == Key::a || key == Key::d || key == Key::s; }
 
@@ -94,7 +155,7 @@ namespace
         }
     }
 
-    void require_mapping(const ActionBindings& actual, Key jump, GamepadButton pad_jump = GamepadButton::a)
+    void require_mapping(const ActionBindings& actual, Key jump, const PadProfile& pad = PadProfile{})
     {
         require(game_action_count == 8 && menu_action_count == 4 && menu_direction_count == 4,
             "Input binding test surface changed without its explicit physical-control oracle");
@@ -106,20 +167,34 @@ namespace
                     std::vector<MouseButton>{ MouseButton::left } : std::vector<MouseButton>{}),
                 "Effective bindings changed another gameplay keyboard/mouse action");
             std::vector<GamepadButton> buttons;
-            if (action == GameAction::jump) { buttons = { pad_jump }; }
-            if (action == GameAction::pause) { buttons = { GamepadButton::start }; }
+            std::vector<TriggerActionBinding> triggers;
+            const auto rebindable = [&](PadAction pad_action)
+            {
+                for (PadControl control : { pad[pad_action].primary, pad[pad_action].alternate })
+                {
+                    if (control == PadControl::none) { continue; }
+                    if (is_trigger(control))
+                    {
+                        triggers.push_back({ control == PadControl::left_trigger ? GamepadTrigger::left : GamepadTrigger::right,
+                            pad_action == PadAction::shoot ? ActionTriggerThreshold::shoot : ActionTriggerThreshold::jump });
+                    }
+                    else { buttons.push_back(oracle_button(control)); }
+                }
+            };
+            if (action == GameAction::jump) { rebindable(PadAction::jump); }
+            if (action == GameAction::shoot) { rebindable(PadAction::shoot); }
+            if (action == GameAction::pause) { rebindable(PadAction::pause); }
             if (action == GameAction::debug) { buttons = { GamepadButton::back }; }
             if (action == GameAction::skip_intro) { buttons = { GamepadButton::a, GamepadButton::b, GamepadButton::start }; }
-            require(actual.game_pad[index].buttons == buttons, "Keyboard Jump changed a fixed pad button alias");
-            const auto& triggers = actual.game_pad[index].triggers;
-            if (action == GameAction::jump || action == GameAction::shoot)
+            require(actual.game_pad[index].buttons == buttons, "Effective pad buttons differ from the profile or a fixed alias changed");
+            const auto& actual_triggers = actual.game_pad[index].triggers;
+            require(actual_triggers.size() == triggers.size(), "Effective pad triggers differ from the profile");
+            for (size_t trigger = 0; trigger < triggers.size(); ++trigger)
             {
-                const bool jumping = action == GameAction::jump;
-                require(triggers.size() == 1 && triggers[0].trigger == (jumping ? GamepadTrigger::left : GamepadTrigger::right) &&
-                    triggers[0].threshold == (jumping ? ActionTriggerThreshold::jump : ActionTriggerThreshold::shoot),
-                    "Keyboard Jump changed a fixed pad trigger or its tuning selector");
+                require(actual_triggers[trigger].trigger == triggers[trigger].trigger &&
+                    actual_triggers[trigger].threshold == triggers[trigger].threshold,
+                    "Effective pad trigger or its tuning selector differs from the profile");
             }
-            else { require(triggers.empty(), "Keyboard Jump added a pad trigger to another action"); }
         }
         require(actual.menu_keys[static_cast<size_t>(MenuInputAction::proceed)] == std::vector<Key>{ Key::enter, Key::space } &&
             actual.menu_keys[static_cast<size_t>(MenuInputAction::back)] == std::vector<Key>{ Key::escape, Key::backspace } &&
@@ -227,54 +302,116 @@ namespace
     void check_pad_domain_and_mapping(const InputTuning& tuning)
     {
         InputBindings preferences{ Key::j };
-        for (GamepadButton button : preferences.pad_jump)
-        { require(button == GamepadButton::a, "Missing per-pad Jump choices must default to A"); }
-        for (const auto& expected : expected_buttons)
+        const PadProfile defaults = profile(PadControl::a, PadControl::left_trigger, PadControl::right_trigger,
+            PadControl::none, PadControl::start, PadControl::none);
+        for (const PadProfile& pad : preferences.pads)
+        { require(pad == defaults, "Missing pad profiles must default to A / LT Jump, RT Shoot and Start Pause"); }
+        const auto listed = pad_controls();
+        require(listed.size() + 1 == expected_controls.size(), "Pad control domain changed size");
+        for (size_t index = 0; index < listed.size(); ++index)
+        { require(listed[index] == expected_controls[index + 1].control, "Pad control page order changed"); }
+        for (const auto& expected : expected_controls)
         {
-            require(pad_jump_button_supported(expected.button) && input_button_name(expected.button) == expected.name &&
-                input_button_label(expected.button) == expected.label && input_button_from_name(expected.name) == expected.button,
-                "Pad Jump domain, canonical token or label differs from A/B/X/Y");
-            for (int slot = 0; slot < input_slots::pad_count; ++slot)
+            require(pad_control_supported(expected.control) == (expected.control != PadControl::none) &&
+                pad_control_name(expected.control) == expected.name && pad_control_label(expected.control) == expected.label &&
+                pad_control_from_name(expected.name) == expected.control,
+                "Pad control domain, canonical token or label differs from its explicit contract");
+        }
+        require(pad_action_name(PadAction::jump) == "jump" && pad_action_name(PadAction::shoot) == "shoot" &&
+            pad_action_name(PadAction::pause) == "pause", "Pad action save keys changed");
+        require(pad_control_conflict(defaults, PadAction::jump, false, PadControl::right_trigger) == PadAction::shoot &&
+            pad_control_conflict(defaults, PadAction::jump, true, PadControl::a) == PadAction::jump &&
+            pad_control_conflict(defaults, PadAction::pause, true, PadControl::left_trigger) == PadAction::jump &&
+            !pad_control_conflict(defaults, PadAction::jump, false, PadControl::a) &&
+            !pad_control_conflict(defaults, PadAction::shoot, true, PadControl::none) &&
+            !pad_control_conflict(defaults, PadAction::shoot, false, PadControl::right_shoulder),
+            "Pad conflict query named the wrong owner or flagged an entry's own control");
+        rejects([] { pad_control_name(static_cast<PadControl>(200)); }, "Unknown pad control acquired a token");
+        rejects([] { pad_control_label(static_cast<PadControl>(200)); }, "Unknown pad control acquired a label");
+
+        // Every control on every action and entry, in every physical slot.
+        for (int slot = 0; slot < input_slots::pad_count; ++slot)
+        {
+            for (PadAction action : pad_actions)
             {
-                preferences.pad_jump[slot] = expected.button;
-                const ActionBindings effective = effective_action_bindings(preferences, slot);
-                require_mapping(effective, Key::j, expected.button);
-                GamepadState before; before.connected = true;
-                GamepadState now = before; now.buttons = button_bit(expected.button);
-                const auto press = game_action(effective, GameAction::jump, now, before, tuning);
-                const auto hold = game_action(effective, GameAction::jump, now, now, tuning);
-                const auto release = game_action(effective, GameAction::jump, before, now, tuning);
-                require(press.pressed && press.held && !press.released && hold.held && !hold.pressed &&
-                    release.released && !release.held && !release.pressed,
-                    "Selected face button lost physical press/hold/release semantics");
-                before = now; now.left_trigger = 1.0f;
-                require(game_action(effective, GameAction::jump, now, before, tuning).pressed ==
-                    (tuning.trigger_jump_threshold < 1.0f), "Selected face button suppressed independent LT crossing");
-                if (expected.button != GamepadButton::a)
+                for (bool alternate : { false, true })
                 {
-                    now = {}; now.connected = true; now.buttons = button_bit(GamepadButton::a);
-                    before = {}; before.connected = true;
-                    require(!game_action(effective, GameAction::jump, now, before, tuning).held &&
-                        !game_action(effective, GameAction::jump, now, before, tuning).pressed,
-                        "Selected non-A Jump retained the former A source");
+                    for (PadControl control : listed)
+                    {
+                        PadProfile pad = defaults;
+                        // Move any other entry off the control so the profile stays valid.
+                        for (PadActionChoice& choice : pad.actions)
+                        {
+                            for (PadControl* entry : { &choice.primary, &choice.alternate })
+                            {
+                                if (*entry != control) { continue; }
+                                *entry = entry == &choice.alternate ? PadControl::none :
+                                    (control == PadControl::left_shoulder ? PadControl::right_shoulder : PadControl::left_shoulder);
+                            }
+                        }
+                        PadActionChoice& target = pad[action];
+                        (alternate ? target.alternate : target.primary) = control;
+                        if (!alternate && target.alternate == control) { target.alternate = PadControl::none; }
+                        pad.validate();
+                        preferences.pads = default_pads; preferences.pads[slot] = pad;
+                        const ActionBindings effective = effective_action_bindings(preferences, slot);
+                        require_mapping(effective, Key::j, pad);
+                        const GameAction game = action == PadAction::jump ? GameAction::jump :
+                            (action == PadAction::shoot ? GameAction::shoot : GameAction::pause);
+                        const float threshold = action == PadAction::shoot ? tuning.trigger_shoot_threshold : tuning.trigger_jump_threshold;
+                        const bool reaches = !is_trigger(control) || threshold < 1.0f;
+                        GamepadState before; before.connected = true;
+                        const GamepadState now = pressing(control);
+                        const auto press = game_action(effective, game, now, before, tuning);
+                        const auto hold = game_action(effective, game, now, now, tuning);
+                        const auto release = game_action(effective, game, before, now, tuning);
+                        require(press.pressed == reaches && press.held == reaches && !press.released &&
+                            hold.held == reaches && !hold.pressed && release.released == reaches && !release.held,
+                            "A chosen pad control lost physical press/hold/release semantics or its action's threshold");
+                        for (int other = 0; other < input_slots::pad_count; ++other)
+                        {
+                            if (other != slot) { require_mapping(effective_action_bindings(preferences, other), Key::j); }
+                        }
+                    }
                 }
             }
         }
-        for (GamepadButton button : { GamepadButton::left_shoulder, GamepadButton::right_shoulder,
-            GamepadButton::left_stick, GamepadButton::right_stick, GamepadButton::start, GamepadButton::back,
-            GamepadButton::dpad_up, GamepadButton::dpad_down, GamepadButton::dpad_left, GamepadButton::dpad_right,
-            static_cast<GamepadButton>(65535) })
+        // Moved defaults stop working.
+        preferences.pads = default_pads;
+        preferences.pads[1] = profile(PadControl::right_trigger, PadControl::none, PadControl::right_shoulder,
+            PadControl::left_trigger, PadControl::y, PadControl::none);
+        const ActionBindings moved = effective_action_bindings(preferences, 1);
+        GamepadState before; before.connected = true;
+        require(!game_action(moved, GameAction::jump, pressing(PadControl::a), before, tuning).held &&
+            !game_action(moved, GameAction::pause, before, pressing(PadControl::start), tuning).released &&
+            game_action(moved, GameAction::skip_intro, before, pressing(PadControl::start), tuning).released &&
+            game_action(moved, GameAction::jump, pressing(PadControl::right_trigger), before, tuning).pressed ==
+                (tuning.trigger_jump_threshold < 1.0f) &&
+            game_action(moved, GameAction::shoot, pressing(PadControl::left_trigger), before, tuning).held ==
+                (tuning.trigger_shoot_threshold < 1.0f) &&
+            game_action(moved, GameAction::pause, before, pressing(PadControl::y), tuning).released,
+            "Moved pad defaults kept their old controls, intro skip changed, or a trigger used the wrong threshold");
+
+        for (const PadProfile& invalid : {
+            profile(PadControl::none, PadControl::none, PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none),
+            profile(PadControl::a, PadControl::none, PadControl::none, PadControl::none, PadControl::start, PadControl::none),
+            profile(PadControl::a, PadControl::none, PadControl::right_trigger, PadControl::none, PadControl::none, PadControl::none),
+            profile(PadControl::a, PadControl::a, PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none),
+            profile(PadControl::right_trigger, PadControl::none, PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none),
+            profile(PadControl::a, PadControl::none, PadControl::right_trigger, PadControl::start, PadControl::start, PadControl::none),
+            profile(PadControl::a, PadControl::left_trigger, PadControl::right_trigger, PadControl::none, PadControl::y, PadControl::left_trigger),
+            profile(static_cast<PadControl>(200), PadControl::none, PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none),
+            profile(PadControl::a, static_cast<PadControl>(200), PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none) })
         {
-            require(!pad_jump_button_supported(button), "Non-face pad Jump button was supported");
-            rejects([&] { input_button_name(button); }, "Unsupported button acquired a canonical token");
-            rejects([&] { input_button_label(button); }, "Unsupported button acquired a help label");
-            InputBindings invalid = preferences; invalid.pad_jump[2] = button;
-            rejects([&] { invalid.validate(); }, "Unsupported per-slot Jump choice validated");
-            rejects([&] { effective_action_bindings(invalid, 0); }, "Invalid other-slot choice escaped binding validation");
+            rejects([&] { invalid.validate(); }, "An unbound, duplicate or unknown pad control validated");
+            InputBindings bindings = preferences; bindings.pads[2] = invalid;
+            rejects([&] { bindings.validate(); }, "An invalid pad profile escaped preference validation");
+            rejects([&] { effective_action_bindings(bindings, 0); }, "Invalid other-slot profile escaped binding validation");
         }
-        for (std::string_view token : { "", "A", "B", "X", "Y", " a", "a ", "start", "left", "lt", "jump" })
-        { rejects([&] { input_button_from_name(token); }, "Noncanonical pad Jump token was accepted"); }
-        rejects([] { input_button_from_name(std::string_view("b\0alias", 7)); }, "Embedded-null pad token was accepted");
+        for (std::string_view token : { "", "A", "LT", "Start", "None", " a", "a ", "back", "dpad_up", "left_trigger",
+            "left_shoulder", "l3", "jump" })
+        { rejects([&] { pad_control_from_name(token); }, "Noncanonical pad control token was accepted"); }
+        rejects([] { pad_control_from_name(std::string_view("b\0alias", 7)); }, "Embedded-null pad token was accepted");
         for (int slot : { -1, input_slots::pad_count, 99 })
         {
             bool rejected = false;
@@ -394,17 +531,17 @@ namespace
         ReaderHarness h(content);
         for (int slot = 0; slot < input_slots::pad_count; ++slot)
         {
-            for (const auto& expected : expected_buttons)
+            for (PadControl face : faces)
             {
                 binding_test_pads::states = {}; std::ignore = h.sample();
-                h.bindings.pad_jump[slot] = expected.button;
+                h.bindings.pads[slot] = jump_on(face);
                 auto& pad = binding_test_pads::states[slot];
-                pad.connected = true; pad.buttons = button_bit(expected.button);
+                pad = pressing(face);
                 auto all = h.sample();
                 require(all[slot].jump_held && !all[slot].jump_pressed,
                     "First/reconnect poll invented a selected-face Jump edge");
                 pad.buttons = 0; std::ignore = h.sample();
-                pad.buttons = button_bit(expected.button); all = h.sample();
+                pad = pressing(face); all = h.sample();
                 require(all[slot].jump_held && all[slot].jump_pressed,
                     "Actual reader did not use the selected physical slot's face button");
                 all = h.sample(); require(all[slot].jump_held && !all[slot].jump_pressed,
@@ -421,7 +558,7 @@ namespace
             }
         }
         binding_test_pads::states = {}; std::ignore = h.sample();
-        h.bindings.pad_jump = { GamepadButton::x, GamepadButton::b, GamepadButton::a, GamepadButton::y };
+        h.bindings.pads = jump_faces({ PadControl::x, PadControl::b, PadControl::a, PadControl::y });
         auto& second = binding_test_pads::states[1]; auto& fourth = binding_test_pads::states[3];
         second.connected = fourth.connected = true; std::ignore = h.sample();
         second.buttons = button_bit(GamepadButton::b); fourth.buttons = button_bit(GamepadButton::y);
@@ -433,7 +570,7 @@ namespace
             !all[0].connected && !all[2].connected && all[roster[1]].connected,
             "Sparse/reordered roster selection changed physical binding identity");
         second.buttons |= button_bit(GamepadButton::x); std::ignore = h.sample(); std::ignore = h.sample();
-        h.bindings.pad_jump[1] = GamepadButton::x; all = h.sample();
+        h.bindings.pads[1] = jump_on(PadControl::x); all = h.sample();
         require(all[1].jump_held && !all[1].jump_pressed,
             "Adopting an already held new face button invented a Jump edge");
         second.buttons = button_bit(GamepadButton::b); all = h.sample();
@@ -450,9 +587,33 @@ namespace
         second.buttons = 0; all = h.sample(); countdown.filter_inputs(all);
         second.buttons = button_bit(GamepadButton::x); all = h.sample(); countdown.filter_inputs(all);
         require(all[1].jump_pressed, "Fresh mapped pad press failed to rearm after resume release");
-        h.bindings.pad_jump[0] = GamepadButton::start;
-        rejects([&] { h.player.player_inputs(); }, "Invalid disconnected-slot preference escaped actual reader validation");
-        h.bindings.pad_jump[0] = GamepadButton::a;
+
+        // Shoot and Pause move too: slot 2 shoots on RB (and LT) and pauses on Y;
+        // Jump takes RT. Menus, intro skip and the other slots keep theirs.
+        binding_test_pads::states = {}; h.bindings.pads = default_pads; std::ignore = h.sample();
+        h.bindings.pads[2] = profile(PadControl::right_trigger, PadControl::none, PadControl::right_shoulder,
+            PadControl::left_trigger, PadControl::y, PadControl::none);
+        auto& third = binding_test_pads::states[2]; auto& first = binding_test_pads::states[0];
+        third.connected = first.connected = true; std::ignore = h.sample(); std::ignore = h.sample();
+        third = pressing(PadControl::right_shoulder); first = pressing(PadControl::right_trigger); all = h.sample();
+        require(all[2].primary_shoot && !all[2].jump_held && all[0].primary_shoot == (h.tuning.input().trigger_shoot_threshold < 1.0f),
+            "Actual reader did not shoot on a rebound shoulder, or remapped another slot");
+        third = pressing(PadControl::left_trigger); all = h.sample();
+        require(all[2].primary_shoot == (h.tuning.input().trigger_shoot_threshold < 1.0f) && !all[2].jump_held,
+            "Shoot's alternate LT lost the shoot threshold or still jumped");
+        third = pressing(PadControl::right_trigger); all = h.sample();
+        require(!all[2].primary_shoot && all[2].jump_pressed == (h.tuning.input().trigger_jump_threshold < 1.0f),
+            "RT kept shooting or did not jump at the jump threshold after rebinding");
+        third = pressing(PadControl::start); std::ignore = h.sample(); third = pressing(PadControl::none); all = h.sample();
+        require(!all[2].toggle_pause_menu && all[2].skip_intro && h.menus[2].action == MenuInputAction::pause,
+            "Start still paused gameplay, or lost its fixed intro/menu role, after Pause moved");
+        third = pressing(PadControl::y); all = h.sample();
+        require(all[2].pause_held && !all[2].toggle_pause_menu, "Rebound Pause did not hold on Y");
+        third = pressing(PadControl::none); all = h.sample();
+        require(all[2].toggle_pause_menu && !all[2].skip_intro, "Rebound Pause did not release on Y, or Y became an intro skip");
+        h.bindings.pads[0][PadAction::jump].primary = PadControl::start;
+        rejects([&] { h.player.player_inputs(); }, "Invalid connected-slot profile escaped actual reader validation");
+        h.bindings.pads = default_pads;
         binding_test_pads::states = {}; std::ignore = h.sample();
     }
 
@@ -566,7 +727,7 @@ namespace
     }
 
     void require_schema(const std::string& bytes, const char* name,
-        const std::array<GamepadButton, input_slots::pad_count>& expected_pad = InputBindings{}.pad_jump)
+        const std::array<PadProfile, input_slots::pad_count>& expected_pads = default_pads)
     {
         rapidjson::Document document; document.Parse(bytes.data(), bytes.size());
         require(!document.HasParseError() && document.IsObject() && document.HasMember("save_version") &&
@@ -576,18 +737,36 @@ namespace
         const auto& section = document["input_bindings"];
         require(section.MemberCount() == 2 && section.HasMember("keyboard_jump") && section["keyboard_jump"].IsString() &&
             std::string_view(section["keyboard_jump"].GetString(), section["keyboard_jump"].GetStringLength()) == name,
-            "Save binding section did not contain exactly its canonical physical Jump token");
-        require(section.HasMember("pad_jump") && section["pad_jump"].IsArray() &&
-            section["pad_jump"].Size() == input_slots::pad_count,
-            "Save did not write all four stable physical-slot Jump choices");
-        for (size_t slot = 0; slot < expected_pad.size(); ++slot)
+            "Save binding section did not contain exactly its canonical physical Jump token and pad profiles");
+        require(section.HasMember("pads") && section["pads"].IsArray() &&
+            section["pads"].Size() == input_slots::pad_count,
+            "Save did not write all four stable physical-slot pad profiles");
+        const auto token = [](PadControl control)
         {
-            const auto found = std::find_if(expected_buttons.begin(), expected_buttons.end(),
-                [&](const ExpectedButton& button) { return button.button == expected_pad[slot]; });
-            require(found != expected_buttons.end(), "Schema oracle was given an unsupported pad choice");
-            const auto& actual = section["pad_jump"][static_cast<rapidjson::SizeType>(slot)];
-            require(actual.IsString() && std::string_view(actual.GetString(), actual.GetStringLength()) == found->name,
-                "Save pad Jump choices did not retain canonical tokens and physical slot order");
+            const auto found = std::find_if(expected_controls.begin(), expected_controls.end(),
+                [&](const ExpectedControl& expected) { return expected.control == control; });
+            require(found != expected_controls.end(), "Schema oracle was given an unsupported pad control");
+            return std::string_view(found->name);
+        };
+        for (size_t slot = 0; slot < expected_pads.size(); ++slot)
+        {
+            const auto& actual = section["pads"][static_cast<rapidjson::SizeType>(slot)];
+            require(actual.IsObject() && actual.MemberCount() == 3, "A saved pad profile is not exactly jump/shoot/pause");
+            for (size_t index = 0; index < pad_actions.size(); ++index)
+            {
+                const char* key = index == 0 ? "jump" : (index == 1 ? "shoot" : "pause");
+                const PadActionChoice& choice = expected_pads[slot].actions[index];
+                require(actual.HasMember(key) && actual[key].IsArray(), "A saved pad profile lost an action");
+                const auto& controls = actual[key];
+                require(controls.Size() == (choice.alternate == PadControl::none ? 1u : 2u),
+                    "A saved pad action did not write its primary and only a real alternate");
+                for (rapidjson::SizeType entry = 0; entry < controls.Size(); ++entry)
+                {
+                    require(controls[entry].IsString() && std::string_view(controls[entry].GetString(), controls[entry].GetStringLength()) ==
+                        token(entry == 0 ? choice.primary : choice.alternate),
+                        "Saved pad controls did not retain canonical tokens and physical slot order");
+                }
+            }
         }
     }
 
@@ -730,50 +909,99 @@ namespace
 
     void check_pad_save(const IsolatedSaveDirectory& directory, const char* content)
     {
-        const std::array<GamepadButton, 4> selected{ GamepadButton::b, GamepadButton::x, GamepadButton::y, GamepadButton::a };
+        // The earlier face-button array migrates per slot; Shoot, Pause and LT keep their defaults.
+        const auto selected = jump_faces({ PadControl::b, PadControl::x, PadControl::y, PadControl::a });
         Save save = load(directory, "{\"keyboard_jump\":\"j\",\"pad_jump\":[\"b\",\"x\",\"y\",\"a\"]}");
-        require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pad_jump == selected,
-            "Independent per-slot Jump preferences did not load in physical slot order");
+        require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pads == selected,
+            "Legacy per-slot Jump preferences did not migrate in physical slot order");
         require_independent(save);
-        require(save.save_to_file(), "Per-slot Jump preferences did not save");
+        require(save.save_to_file(), "Migrated pad profiles did not save");
         require_schema(directory.contents(), "j", selected);
         Save reread; reread.load_save_file(); require(reread.input_bindings() == save.input_bindings(),
-            "Per-slot Jump preferences did not round trip");
+            "Migrated pad profiles did not round trip");
         SaveData reset = save.save_data(); InputBindingsSection{}.reset(reset);
         require(reset.input_bindings == InputBindings{}, "Input section reset failed to restore default keyboard and every pad slot");
 
-        for (const char* broken : { "null", "false", "7", "[]", "{}", "\"unknown\"", "\"B\"", "\"lt\"", "\"b\\u0000alias\"" })
+        for (const char* broken : { "null", "false", "7", "[]", "{}", "\"unknown\"", "\"B\"", "\"lt\"", "\"start\"", "\"b\\u0000alias\"" })
         {
             save = load(directory, "{\"keyboard_jump\":\"j\",\"pad_jump\":[\"b\"," + std::string(broken) + ",\"y\",\"x\"]}");
-            const std::array<GamepadButton, 4> recovered{ GamepadButton::b, GamepadButton::a, GamepadButton::y, GamepadButton::x };
-            require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pad_jump == recovered,
-                "Malformed pad choice discarded valid keyboard or another slot's choice");
+            const auto recovered = jump_faces({ PadControl::b, PadControl::a, PadControl::y, PadControl::x });
+            require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pads == recovered,
+                "Malformed legacy pad choice discarded valid keyboard or another slot's choice");
             require_independent(save);
         }
         for (const char* broken : { "null", "false", "7", "\"b\"", "{}" })
         {
             save = load(directory, "{\"keyboard_jump\":\"j\",\"pad_jump\":" + std::string(broken) + "}");
-            require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pad_jump == InputBindings{}.pad_jump,
-                "Malformed pad array discarded valid keyboard or failed to use per-slot defaults");
+            require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pads == default_pads,
+                "Malformed legacy pad array discarded valid keyboard or failed to use per-slot defaults");
         }
         for (const char* keyboard : { "", "\"keyboard_jump\":\"a\",", "\"keyboard_jump\":false," })
         {
             save = load(directory, "{" + std::string(keyboard) + "\"pad_jump\":[\"x\",\"y\",\"b\"]}");
-            const std::array<GamepadButton, 4> recovered{ GamepadButton::x, GamepadButton::y, GamepadButton::b, GamepadButton::a };
-            require(save.input_bindings().keyboard_jump == Key::space && save.input_bindings().pad_jump == recovered,
-                "Malformed/missing keyboard or short pad array discarded independently valid pad choices");
+            const auto recovered = jump_faces({ PadControl::x, PadControl::y, PadControl::b, PadControl::a });
+            require(save.input_bindings().keyboard_jump == Key::space && save.input_bindings().pads == recovered,
+                "Malformed/missing keyboard or short legacy array discarded independently valid pad choices");
         }
-        save = load(directory, "{\"keyboard_jump\":\"j\",\"pad_jump\":[\"b\",\"x\",\"y\",\"a\",false]}");
-        require(save.input_bindings().pad_jump == selected, "Unknown extra slot discarded known physical-slot preferences");
+
+        // Full profiles: any control, alternates, and per-slot recovery.
+        const std::array<PadProfile, input_slots::pad_count> custom{
+            profile(PadControl::right_trigger, PadControl::a, PadControl::right_shoulder, PadControl::left_trigger,
+                PadControl::y, PadControl::none),
+            PadProfile{},
+            profile(PadControl::left_stick, PadControl::none, PadControl::right_trigger, PadControl::x,
+                PadControl::start, PadControl::right_stick),
+            profile(PadControl::b, PadControl::left_shoulder, PadControl::right_trigger, PadControl::none,
+                PadControl::start, PadControl::y) };
+        const std::string slots[]{
+            "{\"jump\":[\"rt\",\"a\"],\"shoot\":[\"rb\",\"lt\"],\"pause\":[\"y\"]}",
+            "{\"jump\":[\"a\",\"lt\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[\"ls\"],\"shoot\":[\"rt\",\"x\"],\"pause\":[\"start\",\"rs\"]}",
+            "{\"jump\":[\"b\",\"lb\"],\"shoot\":[\"rt\"],\"pause\":[\"start\",\"y\"]}" };
+        const auto pads_json = [&](const std::string& second)
+        { return "{\"keyboard_jump\":\"j\",\"pads\":[" + slots[0] + "," + second + "," + slots[2] + "," + slots[3] + "]}"; };
+        save = load(directory, pads_json(slots[1]));
+        require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pads == custom,
+            "Full per-slot pad profiles did not load");
+        require(save.save_to_file(), "Full pad profiles did not save"); require_schema(directory.contents(), "j", custom);
+        reread.load_save_file(); require(reread.input_bindings() == save.input_bindings(), "Full pad profiles did not round trip");
+        for (const char* broken : { "null", "false", "7", "[]", "\"a\"", "{}",
+            "{\"jump\":[\"a\"],\"shoot\":[\"rt\"]}", "{\"jump\":[],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[\"none\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[\"rt\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[\"a\",\"a\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[\"a\",\"b\",\"x\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[\"back\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[\"A\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":\"a\",\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[7],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}" })
+        {
+            save = load(directory, pads_json(broken));
+            require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pads == custom,
+                "A malformed pad profile discarded the keyboard key or another slot's profile");
+            require_independent(save);
+        }
+        for (const char* broken : { "null", "false", "7", "\"a\"", "{}" })
+        {
+            save = load(directory, "{\"keyboard_jump\":\"j\",\"pads\":" + std::string(broken) + ",\"pad_jump\":[\"b\"]}");
+            require(save.input_bindings().keyboard_jump == Key::j && save.input_bindings().pads == default_pads,
+                "A malformed pads array discarded the keyboard key, or fell back to the older face array");
+        }
+        save = load(directory, "{\"keyboard_jump\":\"j\",\"pads\":[" + slots[0] + "],\"pad_jump\":[\"b\",\"x\"]}");
+        require(save.input_bindings().pads[0] == custom[0] && save.input_bindings().pads[1] == PadProfile{},
+            "A short pads array did not default its missing slots, or mixed in the older face array");
+        save = load(directory, "{\"keyboard_jump\":\"j\",\"pads\":[" + slots[0] + "," + slots[1] + "," + slots[2] + "," + slots[3] + ",false]}");
+        require(save.input_bindings().pads == custom, "Unknown extra slot discarded known physical-slot profiles");
+
         const InputBindings* borrowed = &save.input_bindings(); const std::string bytes = directory.contents();
-        InputBindings invalid = *borrowed; invalid.pad_jump[2] = GamepadButton::start;
+        InputBindings invalid = *borrowed; invalid.pads[2][PadAction::jump].primary = PadControl::start;
         rejects([&] { save.set_input_bindings_and_save(invalid); }, "Invalid pad setter did not validate before mutation");
-        require(&save.input_bindings() == borrowed && borrowed->pad_jump == selected && directory.contents() == bytes &&
+        require(&save.input_bindings() == borrowed && borrowed->pads == custom && directory.contents() == bytes &&
             !std::filesystem::exists(directory.temporary_path()), "Rejected pad setter mutated active choices, disk or staging state");
         for (bool replacement_failure : { false, true })
         {
             save = load(directory, "{\"keyboard_jump\":\"j\"}"); const std::string previous = directory.contents();
-            InputBindings candidate = save.input_bindings(); candidate.pad_jump = selected;
+            InputBindings candidate = save.input_bindings(); candidate.pads = custom;
             if (replacement_failure)
             {
                 const ReplacementLock lock(directory.save_path());
@@ -790,21 +1018,22 @@ namespace
             ReaderHarness h(content);
             PlayerInput actual(&h.pads, &h.keyboard, &h.mouse, &h.tuning, &h.play, &save.input_bindings());
             auto& pad = binding_test_pads::states[2]; pad.connected = true; std::ignore = h.sample();
-            pad.buttons = button_bit(GamepadButton::y); std::ignore = h.sample();
-            require(actual.player_inputs()[2].jump_pressed, "Save-borrowing reader ignored pad choice kept active after write failure");
+            pad = pressing(PadControl::left_stick); std::ignore = h.sample();
+            require(actual.player_inputs()[2].jump_pressed, "Save-borrowing reader ignored a pad profile kept active after write failure");
+            pad = pressing(PadControl::none); std::ignore = h.sample();
             Save previous_disk; previous_disk.load_save_file();
-            require(previous_disk.input_bindings().pad_jump == InputBindings{}.pad_jump,
+            require(previous_disk.input_bindings().pads == default_pads,
                 "Failed pad persistence damaged reloadable previous choices");
             require(save.set_input_bindings_and_save(candidate), "Pad preference retry failed after removing real IO blocker");
-            require_schema(directory.contents(), "j", selected); require_independent(save);
+            require_schema(directory.contents(), "j", custom); require_independent(save);
         }
         auto play = save.play_settings(); play.music_volume = 81;
-        require(save.set_play_settings_and_save(play) && save.input_bindings().pad_jump == selected &&
+        require(save.set_play_settings_and_save(play) && save.input_bindings().pads == custom &&
             save.set_display_settings_and_save(ScreenResolution::s_3840_2160, false, TeamColourPair::blue_orange),
-            "Unrelated settings save overwrote per-slot Jump choices");
+            "Unrelated settings save overwrote per-slot pad profiles");
         Save final; final.load_save_file();
-        require(final.input_bindings().keyboard_jump == Key::j && final.input_bindings().pad_jump == selected,
-            "Independent display/play save did not preserve keyboard and per-slot Jump preferences");
+        require(final.input_bindings().keyboard_jump == Key::j && final.input_bindings().pads == custom,
+            "Independent display/play save did not preserve keyboard and per-slot pad profiles");
     }
 
     void check_relaunch(const char* content, std::string_view mode, const std::filesystem::path& profile)
@@ -860,7 +1089,8 @@ int main(int argc, char** argv)
             "isolated effective Jump with fixed menu/intro/pad controls; real readers, repeated snapshots/focus/remapping, "
             "held-J ResumeCountdown release gating, version-0/1/2 migration/version-3/future known sections, malformed-section isolation, "
             "validation before mutation, real staged-write/replacement failures with active-before-write preference and retry, "
-            "independent Settings/Controls/display/records/remembered saves; per-slot A/B/X/Y with retained LT, local recovery, "
+            "independent Settings/Controls/display/records/remembered saves; per-slot Jump/Shoot/Pause over eleven controls with "
+            "alternates, conflicts and trigger thresholds, legacy face migration, local recovery, "
             "sparse-slot/remap/reconnect/resume and failed-pad-save checks; GUID-isolated profile, no window/device\n";
         return EXIT_SUCCESS;
     }

@@ -1,7 +1,7 @@
 // Actual binding-page navigation uses private snapshots and its own save.
 // Included by the focused scripted-pad painter alongside Keyboard Jump.
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
-void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
+void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
@@ -72,38 +72,31 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
     };
-    PadJumpMenu* page = nullptr;
+    PadButtonsMenu* page = nullptr;
     const auto open = [&](int first_connected, int owner = -1)
     {
         stack.clear(); stack.notify_activation(true); painter_scripted_pads::states = {};
         if (first_connected >= 0) { painter_scripted_pads::states[first_connected].connected = true; }
         neutral(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
-        auto child = std::make_unique<PadJumpMenu>(&context, owner); page = child.get(); stack.push(std::move(child)); tick();
+        auto child = std::make_unique<PadButtonsMenu>(&context, owner); page = child.get(); stack.push(std::move(child)); tick();
         require(stack.depth() == 2 && page->selected_slot() == (owner >= 0 ? owner : std::max(0, first_connected)),
             "Pad Jump did not choose pausing slot / first connected slot / disconnected Pad1 default");
     };
-    const auto substitute = [](std::wstring text, std::wstring_view token, std::wstring_view label)
+    // Jump's first four choices to the right of A; none conflicts with the default profile.
+    constexpr std::array<PadControl, 4> choices{ PadControl::a, PadControl::b, PadControl::x, PadControl::y };
+    const auto jump_of = [](const PadProfile& pad) { return pad[PadAction::jump].primary; };
+    const auto with_jumps = [](InputBindings bindings, const std::array<PadControl, 4>& jumps)
     {
-        const size_t at = text.find(token); require(at != std::wstring::npos, "Pad Jump oracle lost authored token");
-        text.replace(at, token.size(), label); return text;
-    };
-    constexpr std::array<GamepadButton, 4> choices{ GamepadButton::a, GamepadButton::b, GamepadButton::x, GamepadButton::y };
-    constexpr std::array<std::wstring_view, 4> labels{ L"A", L"B", L"X", L"Y" };
-    const auto label_of = [&](GamepadButton button)
-    {
-        const auto at = std::find(choices.begin(), choices.end(), button);
-        require(at != choices.end(), "Pad Jump oracle received an unsupported choice");
-        return labels[static_cast<size_t>(std::distance(choices.begin(), at))];
+        for (size_t slot = 0; slot < jumps.size(); ++slot) { bindings.pads[slot][PadAction::jump].primary = jumps[slot]; }
+        return bindings;
     };
     std::ofstream records(output / "pad-jump.csv");
     records << "case,width,height,slot,current,pending,stack_depth,updates\n";
-    const auto copy_check = [&](const char* name, int slot, GamepadButton current, GamepadButton pending,
+    const auto copy_check = [&](const char* name, int slot, PadControl current, PadControl pending,
         const std::wstring& status, bool warning = false)
     {
         const auto& look = original.controls_settings(); const auto& style = original.menu(); const auto& art = look.art;
-        const auto& copy = original.menu_text().pad_jump;
-        const std::wstring help = substitute(copy.current, L"{button}", label_of(current)) + L'\n' +
-            substitute(copy.pending, L"{button}", label_of(pending)) + L'\n' + copy.help;
+        const std::wstring& help = original.menu_text().pad_buttons.help;
         UiText help_text("independent-pad-help", help, look.help_font, look.controls_position, app.render_resources(), art.ink);
         const RectangleF raw_help = help_text.bounds();
         help_text.set_scale(std::min({ 1.0f, look.controls_size.x / raw_help.width, look.controls_size.y / raw_help.height }));
@@ -115,7 +108,7 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             (panel.right() - art.shadow_offset - art.focus_padding.x - look.status_position.x) / raw_status.width,
             (style.footer_y - look.status_position.y) / raw_status.height }));
         require(RectangleF(look.controls_position, look.controls_size).contains(help_text.bounds()) && panel.contains(status_text.bounds()),
-            "Pad Jump actual-font fitted help/status escaped the paper");
+            "Pad Buttons actual-font fitted help/status escaped the paper");
         const Frame actual = main_menu_frame(app);
         std::srand(7331); const int next = std::rand(); std::srand(7331);
         require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next,
@@ -147,7 +140,7 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         records << name << ',' << actual.width << ',' << actual.height << ',' << slot << ',' <<
             static_cast<int>(current) << ',' << static_cast<int>(pending) << ',' << stack.depth() << ',' << updates << '\n'; ++copies;
     };
-    const auto& copy = original.menu_text().pad_jump;
+    const auto& copy = original.menu_text().pad_buttons;
     for (Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
     {
         size_to(size);
@@ -157,11 +150,11 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             {
                 require(preferences.set_input_bindings_and_save(initial), "Cannot reset private per-slot page choices");
                 open(slot); const std::string saved = bytes(); tap(Key::down); move(Key::right, choice);
-                require(page->pending_button() == choices[choice] && preferences.input_bindings() == initial && bytes() == saved,
-                    "Pad Jump selector applied before Apply or used the roster index");
-                copy_check(choice == 0 ? "entry" : "pending", slot, GamepadButton::a, choices[choice], copy.pending_status);
-                move(Key::down, 2); tap(Key::enter);
-                InputBindings expected = initial; expected.pad_jump[slot] = choices[choice];
+                require(jump_of(page->pending_profile()) == choices[choice] && preferences.input_bindings() == initial && bytes() == saved,
+                    "Pad Buttons selector applied before Apply or used the roster index");
+                copy_check(choice == 0 ? "entry" : "pending", slot, PadControl::a, choices[choice], copy.pending_status);
+                move(Key::down, 7); tap(Key::enter);
+                InputBindings expected = initial; expected.pads[slot][PadAction::jump].primary = choices[choice];
                 Save reloaded; reloaded.load_save_file(); ++reloads;
                 require(preferences.input_bindings() == expected && reloaded.input_bindings() == expected &&
                     reloaded.play_settings().music_volume == 0 && reloaded.play_settings().sfx_volume == 0,
@@ -175,52 +168,67 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     // changed while this page was open are merged from the latest save.
     require(preferences.set_input_bindings_and_save(initial), "Cannot prepare Pad Jump merge fixture"); open(-1);
     tap(Key::down); move(Key::right, 2); tap(Key::up); tap(Key::right); tap(Key::down); tap(Key::right);
-    InputBindings external = preferences.input_bindings(); external.keyboard_jump = Key::k; external.pad_jump[3] = GamepadButton::y;
+    InputBindings external = preferences.input_bindings(); external.keyboard_jump = Key::k;
+    external.pads[3][PadAction::jump].primary = PadControl::y;
     require(preferences.set_input_bindings_and_save(external), "Cannot seed independent newer binding preferences");
-    move(Key::down, 2); tap(Key::enter);
-    require(preferences.input_bindings().keyboard_jump == Key::k && preferences.input_bindings().pad_jump ==
-        std::array<GamepadButton, 4>{ GamepadButton::x, GamepadButton::b, GamepadButton::a, GamepadButton::y },
-        "Pad Jump Apply replaced a newer keyboard/unedited slot or lost an edited slot");
+    move(Key::down, 7); tap(Key::enter);
+    require(preferences.input_bindings().keyboard_jump == Key::k && preferences.input_bindings() ==
+        with_jumps(external, { PadControl::x, PadControl::b, PadControl::a, PadControl::y }),
+        "Pad Buttons Apply replaced a newer keyboard/unedited slot or lost an edited slot");
     tap(Key::up); tap(Key::enter); // Reset selected Pad2 only, still pending.
-    require(page->pending_button() == GamepadButton::a && preferences.input_bindings().pad_jump[1] == GamepadButton::b,
-        "Reset applied immediately instead of proposing A for the selected pad");
+    require(page->pending_profile() == PadProfile{} && jump_of(preferences.input_bindings().pads[1]) == PadControl::b,
+        "Reset applied immediately instead of proposing the default profile for the selected pad");
     const std::string before_back = bytes(); tap(Key::escape);
-    require(bytes() == before_back && preferences.input_bindings().pad_jump[1] == GamepadButton::b,
+    require(bytes() == before_back && jump_of(preferences.input_bindings().pads[1]) == PadControl::b,
         "Back persisted a reset proposal");
+    // Shoot left from RT skips LT, which Jump already uses, and lands on RB.
+    require(preferences.set_input_bindings_and_save(initial), "Cannot prepare Pad Buttons conflict fixture"); open(0);
+    move(Key::down, 3); tap(Key::left);
+    require(page->pending_profile()[PadAction::shoot].primary == PadControl::right_shoulder &&
+        page->pending_profile()[PadAction::jump] == PadProfile{}[PadAction::jump] && preferences.input_bindings() == initial,
+        "Choosing a control in use did not skip it, or changed Jump or the save before Apply");
+    copy_check("conflict", 0, PadControl::a, PadControl::a, copy.conflict_status, true);
+    move(Key::down, 5); tap(Key::enter);
+    {
+        Save reloaded; reloaded.load_save_file(); ++reloads;
+        require(reloaded.input_bindings().pads[0][PadAction::shoot].primary == PadControl::right_shoulder &&
+            reloaded.input_bindings().pads[1] == PadProfile{}, "Rebound Shoot did not apply and reload for only its pad");
+    }
+    tap(Key::escape);
     // One controlled file refusal, followed by the same actual Apply widget.
     require(preferences.set_input_bindings_and_save(initial), "Cannot prepare Pad Jump failed write"); open(-1);
-    tap(Key::down); tap(Key::right); move(Key::down, 2); const std::string old = bytes();
+    tap(Key::down); tap(Key::right); move(Key::down, 7); const std::string old = bytes();
     require(std::filesystem::create_directory(blocked), "Cannot block private Pad Jump temporary write");
-    tap(Key::enter); require(preferences.input_bindings().pad_jump[0] == GamepadButton::b && bytes() == old,
-        "Failed Pad Jump write rolled back active choice or changed old JSON");
-    copy_check("failed-write", 0, GamepadButton::b, GamepadButton::b, original.menu_text().status.active_save_failed, true);
+    tap(Key::enter); require(jump_of(preferences.input_bindings().pads[0]) == PadControl::b && bytes() == old,
+        "Failed Pad Buttons write rolled back active choice or changed old JSON");
+    copy_check("failed-write", 0, PadControl::b, PadControl::b, original.menu_text().status.active_save_failed, true);
     require(std::filesystem::remove(blocked), "Cannot clear private Pad Jump temporary-write refusal");
     tap(Key::enter); Save retry; retry.load_save_file(); ++reloads;
-    require(retry.input_bindings().pad_jump[0] == GamepadButton::b, "Actual Pad Jump Apply could not retry persistence");
+    require(jump_of(retry.input_bindings().pads[0]) == PadControl::b, "Actual Pad Buttons Apply could not retry persistence");
     tap(Key::escape);
     // The real Controls entry opens its third action, with parent edits pending.
     stack.clear(); painter_scripted_pads::states = {}; neutral(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
     stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick(); move(Key::down, 3); tap(Key::right);
     tap(Key::up); tap(Key::enter); tick(); require(stack.depth() == 3, "Actual Controls Pad Jump entry did not push its child");
     const Frame retained = main_menu_frame(app);
-    const_cast<MenuText&>(presentation.menu_text()).pad_jump.help = L"Help for a later page.";
+    const_cast<MenuText&>(presentation.menu_text()).pad_buttons.help = L"Help for a later page.";
     tick(); require(main_menu_frame(app).pixels == retained.pixels, "Live text replacement changed existing Pad Jump copy");
     tap(Key::escape);
     tick(); // The resumed parent must observe neutral before fresh direction input.
     move(Key::down, 6); tap(Key::enter);
-    require(preferences.play_settings().music_volume == 10 && preferences.input_bindings().pad_jump[0] == GamepadButton::b,
+    require(preferences.play_settings().music_volume == 10 && jump_of(preferences.input_bindings().pads[0]) == PadControl::b,
         "Parent Controls Apply lost pending audio or independently applied pad choices");
     presentation = original;
 
     // A nonowner cannot drive a connected owner's page. Default selection
     // follows the physical owner even when an earlier slot is connected.
-    InputBindings owned_preferences = preferences.input_bindings(); owned_preferences.pad_jump[3] = GamepadButton::b;
+    InputBindings owned_preferences = preferences.input_bindings(); owned_preferences.pads[3][PadAction::jump].primary = PadControl::b;
     require(preferences.set_input_bindings_and_save(owned_preferences), "Cannot prepare selected-B menu Back control");
     open(1, 3); painter_scripted_pads::states[3].connected = true; tick(); tick();
-    const int owned_slot = page->selected_slot(); const auto owned_pending = page->pending_button(); const std::string owned_bytes = bytes();
+    const int owned_slot = page->selected_slot(); const PadProfile owned_pending = page->pending_profile(); const std::string owned_bytes = bytes();
     tap_pad(1, GamepadButton::dpad_down); tap_pad(1, GamepadButton::dpad_right); tap_pad(1, GamepadButton::a);
     tap(Key::down); tap(Key::right); tap(Key::enter);
-    require(page->selected_slot() == owned_slot && page->pending_button() == owned_pending && bytes() == owned_bytes && stack.depth() == 2,
+    require(page->selected_slot() == owned_slot && page->pending_profile() == owned_pending && bytes() == owned_bytes && stack.depth() == 2,
         "Another pad/keyboard drove the connected owner's Pad Jump page");
     tap_pad(3, GamepadButton::b); require(stack.depth() == 1, "Menu B stopped being Back after pad Jump preferences changed");
 
@@ -255,9 +263,9 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const auto fingerprint = MatchFingerprint::of(game->level(), 0);
 #endif
         tap_pad(3, GamepadButton::dpad_down); move_pad(3, GamepadButton::dpad_right, 2);
-        move_pad(3, GamepadButton::dpad_down, 2); tap_pad(3, GamepadButton::a); tick();
-        require(preferences.input_bindings().pad_jump[3] == GamepadButton::x &&
-            preferences.input_bindings().pad_jump[0] == GamepadButton::a,
+        move_pad(3, GamepadButton::dpad_down, 7); tap_pad(3, GamepadButton::a); tick();
+        require(jump_of(preferences.input_bindings().pads[3]) == PadControl::x &&
+            jump_of(preferences.input_bindings().pads[0]) == PadControl::a,
             "Paused Pad Jump defaulted to a player/view index instead of physical owner slot3");
         const Frame changed = draw_game();
         const RectangleF card = game->level().gamepad_controls_card_bounds();
@@ -285,7 +293,7 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             "Returning through Pad Jump/Controls/Options resumed or changed the covered match");
         ++paused_reminders; stack.clear();
 
-        InputBindings mixed = initial; mixed.pad_jump = choices;
+        const InputBindings mixed = with_jumps(initial, choices);
         require(preferences.set_input_bindings_and_save(mixed), "Cannot seed mixed four-pad reminder choices");
         struct RestorePadReminderLayout
         {
@@ -297,8 +305,8 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse(), &preferences.input_bindings());
         auto level = build(app, builder, 4, TeamColourPair::blue_yellow);
         const Frame four = render(*level, *app.renderer());
-        for (const std::wstring_view line : { L"Pad 4: Y / LT  Jump", L"Pad 2: B / LT  Jump",
-            L"Pad 3: X / LT  Jump", L"Pad 1: A / LT  Jump" })
+        for (const std::wstring_view line : { L"Pad 4: Y / LT Jump, RT Shoot, Start Pause", L"Pad 2: B / LT Jump, RT Shoot, Start Pause",
+            L"Pad 3: X / LT Jump, RT Shoot, Start Pause", L"Pad 1: A / LT Jump, RT Shoot, Start Pause" })
         { require(level->gamepad_controls_text().find(line) != std::wstring_view::npos,
             "Mixed four-pad opening reminder lost a physical slot's selected face or LT"); }
         const RectangleF four_card = level->gamepad_controls_card_bounds(), four_text = level->gamepad_controls_text_bounds();
@@ -334,8 +342,7 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     header.settings.set_screen_layout(ScreenLayout::two_player);
     header.settings.set_player_team(0, PlayerTeam::a); header.settings.set_player_team(1, PlayerTeam::b);
     header.settings.set_player_weapon(0, WeaponType::sprayer); header.settings.set_player_weapon(1, WeaponType::sprayer);
-    InputBindings recording_bindings = initial;
-    recording_bindings.pad_jump[1] = GamepadButton::b; recording_bindings.pad_jump[3] = GamepadButton::y;
+    const InputBindings recording_bindings = with_jumps(initial, { PadControl::a, PadControl::b, PadControl::a, PadControl::y });
     require(preferences.set_input_bindings_and_save(recording_bindings), "Cannot save actual recording pad choices");
     const auto snapshots = [&](int step)
     {
@@ -403,8 +410,7 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         decoded.inputs[1].size() == replay_length && decoded.updates == replay_length && decoded.seed &&
         decoded.checkpoints.size() == 6 && decoded.settings.player_settings()[0].num == 3 &&
         decoded.settings.player_settings()[1].num == 1, "Mapped tape lost decoded setup, six checkpoints or complete seat streams");
-    InputBindings playback_bindings = initial;
-    playback_bindings.pad_jump[1] = GamepadButton::x; playback_bindings.pad_jump[3] = GamepadButton::b;
+    const InputBindings playback_bindings = with_jumps(initial, { PadControl::a, PadControl::x, PadControl::a, PadControl::b });
     require(preferences.set_input_bindings_and_save(playback_bindings), "Cannot persist changed replay-time face choices");
     Save replay_save; replay_save.load_save_file();
     require(replay_save.input_bindings() == playback_bindings && playback_bindings != recording_bindings,
@@ -445,10 +451,10 @@ void pad_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 #else
     std::cout << "LIMIT Pad Jump post-mapping replay requires Debug developer tools; native page/reader scope runs in both presets\n";
 #endif
-    require(copies == 65 && reloads == 33 && records.good(), "Pad Jump native matrix missed its bounded page cases");
+    require(copies == 66 && reloads == 34 && records.good(), "Pad Buttons native matrix missed its bounded page cases");
     require(paused_reminders == 2 && mixed_reminders == 2, "Pad Jump reminder matrix missed native size/roster cases");
-    std::cout << "PASS Pad Jump native:32 physical-slot/face Apply reloads,65 independently fitted help/status pairs; "
-        "pending multi-slot merge, reset/discard, failed-write retry, Controls entry/parent audio, captured text and owner isolation; "
+    std::cout << "PASS Pad Buttons native:32 physical-slot/face Apply reloads, a skipped-conflict Shoot Apply, "
+        "66 independently fitted help/status pairs; pending multi-slot merge, reset/discard, failed-write retry, Controls entry/parent audio, captured text and owner isolation; "
         "two actual owned paused countdown refresh/reversal routes and two mixed4-pad reminder captures; "
         "private snapshots/save at720/1080, no physical-device or human acceptance\n";
 }

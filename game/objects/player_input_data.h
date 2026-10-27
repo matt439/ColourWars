@@ -24,8 +24,8 @@ struct PlayerInputData
 	bool skip_intro = false;
 
 	// False for a disconnected slot, whose actions are neutral. Players remain
-	// bound to device slots for the match; a reconnected pad in a different slot
-	// controls that slot's player, if any.
+	// bound to device slots for the match; a pad back in a different slot
+	// drives nobody until it reclaims a missing seat with Start (ROAD#4).
 	bool connected = false;
 
 	mattmath::Vector2F left_analog_stick = { 0.0f, 0.0f };

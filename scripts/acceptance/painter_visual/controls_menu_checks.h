@@ -74,10 +74,10 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     preview_volume = 0.0f;
     const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
         look.box_size) / 2.0f, look.box_size);
-    const std::array<const wchar_t*, 10> labels{ L"Pad sticks", L"Keyboard Jump", L"Pad Jump", L"Music volume", L"SFX volume",
+    const std::array<const wchar_t*, 10> labels{ L"Pad sticks", L"Keyboard Jump", L"Pad Buttons", L"Music volume", L"SFX volume",
         L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
     const std::array<const char*, 10> names{ "pad-sticks", "keyboard-jump", "pad-jump", "music", "sfx", "shake", "marker", "effects", "apply", "back" };
-    const std::wstring help = L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: Pad Jump choice / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.";
+    const std::wstring help = L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.";
     const std::wstring pending_status = L"Apply to save changes for all players.";
     const auto measure = [&](const std::string& font, const std::wstring& text)
     {

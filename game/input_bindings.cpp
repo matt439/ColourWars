@@ -27,16 +27,75 @@ namespace
 		{ Key::z, L"Z" }, { Key::space, L"Space" }
 	} };
 
-	struct ButtonName
+	struct ControlName
 	{
-		GamepadButton button;
+		PadControl control;
 		std::string_view name;
 		std::wstring_view label;
 	};
-	constexpr std::array<ButtonName, 4> button_names{ {
-		{ GamepadButton::a, "a", L"A" }, { GamepadButton::b, "b", L"B" },
-		{ GamepadButton::x, "x", L"X" }, { GamepadButton::y, "y", L"Y" }
+	constexpr std::array<ControlName, 12> control_names{ {
+		{ PadControl::none, "none", L"None" }, { PadControl::a, "a", L"A" }, { PadControl::b, "b", L"B" },
+		{ PadControl::x, "x", L"X" }, { PadControl::y, "y", L"Y" },
+		{ PadControl::left_shoulder, "lb", L"LB" }, { PadControl::right_shoulder, "rb", L"RB" },
+		{ PadControl::left_trigger, "lt", L"LT" }, { PadControl::right_trigger, "rt", L"RT" },
+		{ PadControl::left_stick, "ls", L"LS" }, { PadControl::right_stick, "rs", L"RS" },
+		{ PadControl::start, "start", L"Start" }
 	} };
+
+	const ControlName& control_entry(PadControl control)
+	{
+		for (const auto& value : control_names) { if (value.control == control) { return value; } }
+		throw std::invalid_argument("Unknown pad control");
+	}
+
+	constexpr std::array<const char*, pad_action_count> action_names{ "jump", "shoot", "pause" };
+
+	// Adds one control to an action's sources. Triggers are thresholded; a
+	// shoot trigger keeps the shoot threshold, every other action the jump one.
+	void add_source(PadActionBinding& binding, PadControl control, PadAction action)
+	{
+		const ActionTriggerThreshold threshold = action == PadAction::shoot ?
+			ActionTriggerThreshold::shoot : ActionTriggerThreshold::jump;
+		switch (control)
+		{
+		case PadControl::none: return;
+		case PadControl::a: binding.buttons.push_back(GamepadButton::a); return;
+		case PadControl::b: binding.buttons.push_back(GamepadButton::b); return;
+		case PadControl::x: binding.buttons.push_back(GamepadButton::x); return;
+		case PadControl::y: binding.buttons.push_back(GamepadButton::y); return;
+		case PadControl::left_shoulder: binding.buttons.push_back(GamepadButton::left_shoulder); return;
+		case PadControl::right_shoulder: binding.buttons.push_back(GamepadButton::right_shoulder); return;
+		case PadControl::left_stick: binding.buttons.push_back(GamepadButton::left_stick); return;
+		case PadControl::right_stick: binding.buttons.push_back(GamepadButton::right_stick); return;
+		case PadControl::start: binding.buttons.push_back(GamepadButton::start); return;
+		case PadControl::left_trigger: binding.triggers.push_back({ GamepadTrigger::left, threshold }); return;
+		case PadControl::right_trigger: binding.triggers.push_back({ GamepadTrigger::right, threshold }); return;
+		}
+		throw std::invalid_argument("Unknown pad control");
+	}
+
+	// Reads ["primary"] or ["primary", "alternate"].
+	PadActionChoice read_choice(const JsonValue& entry)
+	{
+		if (entry.size() < 1 || entry.size() > 2) { throw std::invalid_argument("A pad action needs one or two controls"); }
+		PadActionChoice choice;
+		choice.primary = pad_control_from_name(entry.at(0).as_string());
+		if (entry.size() == 2) { choice.alternate = pad_control_from_name(entry.at(1).as_string()); }
+		return choice;
+	}
+
+	PadProfile read_profile(const JsonValue& entry)
+	{
+		PadProfile profile;
+		for (std::size_t action = 0; action < pad_action_count; ++action)
+		{
+			profile.actions[action] = read_choice(entry.array(action_names[action]));
+		}
+		profile.validate();
+		return profile;
+	}
+
+	constexpr std::array<PadControl, 4> legacy_faces{ PadControl::a, PadControl::b, PadControl::x, PadControl::y };
 }
 
 bool keyboard_jump_key_supported(Key key)
@@ -83,28 +142,71 @@ Key input_key_from_name(std::string_view name)
 	return *key;
 }
 
-bool pad_jump_button_supported(GamepadButton button)
+std::array<PadControl, 11> pad_controls()
 {
-	return std::any_of(button_names.begin(), button_names.end(),
-		[button](const ButtonName& value) { return value.button == button; });
+	std::array<PadControl, 11> result{};
+	for (std::size_t index = 0; index < result.size(); ++index) { result[index] = control_names[index + 1].control; }
+	return result;
 }
 
-std::string_view input_button_name(GamepadButton button)
+bool pad_control_supported(PadControl control)
 {
-	for (const auto& value : button_names) { if (value.button == button) { return value.name; } }
-	throw std::invalid_argument("Pad Jump button must be A, B, X or Y");
+	return control != PadControl::none && std::any_of(control_names.begin(), control_names.end(),
+		[control](const ControlName& value) { return value.control == control; });
 }
 
-std::wstring_view input_button_label(GamepadButton button)
+std::string_view pad_control_name(PadControl control) { return control_entry(control).name; }
+
+std::wstring_view pad_control_label(PadControl control) { return control_entry(control).label; }
+
+PadControl pad_control_from_name(std::string_view name)
 {
-	for (const auto& value : button_names) { if (value.button == button) { return value.label; } }
-	throw std::invalid_argument("Pad Jump button must be A, B, X or Y");
+	for (const auto& value : control_names) { if (value.name == name) { return value.control; } }
+	throw std::invalid_argument("Unknown pad control name");
 }
 
-GamepadButton input_button_from_name(std::string_view name)
+std::string_view pad_action_name(PadAction action)
 {
-	for (const auto& value : button_names) { if (value.name == name) { return value.button; } }
-	throw std::invalid_argument("Unknown pad Jump button name");
+	return action_names.at(static_cast<std::size_t>(action));
+}
+
+std::optional<PadAction> pad_control_conflict(const PadProfile& profile,
+	PadAction action, bool alternate, PadControl control)
+{
+	if (control == PadControl::none) { return std::nullopt; }
+	for (std::size_t index = 0; index < pad_action_count; ++index)
+	{
+		const PadAction other = static_cast<PadAction>(index);
+		const PadActionChoice& choice = profile.actions[index];
+		if ((other != action || alternate) && choice.primary == control) { return other; }
+		if ((other != action || !alternate) && choice.alternate == control) { return other; }
+	}
+	return std::nullopt;
+}
+
+void PadProfile::validate() const
+{
+	for (std::size_t index = 0; index < pad_action_count; ++index)
+	{
+		const PadActionChoice& choice = this->actions[index];
+		if (!pad_control_supported(choice.primary))
+		{
+			throw std::invalid_argument("Pad " + std::string(action_names[index]) + " needs a supported primary control");
+		}
+		if (choice.alternate != PadControl::none && !pad_control_supported(choice.alternate))
+		{
+			throw std::invalid_argument("Pad " + std::string(action_names[index]) + " has an unsupported alternate control");
+		}
+		for (const bool alternate : { false, true })
+		{
+			const PadControl control = alternate ? choice.alternate : choice.primary;
+			if (pad_control_conflict(*this, static_cast<PadAction>(index), alternate, control))
+			{
+				throw std::invalid_argument("Pad control " + std::string(pad_control_name(control)) +
+					" is bound to more than one pad action");
+			}
+		}
+	}
 }
 
 void InputBindings::validate() const
@@ -118,13 +220,7 @@ void InputBindings::validate() const
 		throw std::invalid_argument("Keyboard Jump key " + std::string(input_key_name(this->keyboard_jump)) +
 			" conflicts with another gameplay action");
 	}
-	for (GamepadButton button : this->pad_jump)
-	{
-		if (!pad_jump_button_supported(button))
-		{
-			throw std::invalid_argument("Pad Jump button must be A, B, X or Y");
-		}
-	}
+	for (const PadProfile& profile : this->pads) { profile.validate(); }
 }
 
 ActionBindings effective_action_bindings(const InputBindings& preferences)
@@ -138,8 +234,15 @@ ActionBindings effective_action_bindings(const InputBindings& preferences)
 ActionBindings effective_action_bindings(const InputBindings& preferences, int pad_slot)
 {
 	ActionBindings result = effective_action_bindings(preferences);
-	result.game_pad[static_cast<std::size_t>(GameAction::jump)].buttons =
-		{ preferences.pad_jump.at(static_cast<std::size_t>(pad_slot)) };
+	const PadProfile& profile = preferences.pads.at(static_cast<std::size_t>(pad_slot));
+	const std::array<GameAction, pad_action_count> actions{ GameAction::jump, GameAction::shoot, GameAction::pause };
+	for (std::size_t index = 0; index < pad_action_count; ++index)
+	{
+		PadActionBinding binding;
+		add_source(binding, profile.actions[index].primary, static_cast<PadAction>(index));
+		add_source(binding, profile.actions[index].alternate, static_cast<PadAction>(index));
+		result.game_pad[static_cast<std::size_t>(actions[index])] = std::move(binding);
+	}
 	return result;
 }
 
@@ -166,19 +269,41 @@ void InputBindingsSection::read(const JsonValue& root, SaveData& data) const
 	{
 		candidate.keyboard_jump = Key::space;
 	}
-	if (section.has("pad_jump"))
+	if (section.has("pads"))
 	{
 		try
 		{
-			const JsonValue slots = section.array("pad_jump");
-			for (std::size_t slot = 0; slot < candidate.pad_jump.size() && slot < slots.size(); ++slot)
+			const JsonValue slots = section.array("pads");
+			for (std::size_t slot = 0; slot < candidate.pads.size() && slot < slots.size(); ++slot)
 			{
-				try { candidate.pad_jump[slot] = input_button_from_name(slots.at(slot).as_string()); }
-				catch (const std::runtime_error&) {} // Recover just this slot to A.
+				try { candidate.pads[slot] = read_profile(slots.at(slot)); }
+				catch (const std::runtime_error&) {} // Recover just this slot to the defaults.
 				catch (const std::invalid_argument&) {}
 			}
 		}
 		catch (const std::runtime_error&) {} // A malformed array does not discard the keyboard key.
+	}
+	else if (section.has("pad_jump"))
+	{
+		// The earlier per-slot face-button Jump choice; LT and the rest keep their defaults.
+		try
+		{
+			const JsonValue slots = section.array("pad_jump");
+			for (std::size_t slot = 0; slot < candidate.pads.size() && slot < slots.size(); ++slot)
+			{
+				try
+				{
+					const PadControl face = pad_control_from_name(slots.at(slot).as_string());
+					if (std::find(legacy_faces.begin(), legacy_faces.end(), face) != legacy_faces.end())
+					{
+						candidate.pads[slot][PadAction::jump].primary = face;
+					}
+				}
+				catch (const std::runtime_error&) {} // Recover just this slot to A.
+				catch (const std::invalid_argument&) {}
+			}
+		}
+		catch (const std::runtime_error&) {}
 	}
 	data.input_bindings = candidate;
 }
@@ -189,11 +314,21 @@ void InputBindingsSection::write(SaveWriter& writer, const SaveData& data) const
 	writer.begin_object();
 	writer.key("keyboard_jump");
 	writer.string(std::string(input_key_name(data.input_bindings.keyboard_jump)));
-	writer.key("pad_jump");
+	writer.key("pads");
 	writer.begin_array();
-	for (GamepadButton button : data.input_bindings.pad_jump)
+	for (const PadProfile& profile : data.input_bindings.pads)
 	{
-		writer.string(std::string(input_button_name(button)));
+		writer.begin_object();
+		for (std::size_t action = 0; action < pad_action_count; ++action)
+		{
+			const PadActionChoice& choice = profile.actions[action];
+			writer.key(action_names[action]);
+			writer.begin_array();
+			writer.string(std::string(pad_control_name(choice.primary)));
+			if (choice.alternate != PadControl::none) { writer.string(std::string(pad_control_name(choice.alternate))); }
+			writer.end_array();
+		}
+		writer.end_object();
 	}
 	writer.end_array();
 	writer.end_object();

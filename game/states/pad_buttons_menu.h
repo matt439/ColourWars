@@ -6,25 +6,30 @@
 #include "game/input_bindings.h"
 #include <optional>
 
-// Per-XInput-slot gameplay Jump choices. Only edited pad slots are merged on
-// Apply; keyboard bindings and other pages' active preferences stay independent.
-class PadJumpMenu final : public PauseMenuPage
+// Per-XInput-slot gameplay Jump, Shoot and Pause controls, each with an
+// optional alternate. Choosing skips controls another entry of the same pad
+// already uses, so a pending profile is always valid. Only edited pad slots are
+// merged on Apply; keyboard bindings and other pages' preferences stay independent.
+class PadButtonsMenu final : public PauseMenuPage
 {
 public:
-	explicit PadJumpMenu(MenuContext* context, int player = -1);
+	explicit PadButtonsMenu(MenuContext* context, int player = -1);
 	void init() override;
 	void update_page(float dt) override;
 	bool covers_screen() const override { return true; }
 	bool debug_dismiss(bool leaving_match) override;
 	int selected_slot() const { return this->slot_; }
-	labrador::GamepadButton pending_button() const { return this->selection_.pad_jump[this->slot_]; }
+	const PadProfile& pending_profile() const { return this->selection_.pads[this->slot_]; }
 protected:
 	bool shows_focus_backing() const override { return false; }
 	bool accepts_stick_navigation() const override { return false; }
 private:
+	// One row per action entry, in PadAction order with the alternate after its primary.
+	static constexpr size_t entry_count = pad_action_count * 2;
 	static void fit_text(labrador::UiText& widget, const mattmath::RectangleF& available);
 	void refresh_values();
 	void set_status(const std::wstring& value, bool warning = false);
+	void choose(size_t entry, labrador::Direction direction);
 	void reset_pending();
 	void apply_settings();
 	void close();
@@ -35,10 +40,8 @@ private:
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::vector<std::unique_ptr<labrador::UiText>> text_;
 	std::unique_ptr<OptionRow> pad_;
-	std::unique_ptr<OptionRow> jump_;
+	std::array<std::unique_ptr<OptionRow>, entry_count> entries_;
 	labrador::UiText* help_ = nullptr;
 	labrador::UiText* status_ = nullptr;
-	mattmath::RectangleF help_limit_;
 	mattmath::RectangleF status_limit_;
-	std::optional<std::array<int, 3>> shown_help_;
 };

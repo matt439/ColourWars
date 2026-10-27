@@ -30,7 +30,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         L"Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel",
         L"Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back",
         L"A/Enter Start match    B/Esc Unlock arena", L" Reconnect controller    B/Esc Change players",
-        L"A/Enter Select    B/Start/Esc Resume", L" Reconnect pads to resume    A/Enter Select",
+        L"A/Enter Select    B/Start/Esc Resume", L" Reconnect, then Start    A/Enter Select",
         L"A/Enter Select", L"A/Enter Back    B/Esc Back",
         L"P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams",
         L"P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel"

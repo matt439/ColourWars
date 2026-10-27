@@ -1,11 +1,13 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <optional>
 #include <vector>
 #include "game/objects/weapon_type.h"
 #include "game/states/menu_player_settings.h"
 #include "engine/render/screen_layout.h"
+#include "game/input_slots.h"
 
 struct MenuText;
 
@@ -61,11 +63,30 @@ public:
 	// Bots occupy their seats without claiming a device; all humans must claim.
 	bool input_roster_complete() const;
 	int player_index_for_slot(int slot) const;
+
+	// A seat's input slot (MenuPlayerSettings::num) is its identity for the
+	// match: paint, scores and preferences are keyed on it. The pad it reads
+	// is device_slot(num), the same slot unless a controller that came back
+	// in another slot reclaimed the seat (ROAD#4). Setup never moves one;
+	// every claim operation above puts each seat back on its own slot.
+	int device_slot(int slot) const;
+	// device_slot for every pad slot, for readers indexed by input slot.
+	std::array<int, input_slots::pad_count> pad_devices() const;
+	// The seat whose input arrives on this device, or -1. A seat that moved
+	// no longer answers for the slot it left.
+	int player_index_for_device(int device) const;
+	// Move a human pad seat onto a pad no seat reads. Returns false and
+	// changes nothing otherwise; moving back to its own slot is allowed.
+	bool move_to_device(int slot, int device);
 	// Stable participant number, with a human device or explicit bot difficulty.
 	std::wstring player_label(int player_index, const MenuText& text) const;
 
 private:
+	void reset_devices();
+
 	std::vector<MenuPlayerSettings> player_settings_;
+	// Per pad input slot, the pad that now drives it; -1 is the slot itself.
+	std::array<int, input_slots::pad_count> devices_ = { -1, -1, -1, -1 };
 	int best_of_ = 1;
 	std::optional<float> duration_;
 	std::string stage_;
