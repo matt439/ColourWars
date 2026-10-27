@@ -269,7 +269,10 @@ namespace bot_ascent_acceptance
         view = approach_fixture(tuning);
         require(first_decision(stalled, view, tuning, difficulty).x_movement > 0.0f,
             "Ascent-timeout fixture did not begin its alignment attempt");
-        const int budget = tuning.bots().progress_window_steps + tuning.bots().recovery_steps;
+        const float approach = view.supports.back().bounds.left() + view.size.x * 0.5f - view.center.x;
+        const int budget = static_cast<int>(std::ceil(static_cast<double>(approach) /
+            tuning.player().x_initial_velocity * 60.0)) +
+            tuning.bots().progress_window_steps + tuning.bots().recovery_steps;
         bool cancelled = false;
         // This is a value-policy fixture: a frozen pose models an alignment
         // that never makes progress. The real-player trial owns actual jumps.

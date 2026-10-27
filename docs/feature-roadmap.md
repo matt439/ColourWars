@@ -570,12 +570,82 @@ slabs and opposed routes remain unqualified. The full suite, native bot
 presentation, physical-pad, CPU/frame-pacing and attended difficulty acceptance
 were not run; the lookahead's runtime cost has not been measured.
 
-**Next implementation:** qualify Turbulence's upper crossing and continuous
-ascent/recovery chains. Extend opponent trials to moving and opposed players
-and improve aim and territory value from those observations, including retained
-paint misses. Keep finite budgets and final-input replay checks. Attended
-difficulty distinction and usefulness remain the author's acceptance gate;
-initial Easy/Normal/Hard values remain provisional and `ROAD#10` stays OPEN.
+#### Turbulence upper crossings and continuous ascent (2026-10-27)
+
+The opt-in `bot_turbulence_routes` case adds **90/90** actual-driver chains in
+the shipped Turbulence arena: three starts, both sides, all five tools and all
+three difficulties. Every trial uses one initial placement and a fixed
+3600-active-step budget in a 120-second match. The opposite human receives
+neutral input at its natural spawn. No route, goal, resource or subsequent
+placement enters the shipping policy.
+
+The shared upper chain requires ordered grounded contact with
+`central_divider_ledge_paint` -> `upper_jump_mid` -> either `upper_left` or
+`upper_right` -> either `upper_jump_left` or `upper_jump_right` ->
+`upper_top_paint`. This qualifies travel from the divider through a side deck
+to the top; it does not require a left-to-right shelf transfer.
+
+| Chain | Starting center X (A / B) | Required floor-to-divider prefix | Minimum jump presses |
+|---|---|---|---|
+| Upper crossing | 2650 / 3350 | Starts on the divider paint ledge | 4 |
+| Continuous outer-floor ascent | 825 / 5385 | `boundary_floor` -> `left_bottom_left_jump` / `right_bottom_right_jump` -> side ascent below | 10 |
+| Local divider recovery | 2825 / 3175 | `boundary_floor` -> `left_bottom_right_jump` / `right_bottom_left_jump` -> side ascent below | 10 |
+
+The side ascent continues through `left/right_lower_paint` -> either of that
+side's mid jump steps -> `left/right_mid_paint` ->
+`left/right_upper_mid_right_jump`, then the shared upper chain. Contacts retain
+the 0.05-unit feet-height tolerance and horizontal body overlap. Continuous
+means one uninterrupted simulation with no further placement; ordinary falls
+and retries remain allowed. Divider recovery starts on the floor beside the
+central obstruction, without a forced in-flight disruption. Final required
+contacts occur by step 268, 697 and 671 respectively; every trial continues
+for its full budget.
+
+The unchanged Release policy at `553d335f` passes only **39/90**: 14 upper
+crossings, eight outer ascents and 17 divider recoveries. Its supported walk
+to takeoff incorrectly consumed the airborne jump-distance allowance. Walking
+approach is now bounded independently by sight and checked floor clearance;
+only airborne alignment consumes jump reach. Finite expiry includes approach
+distance at normal initial movement speed, plus the existing jump/recovery
+allowance. Candidate ranking charges walking distance beyond the old local
+jump envelope, preserving nearby low-step priorities while preventing newly
+admitted remote shelves from displacing useful local climbs. The policy adds
+no arena names or route hints, and geometry, tuning and tools are unchanged.
+A stalled full-sight approach can retain its attempt for up to 1080 steps
+(18 seconds) at current values; later obstruction revalidation is unqualified.
+
+Validation: Debug and Release builds and the twelve selected consumer cases
+`bot_driver`, `bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_ascents`,
+`bot_arena_routes`, `bot_hill_routes`, `bot_turbulence_routes`, `bot_trials`,
+`bot_runtime`, `gameplay_tuning` and `movement` pass. Direct policy checks cover
+mirrored long supported approaches, retained reaction delays, local/remote
+candidate ranking, excessive walk/gap rejection and finite stalled expiry.
+Six new 3600-step final-input tapes reproduce public players, projectile count
+and exact paint state in both builds, with complete fingerprints additionally
+checked in Debug. Both real-bank isolated startup checks pass. New route
+measurements and the 130-trial CSV are identical between builds. Evidence:
+`out/validation/road10-turbulence/`; unchanged Release baseline:
+`out/validation/road10-turbulence-baseline/`. Reproduce the new matrix with
+`scripts/run-acceptance.ps1 -Preset x64-debug -Cases bot_turbulence_routes`
+(or Release).
+
+Final owned top-face paint is measured separately: **82/90** new trials retain
+some. The eight misses are Easy: three Team A upper crossings and five divider
+recoveries across the two sides. The retained CQ gates pass all 90 ascents and
+30 home drops, with deck paint **60/60**; all 150 other-arena routes and 90 hill
+chains pass, with other-arena finishing-support paint **139/150**. Natural-spawn
+trials retain paint in 120/120 configurations; stationary local combat retains
+damage in 10/10 and attributed eliminations in 9/10. Traversal does not
+establish regional value or contested ownership; paint misses remain open.
+
+**Next implementation:** extend opponent trials to moving and opposed players
+and improve aim and territory choices from those observations, including the
+retained paint misses. Keep finite budgets and final-input replay checks.
+Moving supports, rotated slabs, arbitrary slopes and general navigation remain
+unqualified. The full suite, native bot presentation, physical-pad and
+CPU/frame-pacing checks were not run for this slice. Attended difficulty
+distinction and usefulness remain the author's acceptance gate; initial
+Easy/Normal/Hard values stay provisional and `ROAD#10` stays OPEN.
 
 ### Balanced random teams
 

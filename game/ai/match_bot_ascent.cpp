@@ -91,7 +91,11 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 		if (!floor) { return false; }
 		takeoff.x = launch_x;
 		approach = std::fabs(takeoff.x - center.x);
-		if (std::max(approach, alignment) > std::min(reach, this->tuning_->bots().sight_distance) ||
+		// The approach is a checked walk on the known source floor. Only the
+		// airborne alignment consumes jump reach; a long supported walk must
+		// not make an otherwise adjacent jump unreachable.
+		if (approach > this->tuning_->bots().sight_distance ||
+			alignment > std::min(reach, this->tuning_->bots().sight_distance) ||
 			!this->clear_standing(view, landing) || !this->clear_route(view, center, takeoff)) { return false; }
 		// Test a body-clear crossing just above the lip. Requiring the full
 		// held-jump apex rejects usable low-ceiling routes: normal collision may
@@ -100,10 +104,13 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 		const Vector2F over_landing(landing.x, apex.y);
 		if (!this->clear_route(view, takeoff, apex) || !this->clear_route(view, apex, over_landing) ||
 			!this->clear_route(view, over_landing, landing)) { return false; }
-		// Preserve low adjacent steps before taller overlapping bridges. A
-		// normal solid lip already needs a body-width crossing; charge the
-		// extra gap so a distant low deck cannot displace an adjacent step.
-		cost = climb + std::max(0.0f, alignment - view.size.x);
+		// Preserve the existing low-step ranking within one jump's locality.
+		// Newly admitted longer walks pay their excess distance so a cheaper
+		// remote shelf cannot displace useful nearby progression. A normal
+		// solid lip already needs a body-width crossing; charge only the extra
+		// airborne gap.
+		cost = climb + std::max(0.0f, approach - reach) +
+			std::max(0.0f, alignment - view.size.x);
 		return true;
 	};
 	float best = std::numeric_limits<float>::max();
@@ -136,8 +143,14 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 			best = cost; best_approach = approach; best_continues = continues;
 			this->ascent_support_ = support.bounds; this->ascent_takeoff_ = takeoff;
 			this->ascending_ = true; this->ascent_airborne_ = false;
-			this->ascent_steps_left_ = this->tuning_->bots().progress_window_steps +
+			// Allow the supported approach at ordinary minimum moving speed,
+			// then retain the existing finite jump/recovery allowance.
+			const double travel = std::ceil(static_cast<double>(approach) /
+				movement.x_initial_velocity * 60.0);
+			const double budget = travel + this->tuning_->bots().progress_window_steps +
 				this->tuning_->bots().recovery_steps;
+			this->ascent_steps_left_ = static_cast<int>(std::min(budget,
+				static_cast<double>((std::numeric_limits<int>::max)())));
 		}
 	}
 	if (!this->ascending_) { this->continue_ascent_ = false; }
