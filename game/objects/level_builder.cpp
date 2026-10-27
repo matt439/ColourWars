@@ -42,6 +42,10 @@ std::unique_ptr<Level>
 	LevelBuilder::build_level(const MenuLevelSettings& settings, TeamColourPair palette,
 		OpeningMode opening)
 {
+	if (settings.bot_count() != 0)
+	{
+		throw std::invalid_argument("Playable bot runtime integration is pending; cannot build a bot roster");
+	}
 	const LevelLoadedInfo* load_info =
 		this->level_infos_->get(settings.stage());
 

@@ -10,8 +10,9 @@
 struct MenuText;
 
 // The roster is empty until a player count is chosen, then contains 1-4 seats.
-// Each seat is unclaimed (-1) or holds a unique valid device slot. Only the
-// claim operations mutate device assignments; snapshots cannot alter the roster.
+// Human seats are unclaimed (-1) or hold a unique valid device slot. Bots have
+// no device and carry their own difficulty. P1 is always the human setup host.
+// Only roster operations mutate assignments; snapshots cannot alter the roster.
 class MenuLevelSettings
 {
 public:
@@ -26,6 +27,13 @@ public:
 	// Rejects counts outside 1-4 without changing the roster or its count.
 	void set_player_count(int player_count);
 	int player_count() const;
+	int human_count() const;
+	int bot_count() const;
+	// Replacing a human with a bot releases its device. P1 cannot become a bot.
+	// Updating an existing bot changes only difficulty; team/weapon stay intact.
+	void set_player_bot(int player_index, BotDifficulty difficulty);
+	// Replacing a bot leaves an unclaimed human. Existing human claims stay put.
+	void set_player_human(int player_index);
 	// Manifest key for the chosen level; empty until stage selection.
 	void set_stage(const std::string& stage);
 	const std::string& stage() const;
@@ -42,12 +50,15 @@ public:
 	WeaponType player_weapon(int player_index) const;
 
 	// Player one chooses the count; everyone else explicitly claims an empty
-	// seat. A disconnected device retains its seat until setup is cancelled.
+	// human seat. A disconnected device retains its seat until setup is cancelled.
+	// Beginning claims resets human devices while retaining bot choices.
 	void begin_input_claims(int initiating_slot);
 	bool claim_input_slot(int slot);
 	bool release_input_slot(int slot);
+	// Bots occupy their seats without claiming a device; all humans must claim.
 	bool input_roster_complete() const;
 	int player_index_for_slot(int slot) const;
+	// Human labels only until the bot setup/identity presentation is integrated.
 	std::wstring player_label(int player_index, const MenuText& text) const;
 
 private:

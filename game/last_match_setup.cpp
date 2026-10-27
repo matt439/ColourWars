@@ -102,6 +102,10 @@ namespace
 
 LastMatchSetup LastMatchSetup::capture(const MenuLevelSettings& settings)
 {
+	if (settings.bot_count() != 0)
+	{
+		throw std::invalid_argument("Remembering playable bot rosters is pending; cannot capture a bot setup");
+	}
 	LastMatchSetup setup;
 	for (const MenuPlayerSettings& player : settings.player_settings())
 	{

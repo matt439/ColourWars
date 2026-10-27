@@ -40,6 +40,45 @@ int MenuLevelSettings::player_count() const
 	return static_cast<int>(this->player_settings_.size());
 }
 
+int MenuLevelSettings::human_count() const
+{
+	return this->player_count() - this->bot_count();
+}
+
+int MenuLevelSettings::bot_count() const
+{
+	return static_cast<int>(std::count_if(this->player_settings_.begin(),
+		this->player_settings_.end(), [](const MenuPlayerSettings& player)
+		{ return player.controller == PlayerController::bot; }));
+}
+
+void MenuLevelSettings::set_player_bot(int player_index, BotDifficulty difficulty)
+{
+	MenuPlayerSettings& player = this->player_settings_.at(static_cast<size_t>(player_index));
+	if (player_index == 0)
+	{
+		throw std::invalid_argument("Player 1 must remain the human setup host");
+	}
+	if (difficulty != BotDifficulty::easy && difficulty != BotDifficulty::normal &&
+		difficulty != BotDifficulty::hard)
+	{
+		throw std::invalid_argument("Bot difficulty must be Easy, Normal or Hard");
+	}
+	player.controller = PlayerController::bot;
+	player.difficulty = difficulty;
+	player.num = -1;
+}
+
+void MenuLevelSettings::set_player_human(int player_index)
+{
+	MenuPlayerSettings& player = this->player_settings_.at(static_cast<size_t>(player_index));
+	if (player.controller == PlayerController::bot)
+	{
+		player.controller = PlayerController::human;
+		player.num = -1;
+	}
+}
+
 void MenuLevelSettings::set_stage(const std::string& stage)
 {
 	this->stage_ = stage;
@@ -122,7 +161,7 @@ bool MenuLevelSettings::claim_input_slot(int slot)
 	}
 	for (MenuPlayerSettings& player : this->player_settings_)
 	{
-		if (player.num == -1)
+		if (player.controller == PlayerController::human && player.num == -1)
 		{
 			player.num = slot;
 			return true;
@@ -146,7 +185,8 @@ bool MenuLevelSettings::input_roster_complete() const
 {
 	return !this->player_settings_.empty() && std::all_of(
 		this->player_settings_.begin(), this->player_settings_.end(),
-		[](const MenuPlayerSettings& player) { return player.num >= 0; });
+		[](const MenuPlayerSettings& player)
+		{ return player.controller == PlayerController::bot || player.num >= 0; });
 }
 
 int MenuLevelSettings::player_index_for_slot(int slot) const
@@ -169,6 +209,10 @@ std::wstring MenuLevelSettings::player_label(int player_index, const MenuText& t
 {
 	const MenuPlayerSettings& player =
 		this->player_settings_.at(static_cast<size_t>(player_index));
+	if (player.controller == PlayerController::bot)
+	{
+		throw std::invalid_argument("Playable bot menu integration is pending; cannot label a bot roster");
+	}
 	return text.roster_label(player_index, player.num);
 }
 

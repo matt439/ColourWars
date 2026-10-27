@@ -415,6 +415,10 @@ std::string replay_name(std::string_view requested)
 
 void ReplayFile::write(const std::filesystem::path& path) const
 {
+	if (this->settings.bot_count() != 0)
+	{
+		throw std::invalid_argument("Playable bot replay integration is pending; cannot write a bot recording");
+	}
     if (this->final_print.horizontal_motion)
     { validate_motion(*this->final_print.horizontal_motion, this->settings.player_settings().size(),
         this->final_print.seats.size(), path); }

@@ -57,6 +57,80 @@ navigation/combat checks on the shipped arenas; and attended play showing that
 the three difficulty settings feel distinct. Automated checks alone do not
 establish difficulty or gameplay quality.
 
+#### Roster foundation (2026-10-27)
+
+The first bounded slice adds explicit human/bot seats and `BotDifficulty`
+(`easy`, `normal`, `hard`) to `MenuLevelSettings` in both builds. Existing
+seats default to human; P1 remains the human setup host. A bot occupies one of
+the four participant seats and has no physical device slot. An unclaimed
+human, including a Debug dummy, is still human: `num == -1` alone never means
+bot. Human-to-bot conversion releases the device; bot-to-human conversion
+requires a new claim. Changing difficulty keeps the team and weapon choices.
+Fresh input claims preserve bot choices; shrinking discards removed seats,
+and growth adds unclaimed humans. Copies retain all seat metadata, and the
+existing balanced team shuffle includes bots.
+
+This is the roster model, not playable AI. Normal setup has no bot controls
+yet. Level construction, remembered-setup capture, roster labels and Debug
+replay writing explicitly reject bot rosters until those consumers preserve
+and drive them; they must not silently turn bots into idle dummies or lose
+difficulty. The existing human roster, saves and scripted Debug bots retain
+their behavior.
+
+Validation: Debug and Release builds pass, together with the six selected
+consumer cases `bot_roster`, `settings`, `team_selection`, `remembered_setup`,
+`debug_console` and `player_identity` in each build. The new case covers all
+human/bot seat patterns within the four-participant limit, each difficulty,
+sparse claims, conversions, reset/copy/shuffle/resize retention and invalid
+requests without mutation. Unsupported consumers reject before resource access,
+lossy capture or replay filesystem changes. Both real-bank isolated startup
+checks pass. Evidence: `out/validation/road10-roster/`. These are roster and
+regression checks; bot navigation, combat, views and attended difficulty
+acceptance are still unimplemented/unqualified.
+
+The integration contract for the next slices is:
+
+- **Setup:** Player Count remains the total participant count. In Join, P1
+  selects a non-host, unclaimed row and changes it between Human and Bot with
+  Easy/Normal/Hard difficulty, defaulting a new bot to Normal. A joined human
+  must leave before the host changes that row. Other devices claim only human
+  rows; one human plus up to three bots needs no spare controllers. One-player
+  practice stays bot-free. Keep the existing input actions: Up/Down selects a
+  host-controlled row, Left/Right changes its choice, Confirm continues when
+  every human is connected. Do not add gameplay bindings for setup.
+- **Teams and tools:** humans retain their own rows. P1 uses Up/Down to switch
+  between P1 and bot rows, Left/Right to choose each row's team or tool, and
+  Confirm/Back to ready/unready that row. All rows must be ready, and a
+  multiplayer roster must contain both teams. Random teams includes bots and
+  clears every confirmation. Random weapons resolve per participant. Bot
+  identity and difficulty must appear in setup and match/results labels.
+- **Views:** only humans get split-screen panes, ordered by human seat. Roster
+  indices remain stable: a bot in P2 does not rename P3 when P3 gets the second
+  human pane. Introduce an explicit participant/view mapping through builders,
+  cameras, scene views, HUDs, aim and overlays; changing only `screen_layout`
+  to the human count is insufficient. All participants still count for paint,
+  spawns, story, scoring and results. One human against bots is a versus match.
+- **Lifetime and inputs:** the shipping bot driver produces ordinary
+  `PlayerInputData` after physical-slot mapping. It must never emit menu/pause
+  actions, request rumble or claim a controller. Pause/focus loss stops bot
+  decisions with the simulation; disconnects concern participating humans.
+  Rebuild driver state for restart/next round and retain the chosen roster and
+  difficulties through the existing settings copies. Record the final bot
+  inputs; replay replaces the driver. Save and replay formats must preserve
+  controller kind/difficulty before their rejection guards are removed.
+- **Difficulty:** add validated data in `tuning.json` for reaction intervals,
+  aim error and decision/replanning quality when the driver consumes it. Use a
+  seeded private random stream per bot. All difficulties obey normal movement,
+  tool, reserve, health, respawn and scoring rules; Hard does not gain hidden
+  enemies, extra paint or speed. Initial values remain provisional until the
+  attended comparison establishes distinct, useful difficulties.
+
+**Next implementation:** integrate the Join/Team/Weapon host controls, human
+view mapping, labels and save/replay metadata with a Release-capable bot input
+driver. Then qualify platform navigation/recovery, territory choice, opponent
+engagement and reserve management across the five tools and shipped arenas.
+Keep bot setup unavailable until that path builds and drives the chosen seats.
+
 ### Balanced random teams
 
 **GAP#1.5 - implemented (2026-10-15).** In team setup, any joined player may
