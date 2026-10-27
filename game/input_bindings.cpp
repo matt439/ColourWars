@@ -84,17 +84,6 @@ namespace
 		return choice;
 	}
 
-	PadProfile read_profile(const JsonValue& entry)
-	{
-		PadProfile profile;
-		for (std::size_t action = 0; action < pad_action_count; ++action)
-		{
-			profile.actions[action] = read_choice(entry.array(action_names[action]));
-		}
-		profile.validate();
-		return profile;
-	}
-
 	constexpr std::array<PadControl, 4> legacy_faces{ PadControl::a, PadControl::b, PadControl::x, PadControl::y };
 }
 
@@ -246,6 +235,32 @@ ActionBindings effective_action_bindings(const InputBindings& preferences, int p
 	return result;
 }
 
+PadProfile read_pad_profile(const JsonValue& entry)
+{
+	PadProfile profile;
+	for (std::size_t action = 0; action < pad_action_count; ++action)
+	{
+		profile.actions[action] = read_choice(entry.array(action_names[action]));
+	}
+	profile.validate();
+	return profile;
+}
+
+void write_pad_profile(SaveWriter& writer, const PadProfile& profile)
+{
+	writer.begin_object();
+	for (std::size_t action = 0; action < pad_action_count; ++action)
+	{
+		const PadActionChoice& choice = profile.actions[action];
+		writer.key(action_names[action]);
+		writer.begin_array();
+		writer.string(std::string(pad_control_name(choice.primary)));
+		if (choice.alternate != PadControl::none) { writer.string(std::string(pad_control_name(choice.alternate))); }
+		writer.end_array();
+	}
+	writer.end_object();
+}
+
 void InputBindingsSection::reset(SaveData& data) const
 {
 	data.input_bindings = InputBindings();
@@ -276,7 +291,7 @@ void InputBindingsSection::read(const JsonValue& root, SaveData& data) const
 			const JsonValue slots = section.array("pads");
 			for (std::size_t slot = 0; slot < candidate.pads.size() && slot < slots.size(); ++slot)
 			{
-				try { candidate.pads[slot] = read_profile(slots.at(slot)); }
+				try { candidate.pads[slot] = read_pad_profile(slots.at(slot)); }
 				catch (const std::runtime_error&) {} // Recover just this slot to the defaults.
 				catch (const std::invalid_argument&) {}
 			}
@@ -316,20 +331,7 @@ void InputBindingsSection::write(SaveWriter& writer, const SaveData& data) const
 	writer.string(std::string(input_key_name(data.input_bindings.keyboard_jump)));
 	writer.key("pads");
 	writer.begin_array();
-	for (const PadProfile& profile : data.input_bindings.pads)
-	{
-		writer.begin_object();
-		for (std::size_t action = 0; action < pad_action_count; ++action)
-		{
-			const PadActionChoice& choice = profile.actions[action];
-			writer.key(action_names[action]);
-			writer.begin_array();
-			writer.string(std::string(pad_control_name(choice.primary)));
-			if (choice.alternate != PadControl::none) { writer.string(std::string(pad_control_name(choice.alternate))); }
-			writer.end_array();
-		}
-		writer.end_object();
-	}
+	for (const PadProfile& profile : data.input_bindings.pads) { write_pad_profile(writer, profile); }
 	writer.end_array();
 	writer.end_object();
 }

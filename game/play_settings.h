@@ -3,6 +3,8 @@
 #include "game/input_slots.h"
 #include <algorithm>
 #include <array>
+#include <optional>
+#include <string>
 
 // Percentages for one XInput slot, independent of the roster/view number.
 // -1 keeps the existing authored movement or shared aiming preference.
@@ -43,6 +45,27 @@ struct SeatComfort
 
 	bool operator==(const SeatComfort&) const = default;
 };
+
+// The save's spelling of a SeatSwitch: "off", "shared" or "on".
+inline const char* seat_switch_key(SeatSwitch value)
+{
+	switch (value)
+	{
+	case SeatSwitch::off: return "off";
+	case SeatSwitch::on: return "on";
+	case SeatSwitch::shared: break;
+	}
+	return "shared";
+}
+
+inline std::optional<SeatSwitch> seat_switch_from_key(const std::string& key)
+{
+	for (const SeatSwitch value : { SeatSwitch::off, SeatSwitch::shared, SeatSwitch::on })
+	{
+		if (key == seat_switch_key(value)) { return value; }
+	}
+	return std::nullopt;
+}
 
 // User preferences, borrowed from Save by a live match. Authored sound levels
 // remain in tuning/presentation; the two volumes are the music and SFX sound

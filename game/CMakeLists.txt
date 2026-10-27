@@ -12,6 +12,7 @@ add_executable(ColourWars WIN32
     ai/match_bot_ramp.cpp
     action_bindings.cpp
     input_bindings.cpp
+    player_profiles.cpp
     content_validation.cpp
     content_value.cpp
     controls_text.cpp

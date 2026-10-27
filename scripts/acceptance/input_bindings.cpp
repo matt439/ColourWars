@@ -731,9 +731,9 @@ namespace
     {
         rapidjson::Document document; document.Parse(bytes.data(), bytes.size());
         require(!document.HasParseError() && document.IsObject() && document.HasMember("save_version") &&
-            document["save_version"].IsInt() && document["save_version"].GetInt() == 3 &&
+            document["save_version"].IsInt() && document["save_version"].GetInt() == Save::version &&
             document.HasMember("input_bindings") && document["input_bindings"].IsObject(),
-            "Save did not write the explicit version-3 independent binding schema");
+            "Save did not write the current version with the independent binding schema");
         const auto& section = document["input_bindings"];
         require(section.MemberCount() == 2 && section.HasMember("keyboard_jump") && section["keyboard_jump"].IsString() &&
             std::string_view(section["keyboard_jump"].GetString(), section["keyboard_jump"].GetStringLength()) == name,
@@ -772,7 +772,7 @@ namespace
 
     void check_save_schema_and_recovery(const IsolatedSaveDirectory& directory)
     {
-        require(Save::version == 3, "Input binding schema must be save version 3");
+        require(Save::version >= 3, "Input binding schema needs save version 3 or later");
         for (const char* version : { "", "0", "1", "2" })
         {
             Save legacy = load(directory, "", version);
