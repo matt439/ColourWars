@@ -28,6 +28,7 @@ add_executable(ColourWars WIN32
     presentation_read_match.cpp
     presentation_read_menu.cpp
     presentation_validation.cpp
+    round_tape.cpp
     rumble.cpp
     rumble_xinput.cpp
     save.cpp
@@ -162,6 +163,7 @@ add_executable(ColourWars WIN32
     states/end_menu.cpp
     states/game_states.cpp
     states/game_level_dev_tools.cpp
+    states/game_level_replay.cpp
     states/game_level_rumble.cpp
     states/main_menu.cpp
     states/main_menu_credits.cpp

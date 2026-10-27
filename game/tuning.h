@@ -136,6 +136,8 @@ struct MatchTuning
 	float countdown = 0.0f;
 	float zoom_out = 0.0f;
 	float overview = 0.0f;
+	// How much of the round's end the End menu's Watch Replay plays (ROAD#19).
+	float replay = 0.0f;
 
 	// Controls reminder shown during the countdown. Keep its text in sync with
 	// the input mapping; the drawn start signal lives in MatchPresentation.

@@ -8,4 +8,6 @@ enum class EndMenuAction
 	change_level,
 	restart,
 	exit,
+	// The match plays the round's instant replay, then opens the menu again.
+	watch_replay,
 };

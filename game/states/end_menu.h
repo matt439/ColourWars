@@ -28,18 +28,23 @@ protected:
 class EndMenuInitial final : public EndMenuPage
 {
 public:
-	explicit EndMenuInitial(MenuContext* context, const Session& session = Session());
+	// `replay`: the round can be watched again, so Watch Replay is offered
+	// under the continuation and the setup actions move down a row.
+	explicit EndMenuInitial(MenuContext* context, const Session& session = Session(),
+		bool replay = false);
 	void init() override;
 	void update_page(float dt) override;
 protected:
 	bool shows_brand() const override { return false; }
 private:
 	Session session_;
+	bool replay_ = false;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiText> heading_ = nullptr;
 	std::unique_ptr<labrador::UiText> change_teams_ = nullptr;
 	std::unique_ptr<labrador::UiText> change_weapons_ = nullptr;
 	std::unique_ptr<labrador::UiText> change_level_ = nullptr;
 	std::unique_ptr<labrador::UiText> restart_ = nullptr;
+	std::unique_ptr<labrador::UiText> watch_replay_ = nullptr;
 	std::unique_ptr<labrador::UiText> exit_ = nullptr;
 };

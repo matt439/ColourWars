@@ -135,6 +135,10 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 		// GameLevel normally handles restart without leaving the match.
 		this->start_match(MatchStart::developer);
 		break;
+	case EndMenuAction::watch_replay:
+		// GameLevel plays it without leaving the match; never returned here.
+		this->open_menu(MainMenuScreen::home);
+		break;
 	}
 }
 
@@ -234,6 +238,12 @@ void GameLevel::build_and_enter_level()
 	// content `reload` validated and consumes a queued debug restart; a menu
 	// restart also adopts a queued debug plan, so settings_ may change here.
 	this->data()->debug().before_level_build(*this);
+	// Each round draws its own seed from the running sequence, which a Debug
+	// `seed` fixes, so its tape can build the same level again (ROAD#19).
+	this->end_replay();
+	const unsigned int seed = (static_cast<unsigned int>(std::rand()) << 15) ^
+		static_cast<unsigned int>(std::rand());
+	std::srand(seed);
 	// A reload may replace the authored profile. No old pulse or pending event
 	// crosses the round boundary; the sink belongs to the containing screen.
 	this->rumble_ = std::make_unique<Rumble>(*this->rumble_sink_, this->data()->tuning()->rumble());
@@ -250,6 +260,7 @@ void GameLevel::build_and_enter_level()
 	++this->builds_;
 	// Untimed practice is what the menus' solo practice reaches on a stage
 	// with lessons; a developer start keeps the timed course for testing.
+	this->tape_.start(seed, this->settings_);
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->data()->save()->team_palette(), opening, this->start_ == MatchStart::menu);
 	this->data()->debug().after_level_build(*this);
@@ -269,6 +280,13 @@ void GameLevel::build_and_enter_level()
 // leave the match's voices paused until the menu is also closed.
 void GameLevel::on_activated()
 {
+	if (this->replay_phase_ != ReplayPhase::none)
+	{
+		this->data()->debug().sync_background_audio(true);
+		this->level_->resume();
+		this->sync_rumble();
+		return;
+	}
 	this->data()->debug().sync_background_audio(true);
 	this->background_continuing_ = false;
 	this->level_->clear_rumble_events();
@@ -303,6 +321,14 @@ bool GameLevel::audio_may_play() const
 }
 void GameLevel::on_deactivated()
 {
+	if (this->replay_phase_ != ReplayPhase::none)
+	{
+		// A replay has no pause to come back to; it waits, silent, for focus.
+		this->data()->debug().sync_background_audio(false);
+		this->stop_rumble();
+		this->level_->pause_audio();
+		return;
+	}
 	this->data()->debug().sync_background_audio(false);
 	this->stop_rumble();
 	if (this->results_audio_) { this->results_audio_->suspend(); }
@@ -318,7 +344,7 @@ void GameLevel::on_deactivated()
 	this->background_continuing_ = false;
 	this->focus_interrupted_ = this->level_->state() == LevelState::active;
 	this->resume_audio_->stop();
-	this->level_->suspend();
+	this->suspend_level();
 	this->data()->debug().match_suspended(*this);
 }
 
@@ -334,6 +360,8 @@ void GameLevel::update(float dt)
 		if (this->covered_ || this->pause_menu_open_ ||
 			!this->data()->debug().background_updates_allowed()) { return; }
 	}
+	// An instant replay owns the screen: no console, pause or seat checks.
+	if (this->update_replay(dt)) { return; }
 
 	// Console and debug-menu keys, a pending screenshot, F-key binds and
 	// queued debug requests, applied while no Level::update is on the call
@@ -420,6 +448,7 @@ void GameLevel::update(float dt)
 		if (this->resume_countdown_.advance(dt))
 		{
 			this->resume_audio_->stop();
+			this->tape_.record_resume(player_inputs);
 			this->level_->prepare_resume(player_inputs);
 			this->level_->emphasise_players();
 			if (this->audio_may_play()) { this->level_->resume(); }
@@ -449,6 +478,7 @@ void GameLevel::draw(Renderer& renderer) const
 	{
 		this->level_->draw_resume_countdown(renderer, this->resume_countdown_.remaining());
 	}
+	if (this->replay_phase_ != ReplayPhase::none) { this->level_->draw_replay_banner(renderer); }
 	this->data()->debug().draw_status(renderer);
 }
 
@@ -499,7 +529,7 @@ void GameLevel::on_suspend()
 	this->stop_rumble();
 	this->resume_audio_->stop();
 	// Gameplay voices stop here; normal pause retains only quiet arena music.
-	this->level_->suspend();
+	this->suspend_level();
 	if (this->pause_menu_open_ && this->context()->active() &&
 		!this->data()->debug().match_audio_paused())
 	{
@@ -581,7 +611,7 @@ void GameLevel::begin_resume_countdown()
 	if (this->level_->state() != LevelState::active) { return; }
 	this->resume_countdown_.begin(this->data()->presentation()->pause_menu().resume_countdown);
 	this->resume_audio_->stop();
-	this->level_->suspend();
+	this->suspend_level();
 	this->level_->emphasise_players();
 	this->level_->set_music_ducked(true);
 	if (this->context()->active() && !this->data()->debug().match_audio_paused())
@@ -620,7 +650,8 @@ void GameLevel::open_results_menu()
 void GameLevel::open_end_menu()
 {
 	this->context()->push<EndMenuAction>(
-		std::make_unique<EndMenuInitial>(this->menu_context_.get(), this->session_),
+		std::make_unique<EndMenuInitial>(this->menu_context_.get(), this->session_,
+			this->tape_.playable() && !this->level_->practice()),
 		[this](const EndMenuAction& action)
 		{
 			this->on_end_menu_closed(action);
@@ -629,6 +660,11 @@ void GameLevel::open_end_menu()
 
 void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 {
+	if (action == EndMenuAction::watch_replay)
+	{
+		this->start_replay();
+		return;
+	}
 	if (action == EndMenuAction::restart)
 	{
 		if (this->session_.complete())

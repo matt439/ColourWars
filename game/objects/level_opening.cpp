@@ -59,6 +59,10 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		L"RESUMING", menu.detail_font, Vector2F::ZERO, render_resources,
 		this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
+	this->replay_heading_ = std::make_unique<TextDropShadow>(
+		L"REPLAY", menu.detail_font, Vector2F::ZERO, render_resources,
+		this->presentation_->match().countdown_art.ink,
+		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
 	this->centre_countdown_text();
 
 	// Keep these reminders synchronized with PlayerInput bindings, showing only
@@ -219,6 +223,19 @@ void Level::centre_countdown_text()
 	this->resume_heading_->set_position(Vector2F(
 		(resolution.x - resume_bounds.width * resume_scale) / 2.0f,
 		this->countdown_card_.y + padding.y) - resume_bounds.position() * resume_scale);
+	// The replay's card holds only its heading, at the top of the screen,
+	// where it covers the least of the round it labels.
+	const RectangleF replay_bounds = RectangleF::union_of(
+		this->replay_heading_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->replay_heading_->text_bounds_at(menu.detail_shadow_offset, 1.0f));
+	this->replay_heading_->set_scale(heading_scale);
+	this->replay_heading_->set_shadow_scale(heading_scale);
+	this->replay_heading_->set_shadow_offset(menu.detail_shadow_offset * heading_scale);
+	const Vector2F replay_size = replay_bounds.size() * heading_scale + padding * 2.0f;
+	this->replay_card_ = RectangleF(Vector2F((resolution.x - replay_size.x) / 2.0f, padding.y),
+		replay_size);
+	this->replay_heading_->set_position(this->replay_card_.position() + padding -
+		replay_bounds.position() * heading_scale);
 	const float number_top = this->countdown_card_.y + padding.y * 2.0f +
 		heading_bounds.height * heading_scale;
 	this->countdown_number_box_ = RectangleF(
@@ -379,6 +396,18 @@ void Level::draw_resume_countdown(Renderer& renderer, float remaining) const
 		this->preferences_->reduce_effects);
 	list.set_filter(TextureFilter::linear);
 	this->resume_heading_->draw(list);
+	list.set_filter(TextureFilter::point);
+}
+
+void Level::draw_replay_banner(Renderer& renderer) const
+{
+	DrawList list = renderer.view(renderer.view_count() - 1);
+	list.set_viewport(this->viewport_manager_->fullscreen_viewport());
+	list.set_camera(Camera::DEFAULT_CAMERA);
+	list.set_filter(TextureFilter::point);
+	this->countdown_art_->draw_card(list, this->replay_card_, this->opening_scale());
+	list.set_filter(TextureFilter::linear);
+	this->replay_heading_->draw(list);
 	list.set_filter(TextureFilter::point);
 }
 
