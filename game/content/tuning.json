@@ -18,6 +18,7 @@
         "progress_distance": 52.0,
         "finish_dwell_steps": 30,
         "deliberate_shot_interval": 0.75,
+        "refill_retreat_margin": 200.0,
         "easy": { "reaction_steps": 24, "replan_steps": 90, "territory_candidates": 8, "aim_error_radians": 0.28 },
         "normal": { "reaction_steps": 12, "replan_steps": 45, "territory_candidates": 16, "aim_error_radians": 0.14 },
         "hard": { "reaction_steps": 4, "replan_steps": 15, "territory_candidates": 32, "aim_error_radians": 0.05 }

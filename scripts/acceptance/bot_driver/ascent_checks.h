@@ -61,7 +61,7 @@ namespace bot_ascent_acceptance
             !input.jump_pressed && !input.jump_held && !input.drop_through, message);
     }
 
-    inline void check_scoring_descent_landing(const GameTuning& tuning, BotDifficulty difficulty)
+    inline void check_descent_landing(const GameTuning& tuning, BotDifficulty difficulty)
     {
         for (const bool paintable : { false, true })
         {
@@ -94,8 +94,9 @@ namespace bot_ascent_acceptance
             (void)bot.think(view);
 
             // A subsequent step onto adjacent, unpaintable solid ground makes
-            // a new raised support eligible. This distinguishes clearing the
-            // descent on the one-way landing from clearing it on this ground.
+            // a new raised support eligible. Any completed descent releases
+            // exploration, scoring landing or not: a non-scoring floor whose
+            // only exit is a climb must not hold the bot for its whole life.
             view.center.x = 500.0f; view.on_platform = false;
             view.obstacles.emplace_back(400.0f, lower_top - 140.0f, 300.0f, 10.0f);
             view.supports.push_back({ view.obstacles.back(), true, false });
@@ -105,9 +106,9 @@ namespace bot_ascent_acceptance
                 const PlayerInputData input = bot.think(view);
                 jumped = jumped || input.jump_pressed;
             }
-            require(jumped == paintable, paintable ?
+            require(jumped, paintable ?
                 "Landing on a scoring one-way top failed to release later ascent exploration" :
-                "An unpaintable descent landing released exploration before reaching scoring ground");
+                "A completed descent onto non-scoring ground kept later ascent exploration disabled");
         }
     }
 
@@ -348,7 +349,7 @@ namespace bot_ascent_acceptance
         {
             check_continuing_chain_and_runup(tuning, difficulty);
             check_lifetime(tuning, difficulty);
-            check_scoring_descent_landing(tuning, difficulty);
+            check_descent_landing(tuning, difficulty);
             check_jump_boundary_and_local_routes(tuning, difficulty);
             check_short_steps_and_headroom(tuning, difficulty);
             // A centered one-way ascent needs a vertical takeoff, even though

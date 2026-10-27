@@ -231,6 +231,31 @@ namespace
 		return view;
 	}
 
+	// A refilling bot backs away only from an enemy within that enemy's own
+	// reach plus the authored margin. A farther one leaves its goal in place.
+	void check_refill_retreat(const GameTuning& tuning)
+	{
+		const float reach = 400.0f;
+		const float threat = reach + tuning.bots().refill_retreat_margin;
+		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+		{
+			for (const bool near : { true, false })
+			{
+				MatchBot bot(&tuning, difficulty, 7);
+				MatchBotObservation view = fixture(tuning);
+				view.ammo = tuning.bots().reserve_low * 0.5f;
+				view.engage_distance = 200.0f;
+				const float x = near ? threat - 50.0f : threat + 400.0f;
+				view.enemies.push_back({ { x, 0.0f }, {}, reach });
+				const PlayerInputData input = react(bot, view, tuning, difficulty);
+				require(!input.primary_shoot, "A refilling bot fired before reaching its resume reserve");
+				require(near ? input.x_movement < 0.0f : input.x_movement > 0.0f, near ?
+					"A refilling bot did not back away from an enemy within that enemy's reach" :
+					"A refilling bot retreated from an enemy well outside that enemy's reach");
+			}
+		}
+	}
+
 	void check_standing_and_descent(const GameTuning& tuning)
 	{
 		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
@@ -363,7 +388,7 @@ namespace
 		rejects("reserve_resume", [](auto& d) { d["bots"]["reserve_resume"].SetDouble(0.01); });
 		rejects("stuck_turn_steps", [](auto& d) { d["bots"]["stuck_turn_steps"].SetInt(1); });
 		for (const char* field : { "recovery_steps", "progress_window_steps", "progress_distance",
-			"finish_dwell_steps", "deliberate_shot_interval" })
+			"finish_dwell_steps", "deliberate_shot_interval", "refill_retreat_margin" })
 		{
 			rejects(field, [&](auto& d) { d["bots"].RemoveMember(field); });
 			rejects(field, [&](auto& d) { d["bots"][field].SetInt(0); });
@@ -394,11 +419,12 @@ int wmain(int argc, wchar_t** argv)
 		check_recovery_and_territory(tuning);
 		check_private_sequences(tuning);
 		check_visible_approach(tuning);
+		check_refill_retreat(tuning);
 		check_standing_and_descent(tuning);
 		bot_ascent_acceptance::check(tuning);
 		bot_ascent_approach_acceptance::check(tuning);
 		bot_ramp_acceptance::check(tuning);
-		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
+		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	}
 	catch (const std::exception& error)

@@ -19,6 +19,8 @@ struct MatchBotObservation
 	{
 		mattmath::Vector2F center;
 		mattmath::Vector2F velocity;
+		// The enemy's own engagement distance with its visible tool.
+		float engage_distance = 0.0f;
 	};
 
 	mattmath::Vector2F center;
@@ -94,6 +96,7 @@ private:
 	bool continue_ascent_ = false;
 	int ascent_steps_left_ = 0;
 	bool seeking_after_descent_ = false;
+	bool descent_airborne_ = false;
 	mattmath::RectangleF ascent_support_;
 	mattmath::Vector2F ascent_takeoff_;
 	std::vector<mattmath::RectangleF> visited_supports_;

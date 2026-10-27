@@ -72,6 +72,9 @@ struct BotTuning
 	// A tool at least this slow spends each straight shot at its current
 	// support only on an angle that lands there. Zero makes no tool deliberate.
 	float deliberate_shot_interval = 0.0f;
+	// A refilling bot backs away from a visible enemy only within that
+	// enemy's own engagement distance plus this many units.
+	float refill_retreat_margin = 0.0f;
 };
 
 // Match phase durations and countdown presentation.

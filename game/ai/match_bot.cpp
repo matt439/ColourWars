@@ -169,12 +169,15 @@ void MatchBot::decide(const MatchBotObservation& view)
 	// Using the firing radius as the pursuit gate stranded short-range tools
 	// on unrelated paint goals before they could ever enter combat.
 	if (enemy != nullptr && !this->refilling_) { goal = enemy->center; }
-	if (this->refilling_ && enemy != nullptr)
+	// Back away only from an enemy that could reach us soon. Retreating from
+	// one far outside its own range walked a refill back into home ground.
+	const BotTuning& policy = this->tuning_->bots();
+	const float threat = enemy == nullptr ? 0.0f : enemy->engage_distance + policy.refill_retreat_margin;
+	if (this->refilling_ && enemy != nullptr && nearest <= threat * threat)
 	{
 		goal = view.center + Vector2F(enemy->center.x > view.center.x ? -view.size.x * 4.0f :
 			view.size.x * 4.0f, 0.0f);
 	}
-	const BotTuning& policy = this->tuning_->bots();
 	if (this->recovery_left_ == 0 && this->blocked_steps_ >= policy.stuck_turn_steps)
 	{
 		this->heading_ = -this->heading_;
@@ -298,7 +301,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->has_paint_goal_ = false;
 		this->ascending_ = this->ascent_airborne_ = this->continue_ascent_ = false;
 		this->climbing_ramp_ = false;
-		this->seeking_after_descent_ = false;
+		this->seeking_after_descent_ = this->descent_airborne_ = false;
 		this->finish_pending_ = false;
 		this->finish_left_ = 0;
 		this->visited_supports_.clear();
@@ -315,15 +318,12 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	const BotTuning& policy = this->tuning_->bots();
 	if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
 	else if (this->refilling_ && view.ammo >= policy.reserve_resume) { this->refilling_ = false; }
-	if (this->seeking_after_descent_ && view.grounded)
-	{
-		for (const MatchBotSupport& support : view.supports)
-		{
-			if (support.paintable && std::fabs(view.center.y + view.size.y * 0.5f - support.bounds.top()) < 0.1f &&
-				view.center.x >= support.bounds.left() && view.center.x <= support.bounds.right())
-			{ this->seeking_after_descent_ = false; }
-		}
-	}
+	// Any completed descent ends the latch, scoring landing or not. The
+	// supports dropped through stay visited, so this cannot climb straight
+	// back; it only lets a non-scoring floor's sole exit be a climb.
+	if (this->seeking_after_descent_ && !view.grounded) { this->descent_airborne_ = true; }
+	else if (this->seeking_after_descent_ && this->descent_airborne_)
+	{ this->seeking_after_descent_ = this->descent_airborne_ = false; }
 	if (!this->ascending_ && !this->climbing_ramp_ && this->decision_.x_movement != 0.0f && std::fabs(view.velocity.x) < 1.0f)
 	{
 		++this->blocked_steps_;
