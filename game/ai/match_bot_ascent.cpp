@@ -29,25 +29,37 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 	// this choice. Initial one-way spawns retain their ordinary descent policy.
 	const PlayerTuning& movement = this->tuning_->player();
 	const Vector2F half = view.size * 0.5f;
+	const float inset = std::min(2.0f, half.x);
 	float vy = movement.jump_launch_velocity, height = 0.0f, rise = 0.0f;
 	float vx = movement.x_initial_velocity, reach = 0.0f;
 	constexpr float dt = 1.0f / 60.0f;
+	const int held_steps = std::max(1, static_cast<int>(std::min(
+		std::ceil(static_cast<double>(movement.jump_max_time) * 60.0),
+		static_cast<double>((std::numeric_limits<int>::max)()))));
 	for (int step = 0; step < 120; ++step)
 	{
-		vy += movement.gravity * dt;
-		if (static_cast<float>(step) * dt <= movement.jump_max_time) { vy += movement.jump_acceleration * dt; }
+		// Player::start_jump overwrites gravity on the takeoff tick. Held
+		// extension begins on the following tick and includes only held outputs.
+		if (step == 0) { vy = std::max(vy, -movement.max_velocity.y); }
+		else
+		{
+			vy = std::min(vy + movement.gravity * dt, movement.max_velocity.y);
+			if (step < held_steps && static_cast<float>(step - 1) * dt <= movement.jump_max_time)
+			{ vy += movement.jump_acceleration * dt; }
+			vy = std::max(vy, -movement.max_velocity.y);
+		}
 		height -= vy * dt; rise = std::max(rise, height);
 		reach += vx * dt;
 		vx = std::min(vx + movement.x_acceleration * dt, movement.max_velocity.x);
 		if (height <= 0.0f) { break; }
 	}
 	float best = std::numeric_limits<float>::max();
-	float best_climb = std::numeric_limits<float>::max();
+	float best_approach = std::numeric_limits<float>::max();
 	for (const MatchBotSupport& support : view.supports)
 	{
 		const RectangleF& bounds = support.bounds;
 		const float climb = view.center.y + half.y - bounds.top();
-		if (climb < half.y || climb > rise - 2.0f || bounds.width < view.size.x) { continue; }
+		if (climb < half.y || climb > rise || bounds.width < view.size.x) { continue; }
 		bool visited = false;
 		for (const RectangleF& previous : this->visited_supports_)
 		{ visited = visited || same_support(previous, bounds); }
@@ -62,27 +74,39 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 			if (view.center.x < bounds.center().x) { takeoff.x = bounds.left() - half.x - 2.0f; }
 			else { takeoff.x = bounds.right() + half.x + 2.0f; }
 		}
-		const float approach = std::fabs(takeoff.x - view.center.x);
-		if (approach > std::min(reach, this->tuning_->bots().sight_distance) || !this->clear_standing(view, landing) ||
-			!this->clear_route(view, takeoff)) { continue; }
-		// Alignment must remain on a known floor; never walk into an unknown gap.
+		// Align on the source support even when a gap separates it from the
+		// target lip/landing. The crossing belongs to the jump, not the walk.
 		bool floor = false;
+		float alignment = std::numeric_limits<float>::max();
+		float launch_x = takeoff.x;
 		for (const MatchBotSupport& source : view.supports)
 		{
-			floor = floor || (std::fabs(source.bounds.top() - view.center.y - half.y) < 0.1f &&
-				std::min(view.center.x, takeoff.x) - half.x >= source.bounds.left() &&
-				std::max(view.center.x, takeoff.x) + half.x <= source.bounds.right());
+			if (source.bounds.width < view.size.x ||
+				std::fabs(source.bounds.top() - view.center.y - half.y) >= 0.1f ||
+				view.center.x < source.bounds.left() || view.center.x > source.bounds.right()) { continue; }
+			// A supported body may overhang a lip. Keep its center inside the
+			// known floor, retaining room to brake before stepping off it.
+			const float launch = std::clamp(takeoff.x, source.bounds.left() + inset,
+				source.bounds.right() - inset);
+			const float gap = std::fabs(launch - landing.x);
+			if (gap < alignment) { alignment = gap; launch_x = launch; floor = true; }
 		}
 		if (!floor) { continue; }
+		takeoff.x = launch_x;
+		const float approach = std::fabs(takeoff.x - view.center.x);
+		if (std::max(approach, alignment) > std::min(reach, this->tuning_->bots().sight_distance) ||
+			!this->clear_standing(view, landing) || !this->clear_route(view, takeoff)) { continue; }
 		const Vector2F apex(takeoff.x, takeoff.y - rise);
 		const Vector2F over_landing(landing.x, apex.y);
 		if (!this->clear_route(view, takeoff, apex) || !this->clear_route(view, apex, over_landing) ||
 			!this->clear_route(view, over_landing, landing)) { continue; }
-		// Take adjacent steps in height order. Skipping a lower deck for a
-		// taller overlapping bridge can strand the bot above that deck's lip.
-		if (climb < best_climb || (climb == best_climb && approach < best))
+		// Preserve low adjacent steps before taller overlapping bridges. A
+		// normal solid lip already needs a body-width crossing; charge the
+		// extra gap so a distant low deck cannot displace an adjacent step.
+		const float cost = climb + std::max(0.0f, alignment - view.size.x);
+		if (cost < best || (cost == best && approach < best_approach))
 		{
-			best = approach; best_climb = climb;
+			best = cost; best_approach = approach;
 			this->ascent_support_ = bounds; this->ascent_takeoff_ = takeoff;
 			this->ascending_ = true; this->ascent_airborne_ = false;
 			this->ascent_steps_left_ = this->tuning_->bots().progress_window_steps +
@@ -116,8 +140,11 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 	const Vector2F half = view.size * 0.5f;
 	const RectangleF& target = this->ascent_support_;
 	bool present = false;
+	bool one_way = false;
 	for (const MatchBotSupport& support : view.supports)
-	{ present = present || same_support(target, support.bounds); }
+	{
+		if (same_support(target, support.bounds)) { present = true; one_way = support.one_way; }
+	}
 	const Vector2F landing(std::clamp(this->ascent_takeoff_.x, target.left() + half.x,
 		target.right() - half.x), target.top() - half.y);
 	if (!present || !this->clear_standing(view, landing) || --this->ascent_steps_left_ <= 0)
@@ -148,9 +175,12 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 		input.left_analog_stick = {};
 		return;
 	}
-	if (this->ascent_airborne_ && feet <= target.top())
+	if (this->ascent_airborne_)
 	{
-		destination = std::clamp(this->ascent_takeoff_.x, target.left() + half.x, target.right() - half.x);
+		if (one_way || feet <= target.top()) { destination = landing.x; }
+		else if (this->ascent_takeoff_.x < target.center().x)
+		{ destination = target.left() - half.x - 2.0f; }
+		else { destination = target.right() + half.x + 2.0f; }
 	}
 	input.x_movement = steer(destination, view, movement);
 	input.left_analog_stick = Vector2F(input.x_movement, 0.0f);

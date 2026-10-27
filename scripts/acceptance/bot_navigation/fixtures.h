@@ -16,11 +16,12 @@ namespace bot_navigation_acceptance
     {
     public:
         explicit World(const std::filesystem::path& content, const char* registry_name = "bot-navigation",
-            const char* support_error = "Bot navigation needs authored support '") :
+            const char* support_error = "Bot navigation needs authored support '",
+            const char* stage = "close_quarters") :
             assets(content), levels(registry_name), support_error_(support_error)
         {
             auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(content / "levels" /
-                "close_quarters.json").c_str());
+                (std::string(stage) + ".json")).c_str());
             info->validate();
             const JsonValue entries = info->collision_objects_json();
             for (std::size_t index = 0; index < entries.size(); ++index)
@@ -31,7 +32,7 @@ namespace bot_navigation_acceptance
                 supports.emplace_back(entry.string("name"), RectangleF(shape.number("x"),
                     shape.number("y"), shape.number("width"), shape.number("height")));
             }
-            levels.add("close_quarters", std::move(info));
+            levels.add(stage, std::move(info));
         }
 
         const RectangleF& named(const std::string& name) const

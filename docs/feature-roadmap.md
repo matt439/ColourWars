@@ -419,12 +419,84 @@ Moving supports, ramps, rotated slabs and later path obstruction beyond the
 landing need separate qualification. The full suite, native presentation,
 physical-pad, performance and attended difficulty acceptance were not run.
 
-**Next implementation:** qualify named ascents/recovery returns on the other
-shipped arenas. Extend opponent trials to moving and opposed players and
-improve aim and territory value from those observations, including the retained
-deck-paint miss. Keep finite budgets and final-input replay checks. Attended
-difficulty distinction and usefulness remain the author's acceptance gate;
-`ROAD#10` stays OPEN.
+#### Other-arena local ascents and recovery returns (2026-10-27)
+
+The opt-in `bot_arena_routes` case adds **150/150** actual-driver route gates
+across Crossfeed, King of the Hill and Turbulence: five separate starts, both
+sides, all five tools and all three difficulties. Each trial injects its initial
+position only, then runs 900 active steps with ordinary bot inputs; the opposite
+human starts at its natural spawn and receives neutral input.
+
+| Arena / route | Named ordered supports | Starting center X (A / B) |
+|---|---|---|
+| Crossfeed home return | `boundary_floor_a/b` -> `spawn_a/b_floor` | 300 / 3300 |
+| Crossfeed mixer | `centre_plinth` -> `upper_step_a/b` -> `centre_mixer` | 1700 / 1900 |
+| King of the Hill terraces | `mountain_level_5` -> `mountain_level_6` -> `mountain_level_7` | 2000 / 4000 |
+| Turbulence lower deck | `boundary_floor` -> `left_bottom_left_jump` / `right_bottom_right_jump` -> `left/right_lower_paint` | 825 / 5385 |
+| Turbulence middle deck | `left/right_lower_paint` -> `left_mid_left_jump` / `right_mid_right_jump` -> `left/right_mid_paint` | 1190 / 4810 |
+
+The gates retain the existing 0.05-unit feet-height tolerance and horizontal
+body overlap, requiring ordered grounded contacts and one ordinary jump for
+the home return or two for the other routes. These are transient landings,
+not centered stops. Final owned top-face paint is measured separately:
+**139/150** trials retain some on their finishing support. The eleven misses
+and the retained Close Quarters deck miss remain territory-usefulness work;
+successful traversal does not establish regional value or contested ownership.
+
+The first Release probe passed only **66/150** routes and exposed three policy
+defects, now fixed without arena-specific hints or geometry/tuning changes:
+
+- The ascent envelope applied acceleration before the launch displacement.
+  It now respects the normal launch tick and the actual number of held jump
+  outputs. At current values this permits Turbulence's reachable 200-unit
+  one-way steps; a 201-unit step remains outside the estimate.
+- Alignment assumed continuous full-body floor beneath a jump crossing.
+  Takeoff now keeps the body's center inside the known source floor while
+  allowing ordinary lip overhang. Airborne steering crosses a one-way target
+  immediately, or approaches a solid lip until the feet clear its top. Candidate
+  ranking preserves smaller adjacent rises, adds the crossing distance beyond
+  a body width, and breaks ties by walking approach. This supersedes the earlier
+  beside-target takeoff and height-only ranking description above. The retained
+  CQ gates caught and prevented skipping its lower scoring deck for the higher
+  overlapping approach bridge.
+- Support observations derived paintability from collision type. They now use
+  the independent paintable object role, including Crossfeed's six scoring
+  one-way platforms, so a scoring landing can end a deliberate descent's
+  exploration holdoff. Ordinary non-scoring one-way supports retain that holdoff.
+
+Validation: Debug and Release builds and the ten selected consumer cases
+`bot_driver`, `bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_ascents`,
+`bot_arena_routes`, `bot_trials`, `bot_runtime`, `gameplay_tuning` and `movement`
+pass. The retained CQ checks pass all 90 ascents and 30 home drops, with deck
+paint still 59/60. Natural-spawn trials retain paint in 120/120 configurations;
+stationary local combat retains damage in 10/10 and attributed eliminations in
+9/10. All ten new 900-step final-input tapes reproduce public player, projectile
+and exact paint state in both builds, with complete fingerprints additionally
+checked in Debug; the retained cases also keep their replay gates. New arena
+measurements and the 130-trial CSV are identical between builds. Policy checks
+cover the jump-height boundary, missing source floor, gap alignment/takeoff,
+airborne crossing, local-step choice and scoring/non-scoring descent landings;
+actual-object checks retain independent scoring and one-way roles. Both
+real-bank isolated startup checks pass. Evidence:
+`out/validation/road10-arena-routes/`; reproduce the new matrix with
+`scripts/run-acceptance.ps1 -Preset x64-debug -Cases bot_arena_routes` (or Release).
+
+These are separate local starts, not continuous ground-to-summit qualification
+or a general route graph. King of the Hill's ramp approach and castle interior,
+Turbulence's upper chain, moving supports, rotated slabs and later obstruction
+remain unqualified. The horizontal budget still estimates whole-flight travel;
+it does not solve how much crossing time remains above a solid lip. Finite
+expiry and failed-target exclusion contain failed attempts. The full suite,
+native bot presentation, physical-pad, performance and attended difficulty
+acceptance were not run; initial Easy/Normal/Hard values remain provisional.
+
+**Next implementation:** extend required ascent/recovery chains, starting with
+King of the Hill's ramp approach and castle interior and Turbulence's upper
+crossing. Extend opponent trials to moving and opposed players and improve aim
+and territory value from those observations, including retained deck-paint
+misses. Keep finite budgets and final-input replay checks. Attended difficulty
+distinction and usefulness remain the author's acceptance gate; `ROAD#10`
+stays OPEN.
 
 ### Balanced random teams
 

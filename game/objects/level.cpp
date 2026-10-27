@@ -916,7 +916,7 @@ std::vector<MatchBotSupport> Level::bot_supports() const
 		{
 			supports.push_back({ object->shape()->bounding_box(),
 				type == CollisionObjectType::structure_jump_through,
-				type == CollisionObjectType::structure_paintable });
+				dynamic_cast<const PaintableObject*>(object) != nullptr });
 		}
 	}
 	return supports;

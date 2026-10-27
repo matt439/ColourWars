@@ -62,6 +62,123 @@ namespace bot_ascent_acceptance
             !input.jump_pressed && !input.jump_held && !input.drop_through, message);
     }
 
+    inline void check_scoring_descent_landing(const GameTuning& tuning, BotDifficulty difficulty)
+    {
+        for (const bool paintable : { false, true })
+        {
+            MatchBot bot(&tuning, difficulty, 7);
+            MatchBotObservation view = floor_fixture(tuning);
+            view.on_platform = true;
+            view.obstacles.front() = mattmath::RectangleF(-1000.0f, view.size.y * 0.5f, 2000.0f, 10.0f);
+            view.supports.front() = { view.obstacles.front(), true, false };
+            const float lower_top = view.size.y * 0.5f + 300.0f;
+            view.obstacles.emplace_back(-300.0f, lower_top, 600.0f, 10.0f);
+            view.supports.push_back({ view.obstacles.back(), true, paintable });
+            view.obstacles.emplace_back(300.0f, lower_top, 1000.0f, 100.0f);
+            view.supports.push_back({ view.obstacles.back(), false, false });
+            const PlayerInputData drop = first_decision(bot, view, tuning, difficulty);
+            require(drop.drop_through && !drop.jump_held,
+                "Scoring-landing fixture did not begin its ordinary downward escape");
+
+            // Value poses isolate the landing policy. Actual-driver arena
+            // trials separately establish physics and named contacts. The
+            // scoring role of a one-way top must complete the escape too.
+            view.grounded = false; view.on_platform = false;
+            view.center.y = 150.0f;
+            (void)bot.think(view);
+            view.grounded = true; view.on_platform = true;
+            view.center.y = 300.0f;
+            // This fixture advances value poses without integrating input.
+            // Retain ordinary horizontal motion so the unrelated blocked-
+            // movement jump does not fire during Easy's reaction interval.
+            view.velocity.x = tuning.player().x_initial_velocity * 0.5f;
+            (void)bot.think(view);
+
+            // A subsequent step onto adjacent, unpaintable solid ground makes
+            // a new raised support eligible. This distinguishes clearing the
+            // descent on the one-way landing from clearing it on this ground.
+            view.center.x = 500.0f; view.on_platform = false;
+            view.obstacles.emplace_back(400.0f, lower_top - 140.0f, 300.0f, 10.0f);
+            view.supports.push_back({ view.obstacles.back(), true, false });
+            bool jumped = false;
+            for (int step = 0; step < tuning.bot(difficulty).reaction_steps; ++step)
+            {
+                const PlayerInputData input = bot.think(view);
+                jumped = jumped || input.jump_pressed;
+            }
+            require(jumped == paintable, paintable ?
+                "Landing on a scoring one-way top failed to release later ascent exploration" :
+                "An unpaintable descent landing released exploration before reaching scoring ground");
+        }
+    }
+
+    inline void check_jump_boundary_and_local_routes(const GameTuning& tuning, BotDifficulty difficulty)
+    {
+        // These adjacent authored step heights bracket the normal held-jump
+        // apex. The actual-player arena trials own successful 200-unit contact.
+        for (const float rise : { 200.0f, 201.0f })
+        {
+            MatchBot bot(&tuning, difficulty, 7);
+            MatchBotObservation view = floor_fixture(tuning);
+            raised_support(view, rise, 300.0f);
+            const PlayerInputData input = first_decision(bot, view, tuning, difficulty);
+            require(input.jump_pressed == (rise == 200.0f) && input.jump_held == input.jump_pressed,
+                "Ascent did not distinguish a reachable 200-unit step from an unreachable 201-unit step");
+        }
+
+        MatchBot unknown_floor(&tuning, difficulty, 7);
+        MatchBotObservation view = floor_fixture(tuning);
+        view.supports.clear();
+        raised_support(view, 140.0f, 300.0f);
+        const PlayerInputData unknown = first_decision(unknown_floor, view, tuning, difficulty);
+        require(!unknown.jump_pressed && !unknown.jump_held && !unknown.drop_through,
+            "Ascent selected a launch without any known source support");
+
+        MatchBot narrow_source(&tuning, difficulty, 7);
+        view = floor_fixture(tuning);
+        view.size = { 1.0f, 1.0f };
+        view.obstacles.front() = mattmath::RectangleF(-0.5f, 0.5f, 1.0f, 100.0f);
+        view.supports.front() = { view.obstacles.front(), false, false };
+        raised_support(view, 140.0f, 300.0f);
+        require(first_decision(narrow_source, view, tuning, difficulty).jump_pressed,
+            "Takeoff inset invalidated a known source exactly as wide as a small body");
+
+        MatchBot gap(&tuning, difficulty, 7);
+        view = floor_fixture(tuning);
+        view.obstacles.front() = mattmath::RectangleF(-200.0f, view.size.y * 0.5f, 250.0f, 100.0f);
+        view.supports.front() = { view.obstacles.front(), false, false };
+        view.obstacles.emplace_back(150.0f, view.size.y * 0.5f - 140.0f, 300.0f, 10.0f);
+        view.supports.push_back({ view.obstacles.back(), true, false });
+        const PlayerInputData alignment = first_decision(gap, view, tuning, difficulty);
+        require(alignment.x_movement > 0.0f && !alignment.jump_pressed,
+            "A reachable gap route did not begin alignment on its source floor");
+        // The whole body can overhang the lip, but the launch center stays
+        // inside the known floor. It must jump here, not walk to the target.
+        view.center.x = view.supports.front().bounds.right() - 2.0f;
+        const PlayerInputData takeoff = gap.think(view);
+        require(takeoff.x_movement == 0.0f && takeoff.jump_pressed && takeoff.jump_held,
+            "A gap route walked beyond its known source instead of taking off inside the lip");
+        view.grounded = false; view.center.y -= 10.0f;
+        const PlayerInputData crossing = gap.think(view);
+        require(crossing.x_movement > 0.0f && !crossing.drop_through,
+            "A gap route did not steer toward its one-way landing after takeoff");
+
+        MatchBot nearby(&tuning, difficulty, 7);
+        view = floor_fixture(tuning);
+        // A lower deck across a gap must not displace a higher support above
+        // the current floor. Walking farther along one continuous floor is
+        // different from committing to an extended airborne crossing.
+        view.obstacles.front() = mattmath::RectangleF(-200.0f, view.size.y * 0.5f, 250.0f, 100.0f);
+        view.supports.front() = { view.obstacles.front(), false, false };
+        view.obstacles.emplace_back(300.0f, view.size.y * 0.5f - 80.0f, 200.0f, 10.0f);
+        view.supports.push_back({ view.obstacles.back(), true, false });
+        view.obstacles.emplace_back(-250.0f, view.size.y * 0.5f - 140.0f, 200.0f, 10.0f);
+        view.supports.push_back({ view.obstacles.back(), true, false });
+        const PlayerInputData local = first_decision(nearby, view, tuning, difficulty);
+        require(local.x_movement < 0.0f && !local.jump_pressed,
+            "A lower deck across a distant gap displaced a feasible higher ascent above the source floor");
+    }
+
     inline void check_lifetime(const GameTuning& tuning, BotDifficulty difficulty)
     {
         for (const bool airborne : { false, true })
@@ -154,6 +271,8 @@ namespace bot_ascent_acceptance
         for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
         {
             check_lifetime(tuning, difficulty);
+            check_scoring_descent_landing(tuning, difficulty);
+            check_jump_boundary_and_local_routes(tuning, difficulty);
             // A centered one-way ascent needs a vertical takeoff, even though
             // the desired horizontal movement is zero. It must not become a
             // deliberate descent or inherit a jump before the reaction ends.

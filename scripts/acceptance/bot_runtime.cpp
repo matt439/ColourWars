@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/ai/match_bot_support.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
@@ -114,6 +115,45 @@ namespace
         int steps = 0;
     };
 
+    void check_support_roles(World& world)
+    {
+        // Crossfeed's six home/roof/upper-step platforms score paint while
+        // retaining one-way collision. King of the Hill also has ordinary
+        // non-scoring one-way supports; collision alone cannot supply this role.
+        for (const char* stage : { "crossfeed", "king_of_the_hill" })
+        {
+            MenuLevelSettings settings = roster(2, 1, BotDifficulty::normal);
+            settings.set_stage(stage);
+            auto level = world.build(settings);
+            int scoring_one_way = 0, plain_one_way = 0;
+            bool scoring_solid = false, plain_solid = false;
+            for (const MatchBotSupport& support : level->bot_supports())
+            {
+                if (support.one_way)
+                {
+                    scoring_one_way += support.paintable ? 1 : 0;
+                    plain_one_way += support.paintable ? 0 : 1;
+                }
+                else
+                {
+                    scoring_solid = scoring_solid || support.paintable;
+                    plain_solid = plain_solid || !support.paintable;
+                }
+            }
+            require(scoring_solid && plain_solid, "Bot support observations lost solid scoring/boundary roles");
+            if (std::string_view(stage) == "crossfeed")
+            {
+                require(scoring_one_way == 6 && plain_one_way == 0,
+                    "Crossfeed paintable one-way platforms lost their independent scoring role");
+            }
+            else
+            {
+                require(plain_one_way > 0, "Non-scoring one-way supports acquired an invented paint role");
+            }
+        }
+        std::cout << "PASS actual scoring/non-scoring support roles remain independent of one-way collision\n";
+    }
+
     void check_inputs(World& world)
     {
         MenuLevelSettings settings = roster(4, 5, BotDifficulty::hard); // P1/P3 humans, P2/P4 bots.
@@ -179,7 +219,7 @@ int main(int argc, char** argv)
     {
         require(argc == 2, "usage: bot_runtime <content>");
         World world(std::filesystem::absolute(argv[1]));
-        check_mapping(world); check_inputs(world);
+        check_mapping(world); check_support_roles(world); check_inputs(world);
         return 0;
     }
     catch (const std::exception& error) { std::cerr << "FAIL bot runtime: " << error.what() << '\n'; return 1; }
