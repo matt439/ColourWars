@@ -297,6 +297,12 @@ namespace menu_text_acceptance
             d["menu_style"]["fonts"]["item"].SetString("menu_text_descender");
             d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(115.0f);
             d["menu_text"]["items"]["options"].SetString("Fit");
+            // Mode's rows sit 96 apart, too close for descender-tall labels;
+            // only Keep's descender is under test here.
+            for (const char* key : { "single_match", "match_length", "series_stage" })
+            {
+                d["menu_text"]["items"][key].SetString("Fit");
+            }
         });
         tight_display.validate_resources(world.render, world.audio);
         require(keep_size.y == 82.0f && keep_size.y + tight_display.pause_menu().art.focus_padding.y * 2.0f >

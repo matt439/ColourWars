@@ -112,13 +112,24 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             const RectangleF duration_bounds = RectangleF::union_of(label->bounds(), time->bounds());
             actions.push_back(duration_bounds);
             if (focus == 3) { focused = duration_bounds; }
-            add(words.hint, style.detail_font, position(0, 7), art.ink,
+            // ROAD#20: Series stage on row 6, its value in the duration's
+            // column; the hint moved beside Single Match's card to make room.
+            const auto* rule = add(snapshot.menu_text().item(MenuItem::series_stage), style.item_font, position(0, 6),
+                focus == 4 ? art.focus_ink : art.ink, style.item_shadow_offset);
+            const auto* rule_value = add(snapshot.menu_text().series_stage_value(settings.series_stage_rule()),
+                style.item_font, position(2, 6), art.ink, style.item_shadow_offset);
+            const RectangleF rule_bounds = RectangleF::union_of(rule->bounds(), rule_value->bounds());
+            actions.push_back(rule_bounds);
+            if (focus == 4) { focused = rule_bounds; }
+            add(words.hint, style.detail_font, Vector2F(actions.front().right() +
+                art.focus_padding.x * 2.0f + art.shadow_offset, position(0, 2).y), art.ink,
                 style.item_shadow_offset);
         }
-        const auto* back = add(words.back, style.item_font, position(0, 6),
-            focus == 4 ? art.focus_ink : art.ink, style.item_shadow_offset);
+        const int back_focus = count ? 4 : 5;
+        const auto* back = add(words.back, style.item_font, position(0, count ? 6 : 7),
+            focus == back_focus ? art.focus_ink : art.ink, style.item_shadow_offset);
         actions.push_back(back->bounds());
-        if (focus == 4) { focused = back->bounds(); }
+        if (focus == back_focus) { focused = back->bounds(); }
         const auto& footer = snapshot.prompt_bar();
         const UiTextDropShadow prompt("reference-setup-prompt", snapshot.menu_text().prompt(
             count ? MenuPrompt::select_back : MenuPrompt::mode), footer.font, footer.position,
@@ -218,7 +229,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (bool count : { false, true })
         {
             open(count);
-            for (int focus = 0; focus < 5; ++focus)
+            for (int focus = 0; focus < (count ? 5 : 6); ++focus)
             {
                 if (focus > 0) { tap(Key::down); }
                 compare("default-focus-" + std::to_string(focus), count, focus, original, legacy);
@@ -249,6 +260,17 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         "Mode duration Left did not wrap to the last authored choice");
     tap(Key::enter); require(!settings.duration(), "Confirming Match length did not keep its ordinary right cycle");
     compare("duration-confirm-wrap", false, 3, original, legacy);
+    // Series stage (ROAD#20) cycles Same, Rotate, Loser's pick and wraps both ways.
+    tap(Key::down); compare("series-stage-same", false, 4, original, legacy);
+    tap(Key::right); require(settings.series_stage_rule() == SeriesStageRule::rotate, "Series stage Right did not reach Rotate");
+    compare("series-stage-rotate", false, 4, original, legacy);
+    tap(Key::right); require(settings.series_stage_rule() == SeriesStageRule::losers_pick, "Series stage Right did not reach Loser's pick");
+    compare("series-stage-losers-pick", false, 4, original, legacy);
+    tap(Key::right); require(settings.series_stage_rule() == SeriesStageRule::same, "Series stage Right did not wrap to Same");
+    tap(Key::left); require(settings.series_stage_rule() == SeriesStageRule::losers_pick, "Series stage Left did not wrap");
+    tap(Key::enter); require(settings.series_stage_rule() == SeriesStageRule::same && !settings.duration(),
+        "Confirming Series stage did not cycle right, or changed the duration");
+    compare("series-stage-confirm-wrap", false, 4, original, legacy);
     for (int mode = 0; mode < 3; ++mode)
     {
         open(false); for (int move = 0; move < mode; ++move) { tap(Key::down); }
@@ -285,7 +307,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     tap(Key::down);
     tap(Key::enter); const Frame returned_mode = compare("count-back-button", false, 0, original, legacy);
     tick(); require(frame().pixels == returned_mode.pixels, "Neutral Count Back changed initial Mode focus");
-    for (int move = 0; move < 4; ++move) { tap(Key::down); }
+    for (int move = 0; move < 5; ++move) { tap(Key::down); }
     tap(Key::enter); require(frame().pixels == destination(false).pixels, "Mode Back button did not reach actual Home");
     open(false); tap(Key::escape);
     require(frame().pixels == destination(false).pixels, "Mode Escape did not reach actual Home");
@@ -351,6 +373,6 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     open(true, 3); compare("restored-default-series", true, 1, original, legacy);
     require(records.good(), "Setup menu text evidence write failed");
     std::cout << "PASS actual Mode/Player Count: eight independent legacy items and solo hint across six sizes/aspects; "
-        "duration cycles, three mode choices, solo-disabled series, all count/layout/claim and Back routes; "
+        "duration and Series stage cycles, three mode choices, solo-disabled series, all count/layout/claim and Back routes; "
         "custom item/detail fonts, retained/reopened/reversed snapshots and duration/child return, frozen draw RNG\n";
 }

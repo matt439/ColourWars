@@ -735,8 +735,8 @@ adopts the edits. The names are string settings edited in JSON, outside numeric
 
 ### Mode and Player Count labels
 
-Eight required `menu_text.items` roles preserve the existing
-mode-selection and player-count choices:
+Nine required `menu_text.items` roles preserve the existing
+mode-selection and player-count choices and the Series stage row (`ROAD#20`):
 
 | Key | Shipped text | Use |
 |---|---|---|
@@ -744,16 +744,33 @@ mode-selection and player-count choices:
 | `best_of_three` | `Best of 3` | Mode row 3 |
 | `best_of_five` | `Best of 5` | Mode row 4 |
 | `match_length` | `Match length` | Mode duration-row label, row 5 |
+| `series_stage` | `Series stage` | Mode series-stage-row label, row 6 |
 | `one_player_practice` | `1 Player (practice)` | Player Count row 2 |
 | `two_players` | `2 Players` | Player Count row 3 |
 | `three_players` | `3 Players` | Player Count row 4 |
 | `four_players` | `4 Players` | Player Count row 5 |
 
-Both pages reuse `menu_text.items.back` at row 6. The separate required
-`menu_text.solo_practice_hint` defaults to `Solo practice: choose Single Match`
-at Mode row 7. Rows use the existing widget origin and each page's authored
-spacing; these are display roles, with the existing choice order, actions and
-input handling retained.
+Player Count reuses `menu_text.items.back` at row 6 and Mode at row 7, under
+Series stage. The separate required `menu_text.solo_practice_hint` defaults to
+`Solo practice: choose Single Match` and sits on Single Match's row 2, one
+`setup_focus_padding.x` after that row's complete focus card (label, padding
+and shade), so it never touches the card; it must fit the paper and the right
+margin. It moved there from row 7
+when Series stage took a row, and Mode's shipped
+`main_menu.mode_select_spacing.y` went from 100 to 96 so that Back on row 7
+still fits the 920-high paper. Rows use the existing widget origin and each
+page's authored spacing; these are display roles, with the existing choice
+order, actions and input handling retained.
+
+The Series stage values are `menu_text.values.series_stage_same` (`Same
+stage`), `series_stage_rotate` (`Rotate`) and `series_stage_losers_pick`
+(`Loser's pick`), drawn in the item font at the duration's value column.
+Startup draws each one in a real row and checks the complete row, card and
+arrow fit the paper and row stride, as it does for every duration value. Under
+Loser's pick, Stage Select's heading becomes `menu_text.stage.team_a_picks` or
+`team_b_picks` (`Team A picks the arena`, `Team B picks the arena`), checked
+like `headings.arena` against `main_menu.stage_box_size`. The Mode prompt reads
+`Left/Right Change` because two rows now take Left and Right.
 
 The same normalized, nonblank, single-line text rules apply. Mode and Player
 Count labels use `menu_style.fonts.item` and retain
@@ -770,14 +787,15 @@ absolute item-shadow y offset must be at most the page's vertical spacing
 (`main_menu.mode_select_spacing.y` or `main_menu.player_count_spacing.y`). This
 retains the existing text and shadow extents within one row's stride. The
 additional paper/card checks above include art padding, shade and arrow space.
-`match_length` must additionally satisfy
+`match_length` and `series_stage` must additionally satisfy
 `measured_width + abs(item_shadow.x) <= 2 * main_menu.mode_select_spacing.x`
-to fit before its existing duration-value column. That is one complete
+to fit before their value column. That is one complete
 `OptionRow`, so this column check adds no inner focus padding. Boundary equality
 is accepted.
 
 The nonfocusable solo hint uses its detail-font measurement and item shadow
-with the same footer, right-margin and left/top checks. It has no row-height
+with the same footer, right-margin and left/top checks, placed one card
+padding after Single Match's complete card. It has no row-height
 cap or focus-padding allowance.
 
 The strings come from the page's captured `MenuText`; presentation changes

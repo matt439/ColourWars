@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include "game/player_control.h"
+#include "game/series_stage_rule.h"
 
 enum class MenuHeading
 {
@@ -31,7 +32,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, count
 };
 
 struct MenuTitleText
@@ -104,6 +105,10 @@ struct MenuValueText
 	std::wstring duration_default;
 	std::wstring resolution;
 	std::wstring shared;
+	// The Mode page's Series stage values, one per SeriesStageRule.
+	std::wstring series_stage_same;
+	std::wstring series_stage_rotate;
+	std::wstring series_stage_losers_pick;
 };
 
 struct MenuConfirmationText
@@ -184,6 +189,9 @@ struct MenuStageText
 	std::wstring versus_roster;
 	std::wstring numbered_navigation;
 	std::wstring random_hint;
+	// Stage Select's heading when a losing team picks the next round's stage.
+	std::wstring team_a_picks;
+	std::wstring team_b_picks;
 };
 
 // Labels for the per-stage records. The numbers and the joins between the
@@ -284,6 +292,7 @@ struct MenuText
 	std::wstring setting_duration(float seconds, bool use_default) const;
 	// Window presets and live fullscreen sizes share the positive int domain.
 	std::wstring setting_resolution(int width, int height) const;
+	const std::wstring& series_stage_value(SeriesStageRule rule) const;
 	// Stage summary domains follow the existing choices: best-of 3/5, and
 	// one solo player or two through four versus players.
 	std::wstring stage_best_of_mode(int best_of) const;

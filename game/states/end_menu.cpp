@@ -2,6 +2,7 @@
 #include "game/states/end_menu.h"
 #include "game/states/menu_panel.h"
 #include "game/states/main_menu.h"
+#include "game/series_stage_rule.h"
 
 using namespace mattmath;
 using namespace menu_consts;
@@ -185,8 +186,23 @@ void EndMenuInitial::init()
 
 	this->change_teams_->set_hidden(ongoing);
 	this->watch_replay_->set_hidden(!this->replay_);
-	this->focus_.add(this->restart_.get(),
-		[choose] { choose(EndMenuAction::restart, true); });
+	// Under Loser's pick a decisive round's losers choose the next stage
+	// before it plays; a draw or a bot-only loser plays on straight away.
+	const PlayerTeam picker = series_stage_picker(*this->level_settings(), this->session_);
+	if (picker == PlayerTeam::none)
+	{
+		this->focus_.add(this->restart_.get(),
+			[choose] { choose(EndMenuAction::restart, true); });
+	}
+	else
+	{
+		this->focus_.add(this->restart_.get(), [this, picker]
+			{
+				this->play_wave(this->confirm_sound_);
+				this->context()->transition_to(std::make_unique<MainMenuStageSelect>(
+					this->menu_context(), this->session_, picker));
+			});
+	}
 	if (this->replay_)
 	{
 		this->focus_.add(this->watch_replay_.get(),

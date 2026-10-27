@@ -319,6 +319,9 @@ namespace presentation_read
 				throw std::runtime_error(values.where() + ": " + field.first + ": " + error.what());
 			}
 		}
+		text.values.series_stage_same = read_menu_line(values, "series_stage_same");
+		text.values.series_stage_rotate = read_menu_line(values, "series_stage_rotate");
+		text.values.series_stage_losers_pick = read_menu_line(values, "series_stage_losers_pick");
 		text.values.resolution = read_menu_line(values, "resolution");
 		try
 		{
@@ -441,6 +444,8 @@ namespace presentation_read
 		{
 			throw std::runtime_error(stage.where() + ": random_hint: " + error.what());
 		}
+		text.stage.team_a_picks = read_menu_line(stage, "team_a_picks");
+		text.stage.team_b_picks = read_menu_line(stage, "team_b_picks");
 		const JsonValue records = json.object("records");
 		text.records.new_best = read_menu_line(records, "new_best");
 		text.records.stage_best = read_menu_line(records, "stage_best");
@@ -713,6 +718,17 @@ std::wstring MenuText::setting_resolution(int width, int height) const
 	}
 	return format_label_template(this->values.resolution,
 		{ { L"{width}", std::to_wstring(width) }, { L"{height}", std::to_wstring(height) } });
+}
+
+const std::wstring& MenuText::series_stage_value(SeriesStageRule rule) const
+{
+	switch (rule)
+	{
+	case SeriesStageRule::same: return this->values.series_stage_same;
+	case SeriesStageRule::rotate: return this->values.series_stage_rotate;
+	case SeriesStageRule::losers_pick: return this->values.series_stage_losers_pick;
+	}
+	throw std::invalid_argument("Unknown series stage rule");
 }
 
 std::wstring MenuText::stage_best_of_mode(int best_of) const

@@ -9,6 +9,7 @@
 #include "game/objects/weapon_type.h"
 #include "game/player_control.h"
 #include "game/save_section.h"
+#include "game/series_stage_rule.h"
 
 class MenuLevelSettings;
 
@@ -34,6 +35,8 @@ struct LastMatchSetup
 	labrador::ScreenLayout layout = labrador::ScreenLayout::one_player;
 	std::optional<float> duration;
 	int best_of = 1;
+	// Kept for single matches too, so the Mode page shows what was last chosen.
+	SeriesStageRule stage_rule = SeriesStageRule::same;
 
 	// Rejects unresolved or invalid choices; input claims are neither required
 	// nor copied. The caller establishes that this was a normal user start.
@@ -52,11 +55,14 @@ struct LastMatchSetup
 
 // "last_match": { "players": [ { "team": "a", "weapon": "sprayer",
 // "controller": "human", "difficulty": "normal", "handicap": 1 } ],
-// "stage": "...", "layout": "one_player", "best_of": 1, "duration": ... }.
+// "stage": "...", "layout": "one_player", "best_of": 1, "duration": ...,
+// "stage_rule": "rotate" }.
 // Default duration is represented by omitting duration. Invalid whole sections
 // or counts reset to absent; recoverable fields are normalised independently.
 // Legacy seats without controller/difficulty are human/Normal. Handicap is
-// written only when a seat has one; absent or invalid is none. P1 is human,
+// written only when a seat has one; absent or invalid is none. The series
+// stage rule (save version 5) is written only when it is not Same; absent or
+// unknown is Same, the behaviour before the rule existed. P1 is human,
 // and the layout follows the number of humans rather than all participants.
 class LastMatchSetupSection final : public SaveSection
 {

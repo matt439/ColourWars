@@ -14,7 +14,7 @@
             $durationSummary.csv_rows -ne 25 -or $durationSummary.compact_crops -ne 5 -or
             $durationSummary.page_openings -ne 8 -or $durationSummary.font_negative_controls -ne 1 -or
             $durationSummary.resize_updates -ne 0 -or $durationSummary.save_calls -ne 1 -or
-            $durationSummary.crop_pixels -ne 467200 -or $durationRows.Count -ne 25 -or
+            $durationSummary.crop_pixels -ne 420480 -or $durationRows.Count -ne 25 -or
             @($durationRows | Where-Object {
                 $_.focus -ne '3' -or $_.scale -ne '1' -or $_.full_row_match -ne 'true' -or
                 $_.ornament_inside -ne 'true' -or $_.frozen_state_rng -ne 'true' -or
@@ -66,10 +66,10 @@
         }
         foreach ($crop in $durationCrops) {
             $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount("P6`n1168 80`n255`n") + 1168 * 80 * 3
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne '1168 80' -or
+            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount("P6`n1168 72`n255`n") + 1168 * 72 * 3
+            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne '1168 72' -or
                 $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "Duration crop $($crop.Name) differs from its exact 1168x80 RGB payload budget."
+                throw "Duration crop $($crop.Name) differs from its exact 1168x72 RGB payload budget."
             }
         }
         $durationSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count

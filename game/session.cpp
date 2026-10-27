@@ -41,6 +41,7 @@ bool Session::complete() const
 		this->round_finished_;
 }
 int Session::round() const { return this->round_; }
+PlayerTeam Session::round_winner() const { return this->round_winner_; }
 int Session::team_a_wins() const { return this->team_a_wins_; }
 int Session::team_b_wins() const { return this->team_b_wins_; }
 

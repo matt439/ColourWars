@@ -50,6 +50,12 @@ namespace
 		return best_of == 1 || best_of == 3 || best_of == 5;
 	}
 
+	bool valid_stage_rule(SeriesStageRule rule)
+	{
+		return rule == SeriesStageRule::same || rule == SeriesStageRule::rotate ||
+			rule == SeriesStageRule::losers_pick;
+	}
+
 	bool valid_controller(PlayerController controller)
 	{
 		return controller == PlayerController::human || controller == PlayerController::bot;
@@ -176,6 +182,7 @@ LastMatchSetup LastMatchSetup::capture(const MenuLevelSettings& settings)
 	setup.layout = settings.screen_layout();
 	setup.duration = settings.duration();
 	setup.best_of = settings.best_of();
+	setup.stage_rule = settings.series_stage_rule();
 	setup.validate();
 	return setup;
 }
@@ -223,6 +230,10 @@ void LastMatchSetup::validate() const
 	{
 		throw std::invalid_argument("Remembered duration must be finite and positive");
 	}
+	if (!valid_stage_rule(this->stage_rule))
+	{
+		throw std::invalid_argument("Remembered series stage rule must be Same, Rotate or Loser's pick");
+	}
 }
 
 LastMatchSetup LastMatchSetup::normalised() const
@@ -258,6 +269,7 @@ LastMatchSetup LastMatchSetup::normalised() const
 		setup.duration.reset();
 	}
 	if (setup.stage.find('\0') != std::string::npos) { setup.stage.clear(); }
+	if (!valid_stage_rule(setup.stage_rule)) { setup.stage_rule = SeriesStageRule::same; }
 	return setup;
 }
 
@@ -284,6 +296,7 @@ MenuLevelSettings LastMatchSetup::restore(const StageList& stages) const
 	settings.set_screen_layout(setup.layout);
 	settings.set_duration(setup.duration);
 	settings.set_best_of(setup.best_of);
+	settings.set_series_stage_rule(setup.stage_rule);
 	return settings;
 }
 
@@ -340,6 +353,15 @@ void LastMatchSetupSection::read(const JsonValue& root, SaveData& data) const
 	catch (const std::runtime_error&)
 	{
 	}
+	// Saves before version 5 have no rule, and an unknown spelling keeps
+	// Same: both play every round on one stage, as those builds did.
+	try
+	{
+		if (entry.has("stage_rule")) { std::ignore = read_series_stage_rule(entry.identifier("stage_rule"), setup.stage_rule); }
+	}
+	catch (const std::runtime_error&)
+	{
+	}
 	data.last_match = setup.normalised();
 }
 
@@ -380,6 +402,11 @@ void LastMatchSetupSection::write(SaveWriter& writer, const SaveData& data) cons
 	{
 		writer.key("duration");
 		writer.number(*setup.duration);
+	}
+	if (setup.stage_rule != SeriesStageRule::same)
+	{
+		writer.key("stage_rule");
+		writer.string(series_stage_rule_key(setup.stage_rule));
 	}
 	writer.end_object();
 }

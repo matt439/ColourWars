@@ -23,7 +23,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         L"Left/Right Change    A/Enter Select    B/Esc Back",
         L"Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)",
         L"D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)",
-        L"A/Enter Select    Left/Right Match length    B/Esc Back",
+        L"A/Enter Select    Left/Right Change    B/Esc Back",
         L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
         L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
         L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",

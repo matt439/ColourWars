@@ -525,14 +525,15 @@ void Presentation::validate_resources(const RenderResources& render,
 		}
 		return card;
 	};
+	// Mode rows 2-7; Match length and Series stage carry a value column.
 	const MenuItem mode_items[]{ MenuItem::single_match, MenuItem::best_of_three, MenuItem::best_of_five,
-		MenuItem::match_length, MenuItem::back };
-	float mode_back_bottom = 0.0f;
+		MenuItem::match_length, MenuItem::series_stage, MenuItem::back };
+	float single_match_right = 0.0f;
 	for (size_t index = 0; index < std::size(mode_items); ++index)
 	{
 		const RectangleF card = check_setup_item(mode_items[index], main.mode_select_spacing, static_cast<int>(index) + 2,
-			mode_items[index] == MenuItem::match_length);
-		if (mode_items[index] == MenuItem::back) { mode_back_bottom = card.bottom(); }
+			mode_items[index] == MenuItem::match_length || mode_items[index] == MenuItem::series_stage);
+		if (mode_items[index] == MenuItem::single_match) { single_match_right = card.right(); }
 	}
 	const MenuItem player_items[]{ MenuItem::one_player_practice, MenuItem::two_players,
 		MenuItem::three_players, MenuItem::four_players, MenuItem::back };
@@ -542,18 +543,14 @@ void Presentation::validate_resources(const RenderResources& render,
 	}
 	// The nonfocusable hint retains the detail font and the item-shadow offset
 	// that its existing widget uses; it has no action-row fit or focus padding.
+	// Beside Single Match on row 2, one card padding after its complete card.
+	const Vector2F hint_position(single_match_right + main.setup_focus_padding.x,
+		this->menu_.layout.position.y + main.mode_select_spacing.y * 2.0f);
 	check_menu_line("menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
-		this->menu_.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 7.0f),
-		this->menu_.footer_y, this->menu_.item_shadow_offset);
-	const RectangleF practice_hint = check_setup_paper(
+		hint_position, this->menu_.footer_y, this->menu_.item_shadow_offset);
+	std::ignore = check_setup_paper(
 		"menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
-		this->menu_.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 7.0f),
-		this->menu_.item_shadow_offset, false, 0.0f);
-	if (practice_hint.y < mode_back_bottom)
-	{
-		throw std::runtime_error(this->source_path_ +
-			": menu_text.solo_practice_hint must follow the complete Back focus card and shade.");
-	}
+		hint_position, this->menu_.item_shadow_offset, false, 0.0f);
 	const auto fixed_menu_size = [&](const std::string& key, const std::wstring& text, const std::string& font)
 	{
 		const std::string where = this->source_path_ + ": " + key;
@@ -1421,18 +1418,27 @@ void Presentation::validate_resources(const RenderResources& render,
 		main.stage_box_size);
 	const RectangleF stage_inside(stage_paper.position() + Vector2F(setup_edge),
 		stage_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
-	const Vector2F stage_heading_size = render.measure_text(render.resolve_sprite_font(this->menu_.heading_font),
-		this->menu_text_.heading(MenuHeading::arena));
-	const RectangleF stage_heading = RectangleF::union_of(
-		RectangleF(this->menu_.layout.position, stage_heading_size),
-		RectangleF(this->menu_.layout.position + this->menu_.heading_shadow_offset, stage_heading_size));
-	if (!std::isfinite(stage_heading.x) || !std::isfinite(stage_heading.y) ||
-		!std::isfinite(stage_heading.width) || !std::isfinite(stage_heading.height) ||
-		stage_heading.width <= 0.0f || stage_heading.height <= 0.0f || !stage_inside.contains(stage_heading))
+	const std::wstring& stage_heading_words = this->menu_text_.heading(MenuHeading::arena);
+	// Loser's pick (ROAD#20) puts the picking team's heading in its place.
+	const auto check_stage_heading = [&](const std::string& key, const std::wstring& words)
 	{
-		throw std::runtime_error(this->source_path_ +
-			": menu_text.headings.arena must fit main_menu.stage_box_size including its retained shadow bounds.");
-	}
+		drawable_text::check_font_can_draw(&render, this->menu_.heading_font, words, this->source_path_ + ": " + key);
+		const Vector2F stage_heading_size = render.measure_text(render.resolve_sprite_font(this->menu_.heading_font),
+			words);
+		const RectangleF stage_heading = RectangleF::union_of(
+			RectangleF(this->menu_.layout.position, stage_heading_size),
+			RectangleF(this->menu_.layout.position + this->menu_.heading_shadow_offset, stage_heading_size));
+		if (!std::isfinite(stage_heading.x) || !std::isfinite(stage_heading.y) ||
+			!std::isfinite(stage_heading.width) || !std::isfinite(stage_heading.height) ||
+			stage_heading.width <= 0.0f || stage_heading.height <= 0.0f || !stage_inside.contains(stage_heading))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit main_menu.stage_box_size including its retained shadow bounds.");
+		}
+	};
+	check_stage_heading("menu_text.headings.arena", stage_heading_words);
+	check_stage_heading("menu_text.stage.team_a_picks", this->menu_text_.stage.team_a_picks);
+	check_stage_heading("menu_text.stage.team_b_picks", this->menu_text_.stage.team_b_picks);
 	// Home's Exit confirmation reuses Pause paper/layout, with the existing
 	// Exit label rendered once more in the actual heading font.
 	const Vector2F exit_heading_size = fixed_menu_size("menu_text.items.exit",

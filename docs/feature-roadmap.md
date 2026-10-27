@@ -1883,7 +1883,9 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   Teams, the roster and bot difficulty stay locked, because the ledger counts
   team wins and a seat swap would change who is winning. The re-picks last for
   the rest of the series only; the setup the main menu remembers is the one
-  that started it. Still open: a stage rotation or loser's pick rule.
+  that started it. Done 2026-10-28: a Series stage rule on the Mode page (Same
+  stage, Rotate, Loser's pick); see [Series stage rule](#series-stage-rule-road20)
+  below. Left: the author plays the rules and says which they like.
 - **Player profiles (`ROAD#21`, done 2026-10-27).** Smash name tags carry a
   person's controls, rumble and records. Deadzones, rumble, binds and
   accessibility toggles followed the pad slot (`POL#18`, `ROAD#7`, `ROAD#9`,
@@ -2209,6 +2211,76 @@ the file there, or uses Save As), picking up a new or edited file without a
 restart (Debug `reload` rereads tuning and presentation only), a player-facing
 note in the release package's README, and attended play of a real
 player-made stage.
+
+### Series stage rule (`ROAD#20`)
+
+**Done 2026-10-28.** The Mode page has a Series stage row under Match length,
+an option row like it: Left and Right (or Select) cycle **Same stage**,
+**Rotate** and **Loser's pick**. It decides which stage a series' next round
+plays. Same stage is the default and is what every series did before; a single
+match has no next round, so the row does nothing there. The rule is saved with
+the remembered setup (`"last_match.stage_rule"`, written only when it is not
+Same; save version 5). A save without it, or with a spelling this build does not
+know, reads as Same, so old saves play as they did. The row's value, Stage
+Select's picking heading and the Mode prompt are `presentation.json` text with
+startup fit checks ([Mode labels](menu-presentation.md#mode-and-player-count-labels)).
+
+What each rule does, decided on the round that just finished
+(`game/series_stage_rule.h`):
+
+- **A draw replays its stage under every rule.** The End menu already calls it
+  Replay Draw, and a round that settles nothing should be played again on
+  the same ground.
+- **Same stage** keeps the stage.
+- **Rotate** moves on to the next stage of the Random pool, in manifest
+  order, wrapping. It never rotates *into* a stage left out of Random: those
+  are trials and comparisons that a person chooses on purpose. A series
+  started on one plays it once and then joins the pool at the first pool
+  stage after it in the manifest. With an empty pool the stage stays.
+- **Loser's pick** gives the next stage to the team that lost. Next Round
+  opens Stage Select in the End menu's frame, under the heading *Team A picks
+  the arena* (or B), and only that team's seats can browse, lock or back out;
+  the other seats' input is ignored. Back returns to the End menu. The page
+  opens on the stage just played. A losing team made only of bots cannot pick,
+  so the stage rotates as under Rotate instead.
+- **Play Series Again** after a completed series follows the rule too, since
+  the last round was decisive; a single match's Rematch never moves.
+- **Change Level by hand wins.** Change Level (and Change Weapons, which goes
+  on to Stage Select) still opens the full Stage Select for everyone, and the
+  stage confirmed there is played as chosen: the Stage page returns the new
+  End action `play_chosen_stage`, which the rule never moves. Under Rotate the
+  page opens on the stage the rotation would play next, so confirming it at
+  once keeps the rotation going.
+
+Between rounds the rule changes only the series' own copy of the settings, so
+the setup the main menu remembers is still the one that started the series.
+
+The `series_stage_rule` acceptance case covers each rule's next stage, draws,
+explicit-only stages, bot-only losers, single matches, Play Series Again, a
+stage chosen by hand overriding every rule, the remembered-setup round trip,
+old and malformed saves, and the menu text. The painter series re-pick check
+(`check-painter.ps1 -EndMenuOnly`) drives the real End menu and Stage Select
+under each rule, including the restricted pick, and the setup text check
+(`-SetupPaperOnly`) draws the new Mode row. On MattPC (2026-10-28, Debug)
+`-EndMenuOnly`, `-SetupPaperOnly`, `-DurationTextOnly`, `-SetupMotionOnly`,
+`-RememberedSetupOnly`, `-MainMenuOnly`, `-HomeReturnFocusOnly` and
+`-StagePaperOnly` pass. `-MenuTextOnly` had stopped compiling when `ROAD#21`
+added two prompts; its prompt list is brought up to date, and it now runs but
+fails first on Home's Credits label, a page this change does not touch.
+
+Provisional calls the author should confirm in play:
+
+- which rule is the better default once tried (Same stays the default so
+  nothing changes until then);
+- whether Rotate should include the series' starting stage when it is
+  explicit-only, rather than leaving it after one round;
+- whether a draw under Loser's pick should hand the pick to the team that lost
+  the previous decisive round instead of replaying;
+- whether a bot-only loser should pick for itself (a random pool stage) rather
+  than rotate.
+
+The practice hint moved beside Single Match, and Mode's row spacing went from
+100 to 96, to make room for the row; that is an art-pass call too.
 
 ## Menu navigation follow-up (GAP#4.4)
 

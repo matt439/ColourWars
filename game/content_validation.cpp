@@ -152,4 +152,5 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	// Keep this after all established diagnostics, and retain the exact Mode
 	// row/shadow/card/shade/arrow geometry without fitting the value.
 	MainMenuModeSelect::validate_durations(render, tuning, presentation);
+	MainMenuModeSelect::validate_stage_rules(render, presentation);
 }

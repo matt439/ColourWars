@@ -222,6 +222,12 @@ public:
 	void init() override;
 	// Candidate validation uses the same unscaled row and complete ornament
 	// as a real Mode page, after the ordinary resource checks have passed.
+	// Rows of mode_select_spacing under the heading; Match length and Series
+	// stage are the two OptionRows. The practice hint sits on Single Match's
+	// row, one card padding after that row's complete focus card.
+	static constexpr int DURATION_ROW = 5;
+	static constexpr int STAGE_RULE_ROW = 6;
+	static constexpr int BACK_ROW = 7;
 	static std::unique_ptr<OptionRow> make_duration_row(labrador::RenderResources* render,
 		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
 		OptionRow::Adjust on_adjust = {});
@@ -229,14 +235,32 @@ public:
 		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
 	static void validate_durations(labrador::RenderResources* render,
 		const GameTuning& tuning, const Presentation& presentation);
+	// The Series stage row (ROAD#20), checked like the duration row for
+	// every rule's value.
+	static std::unique_ptr<OptionRow> make_stage_rule_row(labrador::RenderResources* render,
+		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+		OptionRow::Adjust on_adjust = {});
+	static void check_stage_rule_row(const OptionRow& stage_rule_row,
+		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
+	static void validate_stage_rules(labrador::RenderResources* render, const Presentation& presentation);
 protected:
 	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
+	static std::unique_ptr<OptionRow> make_setup_row(const std::string& name, MenuItem item, int row,
+		labrador::RenderResources* render, const MenuStyle& style, const MainMenuPresentation& look,
+		const MenuText& text, OptionRow::Adjust on_adjust);
+	static bool setup_row_fits(const OptionRow& row, const mattmath::RectangleF& panel,
+		const MenuPaperArtPresentation& art, float row_spacing);
 	void cycle_duration(labrador::Direction direction);
 	void refresh_duration();
+	void cycle_stage_rule(labrador::Direction direction);
+	void refresh_stage_rule();
+	static mattmath::Vector2F practice_hint_position(const labrador::UiWidget& single_match,
+		const MenuPaperArtPresentation& art);
 	std::unique_ptr<OptionRow> duration_row_;
+	std::unique_ptr<OptionRow> stage_rule_row_;
 	labrador::FontHandle duration_font_{};
 	std::string duration_font_name_;
 	float duration_row_spacing_ = 0.0f;
@@ -436,8 +460,11 @@ private:
 class MainMenuStageSelect final : public MainMenuPage
 {
 public:
+	// `picker`: between rounds under Loser's pick, the team whose seats alone
+	// choose, named in the heading. None lets every seat choose.
 	explicit MainMenuStageSelect(MenuContext* context,
-		std::optional<Session> between_rounds = std::nullopt);
+		std::optional<Session> between_rounds = std::nullopt,
+		PlayerTeam picker = PlayerTeam::none);
 	void update_page(float dt) override;
 	void init() override;
 protected:
@@ -446,6 +473,7 @@ protected:
 private:
 	MenuPaperArtPresentation paper_art_;
 	MenuPaperArtPresentation briefing_art_;
+	PlayerTeam picker_ = PlayerTeam::none;
 	mattmath::RectangleF briefing_layout_bounds_;
 	float briefing_accent_motion_height_ = 0.0f;
 	MenuFocusMotion stage_motion_;

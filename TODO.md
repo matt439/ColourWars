@@ -81,6 +81,8 @@ difficulty comparison; difficulty values remain provisional.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
+- **Series stage rule:** play Same stage, Rotate and Loser's pick, choose the default and
+  settle the draw, explicit-only and bot-loser calls (`ROAD#20`).
 - **Overview map and match variants:** whether a mid-match map may show territory
   (`ROAD#17`), and whether variants count as modes (`ROAD#22`).
 - **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
@@ -197,7 +199,7 @@ excluded modes.
 | `ROAD#17` | DECISION | LOW | M | Overview map in the unused three-player quadrant (Splatoon turf map). Shows territory mid-match, against gap audit 1.1: decide first. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#18` | UNSCOPED | LOW | M | Off-screen teammate and threat markers (Splatoon ally silhouettes); relates to `POL#3` rear threats and `ROAD#10` label clamping. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#19` | OPEN | LOW | S | End-of-round instant replay shipped; left: re-run `check-painter.ps1 -EndContinuationOnly` on MattPC after its crop moved with the End rows (the other End painter checks passed). [Owner](docs/feature-roadmap.md#instant-replay-road19). |
-| `ROAD#20` | UNSCOPED | LOW | S | Stage rotation or loser's pick between series rounds; tools, Boost and stage can now be re-picked by hand between rounds. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#20` | DECISION | LOW | S | The Series stage rule is in (Same stage, Rotate, Loser's pick on Mode). Left: play the three, choose the default, and confirm the provisional calls for draws, explicit-only stages and bot-only losers. [Owner](docs/feature-roadmap.md#series-stage-rule-road20). |
 | `ROAD#21` | DECISION | LOW | S | Player profiles are in and their MattPC painter checks pass. Left: try profiles with real pads (`ROAD#2`). [Owner](docs/feature-roadmap.md#player-profiles-road21). |
 | `ROAD#22` | DECISION | LOW | M | Match variants (low gravity, endless paint, tool roulette), mostly tuning overrides. Decide whether they count as modes, which are ruled out. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#23` | UNSCOPED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The reader is Labrador's, so the engine part is a report with an exhibit; Steam Input covers a Steam release. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |

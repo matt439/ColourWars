@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/series_stage_rule.h"
 #include "game/states/match_start.h"
 #include "game/states/end_menu.h"
 #include "game/build_info.h"
@@ -383,39 +384,92 @@ MainMenuModeSelect::MainMenuModeSelect(MenuContext* context) :
 
 }
 
-std::unique_ptr<OptionRow> MainMenuModeSelect::make_duration_row(RenderResources* render,
-	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
-	OptionRow::Adjust on_adjust)
+std::unique_ptr<OptionRow> MainMenuModeSelect::make_setup_row(const std::string& name, MenuItem item,
+	int row, RenderResources* render, const MenuStyle& style, const MainMenuPresentation& look,
+	const MenuText& text, OptionRow::Adjust on_adjust)
 {
 	MenuStyle row_style = style;
 	row_style.highlight = look.art.focus_ink;
 	row_style.unhighlight = look.art.ink;
 	row_style.disabled = look.art.disabled_ink;
 	row_style.shadow_colour = Colour{};
-	return std::make_unique<OptionRow>("duration", text.item(MenuItem::match_length),
-		style.layout.position + Vector2F(0.0f, look.mode_select_spacing.y * 5.0f),
-		style.layout.position + Vector2F(look.mode_select_spacing.x * 2.0f, look.mode_select_spacing.y * 5.0f),
+	const float y = look.mode_select_spacing.y * static_cast<float>(row);
+	return std::make_unique<OptionRow>(name, text.item(item),
+		style.layout.position + Vector2F(0.0f, y),
+		style.layout.position + Vector2F(look.mode_select_spacing.x * 2.0f, y),
 		row_style, look.art.ink, render, std::move(on_adjust));
 }
 
-void MainMenuModeSelect::check_duration_row(const OptionRow& duration_row,
+std::unique_ptr<OptionRow> MainMenuModeSelect::make_duration_row(RenderResources* render,
+	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+	OptionRow::Adjust on_adjust)
+{
+	return make_setup_row("duration", MenuItem::match_length, DURATION_ROW, render, style, look, text,
+		std::move(on_adjust));
+}
+
+std::unique_ptr<OptionRow> MainMenuModeSelect::make_stage_rule_row(RenderResources* render,
+	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+	OptionRow::Adjust on_adjust)
+{
+	return make_setup_row("series_stage", MenuItem::series_stage, STAGE_RULE_ROW, render, style, look, text,
+		std::move(on_adjust));
+}
+
+bool MainMenuModeSelect::setup_row_fits(const OptionRow& row_widget,
 	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
 {
 	const float pen = art.keyline_width;
 	const float shade = art.shadow_offset;
 	const RectangleF inside(panel.position() + Vector2F(pen * 3.0f),
 		panel.size() - Vector2F(pen * 6.0f + shade));
-	RectangleF row = duration_row.bounds();
+	RectangleF row = row_widget.bounds();
 	row.inflate(art.focus_padding);
 	const RectangleF arrow(row.x - pen * 7.0f, row.center().y - pen * 3.0f,
 		pen * 5.0f, pen * 6.0f);
 	const RectangleF ornament = RectangleF::union_of(arrow, RectangleF::union_of(row,
 		RectangleF(row.position() + Vector2F(shade), row.size())));
-	if (!std::isfinite(row.x) || !std::isfinite(row.y) || !std::isfinite(row.width) || !std::isfinite(row.height) ||
-		row.width <= 0.0f || row.height <= 0.0f || !std::isfinite(row_spacing) || row_spacing <= 0.0f ||
-		!inside.contains(ornament) || std::max(row.height + shade, pen * 6.0f) > row_spacing)
+	return std::isfinite(row.x) && std::isfinite(row.y) && std::isfinite(row.width) && std::isfinite(row.height) &&
+		row.width > 0.0f && row.height > 0.0f && std::isfinite(row_spacing) && row_spacing > 0.0f &&
+		inside.contains(ornament) && std::max(row.height + shade, pen * 6.0f) <= row_spacing;
+}
+
+void MainMenuModeSelect::check_duration_row(const OptionRow& duration_row,
+	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
+{
+	if (!setup_row_fits(duration_row, panel, art, row_spacing))
 	{
 		throw std::runtime_error("main_menu.mode_select_spacing: the complete duration row must fit main_menu.setup_box_size.");
+	}
+}
+
+void MainMenuModeSelect::check_stage_rule_row(const OptionRow& stage_rule_row,
+	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
+{
+	if (!setup_row_fits(stage_rule_row, panel, art, row_spacing))
+	{
+		throw std::runtime_error("main_menu.mode_select_spacing: the complete series stage row must fit main_menu.setup_box_size.");
+	}
+}
+
+void MainMenuModeSelect::validate_stage_rules(RenderResources* render, const Presentation& presentation)
+{
+	const MenuStyle& style = presentation.menu();
+	const MainMenuPresentation& look = presentation.main_menu();
+	const MenuText& text = presentation.menu_text();
+	const RectangleF panel((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
+		look.setup_box_size);
+	MenuPaperArtPresentation art = look.art;
+	art.focus_padding = look.setup_focus_padding;
+	art.shadow_offset = look.setup_shadow_offset;
+	for (const SeriesStageRule rule : { SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick })
+	{
+		const std::wstring& value = text.series_stage_value(rule);
+		drawable_text::check_font_can_draw(render, style.item_font, value,
+			std::string("presentation.json: menu_text.values.series_stage_") + series_stage_rule_key(rule));
+		auto row = make_stage_rule_row(render, style, look, text);
+		row->set_value(value);
+		check_stage_rule_row(*row, panel, art, look.mode_select_spacing.y);
 	}
 }
 
@@ -478,6 +532,38 @@ void MainMenuModeSelect::cycle_duration(Direction direction)
 	this->refresh_duration();
 }
 
+Vector2F MainMenuModeSelect::practice_hint_position(const UiWidget& single_match,
+	const MenuPaperArtPresentation& art)
+{
+	const RectangleF label = single_match.bounds();
+	return Vector2F(label.right() + art.focus_padding.x * 2.0f + art.shadow_offset, label.y);
+}
+
+void MainMenuModeSelect::refresh_stage_rule()
+{
+	const std::wstring& value = this->text().series_stage_value(this->level_settings()->series_stage_rule());
+	const size_t missing = this->render_resources()->first_unrenderable(this->duration_font_, value);
+	if (missing != std::wstring::npos)
+	{
+		throw std::runtime_error("menu_text.values.series_stage cannot draw character at index " +
+			std::to_string(missing) + " with the captured item font '" + this->duration_font_name_ + "'.");
+	}
+	this->stage_rule_row_->set_value(value);
+	check_stage_rule_row(*this->stage_rule_row_, this->paper_->rectangle(), this->setup_art_,
+		this->duration_row_spacing_);
+}
+
+void MainMenuModeSelect::cycle_stage_rule(Direction direction)
+{
+	constexpr std::array<SeriesStageRule, 3> rules{
+		SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick };
+	const auto found = std::find(rules.begin(), rules.end(), this->level_settings()->series_stage_rule());
+	size_t slot = found == rules.end() ? 0 : static_cast<size_t>(found - rules.begin());
+	slot = direction == Direction::left ? (slot + rules.size() - 1) % rules.size() : (slot + 1) % rules.size();
+	this->level_settings()->set_series_stage_rule(rules[slot]);
+	this->refresh_stage_rule();
+}
+
 void MainMenuModeSelect::update_page(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
@@ -500,11 +586,13 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 		{
 			this->play_wave(this->direction_sound_);
 		}
-		else if (this->focus_.focused(0) == this->duration_row_.get() &&
+		else if ((this->focus_.focused(0) == this->duration_row_.get() ||
+			this->focus_.focused(0) == this->stage_rule_row_.get()) &&
 			(input.direction == Direction::left || input.direction == Direction::right))
 		{
 			this->play_wave(this->direction_sound_);
-			this->duration_row_->adjust(input.direction);
+			(this->focus_.focused(0) == this->duration_row_.get() ?
+				this->duration_row_ : this->stage_rule_row_)->adjust(input.direction);
 			this->press_focus();
 		}
 	}
@@ -577,7 +665,7 @@ void MainMenuModeSelect::init()
 		"practice",
 		this->text().solo_practice_hint,
 		style.detail_font,
-		this->calculate_widget_position(0, 7),
+		practice_hint_position(*this->standard_, this->setup_art_),
 		this->render_resources(),
 		look.art.ink,
 		Colour{},
@@ -587,7 +675,7 @@ void MainMenuModeSelect::init()
 		"back",
 		this->text().item(MenuItem::back),
 		style.item_font,
-		this->calculate_widget_position(0, 6),
+		this->calculate_widget_position(0, BACK_ROW),
 		this->render_resources(),
 		look.art.ink,
 		Colour{},
@@ -598,12 +686,15 @@ void MainMenuModeSelect::init()
 	this->duration_row_spacing_ = look.mode_select_spacing.y;
 	this->duration_row_ = make_duration_row(this->render_resources(), style, look, this->text(),
 		[this](Direction direction) { this->cycle_duration(direction); });
+	this->stage_rule_row_ = make_stage_rule_row(this->render_resources(), style, look, this->text(),
+		[this](Direction direction) { this->cycle_stage_rule(direction); });
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
 			look.setup_box_size),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
 		&this->focus_motion_, &this->save()->play_settings());
 	this->refresh_duration();
+	this->refresh_stage_rule();
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -617,6 +708,7 @@ void MainMenuModeSelect::init()
 	this->text_container_->add_child(this->best_of_three_.get());
 	this->text_container_->add_child(this->best_of_five_.get());
 	this->text_container_->add_child(this->duration_row_.get());
+	this->text_container_->add_child(this->stage_rule_row_.get());
 	this->text_container_->add_child(this->practice_.get());
 	this->text_container_->add_child(this->back_.get());
 
@@ -634,6 +726,11 @@ void MainMenuModeSelect::init()
 		{
 			this->play_wave(this->direction_sound_);
 			this->cycle_duration(Direction::right);
+		});
+	this->focus_.add(this->stage_rule_row_.get(), [this]
+		{
+			this->play_wave(this->direction_sound_);
+			this->cycle_stage_rule(Direction::right);
 		});
 
 	this->focus_.add(this->back_.get(), [this]

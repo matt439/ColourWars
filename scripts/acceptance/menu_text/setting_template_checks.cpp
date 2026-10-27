@@ -57,8 +57,9 @@ namespace menu_text_acceptance
         };
         add_font("menu_duration_right", 1136, 16, 0.5f, 0.0f);
         add_font("menu_duration_right_overflow", 1136, 16, 0.75f, 0.0f);
-        add_font("menu_duration_height", 8, 82, 0.0f, 0.5f);
-        add_font("menu_duration_height_overflow", 8, 82, 0.0f, 0.75f);
+        // Mode's rows are 96 apart since the Series stage row (ROAD#20).
+        add_font("menu_duration_height", 8, 78, 0.0f, 0.5f);
+        add_font("menu_duration_height_overflow", 8, 78, 0.0f, 0.75f);
         add_font("menu_duration_missing_plus", 8, 16, 0.0f, 0.0f, U'+');
         const auto marker = [](rapidjson::Document& d, const char* font_name)
         {
@@ -86,15 +87,15 @@ namespace menu_text_acceptance
             const auto value_bounds = value_widget->bounds();
             require(value_widget->text() == L"~4" && value_bounds.position() == value_position &&
                 value_bounds.size() == measured + mattmath::Vector2F(1.5f, 1.5f) &&
-                label_position == mattmath::Vector2F(150.0f, 650.0f) && value_position == mattmath::Vector2F(650.0f, 650.0f),
+                label_position == mattmath::Vector2F(150.0f, 630.0f) && value_position == mattmath::Vector2F(650.0f, 630.0f),
                 "Duration value changed copied text, unscaled font, inherited invisible shadow or authored columns");
             auto padded = row.bounds(); padded.inflate(main.setup_focus_padding);
             require(!right_edge || (measured == mattmath::Vector2F(1144.5f, 20.0f) &&
                 padded.right() + main.setup_shadow_offset == 1826.0f),
                 "Duration right-edge oracle no longer touches the actual setup interior at 1826");
-            require(!height_edge || (measured == mattmath::Vector2F(16.0f, 82.5f) &&
-                padded.height + main.setup_shadow_offset == 100.0f),
-                "Duration height oracle no longer exactly touches its 100-unit complete-row limit");
+            require(!height_edge || (measured == mattmath::Vector2F(16.0f, 78.5f) &&
+                padded.height + main.setup_shadow_offset == 96.0f),
+                "Duration height oracle no longer exactly touches its 96-unit complete-row limit");
             const mattmath::RectangleF panel((mattmath::Vector2F(1920.0f, style.footer_y) - main.setup_box_size) / 2.0f,
                 main.setup_box_size);
             MenuPaperArtPresentation art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
@@ -119,7 +120,7 @@ namespace menu_text_acceptance
         require(world.render.measure_text(world.render.resolve_sprite_font("menu_duration_right_overflow"), L"~4") ==
             mattmath::Vector2F(1144.75f, 20.0f) &&
             world.render.measure_text(world.render.resolve_sprite_font("menu_duration_height_overflow"), L"~4") ==
-            mattmath::Vector2F(16.0f, 82.75f), "Duration overflow fixtures no longer add exactly one quarter unit");
+            mattmath::Vector2F(16.0f, 78.75f), "Duration overflow fixtures no longer add exactly one quarter unit");
         rejected("mode_select_spacing", [&] { complete(authored, right_overflow); });
         rejected("mode_select_spacing", [&] { complete(authored, height_overflow); });
 
@@ -150,6 +151,11 @@ namespace menu_text_acceptance
             d["main_menu"]["mode_select_spacing"]["x"].SetFloat(790.0f);
             d["menu_text"]["values"]["duration_minutes"].SetString("{value}");
             d["menu_text"]["values"]["duration_default"].SetString("{value}");
+            // The Series stage values share this column (ROAD#20), so they
+            // must be as short as these values.
+            d["menu_text"]["values"]["series_stage_same"].SetString("S");
+            d["menu_text"]["values"]["series_stage_rotate"].SetString("R");
+            d["menu_text"]["values"]["series_stage_losers_pick"].SetString("L");
         });
         narrow.validate_resources(world.render, world.audio);
         complete(authored, narrow);

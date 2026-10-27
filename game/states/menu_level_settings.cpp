@@ -293,6 +293,17 @@ std::wstring MenuLevelSettings::player_label(int player_index, const MenuText& t
 	return text.roster_label(player_index, this->device_slot(player.num));
 }
 
+SeriesStageRule MenuLevelSettings::series_stage_rule() const
+{
+	return this->series_stage_rule_;
+}
+
+void MenuLevelSettings::set_series_stage_rule(SeriesStageRule rule)
+{
+	std::ignore = series_stage_rule_key(rule);
+	this->series_stage_rule_ = rule;
+}
+
 int MenuLevelSettings::best_of() const
 {
 	return this->best_of_;

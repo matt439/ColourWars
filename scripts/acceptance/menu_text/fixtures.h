@@ -63,7 +63,7 @@ namespace menu_text_acceptance
         { "options", L"Left/Right Change    A/Enter Select    B/Esc Back" },
         { "controls", L"Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)" },
         { "sticks", L"D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)" },
-        { "mode", L"A/Enter Select    Left/Right Match length    B/Esc Back" },
+        { "mode", L"A/Enter Select    Left/Right Change    B/Esc Back" },
         { "join", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot" },
         { "team", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" },
         { "team_shuffle", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams" },
@@ -345,7 +345,7 @@ namespace menu_text_acceptance
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
         { "keyboard_jump", L"Keyboard Jump" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
         { "watch_replay", L"Watch Replay" },
-        { "profiles", L"Profiles" }
+        { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }
     };
 
     struct World

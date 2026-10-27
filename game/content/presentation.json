@@ -190,7 +190,10 @@
       "duration_minutes": "{value} min",
       "duration_default": "Default ({value})",
       "resolution": "{width}x{height}",
-      "shared": "Shared ({value})"
+      "shared": "Shared ({value})",
+      "series_stage_same": "Same stage",
+      "series_stage_rotate": "Rotate",
+      "series_stage_losers_pick": "Loser's pick"
     },
     "confirmations": {
       "restart": "Are you sure you want to restart?",
@@ -247,7 +250,9 @@
       "solo_roster": "{players} PLAYER",
       "versus_roster": "{players} PLAYERS / 2 TEAMS",
       "numbered_navigation": "<   ARENA {index} / {total}   >",
-      "random_hint": "Random: {count} available arenas.\nConfirm to lock your choice."
+      "random_hint": "Random: {count} available arenas.\nConfirm to lock your choice.",
+      "team_a_picks": "Team A picks the arena",
+      "team_b_picks": "Team B picks the arena"
     },
     "records": {
       "new_best": "NEW BEST",
@@ -307,7 +312,7 @@
       "options": "Left/Right Change    A/Enter Select    B/Esc Back",
       "controls": "Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)",
       "sticks": "D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)",
-      "mode": "A/Enter Select    Left/Right Match length    B/Esc Back",
+      "mode": "A/Enter Select    Left/Right Change    B/Esc Back",
       "join": "A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
       "team": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
       "team_shuffle": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",
@@ -368,7 +373,8 @@
       "pad_buttons": "Pad Buttons",
       "rumble": "Rumble",
       "watch_replay": "Watch Replay",
-      "profiles": "Profiles"
+      "profiles": "Profiles",
+      "series_stage": "Series stage"
     }
   },
 
@@ -435,7 +441,7 @@
       "x_offset": 250.0,
       "max_width": 920.0
     },
-    "mode_select_spacing": { "x": 250.0, "y": 100.0 },
+    "mode_select_spacing": { "x": 250.0, "y": 96.0 },
     "player_count_spacing": { "x": 250.0, "y": 100.0 },
     "team_select": {
       "warning_position": { "x": 150.0, "y": 860.0 },

@@ -94,6 +94,7 @@ void PresentationTarget::validate(std::string_view candidate_text, const std::st
 		// box against its heading: startup's checks that need the resources.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
 		MainMenuModeSelect::validate_durations(context->render_resources(), *this->tuning_, *candidate);
+		MainMenuModeSelect::validate_stage_rules(context->render_resources(), *candidate);
 	}
 	this->candidate_ = std::move(candidate);
 }
