@@ -2031,7 +2031,7 @@ Validation checks Watch Replay on row 1, the setup actions on both their rows,
 and Exit on rows 1 and 5.
 
 The `instant_replay` acceptance case plays a 20 s round on each of the five
-arenas, as `GameLevel` plays it: a full intro, three shipping bots, a scripted
+arenas and the Ferry Trial, whose movers follow the paint, as `GameLevel` plays it: a full intro, three shipping bots, a scripted
 pad human and a pause with a held jump. It then rebuilds the round as Watch
 Replay does and requires every taped step to match: player boxes, states, team
 colours and projectile count, then the final paint. Leaving out the pause's

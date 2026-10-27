@@ -22,7 +22,8 @@ namespace
     public:
         explicit World(const std::filesystem::path& content) : assets(content)
         {
-            for (const char* stage : { "crossfeed", "turbulence", "king_of_the_hill", "close_quarters", "press_tower" })
+            for (const char* stage : { "crossfeed", "turbulence", "king_of_the_hill", "close_quarters", "press_tower",
+                "turbulence_ferry_trial" })
             {
                 auto info = std::make_unique<LevelLoadedInfo>((content / "levels" /
                     (std::string(stage) + ".json")).string().c_str());
@@ -220,7 +221,9 @@ int main(int argc, char** argv)
         World world(std::filesystem::absolute(argv[1]));
         check_tape_rules();
         unsigned int seed = 19019;
-        for (const char* stage : { "crossfeed", "turbulence", "king_of_the_hill", "close_quarters", "press_tower" })
+        // The ferry trial's movers follow the paint, so they replay only if it does.
+        for (const char* stage : { "crossfeed", "turbulence", "king_of_the_hill", "close_quarters", "press_tower",
+            "turbulence_ferry_trial" })
         {
             check_stage(world, stage, seed++);
         }
