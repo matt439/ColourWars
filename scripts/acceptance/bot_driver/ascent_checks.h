@@ -110,19 +110,27 @@ namespace bot_ascent_acceptance
                 "An unpaintable descent landing released exploration before reaching scoring ground");
             if (paintable) { continue; }
 
-            // A stuck turn on that non-scoring ground ends the latch: a floor
-            // whose only exit is a climb must not hold the bot for its life.
-            // Blocked-movement jumps may fire while stuck; only the jump after
-            // recovery, with motion restored, shows the released ascent.
-            view.velocity.x = 0.0f;
+            // Stuck turns on that non-scoring ground, blocked both ways, end
+            // the latch: a floor whose only exit is a climb must not hold the
+            // bot for its life. One dead end alone still walks out. Blocked
+            // jumps may fire while stuck; only a jump after recovery, with
+            // motion restored, shows the released ascent. Motion returns as
+            // soon as each turn has surely begun: blocked steps keep counting
+            // through recovery and would turn again.
             const BotTuning& policy = tuning.bots();
-            for (int step = 0; step < policy.stuck_turn_steps + policy.recovery_steps +
-                tuning.bot(difficulty).reaction_steps * 2 + 1; ++step) { (void)bot.think(view); }
-            view.velocity.x = tuning.player().x_initial_velocity * 0.5f;
-            bool released = false;
-            for (int step = 0; step < tuning.bot(difficulty).reaction_steps * 2 + 1; ++step)
-            { released = bot.think(view).jump_pressed || released; }
-            require(released, "A stuck turn after a non-scoring descent landing kept ascent exploration disabled");
+            const int reaction = tuning.bot(difficulty).reaction_steps;
+            for (const bool second : { false, true })
+            {
+                view.velocity.x = 0.0f;
+                for (int step = 0; step < policy.stuck_turn_steps + reaction * 2; ++step) { (void)bot.think(view); }
+                view.velocity.x = tuning.player().x_initial_velocity * 0.5f;
+                bool released = false;
+                for (int step = 0; step < policy.recovery_steps + reaction * 2 + 1; ++step)
+                { released = bot.think(view).jump_pressed || released; }
+                require(released == second, second ?
+                    "A second stuck turn after a non-scoring descent landing kept ascent exploration disabled" :
+                    "One stuck turn after a non-scoring descent landing released ascent exploration");
+            }
         }
     }
 

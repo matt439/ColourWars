@@ -97,6 +97,7 @@ private:
 	int ascent_steps_left_ = 0;
 	bool seeking_after_descent_ = false;
 	bool descent_airborne_ = false;
+	int descent_turns_ = 0;
 	mattmath::RectangleF ascent_support_;
 	mattmath::Vector2F ascent_takeoff_;
 	std::vector<mattmath::RectangleF> visited_supports_;
