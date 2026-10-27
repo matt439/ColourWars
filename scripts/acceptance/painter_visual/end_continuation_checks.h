@@ -130,7 +130,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         require(readbacks < 94, "End continuation exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    const RectangleF primary_region(630.0f, 300.0f, 810.0f, 144.0f);
+    const RectangleF primary_region(630.0f, 270.0f, 810.0f, 144.0f);
     struct ContinuationMetrics { Vector2F raw; RectangleF primary; RectangleF selected; } metrics;
     const auto reference = [&](const ContinuationCase& fixture, const Presentation& snapshot,
         const std::wstring& literal, int focused, const std::string& font)

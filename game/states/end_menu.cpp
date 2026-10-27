@@ -33,8 +33,8 @@ bool EndMenuPage::debug_dismiss(bool leaving_match)
 	return true;
 }
 
-EndMenuInitial::EndMenuInitial(MenuContext* context, const Session& session) :
-	EndMenuPage(context), session_(session)
+EndMenuInitial::EndMenuInitial(MenuContext* context, const Session& session, bool replay) :
+	EndMenuPage(context), session_(session), replay_(replay)
 {
 
 }
@@ -63,6 +63,11 @@ void EndMenuInitial::init()
 	const MenuStyle& style = this->menu_style();
 	const EndMenuPresentation& look = this->look();
 	const bool ongoing = this->session_.is_series() && !this->session_.complete();
+	// The continuation is row 0. Watch Replay follows it when there is one;
+	// between rounds Change Teams is hidden and the rest move up a row.
+	const int replay_rows = this->replay_ ? 1 : 0;
+	const int teams_row = 1 + replay_rows;
+	const int setup_row = ongoing ? teams_row : teams_row + 1;
 
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink });
 
@@ -88,6 +93,14 @@ void EndMenuInitial::init()
 		"change_teams",
 		this->text().item(MenuItem::change_teams),
 		style.item_font,
+		this->calculate_widget_position(0, teams_row),
+		this->render_resources(),
+		look.art.ink);
+
+	this->watch_replay_ = std::make_unique<UiText>(
+		"watch_replay",
+		this->text().item(MenuItem::watch_replay),
+		style.item_font,
 		this->calculate_widget_position(0, 1),
 		this->render_resources(),
 		look.art.ink);
@@ -96,7 +109,7 @@ void EndMenuInitial::init()
 		"change_weapons",
 		this->text().item(MenuItem::change_weapons),
 		style.item_font,
-		this->calculate_widget_position(0, ongoing ? 1 : 2),
+		this->calculate_widget_position(0, setup_row),
 		this->render_resources(),
 		look.art.ink);
 
@@ -104,7 +117,7 @@ void EndMenuInitial::init()
 		"change_level",
 		this->text().item(MenuItem::change_level),
 		style.item_font,
-		this->calculate_widget_position(0, ongoing ? 2 : 3),
+		this->calculate_widget_position(0, setup_row + 1),
 		this->render_resources(),
 		look.art.ink);
 
@@ -120,7 +133,7 @@ void EndMenuInitial::init()
 		"exit",
 		this->text().item(MenuItem::exit_to_main_menu),
 		style.item_font,
-		this->calculate_widget_position(0, ongoing ? 3 : 4),
+		this->calculate_widget_position(0, setup_row + 2),
 		this->render_resources(),
 		look.art.ink);
 
@@ -140,6 +153,7 @@ void EndMenuInitial::init()
 	this->text_container_->add_child(this->box_.get());
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->restart_.get());
+	this->text_container_->add_child(this->watch_replay_.get());
 	this->text_container_->add_child(this->change_teams_.get());
 	this->text_container_->add_child(this->change_weapons_.get());
 	this->text_container_->add_child(this->change_level_.get());
@@ -170,8 +184,14 @@ void EndMenuInitial::init()
 		};
 
 	this->change_teams_->set_hidden(ongoing);
+	this->watch_replay_->set_hidden(!this->replay_);
 	this->focus_.add(this->restart_.get(),
 		[choose] { choose(EndMenuAction::restart, true); });
+	if (this->replay_)
+	{
+		this->focus_.add(this->watch_replay_.get(),
+			[choose] { choose(EndMenuAction::watch_replay, true); });
+	}
 	if (ongoing)
 	{
 		this->focus_.add(this->change_weapons_.get(), [repick] { repick(true); });

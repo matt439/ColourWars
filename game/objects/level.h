@@ -107,6 +107,9 @@ public:
 	// A suspend also resets every player's jump input, so a jump held across
 	// the menu is not taken as a new press.
 	void suspend() const;
+	// What suspend does to the players, without pausing a voice: an instant
+	// replay repeats a round's suspends where they happened (game/round_tape.h).
+	void interrupt_players() const;
 	void resume();
 	// The top state supplies one active real-time tick, even under pause pages.
 	// Simulation, replay steps and drawing never advance these music ramps.
@@ -141,6 +144,8 @@ public:
 	void draw(labrador::Renderer& renderer) const;
 	// Shared paper signal over the frozen panes; this never advances the world.
 	void draw_resume_countdown(labrador::Renderer& renderer, float remaining) const;
+	// The card that says the panes are an instant replay, not the live round.
+	void draw_replay_banner(labrador::Renderer& renderer) const;
 
 	LevelState state() const;
 	// Skip the countdown to GO!, for a practice rebuild that keeps the
@@ -329,6 +334,8 @@ private:
 	mattmath::RectangleF countdown_number_box_;
 	std::unique_ptr<labrador::TextDropShadow> countdown_heading_ = nullptr;
 	std::unique_ptr<labrador::TextDropShadow> resume_heading_;
+	std::unique_ptr<labrador::TextDropShadow> replay_heading_;
+	mattmath::RectangleF replay_card_;
 	mattmath::RectangleF countdown_card_;
 	std::unique_ptr<labrador::TextDropShadow> stage_entry_;
 	mattmath::RectangleF stage_entry_card_;

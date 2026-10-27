@@ -54,9 +54,10 @@ namespace menu_text_acceptance
         const float left_position = top.x + end.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - end.art.focus_padding.x;
         // The first static label is row 1. Exit sits on row 3 between a
-        // series' rounds and row 4 after a completed match or series; the
-        // validation checks rows 1 and 4, which bound every row between.
-        const float bottom_position = bottom.y - 4.0f * end.layout.spacing.y -
+        // series' rounds and row 4 after a completed match or series, a row
+        // lower under Watch Replay; the validation checks rows 1 and 5, which
+        // bound every row between. Watch Replay, on row 1, is checked first.
+        const float bottom_position = bottom.y - 5.0f * end.layout.spacing.y -
             20.0f - end.art.focus_padding.y;
         const auto paper_edge = [&](const char* axis, float position, const char* field, float outside)
         {
@@ -73,17 +74,17 @@ namespace menu_text_acceptance
                 d["end_menu"]["layout"]["position"][axis].SetFloat(outside);
             }, &world);
         };
-        paper_edge("x", left_position, "items.change_teams", left_position - 0.25f);
-        paper_edge("x", right_position, "items.change_teams", right_position + 0.25f);
+        paper_edge("x", left_position, "items.watch_replay", left_position - 0.25f);
+        paper_edge("x", right_position, "items.watch_replay", right_position + 0.25f);
         // A row-1 card at the paper top would put continuation row 0 above
         // the paper, leaving no valid heading before it. Heading paper-top
         // and first-row contacts are tested independently below instead.
         // Exact bottom contact is below the shared footer but within End's
-        // full-height paper. At the failing position, rows 1-3 still fit;
-        // only completed-match Exit on row 4 crosses that paper's boundary.
-        require(bottom_position + end.layout.spacing.y * 3.0f + 20.0f +
+        // full-height paper. At the failing position, rows 1-4 still fit;
+        // only Exit on row 5, below Watch Replay, crosses that paper's boundary.
+        require(bottom_position + end.layout.spacing.y * 4.0f + 20.0f +
             end.art.focus_padding.y + 0.25f < bottom.y,
-            "End row-4 overflow fixture also overflows its earlier static action rows");
+            "End row-5 overflow fixture also overflows its earlier static action rows");
         paper_edge("y", bottom_position, "items.exit_to_main_menu", bottom_position + 0.25f);
 
         const float row_height = 20.0f + 2.0f * end.art.focus_padding.y;
@@ -94,7 +95,7 @@ namespace menu_text_acceptance
         };
         const auto fits_row = variants.load(row_edge);
         fits_row.validate_resources(world.render, world.audio);
-        variants.rejects("items.change_teams", [&](rapidjson::Document& d)
+        variants.rejects("items.watch_replay", [&](rapidjson::Document& d)
         {
             row_edge(d);
             d["end_menu"]["layout"]["spacing"]["y"].SetFloat(std::nextafter(row_height, 0.0f));
@@ -212,11 +213,12 @@ namespace menu_text_acceptance
         };
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& end = original.end_menu();
-        require(end.box_size == mattmath::Vector2F(980.0f, 820.0f),
+        require(end.box_size == mattmath::Vector2F(980.0f, 900.0f),
             "End heading fixtures no longer exercise the shipped full-height paper");
         add_font("menu_end_heading_width_edge", 980, 20);
         add_font("menu_end_heading_width_overflow", 981, 20);
         add_font("menu_end_heading_action_edge", 8, 20);
+        add_font("menu_end_heading_tall_edge", 8, 40);
         for (const auto& entry : end_text)
         {
             const std::string field = std::string("end.") + entry.key;
@@ -254,18 +256,18 @@ namespace menu_text_acceptance
         {
             d["menu_style"]["fonts"]["heading"].SetString("menu_text_exact");
             for (const auto& entry : end_text) { d["menu_text"]["end"][entry.key].SetString("Fit"); }
-            d["end_menu"]["heading_y"].SetFloat(130.0f);
+            d["end_menu"]["heading_y"].SetFloat(90.0f);
         };
         const auto touches_top = variants.load(paper_top);
         touches_top.validate_resources(world.render, world.audio);
         variants.rejects("end.match_complete", [&](rapidjson::Document& d)
         {
             paper_top(d);
-            d["end_menu"]["heading_y"].SetFloat(129.75f);
+            d["end_menu"]["heading_y"].SetFloat(89.75f);
         }, &world);
 
-        // The heading's unscaled bottom at920 is below a footer-centered
-        // paper's bottom890, but fits the actual full-height paper bottom950.
+        // The heading's unscaled bottom at940 is below a footer-centered
+        // paper's bottom930, but fits the actual full-height paper bottom990.
         std::vector<Glyph> small_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
@@ -275,18 +277,18 @@ namespace menu_text_acceptance
             std::make_unique<Font>(TextureHandle{}, std::move(small_glyphs), 2.0f));
         const auto full_height = variants.load([&](rapidjson::Document& d)
         {
-            use_font(d, "menu_end_heading_action_edge", "match_complete");
+            use_font(d, "menu_end_heading_tall_edge", "match_complete");
             for (const auto& entry : end_text) { d["menu_text"]["end"][entry.key].SetString("~"); }
             d["menu_style"]["fonts"]["item"].SetString("menu_end_heading_small_actions");
             d["end_menu"]["heading_y"].SetFloat(900.0f);
-            d["end_menu"]["layout"]["position"]["y"].SetFloat(920.5f);
+            d["end_menu"]["layout"]["position"]["y"].SetFloat(940.5f);
             d["end_menu"]["layout"]["spacing"]["y"].SetFloat(3.0f);
             d["end_menu"]["art"]["focus_padding"]["y"].SetFloat(0.5f);
             d["end_menu"]["art"]["keyline_width"].SetFloat(0.125f);
             d["end_menu"]["art"]["shadow_offset"].SetFloat(0.125f);
         });
         full_height.validate_resources(world.render, world.audio);
-        require(full_height.end_menu().heading_y + 20.0f >
+        require(full_height.end_menu().heading_y + 40.0f >
             (full_height.menu().footer_y + full_height.end_menu().box_size.y) / 2.0f,
             "End heading full-height fixture no longer distinguishes its actual paper from a footer-centered paper");
 
@@ -389,8 +391,8 @@ namespace menu_text_acceptance
         };
         add_font("menu_continue_right", 722, 16);
         add_font("menu_continue_right_overflow", 722, 16, 0.25f);
-        add_font("menu_continue_height", 8, 89);
-        add_font("menu_continue_height_overflow", 8, 89, 0.0f, 0.25f);
+        add_font("menu_continue_height", 8, 82);
+        add_font("menu_continue_height_overflow", 8, 82, 0.0f, 0.25f);
         add_font("menu_continue_zero_width", 0, 20);
         add_font("menu_continue_zero_height", 8, 0, 0.0f, 0.0f, 0.0f);
         add_font("menu_continue_infinite_width", 8, 20, std::numeric_limits<float>::infinity());
@@ -411,12 +413,12 @@ namespace menu_text_acceptance
                 const auto& end = edge.end_menu();
                 const auto measured = world.render.measure_text(world.render.resolve_sprite_font(edge.menu().item_font), L"~");
                 UiText value("continuation", L"~", edge.menu().item_font, end.layout.position, &world.render, end.art.ink);
-                const mattmath::RectangleF paper(470.0f, 130.0f, 980.0f, 820.0f);
-                require(value.bounds() == mattmath::RectangleF(700.0f, 330.0f,
-                    height_edge ? 8.0f : 722.0f, height_edge ? 89.0f : 20.0f) &&
+                const mattmath::RectangleF paper(470.0f, 90.0f, 980.0f, 900.0f);
+                require(value.bounds() == mattmath::RectangleF(700.0f, 300.0f,
+                    height_edge ? 8.0f : 722.0f, height_edge ? 82.0f : 20.0f) &&
                     value.bounds().size() == measured, "Continuation edge fixture changed the actual plain unscaled UiText bounds");
                 auto padded = value.bounds(); padded.inflate(end.art.focus_padding);
-                require(paper.contains(padded) && (height_edge ? padded.height == 125.0f : padded.right() == 1450.0f),
+                require(paper.contains(padded) && (height_edge ? padded.height == 118.0f : padded.right() == 1450.0f),
                     "Continuation edge fixture lost exact inclusive text-plus-focus-padding contact");
                 require(height_edge ? padded.height + end.art.shadow_offset > end.layout.spacing.y :
                     padded.right() + end.art.shadow_offset > paper.right(),
@@ -439,7 +441,7 @@ namespace menu_text_acceptance
             d["menu_style"]["fonts"]["heading"].SetString("menu_text_exact");
             d["menu_style"]["fonts"]["item"].SetString("menu_end_heading_small_actions");
             d["end_menu"]["heading_y"].SetFloat(900.0f);
-            d["end_menu"]["layout"]["position"]["y"].SetFloat(920.5f);
+            d["end_menu"]["layout"]["position"]["y"].SetFloat(940.5f);
             d["end_menu"]["layout"]["spacing"]["y"].SetFloat(3.0f);
             d["end_menu"]["art"]["focus_padding"]["y"].SetFloat(0.5f);
             d["end_menu"]["art"]["keyline_width"].SetFloat(0.125f);
@@ -447,8 +449,8 @@ namespace menu_text_acceptance
         });
         full_height.validate_resources(world.render, world.audio);
         const auto& end = full_height.end_menu();
-        require(end.layout.position.y + 2.0f + end.art.focus_padding.y == 923.0f &&
-            923.0f > (full_height.menu().footer_y + end.box_size.y) / 2.0f && 923.0f < 950.0f,
+        require(end.layout.position.y + 2.0f + end.art.focus_padding.y == 943.0f &&
+            943.0f > (full_height.menu().footer_y + end.box_size.y) / 2.0f && 943.0f < 990.0f,
             "Continuation full-height fixture no longer distinguishes End paper from the menu-footer paper");
         variants.rejects("items.change_teams", [](rapidjson::Document& d)
         {

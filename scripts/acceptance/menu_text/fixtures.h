@@ -340,7 +340,8 @@ namespace menu_text_acceptance
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
-        { "keyboard_jump", L"Keyboard Jump" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" }
+        { "keyboard_jump", L"Keyboard Jump" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
+        { "watch_replay", L"Watch Replay" }
     };
 
     struct World

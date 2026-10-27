@@ -50,6 +50,7 @@
         "countdown": 3.0,
         "zoom_out": 2.0,
         "overview": 2.0,
+        "replay": 8.0,
         "controls_text": {
             "_comment": [
                 "What it says is in level.cpp, next to nothing: it has to agree",

@@ -9,7 +9,8 @@ namespace menu_text_acceptance
         for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back",
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
             "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no",
-            "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults", "keep", "revert" })
+            "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults", "keep", "revert",
+            "watch_replay" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
