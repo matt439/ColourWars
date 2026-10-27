@@ -7,6 +7,15 @@
 
 using namespace mattmath;
 
+namespace
+{
+	// The driver qualified a shot onto this support's own unpainted top.
+	bool ride_target(const MatchBotObservation& view, const MatchBotSupport& support)
+	{
+		return view.support_open && view.support_paint && view.support_bounds == support.bounds;
+	}
+}
+
 MatchBot::MatchBot(const GameTuning* tuning, BotDifficulty difficulty, std::uint64_t seed) :
 	tuning_(tuning), difficulty_(difficulty), random_state_(seed)
 {
@@ -45,7 +54,24 @@ bool MatchBot::finishing() const
 	return this->finish_pending_ || this->finish_left_ > 0;
 }
 
-void MatchBot::open_finish(const MatchBotObservation& view)
+bool MatchBot::riding() const
+{
+	return this->riding_;
+}
+
+const MatchBotSupport* MatchBot::moving_support(const MatchBotObservation& view) const
+{
+	if (!view.grounded) { return nullptr; }
+	const float feet = view.center.y + view.size.y * 0.5f;
+	for (const MatchBotSupport& support : view.supports)
+	{
+		if (support.moving && support.paintable && std::fabs(feet - support.bounds.top()) < 0.1f &&
+			view.center.x >= support.bounds.left() && view.center.x <= support.bounds.right()) { return &support; }
+	}
+	return nullptr;
+}
+
+void MatchBot::open_finish(const MatchBotObservation& view, const MatchBotSupport& support)
 {
 	// Long enough to recover the ordinary reserve hysteresis and then pass one
 	// cooldown. Firing rules are unchanged; the bot only stays to use them.
@@ -60,8 +86,11 @@ void MatchBot::open_finish(const MatchBotObservation& view)
 	}
 	const double budget = refill + std::ceil(static_cast<double>(
 		this->tuning_->weapon(view.weapon).details.shoot_interval) * 60.0) + policy.finish_dwell_steps;
-	this->finish_support_ = this->ascent_support_;
+	this->finish_support_ = support;
 	this->finish_left_ = static_cast<int>(std::min(budget, 3600.0));
+	// A ride's hold is bounded, even while unpainted top remains in sight.
+	if (support.moving && same_support(support, this->ride_support_))
+	{ this->finish_left_ = std::min(this->finish_left_, this->ride_hold_left_); }
 }
 
 void MatchBot::choose_territory(const MatchBotObservation& view)
@@ -214,7 +243,17 @@ void MatchBot::decide(const MatchBotObservation& view)
 	{
 		this->finish_pending_ = false;
 		if (!recovering && enemy == nullptr && !this->ascending_ && !this->climbing_ramp_ &&
-			view.grounded && view.support_open) { this->open_finish(view); }
+			view.grounded && view.support_open) { this->open_finish(view, this->ascent_support_); }
+	}
+	// A bot riding a moving paintable support stays and paints its visible
+	// unpainted top, however it got there, for a bounded hold per ride.
+	// Only a qualified shot onto that top holds it: a sliver that no shot
+	// reaches does not.
+	if (this->finish_left_ == 0 && !recovering && enemy == nullptr && !this->ascending_ &&
+		!this->climbing_ramp_ && this->ride_hold_left_ > 0)
+	{
+		const MatchBotSupport* mover = this->moving_support(view);
+		if (mover != nullptr && ride_target(view, *mover)) { this->open_finish(view, *mover); }
 	}
 	const bool finishing = this->finish_left_ > 0;
 	if (finishing)
@@ -315,6 +354,8 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->descent_turns_ = 0;
 		this->finish_pending_ = false;
 		this->finish_left_ = 0;
+		this->riding_ = false;
+		this->ride_hold_left_ = 0;
 		this->visited_supports_.clear();
 		this->decision_ = neutral;
 		this->aim_error_ = 0.0f;
@@ -368,6 +409,17 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	if (this->finish_left_ > 0 && !view.enemies.empty()) { this->finish_left_ = 0; }
 	else if (this->finish_left_ > 0 && (!view.grounded || this->recovery_left_ > 0))
 	{ this->finish_left_ = 0; this->react_in_ = 1; }
+	// A new ride starts a fresh hold; the hold counts down while riding.
+	const MatchBotSupport* mover = this->moving_support(view);
+	if (mover == nullptr) { this->ride_hold_left_ = 0; }
+	else if (!this->riding_ || !same_support(*mover, this->ride_support_))
+	{ this->ride_support_ = *mover; this->ride_hold_left_ = policy.mover_hold_steps; }
+	else if (this->ride_hold_left_ > 0) { --this->ride_hold_left_; }
+	this->riding_ = mover != nullptr;
+	// Decide now rather than inheriting a drop through the support.
+	if (mover != nullptr && this->finish_left_ == 0 && this->ride_hold_left_ > 0 && ride_target(view, *mover) &&
+		view.enemies.empty() && this->recovery_left_ == 0 && !this->ascending_ && !this->climbing_ramp_)
+	{ this->react_in_ = std::min(this->react_in_, 1); }
 	if (this->recovery_left_ == 0 && this->replan_in_-- <= 0) { this->choose_territory(view); }
 	if (--this->react_in_ <= 0) { this->decide(view); }
 	PlayerInputData input = this->decision_;

@@ -231,6 +231,47 @@ namespace
 		return view;
 	}
 
+	// A bot riding a moving paintable support holds there while unpainted top
+	// remains in sight, for at most the authored hold per ride, then resumes
+	// its ordinary descent. A static platform with the same paint drops at once.
+	void check_mover_hold(const GameTuning& tuning)
+	{
+		const int hold = tuning.bots().mover_hold_steps;
+		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+		{
+			for (const bool moving : { true, false })
+			{
+				MatchBot bot(&tuning, difficulty, 7);
+				MatchBotObservation view = platform_fixture(tuning, true);
+				view.supports.front().paintable = true;
+				view.supports.front().id = 1;
+				view.supports.front().moving = moving;
+				view.supports.back().id = 2;
+				view.support_open = true;
+				view.support_paint = Vector2F(200.0f, view.size.y * 0.5f - 4.0f);
+				view.support_bounds = view.supports.front().bounds;
+				const int reaction = tuning.bot(difficulty).reaction_steps;
+				int first_drop = -1;
+				for (int step = 0; step < hold + reaction * 4 && first_drop < 0; ++step)
+				{
+					const PlayerInputData input = bot.think(view); ordinary(input);
+					if (input.drop_through) { first_drop = step; }
+					require(!input.jump_pressed, "A bot holding on a support jumped off it");
+				}
+				if (moving)
+				{
+					require(first_drop >= hold, "A bot left a moving support with unpainted top before its hold ended");
+					require(first_drop >= 0, "A bot held on a moving support past its bounded hold");
+				}
+				else
+				{
+					require(first_drop >= 0 && first_drop < hold,
+						"A static platform's top paint held a bot like a moving support");
+				}
+			}
+		}
+	}
+
 	// A refilling bot backs away only from an enemy within that enemy's own
 	// reach plus the authored margin. A farther one leaves its goal in place.
 	void check_refill_retreat(const GameTuning& tuning)
@@ -388,7 +429,7 @@ namespace
 		rejects("reserve_resume", [](auto& d) { d["bots"]["reserve_resume"].SetDouble(0.01); });
 		rejects("stuck_turn_steps", [](auto& d) { d["bots"]["stuck_turn_steps"].SetInt(1); });
 		for (const char* field : { "recovery_steps", "progress_window_steps", "progress_distance",
-			"finish_dwell_steps", "deliberate_shot_interval", "refill_retreat_margin" })
+			"finish_dwell_steps", "deliberate_shot_interval", "refill_retreat_margin", "mover_hold_steps" })
 		{
 			rejects(field, [&](auto& d) { d["bots"].RemoveMember(field); });
 			rejects(field, [&](auto& d) { d["bots"][field].SetInt(0); });
@@ -420,11 +461,12 @@ int wmain(int argc, wchar_t** argv)
 		check_private_sequences(tuning);
 		check_visible_approach(tuning);
 		check_refill_retreat(tuning);
+		check_mover_hold(tuning);
 		check_standing_and_descent(tuning);
 		bot_ascent_acceptance::check(tuning);
 		bot_ascent_approach_acceptance::check(tuning);
 		bot_ramp_acceptance::check(tuning);
-		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
+		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	}
 	catch (const std::exception& error)

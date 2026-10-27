@@ -75,6 +75,8 @@ struct BotTuning
 	// A refilling bot backs away from a visible enemy only within that
 	// enemy's own engagement distance plus this many units.
 	float refill_retreat_margin = 0.0f;
+	// The most steps a bot holds on one moving support per ride to paint it.
+	int mover_hold_steps = 1;
 };
 
 // Match phase durations and countdown presentation.

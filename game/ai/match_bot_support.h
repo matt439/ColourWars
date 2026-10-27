@@ -12,6 +12,8 @@ struct MatchBotSupport
 	// The level object's stable identity, nonzero; zero compares by bounds.
 	// A moving support keeps its identity while its bounds change every step.
 	std::uint32_t id = 0;
+	// A translating support; a bot riding one holds there to paint it.
+	bool moving = false;
 };
 
 struct MatchBotRamp
