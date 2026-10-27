@@ -293,9 +293,14 @@ names are lower-case letters, digits and `_`, unique, not `spawn_a`/`spawn_b`,
 and inside the level's out-of-bounds rectangle; a bad one fails at startup like
 any other level content bug.
 
-The Movement Course names eight, each with its feet 5 units above its surface:
+The Movement Course names ten, each with its feet 5 units above its surface:
 `drop_through`, `short_gap`, `long_gap`, `running_gap` (680 units of run-up),
-`low_ceiling`, `steps`, `high_step`, `recovery_lane`.
+`low_ceiling`, `steps`, `high_step`, `recovery_lane`, `workshop` (beside the
+left spawn) and `refill` (on the right runway).
+Each also carries the lesson untimed solo practice shows there
+([polish-movement-course.md](polish-movement-course.md#practice-workshop));
+`goto` lands inside it. A developer start (`+stage movement_course`) is the
+timed course, so the lessons appear only from the menus' solo practice.
 
 `goto <station> [seat]` puts the seat (1-4, default 1) there at rest: velocity
 zero, airborne for one tick so it settles onto the surface, jump input and

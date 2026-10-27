@@ -7,6 +7,7 @@
 #include "engine/render/colour.h"
 #include "game/objects/player_input_data.h"
 #include "game/input_slots.h"
+#include "game/objects/weapon_type.h"
 
 #include <optional>
 
@@ -45,8 +46,9 @@ void latch_intro_pause(bool intro_playing, std::vector<PlayerInputData>& player_
 class PauseMenuPage : public MenuPage
 {
 public:
-	// Retains the input slot that opened the menu for its lifetime.
-	PauseMenuPage(MenuContext* context, int player_num);
+	// Retains the input slot that opened the menu for its lifetime. A
+	// practice page belongs to untimed solo practice (POL#19).
+	PauseMenuPage(MenuContext* context, int player_num, bool practice = false);
 	~PauseMenuPage() override = default;
 	void init() override = 0;
 	void update_page(float dt) override = 0;
@@ -57,6 +59,7 @@ protected:
 	std::wstring player_number_text() const;
 
 	int pausing_player() const;
+	bool practice() const;
 
 	// Returns an action through the pushed frame, including after page transitions.
 	void finish(PauseMenuAction action) const;
@@ -76,14 +79,18 @@ protected:
 	MenuSound window_open_sound_;
 private:
 	int pausing_player_ = -1;
+	bool practice_ = false;
 };
 
 
 class PauseMenuInitial final : public PauseMenuPage
 {
 public:
-	// Returning from a confirmation keeps the same pause session.
-	PauseMenuInitial(MenuContext* context, int player_num, bool opening = true);
+	// Returning from a confirmation keeps the same pause session. Practice
+	// adds a Tool row under Resume: left/right chooses, select rebuilds the
+	// course clean with that tool where the player stands.
+	PauseMenuInitial(MenuContext* context, int player_num, bool opening = true,
+		bool practice = false);
 	void init() override;
 	void update_page(float dt) override;
 	// Resume (or quit, to leave the match) through the PauseMenuAction frame.
@@ -91,6 +98,8 @@ public:
 private:
 	bool opening_ = true;
 	void refresh_connections();
+	void cycle_tool(labrador::Direction direction);
+	WeaponType tool_choice_ = WeaponType::sprayer;
 	bool waiting_for_players_ = false;
 	// Bit per roster seat whose pad was missing when the texts were last
 	// built. Empty until the first build, so that one always happens.
@@ -102,13 +111,14 @@ private:
 	std::unique_ptr<labrador::UiText> restart_ = nullptr;
 	std::unique_ptr<labrador::UiText> quit_ = nullptr;
 	std::unique_ptr<labrador::UiText> options_ = nullptr;
+	std::unique_ptr<labrador::UiText> tool_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage
 {
 public:
 	PauseMenuConfirmation(MenuContext* context, int player_num,
-		ConfirmationType type);
+		ConfirmationType type, bool practice = false);
 	void init() override;
 	void update_page(float dt) override;
 	bool debug_dismiss(bool leaving_match) override;

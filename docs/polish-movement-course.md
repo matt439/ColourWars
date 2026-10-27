@@ -5,8 +5,9 @@ This is an experimental blockout for the movement work in
 stage selector. Choose **Single Match**, **1 Player (practice)** for solo trials.
 Choose it explicitly for multiplayer trials too; `include_in_random: false`
 keeps this experimental course out of **Random** matches.
-It uses the existing timed match and paint rules; it is not yet the optional
-untimed workshop. Existing arenas are unchanged.
+From the menus' solo practice it is the untimed
+[practice workshop](#practice-workshop); every other roster, and a developer
+start, uses the existing timed match and paint rules. Existing arenas are unchanged.
 
 The source is [movement_course.json](../game/content/levels/movement_course.json).
 Open it directly in the [level editor](level-editor.md), save an experimental
@@ -16,6 +17,69 @@ legacy metadata that no screen draws; Stage Select uses the live arena preview
 deliberately has no music: its `sound` block names the replacement bank only.
 Action cues, including footsteps and landings, use the accepted replacement set;
 optional detail and in-game mix listening remain in `POL#23`.
+
+## Practice workshop
+
+`POL#19`, built 2026-10-27 from the proposal in
+[the polish plan](polish-plan.md#let-players-learn-by-making-a-mess). Choose
+**Single Match**, **1 Player (practice)** and the Movement Course: the match has
+no clock and no end, and the HUD shows no timer. Movement, ammunition, painting,
+respawn and the opening countdown are the ordinary rules. Leave from the pause
+menu (Quit). A bot in the roster, a second human or a developer start
+(`+stage movement_course`) gets the ordinary timed course instead.
+
+**Lessons.** Each of the course's ten stations carries a `lesson`: a title, two
+to four short lines and an `area` rectangle in world units. While the player's
+centre is in an area, a paper card at the bottom of the window shows that
+lesson. It uses the same look as the controls reminder. The areas tile the main
+route from the left spawn to the right runway and the whole recovery floor, and
+they only touch at their edges. `goto <station>` lands inside the station's own
+lesson. The lessons follow the proposal's tasks:
+
+| Station | Lesson |
+|---|---|
+| `workshop` (left spawn) | No clock or score; painted surface wins, eliminations clear room; pause to change tool, start clean or leave |
+| `drop_through` | Jump up through the pale platform, press down to drop back through |
+| `short_gap` | A tap is a short hop that clears this gap from rest |
+| `long_gap` | A held jump from rest crosses; a tap falls short |
+| `running_gap` | Run the whole runway, then hold jump at the edge |
+| `low_ceiling` | The ceiling stops a jump at once; run out from under it still holding jump |
+| `steps` | Tap for the low step, hold for the taller ones |
+| `high_step` | Paint the faces around you, then try the same face with another tool |
+| `refill` (right runway) | Shoot dry (the aim marker shows a cross), stop, and the tank refills |
+| `recovery_lane` (lower floor) | No pits: walk to the nearest pale steps and jump back up |
+
+Lesson text is level content, read and checked at startup. A lesson's area must
+be finite, positive, inside the camera bounds and contain its station. Its
+title and text must be non-blank and drawable in the card's fonts. The
+wording is provisional until a fresh player has been watched using it.
+
+**Tool and clean paint.** The practice pause menu adds a fifth row,
+**Tool: < Sprayer >**, under Resume. Left and right choose among the five
+tools. Select rebuilds the course clean with that tool and puts a living player
+back where they stood. It skips the countdown and goes straight to GO.
+Selecting the tool already held is therefore a clean course in place.
+**Restart** keeps the chosen tool and starts again at the spawn, after the
+countdown and controls reminder. The rows use 0.8 of the authored pause
+spacing so five fit the same paper.
+
+**Evidence.** The `practice_workshop` acceptance case builds the real level
+through `LevelBuilder` and checks the following:
+
+- Every station has a lesson that contains it, and the areas cover the route
+  without overlapping.
+- Solo practice outlasts a one-second duration.
+- `goto` at each station shows that station's lesson, and the card fits a
+  1920x1080 window.
+- A dead player sees no lesson.
+- A timed build still ends, and two humans never get the workshop.
+- A tool-change rebuild starts at GO with the chosen tool.
+- Bad lessons are rejected at load.
+
+**Keep it if** the polish plan's test holds: a fresh player who has used it can
+join an ordinary match knowing how to move, recover paint and choose a useful
+tool without another person explaining the game. That observation is the open
+part of `POL#19`.
 
 ## Dimensions and route
 

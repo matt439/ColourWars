@@ -93,7 +93,8 @@ public:
 		std::vector<LevelStation> stations,
 		OpeningMode opening, std::optional<float> duration = std::nullopt,
 		const InputBindings* input_bindings = nullptr,
-		const MenuLevelSettings* roster = nullptr, std::uint64_t bot_seed = 0);
+		const MenuLevelSettings* roster = nullptr, std::uint64_t bot_seed = 0,
+		std::vector<LevelLesson> lessons = {});
 
 	// Stop the level's voices and player weapon/redraw loops.
 	~Level();
@@ -142,6 +143,20 @@ public:
 	void draw_resume_countdown(labrador::Renderer& renderer, float remaining) const;
 
 	LevelState state() const;
+	// Skip the countdown to GO!, for a practice rebuild that keeps the
+	// player's place. Call before the first update.
+	void start_without_countdown();
+	// Untimed solo practice (POL#19): the level was built with lessons, so its
+	// clock never runs out and the HUD shows no clock. The player leaves
+	// through the pause menu.
+	bool practice() const;
+	// The lesson whose area holds the human's centre during live play, as of
+	// the last update, in the order the builder supplied them; -1 for none.
+	int active_lesson() const;
+	int lesson_count() const;
+	const LevelLesson& lesson(int index) const;
+	// The shown lesson's card in window pixels, else none.
+	mattmath::RectangleF lesson_card_bounds() const;
 	// The countdown is over and the players move.
 	bool match_started() const;
 	// The intro is on screen: A, B or Start skips it rather than pausing.
@@ -370,6 +385,22 @@ private:
 
 	// Borrowed mouse state for camera-dependent aiming; see resolve_mouse_aim.
 	const labrador::Mouse* mouse_ = nullptr;
+
+	// Practice lessons and one prepared card per lesson, so a draw only
+	// chooses among them. Laid out in window pixels by centre_lesson_cards.
+	struct LessonCard
+	{
+		std::unique_ptr<labrador::TextDropShadow> title;
+		std::unique_ptr<labrador::TextDropShadow> text;
+		mattmath::RectangleF card;
+	};
+	std::vector<LevelLesson> lessons_;
+	std::vector<LessonCard> lesson_cards_;
+	int active_lesson_ = -1;
+	void build_lesson_cards(labrador::RenderResources* render_resources);
+	void centre_lesson_cards();
+	void update_active_lesson();
+	void draw_lesson_card(labrador::DrawList& draw_list) const;
 
 	// Initialized from match tuning in the constructor.
 	float timer_ = 0.0f;

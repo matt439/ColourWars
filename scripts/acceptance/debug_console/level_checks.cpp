@@ -203,7 +203,7 @@ namespace debug_console_acceptance
 		// hidden is UiText::set_hidden, which skips the draw.
 		const labrador::Colour shown_tint = CrudeDrawing::premultiplied(look.colour);
 		const auto hidden = [&](int index) { return match.level->station_label(index).hidden(); };
-		require(stations.size() == 10, "The course has eight stations and two spawns");
+		require(stations.size() == 12, "The course has ten stations and two spawns");
 
 		// The reference: the same seed and keys with the overlay never on.
 		std::srand(7);
@@ -219,7 +219,7 @@ namespace debug_console_acceptance
 		std::srand(7);
 		match.build();
 		Level& level = *match.level;
-		require(impl.execute("overlay stations").ok && level.station_label_count() == 10,
+		require(impl.execute("overlay stations").ok && level.station_label_count() == 12,
 			"overlay stations makes one label per station before any update, as a paused match needs");
 		require(impl.status_strip().find("stations") != std::string::npos, "The strip names the overlay");
 		for (int index = 0; index < level.station_label_count(); ++index)
@@ -240,7 +240,7 @@ namespace debug_console_acceptance
 			if (step == 100)
 			{
 				const mattmath::RectangleF shown_box = level.station_label(0).bounds();
-				require(impl.execute("overlay stations").ok && level.station_label_count() == 10 && hidden(0) &&
+				require(impl.execute("overlay stations").ok && level.station_label_count() == 12 && hidden(0) &&
 					hidden(9) && level.station_label(0).colour() == shown_tint &&
 					level.station_label(0).bounds() == shown_box,
 					"Turned off, the labels stay, hidden, keeping their colour and their box");
@@ -254,7 +254,7 @@ namespace debug_console_acceptance
 			}
 			if (step == 101)
 			{
-				require(impl.execute("overlay.stations on").ok && level.station_label_count() == 10 && visible(),
+				require(impl.execute("overlay.stations on").ok && level.station_label_count() == 12 && visible(),
 					"Turned on again, the same labels show and none are added");
 			}
 			match.level->update(keyboard_step(step), dt);
@@ -290,7 +290,7 @@ namespace debug_console_acceptance
 
 		// Every build re-applies the overlay, and overlay none hides the labels.
 		match.build();
-		require(match.level->station_label_count() == 10 && !hidden(0) &&
+		require(match.level->station_label_count() == 12 && !hidden(0) &&
 			match.level->station_label(0).colour() == shown_tint,
 			"A rebuild shows the labels again");
 		require(impl.execute("overlay none").ok && hidden(0) && match.level->station_label(0).colour() == shown_tint,

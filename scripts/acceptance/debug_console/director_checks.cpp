@@ -557,9 +557,9 @@ namespace debug_console_acceptance
 		for (const LevelStation& station : stations) { names.push_back(station.name); }
 		require(names == std::vector<std::string>{ "drop_through", "short_gap", "long_gap",
 			"running_gap", "low_ceiling", "steps", "high_step", "recovery_lane",
-			"spawn_a", "spawn_b" }, "The course lists its eight stations, then the spawns");
-		require(stations[8].position == info.team_a_spawns()[0] &&
-			stations[9].position == info.team_b_spawns()[0], "spawn_a and spawn_b are the first spawns");
+			"workshop", "refill", "spawn_a", "spawn_b" }, "The course lists its ten stations, then the spawns");
+		require(stations[10].position == info.team_a_spawns()[0] &&
+			stations[11].position == info.team_b_spawns()[0], "spawn_a and spawn_b are the first spawns");
 
 		struct Surface { std::string name; mattmath::RectangleF rectangle; bool jump_through; };
 		std::vector<Surface> surfaces;
@@ -574,7 +574,7 @@ namespace debug_console_acceptance
 		}
 		const mattmath::Vector2F size = tuning.player().size;
 		const mattmath::RectangleF bounds = info.out_of_bounds_rectangle();
-		for (std::size_t i = 0; i < 8; ++i)
+		for (std::size_t i = 0; i < 10; ++i)
 		{
 			const mattmath::RectangleF body(stations[i].position, size);
 			require(bounds.contains(body), stations[i].name + " is inside the level");

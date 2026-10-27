@@ -36,6 +36,13 @@ void Level::draw(Renderer& renderer) const
 			list.set_camera(Camera::DEFAULT_CAMERA);
 			this->draw_countdown_text(list);
 		}
+		if (this->lesson_card_bounds().width > 0.0f)
+		{
+			DrawList list = renderer.view(renderer.view_count() - 1);
+			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
+			list.set_camera(Camera::DEFAULT_CAMERA);
+			this->draw_lesson_card(list);
+		}
 		if (this->cursor_marker_visible())
 		{
 			DrawList list = renderer.view(renderer.view_count() - 1);
@@ -144,7 +151,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		// The weapon stops updating while its player is dead, which would
 		// freeze the blink mid-phase until the respawn refill.
 		player->state() == PlayerState::alive && player->primary_weapon().low_paint(),
-		player->primary_weapon().low_paint_elapsed());
+		player->primary_weapon().low_paint_elapsed(), !this->practice());
 
 	if (player->showing_debug())
 	{

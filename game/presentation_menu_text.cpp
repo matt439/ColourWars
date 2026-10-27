@@ -208,6 +208,10 @@ namespace presentation_read
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
+		text.practice_tool = read_menu_line(json, "practice_tool");
+		try { std::ignore = format_label_template(text.practice_tool, { { L"{tool}", L"Sprayer" } }); }
+		catch (const std::invalid_argument& error)
+		{ throw std::runtime_error(json.where() + ": practice_tool: " + error.what()); }
 		text.options_palette_timing = read_menu_line(json, "options_palette_timing");
 		text.display_trial_countdown = read_menu_line(json, "display_trial_countdown");
 		const std::wstring countdown_token = L"{seconds}";
@@ -552,6 +556,11 @@ std::wstring MenuText::display_countdown(int seconds) const
 	if (at == std::wstring::npos) { throw std::invalid_argument("display_trial_countdown requires {seconds}."); }
 	result.replace(at, token.size(), std::to_wstring(seconds));
 	return result;
+}
+
+std::wstring MenuText::practice_tool_label(std::wstring_view tool) const
+{
+	return format_label_template(this->practice_tool, { { L"{tool}", std::wstring(tool) } });
 }
 
 std::wstring MenuText::pause_title_for_player(int number) const

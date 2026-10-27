@@ -248,8 +248,10 @@ void GameLevel::build_and_enter_level()
 	const OpeningMode opening = solo ? OpeningMode::off : this->data()->debug().opening_mode(
 		this->builds_ == 0 ? OpeningMode::full : OpeningMode::quick);
 	++this->builds_;
+	// Untimed practice is what the menus' solo practice reaches on a stage
+	// with lessons; a developer start keeps the timed course for testing.
 	this->level_ = this->level_builder_->build_level(this->settings_,
-		this->data()->save()->team_palette(), opening);
+		this->data()->save()->team_palette(), opening, this->start_ == MatchStart::menu);
 	this->data()->debug().after_level_build(*this);
 	this->level_->set_pad_devices(this->settings_.pad_devices());
 	this->menu_context_->reset_connection_audio();
@@ -535,7 +537,7 @@ void GameLevel::open_pause_menu(int player_num)
 	this->menu_input_->reset_actions();
 	this->context()->push<PauseMenuAction>(
 		std::make_unique<PauseMenuInitial>(this->menu_context_.get(),
-			player_num),
+			player_num, true, this->level_->practice()),
 		[this](const PauseMenuAction& action)
 		{
 			this->on_pause_menu_closed(action);
@@ -557,6 +559,18 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 	case PauseMenuAction::quit:
 		this->leave_match(EndMenuAction::exit);
 		break;
+	case PauseMenuAction::change_tool:
+	{
+		// The page wrote the tool into settings_. The rebuild cleans the
+		// paint; a living player keeps their place and goes straight to GO.
+		const Player& player = this->level_->player(this->level_->participant_for_view(0));
+		const std::optional<mattmath::Vector2F> place = player.state() == PlayerState::alive ?
+			std::optional<mattmath::Vector2F>(player.rectangle().position()) : std::nullopt;
+		this->build_and_enter_level();
+		this->level_->start_without_countdown();
+		if (place) { this->level_->place_player(this->level_->participant_for_view(0), *place); }
+		break;
+	}
 	}
 }
 

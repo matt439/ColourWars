@@ -104,6 +104,7 @@
   "menu_text": {
     "brand": "C O L O U R W A R S   /   LOCAL PAINT BATTLES",
     "solo_practice_hint": "Solo practice: choose Single Match",
+    "practice_tool": "Tool:  < {tool} >",
     "options_palette_timing": "Palette applies next round or restart.",
     "title": {
       "wordmark": "COLOUR\nWARS",

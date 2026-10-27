@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
 #include <string>
 
@@ -9,4 +10,15 @@ struct LevelStation
 {
 	std::string name;
 	mattmath::Vector2F position;
+};
+
+// A station's optional practice prompt (POL#19). Untimed solo practice shows
+// it while the player's centre is inside `area`; the first lesson in file
+// order wins where areas overlap. Title and text are authored UTF-8.
+struct LevelLesson
+{
+	std::string station;
+	mattmath::RectangleF area;
+	std::string title;
+	std::string text;
 };

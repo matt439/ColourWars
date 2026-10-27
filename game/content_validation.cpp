@@ -117,6 +117,24 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 		const std::wstring name = drawable_text::widen_drawable(stage.display_name, where);
 		drawable_text::check_font_can_draw(render, menu.item_font, name, where);
 		drawable_text::check_font_can_draw(render, menu.heading_font, name, where);
+		// Practice lesson cards: the reminder's heading and controls fonts.
+		for (const LevelLesson& lesson : level_infos.get(stage.name)->lessons())
+		{
+			const std::string lesson_where = "the lesson at station '" + lesson.station +
+				"' of stage '" + stage.name + "'";
+			drawable_text::check_font_can_draw(render, menu.detail_font,
+				drawable_text::widen_drawable(lesson.title, lesson_where), lesson_where + ": title");
+			drawable_text::check_font_can_draw(render, tuning.match().controls_font,
+				drawable_text::widen_drawable(lesson.text, lesson_where), lesson_where + ": text");
+		}
+	}
+	// Practice's pause row names each real tool.
+	for (int tool = 0; tool < static_cast<int>(WeaponType::max_prim_wep); ++tool)
+	{
+		drawable_text::check_font_can_draw(render, menu.item_font,
+			presentation.menu_text().practice_tool_label(
+				main_menu.weapon_select_art.choice(static_cast<WeaponType>(tool)).name),
+			"menu_text.practice_tool");
 	}
 	// Duration words depend on actual tuning, not a Presentation-only sample.
 	// Keep this after all established diagnostics, and retain the exact Mode

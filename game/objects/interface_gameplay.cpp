@@ -90,7 +90,7 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	float timer,
 	const Colour& team_colour,
 	bool reduced_effects, bool clock_running,
-	bool low_paint, float low_paint_elapsed) const
+	bool low_paint, float low_paint_elapsed, bool show_clock) const
 {
 	const HudPresentation& look = *this->look_;
 	const float scale = std::min(
@@ -103,7 +103,10 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	// Scale text to both pane dimensions: a stacked two-player view is wide,
 	// but has only half the height available for its HUD.
 	draw_list.set_filter(TextureFilter::linear);
-	this->draw_timer(draw_list, resolution, timer, scale, reduced_effects, clock_running);
+	if (show_clock)
+	{
+		this->draw_timer(draw_list, resolution, timer, scale, reduced_effects, clock_running);
+	}
 
 	const Vector2F identity_pos(resolution.x * look.player_identity_offset.x,
 		resolution.y * look.player_identity_offset.y);
