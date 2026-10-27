@@ -107,7 +107,54 @@ namespace
                 require(a.shoot_angle == b.shoot_angle,
                     "Local scoring paint displaced a visible opponent's combat aim");
             }
+
+            // A sampled underfoot tile must not beat the farther deterministic
+            // top point whose launch has been checked by the driver.
+            MatchBot nearby(&tuning, difficulty, 41), checked(&tuning, difficulty, 41);
+            view.enemies.clear();
+            view.territory.push_back(Vector2F(0.0f, 51.4f));
+            for (int step = 0; step < tuning.bot(difficulty).reaction_steps; ++step)
+            {
+                const PlayerInputData a = nearby.think(view);
+                MatchBotObservation local = view; local.support_paint = Vector2F(200.0f, 51.4f);
+                const PlayerInputData b = checked.think(local);
+                same_navigation(a, b);
+                if (step + 1 == tuning.bot(difficulty).reaction_steps)
+                {
+                    require(std::fabs(b.shoot_angle - Vector2F(200.0f, 51.4f).angle()) <=
+                        tuning.bot(difficulty).aim_error_radians + 0.001f && nearby.random() == checked.random(),
+                        "A nearer sampled tile displaced checked top paint or changed the navigation RNG");
+                }
+            }
         }
+    }
+
+    void check_launch_clearance(const GameTuning& tuning)
+    {
+        MatchBotObservation view;
+        view.alive = view.grounded = true;
+        view.size = tuning.player().size;
+        view.weapon = WeaponType::sniper;
+        for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+        {
+            require(!match_bot_territory::top_launch_clear(view, Vector2F(0.0f, 51.4f), tuning, difficulty),
+                "A downward Sniper muzzle below the current floor supplied a paint target");
+            for (const float side : { -1.0f, 1.0f })
+            {
+                require(match_bot_territory::top_launch_clear(view, Vector2F(side * 200.0f, 51.4f), tuning, difficulty),
+                    "A farther mirrored top tile with clear Sniper launch was rejected");
+            }
+        }
+        require(!match_bot_territory::top_launch_clear(view, Vector2F(100.0f, 51.4f), tuning, BotDifficulty::easy) &&
+            match_bot_territory::top_launch_clear(view, Vector2F(100.0f, 51.4f), tuning, BotDifficulty::normal) &&
+            match_bot_territory::top_launch_clear(view, Vector2F(100.0f, 51.4f), tuning, BotDifficulty::hard),
+            "Top launch eligibility ignored the authored difficulty aim-error envelope");
+        view.weapon = WeaponType::sprayer;
+        require(!match_bot_territory::top_launch_clear(view, Vector2F(0.0f, 51.4f), tuning, BotDifficulty::hard),
+            "A shorter tool's downward launch inside the floor was accepted");
+        view.weapon = WeaponType::roller;
+        require(match_bot_territory::top_launch_clear(view, Vector2F(0.0f, 51.4f), tuning, BotDifficulty::easy),
+            "The Roller's ordinary constrained contact pose was rejected as free flight");
     }
 
     float owned_top_paint(const Level& level, const RectangleF& support, float thickness)
@@ -191,7 +238,8 @@ int main(int argc, char** argv)
     {
         require(argc == 2, "usage: bot_territory <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-territory", "Bot territory needs support '", "turbulence");
-        check_geometry(world.assets.tuning); check_aim_only(world.assets.tuning); check_driver(world);
+        check_geometry(world.assets.tuning); check_launch_clearance(world.assets.tuning);
+        check_aim_only(world.assets.tuning); check_driver(world);
         std::cout << "PASS current-support paint geometry, aim-only/RNG/expiry/enemy priority and 30 finite "
             "actual-driver paid top-paint trials; opposed territory usefulness remains unqualified\n";
         return 0;

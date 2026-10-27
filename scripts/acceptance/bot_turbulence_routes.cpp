@@ -158,11 +158,14 @@ namespace
         std::vector<int> contacts(route.contacts.size(), -1);
         std::size_t next_contact = 0;
         int jumps = 0;
+        int finish_steps = 0, finish_fire = 0, finish_paid = 0;
         float highest_feet = level->player(1).rectangle().bottom();
         Tape tape("Turbulence-route playback exhausted its finite final-input tape");
         std::ostringstream trace;
+        std::ostringstream paint_trace;
         for (int tick = 0; tick < trial_steps; ++tick)
         {
+            const float previous_ammo = level->player(1).weapon_ammo();
             level->update(physical, dt, &tape);
             require(level->state() == LevelState::active && tape.steps.size() == static_cast<std::size_t>(tick + 1),
                 "Turbulence-route trial escaped its finite active-step budget");
@@ -179,6 +182,25 @@ namespace
                 "Turbulence-route bot died, changed identity/tool or produced invalid state");
             const bool contact = next_contact < contacts.size() && route.contacts[next_contact].reached(bot);
             if (contact) { contacts[next_contact++] = tick; }
+            if (route.contacts.back().reached(bot))
+            {
+                // An observed net ammunition decrease establishes paid fire
+                // during this step, not a count of emitted projectiles.
+                const bool paid_fire = bot.weapon_ammo() < previous_ammo;
+                ++finish_steps;
+                finish_fire += input.primary_shoot ? 1 : 0;
+                finish_paid += paid_fire ? 1 : 0;
+                if (finish_steps <= 20)
+                {
+                    paint_trace << "PAINT_TRACE step=" << tick << " x=" << bot.center().x <<
+                        " y=" << bot.center().y << " feet=" << bot.rectangle().bottom() <<
+                        " angle=" << input.shoot_angle << " fire=" << input.primary_shoot <<
+                        " paid_fire=" << paid_fire <<
+                        " readiness=" << static_cast<int>(bot.primary_weapon().readiness()) <<
+                        " ammo=" << bot.weapon_ammo() << " nozzle_x=" << bot.primary_weapon().nozzle_pos().x <<
+                        " nozzle_y=" << bot.primary_weapon().nozzle_pos().y << '\n';
+                }
+            }
             jumps += input.jump_pressed ? 1 : 0;
             highest_feet = std::min(highest_feet, bot.rectangle().bottom());
             if (tick % 30 == 0 || input.jump_pressed || contact)
@@ -197,9 +219,12 @@ namespace
         for (std::size_t index = 0; index < contacts.size(); ++index)
         { std::cout << route.contacts[index].name << ':' << contacts[index] << ','; }
         std::cout << " jumps=" << jumps << " highest_feet=" << highest_feet << " top_paint=" << paint <<
+            " finish_grounded_steps=" << finish_steps << " finish_fire_requests=" << finish_fire <<
+            " finish_paid_fire_steps=" << finish_paid <<
             " final_x=" << level->player(1).center().x << " final_y=" << level->player(1).center().y <<
             " route_passed=" << passed << '\n';
         if (!passed) { std::cout << trace.str(); }
+        if (!passed || paint <= 0.0f) { std::cout << paint_trace.str(); }
         if (replay_check)
         {
             const std::vector<std::uint64_t> expected = snapshot(*level);

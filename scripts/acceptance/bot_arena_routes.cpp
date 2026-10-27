@@ -133,10 +133,13 @@ namespace
         const Endpoints route = endpoints(world, trial);
         const std::vector<PlayerInputData> physical = physical_inputs();
         int first_start = -1, first_intermediate = -1, first_finish = -1, jumps = 0;
+        int finish_steps = 0, finish_fire = 0, finish_paid = 0;
         Tape tape("Arena-route playback exhausted its finite final-input tape");
         std::ostringstream trace;
+        std::ostringstream paint_trace;
         for (int tick = 0; tick < trial_steps; ++tick)
         {
+            const float previous_ammo = level->player(1).weapon_ammo();
             level->update(physical, dt, &tape);
             require(level->state() == LevelState::active && tape.steps.size() == static_cast<std::size_t>(tick + 1),
                 "Arena-route trial escaped its finite active-step budget");
@@ -156,6 +159,25 @@ namespace
                 first_intermediate < 0) { first_intermediate = tick; }
             const bool previous_contact = route.intermediate == nullptr ? first_start >= 0 : first_intermediate >= 0;
             if (previous_contact && on_support(bot, route.finish) && first_finish < 0) { first_finish = tick; }
+            if (on_support(bot, route.finish))
+            {
+                // An observed net ammunition decrease establishes paid fire
+                // during this step, not a count of emitted projectiles.
+                const bool paid_fire = bot.weapon_ammo() < previous_ammo;
+                ++finish_steps;
+                finish_fire += input.primary_shoot ? 1 : 0;
+                finish_paid += paid_fire ? 1 : 0;
+                if (finish_steps <= 20)
+                {
+                    paint_trace << "PAINT_TRACE step=" << tick << " x=" << bot.center().x <<
+                        " y=" << bot.center().y << " feet=" << bot.rectangle().bottom() <<
+                        " angle=" << input.shoot_angle << " fire=" << input.primary_shoot <<
+                        " paid_fire=" << paid_fire <<
+                        " readiness=" << static_cast<int>(bot.primary_weapon().readiness()) <<
+                        " ammo=" << bot.weapon_ammo() << " nozzle_x=" << bot.primary_weapon().nozzle_pos().x <<
+                        " nozzle_y=" << bot.primary_weapon().nozzle_pos().y << '\n';
+                }
+            }
             jumps += input.jump_pressed ? 1 : 0;
             if (static_cast<int>(trial.tool) == 0 && trial.difficulty == BotDifficulty::normal &&
                 (tick < 180 && (tick % 5 == 0 || input.jump_pressed)))
@@ -166,6 +188,11 @@ namespace
             }
         }
         const float paint = owned_top_paint(*level, world, route.finish);
+        if (std::string_view(trial.route.stage) == "crossfeed" && std::string_view(trial.route.name) == "mixer" &&
+            trial.team == PlayerTeam::b && trial.tool == WeaponType::sniper && trial.difficulty == BotDifficulty::normal)
+        {
+            require(paint > 0.0f, "The retained Sniper mixer landing again failed to paint above its long muzzle");
+        }
         // Named grounded contacts qualify the route. Retained scoring paint
         // is reported separately, since these local starts do not prove value.
         const bool passed = first_start >= 0 && first_finish > first_start &&
@@ -175,9 +202,12 @@ namespace
             " team=" << (trial.team == PlayerTeam::a ? 'a' : 'b') << " tool=" << static_cast<int>(trial.tool) <<
             " difficulty=" << static_cast<int>(trial.difficulty) << " start=" << first_start <<
             " intermediate=" << first_intermediate << " finish=" << first_finish << " jumps=" << jumps <<
-            " top_paint=" << paint << " final_x=" << level->player(1).center().x <<
+            " top_paint=" << paint << " finish_grounded_steps=" << finish_steps <<
+            " finish_fire_requests=" << finish_fire << " finish_paid_fire_steps=" << finish_paid <<
+            " final_x=" << level->player(1).center().x <<
             " final_y=" << level->player(1).center().y << " route_passed=" << passed << '\n';
         if (!passed) { std::cout << trace.str(); }
+        if (!passed || paint <= 0.0f) { std::cout << paint_trace.str(); }
         if (replay_check)
         {
             const std::vector<std::uint64_t> expected = snapshot(*level);

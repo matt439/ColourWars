@@ -168,6 +168,7 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 					const Vector2F gap = *point - view.center;
 					const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
 					if (cost < best_support_cost && gap.length() <= view.engage_distance &&
+						match_bot_territory::top_launch_clear(view, *point, *this->tuning_, this->difficulties_[seat]) &&
 						level.bot_line_of_sight(view.center, *point))
 					{ view.support_paint = *point; best_support_cost = cost; }
 				}

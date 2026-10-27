@@ -62,8 +62,9 @@ void MatchBot::choose_territory(const MatchBotObservation& view)
 	if (view.support_paint)
 	{
 		const Vector2F gap = *view.support_paint - view.center;
-		const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
-		if (cost < best_aim && gap.length() <= view.engage_distance)
+		// Prefer the checked local launch over a random nearer tile that can
+		// lie behind this tool's muzzle. This remains an aim-only choice.
+		if (gap.length() <= view.engage_distance)
 		{ this->paint_goal_ = *view.support_paint; this->has_paint_goal_ = true; }
 	}
 	// Occluded scoring faces must not leave a bot retrying a spawn baffle.

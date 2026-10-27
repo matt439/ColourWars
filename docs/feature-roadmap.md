@@ -717,16 +717,109 @@ baseline: `out/validation/road10-combat-baseline/`. Reproduce the new matrix wit
 `scripts/run-acceptance.ps1 -Preset x64-debug -Cases bot_combat_trials` (or Release).
 The short `bot_territory` case joins the default suite.
 
-**Next implementation:** extend opposed trials beyond local Crossfeed starts
-to arena routes, team interactions and useful regional territory; investigate
-the retained finishing-support paint misses. Keep finite budgets and final-input
-replay checks. Prediction assumes constant target velocity for one second,
+The next slice below extends opposed trials to natural arena spawns and regional
+ownership, and investigates the retained finishing-support paint misses.
+Prediction assumes constant target velocity for one second,
 ignores intervening cover/bounces and can prefer a slower arc; it does not prove
 reachability. CPU/frame-pacing cost remains unmeasured, including the added
 bounded flight search and local surface scan. The full suite, native bot
 presentation and physical-pad checks were not run for this slice. Attended
 difficulty distinction and usefulness remain the author's acceptance gate;
 Easy/Normal/Hard values stay provisional and `ROAD#10` stays OPEN.
+
+#### Natural-spawn teams, regional ownership and top-launch clearance (2026-10-27)
+
+The opt-in `bot_team_trials` case adds **40** natural-spawn 2v2 roster trials:
+Crossfeed, Close Quarters, King of the Hill and Turbulence, all five tools and
+both mirrored team assignments. Each trial uses one neutral human and three
+Normal bots for 1800 active steps. All participants use the same tool in each
+trial. No positions, route hints or resource changes are injected. One side has
+one active bot beside the neutral human; the other has two, so this qualifies
+interactions and territory capability rather than fair opposed balance.
+
+All **120/120** bot actors move more than 100 units, buy ordinary fire and retain
+owned paint. Both teams retain paint outside their home band in **80/80** team
+observations; these are repeatable gates. All 80 also retain some middle-band
+paint, recorded separately as a measurement. The companion regional CSV reuses
+the reviewed polygon-clipping measurement and reconciles exact runtime scores.
+Crossfeed uses its existing bands; the other arenas use geometric X thirds of
+their camera bounds. These regions describe geography, not authored strategic
+roles or equal scoring opportunity. Outside-partition paint remains explicit.
+
+| Arena | Matches with observed health loss | Matches with enemy repaint | Bot actors taking health loss |
+|---|---|---|---|
+| Crossfeed | 10/10 | 9/10 | 25/30 |
+| Close Quarters | 10/10 | 9/10 | 27/30 |
+| King of the Hill | 9/10 | 7/10 | 22/30 |
+| Turbulence | 10/10 | 8/10 | 23/30 |
+
+Owner-attributed bot-v-bot eliminations total **36** across **26/40** matches
+(13 Crossfeed, nine Close Quarters, ten King of the Hill and four Turbulence).
+Eight additional attributed deaths belong to the neutral human. Both teams'
+middle-band holdings and the arena-wide enemy paint transitions are separate
+observations: transitions do not yet carry regional attribution.
+
+The main CSV records per-seat movement, requests, shooting state, paid-fire
+steps, reserves, health loss, owner-attributed eliminations, enemy/ally owner
+transitions and final regional ownership. Paid-fire steps mean an observed net
+ammunition decrease; the weapon's shooting-state flag alone also remains true
+while a Sniper is cooling down. Health loss is observed rather than attributed;
+only lethal contacts carry source ownership. Paint transitions are sampled once
+per active step, so they do not count all exchanges inside that step. These
+outcomes do not establish team coordination, contested regional retention or
+relative difficulty strength.
+
+Finishing-support diagnostics now record grounded contact time, firing requests,
+paid-fire steps and a bounded failure trace with aim, muzzle, reserves and tool
+readiness. The unchanged Release baseline at `d2f7d6ee` confirms two distinct
+limits: some direct downward aims launch below the platform top, and some Easy
+upper landings last only two grounded steps while the bot is refilling or the
+tool is cooling down. Ascent landing already forces a replan and reaction on the
+next step; a general faster reaction was not the missing contract.
+
+The deterministic current-support candidate now rejects a free-flight launch
+whose muzzle plus projectile half-height can start below the scoring top over
+the difficulty's complete authored aim-error envelope. A farther eligible tile
+takes aim priority over a nearer random sample. Roller contact paint retains its
+ordinary constrained pose. This changes aim eligibility/priority only: movement
+goals, navigation random draws, reaction/replanning cadence, reserves and visible
+enemy priority are retained. It does not predict later motion, cover or the full
+paint trajectory.
+
+All **450** retained static route gates still pass. CQ deck paint remains 60/60;
+other-arena finishing paint remains **144/150**, with a different mix of misses;
+Turbulence upper/continuous finishing paint improves **79/90 -> 83/90**. The
+retained Normal Sniper landing on Crossfeed's mixer now also requires owned top
+paint, reproducing a specific formerly below-floor launch. Six other-arena
+misses and seven Easy Turbulence misses remain explicit; the latter all have
+only two grounded finishing steps and no paid fire during them. A geometric
+launch check cannot provide a missing reserve, cooldown interval or dwell time.
+Natural-spawn paint remains 120/120, stationary local combat retains health loss
+and attributed eliminations in 10/10, and all 60 moving/opposed local combat
+gates remain satisfied.
+
+Validation: Debug and Release builds and fifteen selected consumer cases pass:
+`bot_driver`, `bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_ascents`,
+`bot_arena_routes`, `bot_hill_routes`, `bot_turbulence_routes`, `bot_trials`,
+`bot_runtime`, `gameplay_tuning`, `movement`, `bot_territory`, `bot_combat_trials`
+and `bot_team_trials`. Four new 1800-step final-input tapes reproduce public
+players, projectile count and exact paint in both builds, with full fingerprints
+additionally checked in Debug; retained replay gates also pass. Both real-bank
+isolated startup checks pass. All four trial CSVs (including regional ownership)
+are byte-identical between builds. Evidence: `out/validation/road10-teams/`; unchanged
+Release route diagnostics: `out/validation/road10-territory-baseline/`.
+Reproduce the new matrix with `scripts/run-acceptance.ps1 -Preset x64-debug
+-Cases bot_team_trials` (or Release).
+
+**Next implementation:** define and qualify a finite opportunity to paint a
+briefly reached scoring support, respecting normal reserves/cooldown and enemy
+priority; retain the thirteen finishing-support misses as repros. Extend opposed
+coverage to mixed tools and independent seeds, and qualify contested regional
+retention by attributing enemy paint transitions to the same exact regions.
+CPU/frame-pacing, moving-support routes,
+the full suite, native bot presentation and physical-pad checks were not run for
+this slice. Attended difficulty distinction and usefulness remain the author's
+acceptance gate; values remain provisional and `ROAD#10` stays OPEN.
 
 ### Balanced random teams
 
