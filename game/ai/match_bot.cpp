@@ -7,6 +7,15 @@
 
 using namespace mattmath;
 
+namespace
+{
+	// The driver qualified a shot onto this support's own unpainted top.
+	bool ride_target(const MatchBotObservation& view, const MatchBotSupport& support)
+	{
+		return view.support_open && view.support_paint && view.support_bounds == support.bounds;
+	}
+}
+
 MatchBot::MatchBot(const GameTuning* tuning, BotDifficulty difficulty, std::uint64_t seed) :
 	tuning_(tuning), difficulty_(difficulty), random_state_(seed)
 {
@@ -238,10 +247,13 @@ void MatchBot::decide(const MatchBotObservation& view)
 	}
 	// A bot riding a moving paintable support stays and paints its visible
 	// unpainted top, however it got there, for a bounded hold per ride.
+	// Only a qualified shot onto that top holds it: a sliver that no shot
+	// reaches does not.
 	if (this->finish_left_ == 0 && !recovering && enemy == nullptr && !this->ascending_ &&
-		!this->climbing_ramp_ && view.support_open && this->ride_hold_left_ > 0)
+		!this->climbing_ramp_ && this->ride_hold_left_ > 0)
 	{
-		if (const MatchBotSupport* mover = this->moving_support(view)) { this->open_finish(view, *mover); }
+		const MatchBotSupport* mover = this->moving_support(view);
+		if (mover != nullptr && ride_target(view, *mover)) { this->open_finish(view, *mover); }
 	}
 	const bool finishing = this->finish_left_ > 0;
 	if (finishing)
@@ -405,7 +417,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	else if (this->ride_hold_left_ > 0) { --this->ride_hold_left_; }
 	this->riding_ = mover != nullptr;
 	// Decide now rather than inheriting a drop through the support.
-	if (mover != nullptr && this->finish_left_ == 0 && this->ride_hold_left_ > 0 && view.support_open &&
+	if (mover != nullptr && this->finish_left_ == 0 && this->ride_hold_left_ > 0 && ride_target(view, *mover) &&
 		view.enemies.empty() && this->recovery_left_ == 0 && !this->ascending_ && !this->climbing_ramp_)
 	{ this->react_in_ = std::min(this->react_in_, 1); }
 	if (this->recovery_left_ == 0 && this->replan_in_-- <= 0) { this->choose_territory(view); }

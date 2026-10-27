@@ -1170,6 +1170,60 @@ author's gate. Decide whether a bot should hold and paint a mover and whether
 world labels should clamp to the pane. Physical-pad checks were not run. Values
 remain provisional and `ROAD#10` stays OPEN.
 
+#### Mover painting and pane-clamped bot labels (2026-10-27)
+
+The author decided both open questions: bots paint moving platforms, and in-match
+bot labels stay inside the pane.
+
+**Mover hold.** `MatchBotSupport` marks translating supports. A bot grounded on a
+moving paintable support opens the ordinary finishing window on it, and reopens
+it on expiry, for at most `bots.mover_hold_steps` (600, provisional) per ride. It
+needs no visible enemy, no recovery and no climb. While a bot rides, the driver
+scans the ridden support's top paint every step. The hold applies only while the
+driver has qualified a shot onto that mover's own unpainted top
+(`support_paint` on the ridden support's bounds), not merely while some
+unpainted top is in sight. The first version held on `support_open` alone.
+`bot_mover_routes` then failed its "every lander leaves" gate in both builds: a
+Hard Sniper (reach, team b) landed at step 1910 with 3792 of the top painted and
+stood there to the 2400-step end, firing at a sliver no shot reached. Requiring
+a qualified shot fixed it without changing the gate or the trial budget.
+`bot_driver` checks that a moving support holds a bot for the full hold and then
+releases it, and that a static platform with the same paint does not hold it.
+
+**Labels.** A bot's world badge and label shift together into the pane's visible
+world rectangle, so a bot at or past the pane edge keeps its identity readable.
+
+**Mover routes.** Release and Debug give identical measures:
+
+| Start | Landed on mover | Painted mover top | Longest ride (median / max steps) | Mean peak top paint | Left it again |
+|---|---|---|---|---|---|
+| reach, before hold | 11/30 | 18/30 | 34 / 197 | 819 | 11/11 |
+| reach, with hold | 11/30 | 18/30 | 491 / 646 | 1051 | 11/11 |
+| ride, before hold | 30/30 | 24/30 | 10 / 79 | 853 | 30/30 |
+| ride, with hold | 30/30 | 26/30 | 92 / 625 | 2261 | 30/30 |
+
+Twelve riding bots and five reaching bots now hold for 550 steps or more, and four
+riders paint the whole top (none before). A ride can run past 600 steps by up to
+46 because the bot still needs its reaction time and must walk off. No bot died.
+
+Validation: Debug and Release builds pass, as do `bot_driver`, `bot_runtime`,
+`bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_territory`,
+`bot_mover_routes`, `bot_team_trials`, `bot_arena_routes`,
+`bot_turbulence_routes`, `bot_hill_routes`, `bot_trials`, `bot_combat_trials`,
+`player_identity`, `paint`, `paint_surfaces`, `paint_underfoot`,
+`moving_structure` and `turbulence_movers` in both builds. No shipped arena has a
+mover: `bot_trials.csv`, `bot_combat_trials.csv` and the four `bot_team_trials`
+CSVs are byte-identical to master `bbb6c0a` (Release) in both builds.
+`check-painter.ps1 -BotPlayersOnly` passes in Debug. In its one-pane 720p and
+1080p captures, P3's badge and full "P3 - Bot (Hard)" label sit inside the pane,
+where the earlier capture clipped them. Evidence:
+`out/validation/road10-mover-paint/` (the failing first hold in
+`road10-mover-paint-v1/`, the master baseline in `road10-mover-paint-master/`).
+
+**Next implementation:** attended difficulty comparison and usefulness remain the
+author's gate. Physical-pad checks were not run. Values remain provisional and
+`ROAD#10` stays OPEN.
+
 ### Balanced random teams
 
 **GAP#1.5 - implemented (2026-10-15).** In team setup, any joined player may
