@@ -1050,6 +1050,126 @@ physical-pad checks were not run. Attended difficulty distinction and usefulness
 remain the author's acceptance gate; values remain provisional and `ROAD#10`
 stays OPEN.
 
+#### Descent latch, refill retreat, scan cost and moving supports (2026-10-27)
+
+**The descent latch.** Clearing `seeking_after_descent_` on every completed
+descent was tried first and rejected: the Close Quarters home-drop bot then
+climbed straight back away from the scored bypass (`bot_navigation`, Easy
+Sprayer team a, no scoring landing). The decision taken: the latch still clears
+on a scoring landing, and also on the **second** stuck turn after a completed
+non-scoring descent. One dead end still walks out as before; a floor blocked both
+ways, whose only exit may be a climb, makes ascents eligible again once recovery
+ends. `bot_driver` checks that one turn holds the latch and the second releases it.
+
+**The refill retreat.** A refilling bot now backs away from a visible enemy only
+within that enemy's own engagement distance plus `bots.refill_retreat_margin`.
+The observation carries each enemy's engagement distance with its visible tool.
+The first value, 200, failed the same-tool `bot_team_trials` gate: in Close
+Quarters, the lone Roller facing two Rollers (trial 55) died twice and kept no
+off-home paint. With the old unconditional retreat it kept 9848. 400 still failed
+it; 600 and 1000 passed team and combat trials. **600** (about 0.75 s of an
+enemy's full run) is the provisional value. A refill lasts about 2.1 s, in which a
+running enemy covers more than the 1600-unit sight distance, so the margin is
+not derived from the refill.
+
+**Baseline comparison.** Release, against `b3380db` (no changes in this slice), in
+the six trial and route cases:
+
+| Measure | Before | After |
+|---|---|---|
+| 2v2 paint claimed per paid shot (Sprayer / Roller / Bucket / Mister / Sniper) | 36.1 / 30.8 / 543 / 188 / 187 | 36.0 / 29.9 / 540 / 189 / 190 |
+| Moving-human trials: all-seat health loss, attributed eliminations | 26.729, 12 | 26.924, 13 |
+| Opposed trials: all-seat health loss, attributed eliminations | 76.148, 41 | 75.913, 46 |
+| Other-arena finishing paint / Turbulence top / route gates | 146/150, 90/90, all | unchanged |
+| Bots leaving the home band (same-tool, mixed, sustained) | 120/120, 360/360, 80/80 | unchanged |
+| Mixed one-bot off-home retention | 119/120 | 119/120 |
+
+`bot_trials.csv` is byte-identical. Sustained 1v1 middle retention:
+
+| Arena | Enemy still capturing in final third | Held every final-third step | Lowest final-third share of peak |
+|---|---|---|---|
+| Crossfeed | 20/20 (was 20/20) | 20/20 | 0.176 (was 0.099) |
+| Close Quarters | 20/20 (was 19/20) | 20/20 | 0.153 (was 0.199) |
+| King of the Hill | 19/20 | 20/20 | 0.177 (unchanged) |
+| Turbulence | 7/20 | 20/20 | 0.298 (unchanged) |
+
+**Scan cost.** New measure-only case `bot_scan_cost`: 225 trials covering 1-3
+bots beside one idle human, every shipped arena, five tool rotations and three
+difficulties, 1800 active steps each (405,000 steps). A
+filter wrapping an identical `MatchBotDriver` times its `filter_seats` call apart
+from the rest of `Level::update`. Each step is classed by the driver's own
+predicate: idle, support scan only (a ready deliberate tool or finishing window,
+over `paint_surfaces()`), or replan (territory sampling, with any scan). The
+only gate is that the case completes and every bot moves (450/450). Release on
+this PC (9950X3D):
+
+| Arena (81,000 steps) | Whole step mean / p99 µs | `filter_seats` mean / p99 µs | Rest of update mean / p99 µs | Idle / scan-only / replan step mean µs | `paint_surfaces()` copy µs (surfaces) |
+|---|---|---|---|---|---|
+| Crossfeed | 94 / 631 | 68 / 604 | 26 / 112 | 6 / 304 / 252 | 55 (2590) |
+| Close Quarters | 69 / 637 | 43 / 614 | 26 / 101 | 6 / 349 / 218 | 40 (2838) |
+| King of the Hill | 168 / 1232 | 118 / 1183 | 49 / 244 | 7 / 558 / 377 | 99 (4275) |
+| Turbulence | 143 / 1141 | 106 / 1098 | 37 / 151 | 5 / 632 / 371 | 80 (5180) |
+| Press Tower | 103 / 783 | 78 / 762 | 25 / 105 | 6 / 374 / 284 | 54 (2924) |
+| All | 115 / 1015 | 83 / 976 | 33 / 158 | 6 / 447 / 304 | 68 |
+
+81% of steps are idle (no scan, about 6 µs). Scan-only steps are 14% and
+replans 6%. The `filter_seats` p99 is 6% of the 16.7 ms frame (7% on King of the
+Hill and Turbulence). Cost grows with bot count: Crossfeed's whole-step mean is
+62, 88 and 132 µs for one, two and three bots.
+
+The scan, not the sampling, is the larger per-step cost: a scan-only step
+costs more than a replan step because every candidate surface runs the landing
+test and a sight check. Even its p99 is under a tenth of the 16.7 ms frame. Single-step maxima
+(up to 34 ms) fall on isolated steps and move between runs: three Release runs
+put them in different trials. The PC was shared with other work (17-54% load),
+so they are scheduling noise, not a bound. A `paint_surfaces()` copy per scan step
+(40-99 µs) is the obvious first saving if the scan ever needs one.
+
+**Moving supports.** `MatchBotSupport` now carries a stable identity, the
+level object's position in its fixed target list (zero, for fixture supports and
+ramps, still compares bounds). Ascent targets, visited supports and the finishing
+support compare by it. An ascent and a finishing window refresh their support's
+bounds each step, and the finishing hold moves with its support. No shipped arena
+has a moving support, so their results are unchanged.
+
+The new opt-in case `bot_mover_routes` runs on the explicit
+`turbulence_mover_trial`: both sides, five tools, three difficulties, 2400
+steps. It has two starts: *reach*, under the side's mover on its upper approach,
+and *ride*, placed on the mover:
+
+| Start | Landed on mover | Painted mover top | Left it again |
+|---|---|---|---|
+| reach, before identity | 5/30 (3-20 steps) | 16/30 | 5/5 |
+| reach, with identity | 11/30 (2-197 steps) | 18/30 | 11/11 |
+| ride, before identity | 30/30 | 27/30 | 30/30 |
+| ride, with identity | 30/30 | 24/30 | 30/30 |
+
+Before the fix an ascent to a mover aborted on its first step, so every reach
+landing was incidental. The case gates that a riding bot starts grounded on its
+mover, and that every bot which lands leaves it again for other ground (no bot
+stuck). Reaching and painting the mover are measurements. Riding bots leave
+after their first decision, since nothing holds them; whether a bot should stay
+and paint a mover is not decided.
+
+**Native presentation.** `check-painter.ps1 -BotPlayersOnly` passes in Debug. It
+now also saves Team Select with bot rows, the Results page and a one-pane match
+(P1 human, P2 Normal, P3 Hard) at 720p and 1080p. Evidence:
+`out/validation/road10-native/`. Join, Team, Weapon and Results bot labels fit and
+read clearly at both sizes. World labels in the one-pane view are small at 720p
+(about 12 px). They are drawn in world space, so a bot at the pane edge has its
+label clipped with its body (P3 in the capture). Clamping is not decided.
+
+Validation: Debug and Release builds pass, as do the fifteen cases above plus
+`bot_mover_routes` in both builds, `bot_scan_cost` in Release, and both real-bank
+isolated startup checks. Evidence: `out/validation/road10-latch/` (the margin-200
+failure in `road10-latch-margin200/`, baseline in `road10-latch-baseline/`),
+`road10-mover-before/`, `road10-latch-scan/` and `road10-native/`.
+
+**Next implementation:** attended difficulty comparison and usefulness remain the
+author's gate. Decide whether a bot should hold and paint a mover and whether
+world labels should clamp to the pane. Physical-pad checks were not run. Values
+remain provisional and `ROAD#10` stays OPEN.
+
 ### Balanced random teams
 
 **GAP#1.5 - implemented (2026-10-15).** In team setup, any joined player may
