@@ -4,6 +4,7 @@
         "Experimental movement blockout; route and acceptance notes: docs/polish-movement-course.md.",
         "Spawn coordinates are character top-left, sized from tuning.player.size (52 by 120).",
         "Stations are the Debug console's goto targets (docs/debug-console.md), also character top-left, feet 5 units above their surface.",
+        "Each station's lesson is untimed solo practice's prompt while the player's centre is in its area (docs/polish-movement-course.md, 'Practice workshop').",
         "A test stage, deliberately silent: no music_name or music_volume (docs/audio-inventory.md)."
     ],
     "display_name": "Movement Course",
@@ -51,14 +52,86 @@
         ]
     },
     "stations": [
-        { "name": "drop_through", "x": 559.0, "y": 715.0 },
-        { "name": "short_gap", "x": 738.0, "y": 875.0 },
-        { "name": "long_gap", "x": 1348.0, "y": 875.0 },
-        { "name": "running_gap", "x": 1740.0, "y": 875.0 },
-        { "name": "low_ceiling", "x": 3300.0, "y": 875.0 },
-        { "name": "steps", "x": 3900.0, "y": 875.0 },
-        { "name": "high_step", "x": 4404.0, "y": 535.0 },
-        { "name": "recovery_lane", "x": 1200.0, "y": 1275.0 }
+        {
+            "name": "drop_through", "x": 559.0, "y": 715.0,
+            "lesson": {
+                "title": "DROP THROUGH",
+                "text": "Jump up through the pale platform and land on it.\nPress down to drop back through.",
+                "area": { "x": 440.0, "y": 300.0, "width": 280.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "short_gap", "x": 738.0, "y": 875.0,
+            "lesson": {
+                "title": "SHORT HOP",
+                "text": "A quick tap of jump is a short hop.\nFrom a standstill it clears this gap.",
+                "area": { "x": 720.0, "y": 300.0, "width": 480.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "long_gap", "x": 1348.0, "y": 875.0,
+            "lesson": {
+                "title": "HELD JUMP",
+                "text": "Hold jump for height and distance. A held jump\nfrom rest crosses this gap; a tap falls short.",
+                "area": { "x": 1200.0, "y": 300.0, "width": 520.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "running_gap", "x": 1740.0, "y": 875.0,
+            "lesson": {
+                "title": "RUNNING JUMP",
+                "text": "This gap needs speed: run the whole runway,\nthen hold jump at the edge.",
+                "area": { "x": 1720.0, "y": 300.0, "width": 1280.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "low_ceiling", "x": 3300.0, "y": 875.0,
+            "lesson": {
+                "title": "LOW CEILING",
+                "text": "Jump under the ceiling: it stops you at once.\nRun out from under it still holding jump.",
+                "area": { "x": 3000.0, "y": 300.0, "width": 880.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "steps", "x": 3900.0, "y": 875.0,
+            "lesson": {
+                "title": "STEPS",
+                "text": "Tap for the low step, hold for the taller ones.\nTry both and feel the difference.",
+                "area": { "x": 3880.0, "y": 300.0, "width": 440.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "high_step", "x": 4404.0, "y": 535.0,
+            "lesson": {
+                "title": "PAINT A HIGH FACE",
+                "text": "Aim up and paint the faces around you. Each tool\nreaches differently: pause, pick another tool\nand try the same face.",
+                "area": { "x": 4320.0, "y": 300.0, "width": 240.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "recovery_lane", "x": 1200.0, "y": 1275.0,
+            "lesson": {
+                "title": "RECOVERY",
+                "text": "There are no pits. Walk to the nearest pale\nsteps and jump back up to the course.",
+                "area": { "x": 0.0, "y": 1010.0, "width": 5680.0, "height": 390.0 }
+            }
+        },
+        {
+            "name": "workshop", "x": 200.0, "y": 875.0,
+            "lesson": {
+                "title": "PRACTICE",
+                "text": "No clock and no score: stay as long as you like.\nA match is won by painted surface; knocking a\nrival out only clears room to paint.\nPause to change tool, start clean or leave.",
+                "area": { "x": 0.0, "y": 300.0, "width": 440.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "refill", "x": 5000.0, "y": 875.0,
+            "lesson": {
+                "title": "EMPTY AND REFILL",
+                "text": "Shoot until your paint runs dry: the aim marker\nshows a cross. Stop shooting for a moment and\nthe tank refills.",
+                "area": { "x": 4560.0, "y": 300.0, "width": 1120.0, "height": 710.0 }
+            }
+        }
     ],
     "level_bounds": {
         "out_of_bounds": {

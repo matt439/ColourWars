@@ -4,6 +4,7 @@
 #include "game/level_format.h"
 #include "engine/math/intersects.h"
 #include "game/objects/level_object_builder.h"
+#include "game/drawable_text.h"
 #include <cmath>
 
 using namespace mattmath;
@@ -140,9 +141,73 @@ void LevelLoadedInfo::validate_stations(const RectangleF& out_of_bounds) const
 				name + "'.");
 		}
 		seen.push_back(name);
-		validate_position(root, Vector2F(station.number("x"), station.number("y")),
-			out_of_bounds, "a station '" + name + "'");
+		const Vector2F position(station.number("x"), station.number("y"));
+		validate_position(root, position, out_of_bounds, "a station '" + name + "'");
+		if (station.has("lesson"))
+		{
+			validate_lesson(station.object("lesson"), position, name);
+		}
 	}
+}
+
+void LevelLoadedInfo::validate_lesson(const JsonValue& lesson,
+	const Vector2F& station, const std::string& name) const
+{
+	const RectangleF area = lesson_area(lesson);
+	if (!std::isfinite(area.x) || !std::isfinite(area.y) ||
+		!std::isfinite(area.width) || !std::isfinite(area.height) ||
+		area.width <= 0.0f || area.height <= 0.0f)
+	{
+		throw std::runtime_error(lesson.object("area").where() +
+			" needs finite coordinates and positive width and height");
+	}
+	const RectangleF camera = this->camera_bounds_rectangle();
+	if (area.left() < camera.left() || area.top() < camera.top() ||
+		area.right() > camera.right() || area.bottom() > camera.bottom())
+	{
+		throw std::runtime_error(lesson.object("area").where() +
+			" leaves the camera bounds; no player could stand in all of it.");
+	}
+	// `goto <station>` must land inside the station's own lesson.
+	if (!rectangle_point_intersect(area, station))
+	{
+		throw std::runtime_error(lesson.object("area").where() + " does not contain station '" +
+			name + "'; going to the station must show its lesson.");
+	}
+	for (const char* key : { "title", "text" })
+	{
+		const std::string words = lesson.string(key);
+		const std::string where = lesson.where() + "." + key;
+		if (words.find_first_not_of(" \n") == std::string::npos)
+		{
+			throw std::runtime_error(where + " is empty; a lesson needs a title and a line to read.");
+		}
+		std::ignore = drawable_text::widen_drawable(words, where);
+	}
+}
+
+RectangleF LevelLoadedInfo::lesson_area(const JsonValue& lesson)
+{
+	const JsonValue area = lesson.object("area");
+	return RectangleF(area.number("x"), area.number("y"),
+		area.number("width"), area.number("height"));
+}
+
+std::vector<LevelLesson> LevelLoadedInfo::lessons() const
+{
+	std::vector<LevelLesson> result;
+	const JsonValue root = this->json_doc_.root();
+	if (!root.has("stations")) { return result; }
+	const JsonValue stations = root.array("stations");
+	for (size_t index = 0; index < stations.size(); ++index)
+	{
+		const JsonValue station = stations.at(index);
+		if (!station.has("lesson")) { continue; }
+		const JsonValue lesson = station.object("lesson");
+		result.push_back({ station.identifier("name"), lesson_area(lesson),
+			lesson.string("title"), lesson.string("text") });
+	}
+	return result;
 }
 
 std::vector<LevelStation> LevelLoadedInfo::stations() const

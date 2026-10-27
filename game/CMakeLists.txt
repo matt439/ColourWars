@@ -105,6 +105,7 @@ add_executable(ColourWars WIN32
     objects/level_object_builder.cpp
     objects/level_intro.cpp
     objects/level_opening.cpp
+    objects/level_practice.cpp
     objects/monitor.cpp
     objects/movement_audio.cpp
     objects/movement_feedback.cpp

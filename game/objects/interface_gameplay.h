@@ -47,7 +47,8 @@ public:
     // The same, with the identity box's whole text already built by
     // identity_text. Level keeps one per view so the draw path allocates nothing.
     // `low_paint` tags the PAINT label (POL#38); it blinks with the tool's
-    // simulated low-paint age unless effects are reduced.
+    // simulated low-paint age unless effects are reduced. Untimed practice
+    // passes show_clock false and the clock panel is not drawn at all.
     void draw_gameplay_interface_prepared(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         int player_index,
@@ -59,7 +60,8 @@ public:
         bool reduced_effects = false,
         bool clock_running = true,
         bool low_paint = false,
-        float low_paint_elapsed = 0.0f) const;
+        float low_paint_elapsed = 0.0f,
+        bool show_clock = true) const;
 
     // "P1  /  TEAM A\n" followed by the device label: the identity box's text.
     static std::wstring identity_text(int player_index, PlayerTeam team,

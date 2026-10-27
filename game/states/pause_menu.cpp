@@ -60,9 +60,9 @@ void latch_intro_pause(bool intro_playing, std::vector<PlayerInputData>& player_
 	}
 }
 
-PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
+PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num, bool practice) :
 	MenuPage(context),
-	pausing_player_(player_num)
+	pausing_player_(player_num), practice_(practice)
 {
 	this->window_open_sound_ = this->resolve_sound(this->look().window_open_sound);
 }
@@ -83,6 +83,11 @@ std::wstring PauseMenuPage::player_number_text() const
 int PauseMenuPage::pausing_player() const
 {
 	return this->pausing_player_;
+}
+
+bool PauseMenuPage::practice() const
+{
+	return this->practice_;
 }
 
 void PauseMenuPage::finish(PauseMenuAction action) const
@@ -108,10 +113,22 @@ ProcessedMenuInput PauseMenuPage::pausing_player_input(
 	return menu_input_for_owner(inputs, this->pausing_player_, *this->level_settings());
 }
 
-PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num, bool opening) :
-	PauseMenuPage(context, player_num), opening_(opening)
+PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num, bool opening,
+	bool practice) :
+	PauseMenuPage(context, player_num, practice), opening_(opening)
 {
 
+}
+
+void PauseMenuInitial::cycle_tool(Direction direction)
+{
+	// The five real tools; Random is a setup choice, not something to hold.
+	const int count = static_cast<int>(WeaponType::max_prim_wep);
+	const int step = direction == Direction::left ? count - 1 : 1;
+	this->tool_choice_ = static_cast<WeaponType>(
+		(static_cast<int>(this->tool_choice_) + step) % count);
+	this->tool_->set_text(this->text().practice_tool_label(
+		this->presentation().main_menu().weapon_select_art.choice(this->tool_choice_).name));
 }
 
 void PauseMenuInitial::update_page(float /*dt*/)
@@ -140,6 +157,13 @@ void PauseMenuInitial::update_page(float /*dt*/)
 	else if (this->focus_.move(0, input.direction))
 	{
 		this->play_wave(this->direction_sound_);
+	}
+	else if (this->tool_ && this->focus_.focused(0) == this->tool_.get() &&
+		this->focus_.enabled(this->tool_.get()) &&
+		(input.direction == Direction::left || input.direction == Direction::right))
+	{
+		this->play_wave(this->direction_sound_);
+		this->cycle_tool(input.direction);
 	}
 }
 
@@ -188,6 +212,7 @@ void PauseMenuInitial::refresh_connections()
 			DESIGN_RESOLUTION.x), this->look().heading_y));
 	this->focus_.set_enabled(this->resume_.get(), !this->waiting_for_players_);
 	this->focus_.set_enabled(this->restart_.get(), !this->waiting_for_players_);
+	if (this->tool_) { this->focus_.set_enabled(this->tool_.get(), !this->waiting_for_players_); }
 	if (was_waiting != this->waiting_for_players_)
 	{
 		// Reconnection never consumes a held button or resumes automatically.
@@ -221,7 +246,11 @@ void PauseMenuInitial::init()
 
 	this->set_widget_position(look.layout.position);
 	this->set_widget_size(look.layout.size);
-	this->set_widget_spacing(look.layout.spacing);
+	// Practice fits a fifth row, Tool, into the same paper.
+	const bool practice = this->practice();
+	this->set_widget_spacing(practice ?
+		Vector2F(look.layout.spacing.x, look.layout.spacing.y * 0.8f) : look.layout.spacing);
+	const int first_row = practice ? 1 : 0;
 
 	this->player_num_ = std::make_unique<UiText>(
 		"player_num",
@@ -243,23 +272,39 @@ void PauseMenuInitial::init()
 		"connection_status", L"", style.detail_font,
 		Vector2F(0.0f, look.status_y), this->render_resources(), look.art.ink);
 
+	if (practice)
+	{
+		// Start from the tool in hand, so Select on an untouched row is a
+		// clean course with the same tool, where the player stands.
+		const std::vector<MenuPlayerSettings>& players = this->level_settings()->player_settings();
+		if (!players.empty() && players.front().weapon < WeaponType::max_prim_wep)
+		{
+			this->tool_choice_ = players.front().weapon;
+		}
+		this->tool_ = std::make_unique<UiText>("tool",
+			this->text().practice_tool_label(
+				this->presentation().main_menu().weapon_select_art.choice(this->tool_choice_).name),
+			style.item_font, this->calculate_widget_position(0, 1), this->render_resources(),
+			look.art.ink);
+	}
+
 	this->restart_ = std::make_unique<UiText>(
 		"restart",
 		this->text().item(MenuItem::restart),
 		style.item_font,
-		this->calculate_widget_position(0, 1),
+		this->calculate_widget_position(0, first_row + 1),
 		this->render_resources(),
 		look.art.ink);
 
 	this->options_ = std::make_unique<UiText>("options", this->text().item(MenuItem::options),
-		style.item_font, this->calculate_widget_position(0, 2), this->render_resources(),
+		style.item_font, this->calculate_widget_position(0, first_row + 2), this->render_resources(),
 		look.art.ink);
 
 	this->quit_ = std::make_unique<UiText>(
 		"quit",
 		this->text().item(MenuItem::quit),
 		style.item_font,
-		this->calculate_widget_position(0, 3),
+		this->calculate_widget_position(0, first_row + 3),
 		this->render_resources(),
 		look.art.ink);
 
@@ -274,6 +319,7 @@ void PauseMenuInitial::init()
 	this->text_container_->add_child(this->player_num_.get());
 	this->text_container_->add_child(this->connection_status_.get());
 	this->text_container_->add_child(this->resume_.get());
+	if (this->tool_) { this->text_container_->add_child(this->tool_.get()); }
 	this->text_container_->add_child(this->restart_.get());
 	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->quit_.get());
@@ -283,12 +329,21 @@ void PauseMenuInitial::init()
 			this->play_wave(this->confirm_sound_);
 			this->finish(PauseMenuAction::resume);
 		});
+	if (this->tool_)
+	{
+		this->focus_.add(this->tool_.get(), [this]
+			{
+				this->play_wave(this->confirm_sound_);
+				this->level_settings()->set_player_weapon(0, this->tool_choice_);
+				this->finish(PauseMenuAction::change_tool);
+			});
+	}
 	this->focus_.add(this->restart_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
 			this->context()->transition_to(std::make_unique<PauseMenuConfirmation>(
 				this->menu_context(), this->pausing_player(),
-				ConfirmationType::restart));
+				ConfirmationType::restart, this->practice()));
 		});
 	this->focus_.add(this->options_.get(), [this]
 		{
@@ -301,7 +356,7 @@ void PauseMenuInitial::init()
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<PauseMenuConfirmation>(
 				this->menu_context(), this->pausing_player(),
-				ConfirmationType::quit));
+				ConfirmationType::quit, this->practice()));
 		});
 
 	this->refresh_connections();
@@ -312,8 +367,8 @@ void PauseMenuInitial::init()
 }
 
 PauseMenuConfirmation::PauseMenuConfirmation(MenuContext* context,
-	int player_num, ConfirmationType type) :
-	PauseMenuPage(context, player_num), type_(type)
+	int player_num, ConfirmationType type, bool practice) :
+	PauseMenuPage(context, player_num, practice), type_(type)
 {
 
 }
@@ -329,7 +384,7 @@ void PauseMenuConfirmation::update_page(float /*dt*/)
 			this->data()->debug()) != -1)
 	{
 		this->context()->transition_to(std::make_unique<PauseMenuInitial>(
-			this->menu_context(), this->pausing_player(), false));
+			this->menu_context(), this->pausing_player(), false, this->practice()));
 		return;
 	}
 	const ProcessedMenuInput input =
@@ -339,7 +394,7 @@ void PauseMenuConfirmation::update_page(float /*dt*/)
 	{
 		this->play_wave(this->cancel_sound_);
 		this->context()->transition_to(std::make_unique<PauseMenuInitial>(
-			this->menu_context(), this->pausing_player(), false));
+			this->menu_context(), this->pausing_player(), false, this->practice()));
 		return;
 	}
 	if (input.action == MenuInputAction::proceed)
@@ -427,7 +482,7 @@ void PauseMenuConfirmation::init()
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<PauseMenuInitial>(
-				this->menu_context(), this->pausing_player(), false));
+				this->menu_context(), this->pausing_player(), false, this->practice()));
 		});
 	this->focus_.add(this->yes_.get(), [this]
 		{

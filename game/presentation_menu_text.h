@@ -221,6 +221,8 @@ struct MenuText
 {
 	std::wstring brand;
 	std::wstring solo_practice_hint;
+	// Untimed practice's pause row (POL#19), with one {tool} token.
+	std::wstring practice_tool;
 	MenuTitleText title;
 	std::wstring home_subtitle;
 	std::wstring display_trial_countdown;
@@ -267,6 +269,7 @@ struct MenuText
 	std::wstring bot_roster_label(int roster_index, BotDifficulty difficulty) const;
 	// Player numbers are the visible roster numbers 1-4, never device slots.
 	std::wstring pause_title_for_player(int number) const;
+	std::wstring practice_tool_label(std::wstring_view tool) const;
 	// Pad slots are 0-3; rounded percentages are -100 through 100 inclusive.
 	std::wstring stick_connection(int pad_slot, bool connected) const;
 	std::wstring stick_raw_movement(int value) const;

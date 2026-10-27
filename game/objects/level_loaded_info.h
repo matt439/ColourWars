@@ -42,6 +42,10 @@ public:
 	// order, then spawn_a and spawn_b (each team's first spawn), which every
 	// level has.
 	std::vector<LevelStation> stations() const;
+	// The stations' optional "lesson" objects ({ "title", "text", "area" }),
+	// in station order: what untimed solo practice teaches (POL#19). Empty for
+	// a level without lessons, which therefore has no practice workshop.
+	std::vector<LevelLesson> lessons() const;
 
 	mattmath::RectangleF out_of_bounds_rectangle() const;
 	mattmath::RectangleF camera_bounds_rectangle() const;
@@ -82,4 +86,9 @@ private:
 		const std::string& what);
 
 	void validate_stations(const mattmath::RectangleF& out_of_bounds) const;
+	// A lesson's area lies inside the camera bounds and contains its station;
+	// its title and text are non-blank and drawable.
+	void validate_lesson(const labrador::JsonValue& lesson,
+		const mattmath::Vector2F& station, const std::string& name) const;
+	static mattmath::RectangleF lesson_area(const labrador::JsonValue& lesson);
 };

@@ -34,7 +34,17 @@
                         "not": { "enum": ["spawn_a", "spawn_b"] }
                     },
                     "x": { "type": "number" },
-                    "y": { "type": "number" }
+                    "y": { "type": "number" },
+                    "lesson": {
+                        "type": "object",
+                        "required": ["title", "text", "area"],
+                        "properties": {
+                            "title": { "type": "string", "minLength": 1 },
+                            "text": { "type": "string", "minLength": 1 },
+                            "area": { "$ref": "#/definitions/rectangle" }
+                        },
+                        "additionalProperties": true
+                    }
                 },
                 "additionalProperties": true
             }

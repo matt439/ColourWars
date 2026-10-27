@@ -31,8 +31,11 @@ public:
 		const labrador::Partitioner* partitioner,
 		const labrador::Mouse* mouse, const InputBindings* input_bindings = nullptr);
 
+	// `practice` asks for untimed solo practice: a one-human roster on a stage
+	// whose stations carry lessons gets them and no clock (POL#19). Any other
+	// roster or stage is built as an ordinary timed match.
 	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings,
-		TeamColourPair palette, OpeningMode opening);
+		TeamColourPair palette, OpeningMode opening, bool practice = false);
 
 private:
 	std::unique_ptr<TeamColourTools> team_colour_ = nullptr;

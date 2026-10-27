@@ -186,7 +186,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const labrador::Mouse* mouse,
 	std::vector<LevelStation> stations,
 	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings,
-	const MenuLevelSettings* roster, std::uint64_t bot_seed) :
+	const MenuLevelSettings* roster, std::uint64_t bot_seed, std::vector<LevelLesson> lessons) :
 	scene_(std::move(scene)),
 	players_(std::move(players)),
 	stations_(std::move(stations)),
@@ -325,6 +325,8 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->colour_players(false, false);
 	}
 
+	this->lessons_ = std::move(lessons);
+	this->build_lesson_cards(render_resources);
 	this->build_opening_frame(render_resources);
 }
 
@@ -444,6 +446,9 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 	if (this->state_ == LevelState::active)
 	{
 		this->update_level_logic(player_inputs, dt, seats, horizontal);
+		this->update_active_lesson();
+		// Practice has no clock to run out; the player leaves from pause.
+		if (this->practice()) { return; }
 
 		this->timer_ -= dt;
 		// Sound only the current displayed second, never missed seconds after a
@@ -784,6 +789,7 @@ void Level::refresh_layout()
 		this->zoom_out_camera_ratio());
 	this->centre_countdown_text();
 	this->centre_controls_text();
+	this->centre_lesson_cards();
 	this->refresh_player_cameras();
 	this->refresh_views();
 	this->layout_size_ = size;

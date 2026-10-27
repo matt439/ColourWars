@@ -40,7 +40,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 
 std::unique_ptr<Level>
 	LevelBuilder::build_level(const MenuLevelSettings& settings, TeamColourPair palette,
-		OpeningMode opening)
+		OpeningMode opening, bool practice)
 {
 	if (settings.player_count() < 1 || settings.human_count() < 1 ||
 		(settings.bot_count() != 0 &&
@@ -120,7 +120,9 @@ std::unique_ptr<Level>
 		this->mouse_,
 		load_info->stations(),
 		opening, settings.duration(), this->input_bindings_, &settings,
-		settings.bot_count() == 0 ? 0u : static_cast<std::uint64_t>(std::rand()));
+		settings.bot_count() == 0 ? 0u : static_cast<std::uint64_t>(std::rand()),
+		practice && settings.player_count() == 1 && settings.human_count() == 1 ?
+			load_info->lessons() : std::vector<LevelLesson>{});
 	}
 	catch (const std::invalid_argument& error)
 	{

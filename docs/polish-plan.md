@@ -1870,6 +1870,13 @@ and `POL#27`/`POL#30`/`POL#31` remains open.
 
 ### Let players learn by making a mess
 
+**Workshop built (2026-10-27, `POL#19`); keeping it waits on a fresh player.**
+Choosing **1 Player (practice)** and the Movement Course from the menus now
+opens an untimed workshop: no clock, a lesson card for each station, a pause
+**Tool** row and Restart for a clean course. The
+[Movement Course record](polish-movement-course.md#practice-workshop) has the
+details. The proposal below is kept as written.
+
 The game already has weapon descriptions, controls cards and timed solo practice
 in [the main menu](../game/states/main_menu.cpp). Build on that with an optional
 small workshop using the movement course and reference arena's material kit.
