@@ -2031,6 +2031,9 @@ write-through, cycling, rename, delete, Boost carry-back and recovery from a
 damaged section. `presentation.json` validation fits the page's copy and the
 widest worn name on Join; the Pad rows scale it to fit like any setting value.
 
+Still open: the painter checks for the Controls page and its children, which
+follow the new row but run only on MattPC, and play with real pads.
+
 ## Menu navigation follow-up (GAP#4.4)
 
 2026-10-15: pad sticks, d-pads, arrow keys and WASD now move on engagement and

@@ -92,7 +92,7 @@ difficulty comparison; difficulty values remain provisional.
 - **Report filing:** the guarded resize request and example (`ENG#23`) are
   prepared and locally qualified, alongside the vibration-output draft (`ENG#25`).
   Filing needs separate author authorization.
-- **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
+- **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
 ## Art direction, characters and the UI
@@ -198,6 +198,7 @@ excluded modes.
 | `ROAD#18` | UNSCOPED | LOW | M | Off-screen teammate and threat markers (Splatoon ally silhouettes); relates to `POL#3` rear threats and `ROAD#10` label clamping. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#19` | UNSCOPED | MED | L | End-of-round instant replay (TowerFall), building on Debug record/play, whose `DBG#2` limits fit; the recorder must ship in Release. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#20` | UNSCOPED | LOW | S | Stage rotation or loser's pick between series rounds; tools, Boost and stage can now be re-picked by hand between rounds. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#21` | DECISION | LOW | S | Player profiles are in. Left: run the painter checks the eleven-row Controls page touches on MattPC (`check-painter.ps1 -ControlsMenuOnly`, `-MenuMotionOnly`, `-PausedOptionsOnly`, `-KeyboardJumpOnly`, `-RumbleOnly`, `-PercentageTextOnly`, `-StickSettingsOnly`), which CI does not run, and try profiles with real pads. [Owner](docs/feature-roadmap.md#player-profiles-road21). |
 | `ROAD#22` | DECISION | LOW | M | Match variants (low gravity, endless paint, tool roulette), mostly tuning overrides. Decide whether they count as modes, which are ruled out. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#23` | UNSCOPED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The reader is Labrador's, so the engine part is a report with an exhibit; Steam Input covers a Steam release. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#24` | UNSCOPED | LOW | M | Pad aim assist so pad players can hold their own against the one mouse player; relates to `POL#3`, `POL#18` and `ROAD#5`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
