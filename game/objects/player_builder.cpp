@@ -98,6 +98,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			position, Vector2F::ZERO, 0.0f, Vector2F::ZERO,
 			SpriteFlip::none, 0.0f, participant_index, &this->presentation_->figure(),
 			&this->presentation_->camera().shake);
+		player->set_handicap(setting.handicap);
 
 		players.push_back(std::move(player));
 	}

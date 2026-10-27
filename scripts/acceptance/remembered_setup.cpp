@@ -19,6 +19,7 @@
 #include <string>
 
 void check_bot_remembered_setup(const std::filesystem::path& save_path);
+void check_handicap_remembered_setup(const std::filesystem::path& save_path);
 
 namespace
 {
@@ -530,10 +531,12 @@ int main(int argc, char** /*argv*/)
         check_validation(directory);
         check_failures_and_independence(directory);
         check_bot_remembered_setup(directory.save_path());
+        check_handicap_remembered_setup(directory.save_path());
         std::cout << "PASS remembered setup: all 1-4 seat layouts/five tools, concrete schema, solo B, fresh claims, "
             "deterministic stage fallback/no RNG, legacy/newer/independent sections, malformed recovery, "
             "strict capture/save validation, actual staged-write/replacement failures, unchanged bytes/memory and retry; "
             "mixed bot rosters/all difficulties, human-only views, metadata recovery and legacy human defaults; "
+            "per-seat handicaps round-trip, recover to none and are refused unresolved; "
             "GUID-isolated profile, no window/device\n";
         return 0;
     }

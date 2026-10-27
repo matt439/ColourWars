@@ -226,6 +226,12 @@ public:
     PlayerState state() const;
 
     PlayerTeam team() const;
+    // The seat's handicap level (handicaps::valid): less damage taken and a
+    // faster paint refill, from tuning. Set by the builder; kept on respawn.
+    int handicap() const;
+    void set_handicap(int level);
+    // Paint underfoot times the handicap's refill boost.
+    float ammo_regen_multiplier() const;
     PlayerPaintUnderfootState paint_underfoot_state() const;
 
     float respawn_timer() const;
@@ -377,6 +383,7 @@ private:
     // Developer cheats: no paint damage; the tank refilled around every shot.
     bool damage_immune_ = false;
     bool infinite_ammo_ = false;
+    int handicap_ = 0;
     PlayerState state_ = PlayerState::alive;
     float respawn_timer_ = 0.0f;
     PlayerInputData input_ = PlayerInputData();

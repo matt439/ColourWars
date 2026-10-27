@@ -31,6 +31,8 @@ struct MatchBotObservation
 	bool on_platform = false;
 	bool facing_right = true;
 	float ammo = 0.0f;
+	// The seat's handicap refill boost; paint underfoot is not predicted.
+	float paint_refill = 1.0f;
 	bool shot_empty = false;
 	float engage_distance = 0.0f;
 	WeaponType weapon = WeaponType::sprayer;

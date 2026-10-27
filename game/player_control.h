@@ -14,3 +14,12 @@ enum class BotDifficulty
 	normal,
 	hard
 };
+
+// A seat's handicap level, chosen on the Tools page for humans and bots alike.
+// Level 0 is none; each higher level is a bigger boost, whose amounts are
+// tuning.json "handicaps". Score is still painted surface at every level.
+namespace handicaps
+{
+	constexpr int count = 3;
+	constexpr bool valid(int level) { return level >= 0 && level < count; }
+}

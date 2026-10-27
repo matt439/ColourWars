@@ -74,6 +74,15 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 			}
 			this->select_states_[i].state = ConfirmationState::confirmed;
 		}
+		else if (inputs[i].action == MenuInputAction::shuffle)
+		{
+			// Weapon Select has no shuffle; the same button changes the handicap.
+			if (this->select_states_[i].state == ConfirmationState::unconfirmed)
+			{
+				this->play_wave(this->direction_sound_);
+				this->cycle_handicap(i);
+			}
+		}
 		else if (this->select_states_[i].state ==
 			ConfirmationState::unconfirmed)
 		{
@@ -111,6 +120,8 @@ void MainMenuWeaponSelect::set_level_settings() const
 	{
 		this->level_settings()->
 			set_player_weapon(i, this->select_states_[i].type);
+		this->level_settings()->
+			set_player_handicap(i, this->select_states_[i].handicap);
 	}
 }
 WeaponType MainMenuWeaponSelect::random_weapon()
@@ -154,6 +165,13 @@ void MainMenuWeaponSelect::cycle_weapons(
 		// The icon is reused for every tool, so its enum is the selection identity.
 		this->player_widgets_[player_index]->motion.selection_changed();
 	}
+}
+void MainMenuWeaponSelect::cycle_handicap(int player_index)
+{
+	SelectState& row = this->select_states_[static_cast<size_t>(player_index)];
+	row.handicap = (row.handicap + 1) % handicaps::count;
+	this->player_widgets_[static_cast<size_t>(player_index)]->handicap->set_text(
+		this->text().handicap_label(row.handicap));
 }
 bool MainMenuWeaponSelect::all_players_confirmed() const
 {
@@ -285,6 +303,7 @@ void MainMenuWeaponSelect::init()
 		state.state = ConfirmationState::unconfirmed;
 		state.type = this->level_settings()
 			->player_weapon(i);
+		state.handicap = this->level_settings()->player_handicap(i);
 		const WeaponChoicePresentation& choice =
 			this->weapon_select_art_.choice(state.type);
 		this->select_states_.push_back(state);
@@ -299,6 +318,14 @@ void MainMenuWeaponSelect::init()
 			label_text,
 			this->menu_style().detail_font,
 			this->calculate_widget_position(0, i + 2),
+			this->render_resources(),
+			this->paper_art_.ink,
+			clear_shadow);
+		widgets->handicap = std::make_unique<UiTextDropShadow>(
+			name + "_handicap",
+			this->text().handicap_label(state.handicap),
+			this->look().weapon_description_font,
+			Vector2F(this->calculate_widget_position(0, i + 2).x, widgets->player->bounds().bottom()),
 			this->render_resources(),
 			this->paper_art_.ink,
 			clear_shadow);
@@ -348,6 +375,7 @@ void MainMenuWeaponSelect::init()
 		this->texture_container_->add_child(widgets->badge.get());
 		this->text_container_->add_child(widgets->weapon_name.get());
 		this->text_container_->add_child(widgets->player.get());
+		this->text_container_->add_child(widgets->handicap.get());
 		this->text_container_->add_child(widgets->weapon_description.get());
 
 		this->register_selection_motion(&widgets->motion);
@@ -389,6 +417,7 @@ void MainMenuWeaponSelect::check_paper_geometry() const
 	{
 		const RectangleF tile = widgets->weapon_icon->artwork_bounds();
 		check(widgets->player->bounds(), "player label");
+		check(widgets->handicap->bounds(), "handicap");
 		check(widgets->badge->bounds(), "player badge");
 		check(tile, "weapon tile");
 		check(widgets->weapon_name->bounds(), "weapon name");
@@ -401,6 +430,7 @@ void MainMenuWeaponSelect::check_paper_geometry() const
 			throw std::runtime_error("main_menu.weapon_select.size: Weapon Select tiles must leave positive paper faces within their motion envelope.");
 		}
 		RectangleF row = RectangleF::union_of(widgets->player->bounds(), widgets->badge->bounds());
+		row = RectangleF::union_of(row, widgets->handicap->bounds());
 		row = RectangleF::union_of(row, tile);
 		row = RectangleF::union_of(row, widgets->weapon_name->bounds());
 		row = RectangleF::union_of(row, widgets->weapon_description->bounds());
@@ -408,7 +438,7 @@ void MainMenuWeaponSelect::check_paper_geometry() const
 		{
 			throw std::runtime_error("main_menu.weapon_select.spacing: Weapon Select rows must follow the heading without overlap.");
 		}
-		if (widgets->player->bounds().right() > tile.x ||
+		if (widgets->player->bounds().right() > tile.x || widgets->handicap->bounds().right() > tile.x ||
 			widgets->weapon_name->bounds().right() > widgets->weapon_description->bounds().x)
 		{
 			throw std::runtime_error("main_menu.weapon_select.spacing: Weapon Select labels, tiles and descriptions must retain separate columns.");

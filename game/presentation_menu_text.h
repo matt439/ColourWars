@@ -190,6 +190,10 @@ struct MenuLabelText
 	std::wstring bot_easy;
 	std::wstring bot_normal;
 	std::wstring bot_hard;
+	// A seat's handicap on Weapon Select, one per level from none upward.
+	std::wstring handicap_none;
+	std::wstring handicap_plus_one;
+	std::wstring handicap_plus_two;
 };
 
 // Authored connection copy; the missing roster is assembled by the menu.
@@ -267,6 +271,8 @@ struct MenuText
 	std::wstring roster_label(int roster_index, int slot) const;
 	std::wstring bot_label(BotDifficulty difficulty) const;
 	std::wstring bot_roster_label(int roster_index, BotDifficulty difficulty) const;
+	// Throws invalid_argument outside handicaps::valid.
+	std::wstring handicap_label(int level) const;
 	// Player numbers are the visible roster numbers 1-4, never device slots.
 	std::wstring pause_title_for_player(int number) const;
 	// Pad slots are 0-3; rounded percentages are -100 through 100 inclusive.

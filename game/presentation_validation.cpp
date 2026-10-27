@@ -1792,6 +1792,25 @@ void Presentation::validate_resources(const RenderResources& render,
 				label_size(key + " at Weapon Select", words, this->menu_.detail_font), Vector2F(2.0f, 2.0f));
 			RectangleF weapon_row = RectangleF::union_of(weapon_label, UiPlayerBadge::before(weapon_label, this->player_identity_));
 			weapon_row = RectangleF::union_of(weapon_row, weapon_contents);
+			// The row's handicap sits under its label, in the label's column,
+			// in the smaller tool-name font so the row keeps its height.
+			for (int level = 0; level < handicaps::count; ++level)
+			{
+				constexpr std::array<const char*, handicaps::count> handicap_roles{
+					"handicap_none", "handicap_plus_one", "handicap_plus_two" };
+				const std::string handicap_key = std::string("menu_text.labels.") +
+					handicap_roles[static_cast<size_t>(level)] + " at Weapon Select";
+				const RectangleF handicap = shadow_bounds(Vector2F(weapon_position.x, weapon_label.bottom()),
+					label_size(handicap_key, this->menu_text_.handicap_label(level), main.weapon_description_font),
+					Vector2F(2.0f, 2.0f));
+				check_label_bounds(handicap_key, handicap, weapon_inside);
+				if (handicap.right() > weapon_tile.x)
+				{
+					throw std::runtime_error(this->source_path_ + ": " + handicap_key +
+						" must end before the first weapon tile including its border.");
+				}
+				weapon_row = RectangleF::union_of(weapon_row, handicap);
+			}
 			check_label_bounds(key + " at Weapon Select", weapon_row, weapon_inside);
 			if (weapon_label.right() > weapon_tile.x)
 			{

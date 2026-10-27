@@ -24,6 +24,12 @@
         "normal": { "reaction_steps": 12, "replan_steps": 45, "territory_candidates": 16, "aim_error_radians": 0.14 },
         "hard": { "reaction_steps": 4, "replan_steps": 15, "territory_candidates": 32, "aim_error_radians": 0.05 }
     },
+    "handicaps": {
+        "_comment": "Per-seat Boost chosen on the Tools page. Provisional until couch play (ROAD#2) says whether +1 and +2 are worth it.",
+        "none": { "damage_taken": 1.0, "paint_refill": 1.0 },
+        "plus_one": { "damage_taken": 0.8, "paint_refill": 1.25 },
+        "plus_two": { "damage_taken": 0.65, "paint_refill": 1.5 }
+    },
     "rumble": {
         "_comment": "Candidate pulses; physical comfort and distinction remain for the pad review.",
         "hit": { "low_frequency": 0.35, "high_frequency": 0.55, "duration": 0.10 },
