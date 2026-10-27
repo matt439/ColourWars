@@ -18,9 +18,11 @@ bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
 	return settings.player_index_for_slot(slot) != -1;
 }
 
-bool pad_seat_missing(int slot, const Gamepads& gamepads, const DebugDirector& debug)
+bool pad_seat_missing(const MenuLevelSettings& settings, int slot,
+	const Gamepads& gamepads, const DebugDirector& debug)
 {
-	return input_slots::is_pad(slot) && !gamepads.connected(slot) && !debug.drives_slot(slot);
+	return input_slots::is_pad(slot) && !gamepads.connected(settings.device_slot(slot)) &&
+		!debug.drives_slot(slot);
 }
 
 int disconnected_player_slot(const MenuLevelSettings& settings,
@@ -28,9 +30,41 @@ int disconnected_player_slot(const MenuLevelSettings& settings,
 {
 	for (const MenuPlayerSettings& player : settings.player_settings())
 	{
-		if (pad_seat_missing(player.num, gamepads, debug))
+		if (pad_seat_missing(settings, player.num, gamepads, debug))
 		{
 			return player.num;
+		}
+	}
+	return -1;
+}
+
+int reclaim_missing_seat(MenuLevelSettings& settings,
+	const std::vector<ProcessedMenuInput>& inputs, unsigned int missing_seats)
+{
+	const std::vector<MenuPlayerSettings>& players = settings.player_settings();
+	int seat = -1;
+	for (int player = 0; player < static_cast<int>(players.size()); ++player)
+	{
+		if ((missing_seats & (1u << player)) != 0)
+		{
+			seat = player;
+			break;
+		}
+	}
+	if (seat == -1)
+	{
+		return -1;
+	}
+	const int slot = players[static_cast<size_t>(seat)].num;
+	for (int device = 0; device < input_slots::pad_count &&
+		device < static_cast<int>(inputs.size()); ++device)
+	{
+		const ProcessedMenuInput& input = inputs[static_cast<size_t>(device)];
+		if (input.connected && input.action == MenuInputAction::pause &&
+			settings.player_index_for_device(device) == -1 &&
+			settings.move_to_device(slot, device))
+		{
+			return slot;
 		}
 	}
 	return -1;
@@ -138,8 +172,15 @@ void PauseMenuInitial::update_page(float /*dt*/)
 		return;
 	}
 	this->refresh_connections();
-	const ProcessedMenuInput input =
-		this->pausing_player_input(this->menu_inputs());
+	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	if (this->waiting_for_players_ && reclaim_missing_seat(*this->level_settings(),
+		inputs, this->shown_missing_seats_.value_or(0)) != -1)
+	{
+		// The seat's "back" cue plays from its new pad; the list shrinks now.
+		this->refresh_connections();
+		return;
+	}
+	const ProcessedMenuInput input = this->pausing_player_input(inputs);
 
 	if (input.action == MenuInputAction::back ||
 		input.action == MenuInputAction::pause)
@@ -175,7 +216,8 @@ void PauseMenuInitial::refresh_connections()
 	unsigned int missing_seats = 0;
 	for (int player = 0; player < static_cast<int>(players.size()); ++player)
 	{
-		if (pad_seat_missing(players[player].num, *this->data()->gamepads(), this->data()->debug()))
+		if (pad_seat_missing(*this->level_settings(), players[player].num,
+			*this->data()->gamepads(), this->data()->debug()))
 		{
 			missing_seats |= 1u << player;
 		}

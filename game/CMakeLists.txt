@@ -157,7 +157,7 @@ add_executable(ColourWars WIN32
     states/controls_settings_menu.cpp
     states/keyboard_jump_capture.cpp
     states/keyboard_jump_menu.cpp
-    states/pad_jump_menu.cpp
+    states/pad_buttons_menu.cpp
     states/stick_settings_menu.cpp
     states/end_menu.cpp
     states/game_states.cpp

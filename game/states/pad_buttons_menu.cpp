@@ -1,14 +1,14 @@
 #include "game/pch.h"
-#include "game/states/pad_jump_menu.h"
+#include "game/states/pad_buttons_menu.h"
 #include "game/objects/crude_drawing.h"
 #include <algorithm>
 
 using namespace labrador;
 using namespace mattmath;
 
-PadJumpMenu::PadJumpMenu(MenuContext* context, int player) : PauseMenuPage(context, player) {}
+PadButtonsMenu::PadButtonsMenu(MenuContext* context, int player) : PauseMenuPage(context, player) {}
 
-void PadJumpMenu::fit_text(UiText& widget, const RectangleF& available)
+void PadButtonsMenu::fit_text(UiText& widget, const RectangleF& available)
 {
 	widget.set_scale(1.0f);
 	const RectangleF bounds = widget.bounds();
@@ -19,7 +19,7 @@ void PadJumpMenu::fit_text(UiText& widget, const RectangleF& available)
 	}
 }
 
-void PadJumpMenu::init()
+void PadButtonsMenu::init()
 {
 	this->input()->reset_actions();
 	this->selection_ = this->save()->input_bindings();
@@ -58,7 +58,7 @@ void PadJumpMenu::init()
 		this->text_container_->add_child(widget);
 		return widget;
 	};
-	const auto& copy = this->text().pad_jump;
+	const auto& copy = this->text().pad_buttons;
 	add_text("heading", copy.heading, style.heading_font, look.heading_position);
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
 		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
@@ -75,22 +75,19 @@ void PadJumpMenu::init()
 			0, input_slots::pad_count - 1);
 		this->refresh_values();
 	});
-	this->jump_ = row("jump", copy.button, 1, [this](Direction direction)
+	const std::array<const char*, entry_count> names{ "jump", "jump_alternate", "shoot",
+		"shoot_alternate", "pause", "pause_alternate" };
+	for (size_t entry = 0; entry < entry_count; ++entry)
 	{
-		constexpr std::array<GamepadButton, 4> choices{ GamepadButton::a, GamepadButton::b,
-			GamepadButton::x, GamepadButton::y };
-		const auto selected = std::find(choices.begin(), choices.end(), this->pending_button());
-		const int index = static_cast<int>(std::distance(choices.begin(), selected));
-		this->selection_.pad_jump[this->slot_] = choices[std::clamp(index +
-			(direction == Direction::right ? 1 : -1), 0, static_cast<int>(choices.size()) - 1)];
-		this->edited_[this->slot_] = true;
-		this->refresh_values();
-		this->set_status(this->text().pad_jump.pending_status);
-	});
-	for (OptionRow* option : { this->pad_.get(), this->jump_.get() })
+		this->entries_[entry] = row(names[entry], copy.row(entry), static_cast<int>(entry + 1),
+			[this, entry](Direction direction) { this->choose(entry, direction); });
+	}
+	this->text_container_->add_child(this->pad_.get());
+	this->focus_.add(this->pad_.get());
+	for (const auto& option : this->entries_)
 	{
-		this->text_container_->add_child(option);
-		this->focus_.add(option);
+		this->text_container_->add_child(option.get());
+		this->focus_.add(option.get());
 	}
 	const auto action = [&](const char* name, const std::wstring& label, int index, Button::Action activate)
 	{
@@ -101,20 +98,20 @@ void PadJumpMenu::init()
 			look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
 		this->focus_.add(widget, std::move(activate));
 	};
-	action("reset", copy.reset, 2, [this] { this->reset_pending(); });
-	action("apply", this->text().item(MenuItem::apply), 3, [this] { this->apply_settings(); });
-	action("back", this->text().item(MenuItem::back), 4, [this] { this->close(); });
-	this->help_limit_ = RectangleF(look.controls_position, look.controls_size);
+	action("reset", copy.reset, 7, [this] { this->reset_pending(); });
+	action("apply", this->text().item(MenuItem::apply), 8, [this] { this->apply_settings(); });
+	action("back", this->text().item(MenuItem::back), 9, [this] { this->close(); });
 	this->status_limit_ = RectangleF(look.status_position, Vector2F(
 		this->paper_->rectangle().right() - look.art.shadow_offset - look.art.focus_padding.x - look.status_position.x,
 		style.footer_y - look.status_position.y));
-	this->help_ = add_text("help", L"", look.help_font, this->help_limit_.position());
+	this->help_ = add_text("help", copy.help, look.help_font, look.controls_position);
+	fit_text(*this->help_, RectangleF(look.controls_position, look.controls_size));
 	this->status_ = add_text("status", L"", look.help_font, this->status_limit_.position());
 	this->refresh_values();
 	this->set_status(copy.pending_status);
 }
 
-void PadJumpMenu::set_status(const std::wstring& value, bool warning)
+void PadButtonsMenu::set_status(const std::wstring& value, bool warning)
 {
 	this->status_->set_text(value);
 	this->status_->set_colour(warning ? this->presentation().main_menu().options_warning_colour :
@@ -122,58 +119,81 @@ void PadJumpMenu::set_status(const std::wstring& value, bool warning)
 	fit_text(*this->status_, this->status_limit_);
 }
 
-void PadJumpMenu::refresh_values()
+void PadButtonsMenu::refresh_values()
 {
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
-		if (!this->edited_[slot]) { this->selection_.pad_jump[slot] = this->save()->input_bindings().pad_jump[slot]; }
+		if (!this->edited_[slot]) { this->selection_.pads[slot] = this->save()->input_bindings().pads[slot]; }
 	}
 	this->pad_->set_value(this->text().device_label(this->slot_));
-	this->jump_->set_value(std::wstring(input_button_label(this->pending_button())));
-	const GamepadButton saved = this->save()->input_bindings().pad_jump[this->slot_];
-	const std::array<int, 3> shown{ this->slot_, static_cast<int>(saved), static_cast<int>(this->pending_button()) };
-	if (this->shown_help_ != shown)
+	const PadProfile& profile = this->pending_profile();
+	for (size_t entry = 0; entry < entry_count; ++entry)
 	{
-		this->help_->set_text(this->text().pad_jump.help_block(input_button_label(saved),
-			input_button_label(this->pending_button())));
-		fit_text(*this->help_, this->help_limit_);
-		this->shown_help_ = shown;
+		const PadActionChoice& choice = profile.actions[entry / 2];
+		this->entries_[entry]->set_value(std::wstring(pad_control_label(entry % 2 == 0 ? choice.primary : choice.alternate)));
 	}
 }
 
-void PadJumpMenu::reset_pending()
+void PadButtonsMenu::choose(size_t entry, Direction direction)
 {
-	this->selection_.pad_jump[this->slot_] = GamepadButton::a;
+	const PadAction action = static_cast<PadAction>(entry / 2);
+	const bool alternate = entry % 2 == 1;
+	PadProfile& profile = this->selection_.pads[this->slot_];
+	PadControl& current = alternate ? profile[action].alternate : profile[action].primary;
+	// Primaries cycle the eleven controls; alternates also offer None first.
+	std::vector<PadControl> choices;
+	if (alternate) { choices.push_back(PadControl::none); }
+	for (const PadControl control : pad_controls()) { choices.push_back(control); }
+	const int step = direction == Direction::right ? 1 : -1;
+	int index = static_cast<int>(std::distance(choices.begin(), std::find(choices.begin(), choices.end(), current)));
+	bool skipped = false;
+	for (index += step; index >= 0 && index < static_cast<int>(choices.size()); index += step)
+	{
+		if (!pad_control_conflict(profile, action, alternate, choices[static_cast<size_t>(index)])) { break; }
+		skipped = true;
+	}
+	if (index >= 0 && index < static_cast<int>(choices.size()))
+	{
+		current = choices[static_cast<size_t>(index)];
+		this->edited_[this->slot_] = true;
+	}
+	this->refresh_values();
+	this->set_status(skipped ? this->text().pad_buttons.conflict_status : this->text().pad_buttons.pending_status, skipped);
+}
+
+void PadButtonsMenu::reset_pending()
+{
+	this->selection_.pads[this->slot_] = PadProfile{};
 	this->edited_[this->slot_] = true;
 	this->refresh_values();
-	this->set_status(this->text().pad_jump.pending_status);
+	this->set_status(this->text().pad_buttons.pending_status);
 	this->play_wave(this->confirm_sound_);
 }
 
-void PadJumpMenu::apply_settings()
+void PadButtonsMenu::apply_settings()
 {
 	InputBindings applied = this->save()->input_bindings();
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
-		if (this->edited_[slot]) { applied.pad_jump[slot] = this->selection_.pad_jump[slot]; }
+		if (this->edited_[slot]) { applied.pads[slot] = this->selection_.pads[slot]; }
 	}
 	const bool saved = this->save()->set_input_bindings_and_save(applied);
 	if (saved) { this->edited_.fill(false); }
 	this->refresh_values();
 	this->play_wave(this->confirm_sound_);
-	this->set_status(saved ? this->text().pad_jump.saved_status : this->text().status.active_save_failed, !saved);
+	this->set_status(saved ? this->text().pad_buttons.saved_status : this->text().status.active_save_failed, !saved);
 }
 
-void PadJumpMenu::close()
+void PadButtonsMenu::close()
 {
 	this->play_wave(this->cancel_sound_);
 	this->input()->reset_actions();
 	this->context()->pop();
 }
 
-bool PadJumpMenu::debug_dismiss(bool /*leaving_match*/) { this->close(); return true; }
+bool PadButtonsMenu::debug_dismiss(bool /*leaving_match*/) { this->close(); return true; }
 
-void PadJumpMenu::update_page(float /*dt*/)
+void PadButtonsMenu::update_page(float /*dt*/)
 {
 	if (!this->context()->active()) { return; }
 	this->refresh_values();

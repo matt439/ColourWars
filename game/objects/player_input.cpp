@@ -15,7 +15,7 @@ PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
 	if (this->input_bindings_ == nullptr) { throw std::invalid_argument("PlayerInput requires input bindings"); }
 	this->keyboard_bindings_ = effective_action_bindings(*this->input_bindings_);
 	this->keyboard_jump_ = this->input_bindings_->keyboard_jump;
-	this->pad_jump_ = this->input_bindings_->pad_jump;
+	this->pad_profiles_ = this->input_bindings_->pads;
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		this->pad_bindings_[slot] = effective_action_bindings(*this->input_bindings_, slot);
@@ -34,18 +34,18 @@ const ActionBindings& PlayerInput::effective_bindings() const
 
 const ActionBindings& PlayerInput::effective_pad_bindings(int slot) const
 {
-	if (this->pad_jump_[slot] != this->input_bindings_->pad_jump[slot])
+	if (this->pad_profiles_[slot] != this->input_bindings_->pads[slot])
 	{
 		this->pad_bindings_[slot] = effective_action_bindings(*this->input_bindings_, slot);
-		this->pad_jump_[slot] = this->input_bindings_->pad_jump[slot];
+		this->pad_profiles_[slot] = this->input_bindings_->pads[slot];
 	}
 	return this->pad_bindings_[slot];
 }
 
-PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
+PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot) const
 {
-	const GamepadState& pad = gamepads.state(slot);
-	const GamepadState& before = gamepads.previous_state(slot);
+	const GamepadState& pad = gamepads.state(device);
+	const GamepadState& before = gamepads.previous_state(device);
 	const ActionBindings& bindings = this->effective_pad_bindings(slot);
 	const auto action = [&](GameAction name)
 	{
@@ -55,12 +55,12 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 	PlayerInputData result;
 	result.connected = true;
 
-	// Jump uses this slot's face button or LT crossing its threshold. Suppress press
+	// Jump uses this slot's chosen controls (A / LT by default). Suppress press
 	// edges on reconnect: the previous state is neutral, so an already-held
 	// button would otherwise look newly pressed. Preserve the held state.
 	const ActionSample jump = action(GameAction::jump);
 	result.jump_held = jump.held;
-	result.jump_pressed = !gamepads.just_connected(slot) && jump.pressed;
+	result.jump_pressed = !gamepads.just_connected(device) && jump.pressed;
 	result.primary_shoot = action(GameAction::shoot).held;
 
 	// Open menus on release so the opening button is no longer held.
@@ -135,13 +135,22 @@ PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 
 std::vector<PlayerInputData> PlayerInput::player_inputs() const
 {
+	std::array<int, input_slots::pad_count> own{};
+	for (int slot = 0; slot < input_slots::pad_count; ++slot) { own[slot] = slot; }
+	return this->player_inputs(own);
+}
+
+std::vector<PlayerInputData> PlayerInput::player_inputs(
+	const std::array<int, input_slots::pad_count>& devices) const
+{
 	this->input_bindings_->validate();
 	std::vector<PlayerInputData> result(input_slots::count);
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
-		if (this->gamepads_->connected(slot))
+		const int device = input_slots::is_pad(devices[slot]) ? devices[slot] : slot;
+		if (this->gamepads_->connected(device))
 		{
-			result[slot] = this->pad_input(*this->gamepads_, slot);
+			result[slot] = this->pad_input(*this->gamepads_, device, slot);
 		}
 	}
 

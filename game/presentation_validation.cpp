@@ -397,7 +397,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		const Vector2F position = controls.layout.position +
 			Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(row));
-		const bool fitted_action = item == MenuItem::keyboard_jump || item == MenuItem::pad_jump || item == MenuItem::apply;
+		const bool fitted_action = item == MenuItem::keyboard_jump || item == MenuItem::pad_buttons || item == MenuItem::apply;
 		const std::optional<float> label_width = fitted_action ?
 			std::optional<float>(controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset - position.x) :
 			(fitted_label ? std::optional<float>(controls.layout.spacing.x - controls.art.focus_padding.x) : std::nullopt);
@@ -414,7 +414,7 @@ void Presentation::validate_resources(const RenderResources& render,
 				menu_item_keys[static_cast<size_t>(item)] + " must fit above the controls status line including focus padding.");
 		}
 	};
-	const MenuItem controls_items[]{ MenuItem::pad_sticks, MenuItem::keyboard_jump, MenuItem::pad_jump, MenuItem::music_volume,
+	const MenuItem controls_items[]{ MenuItem::pad_sticks, MenuItem::keyboard_jump, MenuItem::pad_buttons, MenuItem::music_volume,
 		MenuItem::sfx_volume, MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(controls_items); ++index)
 	{
@@ -1013,11 +1013,11 @@ void Presentation::validate_resources(const RenderResources& render,
 			}
 		}
 	}
-	const PadJumpMenuText& pad_jump = this->menu_text_.pad_jump;
-	const auto pad_jump_text = [&](const char* key, const std::wstring& words, const std::string& font,
+	const PadButtonsMenuText& pad_buttons = this->menu_text_.pad_buttons;
+	const auto pad_buttons_text = [&](const char* key, const std::wstring& words, const std::string& font,
 		const Vector2F& position, bool row, bool option_label = false)
 	{
-		const std::string where = std::string("menu_text.pad_jump.") + key;
+		const std::string where = std::string("menu_text.pad_buttons.") + key;
 		Vector2F size = fixed_menu_size(where, words, font);
 		if (row)
 		{
@@ -1035,30 +1035,28 @@ void Presentation::validate_resources(const RenderResources& render,
 		{ throw std::runtime_error(this->source_path_ + ": " + where + " must fit its controls column and row."); }
 		return RectangleF(position, size);
 	};
-	const RectangleF pad_jump_heading = pad_jump_text("heading", pad_jump.heading, this->menu_.heading_font, controls.heading_position, false);
-	if (pad_jump_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
-	{ throw std::runtime_error(this->source_path_ + ": menu_text.pad_jump.heading must end before its first focus card."); }
-	pad_jump_text("button", pad_jump.button, controls.item_font,
-		controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y), true, true);
-	pad_jump_text("reset", pad_jump.reset, controls.item_font,
-		controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 2.0f), true);
-	std::ignore = fixed_menu_size("menu_text.pad_jump.help", pad_jump.help, controls.help_font);
-	RectangleF pad_jump_help;
-	bool first_pad_help = true;
-	for (const std::wstring_view current : { L"A", L"B", L"X", L"Y" })
+	const RectangleF pad_buttons_heading = pad_buttons_text("heading", pad_buttons.heading, this->menu_.heading_font,
+		controls.heading_position, false);
+	if (pad_buttons_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
+	{ throw std::runtime_error(this->source_path_ + ": menu_text.pad_buttons.heading must end before its first focus card."); }
+	// Rows: Pad, six action entries, Reset, Apply, Back.
+	const char* pad_button_rows[]{ "jump", "jump_alternate", "shoot", "shoot_alternate", "pause", "pause_alternate" };
+	for (size_t index = 0; index < std::size(pad_button_rows); ++index)
 	{
-		std::ignore = fixed_menu_size("menu_text.pad_jump.current", pad_jump.current_button(current), controls.help_font);
-		std::ignore = fixed_menu_size("menu_text.pad_jump.pending", pad_jump.pending_button(current), controls.help_font);
-		pad_jump_text("button", std::wstring(current), controls.item_font,
-			controls.layout.position + controls.layout.spacing, true);
-		for (const std::wstring_view pending : { L"A", L"B", L"X", L"Y" })
+		const Vector2F position = controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(index + 1));
+		pad_buttons_text(pad_button_rows[index], pad_buttons.row(index), controls.item_font, position, true, true);
+		for (const PadControl control : pad_controls())
 		{
-			const RectangleF fitted = check_help_fit("menu_text.pad_jump.help", pad_jump.help_block(current, pending),
-				controls.controls_position, controls.controls_size);
-			pad_jump_help = first_pad_help ? fitted : RectangleF::union_of(pad_jump_help, fitted);
-			first_pad_help = false;
+			pad_buttons_text(pad_button_rows[index], std::wstring(pad_control_label(control)), controls.item_font,
+				position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 		}
+		pad_buttons_text(pad_button_rows[index], std::wstring(pad_control_label(PadControl::none)), controls.item_font,
+			position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 	}
+	pad_buttons_text("reset", pad_buttons.reset, controls.item_font,
+		controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 7.0f), true);
+	const RectangleF pad_buttons_help = check_help_fit("menu_text.pad_buttons.help", pad_buttons.help,
+		controls.controls_position, controls.controls_size);
 	const StickPreviewPresentation& preview = controls.stick_preview;
 	const RectangleF pad_association = check_help_fit("menu_text.help.pad_association", this->menu_text_.help.pad_association,
 		preview.association_position, help_area.bottom_right() - preview.association_position);
@@ -1089,7 +1087,7 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->menu_.item_font, options_art);
 	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f),
 		controls.item_font, controls.art);
-	const RectangleF pad_jump_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 4.0f),
+	const RectangleF pad_buttons_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f),
 		controls.item_font, controls.art);
 	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 5.0f),
 		controls.item_font, controls.art);
@@ -1099,7 +1097,7 @@ void Presentation::validate_resources(const RenderResources& render,
 		std::initializer_list<RectangleF> obstacles)
 	{
 		const std::string_view message_key(message.key);
-		const std::string key = std::string(message_key.starts_with("keyboard_jump.") || message_key.starts_with("pad_jump.") ?
+		const std::string key = std::string(message_key.starts_with("keyboard_jump.") || message_key.starts_with("pad_buttons.") ?
 			"menu_text." : "menu_text.status.") + message.key;
 		const Vector2F raw = fixed_menu_size(key, message.text, font);
 		const float available = (1920.0f + paper_size.x) / 2.0f - art.shadow_offset -
@@ -1161,12 +1159,13 @@ void Presentation::validate_resources(const RenderResources& render,
 		check_status({ "keyboard_jump.capture_release", words }, controls.help_font, controls.status_position,
 			controls.box_size, controls.art, { jump_back, help_area });
 	}
-	const StatusMessage pad_jump_statuses[]{ { "pad_jump.pending_status", pad_jump.pending_status },
-		{ "pad_jump.saved_status", pad_jump.saved_status }, { "active_save_failed", status_text.active_save_failed } };
-	for (const StatusMessage& message : pad_jump_statuses)
+	const StatusMessage pad_buttons_statuses[]{ { "pad_buttons.pending_status", pad_buttons.pending_status },
+		{ "pad_buttons.saved_status", pad_buttons.saved_status }, { "pad_buttons.conflict_status", pad_buttons.conflict_status },
+		{ "active_save_failed", status_text.active_save_failed } };
+	for (const StatusMessage& message : pad_buttons_statuses)
 	{
 		check_status(message, controls.help_font, controls.status_position, controls.box_size,
-			controls.art, { pad_jump_back, pad_jump_help });
+			controls.art, { pad_buttons_back, pad_buttons_help });
 	}
 	const StatusMessage sticks_statuses[]{ { "sticks_pending", status_text.sticks_pending },
 		{ "sticks_saved", status_text.sticks_saved }, { "active_save_failed", status_text.active_save_failed } };

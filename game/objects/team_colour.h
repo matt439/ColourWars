@@ -21,6 +21,10 @@ enum class TeamColourPair
 	blue_orange,
 	pink_green,
 	blue_yellow,
+	// Added by ROAD#8; each passes the colour-vision check in team_palette.
+	purple_gold,
+	red_azure,
+	magenta_forest,
 	// Count of fixed pairs; keep new pairs before this sentinel.
 	count
 };
