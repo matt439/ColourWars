@@ -78,6 +78,8 @@ difficulty comparison; difficulty values remain provisional.
 - **Low-paint warning:** listen to the provisional cue in the 1/2/4P mix and look at the
   HUD tag and figure tank at 4P with sound muted (`POL#38`).
 - **Cursor marker:** judge the pointer marquee in play at 1/2/4P (`POL#39`).
+- **Team colour pairs:** keep or swap the three new colour-vision-checked pairs after seeing
+  them in a match (`ROAD#8`).
 - **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
   treatment (`POL#34`); current behavior is documented, with no candidate accepted.
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
@@ -168,7 +170,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ROAD#7` | DEFERRED | LOW | M | Per-seat view shake, aim marker and Reduce effects, after the stick-profile pattern; after `POL#27`. [Scope](docs/feature-roadmap.md#per-seat-accessibility-toggles-road7). |
-| `ROAD#8` | DEFERRED | LOW | S | More team palette pairs, each checked under colour-vision simulation; later UI art pass. [Scope](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
+| `ROAD#8` | DECISION | LOW | S | Look at the three new team pairs (purple/gold, red/azure, magenta/forest) in a match and keep or swap them; all pass the colour-vision bar in `team_palette`. [Scope](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
 | `ROAD#10` | OPEN | HIGH | XL | Attended difficulty comparison and usefulness; decide whether bots hold and paint movers and whether world labels clamp to the pane; physical-pad check. Latch, refill retreat (margin 600), scan cost and mover identity are done; values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |

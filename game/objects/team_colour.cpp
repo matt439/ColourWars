@@ -46,6 +46,9 @@ const char* TeamColourTools::palette_key(TeamColourPair palette)
 	case TeamColourPair::blue_orange: return "blue_orange";
 	case TeamColourPair::pink_green: return "pink_green";
 	case TeamColourPair::blue_yellow: return "blue_yellow";
+	case TeamColourPair::purple_gold: return "purple_gold";
+	case TeamColourPair::red_azure: return "red_azure";
+	case TeamColourPair::magenta_forest: return "magenta_forest";
 	default: throw std::invalid_argument("Invalid team palette");
 	}
 }
