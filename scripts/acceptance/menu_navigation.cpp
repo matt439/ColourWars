@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/menu_input.h"
 #include "game/states/menu_level_settings.h"
+#include "game/states/pause_menu.h"
 #include "game/presentation.h"
 #include <cstdlib>
 #include <filesystem>
@@ -114,6 +115,90 @@ namespace
             neutral(menu_input_for_owner({}, 0, roster)),
             "An owner outside the supplied input vector must stay neutral");
     }
+
+    // ROAD#4: a pad back in another slot takes its seat with Start while the
+    // match waits. The seat keeps its slot as identity and reads the new pad.
+    void check_seat_reclaim(const MenuText& text)
+    {
+        MenuLevelSettings roster;
+        roster.set_player_count(3);
+        roster.begin_input_claims(0);
+        require(roster.claim_input_slot(1) && roster.claim_input_slot(input_slots::keyboard_and_mouse),
+            "Reclaim fixture must seat pads 1 and 2 and the keyboard");
+        require(roster.device_slot(0) == 0 && roster.device_slot(1) == 1 &&
+            roster.device_slot(input_slots::keyboard_and_mouse) == input_slots::keyboard_and_mouse &&
+            roster.player_index_for_device(1) == 1 && roster.player_index_for_device(2) == -1,
+            "Every seat must read its own slot until a pad reclaims it");
+
+        std::vector<ProcessedMenuInput> inputs(input_slots::count);
+        const ProcessedMenuInput start{ Direction::none, MenuInputAction::pause, true };
+        const unsigned int first_missing = 1u << 0;
+        require(reclaim_missing_seat(roster, inputs, first_missing) == -1,
+            "No press must reclaim nothing");
+        inputs[1] = start;
+        inputs[input_slots::keyboard_and_mouse] = start;
+        inputs[2] = { Direction::none, MenuInputAction::pause, false };
+        inputs[3] = { Direction::up, MenuInputAction::proceed, true };
+        require(reclaim_missing_seat(roster, inputs, first_missing) == -1 && roster.device_slot(0) == 0,
+            "A seated pad, the keyboard, a disconnected pad and a non-Start press must not reclaim");
+        inputs[2].connected = true;
+        require(reclaim_missing_seat(roster, inputs, 0) == -1 && roster.device_slot(0) == 0,
+            "Start must reclaim nothing when no seat is missing");
+        require(reclaim_missing_seat(roster, inputs, first_missing) == 0,
+            "Start on a spare pad must take the missing seat");
+        require(roster.device_slot(0) == 2 && roster.player_index_for_slot(0) == 0 &&
+            roster.player_index_for_device(2) == 0 && roster.player_index_for_device(0) == -1,
+            "The reclaimed seat must keep its identity slot and read the new pad only");
+        require(roster.pad_devices() == std::array<int, input_slots::pad_count>{ 2, 1, 2, 3 },
+            "Indexed readers must see the seat's new pad in its own slot");
+        require(roster.player_label(0, text) == text.roster_label(0, 2),
+            "The roster must name the pad the seat now uses");
+
+        const auto same = [](const ProcessedMenuInput& left, const ProcessedMenuInput& right)
+        {
+            return left.connected == right.connected && left.direction == right.direction && left.action == right.action;
+        };
+        inputs = std::vector<ProcessedMenuInput>(input_slots::count);
+        inputs[0] = { Direction::down, MenuInputAction::proceed, true };
+        inputs[2] = { Direction::left, MenuInputAction::back, true };
+        require(same(menu_input_for_owner(inputs, 0, roster), inputs[2]),
+            "A reclaimed owner's menu must follow its new pad, not the slot it left");
+        inputs[2].connected = false;
+        inputs[1] = { Direction::none, MenuInputAction::none, true };
+        require(same(menu_input_for_owner(inputs, 0, roster), ProcessedMenuInput()),
+            "The slot a seat left must not count as a participant for the fallback");
+
+        inputs = std::vector<ProcessedMenuInput>(input_slots::count);
+        inputs[0] = start;
+        inputs[3] = start;
+        require(reclaim_missing_seat(roster, inputs, (1u << 1) | (1u << 0)) == 0 &&
+            roster.device_slot(0) == 0 && roster.device_slot(1) == 1,
+            "Two missing seats must fill in roster order, the first back onto its own pad");
+        require(reclaim_missing_seat(roster, inputs, 1u << 1) == 1 && roster.device_slot(1) == 3,
+            "A second missing seat must take the next spare pad");
+        require(roster.player_index_for_device(1) == -1 && roster.player_index_for_device(3) == 1,
+            "The second seat must leave its old slot");
+
+        require(!roster.move_to_device(0, 3) && roster.device_slot(0) == 0,
+            "A pad another seat reads must not be taken");
+        require(!roster.move_to_device(0, input_slots::keyboard_and_mouse) &&
+            !roster.move_to_device(input_slots::keyboard_and_mouse, 2) && !roster.move_to_device(2, 2),
+            "Only a seated pad slot may move, and only onto a pad");
+        require(roster.move_to_device(1, 1) && roster.device_slot(1) == 1,
+            "A seat may move back onto its own slot");
+        require(roster.move_to_device(1, 2) && roster.release_input_slot(1) &&
+            roster.device_slot(1) == 1 && roster.player_index_for_device(2) == -1,
+            "A setup claim operation must put every seat back on its own slot");
+
+        MenuLevelSettings with_bot;
+        with_bot.set_player_count(2);
+        with_bot.begin_input_claims(0);
+        with_bot.set_player_bot(1, BotDifficulty::normal);
+        inputs = std::vector<ProcessedMenuInput>(input_slots::count);
+        inputs[2] = start;
+        require(reclaim_missing_seat(with_bot, inputs, 1u << 1) == -1,
+            "A bot seat must never be reclaimed");
+    }
 }
 
 int main(int argc, char** argv)
@@ -126,6 +211,7 @@ int main(int argc, char** argv)
         const float delay = look.menu().repeat_delay;
         const float interval = look.menu().repeat_interval;
         check_owner_routing();
+        check_seat_reclaim(look.menu_text());
         require(delay > interval && interval > 0, "Authored repeat must have a longer first delay");
         MenuDirectionRepeat navigation;
         GamepadState pad;
@@ -285,7 +371,7 @@ int main(int argc, char** argv)
         input.reset_pad_actions(0);
         require(input.menu_inputs()[input_slots::keyboard_and_mouse].direction == before_reset,
             "Resetting one pad must preserve other device results");
-        std::cout << "PASS menu navigation: press, repeat, hysteresis, page arming, focus, stable reads and owner routing\n";
+        std::cout << "PASS menu navigation: press, repeat, hysteresis, page arming, focus, stable reads, owner routing and seat reclaim\n";
         return EXIT_SUCCESS;
     }
     catch (const std::exception& error)

@@ -273,7 +273,7 @@
       "arena_locked": "A/Enter Start match    B/Esc Unlock arena",
       "missing_player": " Reconnect controller    B/Esc Change players",
       "pause": "A/Enter Select    B/Start/Esc Resume",
-      "pause_missing": " Reconnect pads to resume    A/Enter Select",
+      "pause_missing": " Reconnect, then Start    A/Enter Select",
       "select": "A/Enter Select",
       "credits": "A/Enter Back    B/Esc Back",
       "bot_team": "P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams",

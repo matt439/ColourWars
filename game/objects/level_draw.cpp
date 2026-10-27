@@ -250,8 +250,21 @@ void Level::refresh_identity_texts()
 			static_cast<int>(view), player.team(), labelled ?
 			this->seat_labels_[view] : (this->is_bot(static_cast<int>(view)) ?
 				this->presentation_->menu_text().bot_label(this->roster_[view].difficulty) :
-				input_slots::device_name(player.player_num())));
+				input_slots::device_name(this->pad_device(player.player_num()))));
 	}
+}
+
+int Level::pad_device(int slot) const
+{
+	return input_slots::is_pad(slot) && this->pad_devices_[static_cast<size_t>(slot)] >= 0 ?
+		this->pad_devices_[static_cast<size_t>(slot)] : slot;
+}
+
+void Level::set_pad_devices(const std::array<int, input_slots::pad_count>& devices)
+{
+	if (devices == this->pad_devices_) { return; }
+	this->pad_devices_ = devices;
+	this->refresh_identity_texts();
 }
 
 void Level::update_player_identity(float dt)

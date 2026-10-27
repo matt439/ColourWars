@@ -72,7 +72,7 @@ namespace menu_text_acceptance
         { "arena_locked", L"A/Enter Start match    B/Esc Unlock arena" },
         { "missing_player", L" Reconnect controller    B/Esc Change players" },
         { "pause", L"A/Enter Select    B/Start/Esc Resume" },
-        { "pause_missing", L" Reconnect pads to resume    A/Enter Select" },
+        { "pause_missing", L" Reconnect, then Start    A/Enter Select" },
         { "select", L"A/Enter Select" }, { "credits", L"A/Enter Back    B/Esc Back" },
         { "bot_team", L"P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams" },
         { "bot_weapon", L"P1 Up/Down Row    Left/Right Tool    A/Enter Ready    B/Esc Cancel" }
