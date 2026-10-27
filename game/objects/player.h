@@ -109,7 +109,7 @@ public:
     // Borrowed tuning and presentation must outlive the player. The builder supplies the spawn
     // rectangle; tuning supplies movement and health parameters.
     // secondary is currently accepted but ignored; players carry one weapon.
-    // The builder supplies sound_index as the roster/view index, independently
+    // The builder supplies sound_index as the roster participant, independently
     // of sparse device slots and device-less debug players.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,

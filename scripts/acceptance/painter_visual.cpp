@@ -220,6 +220,8 @@ namespace
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 #include "scripts/acceptance/painter_visual/team_setup_checks.h"
 #include "scripts/acceptance/painter_visual/remembered_setup_checks.h"
+#include "scripts/acceptance/painter_visual/bot_setup_checks.h"
+#include "scripts/acceptance/painter_visual/bot_runtime_checks.h"
 #include "scripts/acceptance/painter_visual/connection_text_checks.h"
 #include "scripts/acceptance/painter_visual/stick_readout_checks.h"
 #include "scripts/acceptance/painter_visual/setup_motion_checks.h"
@@ -258,14 +260,14 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"percentage-text" || std::wstring(argv[3]) == L"feedback-tune-colours" || std::wstring(argv[3]) == L"combat-tune-colours" || std::wstring(argv[3]) == L"blocked-shot-tune-colours" || std::wstring(argv[3]) == L"idle-drip-tune-colours" || std::wstring(argv[3]) == L"respawn-pen-tune-colours" || std::wstring(argv[3]) == L"cursor-tune-colours" || std::wstring(argv[3]) == L"silhouette-tune-colours" || std::wstring(argv[3]) == L"reveal-tune-colours" || std::wstring(argv[3]) == L"cursor-material-tune-colours" || std::wstring(argv[3]) == L"desktop-tune-colour" || std::wstring(argv[3]) == L"power-light-tune-colour" || std::wstring(argv[3]) == L"program-tune-colour" || std::wstring(argv[3]) == L"program-level-visibility" || std::wstring(argv[3]) == L"acting-tune-colours" || std::wstring(argv[3]) == L"glass-tune-colour" || std::wstring(argv[3]) == L"silhouette-body-tune-colour" || std::wstring(argv[3]) == L"scribble-tune-colour" || std::wstring(argv[3]) == L"hud-health-tune-colour" || std::wstring(argv[3]) == L"hud-track-tune-colour" || std::wstring(argv[3]) == L"crack-tune-colour" || std::wstring(argv[3]) == L"limb-tune-colours" ||
             std::wstring(argv[3]) == L"exposed-colour-alpha" || std::wstring(argv[3]) == L"duration-text" ||
             std::wstring(argv[3]) == L"resolution-text" || std::wstring(argv[3]) == L"end-continuation" || std::wstring(argv[3]) == L"results-text" || std::wstring(argv[3]) == L"session-result" || std::wstring(argv[3]) == L"series-score" || std::wstring(argv[3]) == L"round-heading" || std::wstring(argv[3]) == L"competitive-winner" || std::wstring(argv[3]) == L"contribution-team" || std::wstring(argv[3]) == L"result-percentage" ||
-            std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"remembered-setup" ||
+            std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"bot-players" || std::wstring(argv[3]) == L"remembered-setup" ||
             std::wstring(argv[3]) == L"remembered-setup-read" || std::wstring(argv[3]) == L"connection-text" ||
             std::wstring(argv[3]) == L"stick-readouts" || std::wstring(argv[3]) == L"team-focus" || std::wstring(argv[3]) == L"team-tune-colours" || std::wstring(argv[3]) == L"weapon-tune-colours" || std::wstring(argv[3]) == L"stage-summary" || std::wstring(argv[3]) == L"menu-labels" ||
             std::wstring(argv[3]) == L"weapon-catalog" || std::wstring(argv[3]) == L"stage-counts" ||
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|press-tower|turbulence-blockout|surface-finish|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|cursor-material-tune-colours|desktop-tune-colour|power-light-tune-colour|program-tune-colour|program-level-visibility|acting-tune-colours|glass-tune-colour|silhouette-body-tune-colour|scribble-tune-colour|hud-health-tune-colour|hud-track-tune-colour|hud-timer-tune-colour|hud-label-tune-colours|crack-tune-colour|limb-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|rumble|stick-settings|percentage-text|team-setup|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|stage-preview-background-tune-colour|hud-closing-materials|hud-closing-shade|hud-paper-tune-colours|home-return-focus|home-exit|options-defaults|display-trial|paused-options] | painter_visual <staged-content> <output> (turbulence-mover|turbulence-shoulder|turbulence-slab) <private-trial.json>");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|press-tower|turbulence-blockout|surface-finish|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|cursor-material-tune-colours|desktop-tune-colour|power-light-tune-colour|program-tune-colour|program-level-visibility|acting-tune-colours|glass-tune-colour|silhouette-body-tune-colour|scribble-tune-colour|hud-health-tune-colour|hud-track-tune-colour|hud-timer-tune-colour|hud-label-tune-colours|crack-tune-colour|limb-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|rumble|stick-settings|percentage-text|team-setup|bot-players|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|stage-preview-background-tune-colour|hud-closing-materials|hud-closing-shade|hud-paper-tune-colours|home-return-focus|home-exit|options-defaults|display-trial|paused-options] | painter_visual <staged-content> <output> (turbulence-mover|turbulence-shoulder|turbulence-slab) <private-trial.json>");
         const bool turbulence_mover_only = argc == 5 && std::wstring(argv[3]) == L"turbulence-mover";
         const bool turbulence_shoulder_only = argc == 5 && std::wstring(argv[3]) == L"turbulence-shoulder";
         const bool turbulence_slab_only = argc == 5 && std::wstring(argv[3]) == L"turbulence-slab";
@@ -291,6 +293,7 @@ int wmain(int argc, wchar_t** argv)
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
         const bool remembered_setup_only = argc == 4 && (std::wstring(argv[3]) == L"remembered-setup" ||
             std::wstring(argv[3]) == L"remembered-setup-read");
+        const bool bot_players_only = argc == 4 && std::wstring(argv[3]) == L"bot-players";
         const bool connection_text_only = argc == 4 && std::wstring(argv[3]) == L"connection-text";
         const bool stick_readouts_only = argc == 4 && std::wstring(argv[3]) == L"stick-readouts";
         const bool team_focus_only = argc == 4 && std::wstring(argv[3]) == L"team-focus";
@@ -380,11 +383,11 @@ int wmain(int argc, wchar_t** argv)
         require(!crack_tune_colour_only, "CrackTuneColourOnly requires the normal gamepad reader");
         require(!limb_tune_colours_only, "LimbTuneColoursOnly requires the normal gamepad reader");
 
-        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only ||
+        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || bot_players_only || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options")),
             "The scripted gamepad backend is restricted to focused team/setup/menu-text acceptance");
 #else
-        require(argc != 4 || (!rumble_only && !keyboard_jump_only && !remembered_setup_only && !connection_text_only && !stick_readouts_only && !team_focus_only && !team_tune_colours_only && !weapon_tune_colours_only && !stage_summary_only && !stage_preview_background_tune_colour_only && !menu_labels_only && std::wstring(argv[3]) != L"team-setup" &&
+        require(argc != 4 || (!rumble_only && !keyboard_jump_only && !bot_players_only && !remembered_setup_only && !connection_text_only && !stick_readouts_only && !team_focus_only && !team_tune_colours_only && !weapon_tune_colours_only && !stage_summary_only && !stage_preview_background_tune_colour_only && !menu_labels_only && std::wstring(argv[3]) != L"team-setup" &&
             std::wstring(argv[3]) != L"setup-motion" && std::wstring(argv[3]) != L"join-stage-motion" && std::wstring(argv[3]) != L"join-paper" && std::wstring(argv[3]) != L"team-paper" && std::wstring(argv[3]) != L"weapon-paper" && std::wstring(argv[3]) != L"stage-paper" && std::wstring(argv[3]) != L"home-return-focus" && std::wstring(argv[3]) != L"home-exit" && std::wstring(argv[3]) != L"options-defaults" && std::wstring(argv[3]) != L"display-trial" && std::wstring(argv[3]) != L"paused-options"),
             "Use check-painter.ps1 focused scripted input switches to compile the scripted input seam");
 #endif
@@ -926,6 +929,12 @@ int wmain(int argc, wchar_t** argv)
         {
             remembered_setup_matrix(app, levels, canvas, tuning, presentation, content, output,
                 std::wstring(argv[3]) == L"remembered-setup-read");
+            return 0;
+        }
+        if (bot_players_only)
+        {
+            check_playable_bot_setup(app, levels, tuning, presentation, output);
+            check_playable_bot_runtime(app, levels, tuning, presentation, content, output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"paused-options")

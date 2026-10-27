@@ -58,6 +58,7 @@ public:
 	std::vector<ProcessedMenuInput> menu_inputs();
 	// Same input, in the fixed roster's player order. A missing device leaves
 	// its own row neutral instead of handing the row to another controller.
+	// Explicit bots are connected and neutral; pages route host choices to them.
 	std::vector<ProcessedMenuInput> player_inputs(const MenuLevelSettings& settings);
 
 	// Clear ownership when taking input back from gameplay or another context.

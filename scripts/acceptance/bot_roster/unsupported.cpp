@@ -24,21 +24,6 @@ void check_unsupported_bot_consumers(const std::filesystem::path& content)
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
     settings.set_player_bot(1, BotDifficulty::normal);
 
-    // The runtime gate stays ahead of resource access until the bot driver and
-    // human view mapping are integrated. Metadata consumers are now supported.
-    const GameTuning tuning((content / "tuning.json").string().c_str());
-    LevelBuilder builder(nullptr, nullptr, nullptr, nullptr, nullptr, &tuning,
-        nullptr, nullptr, nullptr, nullptr, nullptr);
-    bool rejected = false;
-    try { builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off); }
-    catch (const std::invalid_argument& error)
-    {
-        const std::string diagnostic = error.what();
-        rejected = diagnostic.find("bot") != std::string::npos &&
-            diagnostic.find("pending") != std::string::npos;
-    }
-    require(rejected, "The level builder did not reject bots before touching runtime resources");
-
     const Presentation presentation((content / "presentation.json").string().c_str());
     const MenuText& text = presentation.menu_text();
     constexpr BotDifficulty difficulties[]{ BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard };

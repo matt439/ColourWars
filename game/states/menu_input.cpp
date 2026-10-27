@@ -254,6 +254,13 @@ std::vector<ProcessedMenuInput> MenuInput::player_inputs(
 	std::vector<ProcessedMenuInput> result;
 	for (const MenuPlayerSettings& player : settings.player_settings())
 	{
+		if (player.controller == PlayerController::bot)
+		{
+			// A bot needs no device to keep setup ready. Only the human host
+			// routes choices to its row; the bot emits no menu actions.
+			result.push_back({ Direction::none, MenuInputAction::none, true });
+			continue;
+		}
 		result.push_back(player.num >= 0 &&
 			static_cast<size_t>(player.num) < inputs.size() ?
 			inputs[static_cast<size_t>(player.num)] : ProcessedMenuInput());

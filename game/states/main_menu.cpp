@@ -59,6 +59,55 @@ void MainMenuPage::set_player_prompts(MenuPrompt prompts)
 	this->set_prompts(prompts);
 }
 
+int MainMenuPage::next_host_row(int row, Direction direction, bool joining) const
+{
+	if (direction != Direction::up && direction != Direction::down) { return row; }
+	const int step = direction == Direction::up ? -1 : 1;
+	const auto& players = this->level_settings()->player_settings();
+	for (int candidate = row + step; candidate >= 0 && candidate < this->player_count(); candidate += step)
+	{
+		const auto& seat = players[static_cast<size_t>(candidate)];
+		if (joining ? candidate > 0 && (seat.controller == PlayerController::bot || seat.num < 0) :
+			candidate == 0 || seat.controller == PlayerController::bot)
+		{
+			return candidate;
+		}
+	}
+	return row;
+}
+
+void MainMenuPage::route_host_setup_input(std::vector<ProcessedMenuInput>& inputs, int& row)
+{
+	if (inputs.empty() || this->level_settings()->bot_count() == 0) { return; }
+	const ProcessedMenuInput host = inputs[0];
+	inputs[0] = { Direction::none, MenuInputAction::none, host.connected };
+	if (host.action == MenuInputAction::none &&
+		(host.direction == Direction::up || host.direction == Direction::down))
+	{
+		const int next = this->next_host_row(row, host.direction, false);
+		if (next != row) { this->play_wave(this->direction_sound_); row = next; }
+		return;
+	}
+	inputs[static_cast<size_t>(row)] = host;
+}
+
+std::unique_ptr<UiTexture> MainMenuPage::make_host_cursor() const
+{
+	const MenuStyle& style = this->menu_style();
+	return std::make_unique<UiTexture>("host_row", style.sprite_sheet, style.fill_frame,
+		RectangleF(0.0f, 0.0f, style.rule_height, style.rule_height), this->render_resources(),
+		CrudeDrawing::premultiplied(this->look().art.focus_ink));
+}
+
+void MainMenuPage::place_host_cursor(UiTexture& cursor, const UiWidget& row) const
+{
+	const RectangleF bounds = row.bounds();
+	const MenuStyle& style = this->menu_style();
+	// An underline identifies the host's row independently of readiness tint.
+	cursor.set_position(Vector2F(bounds.x, bounds.bottom() + style.rule_height));
+	cursor.set_size(Vector2F(bounds.width, style.rule_height));
+}
+
 bool MainMenuPage::wait_for_players(
 	const std::vector<ProcessedMenuInput>& inputs)
 {

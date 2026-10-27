@@ -194,6 +194,12 @@ void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 	settings->set_player_count(players);
 	settings->set_screen_layout(layout);
 	settings->begin_input_claims(this->activating_slot_);
+	if (settings->bot_count() > 0)
+	{
+		constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player,
+			ScreenLayout::two_player, ScreenLayout::three_player, ScreenLayout::four_player };
+		settings->set_screen_layout(layouts[static_cast<size_t>(settings->human_count() - 1)]);
+	}
 	if (players == 1 && settings->player_team(0) != PlayerTeam::a &&
 		settings->player_team(0) != PlayerTeam::b)
 	{
@@ -263,6 +269,8 @@ void MainMenuJoin::init()
 		this->render_resources(), this->setup_art_.ink, clear_shadow,
 		style.detail_shadow_offset);
 	this->text_container_->add_child(this->status_.get());
+	this->host_cursor_ = this->make_host_cursor();
+	this->texture_container_->add_child(this->host_cursor_.get());
 	this->refresh_players(this->input()->player_inputs(*this->level_settings()));
 }
 
@@ -294,7 +302,10 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 	{
 		const bool connected = inputs[player].connected;
 		JoinMotionRow& motion = *this->join_motion_[player];
-		const bool row_changed = motion.slot != players[player].num || motion.connected != connected;
+		const std::wstring label = this->level_settings()->player_label(player, this->text()) +
+			(!connected && players[player].num >= 0 ? this->text().connection.join_reconnect_suffix : L"");
+		const bool row_changed = motion.slot != players[player].num || motion.connected != connected ||
+			this->players_[player]->text() != label;
 		if (row_changed)
 		{
 			// Device changes settle quietly; only accepted join/leave actions
@@ -309,11 +320,6 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		// reconnect suffix, so an unchanged row already shows the right text.
 		if (row_changed)
 		{
-			std::wstring label = this->level_settings()->player_label(player, this->text());
-			if (!connected && players[player].num >= 0)
-			{
-				label += this->text().connection.join_reconnect_suffix;
-			}
 			this->players_[player]->set_text(label);
 		}
 		this->players_[player]->set_colour(connected ?
@@ -325,6 +331,22 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		}
 		previous_bottom = row.bottom();
 	}
+	const auto editable = [&](int row)
+	{
+		return row > 0 && row < this->player_count() &&
+			(players[static_cast<size_t>(row)].controller == PlayerController::bot ||
+				players[static_cast<size_t>(row)].num < 0);
+	};
+	if (!editable(this->host_row_))
+	{
+		this->host_row_ = this->next_host_row(0, Direction::down, true);
+	}
+	this->host_cursor_->set_hidden(!editable(this->host_row_));
+	if (editable(this->host_row_))
+	{
+		this->place_host_cursor(*this->host_cursor_, *this->players_[static_cast<size_t>(this->host_row_)]);
+		std::ignore = this->check_paper_bounds(*this->host_cursor_, "host row cursor");
+	}
 	const std::wstring& status = ready ? this->text().connection.join_ready :
 		this->text().connection.join_waiting;
 	if (this->status_->text() != status)
@@ -335,6 +357,39 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 	{
 		throw std::runtime_error("main_menu.player_count_spacing: Join status must follow the player rows without overlap.");
 	}
+}
+
+void MainMenuJoin::change_host_row(Direction direction)
+{
+	MenuLevelSettings& settings = *this->level_settings();
+	if (this->host_row_ <= 0 || this->host_row_ >= this->player_count()) { return; }
+	const auto& seat = settings.player_settings()[static_cast<size_t>(this->host_row_)];
+	if (seat.controller == PlayerController::human)
+	{
+		if (seat.num >= 0) { return; }
+		settings.set_player_bot(this->host_row_, BotDifficulty::normal);
+	}
+	else if (direction == Direction::left && seat.difficulty == BotDifficulty::hard)
+	{
+		settings.set_player_bot(this->host_row_, BotDifficulty::normal);
+	}
+	else if (direction == Direction::right && seat.difficulty == BotDifficulty::easy)
+	{
+		settings.set_player_bot(this->host_row_, BotDifficulty::normal);
+	}
+	else if (direction == Direction::left && seat.difficulty == BotDifficulty::normal)
+	{
+		settings.set_player_bot(this->host_row_, BotDifficulty::easy);
+	}
+	else if (direction == Direction::right && seat.difficulty == BotDifficulty::normal)
+	{
+		settings.set_player_bot(this->host_row_, BotDifficulty::hard);
+	}
+	else { settings.set_player_human(this->host_row_); }
+	constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player,
+		ScreenLayout::two_player, ScreenLayout::three_player, ScreenLayout::four_player };
+	settings.set_screen_layout(layouts[static_cast<size_t>(settings.human_count() - 1)]);
+	this->play_wave(this->direction_sound_);
 }
 
 void MainMenuJoin::update_page(float /*dt*/)
@@ -354,6 +409,22 @@ void MainMenuJoin::update_page(float /*dt*/)
 	bool continue_requested = false;
 	bool roster_changed = false;
 	std::vector<bool> changed_rows(static_cast<size_t>(this->player_count()), false);
+	// Convert before accepting other devices' claims, so a simultaneous join
+	// cannot turn an already connected human into a bot.
+	const ProcessedMenuInput& host = players[0];
+	if (host.connected && host.action == MenuInputAction::none)
+	{
+		if (host.direction == Direction::up || host.direction == Direction::down)
+		{
+			const int next = this->next_host_row(this->host_row_, host.direction, true);
+			if (next != this->host_row_) { this->host_row_ = next; this->play_wave(this->direction_sound_); }
+		}
+		else if (host.direction == Direction::left || host.direction == Direction::right)
+		{
+			this->change_host_row(host.direction);
+			roster_changed = true;
+		}
+	}
 	for (int slot = 0; slot < static_cast<int>(inputs.size()); ++slot)
 	{
 		const int player = settings->player_index_for_slot(slot);

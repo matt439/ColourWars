@@ -5,6 +5,8 @@
 #include "game/objects/translating_structure_paintable.h"
 #include "game/simulation.h"
 #include "game/horizontal_motion_contract.h"
+#include "game/ai/match_bot_driver.h"
+#include "engine/math/intersects.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -183,7 +185,8 @@ Level::Level(std::unique_ptr<Scene> scene,
 	// Disambiguate from DirectX::Mouse.
 	const labrador::Mouse* mouse,
 	std::vector<LevelStation> stations,
-	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings) :
+	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings,
+	const MenuLevelSettings* roster, std::uint64_t bot_seed) :
 	scene_(std::move(scene)),
 	players_(std::move(players)),
 	stations_(std::move(stations)),
@@ -203,6 +206,34 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->input_bindings_ = input_bindings;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
+	this->roster_.resize(this->players_.size());
+	if (roster != nullptr)
+	{
+		if (roster->player_settings().size() != this->players_.size())
+		{ throw std::invalid_argument("Level roster must match its participants"); }
+		this->roster_ = roster->player_settings();
+	}
+	this->participant_views_.assign(this->players_.size(), -1);
+	this->bot_identity_texts_.resize(this->players_.size());
+	for (std::size_t participant = 0; participant < this->players_.size(); ++participant)
+	{
+		if (this->roster_[participant].controller == PlayerController::human)
+		{
+			this->participant_views_[participant] = static_cast<int>(this->view_participants_.size());
+			this->view_participants_.push_back(static_cast<int>(participant));
+		}
+		else
+		{
+			this->bot_identity_texts_[participant] = std::make_unique<Text>(
+				presentation->menu_text().bot_roster_label(static_cast<int>(participant),
+					this->roster_[participant].difficulty), presentation->hud().player_identity_font,
+				Vector2F::ZERO, render_resources, presentation->player_identity().ink_colour);
+		}
+	}
+	if (this->view_participants_.empty())
+	{ throw std::invalid_argument("Level requires at least one human view"); }
+	if (roster != nullptr && roster->bot_count() != 0)
+	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, bot_seed); }
 	const MenuStyle& menu = presentation->menu();
 	const CountdownArtPresentation& paper = presentation->match().countdown_art;
 	this->stage_entry_ = std::make_unique<TextDropShadow>(stage_name,
@@ -612,7 +643,7 @@ void Level::resolve_mouse_aim(Player* player, size_t view_index,
 void Level::apply_player_inputs(
 	const std::vector<PlayerInputData>& player_inputs, SeatInputFilter* seats)
 {
-	// One input per view; an idle dummy (or an unknown slot) gets neutral input.
+	// One input per participant; an idle human dummy gets neutral input.
 	std::vector<PlayerInputData> by_view(this->players_.size());
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
@@ -626,11 +657,16 @@ void Level::apply_player_inputs(
 			// Copy the slot input to fill in this player's camera-dependent mouse aim.
 			if (input_slots::is_keyboard_and_mouse(slot))
 			{
-				this->resolve_mouse_aim(player, i, by_view[i]);
+				this->resolve_mouse_aim(player,
+					static_cast<size_t>(this->view_for_participant(static_cast<int>(i))), by_view[i]);
 			}
 		}
 	}
 
+	if (this->bot_driver_ != nullptr && (seats == nullptr || !seats->replaces_bot_inputs()))
+	{
+		this->bot_driver_->filter_seats(by_view, *this);
+	}
 	if (seats != nullptr)
 	{
 		seats->filter_seats(by_view, *this);
@@ -705,6 +741,8 @@ void Level::refresh_player_cameras()
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
 		Player* player = this->players_[i];
+		const int view = this->participant_views_[i];
+		if (view < 0) { continue; }
 		// Fatal contacts can leave state alive until the next Player update.
 		// Dead players retain velocity while camera_focus holds then visits spawn.
 		const float velocity = player->state() == PlayerState::alive && player->health() > 0.0f
@@ -712,7 +750,7 @@ void Level::refresh_player_cameras()
 		const Camera camera = this->player_camera_.follow(
 			player->camera_focus(),
 			this->viewport_manager_->player_viewport(
-				static_cast<int>(i)),
+				view),
 			this->resolution_manager_->resolution_vec().y,
 			this->presentation_->camera(),
 			player->camera(),
@@ -763,10 +801,11 @@ void Level::update_players_after_resolve()
 Camera Level::view_camera(int view) const
 {
 	const Player& player = *this->players_.at(static_cast<size_t>(view));
+	const int pane = this->view_for_participant(view);
 	if (this->state_ != LevelState::active || !this->preferences_->view_shake_enabled() ||
-		player.view_shake().offset() == Vector2F::ZERO) { return player.camera(); }
+		pane < 0 || player.view_shake().offset() == Vector2F::ZERO) { return player.camera(); }
 	return PlayerCamera::displaced(player.camera(),
-		this->viewport_manager_->player_viewport(view), player.view_shake().offset(),
+		this->viewport_manager_->player_viewport(pane), player.view_shake().offset(),
 		this->camera_bounds_);
 }
 
@@ -797,13 +836,13 @@ void Level::refresh_views()
 	if (this->state_ == LevelState::start_countdown ||
 		this->state_ == LevelState::active)
 	{
-		// Pane order follows players_, not input slots, which may be sparse.
-		for (size_t i = 0; i < this->players_.size(); ++i)
+		// Human panes retain their participant identity across bot-seat gaps.
+		for (size_t i = 0; i < this->view_participants_.size(); ++i)
 		{
 			this->scene_->add_view(
 				Viewport(this->viewport_manager_->player_viewport(
 					static_cast<int>(i)).pixel_rect()),
-				this->view_camera(static_cast<int>(i)));
+				this->view_camera(this->view_participants_[i]));
 		}
 	}
 	else
@@ -822,6 +861,61 @@ int Level::player_count() const
 const Player& Level::player(int view) const
 {
 	return *this->players_.at(static_cast<size_t>(view));
+}
+
+int Level::view_count() const
+{
+	return static_cast<int>(this->view_participants_.size());
+}
+
+int Level::participant_for_view(int view) const
+{
+	return this->view_participants_.at(static_cast<std::size_t>(view));
+}
+
+int Level::view_for_participant(int participant) const
+{
+	return this->participant_views_.at(static_cast<std::size_t>(participant));
+}
+
+bool Level::is_bot(int participant) const
+{
+	return this->roster_.at(static_cast<std::size_t>(participant)).controller == PlayerController::bot;
+}
+
+BotDifficulty Level::bot_difficulty(int participant) const
+{
+	return this->roster_.at(static_cast<std::size_t>(participant)).difficulty;
+}
+
+std::wstring_view Level::bot_identity(int participant) const
+{
+	const std::unique_ptr<Text>& text = this->bot_identity_texts_.at(static_cast<std::size_t>(participant));
+	return text == nullptr ? std::wstring_view{} : text->text();
+}
+
+std::vector<RectangleF> Level::bot_obstacles() const
+{
+	std::vector<RectangleF> bounds;
+	for (const CollisionObject* object : this->projectile_targets_)
+	{
+		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr)
+		{ bounds.push_back(object->shape()->bounding_box()); }
+	}
+	return bounds;
+}
+
+bool Level::bot_line_of_sight(Vector2F from, Vector2F to) const
+{
+	if (!std::isfinite(from.x) || !std::isfinite(from.y) ||
+		!std::isfinite(to.x) || !std::isfinite(to.y)) { return false; }
+	const Segment sight(from, to);
+	for (const CollisionObject* object : this->projectile_targets_)
+	{
+		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
+			rectangle_segment_intersect(object->shape()->bounding_box(), sight)) { return false; }
+	}
+	return true;
 }
 
 LevelState Level::state() const

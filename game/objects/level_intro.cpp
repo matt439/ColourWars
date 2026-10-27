@@ -244,15 +244,16 @@ void Level::add_intro_views()
 		this->scene_->add_view(view, Camera::frame(this->picture_bounds_, view));
 		return;
 	}
-	// One view per player, all the whole picture at first, each flying out to
+	// One view per human, all the whole picture at first, each flying out to
 	// its own pane and its own camera.
-	for (size_t i = 0; i < this->players_.size(); ++i)
+	for (size_t i = 0; i < this->view_participants_.size(); ++i)
 	{
 		const RectangleF pane = Viewport(this->viewport_manager_->player_viewport(
 			static_cast<int>(i)).pixel_rect()).rectangle();
 		const Viewport view(lerp(picture, pane, push));
 		this->scene_->add_view(view, Camera::calculate_intermediate_camera(
-			Camera::frame(this->picture_bounds_, view), this->players_[i]->camera(), push));
+			Camera::frame(this->picture_bounds_, view),
+			this->players_[static_cast<std::size_t>(this->view_participants_[i])]->camera(), push));
 	}
 }
 

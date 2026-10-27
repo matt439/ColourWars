@@ -17,11 +17,16 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context) :
 
 void MainMenuWeaponSelect::update_page(float /*dt*/)
 {
-	const std::vector<ProcessedMenuInput> inputs =
+	std::vector<ProcessedMenuInput> inputs =
 		this->input()->player_inputs(*this->level_settings());
 	if (this->wait_for_players(inputs))
 	{
 		return;
+	}
+	this->route_host_setup_input(inputs, this->host_row_);
+	if (this->host_cursor_)
+	{
+		this->place_host_cursor(*this->host_cursor_, *this->player_widgets_[this->host_row_]->player);
 	}
 	const int player_count = this->player_count();
 	const int num_inputs = static_cast<int>(inputs.size());
@@ -231,7 +236,7 @@ void MainMenuWeaponSelect::init()
 	this->icon_art_.keyline_width = style.rule_height;
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 
-	this->set_player_prompts(MenuPrompt::weapon);
+	this->set_player_prompts(this->level_settings()->bot_count() > 0 ? MenuPrompt::bot_weapon : MenuPrompt::weapon);
 
 	this->set_widget_spacing(this->look().weapon_select.spacing);
 	// A random palette is not chosen until the level is built. Keep that
@@ -347,6 +352,12 @@ void MainMenuWeaponSelect::init()
 
 		this->register_selection_motion(&widgets->motion);
 		this->player_widgets_.push_back(std::move(widgets));
+	}
+	if (this->level_settings()->bot_count() > 0)
+	{
+		this->host_cursor_ = this->make_host_cursor();
+		this->place_host_cursor(*this->host_cursor_, *this->player_widgets_[this->host_row_]->player);
+		this->texture_container_->add_child(this->host_cursor_.get());
 	}
 	this->update_weapon_select_visuals();
 }

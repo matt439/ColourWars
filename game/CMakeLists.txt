@@ -4,6 +4,8 @@ find_package(xaudio2redist CONFIG REQUIRED)
 find_package(directxtk CONFIG REQUIRED)
 
 add_executable(ColourWars WIN32
+    ai/match_bot.cpp
+    ai/match_bot_driver.cpp
     action_bindings.cpp
     input_bindings.cpp
     content_validation.cpp

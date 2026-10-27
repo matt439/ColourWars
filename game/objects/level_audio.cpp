@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/ai/match_bot_driver.h"
 
 using namespace mattmath;
 using namespace labrador;

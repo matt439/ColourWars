@@ -20,13 +20,7 @@ void GameMenu::init()
 	this->menu_level_settings_ = std::make_unique<MenuLevelSettings>();
 	if (const auto& remembered = this->data()->save()->last_match_setup(); remembered)
 	{
-		MenuLevelSettings restored = remembered->restore(*this->data()->stages());
-		// Preserve future bot setup metadata on disk, but do not expose seats
-		// through the menu until the playable runtime and human views are ready.
-		if (restored.bot_count() == 0)
-		{
-			*this->menu_level_settings_ = std::move(restored);
-		}
+		*this->menu_level_settings_ = remembered->restore(*this->data()->stages());
 	}
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), this->menu_level_settings_.get());
@@ -243,6 +237,8 @@ void GameLevel::build_and_enter_level()
 	// A reload may replace the authored profile. No old pulse or pending event
 	// crosses the round boundary; the sink belongs to the containing screen.
 	this->rumble_ = std::make_unique<Rumble>(*this->rumble_sink_, this->data()->tuning()->rumble());
+	// Panes belong to humans; scoring, spawns and the session use participants.
+	this->settings_.set_screen_layout(static_cast<ScreenLayout>(this->settings_.human_count() - 1));
 	this->data()->viewport_manager()->
 		set_layout(this->settings_.screen_layout());
 	// The first match of this screen has the whole intro; a rematch starts

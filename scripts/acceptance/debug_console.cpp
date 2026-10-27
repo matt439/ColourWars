@@ -55,10 +55,10 @@ namespace debug_console_acceptance
 	const char* const rtti_names[] = {
 		".?AVDebugConsoleState@@", ".?AVDebugRegistry@@", ".?AVLambdaCommand@@",
 		".?AVDebugMenuPage@@", ".?AVNumberVariable@@",
-		// Phase 3: bots, record/play, live tuning, and the seat filter they share.
+		// Developer bots, record/play and live tuning. SeatInputFilter is also
+		// used by the shipping MatchBotDriver and therefore exists in Release.
 		".?AVBot@@", ".?AVPaintBot@@", ".?AVBotDriver@@", ".?AVReplayRecorder@@",
 		".?AVReplayPlayer@@", ".?AVTuneTarget@@", ".?AVTuningTarget@@",
-		".?AVSeatInputFilter@@",
 		".?AVDebugBackgroundInput@@",
 		// Phase 4: script waits.
 		".?AVDebugWait@@", ".?AVUpdatesWait@@", ".?AVMatchWait@@",
@@ -310,7 +310,7 @@ int main(int argc, char** argv)
 			!director.background_scripts() && !director.background_updates_allowed(),
 			"Release background policy/audio hooks remain inert for an attached target");
 		require(match.last_filter == nullptr && match.filtered_updates == 0,
-			"Release gives Level::update no seat filter: no bot, recording or replay");
+			"Release director adds no developer bot, recording or replay filter");
 		director.match_suspended(match);
 		for (int slot = -1; slot <= input_slots::keyboard_and_mouse; ++slot)
 		{
@@ -319,8 +319,8 @@ int main(int argc, char** argv)
 
 		std::cout << (background_only ? "PASS debug console background-only (Release): " :
 			"PASS debug console (Release): ") << "inert director/background hooks and shared layout; one stderr line for "
-			"'+' arguments; pad chord, overlays and unwinding inert; no seat filter and no "
-			"driven slot; no console, registry, menu, command, bot, replay or tuning classes "
+			"'+' arguments; pad chord, overlays and unwinding inert; no developer filter or "
+			"driven slot; no console, registry, menu, command, developer bot, replay or tuning classes "
 			"in ColourWars.exe.\n";
 #endif
 		return 0;

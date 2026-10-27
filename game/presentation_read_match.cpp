@@ -138,6 +138,8 @@ namespace presentation_read
 		identity.enabled = json.boolean("enabled");
 		identity.world_size = read_positive_vector(json, "world_size");
 		identity.world_offset = read_vector(json, "world_offset");
+		identity.bot_label_size = read_positive_vector(json, "bot_label_size");
+		identity.bot_label_gap = read_non_negative(json, "bot_label_gap");
 		identity.emphasis_duration = read_positive(json, "emphasis_duration");
 		identity.emphasis_scale = read_positive(json, "emphasis_scale");
 		identity.ui_size = read_positive_vector(json, "ui_size");

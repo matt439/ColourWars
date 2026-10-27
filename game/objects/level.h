@@ -40,7 +40,11 @@
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
 #include "game/objects/music_envelope.h"
+#include "game/states/menu_level_settings.h"
+#include <cstdint>
 #include <string_view>
+
+class MatchBotDriver;
 
 enum class LevelState
 {
@@ -86,7 +90,8 @@ public:
 		const labrador::Mouse* mouse,
 		std::vector<LevelStation> stations,
 		OpeningMode opening, std::optional<float> duration = std::nullopt,
-		const InputBindings* input_bindings = nullptr);
+		const InputBindings* input_bindings = nullptr,
+		const MenuLevelSettings* roster = nullptr, std::uint64_t bot_seed = 0);
 
 	// Stop the level's voices and player weapon/redraw loops.
 	~Level();
@@ -112,8 +117,8 @@ public:
 	// simulation that no menu covers (the Debug clock's pause).
 	void pause_audio() const;
 
-	// `seats`, when given, sees and may replace every seat's input for each
-	// logic step (the Debug bots and replays); null in Release.
+	// `seats`, when given, sees and may replace every participant's final input
+	// after the shipping bots (Debug bots/record/play); null in Release.
 	void update(const std::vector<PlayerInputData>& player_inputs, float dt,
 		SeatInputFilter* seats = nullptr);
 	// Feedback intents, retaining each Player's physical slot. Drain once after
@@ -143,11 +148,22 @@ public:
 	// coverage; the results page then keeps only the percentages.
 	bool revealed() const;
 
-	// Read-only views for developer status; the index is the view, not the
-	// player's input slot (see players_).
+	// Read-only participants for developer status; the index is the stable
+	// roster seat, independent of physical slot and human pane.
 	int player_count() const;
 	const Player& player(int view) const;
-	// Cosmetic world camera; player(view).camera() remains the stable aim/follow camera.
+	// Participant indices are stable roster seats; views contain only humans.
+	int view_count() const;
+	int participant_for_view(int view) const;
+	int view_for_participant(int participant) const;
+	bool is_bot(int participant) const;
+	BotDifficulty bot_difficulty(int participant) const;
+	std::wstring_view bot_identity(int participant) const;
+	// Conservative current structural bounds for bot planning and sight. No
+	// projectile/player state is exposed by these geometry queries.
+	std::vector<mattmath::RectangleF> bot_obstacles() const;
+	bool bot_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to) const;
+	// Cosmetic camera by participant; player(index).camera() remains the stable aim/follow camera.
 	labrador::Camera view_camera(int view) const;
 	// Null for tools without an idle drip. Index follows player(view).
 	const IdleDrip* idle_drip(int view) const;
@@ -228,8 +244,15 @@ private:
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,
 	// so these pointers remain valid for the match.
-	// The vector index is the player's view index, not their input slot (player_num()).
+	// The vector index is the participant's stable roster seat, independent of
+	// their human view or physical input slot (player_num()).
 	std::vector<Player*> players_;
+	std::vector<MenuPlayerSettings> roster_;
+	std::vector<int> view_participants_;
+	std::vector<int> participant_views_;
+	std::unique_ptr<MatchBotDriver> bot_driver_;
+	// Immutable labels and metrics shared safely by every human pane.
+	std::vector<std::unique_ptr<labrador::Text>> bot_identity_texts_;
 	// Scene-owned cosmetics, advanced after final player contacts and muzzle repair.
 	std::vector<IdleDrip*> idle_drips_;
 
@@ -319,10 +342,10 @@ private:
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
 	LevelOverlays overlays_{};
 
-	// By view; see set_seat_labels. Present in every build, only ever set by
+	// By participant; see set_seat_labels. Present in every build, only ever set by
 	// the Debug director, so empty in Release.
 	std::vector<std::wstring> seat_labels_;
-	// By view: each HUD identity box's whole text. Built from the view, the
+	// By participant: each HUD identity box's whole text. Built from the seat, the
 	// player's team and pad slot (all fixed for the match) and seat_labels_,
 	// so only construction and set_seat_labels rebuild it; draws only read it.
 	std::vector<std::wstring> identity_texts_;
@@ -455,12 +478,12 @@ private:
 		float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal = nullptr);
 
 	// Apply input by each player's device slot, not by their position in
-	// players_, then let `seats` (if any) see or replace it per view.
+	// players_, then let the bot driver and `seats` (if any) replace it per participant.
 	void apply_player_inputs(
 		const std::vector<PlayerInputData>& player_inputs, SeatInputFilter* seats);
 
-	// Fill keyboard/mouse aim using this player's camera and pane. view_index
-	// is the position in players_, not the device slot returned by player_num().
+	// Fill keyboard/mouse aim using this player's camera and human pane. view_index
+	// is the human pane, independent of participant and physical slot.
 	// The camera uses positive uniform scale, so normalizing the screen-space
 	// direction gives the same aim direction as normalizing in world space.
 	void resolve_mouse_aim(Player* player, size_t view_index,
@@ -475,7 +498,7 @@ private:
 	void update_players_after_resolve();
 	void update_idle_drips(float dt);
 
-	// One pane per player during the match, one fullscreen view afterward.
+	// One pane per human during the match, one fullscreen view afterward.
 	// Refresh after updates and after resize, before render workers start.
 	void refresh_views();
 

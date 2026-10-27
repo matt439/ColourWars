@@ -19,6 +19,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     } clear{ stack, presentation, original };
     std::array<int, 4> slots{};
     std::vector<int> expected_slots;
+    int expected_host_row = 1;
     std::array<bool, input_slots::count> connected{};
     std::vector<RectangleF> initial_rows;
     const auto bit = [](GamepadButton button) { return static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); };
@@ -85,6 +86,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player :
             count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
         settings.begin_input_claims(slots[0]); expected_slots.assign(static_cast<size_t>(count), -1); expected_slots[0] = slots[0];
+        expected_host_row = 1;
         for (int player = 0; player < count; ++player) { settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); }
         initial_rows.clear(); for (int player = 0; player < count; ++player) { initial_rows.push_back(text_bounds(presentation, player)); }
         stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
@@ -156,13 +158,35 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             require(inside.contains(mark), "Independent Join acknowledgement escapes the paper interior");
             sheet->draw(list, fill, mark, art.focus_ink);
         }
+        // Keep the host's selected row when an earlier human leaves. A claim
+        // that takes that selected row advances it to the first editable row.
+        const auto editable = [&](int seat)
+        {
+            return seat > 0 && static_cast<size_t>(seat) < expected_slots.size() &&
+                expected_slots[static_cast<size_t>(seat)] < 0;
+        };
+        if (!editable(expected_host_row))
+        {
+            expected_host_row = 0;
+            for (size_t seat = 1; seat < expected_slots.size(); ++seat)
+            {
+                if (expected_slots[seat] < 0) { expected_host_row = static_cast<int>(seat); break; }
+            }
+        }
+        if (editable(expected_host_row))
+        {
+            const RectangleF row = text[static_cast<size_t>(expected_host_row) + 1]->bounds();
+            const RectangleF cursor(row.x, row.bottom() + style.rule_height, row.width, style.rule_height);
+            require(inside.contains(cursor), "Independent host row underline escapes Join paper");
+            sheet->draw(list, fill, cursor, art.focus_ink);
+        }
         sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
             menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
         sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y,
             menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); for (const auto& widget : text) { widget->draw(list); }
         const auto& footer = snapshot.prompt_bar();
-        const UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / P1 back",
+        const UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / back    P1: Up/Down Row, Left/Right Human / Bot",
             footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         prompt.draw(list); const Frame expected = read(renderer);
         const std::string stem = "join-paper-" + name + '-' + std::to_string(settings.player_count()) + "p-" +

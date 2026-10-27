@@ -54,6 +54,11 @@ protected:
 	// row and offer reconnect or return to the count screen to choose again.
 	bool wait_for_players(const std::vector<ProcessedMenuInput>& inputs);
 	void set_player_prompts(MenuPrompt prompts);
+	// P1 selects its own or a bot's row, while other humans keep their inputs.
+	void route_host_setup_input(std::vector<ProcessedMenuInput>& inputs, int& row);
+	int next_host_row(int row, labrador::Direction direction, bool joining) const;
+	std::unique_ptr<labrador::UiTexture> make_host_cursor() const;
+	void place_host_cursor(labrador::UiTexture& cursor, const labrador::UiWidget& row) const;
 
 	// Family-specific sounds; the looping music is stopped before entering a match.
 	MenuSound error_sound_;
@@ -285,6 +290,9 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> status_;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> players_;
 	std::vector<std::unique_ptr<JoinMotionRow>> join_motion_;
+	int host_row_ = 1;
+	std::unique_ptr<labrador::UiTexture> host_cursor_;
+	void change_host_row(labrador::Direction direction);
 };
 
 class MainMenuTeamSelect final : public MainMenuPage
@@ -330,6 +338,8 @@ private:
 	// until the first write, so that one always happens.
 	std::vector<PlayerTeam> displayed_teams_;
 	std::vector<ConfirmationState> displayed_confirmations_;
+	int host_row_ = 0;
+	std::unique_ptr<labrador::UiTexture> host_cursor_;
 	void shuffle_teams();
 	void update_team_select_visuals();
 	void deselect_and_unconfirm_all_widgets();
@@ -389,6 +399,8 @@ private:
 	// Each row's weapon when its icon and text were last written; none until
 	// the first write, so that one always happens.
 	std::vector<WeaponType> displayed_weapons_;
+	int host_row_ = 0;
+	std::unique_ptr<labrador::UiTexture> host_cursor_;
 	void update_weapon_select_visuals();
 	void unconfirm_all_widgets();
 	bool all_players_confirmed() const;

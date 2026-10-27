@@ -2,6 +2,7 @@
 #include "game/debug/debug_background.h"
 
 #if COLOURWARS_DEV_TOOLS
+#include "game/objects/level.h"
 #include <CommCtrl.h>
 #include <utility>
 
@@ -12,8 +13,10 @@ bool background_window_allows(const DebugBackgroundState& state)
 
 void DebugBackgroundInput::filter_seats(std::vector<PlayerInputData>& seats, const Level& level)
 {
-	for (PlayerInputData& input : seats)
+	for (size_t seat = 0; seat < seats.size(); ++seat)
 	{
+		if (level.is_bot(static_cast<int>(seat))) { continue; }
+		PlayerInputData& input = seats[seat];
 		const bool connected = input.connected;
 		input = PlayerInputData();
 		input.connected = connected;

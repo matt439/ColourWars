@@ -529,14 +529,14 @@ namespace
         };
         reject([](rapidjson::Value& look) { look.RemoveMember("enabled"); });
         reject([](rapidjson::Value& look) { look["enabled"].SetInt(1); });
-        for (const char* field : { "world_size", "world_offset", "ui_size" })
+        for (const char* field : { "world_size", "world_offset", "ui_size", "bot_label_size" })
         {
             reject([field](rapidjson::Value& look) { look.RemoveMember(field); });
             reject([field](rapidjson::Value& look) { look[field].SetString("small"); });
             reject([field](rapidjson::Value& look) { look[field].RemoveMember("x"); });
             reject([field](rapidjson::Value& look) { look[field]["y"].SetString("small"); });
         }
-        for (const char* field : { "world_size", "ui_size" })
+        for (const char* field : { "world_size", "ui_size", "bot_label_size" })
         {
             for (const char* axis : { "x", "y" })
             {
@@ -546,7 +546,7 @@ namespace
                     look[field][axis].SetDouble(std::numeric_limits<double>::max()); });
             }
         }
-        for (const char* field : { "emphasis_duration", "emphasis_scale", "ui_gap", "border" })
+        for (const char* field : { "emphasis_duration", "emphasis_scale", "ui_gap", "border", "bot_label_gap" })
         {
             reject([field](rapidjson::Value& look) { look.RemoveMember(field); });
             reject([field](rapidjson::Value& look) { look[field].SetString("small"); });

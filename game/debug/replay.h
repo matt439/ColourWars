@@ -111,6 +111,7 @@ public:
 	ReplayPlayer(std::string name, ReplayFile file);
 
 	void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override;
+	bool replaces_bot_inputs() const override { return true; }
 
 	const std::string& name() const { return this->name_; }
 	const ReplayFile& file() const { return this->file_; }

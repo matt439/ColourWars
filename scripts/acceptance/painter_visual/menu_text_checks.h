@@ -18,20 +18,22 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     constexpr std::array<const wchar_t*, 11> headings{ L"Make your mark.", L"Options", L"Credits",
         L"Controls / audio", L"Pad sticks", L"Number of Players", L"Join Players", L"Mode Select",
         L"Team Select", L"Weapon Select", L"Choose your arena" };
-    constexpr std::array<const wchar_t*, 17> prompts{
+    constexpr std::array<const wchar_t*, 19> prompts{
         L"A/Enter Start", L"A/Enter Select    B/Esc Back",
         L"Left/Right Change    A/Enter Select    B/Esc Back",
         L"Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)",
         L"D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)",
         L"A/Enter Select    Left/Right Match length    B/Esc Back",
-        L"A/Enter Join / P1 continue    B/Esc Leave / P1 back",
+        L"A/Enter Join / P1 continue    B/Esc Leave / back    P1: Up/Down Row, Left/Right Human / Bot",
         L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
         L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",
         L"Left/Right Change weapon    A/Enter Confirm    B/Esc Cancel",
         L"Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back",
         L"A/Enter Start match    B/Esc Unlock arena", L" Reconnect controller    B/Esc Change players",
         L"A/Enter Select    B/Start/Esc Resume", L" Reconnect pads to resume    A/Enter Select",
-        L"A/Enter Select", L"A/Enter Back    B/Esc Back"
+        L"A/Enter Select", L"A/Enter Back    B/Esc Back",
+        L"P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams",
+        L"P1 Up/Down Row    Left/Right Tool    A/Enter Ready    B/Esc Cancel"
     };
     static_assert(headings.size() == static_cast<size_t>(MenuHeading::count));
     static_assert(prompts.size() == static_cast<size_t>(MenuPrompt::count));

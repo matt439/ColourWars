@@ -7,6 +7,7 @@
 #include "game/objects/weapon_type.h"
 #include "game/sound_reference.h"
 #include "game/rumble.h"
+#include "game/player_control.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
 #include "engine/render/colour.h"
@@ -42,6 +43,26 @@ struct InputTuning
 	float movement_deadzone = 0.0f;
 	float menu_engage_threshold = 0.0f;
 	float menu_release_threshold = 0.0f;
+};
+
+// Provisional shipped-opponent policy. Every difficulty uses the same world
+// observations, movement and resource rules; these only govern decisions.
+struct BotDifficultyTuning
+{
+	int reaction_steps = 1;
+	int replan_steps = 1;
+	int territory_candidates = 1;
+	float aim_error_radians = 0.0f;
+};
+
+struct BotTuning
+{
+	std::array<BotDifficultyTuning, 3> difficulties{};
+	float sight_distance = 0.0f;
+	float reserve_low = 0.0f;
+	float reserve_resume = 0.0f;
+	int stuck_jump_steps = 1;
+	int stuck_turn_steps = 1;
 };
 
 // Match phase durations and countdown presentation.
@@ -332,6 +353,8 @@ public:
 	const PaintTuning& paint() const;
 	const PlayerTuning& player() const;
 	const RumbleProfile& rumble() const;
+	const BotTuning& bots() const;
+	const BotDifficultyTuning& bot(BotDifficulty difficulty) const;
 
 	// Shared across every weapon: how fast ammo comes back, and how much of it
 	// a weapon starts with.
@@ -358,6 +381,7 @@ private:
 	PaintTuning paint_;
 	PlayerTuning player_;
 	RumbleProfile rumble_{};
+	BotTuning bots_{};
 
 	float ammo_regen_delay_ = 0.0f;
 	float ammo_regen_rate_ = 0.0f;

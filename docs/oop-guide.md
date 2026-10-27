@@ -59,8 +59,10 @@ Application owns the state stack
 
 Level also borrows pointers to the Scene's players. Players respawn rather than
 being removed from Scene, so these pointers remain valid for the match. The
-index in Level's player vector is a view index; `player_num()` identifies an
-input slot. They are not interchangeable. UI containers similarly reference
+index in Level's player vector is a stable roster participant; `player_num()`
+identifies a human input slot. Bots have no device or pane. Explicit mappings
+connect human pane indices to participants, so a bot in P2 does not rename P3
+when P3 owns the second pane. UI containers similarly reference
 widgets owned by pages or compound widgets such as `OptionRow`.
 
 Polymorphic ownership requires safe destruction through the base type.

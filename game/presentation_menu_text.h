@@ -20,7 +20,7 @@ enum class MenuPrompt
 {
 	title, select_back, options, controls, sticks, mode, join, team, team_shuffle,
 	weapon, arena_browse, arena_locked, missing_player, pause, pause_missing,
-	select, credits, count
+	select, credits, bot_team, bot_weapon, count
 };
 
 enum class MenuItem

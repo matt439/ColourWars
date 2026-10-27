@@ -232,8 +232,10 @@ countdown, the clock, the HUDs, the cameras, the music. The generic parts —
 object lists, the tick, the collision sweep, out-of-bounds retirement, per-view
 render fan-out — are `labrador::Scene` in the engine. `Level` holds non-owning
 `Player*` back into the scene that owns them; the index into `players_` is the
-index of that player's view, **not** the player's pad slot (`player_num()` is,
-and the two diverge when a pad is unplugged).
+stable roster participant, **not** the player's pad slot (`player_num()`) or
+human pane. Bots have no device or pane. `participant_for_view` and
+`view_for_participant` map between human panes and roster seats; a bot in P2
+does not rename P3 when P3 owns the second pane.
 
 Construction goes through builders — `LevelBuilder` → `PlayerBuilder`,
 `LevelObjectBuilder`, `WeaponBuilder`, `ProjectileBuilder` — which read the level

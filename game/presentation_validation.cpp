@@ -1456,6 +1456,14 @@ void Presentation::validate_resources(const RenderResources& render,
 		}
 		return pen.extent;
 	};
+	for (int player = 1; player < 4; ++player)
+	{
+		for (const BotDifficulty difficulty : label_difficulties)
+		{
+			std::ignore = label_size("menu_text.labels.bot at world player identity",
+				this->menu_text_.bot_roster_label(player, difficulty), this->hud_.player_identity_font);
+		}
+	}
 	const MenuConnectionText& connection = this->menu_text_.connection;
 	const std::string reconnect_key = "menu_text.connection.join_reconnect_suffix";
 	const RectangleF join_heading = check_setup_paper("menu_text.headings.join_players",
@@ -1492,6 +1500,12 @@ void Presentation::validate_resources(const RenderResources& render,
 				// text bounds, without adding focus-card padding to these rows.
 				const RectangleF accent(bounds.x - this->menu_.focus_padding.x, bounds.y,
 					std::max(0.0f, this->menu_.focus_padding.x), bounds.height);
+				if (player > 0 && (slot < 0 || slot >= input_slots::count))
+				{
+					const RectangleF cursor(bounds.x, bounds.bottom() + this->menu_.rule_height,
+						bounds.width, this->menu_.rule_height);
+					bounds = RectangleF::union_of(bounds, cursor);
+				}
 				bounds = RectangleF::union_of(bounds, accent);
 				if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
 					!std::isfinite(bounds.width) || !std::isfinite(bounds.height) || !setup_inside.contains(bounds))

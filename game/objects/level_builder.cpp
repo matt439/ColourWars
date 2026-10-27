@@ -42,10 +42,10 @@ std::unique_ptr<Level>
 	LevelBuilder::build_level(const MenuLevelSettings& settings, TeamColourPair palette,
 		OpeningMode opening)
 {
-	if (settings.bot_count() != 0)
-	{
-		throw std::invalid_argument("Playable bot runtime integration is pending; cannot build a bot roster");
-	}
+	if (settings.player_count() < 1 || settings.human_count() < 1 ||
+		(settings.bot_count() != 0 &&
+			settings.screen_layout() != static_cast<ScreenLayout>(settings.human_count() - 1)))
+	{ throw std::invalid_argument("Level layout must match its human participants"); }
 	const LevelLoadedInfo* load_info =
 		this->level_infos_->get(settings.stage());
 
@@ -119,7 +119,8 @@ std::unique_ptr<Level>
 		this->preferences_,
 		this->mouse_,
 		load_info->stations(),
-		opening, settings.duration(), this->input_bindings_);
+		opening, settings.duration(), this->input_bindings_, &settings,
+		settings.bot_count() == 0 ? 0u : static_cast<std::uint64_t>(std::rand()));
 	}
 	catch (const std::invalid_argument& error)
 	{

@@ -859,6 +859,20 @@ elseif ($ConnectionTextOnly) {
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.checks = 'Bounded connection-copy scope at720/1080: independently supplied literal text, unscaled full text/shadow bounds and native rasters over a standalone paper background; fallback Pause title and all four visible player numbers use reordered device slots. Actual Join distinguishes unclaimed, lost, returned-neutral and explicitly claimed states. Actual Restart confirmation falls back on a missing participant, Resume/Restart labels disable, missing-player Back cannot resume, and a held/released reconnect action needs a fresh press. Team warning shows only when the last confirmation would leave one team empty and clears after a provisional valid edit. All eight customized connection strings and three replacement font roles remain captured across presentation assignment and real refreshes, adopt on reopen and reverse only on reopen. Choices/claims remain unchanged except the one accepted Join action; frozen drawing preserves pixels/RNG. At most300 zero-dt page updates, concise CSV and exactly eight compact crops total per preset; no broad painter matrix, duplicate fullscreen captures, human readability, listening or performance qualification.'
 }
+elseif ($BotPlayersOnly) {
+    $result.scope = 'bot-players-only'
+    $result.Remove('stage')
+    $result.stages = @('crossfeed', 'movement_course')
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'mister')
+    $result.input_slots = @(4, 3, -1)
+    $result.actions = @('host-bot-setup', 'human-view-mapping', 'runtime-inputs', 'pause-focus-disconnect', 'restart-series', 'normal-launch-save')
+    $result.inputs = 'Local keyboard snapshots and the scripted GamepadReader seam drive actual setup pages and GameLevel. Nested private profiles isolate every save and record. Native D3D11 uses the hardware adapter.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Focused bot setup, runtime pane mapping, lifecycle and identity checks. Difficulty feel, full platform-route/combat/reserve qualification and physical pads remain open. See run.log and bot-players CSVs for the executed bounded cases.'
+}
 elseif ($RememberedSetupOnly) {
     $result.scope = 'remembered-setup-only'
     $result.Remove('stage')
@@ -867,7 +881,7 @@ elseif ($RememberedSetupOnly) {
     $result.palettes = @('runtime-save-default')
     $result.weapons = @('sprayer', 'sniper', 'mister', 'bucket')
     $result.resolutions = @('1280x720')
-    $result.actions = @('actual-normal-menu-start', 'last-match-save', 'editable-cancelled-choices', 'fresh-sparse-claims', 'fresh-confirmation', 'pause-restart', 'series-continuation', 'developer-bot-replay-exclusion', 'separate-process-relaunch')
+    $result.actions = @('actual-normal-menu-start', 'remembered-bot-restoration', 'last-match-save', 'editable-cancelled-choices', 'fresh-sparse-claims', 'fresh-confirmation', 'pause-restart', 'series-continuation', 'developer-bot-replay-exclusion', 'separate-process-relaunch')
     $result.input_slots = @(3, 4)
     if ($Preset -eq 'x64-debug') {
         $result.player_counts += 4
@@ -876,7 +890,7 @@ elseif ($RememberedSetupOnly) {
     }
     $result.inputs = 'Actual GameMenu owns setup pages and the typed normal/developer launch callback. The existing scripted GamepadReader seam and local keyboard snapshots drive menus without foreground or global input. All saves, developer files and replay evidence are under a nested private profile.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
-    $result.checks = 'Two hidden720p processes share only a new private remembered-setup profile. The writer drives actual menus, compares fresh independent Mode/Count/Join/Team/Weapon/Stage page rasters, preserves the prior save through provisional/cancelled changes and the first arena confirmation, then saves resolved choices through the real normal GameMenu callback. A normal Pause Restart and two drawn best-of-three rounds update records independently of last_match. Debug additionally starts a sparse pad/keyboard/device-less bot match through an actual private script, records and replays it through the real director/menu path, and changes a normal menu choice while an explicitly claimed seat is bot-driven; all preserve the user setup. A separate native reader process reloads Save and GameMenu, restores choices, begins with a missing pad and fresh claims, reconnects without autojoining, requires each player to confirm again and cancels a changed arena without saving. Seven compact crops, CSV and command/replay evidence retain frozen page pixels/RNG. Release runs normal menus/relaunch and excludes developer branches. No physical-pad, listening, human readability or performance acceptance.'
+    $result.checks = 'Two hidden720p processes share only a new private remembered-setup profile. The writer restores a remembered Hard bot into actual Mode/Count/Join/Team with a fresh human claim and unchanged save, then drives actual menus, compares fresh independent Mode/Count/Join/Team/Weapon/Stage page rasters, preserves the prior save through provisional/cancelled changes and the first arena confirmation, then saves resolved choices through the real normal GameMenu callback. A normal Pause Restart and two drawn best-of-three rounds update records independently of last_match. Debug additionally starts a sparse pad/keyboard/device-less bot match through an actual private script, records and replays it through the real director/menu path, and changes a normal menu choice while an explicitly claimed seat is bot-driven; all preserve the user setup. A separate native reader process reloads Save and GameMenu, restores choices, begins with a missing pad and fresh claims, reconnects without autojoining, requires each player to confirm again and cancels a changed arena without saving. Ten compact crops, CSV and command/replay evidence retain frozen page pixels/RNG. Release runs normal menus/relaunch and excludes developer branches. No physical-pad, listening, human readability or performance acceptance.'
 }
 elseif ($TuneColoursOnly) {
     $result.scope = 'tune-colours-only'

@@ -26,6 +26,10 @@ class DebugBackgroundInput final : public SeatInputFilter
 public:
 	void set_next(SeatInputFilter* next) { this->next_ = next; }
 	void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override;
+	bool replaces_bot_inputs() const override
+	{
+		return this->next_ != nullptr && this->next_->replaces_bot_inputs();
+	}
 
 private:
 	SeatInputFilter* next_ = nullptr;

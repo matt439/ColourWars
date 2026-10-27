@@ -1,0 +1,149 @@
+#include "game/pch.h"
+#include "game/ai/match_bot_driver.h"
+#include "game/objects/level.h"
+#include "game/objects/weapon.h"
+#include "engine/core/step_timer.h"
+#include <cmath>
+
+using namespace mattmath;
+
+namespace
+{
+	bool grounded(PlayerMoveState state)
+	{
+		return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
+			state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+	}
+
+	Vector2F paint_point(const PaintSurfaceSample& surface, float clearance)
+	{
+		Vector2F center;
+		for (const Vector2F& corner : surface.corners) { center += corner; }
+		center *= 0.25f;
+		switch (surface.face)
+		{
+		case PaintSurfaceFace::top: center.y -= clearance; break;
+		case PaintSurfaceFace::bottom: center.y += clearance; break;
+		case PaintSurfaceFace::left: center.x -= clearance; break;
+		case PaintSurfaceFace::right: center.x += clearance; break;
+		}
+		return center;
+	}
+}
+
+MatchBotDriver::MatchBotDriver(const GameTuning* tuning, const MenuLevelSettings& settings,
+	std::uint64_t seed) : tuning_(tuning)
+{
+	if (tuning == nullptr) { throw std::invalid_argument("A match bot driver requires tuning"); }
+	const std::vector<MenuPlayerSettings>& players = settings.player_settings();
+	this->bots_.resize(players.size());
+	this->difficulties_.reserve(players.size());
+	for (size_t seat = 0; seat < players.size(); ++seat)
+	{
+		const MenuPlayerSettings& player = players[seat];
+		this->difficulties_.push_back(player.difficulty);
+		if (player.controller == PlayerController::bot)
+		{
+			this->bots_[seat] = std::make_unique<MatchBot>(tuning, player.difficulty,
+				seed * 0x9E3779B97F4A7C15ull + static_cast<std::uint64_t>(seat) + 1);
+		}
+	}
+}
+
+bool MatchBotDriver::drives(int participant) const
+{
+	return participant >= 0 && participant < static_cast<int>(this->bots_.size()) &&
+		this->bots_[static_cast<size_t>(participant)] != nullptr;
+}
+
+float MatchBotDriver::engagement_distance(const Player& player, const GameTuning& tuning)
+{
+	const Weapon& weapon = player.primary_weapon();
+	const WeaponTuning& tool = tuning.weapon(weapon.type());
+	const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
+	const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
+		labrador::StepTimer::TicksPerSecond / 60));
+	float speed = tool.details.starting_vel_length;
+	float distance = 0.0f;
+	float elapsed = 0.0f;
+	// A conservative local engagement heuristic, not a projectile-hit promise.
+	for (int step = 0; step < 60; ++step)
+	{
+		elapsed += dt;
+		if (step > 0 && elapsed > projectile.details.delete_timer) { break; }
+		if (std::fabs(speed) > projectile.details.wind_resistance * projectile.wind_stop_factor)
+		{
+			speed += speed > 0.0f ? -projectile.details.wind_resistance * dt :
+				projectile.details.wind_resistance * dt;
+		}
+		else { speed = 0.0f; }
+		speed = std::clamp(speed, -projectile.max_velocity.x, projectile.max_velocity.x);
+		distance += std::fabs(speed * dt);
+	}
+	return distance + Vector2F::distance(weapon.nozzle_pos(), player.center()) +
+		projectile.details.col_rect_size.x * 0.5f + tuning.player().size.x * 0.5f;
+}
+
+void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Level& level)
+{
+	bool wants_territory = false;
+	for (size_t seat = 0; seat < this->bots_.size() && seat < seats.size() &&
+		seat < static_cast<size_t>(level.player_count()); ++seat)
+	{
+		wants_territory = wants_territory || (this->bots_[seat] != nullptr &&
+			this->bots_[seat]->needs_territory() && level.player(static_cast<int>(seat)).state() == PlayerState::alive);
+	}
+	const std::vector<PaintSurfaceSample> surfaces = wants_territory ? level.paint_surfaces() :
+		std::vector<PaintSurfaceSample>{};
+	const std::vector<RectangleF> obstacles = level.bot_obstacles();
+	for (size_t seat = 0; seat < this->bots_.size() && seat < seats.size() &&
+		seat < static_cast<size_t>(level.player_count()); ++seat)
+	{
+		MatchBot* bot = this->bots_[seat].get();
+		if (bot == nullptr) { continue; }
+		const Player& player = level.player(static_cast<int>(seat));
+		const Weapon& weapon = player.primary_weapon();
+		const WeaponTuning& tool = this->tuning_->weapon(weapon.type());
+		const ProjectileTuning& projectile = this->tuning_->projectile(tool.details.proj_type);
+		MatchBotObservation view;
+		view.center = player.center();
+		view.velocity = player.velocity();
+		view.size = this->tuning_->player().size;
+		view.alive = player.state() == PlayerState::alive && player.health() > 0.0f;
+		view.grounded = grounded(player.move_state());
+		view.on_platform = player.move_state() == PlayerMoveState::on_drop_down_ground;
+		view.facing_right = player.facing_right();
+		view.ammo = player.weapon_ammo() / this->tuning_->starting_ammo();
+		view.shot_empty = weapon.readiness() == WeaponReadiness::empty;
+		view.engage_distance = engagement_distance(player, *this->tuning_);
+		view.projectile_speed = tool.details.starting_vel_length;
+		view.projectile_gravity = projectile.details.gravity;
+		view.obstacles = obstacles;
+		const float sight = this->tuning_->bots().sight_distance;
+		if (view.alive)
+		{
+			for (int other = 0; other < level.player_count(); ++other)
+			{
+				const Player& candidate = level.player(other);
+				if (other == static_cast<int>(seat) || candidate.team() == player.team() ||
+					candidate.state() != PlayerState::alive || candidate.health() <= 0.0f ||
+					Vector2F::distance_squared(candidate.center(), view.center) > sight * sight ||
+					!level.bot_line_of_sight(view.center, candidate.center())) { continue; }
+				view.enemies.push_back({ candidate.center(), candidate.velocity() });
+			}
+			if (bot->needs_territory() && !surfaces.empty())
+			{
+				const int count = this->tuning_->bot(this->difficulties_[seat]).territory_candidates;
+				for (int index = 0; index < count; ++index)
+				{
+					const PaintSurfaceSample& surface = surfaces[static_cast<size_t>(bot->random() % surfaces.size())];
+					if (surface.team == player.team()) { continue; }
+					const Vector2F point = paint_point(surface, this->tuning_->paint().thickness + view.size.x * 0.05f);
+					if (Vector2F::distance_squared(point, view.center) <= sight * sight &&
+						level.bot_line_of_sight(view.center, point)) { view.territory.push_back(point); }
+				}
+			}
+		}
+		seats[seat] = bot->think(view);
+	}
+}

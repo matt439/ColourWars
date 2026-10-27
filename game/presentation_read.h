@@ -25,7 +25,8 @@ namespace presentation_read
 	};
 	inline constexpr std::array<const char*, static_cast<size_t>(MenuPrompt::count)> menu_prompt_keys{
 		"title", "select_back", "options", "controls", "sticks", "mode", "join", "team", "team_shuffle",
-		"weapon", "arena_browse", "arena_locked", "missing_player", "pause", "pause_missing", "select", "credits"
+		"weapon", "arena_browse", "arena_locked", "missing_player", "pause", "pause_missing", "select", "credits",
+		"bot_team", "bot_weapon"
 	};
 	inline constexpr std::array<const char*, static_cast<size_t>(MenuItem::count)> menu_item_keys{
 		"play", "options", "credits", "exit", "resolution", "fullscreen", "team_palette",

@@ -45,22 +45,47 @@ void Level::draw(Renderer& renderer) const
 
 void Level::draw_player_overlay(int view_index, DrawList& list) const
 {
-	const Player* player = this->players_[static_cast<size_t>(view_index)];
+	const int participant = this->participant_for_view(view_index);
+	const Player* player = this->players_[static_cast<size_t>(participant)];
 
 	const Viewport& player_vp = this->scene_->view(view_index).viewport;
 	// Detached world contacts remain visible even if their shot or owner has
 	// retired or left the pane. Render workers only read the fixed cue storage.
 	list.set_camera(this->scene_->view(view_index).camera);
 	this->blocked_shot_feedback_->draw(list);
-	if (this->aim_marker_visible(view_index))
+	if (this->aim_marker_visible(participant))
 	{
 		list.set_camera(this->scene_->view(view_index).camera);
 		player->primary_weapon().draw_aim_marker(list);
 	}
-	if (this->player_identity_visible(view_index))
+	if (this->player_identity_visible(participant))
 	{
 		list.set_filter(TextureFilter::point);
-		this->player_badge_->draw(list, this->player_identity_bounds(view_index), view_index);
+		this->player_badge_->draw(list, this->player_identity_bounds(participant), participant);
+	}
+	// Bots share human views. Their stable roster number and explicit difficulty
+	// travel with their world figure, never masquerading as an unclaimed human.
+	for (int bot = 0; bot < this->player_count(); ++bot)
+	{
+		if (!this->is_bot(bot) || !this->player_identity_visible(bot)) { continue; }
+		list.set_filter(TextureFilter::point);
+		const RectangleF badge = this->player_identity_bounds(bot);
+		this->player_badge_->draw(list, badge, bot);
+		const Text& text = *this->bot_identity_texts_[static_cast<std::size_t>(bot)];
+		const RectangleF measured = text.text_bounds_at(Vector2F::ZERO, 1.0f);
+		const PlayerIdentityPresentation& look = this->presentation_->player_identity();
+		const float emphasis = badge.width / look.world_size.x;
+		const float scale = emphasis * std::min(
+			look.bot_label_size.x / std::max(1.0f, measured.width),
+			look.bot_label_size.y / std::max(1.0f, measured.height));
+		const Vector2F size = measured.size() * scale;
+		const Vector2F position(badge.center().x - size.x * 0.5f,
+			badge.top() - size.y - look.bot_label_gap * emphasis);
+		this->render_resources_->sprite_sheet(this->overlay_sheet_)->draw(list,
+			this->overlay_fill_, RectangleF(position, size),
+			this->presentation_->player_identity().background_colour);
+		text.draw_with(list, this->presentation_->player_identity().ink_colour,
+			position - measured.position() * scale, scale);
 	}
 
 	// Dividers use window coordinates; subtract the pane's screen origin
@@ -85,8 +110,8 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 
 	this->interface_gameplay_->draw_gameplay_interface_prepared(list,
 		player_vp.size(),
-		view_index,
-		this->identity_texts_[static_cast<std::size_t>(view_index)],
+		participant,
+		this->identity_texts_[static_cast<std::size_t>(participant)],
 		player->health() / this->tuning_->player().starting_health,
 		player->weapon_ammo() / this->tuning_->starting_ammo(),
 		this->timer_,
@@ -147,7 +172,9 @@ void Level::refresh_identity_texts()
 			!this->seat_labels_[view].empty();
 		this->identity_texts_[view] = InterfaceGameplay::identity_text(
 			static_cast<int>(view), player.team(), labelled ?
-			this->seat_labels_[view] : input_slots::device_name(player.player_num()));
+			this->seat_labels_[view] : (this->is_bot(static_cast<int>(view)) ?
+				this->presentation_->menu_text().bot_label(this->roster_[view].difficulty) :
+				input_slots::device_name(player.player_num())));
 	}
 }
 

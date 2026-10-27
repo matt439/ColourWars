@@ -215,25 +215,40 @@ opens; reopening adopts edited values.
 Join reuses `main_menu.setup_box_size` and the captured setup-art copy described
 above, including the focus-padding and shadow-offset overrides. Its solid
 surround uses `main_menu.home_background_colour`. There are no new data fields
-or artwork assets. Join has no shared focus cursor, so `MenuPaperArtwork` draws
-the outer panel without a focused-row card or detached arrow. The controls
-footer remains visible and the legacy brand is suppressed.
+or artwork assets. `MenuPaperArtwork` draws the outer panel without a
+focused-row card or detached arrow. A static underline identifies the row P1
+can edit: Up/Down selects an unclaimed non-host human or an existing bot, and
+Left/Right changes Human, Bot (Easy), Bot (Normal) or Bot (Hard). A new bot
+starts at Normal; a joined human must leave before its row can change. The
+underline uses the row's measured width and `menu_style.chrome.rule_height`
+for its thickness and gap. The controls footer remains visible and the legacy
+brand is suppressed.
 
-Connected player rows and the existing claim/release gutter stripe use captured
+Connected humans, bot rows and the existing claim/release gutter stripe use captured
 `focus_ink`; unclaimed rows and reserved missing devices use `disabled_ink`.
 Heading and status use ordinary `ink`. Heading, item and status shadows have
 zero alpha but retain their authored offsets, fonts, anchors and logical
 bounds. Device/roster labels, reconnect suffix and status copy remain unscaled;
 their words come from `menu_text.labels` and `menu_text.connection`.
 
-Page checks use the actual generated row labels and captured gutter rectangles,
+Page checks use the actual generated row labels, host underline and captured gutter rectangles,
 plus heading and status bounds, to require containment in the usable paper
 interior. They also preserve the heading, player rows and status in that
 vertical order. These checks retain text-shadow extents and add no fitting or
 wrapping. The paper and gutter use point sampling; lettering stays linear.
-Roster claims, stable empty rows, readiness, reconnect, Back/rescue,
-destinations, RNG and audio retain their existing behavior. The bounded gutter
-motion and its Reduce effects/interruption policy are unchanged.
+Bots need no device to make setup ready. Every human must be connected before
+P1 can continue; only human seats contribute screen panes. One-player practice
+stays bot-free. Stable device claims, reconnect, Back/rescue and the bounded
+gutter motion retain their existing behavior.
+
+On Team and Weapon Select, P1 uses Up/Down to select P1 or a bot row, marked by
+the same static underline. Left/Right and Confirm/Back apply to that row; other
+humans control their own rows. Every participant must confirm separately.
+`menu_text.prompts.bot_team` and `bot_weapon` describe this host routing only
+when the roster contains bots. Random teams includes bots and clears all
+readiness; multiplayer still needs both teams. Bot labels retain their stable
+participant number and explicit difficulty. The runtime and attended gameplay
+qualification belong to [ROAD#10](feature-roadmap.md#ai-bot-players-road10).
 
 ## Shared paper focus and press motion
 
@@ -548,7 +563,7 @@ remain point-filtered and lettering linear-filtered.
 ## Shared headings and complete control legends
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
-seventeen complete prompt-bar legends, forty-two row labels, a solo-practice
+nineteen complete prompt-bar legends, forty-two row labels, a solo-practice
 hint, a paused-Options palette-timing caption, five Title/Home strings,
 three Controls/Pad Sticks help strings, eleven
 fixed save-status messages, three shared setting values, two Pause confirmation
@@ -561,7 +576,7 @@ two fixed Stage Select mode labels:
 |---|---|
 | `menu_text.brand` | One brand-line string |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
-| `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
+| `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits`, `bot_team`, `bot_weapon` |
 | `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_jump`, `rumble` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.options_palette_timing` | One persistent paused-Options palette-timing caption |

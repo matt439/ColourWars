@@ -47,10 +47,14 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 	// Index each team's spawn array using its own player counter.
 	size_t team_a_index = 0;
 	size_t team_b_index = 0;
+	int human_view = 0;
 	for (auto& setting : settings.player_settings())
 	{
-		// View index is match position, not input slot; connected slots may be sparse.
-		const int view_index = static_cast<int>(players.size());
+		// Sound and paint identity use the stable participant, while only humans
+		// consume a screen pane. A bot's unused camera starts fullscreen.
+		const int participant_index = static_cast<int>(players.size());
+		const Viewport viewport = setting.controller == PlayerController::bot ?
+			viewport_manager->fullscreen_viewport() : viewport_manager->player_viewport(human_view++);
 
 		Vector2F position = Vector2F::ZERO;
 		if (setting.team == PlayerTeam::a)
@@ -80,8 +84,8 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			this->weapon_builder_->build_weapon(
 				this->tuning_,
 				setting.team,
-				paint_owners::index(setting.num, view_index),
-				view_index,
+				paint_owners::index(setting.num, participant_index),
+				participant_index,
 				team_colours.team_colour(setting.team),
 				setting.weapon,
 				rect.center(),
@@ -90,10 +94,9 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 				&this->presentation_->weapon_feedback()),
 			WeaponType::grenade_std,
 			team_colours.team_colour(setting.team),
-			viewport_manager->
-				player_viewport(view_index),
+			viewport,
 			position, Vector2F::ZERO, 0.0f, Vector2F::ZERO,
-			SpriteFlip::none, 0.0f, view_index, &this->presentation_->figure(),
+			SpriteFlip::none, 0.0f, participant_index, &this->presentation_->figure(),
 			&this->presentation_->camera().shake);
 
 		players.push_back(std::move(player));

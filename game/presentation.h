@@ -97,6 +97,9 @@ struct PlayerIdentityPresentation
 	mattmath::Vector2F world_size;
 	// Bottom-centre offset above the player's collision rectangle.
 	mattmath::Vector2F world_offset;
+	// The bot's full roster/difficulty label above its ordinary world badge.
+	mattmath::Vector2F bot_label_size;
+	float bot_label_gap = 0.0f;
 	float emphasis_duration = 0.0f;
 	float emphasis_scale = 1.0f;
 	mattmath::Vector2F ui_size;

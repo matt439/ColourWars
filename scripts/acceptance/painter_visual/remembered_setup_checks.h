@@ -197,34 +197,29 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         return;
     }
 
-    // The persistence API can retain future bot choices before normal setup
-    // and runtime are enabled. The actual GameMenu must still start fresh,
-    // without erasing those choices or turning a bot into an idle participant.
+    // Normal setup restores bots while requiring fresh human claims.
     {
         MenuLevelSettings mixed = seed; mixed.set_player_bot(1, BotDifficulty::hard);
         mixed.set_screen_layout(ScreenLayout::one_player);
         require(preferences->remember_match_setup_and_save(LastMatchSetup::capture(mixed)),
-            "Cannot seed the private future bot setup");
+            "Cannot seed the private bot setup");
         const std::string bot_save = remembered_setup_bytes(save_path);
-        MenuLevelSettings fresh;
+        MenuLevelSettings expected = preferences->last_match_setup()->restore(stages);
         open(false); tap(4, GamepadButton::a); tap(4, GamepadButton::a);
-        compare(0, fresh, "bot-gate-default-mode"); tap(4, GamepadButton::a);
-        compare(1, fresh, "bot-gate-default-count", true);
-        tap(4, GamepadButton::dpad_down); tap(4, GamepadButton::a);
-        fresh.set_player_count(2); fresh.set_screen_layout(ScreenLayout::two_player);
-        fresh.begin_input_claims(4); compare(2, fresh, "bot-gate-fresh-human-join", true);
-        tap(4, GamepadButton::a); compare(2, fresh, "bot-gate-human-still-unclaimed");
-        painter_scripted_pads::states[3].connected = true; tick(); tick();
-        tap(3, GamepadButton::a);
-        require(fresh.claim_input_slot(3), "Cannot specify the future bot gate's fresh human claim");
-        compare(2, fresh, "bot-gate-explicit-human-claim");
+        compare(0, expected, "bot-restored-mode"); tap(4, GamepadButton::a);
+        compare(1, expected, "bot-restored-count", true);
+        tap(4, GamepadButton::a); expected.begin_input_claims(4);
+        compare(2, expected, "bot-restored-join", true);
+        require(expected.input_roster_complete() && expected.human_count() == 1 &&
+            expected.bot_count() == 1, "Remembered bot needs a spare controller");
+        tap(4, GamepadButton::a); compare(3, expected, "bot-restored-teams", true);
         Save retained; retained.load_save_file();
         require(remembered_setup_bytes(save_path) == bot_save && preferences->last_match_setup() &&
             remembered_setup_matches(*preferences->last_match_setup(), mixed) && retained.last_match_setup() &&
             remembered_setup_matches(*retained.last_match_setup(), mixed),
-            "The normal GameMenu bot gate changed remembered controller/difficulty metadata in memory or on disk");
-        note("future-bot-metadata-preserved-normal-setup-gated", fresh, true);
-        std::cout << "PASS remembered bot metadata retained in memory and disk while actual GameMenu uses default Mode/Count and fresh human-only Join claims\n";
+            "Restoring the bot setup changed saved controller/difficulty metadata");
+        note("bot-metadata-restored-no-spare-controller", expected, true);
+        std::cout << "PASS remembered bots restored through actual GameMenu Mode/Count/Join/Team with fresh human claim and unchanged saved metadata\n";
         stack.clear();
     }
 

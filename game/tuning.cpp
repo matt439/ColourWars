@@ -140,6 +140,49 @@ namespace
 		return input;
 	}
 
+	BotTuning read_bots(const JsonValue& root)
+	{
+		const JsonValue json = root.object("bots");
+		BotTuning bots;
+		bots.sight_distance = read_positive(json, "sight_distance");
+		bots.reserve_low = read_unit(json, "reserve_low");
+		bots.reserve_resume = read_unit(json, "reserve_resume");
+		if (bots.reserve_resume <= bots.reserve_low)
+		{
+			throw std::runtime_error(json.where() + ": reserve_resume must exceed reserve_low.");
+		}
+		const auto steps = [](const JsonValue& value, const char* key)
+		{
+			const int count = value.integer(key);
+			if (count < 1 || count > 3600)
+			{
+				throw std::runtime_error(value.where() + ": " + key + " must be between 1 and 3600 steps.");
+			}
+			return count;
+		};
+		bots.stuck_jump_steps = steps(json, "stuck_jump_steps");
+		bots.stuck_turn_steps = steps(json, "stuck_turn_steps");
+		if (bots.stuck_turn_steps <= bots.stuck_jump_steps)
+		{
+			throw std::runtime_error(json.where() + ": stuck_turn_steps must exceed stuck_jump_steps.");
+		}
+		const char* names[]{ "easy", "normal", "hard" };
+		for (size_t index = 0; index < bots.difficulties.size(); ++index)
+		{
+			const JsonValue entry = json.object(names[index]);
+			BotDifficultyTuning& difficulty = bots.difficulties[index];
+			difficulty.reaction_steps = steps(entry, "reaction_steps");
+			difficulty.replan_steps = steps(entry, "replan_steps");
+			difficulty.territory_candidates = entry.integer("territory_candidates");
+			if (difficulty.territory_candidates < 1 || difficulty.territory_candidates > 256)
+			{
+				throw std::runtime_error(entry.where() + ": territory_candidates must be between 1 and 256.");
+			}
+			difficulty.aim_error_radians = read_number_in(entry, "aim_error_radians", 0.0f, PI);
+		}
+		return bots;
+	}
+
 	RumbleProfile read_rumble(const JsonValue& root)
 	{
 		const JsonValue json = root.object("rumble");
@@ -650,6 +693,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 	this->paint_ = read_paint(root);
 	this->player_ = read_player(root);
 	this->rumble_ = read_rumble(root);
+	this->bots_ = read_bots(root);
 
 	const JsonValue weapons = root.object("weapons");
 	this->ammo_regen_delay_ = read_non_negative(weapons, "ammo_regen_delay");
@@ -724,6 +768,21 @@ const PlayerTuning& GameTuning::player() const
 const RumbleProfile& GameTuning::rumble() const
 {
 	return this->rumble_;
+}
+
+const BotTuning& GameTuning::bots() const
+{
+	return this->bots_;
+}
+
+const BotDifficultyTuning& GameTuning::bot(BotDifficulty difficulty) const
+{
+	if (difficulty != BotDifficulty::easy && difficulty != BotDifficulty::normal &&
+		difficulty != BotDifficulty::hard)
+	{
+		throw std::out_of_range("Unknown bot difficulty");
+	}
+	return this->bots_.difficulties[static_cast<size_t>(difficulty)];
 }
 
 float GameTuning::ammo_regen_delay() const

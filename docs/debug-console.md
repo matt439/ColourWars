@@ -1025,8 +1025,10 @@ Easy/Normal/Hard difficulty for each participant. Layout counts humans, while
 input arrays count all participants. The reader also accepts human-only
 format 3, treating unclaimed seats as human dummies. Present format-4 metadata
 is strict; bot seats cannot own devices and P1 must be human. Human difficulty
-is unused and written as Normal. Playable bot setup/runtime remains gated by
-`ROAD#10`; accepting its metadata does not enable bot matches yet.
+is unused and written as Normal. Normal setup now supports playable bots
+(`ROAD#10`); recording captures their final inputs, and playback bypasses their
+live decision driver. Arena navigation/combat and attended difficulty acceptance
+remain separate from replay qualification.
 
 **`play <name> [force]`** rebuilds the match with the recorded settings
 verbatim - from a match or from the menus - and feeds every seat its recorded
@@ -1440,9 +1442,9 @@ as the game. In Release:
   page), `DebugMatchTarget`'s `debug_countdown_over`, `debug_set_seat_labels`
   and `debug_screen_obstacles` with their `GameLevel` adapters, and
   `DebugDirector::begin_match_draw`, an inline no-op; the
-  header-only `SeatInputFilter` interface (nothing in Release derives from it,
-  so it has no vtable or type information there) and the `seats` parameter of
-  `Level::update`, always null; `DebugMatchTarget::debug_level`;
+  `SeatInputFilter` interface, also used by the shipping `MatchBotDriver`, and
+  the developer `seats` parameter of `Level::update`, always null in Release
+  (shipping bots are owned by Level); `DebugMatchTarget::debug_level`;
   `pad_seat_missing`, whose "driven by a bot or replay" half is always false;
   `DebugDirector` itself, one null pointer with inline no-op hooks
   (`match_suspended`, `drives_slot` among them); and the one stderr line above.
@@ -1451,10 +1453,11 @@ as the game. In Release:
   `.?AVLambdaCommand@@`, `.?AVDebugMenuPage@@`, `.?AVNumberVariable@@`,
   `.?AVBot@@`, `.?AVPaintBot@@`, `.?AVBotDriver@@`, `.?AVReplayRecorder@@`,
   `.?AVReplayPlayer@@`, `.?AVTuneTarget@@`, `.?AVTuningTarget@@`,
-  `.?AVSeatInputFilter@@`, `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
+  `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
   `.?AVMatchWait@@`, and the Release executable must contain none of them;
-  in Release it also checks that a match update gets no seat filter and that no
-  slot is driven. CI also checks the packaged
+  in Release it also checks that the director supplies no developer filter or
+  driven physical slot. `SeatInputFilter` remains present for shipping bots.
+  CI also checks the packaged
   `ColourWars.exe`.
 
 ## For developers

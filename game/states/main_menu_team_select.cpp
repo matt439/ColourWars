@@ -17,11 +17,16 @@ MainMenuTeamSelect::MainMenuTeamSelect(MenuContext* context) :
 
 void MainMenuTeamSelect::update_page(float /*dt*/)
 {
-	const std::vector<ProcessedMenuInput> inputs =
+	std::vector<ProcessedMenuInput> inputs =
 		this->input()->player_inputs(*this->level_settings());
 	if (this->wait_for_players(inputs))
 	{
 		return;
+	}
+	this->route_host_setup_input(inputs, this->host_row_);
+	if (this->host_cursor_)
+	{
+		this->place_host_cursor(*this->host_cursor_, *this->player_widgets_[this->host_row_]->player);
 	}
 	if (this->player_count() >= 2 && std::any_of(inputs.begin(), inputs.end(),
 		[](const ProcessedMenuInput& input) { return input.action == MenuInputAction::shuffle; }))
@@ -331,8 +336,8 @@ void MainMenuTeamSelect::init()
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 	this->team_select_frames_ = look.team_select_frames;
 	this->team_select_selected_frames_ = look.team_select_selected_frames;
-	this->set_player_prompts(this->player_count() >= 2 ?
-		MenuPrompt::team_shuffle : MenuPrompt::team);
+	this->set_player_prompts(this->level_settings()->bot_count() > 0 ? MenuPrompt::bot_team :
+		this->player_count() >= 2 ? MenuPrompt::team_shuffle : MenuPrompt::team);
 
 	this->set_widget_spacing(this->look().team_select.spacing);
 
@@ -453,6 +458,12 @@ void MainMenuTeamSelect::init()
 		this->team_focus_.add(row_widgets.player_center.get());
 		this->team_focus_.add(row_widgets.player_b.get());
 		this->team_focus_.set_focused(i, this->team_widget(i, this->level_settings()->player_team(i)));
+	}
+	if (this->level_settings()->bot_count() > 0)
+	{
+		this->host_cursor_ = this->make_host_cursor();
+		this->place_host_cursor(*this->host_cursor_, *this->player_widgets_[this->host_row_]->player);
+		this->texture_container_->add_child(this->host_cursor_.get());
 	}
 	this->update_team_select_visuals();
 	this->check_paper_geometry();

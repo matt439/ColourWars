@@ -70,11 +70,10 @@ Fresh input claims preserve bot choices; shrinking discards removed seats,
 and growth adds unclaimed humans. Copies retain all seat metadata, and the
 existing balanced team shuffle includes bots.
 
-This is the roster model, not playable AI. Normal setup has no bot controls
-yet. The initial slice rejected bot rosters in construction, remembered-setup
-capture, labels and replay writing. The metadata and label consumers are now
-integrated below; level construction still rejects bot rosters before resource
-access until human views and the playable driver are ready.
+This initial slice established the roster model. At that stage, normal setup
+had no bot controls and construction, remembered-setup capture, labels and replay
+writing rejected bot rosters. The metadata and runtime slices below now replace
+those temporary guards.
 
 Validation: Debug and Release builds pass, together with the six selected
 consumer cases `bot_roster`, `settings`, `team_selection`, `remembered_setup`,
@@ -149,10 +148,9 @@ bounds and Results percentages. Debug status and paint overlays also distinguish
 bot difficulty from an idle human with `num == -1`. Runtime world identity and
 the human/view mapping remain part of the next slice.
 
-Normal setup remains human-only: `GameMenu` retains a remembered bot setup in
-the save but opens fresh setup choices until runtime integration is ready.
-The level builder's early rejection guard also remains. These guards must be
-removed together with the playable setup/view/driver path, not independently.
+At this stage, normal setup remained human-only and the level builder retained
+its early rejection guard. The runtime slice below removes both guards together
+with the playable setup/view/driver path.
 
 Validation: Debug and Release builds pass, with the eight selected consumer
 cases `bot_roster`, `remembered_setup`, `debug_console`, `menu_text`, `settings`,
@@ -167,12 +165,79 @@ isolated startup checks pass. Evidence: `out/validation/road10-metadata/`.
 These are selected metadata/regression checks, not the full acceptance suite,
 bot gameplay qualification or attended difficulty acceptance.
 
-**Next implementation:** integrate Join/Team/Weapon host controls and explicit
-human view mapping with a Release-capable bot input driver, then carry bot world
-identity through that runtime. Qualify platform navigation/recovery, territory
-choice, opponent engagement and reserve management across the five tools and
-shipped arenas. Keep bot setup unavailable until that path builds and drives
-the chosen seats.
+#### Setup, human panes and shipping driver (2026-10-27)
+
+Normal Join now lets P1 select an unclaimed non-host row with Up/Down and
+change Human/Bot difficulty with Left/Right. A new bot defaults to Normal;
+joined or reserved human rows must leave before conversion. P1 controls its
+own and bot Team/Weapon rows, with separate row readiness; other humans retain
+their own input. Bot-free solo practice remains available. Remembered bots
+restore into normal setup with fresh human claims, and normally confirmed bot
+matches save their resolved roster through the existing launch callback.
+
+`Level::player` and `player_count` now describe stable roster participants.
+Explicit `participant_for_view`/`view_for_participant` mappings give panes only
+to humans. Scene views, follow/aim cameras, HUDs, overlays and the opening's
+camera transition use that mapping. P3 keeps its number when a bot occupies P2.
+Bots retain participant-based spawns, paint credit, audio identity, scoring and
+results. Their world labels include the stable number and difficulty, with
+validated `player_identity.bot_label_size` and `bot_label_gap` geometry.
+
+The Release-capable `MatchBotDriver` supplies ordinary participant input after
+physical-slot mapping and mouse aim, before the optional developer filter.
+Each bot has a private seeded stream. Recording sees the final input; playback
+bypasses the shipping driver. Rebuilds create fresh driver state while settings
+copies preserve difficulty and choices. Bots have no physical slot, menu/pause
+actions or motor destination. Pause, focus loss, reconnect waits and the resume
+count-in stop decisions with simulation.
+
+Initial policy values live in validated `tuning.json.bots`: reaction/replan
+intervals, aim error and territory candidate count per difficulty, plus shared
+sight range, reserve thresholds and stuck recovery delays. The driver samples
+local visible unowned/enemy paint, responds to living enemies with conservative
+structural-bounds line of sight, predicts a local aim point, and emits normal
+jump/turn/drop/fire requests. The reserve guard stops firing until recovery;
+all movement, ammunition, health, respawn and scoring still use normal game
+rules. Hard gets no extra speed, supply or hidden enemy observations.
+
+This is an initial local policy, not arena navigation or combat qualification.
+It has no route graph; multi-level routes can still trap its reactive recovery.
+Structural AABB sight is conservative around ramps/platforms. Its engagement
+and lead estimates do not establish projectile hits with drag, inherited motion
+or bounces. Snapshot memory is bounded by the current arena, but CPU/frame-pacing
+impact has not been measured. Initial Easy/Normal/Hard values remain provisional.
+
+Validation: Debug and Release builds pass, with the eleven selected consumer
+cases `bot_driver`, `bot_runtime`, `bot_roster`, `remembered_setup`,
+`debug_console`, `menu_text`, `settings`, `team_selection`, `player_identity`,
+`moving_structure` and `gameplay_tuning` in each build. The new runtime case
+constructs all 15 legal human/bot arrangements, retains sparse identity and
+tool/team choices, checks unchanged human inputs and zero-time decisions, and
+records/replays 120 actual bot-driven steps to an equal final Debug fingerprint.
+The policy case checks all three difficulties and five tool observations,
+reserve hysteresis, reaction/aim, death/respawn and jump/turn/drop requests;
+these are policy checks, not successful arena-route or combat trials.
+
+Native `-BotPlayersOnly` passes at 720p/1080p on hardware D3D11 in both builds.
+It drives actual Join/Team/Weapon pages, bot-free solo, host and sparse-human
+readiness, then an actual P1-human/P2-bot/P3-human/P4-bot match through normal
+setup capture, Pause/Restart, focus count-in, human disconnect/reconnect and two
+Results/series continuations. Frozen frames retain state and the two human
+panes; inspected captures show the P2 Easy/P4 Hard world labels. Native
+`-RememberedSetupOnly` passes in both builds, including normal remembered-bot
+restoration and separate-process human reclaims. `-JoinPaperOnly` retains the
+human setup/layout regressions at six sizes in both builds. Both real-bank
+isolated startup checks pass. Evidence: `out/validation/road10-runtime/`, with
+build logs at `out/road10-build-debug.log` and `out/road10-build-release.log`.
+This is selected acceptance, not the full suite, physical-pad, performance or
+attended difficulty qualification.
+
+**Next implementation:** build repeatable spawn-to-territory and opponent trials
+on Crossfeed and the shipped arenas, for all five tools. Use observed failures
+to improve reachable route selection, platform jumps/drops, stuck recovery,
+territory value, combat approach/aim and reserve use. Keep finite per-trial step
+budgets and final-input replay checks. Attended difficulty distinction and
+usefulness remain the author's acceptance gate; `ROAD#10` stays OPEN.
 
 ### Balanced random teams
 
