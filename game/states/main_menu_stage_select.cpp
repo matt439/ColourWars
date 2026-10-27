@@ -182,6 +182,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_hint_->set_text(confirmed ?
 		this->text().stage.locked_hint : random ?
 		this->text().stage_random_hint(random_stage_indices(*this->data()->stages()).size()) :
+		this->is_user_stage(slot) ? this->text().stage.user_hint :
 		this->text().stage.browse_hint);
 	const RectangleF hint_bounds = RectangleF::union_of(
 		this->selection_hint_->text_bounds_at(Vector2F::ZERO, 1.0f),
@@ -259,6 +260,12 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 			"the stage list");
 	}
 	return L"ERROR";
+}
+bool MainMenuStageSelect::is_user_stage(int slot) const
+{
+	const StageList* stages = this->data()->stages();
+	return slot >= 0 && slot < static_cast<int>(stages->size()) &&
+		stages->at(static_cast<size_t>(slot)).user;
 }
 int MainMenuStageSelect::pick_random_stage() const
 {

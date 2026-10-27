@@ -594,7 +594,7 @@ two fixed Stage Select mode labels:
 | `menu_text.confirmations` | `restart`, `quit`, `exit`, `display` |
 | `menu_text.display_trial_countdown` | One countdown string with exactly one `{seconds}` token |
 | `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
-| `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective`, `random_navigation`, `locked_hint`, `browse_hint`, `solo_mode`, `single_match_mode` |
+| `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective`, `random_navigation`, `locked_hint`, `browse_hint`, `user_hint`, `solo_mode`, `single_match_mode` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
@@ -1377,16 +1377,17 @@ compose `BEST OF ` with the best-of value in C++.
 
 ### Fixed Stage Select navigation and hints
 
-Three more required `menu_text.stage` fields supply complete fixed cues:
+Four more required `menu_text.stage` fields supply complete fixed cues:
 
 | Key | Use |
 |---|---|
 | `random_navigation` | Random slot navigation, shipped as `<   SURPRISE ME   >` |
 | `locked_hint` | Confirmed stage choice, including Random |
 | `browse_hint` | Unconfirmed concrete stage choice |
+| `user_hint` | Unconfirmed user stage ([`ROAD#16`](feature-roadmap.md#user-stages-road16)), in place of `browse_hint` |
 
 Random navigation follows the shared normalized, nonblank, single-line rules.
-The two hints use the same normalized authored-block rules as the objective
+The three hints use the same normalized authored-block rules as the objective
 strings: printable text, LF breaks between nonblank lines and no automatic
 wrapping. The complete shipped locked hint is:
 
@@ -1401,6 +1402,17 @@ The complete shipped browse hint is:
 Left/Right to browse.
 Confirm to lock your choice.
 ```
+
+The complete shipped user-stage hint, the only mark a user stage carries, is:
+
+```text
+Built by you.
+Confirm to lock your choice.
+```
+
+It keeps the browse hint's second line and draws only characters the other
+two hints draw, so a font that can draw them can draw it; startup checks its
+fit the same way as theirs.
 
 Random navigation uses the actual `menu_style.fonts.detail`, shipped as
 `lato_black_36`, and the unscaled `UiTextDropShadow` style at

@@ -175,6 +175,8 @@ struct MenuStageText
 	std::wstring random_navigation;
 	std::wstring locked_hint;
 	std::wstring browse_hint;
+	// Unconfirmed user stage (ROAD#16), in browse_hint's place.
+	std::wstring user_hint;
 	std::wstring solo_mode;
 	std::wstring single_match_mode;
 	std::wstring best_of_mode;

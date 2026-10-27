@@ -217,7 +217,20 @@ prompt is a modal box, so it belongs to the manual pass in `ED#5`.
 For an existing stage, save its source JSON, rebuild the game and choose the
 stage from the game menu. The build copies the revised file beside the game.
 
-A new file is not automatically a menu stage. To register it:
+To play a new file without rebuilding, save or copy it as
+`%LOCALAPPDATA%\ColourWars\stages\<name>.json` (create the folder; it sits
+beside the save) and start the game. It appears in Stage Select after the
+shipped stages, with "Built by you." in the briefing, and `+stage <name>`
+starts it from the Debug command line. It is never a Random candidate. The
+game checks it as it checks a shipped stage; a file that fails prints one
+`user stage refused: <file>: <reason>` line on stderr and is left out, and the
+game starts without it. `<name>` follows the registration helper's rule below
+and may not be a shipped stage's name in any case. Edit the file and restart
+the game to see the change. See
+[User stages](feature-roadmap.md#user-stages-road16).
+
+To ship a stage with the game, register it instead. A new file in
+`game/content/levels/` is not automatically a menu stage. To register it:
 
 1. Save it as `game/content/levels/<name>.json`.
 2. Add `<name>` without the extension to the `level` asset group's `names`

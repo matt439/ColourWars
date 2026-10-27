@@ -485,6 +485,9 @@ private:
 	int random_slot() const;
 	// Presentation for stage and Random slots, shared by init and updates.
 	std::wstring slot_display_name(int slot) const;
+	// True for a stage from the player's stage folder (ROAD#16), which shows
+	// menu_text.stage.user_hint instead of browse_hint.
+	bool is_user_stage(int slot) const;
 	// Chooses a random stage slot.
 	int pick_random_stage() const;
 	void cycle_stages(labrador::Direction direction);

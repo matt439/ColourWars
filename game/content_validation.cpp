@@ -9,6 +9,34 @@
 
 using namespace labrador;
 
+void validate_stage_objects(const GameTuning& tuning, const LevelObjectBuilder& builder,
+	RenderResources& render, const AudioResources& audio, const LevelLoadedInfo& info)
+{
+	info.validate_content(builder, render, audio);
+	check_stage_tunnelling(tuning, builder, info.collision_objects_json());
+	tuning.validate_match_sounds(render, audio, info.sound_bank_name());
+}
+
+void validate_stage_text(const GameTuning& tuning, const Presentation& presentation,
+	RenderResources* render, const LevelLoadedInfo& info, const Stage& stage)
+{
+	const MenuStyle& menu = presentation.menu();
+	const std::string where = "the display_name of stage '" + stage.name + "'";
+	const std::wstring name = drawable_text::widen_drawable(stage.display_name, where);
+	drawable_text::check_font_can_draw(render, menu.item_font, name, where);
+	drawable_text::check_font_can_draw(render, menu.heading_font, name, where);
+	// Practice lesson cards: the reminder's heading and controls fonts.
+	for (const LevelLesson& lesson : info.lessons())
+	{
+		const std::string lesson_where = "the lesson at station '" + lesson.station +
+			"' of stage '" + stage.name + "'";
+		drawable_text::check_font_can_draw(render, menu.detail_font,
+			drawable_text::widen_drawable(lesson.title, lesson_where), lesson_where + ": title");
+		drawable_text::check_font_can_draw(render, tuning.match().controls_font,
+			drawable_text::widen_drawable(lesson.text, lesson_where), lesson_where + ": text");
+	}
+}
+
 void validate_game_content(const GameTuning& tuning, const Presentation& presentation,
 	RenderResources* render, const AudioResources* audio,
 	const Registry<LevelLoadedInfo>& level_infos, const StageList& stages,
@@ -82,11 +110,8 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 		&tuning.paint());
 	for (const Stage& stage : stages)
 	{
-		level_infos.get(stage.name)->validate_content(content_validator, *render, *audio);
-		check_stage_tunnelling(tuning, content_validator,
-			level_infos.get(stage.name)->collision_objects_json());
-		tuning.validate_match_sounds(*render, *audio,
-			level_infos.get(stage.name)->sound_bank_name());
+		validate_stage_objects(tuning, content_validator, *render, *audio,
+			*level_infos.get(stage.name));
 	}
 
 	// Check authored weapon descriptions and stage names against their loaded
@@ -113,20 +138,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 
 	for (const Stage& stage : stages)
 	{
-		const std::string where = "the display_name of stage '" + stage.name + "'";
-		const std::wstring name = drawable_text::widen_drawable(stage.display_name, where);
-		drawable_text::check_font_can_draw(render, menu.item_font, name, where);
-		drawable_text::check_font_can_draw(render, menu.heading_font, name, where);
-		// Practice lesson cards: the reminder's heading and controls fonts.
-		for (const LevelLesson& lesson : level_infos.get(stage.name)->lessons())
-		{
-			const std::string lesson_where = "the lesson at station '" + lesson.station +
-				"' of stage '" + stage.name + "'";
-			drawable_text::check_font_can_draw(render, menu.detail_font,
-				drawable_text::widen_drawable(lesson.title, lesson_where), lesson_where + ": title");
-			drawable_text::check_font_can_draw(render, tuning.match().controls_font,
-				drawable_text::widen_drawable(lesson.text, lesson_where), lesson_where + ": text");
-		}
+		validate_stage_text(tuning, presentation, render, *level_infos.get(stage.name), stage);
 	}
 	// Practice's pause row names each real tool.
 	for (int tool = 0; tool < static_cast<int>(WeaponType::max_prim_wep); ++tool)

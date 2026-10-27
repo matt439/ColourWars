@@ -36,6 +36,12 @@ namespace directory_consts
 	// here.
 	std::string debug_directory();
 
+	// Player-made stages played without a rebuild (ROAD#16): every *.json
+	// directly in %LOCALAPPDATA%\ColourWars\stages, beside the save, or the
+	// executable-relative save/stages without LOCALAPPDATA. UTF-8; not created
+	// here. Shipped stages stay beside the executable, named by the manifest.
+	std::string user_stage_directory();
+
 	// One automatic failure record in the per-user profile. Empty when no
 	// LOCALAPPDATA is available; diagnostics never fall back to shared content.
 	std::string fatal_report_path();

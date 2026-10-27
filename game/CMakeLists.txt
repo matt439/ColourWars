@@ -35,6 +35,7 @@ add_executable(ColourWars WIN32
     save.cpp
     session.cpp
     sound_groups.cpp
+    stage_loading.cpp
     text_wrap.cpp
     tuning.cpp
     tuning_validation.cpp

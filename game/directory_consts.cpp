@@ -19,6 +19,8 @@ namespace
 
 	constexpr char DEBUG_FOLDER_NAME[] = "debug";
 
+	constexpr char USER_STAGE_FOLDER_NAME[] = "stages";
+
 	// %LOCALAPPDATA%, read wide and without MAX_PATH; empty when unset.
 	std::filesystem::path local_app_data()
 	{
@@ -81,6 +83,17 @@ namespace directory_consts
 				std::string("./save/") + DEBUG_FOLDER_NAME);
 		}
 		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / DEBUG_FOLDER_NAME);
+	}
+
+	std::string user_stage_directory()
+	{
+		const std::filesystem::path root = local_app_data();
+		if (root.empty())
+		{
+			return labrador::resolved_under(labrador::executable_directory(),
+				std::string("./save/") + USER_STAGE_FOLDER_NAME);
+		}
+		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / USER_STAGE_FOLDER_NAME);
 	}
 
 	std::string legacy_save_file_path()

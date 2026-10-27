@@ -876,6 +876,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	check_stage_hint("locked_hint", this->menu_text_.stage.locked_hint);
 	check_stage_hint("browse_hint", this->menu_text_.stage.browse_hint);
+	check_stage_hint("user_hint", this->menu_text_.stage.user_hint);
 	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
 		options_art.shadow_offset - options_art.focus_padding.x - main.options_value_x,
 		main.options_spacing.y - options_art.focus_padding.y * 2.0f);

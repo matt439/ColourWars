@@ -210,6 +210,23 @@ jobs:
             Move-Item -LiteralPath $backup -Destination $bank
           }
 
+      # ROAD#16: one valid and one broken stage in the isolated profile's
+      # stage folder; the broken one is one stderr line and startup goes on.
+      - name: A broken user stage is refused without stopping startup
+        shell: pwsh
+        run: |
+          $arguments = @{
+            Executable = "out/build/${{ matrix.preset }}/game/ColourWars.exe"
+            OutputDirectory = 'out/validation/startup/user-stages'
+            UserStageFixture = $true
+          }
+          if ('${{ matrix.preset }}' -eq 'x64-release') {
+            $arguments.Executable = Join-Path $env:RUNNER_TEMP 'ColourWars-release/ColourWars-windows-x64/ColourWars.exe'
+            $arguments.AllowNoHardwareAdapter = $true
+            $arguments.SystemOnlyPath = $true
+          }
+          & ./scripts/check-startup.ps1 @arguments
+
       # Only a ZIP that passed inspection, its version stamp and startup.
       - name: Upload Release package
         if: matrix.preset == 'x64-release'

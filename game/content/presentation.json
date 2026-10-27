@@ -240,6 +240,7 @@
       "random_navigation": "<   SURPRISE ME   >",
       "locked_hint": "Confirm again to start.\nBack to change your choice.",
       "browse_hint": "Left/Right to browse.\nConfirm to lock your choice.",
+      "user_hint": "Built by you.\nConfirm to lock your choice.",
       "solo_mode": "SOLO PRACTICE",
       "single_match_mode": "SINGLE MATCH",
       "best_of_mode": "BEST OF {best_of}",

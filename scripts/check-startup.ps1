@@ -10,7 +10,11 @@ param(
     [switch]$SystemOnlyPath,
     # Release has no WARP fallback. Only its exact missing-adapter diagnostic
     # can be skipped; the default remains a required hardware startup check.
-    [switch]$AllowNoHardwareAdapter
+    [switch]$AllowNoHardwareAdapter,
+    # ROAD#16: seed the isolated profile's stage folder with one valid user
+    # stage and one broken file. Startup must go on, with exactly one
+    # refusal line for the broken file and no other diagnostic.
+    [switch]$UserStageFixture
 )
 
 $ErrorActionPreference = 'Stop'
@@ -44,6 +48,15 @@ $workingDirectory = Join-Path $runDirectory 'working-directory'
 $profileDirectory = Join-Path $runDirectory 'profile'
 $null = New-Item -ItemType Directory -Path $workingDirectory, $profileDirectory -Force
 $stderrPath = Join-Path $runDirectory 'startup.err'
+$userStageRefusal = $null
+if ($UserStageFixture) {
+    $userStages = Join-Path $profileDirectory 'ColourWars/stages'
+    $null = New-Item -ItemType Directory -Path $userStages -Force
+    Copy-Item -LiteralPath (Join-Path $executableDirectory 'levels/close_quarters.json') `
+        -Destination (Join-Path $userStages 'startup_user_stage.json')
+    [IO.File]::WriteAllText((Join-Path $userStages 'startup_broken.json'), '{ "display_name": ')
+    $userStageRefusal = '^user stage refused: startup_broken\.json: .*not valid JSON'
+}
 $stdoutPath = Join-Path $runDirectory 'startup.out'
 
 if (-not ('ColourWars.StartupWindow' -as [type])) {
@@ -262,9 +275,13 @@ try {
                 throw 'The audible startup check unexpectedly used a silent bank.'
             }
             if ($line.Trim() -ne '' -and
-                $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
+                $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.' -and
+                -not ($userStageRefusal -and $line -match $userStageRefusal)) {
                 throw "Unexpected startup diagnostic: $line"
             }
+        }
+        if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
+            throw 'The broken user stage was not refused with exactly one line.'
         }
         [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
         if (-not $process.WaitForExit(10000)) {
@@ -281,7 +298,8 @@ try {
                 throw 'The audible startup check unexpectedly used a silent bank.'
             }
             if ($line.Trim() -ne '' -and
-                $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
+                $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.' -and
+                -not ($userStageRefusal -and $line -match $userStageRefusal)) {
                 throw "Unexpected shutdown diagnostic: $line"
             }
         }

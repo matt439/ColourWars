@@ -1852,9 +1852,10 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   `POL#21`, and bots must ride the objects. The first slice, the
   [paint ferry](#paint-ferry-road15-first-slice), is on an explicit trial stage.
 - **Player-made stages without rebuilding (`ROAD#16`).** A stage saved by the
-  editor plays only after a manifest edit and a rebuild. User stages need
-  their own folder, validated individually so that a broken one is refused
-  without stopping startup; manifest stages stay never-optional.
+  editor played only after a manifest edit and a rebuild. First slice done
+  2026-10-28: a per-user stage folder, each file validated on its own, a
+  broken one refused without stopping startup; manifest stages stay
+  never-optional. See [User stages](#user-stages-road16) below.
 
 ### Awareness and presentation
 
@@ -2109,6 +2110,105 @@ probe resets wrote through the working copy `play_settings()` now returns
 instead of saving.
 
 Still open: play with real pads.
+
+### User stages (`ROAD#16`)
+
+**Scope (2026-10-28).** A player who saves a level with the editor should be
+able to play it by starting the game, with no manifest edit, CMake list or
+rebuild. The slice is the smallest that a player can use: a per-user folder
+the game reads at startup, the same checks a shipped stage gets, and a refusal
+that costs the player one stage rather than the game. Shipped stages keep the
+engine's content-root rule (beside the executable, named by the manifest) and
+stay never-optional: one the manifest names and the disk lacks still fails
+startup.
+
+**Done 2026-10-28.** The folder is `%LOCALAPPDATA%\ColourWars\stages\`,
+beside the save (`directory_consts::user_stage_directory`; the
+executable-relative `save/stages` when there is no `LOCALAPPDATA`, as for the
+screenshots and replays). The game does not create it. After the manifest
+loads, `load_user_stages` (`game/stage_loading.h`) reads every `*.json` directly
+in it, in file-name order, and checks each on its own:
+
+- the file name is the stage's id: 1 to 64 ASCII letters, digits, `_` or `-`,
+  not starting with `-` (the registration helper's rule, so the file can
+  later be registered unchanged);
+- no stage already has that id, compared without case: a user stage cannot
+  replace a shipped one or another user stage;
+- the level format and structure (`LevelLoadedInfo::validate`) and a drawable
+  `display_name`, which is how the manifest's `level` kind reads a shipped
+  stage (`read_stage_definition`, now shared by both);
+- the per-stage halves of `validate_game_content`, split out as
+  `validate_stage_objects` (built objects and resources, tunnelling, match
+  sounds) and `validate_stage_text` (name and lesson fonts);
+- the sound groups (`sound_groups::check_candidate`): a stage may not play as
+  music a sound the game plays as an effect;
+- the arena counter (`ARENA 11 / 11`) still fits with one more stage.
+
+A file that fails any of these is left out and prints one line on stderr,
+`user stage refused: <file>: <reason>`, where the reason is the same
+diagnostic a shipped stage would fail startup with. Startup goes on. A missing
+or empty folder says nothing; a file where the folder should be is one line.
+Other files and sub-folders are ignored. The accepted stages then pass the
+whole-list `validate_game_content` and join the sound groups with the shipped
+ones; because each passed the same checks first, that cannot fail on them.
+
+User stages follow the shipped ones in Stage Select, in file-name order, and
+count in its arena counter. The briefing card marks one with its own hint,
+"Built by you." over "Confirm to lock your choice." (`menu_text.stage.user_hint`),
+in the browse hint's place; nothing else on the page moves, so the Stage
+painter fixtures are unchanged. `+stage <name>` starts one from the Debug
+command line.
+
+Records and replay work with them, because both are keyed by the stage id: a
+finished round records under the file name, Stage Select and Results show its
+best, and the remembered setup restores it while the file is there (falling
+back to the first stage, as for a retired stage, when it is not). Instant
+replay rebuilds the round from the loaded definition in memory. The Debug
+`record`/`play` files name the stage; playing one needs the file in the folder,
+and a file edited since the recording plays its new geometry, which the replay
+does not detect.
+
+Provisional decisions, open for the author:
+
+- **Random.** User stages are never Random candidates, whatever their
+  `include_in_random` says; the Random hint's count is unchanged. An unfinished
+  stage turning up in a party's Random pick seemed worse than having to choose
+  it. Honouring an explicit `"include_in_random": true` would be a one-line
+  change.
+- **Names and records.** The id is the bare file name, the same namespace as
+  the shipped stages, so a user stage keeps its records when it is later
+  registered. The cost is that a future shipped stage with the same name
+  refuses the user stage and inherits its records.
+- **Marker.** The hint is the only marker. A mark on the name or preview would
+  move the page and its painter fixtures.
+
+The `user_stages` acceptance case points `LOCALAPPDATA` at a scratch folder
+before it asks for the directory, and scans scratch folders beside its own
+executable (one with a non-ASCII name): a missing, empty and non-folder path;
+two valid stages, one asking for Random; and broken JSON, a level without
+spawns, a missing sprite frame, a music/effect conflict, a case-only collision
+with Crossfeed, two bad file names, an undrawable name, a text file and a
+`.json` folder. It requires the valid two in order after the shipped ten,
+marked and outside Random, each bad file refused in one line naming the
+cause, the shipped Crossfeed untouched, and the whole list then passing
+`validate_game_content` and `sound_groups::assign`. A second scan checks a
+collision between two user stages. `check-startup.ps1 -UserStageFixture` starts
+the real game with one valid and one broken user stage in its isolated
+profile: the window comes up, and stderr carries exactly the one refusal line;
+CI runs it on both presets after the other startup checks. On MattPC
+(2026-10-28, Debug) the Stage painter checks (`-StagePaperOnly`,
+`-StageCountsOnly`, `-StageSummaryOnly`) passed unchanged. They needed a local,
+uncommitted fix first: the probe's `menu_text_checks.h` still lists 19 prompts
+after `ROAD#21` added the two Profiles prompts, so no painter check compiles
+on master until that list gains them.
+A Debug launch with `+stage my_arena +players 2 +bot all paint` played a user
+copy of Close Quarters from an isolated profile.
+
+Still open: the editor saving straight to the folder (today the player copies
+the file there, or uses Save As), picking up a new or edited file without a
+restart (Debug `reload` rereads tuning and presentation only), a player-facing
+note in the release package's README, and attended play of a real
+player-made stage.
 
 ## Menu navigation follow-up (GAP#4.4)
 

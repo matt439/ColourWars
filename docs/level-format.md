@@ -42,7 +42,7 @@ not runtime assets.
 | `format` | Optional integer | `1`; omission selects legacy format 1. |
 | `display_name` | String | Authored stage label. Startup checks it against the game's drawable text rules and fonts. |
 | `icon_frame` | String | Existing frame in `sprite_sheet_1`. Required legacy icon metadata; stage selection now draws a live arena preview. |
-| `include_in_random` | Optional boolean | Defaults to `true`; `false` keeps an experimental stage out of Random without removing its explicit menu entry. |
+| `include_in_random` | Optional boolean | Defaults to `true`; `false` keeps an experimental stage out of Random without removing its explicit menu entry. A [user stage](feature-roadmap.md#user-stages-road16) is never in Random, whatever this says. |
 | `sound` | Object | Bank identifier and independent optional music/sting pairs, below. |
 | `spawn_locations` | Object | `team_a` and `team_b` arrays of points, at least four entries each. |
 | `level_bounds` | Object | All four named rectangles, below. |
@@ -433,7 +433,10 @@ Point a JSON editor at [level.schema.json](level.schema.json), then open the fil
 in ColourWarsEditor and save a copy. Register an intended runtime stage using
 the manifest and asset-list steps in [Play the level](level-editor.md#play-the-level).
 Rebuild and run it in the game: the schema does not resolve its assets, the
-editor only warns about names, and neither establishes playability.
+editor only warns about names, and neither establishes playability. To try a
+stage without registering or rebuilding, put it in the player's stage folder
+instead; the game applies the same checks to it at startup and refuses it
+alone if it fails ([Play the level](level-editor.md#play-the-level)).
 
 From an x64 Visual Studio Developer shell at the repository root:
 

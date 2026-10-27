@@ -403,6 +403,7 @@ namespace presentation_read
 		text.stage.random_navigation = read_menu_line(stage, "random_navigation");
 		text.stage.locked_hint = read_menu_block(stage, "locked_hint");
 		text.stage.browse_hint = read_menu_block(stage, "browse_hint");
+		text.stage.user_hint = read_menu_block(stage, "user_hint");
 		text.stage.solo_mode = read_menu_line(stage, "solo_mode");
 		text.stage.single_match_mode = read_menu_line(stage, "single_match_mode");
 		const auto read_stage_summary = [&](const char* key, const wchar_t* token)

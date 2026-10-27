@@ -25,6 +25,13 @@ namespace sound_groups
 		const Presentation& presentation,
 		const labrador::Registry<LevelLoadedInfo>& level_infos, const StageList& stages);
 
+	// What assign would throw if `candidate` joined `stages`, without assigning
+	// anything: a user stage (game/stage_loading.h) that names a wave as music
+	// which the content plays as an effect is refused before it joins.
+	void check_candidate(const GameTuning& tuning, const Presentation& presentation,
+		const labrador::Registry<LevelLoadedInfo>& level_infos, const StageList& stages,
+		const LevelLoadedInfo& candidate, const Stage& stage);
+
 	// Sets both groups from the player's settings. Throws std::out_of_range
 	// before assign has added them.
 	void apply(labrador::AudioResources& audio, const PlaySettings& settings);

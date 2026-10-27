@@ -325,7 +325,8 @@ namespace menu_text_acceptance
     constexpr StageCueText stage_cue_text[]{
         { "random_navigation", L"<   SURPRISE ME   >", &MenuStageText::random_navigation, false },
         { "locked_hint", L"Confirm again to start.\nBack to change your choice.", &MenuStageText::locked_hint, true },
-        { "browse_hint", L"Left/Right to browse.\nConfirm to lock your choice.", &MenuStageText::browse_hint, true }
+        { "browse_hint", L"Left/Right to browse.\nConfirm to lock your choice.", &MenuStageText::browse_hint, true },
+        { "user_hint", L"Built by you.\nConfirm to lock your choice.", &MenuStageText::user_hint, true }
     };
     constexpr DefaultText items[]{
         { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
