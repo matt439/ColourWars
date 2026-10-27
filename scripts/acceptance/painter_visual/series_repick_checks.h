@@ -1,6 +1,7 @@
 // Between the rounds of an unfinished series, the actual End menu reopens the
 // real Weapon and Stage Select pages in its own frame (ROAD#20). Only ordinary
-// armed keyboard actions drive them; P2 is a bot, so the host readies its row.
+// armed keyboard actions drive them (no scripted pads, so the end-menu leaf
+// builds it); P2 is a bot, so the host readies its row.
 void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {

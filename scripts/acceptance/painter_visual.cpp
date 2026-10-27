@@ -217,11 +217,11 @@ namespace
 #include "scripts/acceptance/painter_visual/competitive_winner_checks.h"
 #include "scripts/acceptance/painter_visual/contribution_team_checks.h"
 #include "scripts/acceptance/painter_visual/result_percentage_checks.h"
+#include "scripts/acceptance/painter_visual/series_repick_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 #include "scripts/acceptance/painter_visual/team_setup_checks.h"
 #include "scripts/acceptance/painter_visual/remembered_setup_checks.h"
 #include "scripts/acceptance/painter_visual/bot_setup_checks.h"
-#include "scripts/acceptance/painter_visual/series_repick_checks.h"
 #include "scripts/acceptance/painter_visual/bot_runtime_checks.h"
 #include "scripts/acceptance/painter_visual/connection_text_checks.h"
 #include "scripts/acceptance/painter_visual/stick_readout_checks.h"
