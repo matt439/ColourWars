@@ -417,7 +417,8 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         else
         {
-            game_tick(0.0f); game_tap(Key::down); game_tap(Key::enter);
+            // Exit sits under Change Weapons and Change Level between rounds.
+            game_tick(0.0f); game_tap(Key::down); game_tap(Key::down); game_tap(Key::down); game_tap(Key::enter);
             require(left_series && stack.depth() == 1, "Actual series Exit did not leave its match");
         }
     }
