@@ -1268,7 +1268,7 @@ not close the physical-pad session (`ROAD#2`) or human readability/listening gat
 2026-10-15 until couch sessions (`ROAD#2`) showed a need; with bots now offering
 Easy, Normal and Hard, the author asked for it to be built.
 
-**Mechanic (provisional, awaiting the author's pick).** Each seat, human or
+**Mechanic (chosen by the author 2026-10-27).** Each seat, human or
 bot, has a handicap level: Off, +1 or +2, shown as **Boost**. A boost makes the
 player take less damage from every hit and refill paint faster. Score stays
 painted surface at every level; there is no paint or score multiplier, so a
@@ -1305,10 +1305,10 @@ every level (Off unchanged), the refill multiplier and respawn retention;
 `remembered_setup` round-trips and recovers handicaps. Presentation
 validation fits every level's text under every Weapon Select label.
 
-**Still the author's:** confirm the mechanic (one Boost for health and refill,
-or health only, refill only, or levels that also weaken), and judge in
-attended play whether +1 and +2 are worth having and the values feel fair
-against Easy/Normal/Hard bots. Values remain provisional until then.
+**Still the author's:** judge in attended play whether +1 and +2 are worth
+having and the values feel fair against Easy/Normal/Hard bots. The author
+picked one Boost for health and refill over health-only, refill-only or
+two-way levels; the values remain provisional until that play.
 
 ## First increment: explicit joining and reconnect pause
 
