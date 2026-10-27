@@ -73,12 +73,15 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	}
 	// Bots share human views. Their stable roster number and explicit difficulty
 	// travel with their world figure, never masquerading as an unclaimed human.
+	// A bot's badge and label stay inside this pane, even when its body is
+	// at or past the edge, so its identity is never cut off.
+	const RectangleF visible = this->scene_->view(view_index).camera.visible_rectangle(
+		Viewport(player_vp.pixel_rect()));
 	for (int bot = 0; bot < this->player_count(); ++bot)
 	{
 		if (!this->is_bot(bot) || !this->player_identity_visible(bot)) { continue; }
 		list.set_filter(TextureFilter::point);
-		const RectangleF badge = this->player_identity_bounds(bot);
-		this->player_badge_->draw(list, badge, bot);
+		RectangleF badge = this->player_identity_bounds(bot);
 		const Text& text = *this->bot_identity_texts_[static_cast<std::size_t>(bot)];
 		const RectangleF measured = text.text_bounds_at(Vector2F::ZERO, 1.0f);
 		const PlayerIdentityPresentation& look = this->presentation_->player_identity();
@@ -87,8 +90,20 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 			look.bot_label_size.x / std::max(1.0f, measured.width),
 			look.bot_label_size.y / std::max(1.0f, measured.height));
 		const Vector2F size = measured.size() * scale;
-		const Vector2F position(badge.center().x - size.x * 0.5f,
+		Vector2F position(badge.center().x - size.x * 0.5f,
 			badge.top() - size.y - look.bot_label_gap * emphasis);
+		const auto inside = [](float low, float high, float min, float max)
+		{
+			if (high - low > max - min) { return min - low; }
+			return low < min ? min - low : (high > max ? max - high : 0.0f);
+		};
+		const Vector2F shift(
+			inside(std::min(badge.left(), position.x), std::max(badge.right(), position.x + size.x),
+				visible.left(), visible.right()),
+			inside(position.y, badge.bottom(), visible.top(), visible.bottom()));
+		badge = RectangleF(badge.position() + shift, badge.size());
+		position += shift;
+		this->player_badge_->draw(list, badge, bot);
 		this->render_resources_->sprite_sheet(this->overlay_sheet_)->draw(list,
 			this->overlay_fill_, RectangleF(position, size),
 			this->presentation_->player_identity().background_colour);

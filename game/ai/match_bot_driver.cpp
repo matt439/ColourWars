@@ -21,7 +21,7 @@ namespace
 	// A ready deliberate tool requalifies its top shot every step, airborne too.
 	bool support_shot(const MatchBot& bot, const Player& player)
 	{
-		return bot.finishing() || (bot.deliberate(player.primary_weapon().type()) &&
+		return bot.finishing() || bot.riding() || (bot.deliberate(player.primary_weapon().type()) &&
 			player.primary_weapon().readiness() == WeaponReadiness::ready);
 	}
 

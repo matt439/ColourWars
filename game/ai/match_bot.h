@@ -67,6 +67,9 @@ public:
 	bool deliberate(WeaponType weapon) const;
 	// A finishing window is pending or open; the driver requalifies support aim.
 	bool finishing() const;
+	// Grounded on a moving paintable support at the last step; the driver
+	// scans its top paint every step while the bot rides it.
+	bool riding() const;
 	std::uint64_t random();
 
 private:
@@ -115,6 +118,10 @@ private:
 	// The finishing support's left edge when finish_x_ was chosen; a moving
 	// support carries the held position with it.
 	float finish_anchor_ = 0.0f;
+	// The moving support ridden last step and the hold left on this ride.
+	bool riding_ = false;
+	MatchBotSupport ride_support_;
+	int ride_hold_left_ = 0;
 
 	float random_unit();
 	void decide(const MatchBotObservation& view);
@@ -130,7 +137,8 @@ private:
 	void remember_descent(const MatchBotObservation& view, mattmath::Vector2F goal);
 	void choose_ramp(const MatchBotObservation& view);
 	void steer_ramp(const MatchBotObservation& view, PlayerInputData& input);
-	void open_finish(const MatchBotObservation& view);
+	void open_finish(const MatchBotObservation& view, const MatchBotSupport& support);
+	const MatchBotSupport* moving_support(const MatchBotObservation& view) const;
 	void steer_finish(const MatchBotObservation& view, PlayerInputData& input);
 	bool clear_ramp_path(const MatchBotObservation& view, mattmath::Vector2F from,
 		mattmath::Vector2F to, const MatchBotRamp& ramp) const;
