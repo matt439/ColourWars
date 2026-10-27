@@ -125,7 +125,10 @@ void PadButtonsMenu::refresh_values()
 	{
 		if (!this->edited_[slot]) { this->selection_.pads[slot] = this->save()->input_bindings().pads[slot]; }
 	}
-	this->pad_->set_value(this->text().device_label(this->slot_));
+	// A pad wearing a profile edits the profile, so the row names it.
+	const int worn = this->save()->worn_profile(this->slot_);
+	this->pad_->set_value(this->text().worn_profile_label(this->text().device_label(this->slot_),
+		worn < 0 ? std::string_view() : std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)));
 	const PadProfile& profile = this->pending_profile();
 	for (size_t entry = 0; entry < entry_count; ++entry)
 	{

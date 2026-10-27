@@ -295,6 +295,8 @@ private:
 		std::unique_ptr<MenuJoinAccent> accent;
 	};
 	void refresh_players(const std::vector<ProcessedMenuInput>& inputs);
+	// Sets the seat `slot` joined to the Boost of the profile it wears.
+	void take_profile_boost(int slot);
 	mattmath::RectangleF check_paper_bounds(const labrador::UiWidget& widget,
 		const char* role, const labrador::UiWidget* accent = nullptr) const;
 	std::unique_ptr<labrador::UiTexture> background_;

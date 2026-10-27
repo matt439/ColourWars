@@ -208,14 +208,14 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     tap(Key::escape);
     // The real Controls entry opens its third action, with parent edits pending.
     stack.clear(); painter_scripted_pads::states = {}; neutral(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
-    stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick(); move(Key::down, 3); tap(Key::right);
-    tap(Key::up); tap(Key::enter); tick(); require(stack.depth() == 3, "Actual Controls Pad Jump entry did not push its child");
+    stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick(); move(Key::down, 4); tap(Key::right);
+    move(Key::up, 2); tap(Key::enter); tick(); require(stack.depth() == 3, "Actual Controls Pad Jump entry did not push its child");
     const Frame retained = main_menu_frame(app);
     const_cast<MenuText&>(presentation.menu_text()).pad_buttons.help = L"Help for a later page.";
     tick(); require(main_menu_frame(app).pixels == retained.pixels, "Live text replacement changed existing Pad Jump copy");
     tap(Key::escape);
     tick(); // The resumed parent must observe neutral before fresh direction input.
-    move(Key::down, 6); tap(Key::enter);
+    move(Key::down, 7); tap(Key::enter);
     require(preferences.play_settings().music_volume == 10 && jump_of(preferences.input_bindings().pads[0]) == PadControl::b,
         "Parent Controls Apply lost pending audio or independently applied pad choices");
     presentation = original;

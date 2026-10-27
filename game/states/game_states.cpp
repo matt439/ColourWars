@@ -211,6 +211,16 @@ void GameLevel::init()
 		std::none_of(seats.begin(), seats.end(), [this](const MenuPlayerSettings& seat)
 			{ return this->data()->debug().drives_slot(seat.num); }))
 	{
+		// Each worn profile keeps the Boost its seat started with (ROAD#21).
+		std::array<int, input_slots::pad_count> boosts{ -1, -1, -1, -1 };
+		for (const MenuPlayerSettings& seat : seats)
+		{
+			if (seat.controller == PlayerController::human && input_slots::is_pad(seat.num))
+			{
+				boosts[static_cast<size_t>(seat.num)] = seat.handicap;
+			}
+		}
+		std::ignore = this->data()->save()->remember_profile_boosts_and_save(boosts);
 		std::ignore = this->data()->save()->remember_match_setup_and_save(
 			LastMatchSetup::capture(this->settings_));
 		// This synchronous save is part of entering the match, not elapsed play.

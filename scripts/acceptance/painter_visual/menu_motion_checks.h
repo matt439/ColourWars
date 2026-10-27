@@ -179,12 +179,12 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         open(std::make_unique<ControlsSettingsMenu>(&context));
         const auto& controls = presentation.controls_settings();
         const auto& art = controls.art;
-        tap(Key::down); tap(Key::down); tap(Key::down); tick(settle_time);
+        tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::down); tick(settle_time);
         tap(Key::right);
         const Frame pressed = main_menu_frame(app); frozen(pressed);
         tick(motion.press_duration * 0.4f); const Frame release = main_menu_frame(app); frozen(release);
         tick(settle_time); const Frame released = main_menu_frame(app);
-        RectangleF music_row(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 3.0f),
+        RectangleF music_row(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 4.0f),
             Vector2F(controls.controls_position.x - controls.layout.position.x -
                 art.focus_padding.x * 2.0f - art.shadow_offset, controls.layout.spacing.y));
         music_row.inflate(art.focus_padding + Vector2F(2.0f));
@@ -194,9 +194,9 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
             "Selection paper did not release with positive time");
         RectangleF label = measured(controls.item_font,
             presentation.menu_text().item(MenuItem::music_volume), controls.layout.position +
-                Vector2F(0.0f, controls.layout.spacing.y * 3.0f));
+                Vector2F(0.0f, controls.layout.spacing.y * 4.0f));
         RectangleF value = measured(controls.item_font, L"10%", controls.layout.position +
-            Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * 3.0f));
+            Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * 4.0f));
         const float text_height = controls.layout.spacing.y - art.focus_padding.y * 2.0f;
         label = RectangleF(label.position(), label.size() * std::min({ 1.0f,
             (controls.layout.spacing.x - art.focus_padding.x) / label.width, text_height / label.height }));
@@ -263,18 +263,18 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
 
         // The real child pushes over this parent, then pops back to the same
         // focus. Its successful activation must leave no pressed parent card.
-        tap(Key::up); tap(Key::up); tap(Key::up); tick(settle_time); const Frame parent = main_menu_frame(app);
+        tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up); tick(settle_time); const Frame parent = main_menu_frame(app);
         tap(Key::enter); require(stack.depth() == 3, "Pad sticks did not push its actual child");
         tap(Key::escape); require(stack.depth() == 2 && parent.pixels == main_menu_frame(app).pixels,
             "Suspended/resumed Controls retained its successful child-activation press");
         tick(); // Arm fresh parent navigation only after returning to neutral.
 
-        for (int row = 0; row < 8; ++row) { tap(Key::down); }
+        for (int row = 0; row < 9; ++row) { tap(Key::down); }
         tick(settle_time); tap(Key::enter);
         const Frame applied_press = main_menu_frame(app); frozen(applied_press); tick(settle_time);
         const Frame applied_rest = main_menu_frame(app);
         RectangleF apply_row = measured(controls.item_font, presentation.menu_text().item(MenuItem::apply),
-            controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 8.0f));
+            controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f));
         const float apply_scale = std::min({ 1.0f,
             (controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset - apply_row.x) / apply_row.width,
             (controls.layout.spacing.y - art.focus_padding.y * 2.0f) / apply_row.height });

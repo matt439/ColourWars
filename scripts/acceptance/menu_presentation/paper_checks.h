@@ -194,6 +194,7 @@ namespace
             // Moving the shared origin also moves Join's unfitted legend.
             // Keep it short so Weapon's heading owns this paper-edge case.
             d["menu_text"]["connection"]["join_waiting"].SetString("Fit");
+            short_worn_join_rows(d);
             d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
             d["menu_text"]["headings"]["weapons"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
         };
@@ -260,6 +261,7 @@ namespace
             // The shared origin must not make Join's separate legend the
             // failing role in this Stage heading boundary fixture.
             d["menu_text"]["connection"]["join_waiting"].SetString("Fit");
+            short_worn_join_rows(d);
             d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
             d["menu_text"]["headings"]["arena"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
         };

@@ -87,6 +87,12 @@ ActionBindings effective_action_bindings(const InputBindings& preferences);
 // the jump threshold. Invalid slots throw out_of_range.
 ActionBindings effective_action_bindings(const InputBindings& preferences, int pad_slot);
 
+// One pad profile as the save spells it: { "jump": ["a", "lt"], "shoot":
+// ["rt"], "pause": ["start"] }. Reading validates and throws runtime_error or
+// invalid_argument; profiles (game/player_profiles.h) share this spelling.
+PadProfile read_pad_profile(const labrador::JsonValue& entry);
+void write_pad_profile(SaveWriter& writer, const PadProfile& profile);
+
 class InputBindingsSection final : public SaveSection
 {
 public:

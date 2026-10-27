@@ -167,7 +167,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const Presentation& snapshot, PercentageVariant variant, int first, int second, bool save_crop)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.controls_settings(); const auto& art = look.art;
-        const std::array<const wchar_t*, 10> control_labels{ L"Pad sticks", L"Keyboard Jump", L"Pad Buttons", L"Music volume", L"SFX volume",
+        const std::array<const wchar_t*, 11> control_labels{ L"Pad sticks", L"Keyboard Jump", L"Pad Buttons", L"Profiles", L"Music volume", L"SFX volume",
             L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
         const std::array<const wchar_t*, 9> stick_labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
             L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
@@ -186,15 +186,15 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             UiText* result = widget.get(); text.push_back(std::move(widget)); return result;
         };
         const size_t row_count = sticks ? stick_labels.size() : control_labels.size();
-        const size_t first_value_row = sticks ? 1 : 3;
+        const size_t first_value_row = sticks ? 1 : 4;
         RectangleF focused_bounds;
         for (size_t row = 0; row < row_count; ++row)
         {
             const Vector2F position = look.layout.position + Vector2F(0.0f, look.layout.spacing.y * static_cast<float>(row));
             UiText* label = add(sticks ? stick_labels[row] : control_labels[row], position,
                 row == focus_row ? art.focus_ink : art.ink);
-            const bool adjustable = sticks ? row < 7 : (row >= 3 && row <= 7);
-            const bool fitted_action = sticks ? row == 7 : (row == 1 || row == 2 || row == 8);
+            const bool adjustable = sticks ? row < 7 : (row >= 4 && row <= 8);
+            const bool fitted_action = sticks ? row == 7 : (row >= 1 && row <= 3) || row == 9;
             if (adjustable || fitted_action)
             {
                 const RectangleF raw = label->bounds();
@@ -383,8 +383,8 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     presentation = next; tick();
     require(compare("old-parent-retained", false, 0, old, PercentageVariant::old_long, 0, 100, false).pixels == old_parent.pixels,
         "Replacing percentage copy/font changed an existing Controls page");
-    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::left);
-    tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up);
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::left);
+    tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up);
     const Frame pending_parent = compare("old-parent-pending", false, 0, old, PercentageVariant::old_long, 10, 90, false);
     check_preferences(seeded);
     require(saved_bytes() == seeded_bytes, "Pending percentage volume edit wrote the private save");
@@ -445,8 +445,8 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     check_preferences(active);
     presentation = next; open_parent();
     std::ignore = compare("new-parent-reopened", false, 0, next, PercentageVariant::new_long, 0, 100, false);
-    presentation = old; tick(); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right);
-    std::ignore = compare("new-parent-reversed-pending", false, 3, next, PercentageVariant::new_long, 10, 100, false);
+    presentation = old; tick(); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right);
+    std::ignore = compare("new-parent-reversed-pending", false, 4, next, PercentageVariant::new_long, 10, 100, false);
     tap(Key::escape);
     require(stack.depth() == 1 && saved_bytes() == applied_bytes, "New percentage page persisted a discarded value");
     check_preferences(active);

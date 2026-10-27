@@ -8,6 +8,7 @@
 #include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
+#include "game/player_profiles.h"
 #include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
 #include "game/controls_text.h"
@@ -407,7 +408,8 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		const Vector2F position = controls.layout.position +
 			Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(row));
-		const bool fitted_action = item == MenuItem::keyboard_jump || item == MenuItem::pad_buttons || item == MenuItem::apply;
+		const bool fitted_action = item == MenuItem::keyboard_jump || item == MenuItem::pad_buttons ||
+			item == MenuItem::profiles || item == MenuItem::apply;
 		const std::optional<float> label_width = fitted_action ?
 			std::optional<float>(controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset - position.x) :
 			(fitted_label ? std::optional<float>(controls.layout.spacing.x - controls.art.focus_padding.x) : std::nullopt);
@@ -424,11 +426,11 @@ void Presentation::validate_resources(const RenderResources& render,
 				menu_item_keys[static_cast<size_t>(item)] + " must fit above the controls status line including focus padding.");
 		}
 	};
-	const MenuItem controls_items[]{ MenuItem::pad_sticks, MenuItem::keyboard_jump, MenuItem::pad_buttons, MenuItem::music_volume,
+	const MenuItem controls_items[]{ MenuItem::pad_sticks, MenuItem::keyboard_jump, MenuItem::pad_buttons, MenuItem::profiles, MenuItem::music_volume,
 		MenuItem::sfx_volume, MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(controls_items); ++index)
 	{
-		check_controls_item(controls_items[index], static_cast<int>(index), index >= 3 && index <= 7);
+		check_controls_item(controls_items[index], static_cast<int>(index), index >= 4 && index <= 8);
 	}
 	const MenuItem sticks_items[]{ MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone,
 		MenuItem::rumble, MenuItem::apply, MenuItem::back };
@@ -890,8 +892,8 @@ void Presentation::validate_resources(const RenderResources& render,
 	const Vector2F controls_value_limit(controls.controls_position.x - controls.art.focus_padding.x * 2.0f -
 		controls.art.shadow_offset - controls.layout.position.x - controls.layout.spacing.x,
 		controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
-	// Rumble occupies Stick row 3; Controls toggles occupy rows 5 through 7.
-	for (const int row : { 3, 5, 6, 7 })
+	// Rumble occupies Stick row 3; Controls toggles occupy rows 6 through 8.
+	for (const int row : { 3, 6, 7, 8 })
 	{
 		const Vector2F position = controls.layout.position +
 			Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * static_cast<float>(row));
@@ -1067,6 +1069,53 @@ void Presentation::validate_resources(const RenderResources& render,
 		controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 7.0f), true);
 	const RectangleF pad_buttons_help = check_help_fit("menu_text.pad_buttons.help", pad_buttons.help,
 		controls.controls_position, controls.controls_size);
+	// Profiles (ROAD#21): four option rows, then New, Delete and Back.
+	const ProfilesMenuText& profiles = this->menu_text_.profiles;
+	const auto profiles_text = [&](const char* key, const std::wstring& words, const std::string& font,
+		const Vector2F& position, bool row, bool option_label = false)
+	{
+		const std::string where = std::string("menu_text.profiles.") + key;
+		Vector2F size = fixed_menu_size(where, words, font);
+		if (row)
+		{
+			const Vector2F available(option_label ? controls.layout.spacing.x - controls.art.focus_padding.x :
+				controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset - position.x,
+				controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
+			const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
+			if (!std::isfinite(scale) || scale <= 0.0f)
+			{ throw std::runtime_error(this->source_path_ + ": " + where + " must retain finite positive fitted bounds."); }
+			size *= scale;
+		}
+		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::ZERO);
+		if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
+			(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
+		{ throw std::runtime_error(this->source_path_ + ": " + where + " must fit its controls column and row."); }
+		return RectangleF(position, size);
+	};
+	const RectangleF profiles_heading = profiles_text("heading", profiles.heading, this->menu_.heading_font,
+		controls.heading_position, false);
+	if (profiles_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
+	{ throw std::runtime_error(this->source_path_ + ": menu_text.profiles.heading must end before its first focus card."); }
+	const auto profile_row = [&](int row) { return controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(row)); };
+	const auto profile_value = [&](const char* key, const std::wstring& words, int row)
+	{ std::ignore = profiles_text(key, words, controls.item_font, profile_row(row) + Vector2F(controls.layout.spacing.x, 0.0f), true); };
+	profiles_text("profile", profiles.profile, controls.item_font, profile_row(0), true, true);
+	profiles_text("name", profiles.name, controls.item_font, profile_row(1), true, true);
+	profiles_text("boost", profiles.boost, controls.item_font, profile_row(2), true, true);
+	profiles_text("worn_by", profiles.worn_by, controls.item_font, profile_row(3), true, true);
+	// The widest name, as shown and while its first letter is being edited.
+	const std::wstring widest_name(player_profiles::max_name_length, L'W');
+	profile_value("none", profiles.none, 0);
+	profile_value("none", widest_name, 0);
+	profile_value("none", L"[W]" + widest_name.substr(1), 1);
+	profile_value("none", L"[_]", 1);
+	// Boost and pad labels are checked where they first appear; OptionRow
+	// fits every value to its column, so here only this page's own words.
+	profile_value("nobody", profiles.nobody, 3);
+	profiles_text("new_profile", profiles.new_profile, controls.item_font, profile_row(4), true);
+	profiles_text("delete_profile", profiles.delete_profile, controls.item_font, profile_row(5), true);
+	const RectangleF profiles_help = check_help_fit("menu_text.profiles.help", profiles.help,
+		controls.controls_position, controls.controls_size);
 	const StickPreviewPresentation& preview = controls.stick_preview;
 	const RectangleF pad_association = check_help_fit("menu_text.help.pad_association", this->menu_text_.help.pad_association,
 		preview.association_position, help_area.bottom_right() - preview.association_position);
@@ -1095,7 +1144,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 6.0f),
 		this->menu_.item_font, options_art);
-	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f),
+	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 10.0f),
 		controls.item_font, controls.art);
 	const RectangleF pad_buttons_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f),
 		controls.item_font, controls.art);
@@ -1107,7 +1156,8 @@ void Presentation::validate_resources(const RenderResources& render,
 		std::initializer_list<RectangleF> obstacles)
 	{
 		const std::string_view message_key(message.key);
-		const std::string key = std::string(message_key.starts_with("keyboard_jump.") || message_key.starts_with("pad_buttons.") ?
+		const std::string key = std::string(message_key.starts_with("keyboard_jump.") || message_key.starts_with("pad_buttons.") ||
+			message_key.starts_with("profiles.") ?
 			"menu_text." : "menu_text.status.") + message.key;
 		const Vector2F raw = fixed_menu_size(key, message.text, font);
 		const float available = (1920.0f + paper_size.x) / 2.0f - art.shadow_offset -
@@ -1176,6 +1226,17 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		check_status(message, controls.help_font, controls.status_position, controls.box_size,
 			controls.art, { pad_buttons_back, pad_buttons_help });
+	}
+	const RectangleF profiles_back = padded_back(profile_row(6), controls.item_font, controls.art);
+	const StatusMessage profiles_statuses[]{ { "profiles.idle_status", profiles.idle_status },
+		{ "profiles.saved_status", profiles.saved_status }, { "profiles.editing_status", profiles.editing_status },
+		{ "profiles.name_taken_status", profiles.name_taken_status }, { "profiles.full_status", profiles.full_status },
+		{ "profiles.delete_confirm_status", profiles.delete_confirm_status },
+		{ "profiles.deleted_status", profiles.deleted_status }, { "active_save_failed", status_text.active_save_failed } };
+	for (const StatusMessage& message : profiles_statuses)
+	{
+		check_status(message, controls.help_font, controls.status_position, controls.box_size,
+			controls.art, { profiles_back, profiles_help });
 	}
 	const StatusMessage sticks_statuses[]{ { "sticks_pending", status_text.sticks_pending },
 		{ "sticks_saved", status_text.sticks_saved }, { "active_save_failed", status_text.active_save_failed } };
@@ -1541,8 +1602,15 @@ void Presentation::validate_resources(const RenderResources& render,
 			};
 			check_join_row(label, false);
 			// The shared keyboard/mouse input is always connected. Only a
-			// reserved pad can actually display the reconnect suffix.
-			if (input_slots::is_pad(slot)) { check_join_row(label + connection.join_reconnect_suffix, true); }
+			// reserved pad can actually display the reconnect suffix, and only
+			// a connected pad shows the profile it wears, whose name may be
+			// the widest one.
+			if (input_slots::is_pad(slot))
+			{
+				check_join_row(label + connection.join_reconnect_suffix, true);
+				check_join_row(this->menu_text_.worn_profile_label(label,
+					std::string(player_profiles::max_name_length, 'W')), false);
+			}
 		}
 		join_previous_bottom = row_bottom;
 		join_previous_keys = std::move(row_bottom_keys);

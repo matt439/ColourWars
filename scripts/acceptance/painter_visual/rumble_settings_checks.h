@@ -99,8 +99,8 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
     stack.push(std::make_unique<ControlsSettingsMenu>(&context, 3)); tick(); tick();
     // Parent audio remains pending while its physical owner opens the child.
-    move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::dpad_right);
-    move(GamepadButton::dpad_up, 3); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::dpad_right);
+    move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::a);
     require(stack.depth() == 3, "Controls did not open actual Pad sticks for its sparse physical owner");
     move(GamepadButton::dpad_down, 3);
     const Frame on = main_menu_frame(app);
@@ -133,10 +133,10 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::dpad_right);
     move(GamepadButton::dpad_down, 5); pad(3, GamepadButton::a);
     require(stack.depth() == 2 && bytes() == applied_bytes, "Rumble Back saved its pending On choice");
-    move(GamepadButton::dpad_down, 8); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 9); pad(3, GamepadButton::a);
     verify("parent-merge", { true, true, true, false }, { true, true, true, false }, 10, 10);
 
-    move(GamepadButton::dpad_up, 8); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_up, 9); pad(3, GamepadButton::a);
     move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::dpad_right);
     require(std::filesystem::create_directory(blocked), "Cannot isolate one rumble save failure");
     move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);

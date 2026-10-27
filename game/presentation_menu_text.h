@@ -21,7 +21,7 @@ enum class MenuPrompt
 {
 	title, select_back, options, controls, sticks, mode, join, team, team_shuffle,
 	weapon, arena_browse, arena_locked, missing_player, pause, pause_missing,
-	select, credits, bot_team, bot_weapon, count
+	select, credits, bot_team, bot_weapon, profiles, profile_name, count
 };
 
 enum class MenuItem
@@ -31,7 +31,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, count
 };
 
 struct MenuTitleText
@@ -68,6 +68,15 @@ struct PadButtonsMenuText
 	std::wstring reset, help, pending_status, saved_status, conflict_status;
 	// Index 0-5: jump, jump_alternate, shoot, shoot_alternate, pause, pause_alternate.
 	const std::wstring& row(size_t index) const;
+};
+
+// The Profiles page (ROAD#21): rows, help and its status lines. Names are
+// the save's A-Z, 0-9 and spaces, widened as they are.
+struct ProfilesMenuText
+{
+	std::wstring heading, profile, none, name, boost, worn_by, nobody, new_profile, delete_profile, help;
+	std::wstring idle_status, saved_status, editing_status, name_taken_status, full_status,
+		delete_confirm_status, deleted_status;
 };
 
 struct MenuStatusText
@@ -202,6 +211,8 @@ struct MenuLabelText
 	std::wstring handicap_none;
 	std::wstring handicap_plus_one;
 	std::wstring handicap_plus_two;
+	// A pad or Join row whose pad wears a profile: {device} and {name}.
+	std::wstring worn_profile;
 };
 
 // Authored connection copy; the missing roster is assembled by the menu.
@@ -244,6 +255,7 @@ struct MenuText
 	MenuHelpText help;
 	KeyboardJumpMenuText keyboard_jump;
 	PadButtonsMenuText pad_buttons;
+	ProfilesMenuText profiles;
 	MenuStatusText status;
 	MenuValueText values;
 	MenuConfirmationText confirmations;
@@ -285,6 +297,8 @@ struct MenuText
 	std::wstring bot_roster_label(int roster_index, BotDifficulty difficulty) const;
 	// Throws invalid_argument outside handicaps::valid.
 	std::wstring handicap_label(int level) const;
+	// `label` with the worn profile's name; an empty name returns it as is.
+	std::wstring worn_profile_label(const std::wstring& label, std::string_view name) const;
 	// Player numbers are the visible roster numbers 1-4, never device slots.
 	std::wstring pause_title_for_player(int number) const;
 	std::wstring practice_tool_label(std::wstring_view tool) const;

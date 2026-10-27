@@ -302,7 +302,12 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 	{
 		const bool connected = inputs[player].connected;
 		JoinMotionRow& motion = *this->join_motion_[player];
-		const std::wstring label = this->level_settings()->player_label(player, this->text()) +
+		// A reserved pad's reconnect note takes the place of its profile's name.
+		const int worn = players[player].controller == PlayerController::human && connected ?
+			this->save()->worn_profile(players[player].num) : -1;
+		const std::wstring label = this->text().worn_profile_label(
+			this->level_settings()->player_label(player, this->text()), worn < 0 ? std::string_view() :
+			std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)) +
 			(!connected && players[player].num >= 0 ? this->text().connection.join_reconnect_suffix : L"");
 		const bool row_changed = motion.slot != players[player].num || motion.connected != connected ||
 			this->players_[player]->text() != label;
@@ -392,6 +397,19 @@ void MainMenuJoin::change_host_row(Direction direction)
 	this->play_wave(this->direction_sound_);
 }
 
+void MainMenuJoin::take_profile_boost(int slot)
+{
+	// A seat starts from the Boost its pad's profile carries; Weapon Select
+	// can still change it, and the match carries the choice back.
+	const int worn = this->save()->worn_profile(slot);
+	const int player = this->level_settings()->player_index_for_slot(slot);
+	if (worn >= 0 && player >= 0)
+	{
+		this->level_settings()->set_player_handicap(player,
+			this->save()->profiles().list[static_cast<size_t>(worn)].boost);
+	}
+}
+
 void MainMenuJoin::update_page(float /*dt*/)
 {
 	if (!this->context()->active())
@@ -454,7 +472,20 @@ void MainMenuJoin::update_page(float /*dt*/)
 			{
 				roster_changed = true;
 				changed_rows[static_cast<size_t>(settings->player_index_for_slot(slot))] = true;
+				this->take_profile_boost(slot);
 				this->play_wave(this->ready_sound_);
+			}
+		}
+		else if (inputs[slot].action == MenuInputAction::shuffle && player >= 0 && input_slots::is_pad(slot))
+		{
+			// A joined pad steps through the profiles it may wear, then none.
+			const int next = this->save()->next_wearable_profile(slot, 1);
+			if (next != this->save()->worn_profile(slot) && this->save()->wear_profile(slot, next))
+			{
+				this->take_profile_boost(slot);
+				roster_changed = true;
+				changed_rows[static_cast<size_t>(player)] = true;
+				this->play_wave(this->direction_sound_);
 			}
 		}
 	}
