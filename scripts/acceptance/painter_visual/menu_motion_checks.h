@@ -97,12 +97,15 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
     };
     std::ofstream records(output / "menu-motion.csv");
     records << "case,width,height,delta_x,delta_y,delta_width,delta_height\n";
+    // A partly released face moves less than one native pixel at 720p, so it
+    // may already rasterise as rest; it must still never leave its envelope.
     const auto changed = [&](const char* name, const Frame& moving, const Frame& resting,
-        const RectangleF& envelope)
+        const RectangleF& envelope, bool may_rest = false)
     {
         const RectangleI bounds = foreground_delta_bounds(moving, resting);
         const RectangleI allowed = project(envelope);
-        if (bounds.width <= 0 || bounds.height <= 0 || !allowed.contains(bounds))
+        const bool rested = may_rest && moving.pixels == resting.pixels;
+        if (!rested && (bounds.width <= 0 || bounds.height <= 0 || !allowed.contains(bounds)))
         {
             save(moving, output / (std::string("menu-motion-") + name + "-failure-moving.ppm"));
             save(resting, output / (std::string("menu-motion-") + name + "-failure-rest.ppm"));
@@ -110,7 +113,7 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
                 bounds.width << ',' << bounds.height << " allowed=" << allowed.x << ',' << allowed.y <<
                 ',' << allowed.width << ',' << allowed.height << '\n';
         }
-        require(bounds.width > 0 && bounds.height > 0 && allowed.contains(bounds),
+        require(rested || (bounds.width > 0 && bounds.height > 0 && allowed.contains(bounds)),
             "Menu motion disappeared or changed pixels outside its ornament envelope");
         records << name << ',' << moving.width << ',' << moving.height << ',' << bounds.x << ',' <<
             bounds.y << ',' << bounds.width << ',' << bounds.height << '\n';
@@ -186,7 +189,7 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
                 art.focus_padding.x * 2.0f - art.shadow_offset, controls.layout.spacing.y));
         music_row.inflate(art.focus_padding + Vector2F(2.0f));
         changed("controls-value-press", pressed, released, music_row);
-        changed("controls-value-release", release, released, music_row);
+        changed("controls-value-release", release, released, music_row, true);
         require(pressed.pixels != release.pixels,
             "Selection paper did not release with positive time");
         RectangleF label = measured(controls.item_font,
