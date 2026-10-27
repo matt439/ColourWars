@@ -202,10 +202,21 @@ void MatchBot::decide(const MatchBotObservation& view)
 	// one far outside its own range walked a refill back into home ground.
 	const BotTuning& policy = this->tuning_->bots();
 	const float threat = enemy == nullptr ? 0.0f : enemy->engage_distance + policy.refill_retreat_margin;
-	if (this->refilling_ && enemy != nullptr && nearest <= threat * threat)
+	const bool retreating = this->refilling_ && enemy != nullptr && nearest <= threat * threat;
+	if (retreating)
 	{
 		goal = view.center + Vector2F(enemy->center.x > view.center.x ? -view.size.x * 4.0f :
 			view.size.x * 4.0f, 0.0f);
+	}
+	// Enemy paint stops the refill under the underfoot trial, so walking on to
+	// the next paint goal could leave the bot empty. Go back to the last ground
+	// that wasn't enemy paint, and hold still there until the reserve resumes.
+	else if (this->refilling_ && policy.refill_off_enemy_paint && view.underfoot)
+	{
+		if (!view.on_enemy_paint) { goal = view.center; }
+		// That ground may have been painted since; then walk on as before.
+		else if (this->has_off_enemy_ && std::fabs(this->off_enemy_center_.x - view.center.x) > view.size.x)
+		{ goal = this->off_enemy_center_; }
 	}
 	if (this->recovery_left_ == 0 && this->blocked_steps_ >= policy.stuck_turn_steps)
 	{
@@ -356,6 +367,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->finish_left_ = 0;
 		this->riding_ = false;
 		this->ride_hold_left_ = 0;
+		this->has_off_enemy_ = false;
 		this->visited_supports_.clear();
 		this->decision_ = neutral;
 		this->aim_error_ = 0.0f;
@@ -370,6 +382,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	const BotTuning& policy = this->tuning_->bots();
 	if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
 	else if (this->refilling_ && view.ammo >= policy.reserve_resume) { this->refilling_ = false; }
+	if (view.grounded && !view.on_enemy_paint) { this->has_off_enemy_ = true; this->off_enemy_center_ = view.center; }
 	if (this->seeking_after_descent_ && !view.grounded) { this->descent_airborne_ = true; }
 	if (this->seeking_after_descent_ && view.grounded)
 	{

@@ -1083,17 +1083,24 @@ void Player::update(float dt)
         this->showing_debug_ = !this->showing_debug_;
     }
 
-    // Regenerate up to the configured starting health.
+    // Regenerate up to the configured starting health. The underfoot trial
+    // can pause both the delay and the regeneration on enemy paint.
     const PlayerTuning& tuning = this->player_tuning();
-    if (this->health_regen_timer_ >= tuning.health_regen_delay)
+    const bool regen_blocked = tuning.paint_underfoot.enabled &&
+        tuning.paint_underfoot.enemy_blocks_health_regen &&
+        this->underfoot_step_team_ != PlayerTeam::none && this->underfoot_step_team_ != this->team_;
+    if (!regen_blocked)
     {
-        this->health_ += tuning.health_regen_rate * dt;
-        if (this->health_ > tuning.starting_health)
+        if (this->health_regen_timer_ >= tuning.health_regen_delay)
         {
-            this->health_ = tuning.starting_health;
+            this->health_ += tuning.health_regen_rate * dt;
+            if (this->health_ > tuning.starting_health)
+            {
+                this->health_ = tuning.starting_health;
+            }
         }
+        this->health_regen_timer_ += dt;
     }
-    this->health_regen_timer_ += dt;
     this->update_redraw_sound(dt);
 }
 std::vector<std::unique_ptr<Projectile>>

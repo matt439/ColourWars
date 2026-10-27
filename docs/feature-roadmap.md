@@ -1072,6 +1072,16 @@ enemy's full run) is the provisional value. A refill lasts about 2.1 s, in which
 running enemy covers more than the 1600-unit sight distance, so the margin is
 not derived from the refill.
 
+**Refill off enemy paint.** The default-off paint-underfoot trial
+([POL#30](polish-plan.md#experimental-underfoot-prototype)) stops ammunition
+recovery on enemy paint, and a refilling bot walks on toward its next paint
+goal, so it could stay empty. `bots.refill_off_enemy_paint` (shipped on, inert
+while the trial is off) sends a refilling bot back to the last grounded centre
+it held off enemy paint and holds it still off it until the reserve resumes.
+A threat retreat still wins. The observation carries the trial's state and
+whether this step's support is enemy paint; `bot_driver` checks hold, return
+and the no-trial and toggle-off controls.
+
 **Baseline comparison.** Release, against `b3380db` (no changes in this slice), in
 the six trial and route cases:
 

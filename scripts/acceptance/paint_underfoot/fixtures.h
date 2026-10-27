@@ -70,7 +70,7 @@ namespace paint_underfoot_acceptance
             return GameTuning(labrador::parse_json(buffer.GetString(), "paint-underfoot-variant.json"));
         }
         void configure(bool enabled, float speed = 1.10f, float recovery = 1.25f,
-            float enemy_speed = 0.85f, float enemy_recovery = 0.0f)
+            float enemy_speed = 0.85f, float enemy_recovery = 0.0f, bool block_regen = false)
         {
             tuning = variant([&](rapidjson::Document& document)
             {
@@ -80,6 +80,7 @@ namespace paint_underfoot_acceptance
                 block["own_ammo_regen_multiplier"].SetFloat(recovery);
                 block["enemy_speed_multiplier"].SetFloat(enemy_speed);
                 block["enemy_ammo_regen_multiplier"].SetFloat(enemy_recovery);
+                block["enemy_blocks_health_regen"].SetBool(block_regen);
             });
         }
         std::unique_ptr<Weapon> weapon(WeaponType tool, PlayerTeam team = PlayerTeam::a, int owner = 5)
@@ -162,4 +163,5 @@ namespace paint_underfoot_acceptance
     void check_support(World& world);
     void check_recovery(World& world);
     void check_schema_and_bounds(World& world);
+    void check_health_regen(World& world);
 }

@@ -77,6 +77,9 @@ struct BotTuning
 	float refill_retreat_margin = 0.0f;
 	// The most steps a bot holds on one moving support per ride to paint it.
 	int mover_hold_steps = 1;
+	// With paint underfoot enabled, a refilling bot walks back off enemy paint
+	// and holds still off it. No effect while paint underfoot is off.
+	bool refill_off_enemy_paint = false;
 };
 
 // One handicap level's boost (docs/feature-roadmap.md#handicaps). Level 0
@@ -255,6 +258,9 @@ struct PaintUnderfootTuning
     float own_ammo_regen_multiplier = 1.0f;
     float enemy_speed_multiplier = 1.0f;
     float enemy_ammo_regen_multiplier = 1.0f;
+    // Health does not regenerate while standing on enemy paint. Optional;
+    // missing reads as false, and nothing changes while the trial is off.
+    bool enemy_blocks_health_regen = false;
 };
 struct PlayerTuning
 {
