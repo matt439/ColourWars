@@ -77,7 +77,9 @@ devices again. Spare controllers do not pause a match or take over an occupied
 player's seat.
 
 Options > Team palette keeps Random as the default, or fixes Team A/B to
-blue/orange, pink/green or blue/yellow. Use Left/Right to choose, then Apply
+blue/orange, pink/green, blue/yellow, purple/gold, red/azure or
+magenta/forest. The last three are checked under protan, deutan and tritan
+colour-vision simulation. Use Left/Right to choose, then Apply
 to save it between launches. Fixed palettes also stay fixed on a rematch.
 Each gameplay HUD names Team A or Team B on its dark identity panel; results
 label the teams with A/B letters beside the percentages (and the bars, when

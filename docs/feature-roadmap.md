@@ -1578,12 +1578,35 @@ same per-pad page. Before scoping, decide whether Reduce effects is per pane
 
 ### More team palette pairs (`ROAD#8`)
 
-**DEFERRED** to the later UI art pass. Three pairs ship. Adding one is a content
-edit to the [team palette block](#team-palette-content-gap22-2026-10-15), and
-each extra pair widens the colour-vision route around the random roll. Making
-one a fixed Options choice still needs an enum entry and save key. Check each
-candidate pair against the arena art under deutan, protan and tritan simulation
-before shipping it.
+**Implemented 2026-10-27; the author's look in a match remains.** Six pairs
+ship. The three new ones are fixed Options choices (an enum entry and save key
+each) as well as members of the Random draw, so each one widens the
+colour-vision route around the roll:
+
+| key | Team A | Team B | worst pair difference | nearest surrounding |
+|---|---|---|---|---|
+| `purple_gold` | purple `7B1FA2` | gold `FFC20A` | 43.6 (tritan) | 18.9 |
+| `red_azure` | red `E0201B` | azure `1E90FF` | 50.9 (normal) | 18.5 |
+| `magenta_forest` | magenta `FF00FF` | forest `269900` | 55.6 (deutan) | 23.2 |
+
+**The bar.** The `team_palette` case simulates protan, deutan and tritan vision
+with the Machado, Oliveira and Fernandes (2009) full-severity matrices in
+linear sRGB and measures CIEDE2000. A pair passes when its two teams stay at
+least 40 apart under normal and all three simulations, and each team colour
+stays at least 15 from every surface colour the levels author (read from
+`game/content/levels/`) and from the HUD health bar. Every shipped pair must
+pass except the two legacy pairs, which are kept as they shipped and listed by
+name: `pink_green` (27.3 under deutan, and its green is 5.9 from the health bar
+under tritan) and `blue_yellow` (yellow is 10.3 from white). The exemption
+list fails if either one starts passing, so a recolour has to take it off.
+`blue_orange` passes (58.1, 22.9).
+
+A content-only extra pair still joins Random without a rebuild, and now has to
+pass the same bar. [The preview sheet](images/road8/team-pairs-colour-vision.png)
+shows every pair on a Gainsboro surface under each simulation. Nothing here
+qualifies the colours on screen: the opt-in visual cases that capture palettes
+(`paint_fx_visual`, `painter_visual`, the console's opening art check) still
+name the original three, and the in-match look is the author's call.
 
 ### Controller rumble (`ROAD#9`)
 

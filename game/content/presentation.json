@@ -8,18 +8,27 @@
   ],
 
   "team_palette": {
-    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw.",
+    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw. Every pair except pink_green and blue_yellow must pass the team_palette colour-vision check.",
     "colours": [
       { "name": "blue", "colour": "0634CC" },
       { "name": "yellow", "colour": "FFFF00" },
       { "name": "orange", "colour": "FF7F00" },
       { "name": "pink", "colour": "FF007F" },
-      { "name": "green", "colour": "00FF00" }
+      { "name": "green", "colour": "00FF00" },
+      { "name": "purple", "colour": "7B1FA2" },
+      { "name": "gold", "colour": "FFC20A" },
+      { "name": "red", "colour": "E0201B" },
+      { "name": "azure", "colour": "1E90FF" },
+      { "name": "magenta", "colour": "FF00FF" },
+      { "name": "forest", "colour": "269900" }
     ],
     "pairs": [
       { "key": "blue_orange", "label": "A: Blue / B: Orange", "team_a": "blue", "team_b": "orange" },
       { "key": "pink_green", "label": "A: Pink / B: Green", "team_a": "pink", "team_b": "green" },
-      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow" }
+      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow" },
+      { "key": "purple_gold", "label": "A: Purple / B: Gold", "team_a": "purple", "team_b": "gold" },
+      { "key": "red_azure", "label": "A: Red / B: Azure", "team_a": "red", "team_b": "azure" },
+      { "key": "magenta_forest", "label": "A: Magenta / B: Forest", "team_a": "magenta", "team_b": "forest" }
     ]
   },
 

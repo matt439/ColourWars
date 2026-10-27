@@ -193,7 +193,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
             tap(Key::left);
             compare(name + "-palette-fixed-reset", false, 2,
                 snapshot.team_palette().fixed_pair(TeamColourPair::blue_yellow).label, snapshot, true, custom ? 3 : 0);
-            tap(Key::right);
+            for (int pair = static_cast<int>(TeamColourPair::blue_yellow); pair < static_cast<int>(TeamColourPair::count); ++pair) { tap(Key::right); }
             compare(name + "-palette-random-cycle", false, 2, words.random, snapshot, true, custom ? (short_values ? 3 : 1) : 0);
             tap(Key::down); tap(Key::down); tap(Key::down);
         }
