@@ -517,7 +517,8 @@ void ReplayFile::write(const std::filesystem::path& path) const
 			", \"weapon\": " << quoted(MatchPlanner::weapon_name(seats[i].weapon)) <<
 			", \"controller\": " << quoted(seats[i].controller == PlayerController::bot ? "bot" : "human") <<
 			", \"difficulty\": " << quoted(difficulty_name(seats[i].controller == PlayerController::bot ?
-				seats[i].difficulty : BotDifficulty::normal, path)) << " }" <<
+				seats[i].difficulty : BotDifficulty::normal, path)) <<
+			(seats[i].handicap != 0 ? ", \"handicap\": " + std::to_string(seats[i].handicap) : std::string()) << " }" <<
 			(i + 1 < seats.size() ? ",\n" : "\n");
 	}
 	out << "    ]\n  },\n";
@@ -658,8 +659,8 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 		const labrador::JsonValue entry = seats.at(static_cast<std::size_t>(seat));
 		const int slot = entry.integer("slot");
 		slots.push_back(slot);
-		if (version == 3 && (entry.has("controller") || entry.has("difficulty")))
-		{ fail(path, "version 3 cannot contain controller or difficulty metadata"); }
+		if (version == 3 && (entry.has("controller") || entry.has("difficulty") || entry.has("handicap")))
+		{ fail(path, "version 3 cannot contain controller, difficulty or handicap metadata"); }
 		if (version == format_version)
 		{
 			const std::string controller = entry.identifier("controller");
@@ -727,6 +728,13 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 			fail(path, "seat " + std::to_string(seat + 1) + " has an unknown weapon");
 		}
 		rebuilt.set_player_weapon(seat, weapon);
+		// Absent is none, which keeps unhandicapped version-4 bytes unchanged.
+		if (entry.has("handicap"))
+		{
+			const int handicap = entry.integer("handicap");
+			if (!handicaps::valid(handicap)) { fail(path, "seat " + std::to_string(seat + 1) + " has an unknown handicap"); }
+			rebuilt.set_player_handicap(seat, handicap);
+		}
 	}
 	rebuilt.set_stage(setup.string("stage"));
 	rebuilt.set_best_of(setup.integer("best_of"));

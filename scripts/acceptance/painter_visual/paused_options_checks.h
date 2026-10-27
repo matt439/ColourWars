@@ -385,9 +385,9 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         if (count == 2) { painter_scripted_pads::states[3].connected = false; tick(); device = 0;
             tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_up); painter_scripted_pads::states[3].connected = true; tick(); tick(); device = 3; }
         tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right);
-        tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_down); tap(GamepadButton::a);
+        for (int i = 1; i < 7; ++i) { tap(GamepadButton::dpad_down); } tap(GamepadButton::a); // Apply
         expected.sticks[3].movement_deadzone += 5; preserved(); tap(GamepadButton::b); require(stack.depth() == 5, "Sticks Back skipped Controls");
-        for (int i = 0; i < 4; ++i) { tap(GamepadButton::dpad_down); } tap(expected.view_shake ? GamepadButton::dpad_left : GamepadButton::dpad_right);
+        for (int i = 0; i < 5; ++i) { tap(GamepadButton::dpad_down); } tap(expected.view_shake ? GamepadButton::dpad_left : GamepadButton::dpad_right);
         for (int i = 0; i < 3; ++i) { tap(GamepadButton::dpad_down); } tap(GamepadButton::a); expected.view_shake = !expected.view_shake; preserved();
         tap(GamepadButton::b); require(stack.depth() == 4 && options.pixels == resume_stack_frame(app).pixels, "Controls return lost retained Options focus");
         compare("controls-sticks-merged"); check_world();

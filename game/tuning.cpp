@@ -190,6 +190,40 @@ namespace
 		return bots;
 	}
 
+	std::array<HandicapTuning, handicaps::count> read_handicaps(const JsonValue& root)
+	{
+		const JsonValue json = root.object("handicaps");
+		std::array<HandicapTuning, handicaps::count> result{};
+		const char* names[]{ "none", "plus_one", "plus_two" };
+		static_assert(std::size(names) == handicaps::count);
+		for (size_t index = 0; index < result.size(); ++index)
+		{
+			const JsonValue entry = json.object(names[index]);
+			HandicapTuning& level = result[index];
+			level.damage_taken = read_unit(entry, "damage_taken");
+			if (!(level.damage_taken > 0.0f))
+			{
+				throw std::runtime_error(entry.where() + ": 'damage_taken' must be greater than zero.");
+			}
+			level.paint_refill = read_finite(entry, "paint_refill");
+			if (!(level.paint_refill >= 1.0f))
+			{
+				throw std::runtime_error(entry.where() + ": 'paint_refill' must be at least 1.");
+			}
+			// A boost is help, so each level gives at least the one below it.
+			if (index > 0 && (level.damage_taken > result[index - 1].damage_taken ||
+				level.paint_refill < result[index - 1].paint_refill))
+			{
+				throw std::runtime_error(entry.where() + ": a handicap level must not boost less than the level below it.");
+			}
+		}
+		if (result[0].damage_taken != 1.0f || result[0].paint_refill != 1.0f)
+		{
+			throw std::runtime_error(json.where() + ": 'none' must leave damage_taken and paint_refill at 1.");
+		}
+		return result;
+	}
+
 	RumbleProfile read_rumble(const JsonValue& root)
 	{
 		const JsonValue json = root.object("rumble");
@@ -702,6 +736,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 	this->player_ = read_player(root);
 	this->rumble_ = read_rumble(root);
 	this->bots_ = read_bots(root);
+	this->handicaps_ = read_handicaps(root);
 
 	const JsonValue weapons = root.object("weapons");
 	this->ammo_regen_delay_ = read_non_negative(weapons, "ammo_regen_delay");
@@ -729,6 +764,17 @@ GameTuning::GameTuning(const JsonDocument& document)
         recovery(this->player_.paint_underfoot.own_ammo_regen_multiplier, "own_ammo_regen_multiplier");
         recovery(this->player_.paint_underfoot.enemy_ammo_regen_multiplier, "enemy_ammo_regen_multiplier");
     }
+	for (const HandicapTuning& level : this->handicaps_)
+	{
+		// The fastest refill a boosted player can reach on their own paint.
+		const float own = this->player_.paint_underfoot.enabled ?
+			this->player_.paint_underfoot.own_ammo_regen_multiplier : 1.0f;
+		if (!std::isfinite(this->ammo_regen_rate_ * own * level.paint_refill))
+		{
+			throw std::runtime_error(root.object("handicaps").where() +
+				": 'paint_refill' times weapons.ammo_regen_rate and paint underfoot must be finite.");
+		}
+	}
 
 	const auto add_weapon = [this, &weapons](WeaponType type, const char* key)
 	{
@@ -792,6 +838,15 @@ const RumbleProfile& GameTuning::rumble() const
 const BotTuning& GameTuning::bots() const
 {
 	return this->bots_;
+}
+
+const HandicapTuning& GameTuning::handicap(int level) const
+{
+	if (!handicaps::valid(level))
+	{
+		throw std::out_of_range("Unknown handicap level");
+	}
+	return this->handicaps_[static_cast<size_t>(level)];
 }
 
 const BotDifficultyTuning& GameTuning::bot(BotDifficulty difficulty) const

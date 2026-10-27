@@ -140,6 +140,20 @@ WeaponType MenuLevelSettings::player_weapon(int player_index) const
 	return this->player_settings_.at(static_cast<size_t>(player_index)).weapon;
 }
 
+void MenuLevelSettings::set_player_handicap(int player_index, int handicap)
+{
+	MenuPlayerSettings& player = this->player_settings_.at(static_cast<size_t>(player_index));
+	if (!handicaps::valid(handicap))
+	{
+		throw std::invalid_argument("Handicap level must be none, +1 or +2");
+	}
+	player.handicap = handicap;
+}
+int MenuLevelSettings::player_handicap(int player_index) const
+{
+	return this->player_settings_.at(static_cast<size_t>(player_index)).handicap;
+}
+
 void MenuLevelSettings::begin_input_claims(int initiating_slot)
 {
 	if (this->player_settings_.empty() ||

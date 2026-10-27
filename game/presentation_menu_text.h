@@ -93,6 +93,7 @@ struct MenuValueText
 	std::wstring duration_minutes;
 	std::wstring duration_default;
 	std::wstring resolution;
+	std::wstring shared;
 };
 
 struct MenuConfirmationText
@@ -190,6 +191,10 @@ struct MenuLabelText
 	std::wstring bot_easy;
 	std::wstring bot_normal;
 	std::wstring bot_hard;
+	// A seat's handicap on Weapon Select, one per level from none upward.
+	std::wstring handicap_none;
+	std::wstring handicap_plus_one;
+	std::wstring handicap_plus_two;
 };
 
 // Authored connection copy; the missing roster is assembled by the menu.
@@ -251,6 +256,8 @@ struct MenuText
 	std::wstring display_countdown(int seconds) const;
 	// Integer volume and rounded effective-deadzone values share the 0-100 domain.
 	std::wstring setting_percentage(int value) const;
+	// A per-pad switch that follows the shared one, showing what it resolves to.
+	std::wstring setting_shared(bool value) const;
 	// Positive finite seconds retain the Mode row's float division and default
 	// stream precision, including scientific notation and minutes underflowing to 0.
 	std::wstring setting_duration(float seconds, bool use_default) const;
@@ -269,6 +276,8 @@ struct MenuText
 	std::wstring roster_label(int roster_index, int slot) const;
 	std::wstring bot_label(BotDifficulty difficulty) const;
 	std::wstring bot_roster_label(int roster_index, BotDifficulty difficulty) const;
+	// Throws invalid_argument outside handicaps::valid.
+	std::wstring handicap_label(int level) const;
 	// Player numbers are the visible roster numbers 1-4, never device slots.
 	std::wstring pause_title_for_player(int number) const;
 	std::wstring practice_tool_label(std::wstring_view tool) const;

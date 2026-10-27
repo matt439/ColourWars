@@ -291,7 +291,8 @@ namespace presentation_read
 			throw std::runtime_error(values.where() + ": percentage: " + error.what());
 		}
 		for (const auto& field : { std::pair("duration_minutes", &text.values.duration_minutes),
-			std::pair("duration_default", &text.values.duration_default) })
+			std::pair("duration_default", &text.values.duration_default),
+			std::pair("shared", &text.values.shared) })
 		{
 			*field.second = read_menu_line(values, field.first);
 			try
@@ -464,6 +465,9 @@ namespace presentation_read
 		text.labels.bot_easy = read_label("bot_easy", {});
 		text.labels.bot_normal = read_label("bot_normal", {});
 		text.labels.bot_hard = read_label("bot_hard", {});
+		text.labels.handicap_none = read_label("handicap_none", {});
+		text.labels.handicap_plus_one = read_label("handicap_plus_one", {});
+		text.labels.handicap_plus_two = read_label("handicap_plus_two", {});
 		const JsonValue connection = json.object("connection");
 		text.connection.join_reconnect_suffix = read_menu_line(connection, "join_reconnect_suffix");
 		text.connection.join_ready = read_menu_line(connection, "join_ready");
@@ -659,6 +663,11 @@ std::wstring MenuText::setting_duration(float seconds, bool use_default) const
 		{ { L"{value}", minutes } }) : minutes;
 }
 
+std::wstring MenuText::setting_shared(bool value) const
+{
+	return format_label_template(this->values.shared, { { L"{value}", value ? this->values.on : this->values.off } });
+}
+
 std::wstring MenuText::setting_resolution(int width, int height) const
 {
 	if (width <= 0 || height <= 0)
@@ -731,6 +740,20 @@ std::wstring MenuText::bot_roster_label(int roster_index, BotDifficulty difficul
 {
 	return format_label_template(this->labels.roster_row,
 		{ { L"{player}", PlayerBadge::label(roster_index) }, { L"{device}", this->bot_label(difficulty) } });
+}
+
+std::wstring MenuText::handicap_label(int level) const
+{
+	const std::wstring* words = nullptr;
+	switch (level)
+	{
+	case 0: words = &this->labels.handicap_none; break;
+	case 1: words = &this->labels.handicap_plus_one; break;
+	case 2: words = &this->labels.handicap_plus_two; break;
+	default: throw std::invalid_argument("Handicap label requires none, +1 or +2.");
+	}
+	static_assert(handicaps::count == 3);
+	return format_label_template(*words, {});
 }
 
 std::wstring MenuText::stick_connection(int pad_slot, bool connected) const

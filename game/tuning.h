@@ -79,6 +79,16 @@ struct BotTuning
 	int mover_hold_steps = 1;
 };
 
+// One handicap level's boost (docs/feature-roadmap.md#handicaps). Level 0
+// must be neutral, so a seat without a handicap plays the unchanged game.
+struct HandicapTuning
+{
+	// Multiplies every hit's damage: 0.8 survives a quarter more paint.
+	float damage_taken = 1.0f;
+	// Multiplies the tank's refill rate, alongside paint underfoot.
+	float paint_refill = 1.0f;
+};
+
 // Match phase durations and countdown presentation.
 // The opening's beats before the countdown (docs/backstory.md, "Opening"), in
 // seconds. They move the match's state machine, so they are tuning.
@@ -383,6 +393,8 @@ public:
 	const RumbleProfile& rumble() const;
 	const BotTuning& bots() const;
 	const BotDifficultyTuning& bot(BotDifficulty difficulty) const;
+	// Throws std::out_of_range outside handicaps::valid.
+	const HandicapTuning& handicap(int level) const;
 
 	// Shared across every weapon: how fast ammo comes back, and how much of it
 	// a weapon starts with.
@@ -411,6 +423,7 @@ private:
 	PlayerTuning player_;
 	RumbleProfile rumble_{};
 	BotTuning bots_{};
+	std::array<HandicapTuning, handicaps::count> handicaps_{};
 
 	float ammo_regen_delay_ = 0.0f;
 	float ammo_regen_rate_ = 0.0f;

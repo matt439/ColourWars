@@ -287,7 +287,7 @@ namespace
         Player* player;
         size_t emitted_projectiles = 0;
 
-        Course(World& world, bool enabled)
+        Course(World& world, bool enabled, int slot = 0)
         {
             this->preferences.view_shake = enabled;
             const RectangleF rectangle(0, -world.tuning.player().size.y,
@@ -298,7 +298,7 @@ namespace
             this->player = this->scene.add(std::make_unique<Player>(rectangle,
                 &world.tuning, &world.presentation.movement_feedback(),
                 &world.presentation.combat_feedback(), &world.presentation.respawn_redraw(),
-                &world.render, &world.audio, &this->preferences, 0, PlayerTeam::a,
+                &world.render, &world.audio, &this->preferences, slot, PlayerTeam::a,
                 WeaponType::sprayer, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, rectangle.top_left(), Vector2F::ZERO, 0.0f, Vector2F::ZERO,
                 SpriteFlip::none, 0.0f, -1, nullptr, &world.presentation.camera().shake));
@@ -459,6 +459,50 @@ namespace
         std::cout << "PASS view shake reduced-effects preference: independent setting, live clear, gated damage/death and fresh restore\n";
     }
 
+    // ROAD#7: a pad slot's own override decides its player's shake; the shared
+    // switches still decide the keyboard seat and every slot left on Shared.
+    void check_seat_preference(World& world)
+    {
+        const ProjectileSpray shot = world.shot();
+        const auto shakes = [&](int slot, SeatComfort comfort, bool shared_shake, bool shared_reduced)
+        {
+            Course course(world, shared_shake, slot);
+            course.preferences.reduce_effects = shared_reduced;
+            for (SeatComfort& seat : course.preferences.pad_comfort) { seat = comfort; }
+            course.tick();
+            course.hit(shot);
+            return course.player->view_shake().remaining() > 0.0f;
+        };
+        const SeatComfort off{ SeatSwitch::off, SeatSwitch::shared, SeatSwitch::shared };
+        const SeatComfort on{ SeatSwitch::on, SeatSwitch::shared, SeatSwitch::shared };
+        const SeatComfort calm{ SeatSwitch::on, SeatSwitch::shared, SeatSwitch::on };
+        const SeatComfort lively{ SeatSwitch::shared, SeatSwitch::shared, SeatSwitch::off };
+        for (int slot = 0; slot < input_slots::pad_count; ++slot)
+        {
+            require(!shakes(slot, off, true, false) && shakes(slot, on, false, false) &&
+                !shakes(slot, calm, true, false) && shakes(slot, lively, true, true) &&
+                shakes(slot, SeatComfort{}, true, false) && !shakes(slot, SeatComfort{}, true, true),
+                "A pad slot's view-shake override did not decide its own player's shake");
+        }
+        require(shakes(input_slots::keyboard_and_mouse, off, true, false) &&
+            !shakes(input_slots::keyboard_and_mouse, on, false, false) &&
+            !shakes(-1, on, true, true),
+            "The keyboard seat or a bot took a pad slot's override instead of the shared switch");
+        // Two players under one preference set: only the slot that opted out is still.
+        Course first(world, true, 0), second(world, true, 1);
+        second.preferences.pad_comfort[1].view_shake = SeatSwitch::off;
+        first.preferences = second.preferences;
+        first.tick(); second.tick();
+        first.hit(shot); second.hit(shot);
+        require(first.player->view_shake().remaining() > 0.0f && second.player->view_shake().remaining() == 0.0f,
+            "Pad 2's view-shake opt-out reached Pad 1");
+        second.preferences.pad_comfort[1].view_shake = SeatSwitch::shared;
+        second.tick();
+        require(second.player->view_shake().remaining() == 0.0f,
+            "Returning a slot to Shared replayed a suppressed shake");
+        std::cout << "PASS view shake per-seat comfort: slot overrides, Shared fallback, own Reduce effects, keyboard/bot shared\n";
+    }
+
     void check_simulation_equivalence(World& world)
     {
         Course moving(world, true), quiet(world, true);
@@ -559,6 +603,7 @@ int main(int argc, char** argv)
         check_render_camera(world.presentation.camera());
         check_player_events(world);
         check_reduced_preference(world);
+        check_seat_preference(world);
         check_simulation_equivalence(world);
         check_validation(content);
         return 0;

@@ -90,7 +90,8 @@ namespace
 			actual.sfx_volume == wanted.sfx_volume &&
 			actual.view_shake == wanted.view_shake &&
 			actual.aim_marker == wanted.aim_marker &&
-			actual.reduce_effects == wanted.reduce_effects && actual.pad_rumble == wanted.pad_rumble,
+			actual.reduce_effects == wanted.reduce_effects && actual.pad_rumble == wanted.pad_rumble &&
+			actual.pad_comfort == wanted.pad_comfort,
 			"Shared play preferences did not survive reloading");
 		for (int slot = 0; slot < input_slots::pad_count; ++slot)
 		{
@@ -351,6 +352,113 @@ namespace
 		}
 	}
 
+	// Per-slot comfort overrides: their resolution against the shared switches,
+	// then field-independent recovery by physical slot and canonical writing.
+	void check_comfort_resolution()
+	{
+		PlaySettings play;
+		for (int slot = 0; slot < input_slots::pad_count; ++slot)
+		{
+			require(play.seat_comfort(slot) == SeatComfort{} && play.view_shake_enabled(slot) &&
+				play.aim_marker_enabled(slot) && !play.reduce_effects_for(slot),
+				"A pad slot does not follow the shared comfort switches by default");
+		}
+		play.pad_comfort[1] = { SeatSwitch::off, SeatSwitch::off, SeatSwitch::shared };
+		play.pad_comfort[2] = { SeatSwitch::shared, SeatSwitch::shared, SeatSwitch::on };
+		require(!play.view_shake_enabled(1) && !play.aim_marker_enabled(1) && !play.reduce_effects_for(1) &&
+			!play.view_shake_enabled(2) && play.aim_marker_enabled(2) && play.reduce_effects_for(2) &&
+			play.view_shake_enabled(0) && play.aim_marker_enabled(0) && !play.reduce_effects_for(0) &&
+			play.view_shake_enabled(3) && play.aim_marker_enabled(3) && !play.reduce_effects_for(3),
+			"One slot's comfort override reached another slot");
+		play.view_shake = false;
+		play.aim_marker = false;
+		play.reduce_effects = true;
+		play.pad_comfort[3] = { SeatSwitch::on, SeatSwitch::on, SeatSwitch::off };
+		require(!play.view_shake_enabled(0) && !play.aim_marker_enabled(0) && play.reduce_effects_for(0) &&
+			play.view_shake_enabled(3) && play.aim_marker_enabled(3) && !play.reduce_effects_for(3),
+			"A slot override did not win over, or a shared slot did not follow, the Options switches");
+		play.pad_comfort[3].reduce_effects = SeatSwitch::on;
+		require(!play.view_shake_enabled(3) && play.aim_marker_enabled(3),
+			"A slot's own Reduce effects did not suppress its own view shake");
+		for (const int slot : { -1, input_slots::keyboard_and_mouse, input_slots::count,
+			(std::numeric_limits<int>::min)(), (std::numeric_limits<int>::max)() })
+		{
+			require(play.seat_comfort(slot) == SeatComfort{} && !play.view_shake_enabled(slot) &&
+				!play.aim_marker_enabled(slot) && play.reduce_effects_for(slot),
+				"The keyboard, a bot or an invalid slot did not follow the shared switches");
+		}
+	}
+
+	void check_comfort_loading(const IsolatedSaveDirectory& directory)
+	{
+		using Comfort = std::array<SeatComfort, input_slots::pad_count>;
+		const auto key = [](SeatSwitch value)
+		{
+			return value == SeatSwitch::off ? "off" : (value == SeatSwitch::on ? "on" : "shared");
+		};
+		const auto check = [&](const std::string& member, const Comfort& expected)
+		{
+			write_stick_fixture(directory, ",\"pad_sticks\":[{\"movement_deadzone\":25,\"aim_deadzone\":35}]"
+				",\"pad_rumble\":[{\"enabled\":false}]" + member);
+			Save restored;
+			restored.load_save_file();
+			require_fixture_preferences(restored);
+			require(restored.play_settings().pad_comfort == expected &&
+				restored.play_settings().sticks[0].movement_deadzone == 25 &&
+				!restored.play_settings().pad_rumble[0] && restored.play_settings().pad_rumble[1],
+				"Comfort recovery lost physical-slot association or reset unrelated pad preferences");
+			require(restored.save_to_file(), "Could not canonicalize the comfort save fixture");
+			std::string canonical = "\"pad_comfort\":[";
+			for (size_t slot = 0; slot < expected.size(); ++slot)
+			{
+				if (slot != 0) { canonical += ','; }
+				canonical += std::string("{\"view_shake\":\"") + key(expected[slot].view_shake) +
+					"\",\"aim_marker\":\"" + key(expected[slot].aim_marker) +
+					"\",\"reduce_effects\":\"" + key(expected[slot].reduce_effects) + "\"}";
+			}
+			canonical += ']';
+			require(contents(directory.save_path()).find(canonical) != std::string::npos,
+				"Comfort save did not write four canonical entries");
+			check_round_trip(restored);
+		};
+		for (const char* member : { "", ",\"pad_comfort\":null", ",\"pad_comfort\":true",
+			",\"pad_comfort\":{}", ",\"pad_comfort\":\"off\"", ",\"pad_comfort\":[]" })
+		{
+			check(member, Comfort{});
+		}
+		Comfort first{};
+		first[0] = { SeatSwitch::off, SeatSwitch::on, SeatSwitch::shared };
+		check(",\"pad_comfort\":[{\"view_shake\":\"off\",\"aim_marker\":\"on\",\"reduce_effects\":\"shared\"}]", first);
+		// Each field recovers alone: a bad value keeps shared, its neighbours load.
+		Comfort mixed{};
+		mixed[0].aim_marker = SeatSwitch::on;
+		mixed[0].reduce_effects = SeatSwitch::on;
+		mixed[2] = { SeatSwitch::off, SeatSwitch::off, SeatSwitch::off };
+		mixed[3].view_shake = SeatSwitch::on;
+		check(",\"pad_comfort\":[{\"view_shake\":false,\"aim_marker\":\"on\",\"reduce_effects\":\"on\"},"
+			"null,{\"view_shake\":\"off\",\"aim_marker\":\"off\",\"reduce_effects\":\"off\"},"
+			"{\"view_shake\":\"on\",\"aim_marker\":\"On\",\"reduce_effects\":1},"
+			"{\"view_shake\":\"off\"}]", mixed);
+		for (const char* malformed : { "null", "false", "0", "\"\"", "\"OFF\"", "\"yes\"", "[]", "{}" })
+		{
+			for (int slot = 0; slot < input_slots::pad_count; ++slot)
+			{
+				std::string member = ",\"pad_comfort\":[";
+				Comfort expected{};
+				for (int entry = 0; entry < input_slots::pad_count; ++entry)
+				{
+					if (entry != 0) { member += ','; }
+					member += std::string("{\"view_shake\":") + (entry == slot ? malformed : "\"on\"") +
+						",\"aim_marker\":\"off\",\"reduce_effects\":\"on\"}";
+					expected[static_cast<size_t>(entry)] = { entry == slot ? SeatSwitch::shared : SeatSwitch::on,
+						SeatSwitch::off, SeatSwitch::on };
+				}
+				member += ']';
+				check(member, expected);
+			}
+		}
+	}
+
 	void check_boolean_loading(const IsolatedSaveDirectory& directory,
 		const char* key, bool PlaySettings::* preference,
 		const char* other_key, bool PlaySettings::* other_preference)
@@ -494,9 +602,12 @@ int main()
 		check_legacy_sticks(directory);
 		check_stick_api(directory);
 		check_rumble_loading(directory);
+		check_comfort_resolution();
+		check_comfort_loading(directory);
 		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery, "
 			"boolean recovery, four pad profiles, typed field recovery, legacy aim inheritance, "
-			"stick normalization, independent per-slot rumble recovery and persistence\n";
+			"stick normalization, independent per-slot rumble recovery and persistence, "
+			"per-slot comfort overrides, their resolution and field-independent recovery\n";
 		return 0;
 	}
 	catch (const std::exception& error)

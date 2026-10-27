@@ -384,7 +384,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
             {
                 this->movement_feedback_.land(this->support_position_,
                     this->support_impact_speed_);
-                if (this->preferences_->view_shake_enabled())
+                if (this->preferences_->view_shake_enabled(this->player_num_))
                 {
                     this->view_shake_.land(this->support_impact_speed_);
                 }
@@ -660,6 +660,26 @@ float Player::underfoot_ammo_multiplier() const
         this->state_ != PlayerState::alive || this->health_ <= 0.0f) { return 1.0f; }
     return this->underfoot_step_team_ == this->team_ ? effect.own_ammo_regen_multiplier : effect.enemy_ammo_regen_multiplier;
 }
+float Player::ammo_regen_multiplier() const
+{
+    return this->underfoot_ammo_multiplier() *
+        this->tuning_->handicap(this->handicap_).paint_refill;
+}
+
+int Player::handicap() const
+{
+    return this->handicap_;
+}
+
+void Player::set_handicap(int level)
+{
+    if (!handicaps::valid(level))
+    {
+        throw std::invalid_argument("Handicap level must be none, +1 or +2");
+    }
+    this->handicap_ = level;
+}
+
 std::optional<Player::PaintedSupport> Player::painted_support() const
 {
     if (this->fixed_slab_support_ && this->is_on_ramp() && this->supported_this_tick_)
@@ -921,7 +941,8 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
 
     // Damage belongs to the projectile's tuning record.
     const float damage = this->tuning_->projectile(
-        to_projectile_type(other_type)).details.player_damage;
+        to_projectile_type(other_type)).details.player_damage *
+        this->tuning_->handicap(this->handicap_).damage_taken;
     const bool vulnerable = this->state_ == PlayerState::alive && this->health_ > 0.0f;
     this->health_ -= damage;
     if (this->health_ <= 0.0f)
@@ -952,7 +973,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
         this->pending_rumble_.hit = true;
         this->start_action(PlayerAnimationState::hurt);
         this->combat_feedback_.hurt();
-        if (this->preferences_->view_shake_enabled()) { this->view_shake_.hurt(); }
+        if (this->preferences_->view_shake_enabled(this->player_num_)) { this->view_shake_.hurt(); }
     }
 
     this->health_regen_timer_ = 0.0f;
@@ -995,7 +1016,7 @@ void Player::update(float dt)
     // on its actual tick at age zero, irrespective of the number of views.
     this->movement_feedback_.update(dt);
     this->combat_feedback_.update(dt);
-    this->view_shake_.update(dt, this->preferences_->view_shake_enabled());
+    this->view_shake_.update(dt, this->preferences_->view_shake_enabled(this->player_num_));
     this->age_action(dt);
     if (this->state_ == PlayerState::alive && this->health_ <= 0.0f)
     {
@@ -1014,7 +1035,7 @@ void Player::update(float dt)
         this->start_action(PlayerAnimationState::elimination);
         this->pending_rumble_.elimination = true;
         this->combat_feedback_.eliminate(this->rectangle_);
-        if (this->preferences_->view_shake_enabled()) { this->view_shake_.eliminate(); }
+        if (this->preferences_->view_shake_enabled(this->player_num_)) { this->view_shake_.eliminate(); }
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
     }
 
@@ -1100,7 +1121,7 @@ std::vector<std::unique_ptr<Projectile>>
         this->center(),
         MovingObject::velocity(),
         this->facing_right(),
-        dt, this->underfoot_ammo_multiplier());
+        dt, this->ammo_regen_multiplier());
     // A paid shot is still a shot when its muzzle immediately contacts cover.
     // Check before launch obstruction retires it, never from held input or the
     // weapon's looping presentation flag (which also spans the cooldown).

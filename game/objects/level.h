@@ -191,6 +191,10 @@ public:
 	bool player_identity_visible(int view) const;
 	float player_identity_emphasis(int view) const;
 	mattmath::RectangleF player_identity_bounds(int view) const;
+	// The same badge as seen by the pad in viewer_slot: a bot's badge in a
+	// human pane follows that pane's Reduce effects, not the bot's.
+	float player_identity_emphasis_for(int view, int viewer_slot) const;
+	mattmath::RectangleF player_identity_bounds_for(int view, int viewer_slot) const;
 	// Reacquire one's own figure after a covering menu or focus loss.
 	void emphasise_players();
 	const BlockedShotFeedback& blocked_shot_feedback() const;

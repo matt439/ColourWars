@@ -1264,12 +1264,51 @@ not close the physical-pad session (`ROAD#2`) or human readability/listening gat
 
 ### Handicaps
 
-**ROAD#5 — DEFERRED**, split from the remaining `GAP#1.5` scope, until the
-physical multiplayer sessions (`ROAD#2`) identify a skill imbalance that needs
-a handicap. Those observations must establish the
-need and the mechanic before implementation is scoped. No per-player paint or
-score multiplier has been chosen; the current score remains painted surface.
-`ROAD#5` tracks this deferred work separately from the random-team action.
+**ROAD#5 - DECISION (reopened by the author 2026-10-27).** It was deferred on
+2026-10-15 until couch sessions (`ROAD#2`) showed a need; with bots now offering
+Easy, Normal and Hard, the author asked for it to be built.
+
+**Mechanic (chosen by the author 2026-10-27).** Each seat, human or
+bot, has a handicap level: Off, +1 or +2, shown as **Boost**. A boost makes the
+player take less damage from every hit and refill paint faster. Score stays
+painted surface at every level; there is no paint or score multiplier, so a
+boosted player still has to cover the ground themselves. The two numbers per
+level are `tuning.json` `handicaps` (`none`, `plus_one`, `plus_two`):
+
+| level | `damage_taken` | `paint_refill` | in practice |
+|---|---|---|---|
+| Off | 1.0 | 1.0 | the unchanged game |
+| +1 | 0.8 | 1.25 | survives a quarter more paint |
+| +2 | 0.65 | 1.5 | survives about half as much again |
+
+`none` must be exactly neutral, `damage_taken` is in (0, 1], `paint_refill` is
+at least 1, and each level must boost at least as much as the one below it.
+The refill boost multiplies paint underfoot rather than replacing it. Both are
+applied by `Player`, so a boosted bot gets the same help as a boosted human
+and its refill dwell estimate counts the boost.
+
+**Setup.** Weapon Select shows each row's level under its label. X / R, the
+Team Select random-teams button, cycles that row Off, +1, +2 while the row is
+unready; P1 reaches bot rows through the existing host-row routing. The
+`weapon` and `bot_weapon` prompts name the button. The level belongs to the
+seat: it survives bot/human conversion, difficulty changes, resizes, random
+teams, fresh claims and restarts or the next round of a series.
+
+**Persistence.** The remembered setup and Debug replays write `"handicap"` on
+a seat only when it has one, so setups and replays without handicaps keep
+their bytes. Absent or malformed saved values recover to Off; a replay with
+an unknown level is refused.
+
+**Validation.** The `handicap` case checks the tuning shape and refusals,
+the roster field, the Weapon Select copy and prompts, bit-exact damage at
+every level (Off unchanged), the refill multiplier and respawn retention;
+`remembered_setup` round-trips and recovers handicaps. Presentation
+validation fits every level's text under every Weapon Select label.
+
+**Still the author's:** judge in attended play whether +1 and +2 are worth
+having and the values feel fair against Easy/Normal/Hard bots. The author
+picked one Boost for health and refill over health-only, refill-only or
+two-way levels; the values remain provisional until that play.
 
 ## First increment: explicit joining and reconnect pause
 
@@ -1577,17 +1616,37 @@ produced for this increment.
 
 ### Per-seat accessibility toggles (`ROAD#7`)
 
-**DEFERRED** until after the coupled `POL#27` pass. View shake, the aim marker
-and Reduce effects are single `PlaySettings` fields that apply to every pane,
-while stick deadzones are already per slot (`StickSettings`). On a shared screen
-a motion-sensitive player cannot opt out alone. The shape is the stick-profile
-pattern: per-slot copies with the global value as the default, edited from the
-same per-pad page. Before scoping, decide whether Reduce effects is per pane
-(view shake, flashes) or global (shared overlays, the resume signal).
+**Implemented 2026-10-27; a look on 1-4P panes with pads remains (`ROAD#2`).**
+View shake, the aim marker and Reduce effects were single `PlaySettings` fields
+that applied to every pane, so on a shared screen a motion-sensitive player
+could not opt out alone. Each pad slot now has its own **Off / Shared / On**
+override for all three, following the stick-profile and rumble pattern.
+
+- **Shared** is the default and follows the Options switch, so an older save
+  behaves exactly as before. The Pad sticks page shows it as `Shared (On)` or
+  `Shared (Off)` so the effective value is never hidden.
+- **Reduce effects is both.** The Options switch still governs everything on
+  the shared screen: menus, the intro, the countdown, the reveal and world
+  effects every pane draws (muzzle flash, figure motion, drips, structures). A
+  pad's override governs only what that pad's player sees: its own view shake,
+  its pane's HUD pulses, and the badge emphasis in its pane, including bot
+  badges drawn there. A pad's Reduce effects still suppresses its own shake
+  while keeping its separate View shake choice.
+- The keyboard seat, bots and unknown slots always follow the shared switches.
+- Edited on the Pad sticks page (rows 4-6, after Rumble), committed by its
+  Apply for the edited slots only; the Controls page's Apply keeps them. Saved
+  as `pad_comfort`: four `{"view_shake", "aim_marker", "reduce_effects"}`
+  records holding `"off"`, `"shared"` or `"on"`, each field recovering to
+  Shared independently.
+
+CPU acceptance: `settings` (resolution, slot isolation, recovery, canonical
+writing), `view_shake` (per-slot shake, Shared fallback, keyboard/bot),
+`aim_marker` (sparse-slot panes) and `player_identity` (own versus other
+viewer's badge emphasis). The painter fixtures cover the longer page.
 
 ### More team palette pairs (`ROAD#8`)
 
-**Implemented 2026-10-27; the author's look in a match remains.** Six pairs
+**Done 2026-10-27; the author accepted the three new pairs after seeing them.** Six pairs
 ship. The three new ones are fixed Options choices (an enum entry and save key
 each) as well as members of the Random draw, so each one widens the
 colour-vision route around the roll:
@@ -1615,7 +1674,7 @@ pass the same bar. [The preview sheet](images/road8/team-pairs-colour-vision.png
 shows every pair on a Gainsboro surface under each simulation. Nothing here
 qualifies the colours on screen: the opt-in visual cases that capture palettes
 (`paint_fx_visual`, `painter_visual`, the console's opening art check) still
-name the original three, and the in-match look is the author's call.
+name the original three.
 
 ### Controller rumble (`ROAD#9`)
 
