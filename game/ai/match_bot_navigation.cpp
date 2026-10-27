@@ -28,6 +28,11 @@ namespace
 
 bool MatchBot::clear_route(const MatchBotObservation& view, Vector2F center) const
 {
+	return this->clear_route(view, view.center, center);
+}
+
+bool MatchBot::clear_route(const MatchBotObservation& view, Vector2F from, Vector2F to) const
+{
 	const Vector2F half = view.size * 0.5f;
 	for (const RectangleF& barrier : view.obstacles)
 	{
@@ -43,7 +48,7 @@ bool MatchBot::clear_route(const MatchBotObservation& view, Vector2F center) con
 		// Positive interiors only: feet moving along a support top or ending
 		// exactly on it remain clear. Clip in double rather than perturbing a
 		// float bound, which can lose the perturbation when recentered.
-		if (crosses_interior(view.center, center, barrier, half)) { return false; }
+		if (crosses_interior(from, to, barrier, half)) { return false; }
 	}
 	return true;
 }

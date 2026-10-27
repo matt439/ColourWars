@@ -1,5 +1,5 @@
 #include "game/pch.h"
-#include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
@@ -10,57 +10,9 @@ namespace
 {
     using namespace labrador;
     using namespace mattmath;
-    using paint_surfaces_acceptance::require;
+    using namespace bot_navigation_acceptance;
 
     constexpr int trial_steps = 600;
-    constexpr unsigned int trial_seed = 41731;
-    constexpr float endpoint_tolerance = 0.05f;
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
-
-    class World
-    {
-    public:
-        explicit World(const std::filesystem::path& content) : assets(content)
-        {
-            auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(content / "levels" /
-                "close_quarters.json").c_str());
-            info->validate();
-            const JsonValue entries = info->collision_objects_json();
-            for (std::size_t index = 0; index < entries.size(); ++index)
-            {
-                const JsonValue entry = entries.at(index);
-                if (!entry.has("name") || !entry.has("rectangle")) { continue; }
-                const JsonValue shape = entry.object("rectangle");
-                supports.emplace_back(entry.string("name"), RectangleF(shape.number("x"),
-                    shape.number("y"), shape.number("width"), shape.number("height")));
-            }
-            levels.add("close_quarters", std::move(info));
-        }
-
-        const RectangleF& named(const std::string& name) const
-        {
-            for (const auto& [key, rectangle] : supports)
-            { if (key == name) { return rectangle; } }
-            throw std::runtime_error("Bot navigation needs authored support '" + name + "'");
-        }
-
-        std::unique_ptr<Level> build(const MenuLevelSettings& settings)
-        {
-            std::srand(trial_seed);
-            viewports.set_layout(settings.screen_layout());
-            LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
-                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);
-            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
-        }
-
-        paint_surfaces_acceptance::World assets;
-        std::vector<std::pair<std::string, RectangleF>> supports;
-        Registry<LevelLoadedInfo> levels{ "bot-navigation" };
-        ResolutionManager resolution;
-        ViewportManager viewports{ &resolution };
-        Mouse mouse;
-        Partitioner partitioner;
-    };
 
     struct Trial
     {
@@ -83,13 +35,6 @@ namespace
         return settings;
     }
 
-    std::vector<PlayerInputData> physical_inputs()
-    {
-        std::vector<PlayerInputData> physical(input_slots::count);
-        for (PlayerInputData& input : physical) { input.connected = true; }
-        return physical;
-    }
-
     // This separate capability trial places the bot once at its home-floor
     // endpoint. All subsequent movement, drops and firing come from the real
     // shipping driver; the opposite human starts at its natural spawn and
@@ -107,22 +52,6 @@ namespace
             "Navigation trial could not place the initial home-floor endpoint");
         require(std::fabs(level.player(1).rectangle().bottom() - home.top()) <= endpoint_tolerance,
             "Navigation trial initial body does not stand at the named home-floor height");
-    }
-
-    bool grounded(const Player& player)
-    {
-        return player.move_state() == PlayerMoveState::on_ground ||
-            player.move_state() == PlayerMoveState::on_drop_down_ground ||
-            player.move_state() == PlayerMoveState::on_ramp_left ||
-            player.move_state() == PlayerMoveState::on_ramp_right;
-    }
-
-    bool on_support(const Player& player, const RectangleF& support)
-    {
-        const RectangleF& body = player.rectangle();
-        return grounded(player) && std::fabs(body.bottom() - support.top()) <= endpoint_tolerance &&
-            body.right() > support.left() + endpoint_tolerance &&
-            body.left() < support.right() - endpoint_tolerance;
     }
 
     float owned_floor_paint(const Level& level, const World& world)
@@ -144,42 +73,6 @@ namespace
             if (belongs) { area += surface.scored_area; }
         }
         return area;
-    }
-
-    class Tape final : public SeatInputFilter
-    {
-    public:
-        void filter_seats(std::vector<PlayerInputData>& seats, const Level&) override
-        {
-            if (playback)
-            {
-                require(next < steps.size(), "Navigation playback exhausted its finite final-input tape");
-                seats = steps[next++];
-            }
-            else { steps.push_back(seats); }
-        }
-        bool replaces_bot_inputs() const override { return playback; }
-        std::vector<std::vector<PlayerInputData>> steps;
-        bool playback = false;
-        std::size_t next = 0;
-    };
-
-    std::vector<std::uint64_t> snapshot(const Level& level)
-    {
-        std::vector<std::uint64_t> state = paint_surfaces_acceptance::sample_state(level.paint_surfaces());
-        for (int seat = 0; seat < level.player_count(); ++seat)
-        {
-            const Player& player = level.player(seat);
-            for (const float value : { player.center().x, player.center().y, player.velocity().x,
-                player.velocity().y, player.weapon_ammo(), player.health() })
-            { state.push_back(paint_surfaces_acceptance::bits(value)); }
-            state.push_back(static_cast<std::uint64_t>(player.state()));
-            state.push_back(static_cast<std::uint64_t>(player.move_state()));
-            for (const std::uint64_t count : player.lethal_projectiles().enemy_by_owner) { state.push_back(count); }
-            state.push_back(player.lethal_projectiles().uncredited);
-        }
-        state.push_back(static_cast<std::uint64_t>(level.projectile_count()));
-        return state;
     }
 
     void run(World& world, const Trial& trial, bool replay_check)

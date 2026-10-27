@@ -915,7 +915,8 @@ std::vector<MatchBotSupport> Level::bot_supports() const
 			type != CollisionObjectType::structure_fixed_slab && object->shape() != nullptr)
 		{
 			supports.push_back({ object->shape()->bounding_box(),
-				type == CollisionObjectType::structure_jump_through });
+				type == CollisionObjectType::structure_jump_through,
+				type == CollisionObjectType::structure_paintable });
 		}
 	}
 	return supports;

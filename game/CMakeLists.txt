@@ -5,6 +5,7 @@ find_package(directxtk CONFIG REQUIRED)
 
 add_executable(ColourWars WIN32
     ai/match_bot.cpp
+    ai/match_bot_ascent.cpp
     ai/match_bot_driver.cpp
     ai/match_bot_navigation.cpp
     action_bindings.cpp

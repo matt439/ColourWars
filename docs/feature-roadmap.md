@@ -356,13 +356,75 @@ damage establish actual normal-rule projectile contacts. Evidence:
 suite, native presentation, physical-pad, performance or attended difficulty
 qualification; CPU/frame-pacing cost remains unmeasured.
 
-**Next implementation:** qualify platform ascents and recovery returns with
-named endpoints, starting with the Close Quarters lower-floor → recovery →
-home-floor and lower/upper paint-deck routes, then the other shipped arenas.
-Extend opponent trials to moving and opposed players and improve aim and
-territory value from those observations. Keep finite budgets and final-input
-replay checks. Attended difficulty distinction and usefulness remain the
-author's acceptance gate; `ROAD#10` stays OPEN.
+#### Adjacent support ascents and recovery returns (2026-10-27)
+
+The shipping policy now explores adjacent raised rectangular supports. It
+derives a conservative rise and approach budget from the normal held jump,
+checks body clearance and the solid-body approach/rise/crossing/descent sweeps,
+and prefers smaller rises among nearby candidates. A solid target uses a
+takeoff beside its lip; a centered one-way target permits a vertical jump.
+The selected route steers and brakes each simulation step, while initial
+selection, aim and firing retain the difficulty's reaction policy. There are
+no arena names or authored route hints in the driver.
+
+An ascent can continue through an intermediate one-way support. Completed or
+failed targets are excluded for the rest of that life. An attempt expires
+after the existing progress-window plus recovery budget (120 steps at the
+current values); normal stuck detection does not mistake intentional vertical
+takeoff or braking for a blocked horizontal goal. A vanished target or newly
+occupied landing cancels the attempt, and death clears its route and visited
+supports. Initial one-way spawns retain the downward escape. After a deliberate
+drop, exploration waits for grounded contact on a paintable top, so it cannot
+reverse the escape or climb past the first scoring floor. Support observations
+carry that paintable role separately from their collision geometry.
+
+The opt-in `bot_ascents` case qualifies **90/90** actual-driver trials: three
+independent starts, both sides, all five tools and all three difficulties.
+Each has initial placement only and a 900-active-step budget:
+
+- Home return: `boundary_floor_left/right` → `spawn_a/b_recovery` →
+  `spawn_a/b_floor`, starting at X=500/5500.
+- Lower deck: the same lower floor → `lower_left/right_platform` →
+  `lower_paint`, starting at X=1300/4700.
+- Upper deck: `lower_paint` → `upper_left/right_platform` → `upper_paint`,
+  starting at X=2300/3700.
+
+Each route requires ordered grounded contacts and at least two ordinary jump
+presses. Contacts use the existing 0.05-unit feet-height tolerance and body
+overlap; these are transient landings, not centered stops. The two deck routes
+are separate starts, not one continuous lower-floor-to-summit qualification.
+At the end, **59/60** deck trials retain bot-owned top-face paint. The remaining
+Easy Team A Sprayer upper-deck trial reaches both endpoints but retains no
+owned top paint. Paint is a measurement here, not a route pass condition;
+regional usefulness and contested ownership remain open.
+
+Validation: both builds and the nine selected cases `bot_driver`,
+`bot_recovery`, `bot_ballistics`, `bot_navigation`, `bot_ascents`, `bot_trials`,
+`bot_runtime`, `gameplay_tuning` and `movement` pass. The retained 30 home-drop
+gates still require scoring-floor contact and owned floor paint. Natural-spawn
+trials retain paint in 120/120 configurations; the ten stationary local combat
+trials retain damage in 10/10 and attributed eliminations in 9/10. Six new
+900-step final-input tapes reproduce public player/paint state and projectile
+count in both builds, with complete fingerprints additionally checked in Debug.
+Policy checks cover all difficulties, invalid support/clearance, initial
+reaction, enemy priority, target disappearance, occupied landings, expiry,
+failed-target exclusion and death/respawn reset. Both real-bank isolated startup
+checks pass. Evidence: `out/validation/road10-ascents/`; reproduce with
+`scripts/run-acceptance.ps1 -Preset x64-debug -Cases bot_ascents` (or Release).
+
+This is static Close Quarters qualification for an adjacent-support heuristic,
+not a general route graph or an exact trajectory solver. Intervening one-way
+contacts can catch a jump, and the conservative sweeps can reject valid routes.
+Moving supports, ramps, rotated slabs and later path obstruction beyond the
+landing need separate qualification. The full suite, native presentation,
+physical-pad, performance and attended difficulty acceptance were not run.
+
+**Next implementation:** qualify named ascents/recovery returns on the other
+shipped arenas. Extend opponent trials to moving and opposed players and
+improve aim and territory value from those observations, including the retained
+deck-paint miss. Keep finite budgets and final-input replay checks. Attended
+difficulty distinction and usefulness remain the author's acceptance gate;
+`ROAD#10` stays OPEN.
 
 ### Balanced random teams
 

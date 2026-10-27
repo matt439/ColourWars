@@ -42,8 +42,8 @@ struct MatchBotObservation
 };
 
 // One opponent's match-lifetime decisions, independent of cameras and devices.
-// The local route policy is a foundation for the arena navigation
-// qualification, not a claim of complete platform path finding.
+// Local standing/descent and adjacent-support ascents are a foundation for
+// arena qualification, not complete platform path finding.
 class MatchBot
 {
 public:
@@ -72,6 +72,14 @@ private:
 	mattmath::Vector2F paint_goal_;
 	float heading_ = 1.0f;
 	PlayerInputData decision_;
+	bool ascending_ = false;
+	bool ascent_airborne_ = false;
+	bool continue_ascent_ = false;
+	int ascent_steps_left_ = 0;
+	bool seeking_after_descent_ = false;
+	mattmath::RectangleF ascent_support_;
+	mattmath::Vector2F ascent_takeoff_;
+	std::vector<mattmath::RectangleF> visited_supports_;
 
 	float random_unit();
 	void decide(const MatchBotObservation& view);
@@ -80,7 +88,11 @@ private:
 		mattmath::Vector2F& standing) const;
 	bool clear_standing(const MatchBotObservation& view, mattmath::Vector2F center) const;
 	bool clear_route(const MatchBotObservation& view, mattmath::Vector2F center) const;
+	bool clear_route(const MatchBotObservation& view, mattmath::Vector2F from, mattmath::Vector2F to) const;
 	void choose_descent(const MatchBotObservation& view);
+	void choose_ascent(const MatchBotObservation& view);
+	void steer_ascent(const MatchBotObservation& view, PlayerInputData& input);
+	void remember_descent(const MatchBotObservation& view, mattmath::Vector2F goal);
 	bool obstacle_ahead(const MatchBotObservation& view) const;
 	bool ledge_ahead(const MatchBotObservation& view) const;
 };

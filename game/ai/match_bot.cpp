@@ -132,6 +132,15 @@ void MatchBot::decide(const MatchBotObservation& view)
 	// Commit to leaving the failed goal before asking the sampler for another.
 	// Otherwise a fast replan can turn back into the same obstruction at once.
 	const bool recovering = this->recovery_left_ > 0;
+	if (recovering || enemy != nullptr)
+	{
+		this->ascending_ = this->continue_ascent_ = false;
+	}
+	else if (!this->ascending_ && !this->seeking_after_descent_ &&
+		view.grounded && (!view.on_platform || this->continue_ascent_))
+	{
+		this->choose_ascent(view);
+	}
 	if (recovering) { goal = view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f); }
 	const float dx = goal.x - view.center.x;
 	float movement = std::fabs(dx) > view.size.x * 0.4f ? (dx > 0.0f ? 1.0f : -1.0f) : 0.0f;
@@ -144,8 +153,9 @@ void MatchBot::decide(const MatchBotObservation& view)
 	this->decision_.left_analog_stick = Vector2F(movement, 0.0f);
 	const bool above = goal.y < view.center.y - view.size.y * 0.5f;
 	const bool dropping = view.on_platform && goal.y > view.center.y + view.size.y * 0.5f;
+	if (dropping && !this->ascending_) { this->remember_descent(view, goal); }
 	if (dropping) { this->jump_left_ = 0; }
-	const bool jump = !dropping && view.grounded && movement != 0.0f &&
+	const bool jump = !this->ascending_ && !dropping && view.grounded && movement != 0.0f &&
 		(above || this->blocked_steps_ >= policy.stuck_jump_steps ||
 			this->obstacle_ahead(view) || (this->ledge_ahead(view) && goal.y <= view.center.y));
 	if (jump && !this->jump_was_held_)
@@ -193,6 +203,9 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->recovery_left_ = this->progress_steps_ = 0;
 		this->jump_was_held_ = this->refilling_ = this->has_goal_ = false;
 		this->has_paint_goal_ = false;
+		this->ascending_ = this->ascent_airborne_ = this->continue_ascent_ = false;
+		this->seeking_after_descent_ = false;
+		this->visited_supports_.clear();
 		this->decision_ = neutral;
 		return neutral;
 	}
@@ -205,12 +218,21 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	const BotTuning& policy = this->tuning_->bots();
 	if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
 	else if (this->refilling_ && view.ammo >= policy.reserve_resume) { this->refilling_ = false; }
-	if (this->decision_.x_movement != 0.0f && std::fabs(view.velocity.x) < 1.0f)
+	if (this->seeking_after_descent_ && view.grounded)
+	{
+		for (const MatchBotSupport& support : view.supports)
+		{
+			if (support.paintable && std::fabs(view.center.y + view.size.y * 0.5f - support.bounds.top()) < 0.1f &&
+				view.center.x >= support.bounds.left() && view.center.x <= support.bounds.right())
+			{ this->seeking_after_descent_ = false; }
+		}
+	}
+	if (!this->ascending_ && this->decision_.x_movement != 0.0f && std::fabs(view.velocity.x) < 1.0f)
 	{
 		++this->blocked_steps_;
 	}
 	else { this->blocked_steps_ = 0; }
-	if (this->decision_.x_movement != 0.0f && this->recovery_left_ == 0)
+	if (!this->ascending_ && this->decision_.x_movement != 0.0f && this->recovery_left_ == 0)
 	{
 		if (Vector2F::distance_squared(view.center, this->progress_origin_) >=
 			policy.progress_distance * policy.progress_distance)
@@ -233,6 +255,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	if (this->recovery_left_ == 0 && this->replan_in_-- <= 0) { this->choose_territory(view); }
 	if (--this->react_in_ <= 0) { this->decide(view); }
 	PlayerInputData input = this->decision_;
+	if (this->ascending_) { this->steer_ascent(view, input); }
 	input.connected = true;
 	// The reserve guard is immediate, even between policy reactions. It cannot
 	// buy an unaffordable shot or inherit firing from a depleted decision.

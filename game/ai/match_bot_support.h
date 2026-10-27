@@ -8,4 +8,5 @@ struct MatchBotSupport
 {
 	mattmath::RectangleF bounds;
 	bool one_way = false;
+	bool paintable = false;
 };
