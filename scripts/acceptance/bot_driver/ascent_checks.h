@@ -61,7 +61,7 @@ namespace bot_ascent_acceptance
             !input.jump_pressed && !input.jump_held && !input.drop_through, message);
     }
 
-    inline void check_scoring_descent_landing(const GameTuning& tuning, BotDifficulty difficulty)
+    inline void check_descent_landing(const GameTuning& tuning, BotDifficulty difficulty)
     {
         for (const bool paintable : { false, true })
         {
@@ -108,6 +108,29 @@ namespace bot_ascent_acceptance
             require(jumped == paintable, paintable ?
                 "Landing on a scoring one-way top failed to release later ascent exploration" :
                 "An unpaintable descent landing released exploration before reaching scoring ground");
+            if (paintable) { continue; }
+
+            // Stuck turns on that non-scoring ground, blocked both ways, end
+            // the latch: a floor whose only exit is a climb must not hold the
+            // bot for its life. One dead end alone still walks out. Blocked
+            // jumps may fire while stuck; only a jump after recovery, with
+            // motion restored, shows the released ascent. Motion returns as
+            // soon as each turn has surely begun: blocked steps keep counting
+            // through recovery and would turn again.
+            const BotTuning& policy = tuning.bots();
+            const int reaction = tuning.bot(difficulty).reaction_steps;
+            for (const bool second : { false, true })
+            {
+                view.velocity.x = 0.0f;
+                for (int step = 0; step < policy.stuck_turn_steps + reaction * 2; ++step) { (void)bot.think(view); }
+                view.velocity.x = tuning.player().x_initial_velocity * 0.5f;
+                bool released = false;
+                for (int step = 0; step < policy.recovery_steps + reaction * 2 + 1; ++step)
+                { released = bot.think(view).jump_pressed || released; }
+                require(released == second, second ?
+                    "A second stuck turn after a non-scoring descent landing kept ascent exploration disabled" :
+                    "One stuck turn after a non-scoring descent landing released ascent exploration");
+            }
         }
     }
 
@@ -348,7 +371,7 @@ namespace bot_ascent_acceptance
         {
             check_continuing_chain_and_runup(tuning, difficulty);
             check_lifetime(tuning, difficulty);
-            check_scoring_descent_landing(tuning, difficulty);
+            check_descent_landing(tuning, difficulty);
             check_jump_boundary_and_local_routes(tuning, difficulty);
             check_short_steps_and_headroom(tuning, difficulty);
             // A centered one-way ascent needs a vertical takeoff, even though

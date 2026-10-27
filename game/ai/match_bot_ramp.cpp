@@ -64,8 +64,8 @@ void MatchBot::choose_ramp(const MatchBotObservation& view)
 		const RectangleF& bounds = ramp.bounds;
 		if (!(bounds.width > 0.0f) || !(bounds.height > 0.0f)) { continue; }
 		bool visited = false;
-		for (const RectangleF& previous : this->visited_supports_)
-		{ visited = visited || same_bounds(previous, bounds); }
+		for (const MatchBotSupport& previous : this->visited_supports_)
+		{ visited = visited || same_bounds(previous.bounds, bounds); }
 		if (visited) { continue; }
 		const float direction = ramp.rises_right ? 1.0f : -1.0f;
 		const float toe = ramp.rises_right ? bounds.left() : bounds.right();
@@ -150,7 +150,8 @@ void MatchBot::steer_ramp(const MatchBotObservation& view, PlayerInputData& inpu
 	if (!present || !exit_known || !clear || finished || --this->ramp_steps_left_ <= 0 ||
 		feet > bounds.bottom() + view.size.y)
 	{
-		if (present) { this->visited_supports_.push_back(this->ramp_.bounds); }
+		// A ramp has no support identity; it is remembered by its bounds.
+		if (present) { this->visited_supports_.push_back({ this->ramp_.bounds, false, false, 0 }); }
 		this->climbing_ramp_ = false;
 		this->continue_ascent_ = finished;
 		this->react_in_ = 1; this->replan_in_ = 0;

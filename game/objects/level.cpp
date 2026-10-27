@@ -908,15 +908,19 @@ std::vector<RectangleF> Level::bot_obstacles() const
 std::vector<MatchBotSupport> Level::bot_supports() const
 {
 	std::vector<MatchBotSupport> supports;
+	// The target list is fixed for the match, so a position in it is a stable
+	// identity even for a support that moves.
+	std::uint32_t id = 0;
 	for (const CollisionObject* object : this->projectile_targets_)
 	{
+		++id;
 		const CollisionObjectType type = to_collision_type(object->tag());
 		if (is_structure(type) && !is_structure_ramp(type) &&
 			type != CollisionObjectType::structure_fixed_slab && object->shape() != nullptr)
 		{
 			supports.push_back({ object->shape()->bounding_box(),
 				type == CollisionObjectType::structure_jump_through,
-				dynamic_cast<const PaintableObject*>(object) != nullptr });
+				dynamic_cast<const PaintableObject*>(object) != nullptr, id });
 		}
 	}
 	return supports;

@@ -19,6 +19,8 @@ struct MatchBotObservation
 	{
 		mattmath::Vector2F center;
 		mattmath::Vector2F velocity;
+		// The enemy's own engagement distance with its visible tool.
+		float engage_distance = 0.0f;
 	};
 
 	mattmath::Vector2F center;
@@ -94,9 +96,12 @@ private:
 	bool continue_ascent_ = false;
 	int ascent_steps_left_ = 0;
 	bool seeking_after_descent_ = false;
-	mattmath::RectangleF ascent_support_;
+	bool descent_airborne_ = false;
+	int descent_turns_ = 0;
+	// Supports are tracked by identity; a moving one refreshes its bounds.
+	MatchBotSupport ascent_support_;
 	mattmath::Vector2F ascent_takeoff_;
-	std::vector<mattmath::RectangleF> visited_supports_;
+	std::vector<MatchBotSupport> visited_supports_;
 	bool climbing_ramp_ = false;
 	int ramp_steps_left_ = 0;
 	MatchBotRamp ramp_;
@@ -105,8 +110,11 @@ private:
 	// long enough to recover its reserve and pass one cooldown.
 	bool finish_pending_ = false;
 	int finish_left_ = 0;
-	mattmath::RectangleF finish_support_;
+	MatchBotSupport finish_support_;
 	float finish_x_ = 0.0f;
+	// The finishing support's left edge when finish_x_ was chosen; a moving
+	// support carries the held position with it.
+	float finish_anchor_ = 0.0f;
 
 	float random_unit();
 	void decide(const MatchBotObservation& view);

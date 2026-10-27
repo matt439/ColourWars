@@ -169,15 +169,24 @@ void MatchBot::decide(const MatchBotObservation& view)
 	// Using the firing radius as the pursuit gate stranded short-range tools
 	// on unrelated paint goals before they could ever enter combat.
 	if (enemy != nullptr && !this->refilling_) { goal = enemy->center; }
-	if (this->refilling_ && enemy != nullptr)
+	// Back away only from an enemy that could reach us soon. Retreating from
+	// one far outside its own range walked a refill back into home ground.
+	const BotTuning& policy = this->tuning_->bots();
+	const float threat = enemy == nullptr ? 0.0f : enemy->engage_distance + policy.refill_retreat_margin;
+	if (this->refilling_ && enemy != nullptr && nearest <= threat * threat)
 	{
 		goal = view.center + Vector2F(enemy->center.x > view.center.x ? -view.size.x * 4.0f :
 			view.size.x * 4.0f, 0.0f);
 	}
-	const BotTuning& policy = this->tuning_->bots();
 	if (this->recovery_left_ == 0 && this->blocked_steps_ >= policy.stuck_turn_steps)
 	{
 		this->heading_ = -this->heading_;
+		// A completed descent onto non-scoring ground keeps the latch while
+		// the bot can walk on. A second stuck turn there, blocked both ways,
+		// means the floor's only exit may be a climb, so ascents become
+		// eligible once recovery ends. One dead end still walks out.
+		if (this->seeking_after_descent_ && this->descent_airborne_ && ++this->descent_turns_ >= 2)
+		{ this->seeking_after_descent_ = this->descent_airborne_ = false; }
 		this->recovery_left_ = policy.recovery_steps;
 		this->blocked_steps_ = this->progress_steps_ = 0;
 		this->progress_origin_ = view.center;
@@ -212,14 +221,18 @@ void MatchBot::decide(const MatchBotObservation& view)
 	{
 		// Stay on the fully supported span, keeping a local goal when it lies
 		// on this support; otherwise explore along it, turned inward.
+		for (const MatchBotSupport& support : view.supports)
+		{ if (same_support(this->finish_support_, support)) { this->finish_support_ = support; } }
+		const RectangleF& span = this->finish_support_.bounds;
+		this->finish_anchor_ = span.left();
 		const float half = view.size.x * 0.5f, inset = std::min(2.0f, half);
-		const float low = this->finish_support_.left() + half + inset;
-		const float high = this->finish_support_.right() - half - inset;
+		const float low = span.left() + half + inset;
+		const float high = span.right() - half - inset;
 		if (view.center.x < low) { this->heading_ = 1.0f; }
 		else if (view.center.x > high) { this->heading_ = -1.0f; }
 		const bool local_goal = this->has_goal_ && std::fabs(this->goal_.y - view.center.y) < 0.1f;
 		const float wanted = local_goal ? this->goal_.x : view.center.x + this->heading_ * view.size.x * 4.0f;
-		this->finish_x_ = low <= high ? std::clamp(wanted, low, high) : this->finish_support_.center().x;
+		this->finish_x_ = low <= high ? std::clamp(wanted, low, high) : span.center().x;
 		goal = Vector2F(this->finish_x_, view.center.y);
 	}
 	if (recovering) { goal = view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f); }
@@ -298,7 +311,8 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->has_paint_goal_ = false;
 		this->ascending_ = this->ascent_airborne_ = this->continue_ascent_ = false;
 		this->climbing_ramp_ = false;
-		this->seeking_after_descent_ = false;
+		this->seeking_after_descent_ = this->descent_airborne_ = false;
+		this->descent_turns_ = 0;
 		this->finish_pending_ = false;
 		this->finish_left_ = 0;
 		this->visited_supports_.clear();
@@ -315,13 +329,14 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	const BotTuning& policy = this->tuning_->bots();
 	if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
 	else if (this->refilling_ && view.ammo >= policy.reserve_resume) { this->refilling_ = false; }
+	if (this->seeking_after_descent_ && !view.grounded) { this->descent_airborne_ = true; }
 	if (this->seeking_after_descent_ && view.grounded)
 	{
 		for (const MatchBotSupport& support : view.supports)
 		{
 			if (support.paintable && std::fabs(view.center.y + view.size.y * 0.5f - support.bounds.top()) < 0.1f &&
 				view.center.x >= support.bounds.left() && view.center.x <= support.bounds.right())
-			{ this->seeking_after_descent_ = false; }
+			{ this->seeking_after_descent_ = this->descent_airborne_ = false; }
 		}
 	}
 	if (!this->ascending_ && !this->climbing_ramp_ && this->decision_.x_movement != 0.0f && std::fabs(view.velocity.x) < 1.0f)

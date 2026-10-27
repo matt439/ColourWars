@@ -66,6 +66,11 @@ bool MatchBotDriver::drives(int participant) const
 		this->bots_[static_cast<size_t>(participant)] != nullptr;
 }
 
+const MatchBot* MatchBotDriver::bot(int participant) const
+{
+	return this->drives(participant) ? this->bots_[static_cast<size_t>(participant)].get() : nullptr;
+}
+
 float match_bot_ballistics::horizontal_reach(const WeaponTuning& tool,
 	const ProjectileTuning& projectile)
 {
@@ -159,7 +164,8 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 					candidate.state() != PlayerState::alive || candidate.health() <= 0.0f ||
 					Vector2F::distance_squared(candidate.center(), view.center) > sight * sight ||
 					!level.bot_line_of_sight(view.center, candidate.center())) { continue; }
-				view.enemies.push_back({ candidate.center(), candidate.velocity() });
+				view.enemies.push_back({ candidate.center(), candidate.velocity(),
+					engagement_distance(candidate, *this->tuning_) });
 			}
 			const bool replan = bot->needs_territory();
 			if ((replan || support_shot(*bot, player)) && !surfaces.empty())
