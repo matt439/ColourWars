@@ -471,7 +471,25 @@ namespace colourwars_editor
                 else if (property.path == "motion/travel_x") { property.label = "motion/travel_x (world units)"; }
                 else if (property.path == "motion/period") { property.label = "motion/period (round-trip seconds)"; }
                 else if (property.path == "motion/phase") { property.label = "motion/phase (cycles [0,1))"; }
+                else if (property.path == "motion/drive") { property.label = "motion/drive (cycle or paint)"; }
+                else if (property.path == "motion/team_a_heads")
+                { property.label = "motion/team_a_heads (right or left)"; }
             }
+            const Json& motion = value["motion"];
+            const bool paint = motion.IsObject() && motion.HasMember("drive") && motion["drive"].IsString() &&
+                string(motion, "drive") == "paint";
+            if (paint)
+            {
+                for (Property& property : result)
+                {
+                    if (property.path == "motion/phase")
+                    { property.label = "motion/phase (paint: 0 left end to 0.5 right end)"; }
+                }
+            }
+            // An absent drive is the runtime's cycle; show it so the drive can
+            // be switched without hand-editing the file.
+            if (motion.IsObject() && !motion.HasMember("drive"))
+            { result.push_back({ "motion/drive", "motion/drive (cycle or paint)", "cycle", false, false }); }
         }
         if (entry.kind == EntryKind::collision && value.HasMember("collision_type") &&
             value["collision_type"].IsString())
@@ -519,6 +537,41 @@ namespace colourwars_editor
                         document.GetAllocator());
                     return;
                 }
+            }
+            if (entry.kind == EntryKind::collision && object.HasMember("motion") && object["motion"].IsObject() &&
+                (pointer_text == "/motion/drive" || pointer_text == "/motion/team_a_heads"))
+            {
+                // A drive switch carries its heading with it: paint gains team A
+                // heading right unless it already has one, and cycle (or a
+                // cleared drive, which is the cycle default) sheds it. Anything
+                // else is written as typed and the shared drive rule refuses it.
+                Json& motion = object["motion"];
+                Allocator& allocator = document.GetAllocator();
+                const auto put = [&](const char* key, const std::string& text)
+                {
+                    if (motion.HasMember(key)) { motion.RemoveMember(key); }
+                    motion.AddMember(Json(key, allocator), Json(text.c_str(), allocator), allocator);
+                };
+                if (pointer_text == "/motion/team_a_heads")
+                {
+                    if (value.empty()) { motion.RemoveMember("team_a_heads"); }
+                    else if (target != nullptr && target->IsString())
+                    { target->SetString(value.data(), static_cast<rapidjson::SizeType>(value.size()), allocator); }
+                    else { put("team_a_heads", value); }
+                    return;
+                }
+                if (value.empty() || (value == "cycle" && target == nullptr))
+                {
+                    motion.RemoveMember("drive");
+                    motion.RemoveMember("team_a_heads");
+                    return;
+                }
+                if (target != nullptr && target->IsString())
+                { target->SetString(value.data(), static_cast<rapidjson::SizeType>(value.size()), allocator); }
+                else { put("drive", value); }
+                if (value == "cycle") { motion.RemoveMember("team_a_heads"); }
+                if (value == "paint" && !motion.HasMember("team_a_heads")) { put("team_a_heads", "right"); }
+                return;
             }
             if (target == nullptr) { fail("The selected property no longer exists."); }
             if (target->IsString())

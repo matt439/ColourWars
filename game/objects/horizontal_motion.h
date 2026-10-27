@@ -2,6 +2,7 @@
 
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
+#include "game/horizontal_motion_contract.h"
 #include "game/objects/paintable_object.h"
 #include <array>
 #include <cstdint>
@@ -14,11 +15,9 @@ class TranslatingStructurePaintable;
 // snapshot-local paint-source index. Level binds positive IDs once on admission.
 using HorizontalMotionId = std::uint32_t;
 
-// What advances the phase. A cycle runs the triangular round trip forever. A
-// paint drive travels the same path at the same speed, but only while one team
-// holds more of the mover's own paint: toward that team's heading, stopping at
-// either end, and holding still on a tie (including no paint at all).
-enum class HorizontalDrive : std::uint8_t { cycle, paint };
+// What advances the phase. Defined in the engine-free contract so the level
+// editor checks an authored drive by the same rule the game loads it by.
+using HorizontalDrive = horizontal_motion_contract::Drive;
 
 struct HorizontalMotionSpec
 {

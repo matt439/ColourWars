@@ -27,6 +27,7 @@ add_executable(colourwars_editor_acceptance EXCLUDE_FROM_ALL
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/format_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/field_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/motion_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/drive_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/slab_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/editing_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/registration_checks.cpp")

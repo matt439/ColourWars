@@ -167,8 +167,10 @@ more of the mover's own paint, by area over all its faces: toward
 B. It holds on a tie, including no paint, and stops at either end. Its speed is
 a cycle's leg speed, `2 * travel_x / period`. `phase` must be in [0, 0.5],
 where 0 is the left end and 0.5 the right. `team_a_heads` is required with a
-paint drive and refused with a cycle. The editor keeps both fields as metadata
-but does not check them yet; the game refuses a bad record at load.
+paint drive and refused with a cycle. The game's loader and the
+[editor](level-editor.md#moving-structure-authoring-gapd5) read both fields
+through one rule in `game/horizontal_motion_contract.h`, so the editor refuses
+a bad record before save and the game refuses it at load.
 
 This is the existing horizontal triangular mover, with its existing safety
 limits. On actual Level admission the entire platform envelope and expanded

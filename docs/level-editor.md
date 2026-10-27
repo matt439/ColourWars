@@ -311,6 +311,26 @@ distance and the period and phase remain unchanged. The inspector exposes
 New movers start at travel 120, period 6.4 and phase 0 as editable authoring
 defaults, not an accepted arena placement or balance choice.
 
+A mover is made a [paint ferry](feature-roadmap.md#paint-ferry-road15-first-slice)
+(`ROAD#15`) in the same inspector. `motion/drive (cycle or paint)` is always
+listed, as `cycle` when the record omits it; `motion/team_a_heads (right or
+left)` is listed when present, and a paint drive's phase is labelled
+`0 left end to 0.5 right end`. Setting the drive to `paint` adds team A heading
+`right` unless the mover already has a heading. Setting `cycle`, or clearing the
+drive, removes the heading, and a cleared drive is omitted rather than written
+as `cycle`. Typing `cycle` over an omitted drive changes nothing. Any other
+value is written as typed and then refused.
+
+The drive is checked by the game's own rule, not a copy:
+`horizontal_motion_contract::decode_drive` reads the two text fields and
+`validate_drive` the paint-drive phase, and the game's `LevelObjectBuilder`
+calls the same two. An unknown drive, a paint drive without a heading or with
+one other than right/left, a heading on a cycle (explicit or by default), a
+paint drive whose phase is past 0.5, and a non-text drive or heading are each
+refused. As an edit, the refusal leaves the document and history unchanged; as
+a file, the load is refused with the same wording the game's load error uses.
+So a bad drive never reaches a save.
+
 The filled body shows its initial phase. A white dashed outline marks the
 anchor, blue dashes the complete travel envelope, and gold dots the expanded
 standing corridor. Selection and resize handles edit the anchor; clicking the
@@ -325,6 +345,10 @@ bounds or intersects another structure, duplication is refused. Anchor, motion,
 static-geometry and bounds edits validate the complete candidate before changing
 the document or undo/redo branch. Save/reopen retains unknown root, object and
 motion metadata, rectangle/TLBR encoding and ignored alternative geometry.
+The `level_editor` document checks open, save and reopen the shipped Ferry Trial
+(`turbulence_ferry_trial`) unchanged, flip and switch its drives with undo, turn
+a palette mover into a ferry, and refuse each bad drive shape both as an edit
+and as a file.
 
 The application supplies source `game/content/tuning.json` for player size;
 the registration helper supplies the same repository context. Tools using the

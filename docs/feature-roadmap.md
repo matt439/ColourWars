@@ -1986,10 +1986,21 @@ paint held before it. In a Linux build of the same objects, ferries moved in
 all three matches and bots rode a moving ferry in two of them (121 to 136
 steps). Riding is a measurement, not a requirement.
 
+**Editor drive checks (2026-10-28).** The level editor authors a ferry in
+the inspector: `motion/drive` (shown as `cycle` when absent) and
+`motion/team_a_heads`. Switching a mover to `paint` adds team A heading right
+unless it has a heading, and switching to `cycle` or clearing the drive drops
+it. The drive rule itself (`decode_drive`, `validate_drive`) moved into the
+engine-free `game/horizontal_motion_contract.h`, which the game's loader and
+the editor both call, so the editor refuses at load and on every edit exactly
+the drives the game would refuse, in the game's words. See
+[Moving-structure authoring](level-editor.md#moving-structure-authoring-gapd5).
+The palette has no ferry entry of its own; a ferry is a moving paintable whose
+drive is switched to paint.
+
 Still open in `ROAD#15`: lifts and other vertical motion (the mover is
-horizontal only), team-gated rails and growing sponges, editor checks for the
-drive fields (the editor keeps them as metadata, and the game refuses a bad
-one at load), ferry art that shows its heading, and attended play. The
+horizontal only), team-gated rails and growing sponges, ferry art that shows
+its heading (the editor draws a ferry like any mover), and attended play. The
 stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
 `-StageCountsOnly`, `-StageSummaryOnly`) passed with the tenth stage on MattPC
 in Debug and Release (2026-10-28).
