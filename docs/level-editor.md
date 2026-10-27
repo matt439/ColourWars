@@ -328,7 +328,8 @@ calls the same two. An unknown drive, a paint drive without a heading or with
 one other than right/left, a heading on a cycle (explicit or by default), a
 paint drive whose phase is past 0.5, and a non-text drive or heading are each
 refused. As an edit, the refusal leaves the document and history unchanged; as
-a file, the load is refused with the same wording the game's load error uses.
+a file, the load is refused, and every drive rule above is in the same words
+as the game's load error (only the non-text type error is each side's own).
 So a bad drive never reaches a save.
 
 The filled body shows its initial phase. A white dashed outline marks the
