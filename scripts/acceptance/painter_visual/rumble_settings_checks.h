@@ -62,10 +62,14 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     std::ofstream records(output / "rumble-settings.csv");
     records << "case,selected_slot,active_pad1,active_pad2,active_pad3,active_pad4,music,save_equal\n";
     int cases = 0;
+    using Comfort = std::array<SeatComfort, input_slots::pad_count>;
+    Comfort comfort = initial.pad_comfort;
     const auto verify = [&](const char* name, const Slots& active, const Slots& disk, int active_music, int disk_music)
     {
         const PlaySettings& play = preferences.play_settings();
         Save restored; restored.load_save_file();
+        require(play.pad_comfort == comfort && restored.play_settings().pad_comfort == comfort,
+            "Pad sticks lost or leaked a per-pad comfort override between slots, memory and disk");
         require(play.pad_rumble == active && restored.play_settings().pad_rumble == disk &&
             play.music_volume == active_music && restored.play_settings().music_volume == disk_music,
             "Rumble page lost pending/active/disk or physical-slot association");
@@ -121,13 +125,13 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
         "Actual rumble On/Off lettering did not change within its complete row");
     require(off.pixels == main_menu_frame(app).pixels, "Frozen rumble settings draw changed pixels");
     save(on, output / "rumble-settings-on.ppm"); save(off, output / "rumble-settings-off.ppm");
-    pad(3, GamepadButton::dpad_down); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
     verify("applied-off", { true, true, true, false }, { true, true, true, false }, 0, 0);
     const std::string applied_bytes = bytes();
     pad(3, GamepadButton::a);
     require(bytes() == applied_bytes, "Repeated rumble Apply changed canonical save bytes");
-    pad(3, GamepadButton::dpad_up); pad(3, GamepadButton::dpad_right);
-    move(GamepadButton::dpad_down, 2); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::dpad_right);
+    move(GamepadButton::dpad_down, 5); pad(3, GamepadButton::a);
     require(stack.depth() == 2 && bytes() == applied_bytes, "Rumble Back saved its pending On choice");
     move(GamepadButton::dpad_down, 8); pad(3, GamepadButton::a);
     verify("parent-merge", { true, true, true, false }, { true, true, true, false }, 10, 10);
@@ -135,13 +139,13 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     move(GamepadButton::dpad_up, 8); pad(3, GamepadButton::a);
     move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::dpad_right);
     require(std::filesystem::create_directory(blocked), "Cannot isolate one rumble save failure");
-    pad(3, GamepadButton::dpad_down); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
     verify("save-failed", { true, true, true, true }, { true, true, true, false }, 10, 10);
     require(std::filesystem::remove(blocked), "Cannot release the private rumble save blocker");
     pad(3, GamepadButton::a);
     verify("save-recovered", { true, true, true, true }, { true, true, true, true }, 10, 10);
     const std::string recovered_bytes = bytes();
-    pad(3, GamepadButton::dpad_up); pad(3, GamepadButton::dpad_left); pad(3, GamepadButton::b);
+    move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::dpad_left); pad(3, GamepadButton::b);
     require(stack.depth() == 2 && bytes() == recovered_bytes, "Rumble Back action saved its pending Off choice");
     verify("discard", { true, true, true, true }, { true, true, true, true }, 10, 10);
 
@@ -149,18 +153,36 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     PlaySettings independent = preferences.play_settings(); independent.pad_rumble[1] = false;
     require(preferences.set_play_settings_and_save(independent), "Cannot prepare an independent pad-slot edit");
     move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::dpad_left);
-    pad(3, GamepadButton::dpad_down); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
     verify("edited-slot-merge", { true, false, true, false }, { true, false, true, false }, 10, 10);
     const std::string merged_bytes = bytes();
-    pad(3, GamepadButton::dpad_up); pad(3, GamepadButton::dpad_right);
+    move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::dpad_right);
     painter_scripted_pads::states[3].connected = false; tick();
     keyboard(Key::escape);
     require(stack.depth() == 2 && bytes() == merged_bytes,
         "Keyboard Escape recovery after owner disconnect saved a pending rumble choice");
     verify("escape-discard", { true, false, true, false }, { true, false, true, false }, 10, 10);
-    require(cases == 8 && records.good(), "Rumble settings evidence is incomplete");
+
+    painter_scripted_pads::states[3].connected = true; tick(); tick();
+    pad(3, GamepadButton::a);
+    require(stack.depth() == 3, "Controls did not reopen Pad sticks for its reconnected owner");
+    move(GamepadButton::dpad_down, 4);
+    const std::string comfort_before = bytes();
+    pad(3, GamepadButton::dpad_left);
+    require(bytes() == comfort_before, "Pending View shake Off wrote the save before Apply");
+    verify("comfort-pending", { true, false, true, false }, { true, false, true, false }, 10, 10);
+    move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::a);
+    comfort[3].view_shake = SeatSwitch::off;
+    verify("comfort-applied", { true, false, true, false }, { true, false, true, false }, 10, 10);
+    const PlaySettings& resolved = preferences.play_settings();
+    require(!resolved.view_shake_enabled(3) && resolved.view_shake_enabled(1) && resolved.view_shake &&
+        resolved.aim_marker_enabled(3) && !resolved.reduce_effects_for(3),
+        "Pad 4's View shake Off did not resolve for its own slot only");
+    pad(3, GamepadButton::dpad_down); pad(3, GamepadButton::a);
+    require(stack.depth() == 2, "Pad sticks Back after a comfort Apply did not return to Controls");
+    require(cases == 10 && records.good(), "Rumble settings evidence is incomplete");
     std::cout << "PASS rumble settings: actual Controls/Pad sticks, sparse owner3 with earlier connected slot1, "
         "pending On/Off, Apply/reload/repeat, Back/Escape discard, one failed save/recovery, unrelated settings and "
-        "parent/edited-slot merge; two 720p captures, no native motor call or physical comfort claim\n";
+        "parent/edited-slot merge; one pad's View shake Off pending then applied to that slot only; two 720p captures, no native motor call or physical comfort claim\n";
 }
 #endif
