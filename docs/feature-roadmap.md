@@ -1626,7 +1626,7 @@ same per-pad page. Before scoping, decide whether Reduce effects is per pane
 
 ### More team palette pairs (`ROAD#8`)
 
-**Implemented 2026-10-27; the author's look in a match remains.** Six pairs
+**Done 2026-10-27; the author accepted the three new pairs after seeing them.** Six pairs
 ship. The three new ones are fixed Options choices (an enum entry and save key
 each) as well as members of the Random draw, so each one widens the
 colour-vision route around the roll:
@@ -1654,7 +1654,7 @@ pass the same bar. [The preview sheet](images/road8/team-pairs-colour-vision.png
 shows every pair on a Gainsboro surface under each simulation. Nothing here
 qualifies the colours on screen: the opt-in visual cases that capture palettes
 (`paint_fx_visual`, `painter_visual`, the console's opening art check) still
-name the original three, and the in-match look is the author's call.
+name the original three.
 
 ### Controller rumble (`ROAD#9`)
 
