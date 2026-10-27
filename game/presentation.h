@@ -123,6 +123,17 @@ struct ClosingClockPresentation
 	float beat_duration = 0.0f;
 };
 
+// The PAINT label inverts into an ink tag while the tool is low (POL#38), a
+// lightness change that needs no hue. HUD reference pixels; Reduce effects
+// holds the tag steady instead of blinking.
+struct HudLowPaintPresentation
+{
+	labrador::Colour tag;
+	labrador::Colour text;
+	mattmath::Vector2F padding;
+	float blink_period = 0.0f;
+};
+
 // Static paper backing for the live HUD, in HUD reference pixels.
 struct HudPaperPresentation
 {
@@ -163,6 +174,7 @@ struct HudPresentation
 	// Reference viewport width for scaling the timer font.
 	float timer_reference_width = 1920.0f;
 	ClosingClockPresentation closing_clock;
+	HudLowPaintPresentation low_paint;
 
 	std::string player_identity_font;
 	mattmath::Vector2F player_identity_offset = { 0.0f, 0.0f };
@@ -265,6 +277,13 @@ struct WeaponFeedbackPresentation
 	float aim_marker_size = 0.0f;
 	float aim_marker_stroke = 0.0f;
 	std::array<mattmath::Vector2F, static_cast<size_t>(WeaponType::bucket) + 1> muzzle_sizes;
+	// A keylined tank beside the status slot while the tool is low (POL#38),
+	// offset clear of the owner's identity badge. It blinks to
+	// `low_paint_dim_alpha`; Reduce effects holds it steady.
+	mattmath::Vector2F low_paint_size;
+	mattmath::Vector2F low_paint_offset;
+	float low_paint_blink_period = 0.0f;
+	float low_paint_dim_alpha = 0.0f;
 };
 
 // Detached, short-lived contacts for flying paint stopped by unpainted cover.

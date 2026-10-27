@@ -301,6 +301,20 @@ struct WeaponFeedbackSounds
 	std::optional<SoundTuning> ready;
 	std::optional<SoundTuning> lift;
 	std::optional<SoundTuning> settle;
+	// Played once as a paid shot leaves the tool low on paint (POL#38).
+	std::optional<SoundTuning> low;
+};
+
+// Advance warning before a tool runs dry. A tool is low below the larger of a
+// share of the tank and enough paint for `shots` shots, so a warned tool can
+// always fire again. The warning rearms once the tank recovers a further
+// `rearm_fraction` of a full tank, or one shot if that is more. Feedback
+// only: no cost or recovery changes.
+struct LowPaintTuning
+{
+	float supply_fraction = 0.0f;
+	float shots = 0.0f;
+	float rearm_fraction = 0.0f;
 };
 
 struct WeaponTuning
@@ -370,6 +384,7 @@ public:
 	float ammo_regen_delay() const;
 	float ammo_regen_rate() const;
 	float starting_ammo() const;
+	const LowPaintTuning& low_paint() const;
 
 	// Throws std::out_of_range if the requested record was not supplied.
 	const WeaponTuning& weapon(WeaponType type) const;
@@ -395,6 +410,7 @@ private:
 	float ammo_regen_delay_ = 0.0f;
 	float ammo_regen_rate_ = 0.0f;
 	float starting_ammo_ = 1.0f;
+	LowPaintTuning low_paint_{};
 
 	std::array<WeaponTuning, WEAPON_COUNT> weapons_{};
 	std::array<ProjectileTuning, PROJECTILE_COUNT> projectiles_{};

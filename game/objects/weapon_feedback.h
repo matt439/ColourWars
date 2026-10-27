@@ -18,6 +18,18 @@ struct WeaponFeedbackState
     bool operator==(const WeaponFeedbackState&) const = default;
 };
 
+// POL#38: whether the tool is low on paint, how much of the warning band is
+// left (ammunition over the low line, [0, 1)) and its simulated low age.
+struct LowPaintCue
+{
+    bool low = false;
+    float level = 0.0f;
+    float elapsed = 0.0f;
+    // The player's centre. The tank's horizontal offset is taken from it, not
+    // the tool pivot, so it clears the identity badge in every facing.
+    float body_x = 0.0f;
+};
+
 // Three bounded event pulses and a stateless readiness marker. Drawing another
 // view never advances them, and they never create paint or gameplay objects.
 class WeaponFeedback : public labrador::TextureObject
@@ -33,11 +45,13 @@ public:
     void clear();
     const WeaponFeedbackState& state() const;
 
+    // The low-paint tank shares the status slot and yields to the pulses.
     void draw(labrador::DrawList& draw_list, const mattmath::Vector2F& nozzle,
         const mattmath::Vector2F& pivot, float angle, WeaponType type,
-        const labrador::Colour& team_colour, bool reduce_effects = false) const;
+        const labrador::Colour& team_colour, bool reduce_effects = false,
+        const LowPaintCue& low = {}) const;
     mattmath::RectangleF bounds(const mattmath::Vector2F& nozzle,
-        const mattmath::Vector2F& pivot, WeaponType type) const;
+        const mattmath::Vector2F& pivot, WeaponType type, const LowPaintCue& low = {}) const;
 
     // Persistent, directional information, separate from the event pulses.
     // Level draws it only in the owning player's pane while that player can act.

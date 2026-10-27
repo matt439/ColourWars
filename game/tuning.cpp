@@ -630,6 +630,7 @@ namespace
 		weapon.feedback_sounds.ready = optional_sound("ready");
 		weapon.feedback_sounds.lift = optional_sound("lift");
 		weapon.feedback_sounds.settle = optional_sound("settle");
+		weapon.feedback_sounds.low = optional_sound("low");
 		return weapon;
 	}
 
@@ -704,6 +705,17 @@ GameTuning::GameTuning(const JsonDocument& document)
 	this->ammo_regen_delay_ = read_non_negative(weapons, "ammo_regen_delay");
 	this->ammo_regen_rate_ = read_non_negative(weapons, "ammo_regen_rate");
 	this->starting_ammo_ = read_positive(weapons, "starting_ammo");
+	{
+		const JsonValue low = weapons.object("low_paint");
+		this->low_paint_.supply_fraction = read_unit(low, "supply_fraction");
+		this->low_paint_.shots = read_finite(low, "shots");
+		// Two shots' paint guarantees the shot that crosses the line leaves one.
+		if (!(this->low_paint_.shots >= 2.0f))
+		{
+			throw std::runtime_error(low.where() + ": 'shots' must be at least 2, so a warned tool can still fire.");
+		}
+		this->low_paint_.rearm_fraction = read_number_in(low, "rearm_fraction", 0.0f, 1.0f);
+	}
     if (root.object("player").has("paint_underfoot"))
     {
         const JsonValue effect = root.object("player").object("paint_underfoot");
@@ -801,6 +813,11 @@ float GameTuning::ammo_regen_rate() const
 float GameTuning::starting_ammo() const
 {
 	return this->starting_ammo_;
+}
+
+const LowPaintTuning& GameTuning::low_paint() const
+{
+	return this->low_paint_;
 }
 
 const WeaponTuning& GameTuning::weapon(WeaponType type) const

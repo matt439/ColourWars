@@ -62,6 +62,10 @@ Weapon::Weapon(const GameTuning* tuning,
     {
         this->ready_sound_ = this->sound_bank_->resolve_wave(feedback.ready->name);
     }
+    if (feedback.low.has_value())
+    {
+        this->low_sound_ = this->sound_bank_->resolve_wave(feedback.low->name);
+    }
     this->paint_frame_ = this->sprite_sheet()->
         resolve_sprite_frame(details.frame_name + "_paint");
     if (type == WeaponType::sprayer || type == WeaponType::mister)
@@ -117,7 +121,8 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
     {
         this->feedback_->draw(draw_list, this->nozzle_pos(), this->draw_pos(),
             this->rotation(), this->type(), this->paint_override_.value_or(this->team_colour()),
-            this->preferences_->reduce_effects);
+            this->preferences_->reduce_effects,
+            this->low_paint_cue());
     }
 
     if (debug)
@@ -210,7 +215,8 @@ RectangleF Weapon::draw_bounds() const
 	if (this->feedback_ != nullptr)
 	{
 		result = RectangleF::union_of(result,
-			this->feedback_->bounds(this->nozzle_pos(), this->draw_pos(), this->type()));
+			this->feedback_->bounds(this->nozzle_pos(), this->draw_pos(), this->type(),
+				this->low_paint_cue()));
 	}
 	return result;
 }
@@ -432,6 +438,22 @@ void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
         this->awaiting_recovery_ = false;
     }
 
+    // One warning as a paid shot leaves the tool low. Held fire cannot repeat
+    // it; only recovery past the rearm line does, so it never chatters.
+    if (this->low_warned_ && this->ammo() >= this->low_paint_rearm_level())
+    {
+        this->low_warned_ = false;
+    }
+    if (shot && !this->low_warned_ && this->low_paint())
+    {
+        if (feedback.low.has_value())
+        {
+            this->play_feedback_sound(this->low_sound_, *feedback.low);
+        }
+        this->low_warned_ = true;
+    }
+    this->low_elapsed_ = this->low_paint() ? this->low_elapsed_ + dt : 0.0f;
+
     if (this->cooldown_feedback_pending_ &&
         this->shoot_timer() > this->shoot_interval())
     {
@@ -452,6 +474,27 @@ void Weapon::play_feedback_sound(SoundBank::WaveHandle sound,
 void Weapon::update_ground_contact(bool /*supported*/, bool /*established_support*/,
     float /*dt*/)
 {
+}
+float Weapon::low_paint_level() const
+{
+    const LowPaintTuning& low = this->tuning_->low_paint();
+    const float full = this->tuning_->starting_ammo();
+    return std::min(full, std::max(low.supply_fraction * full, low.shots * this->ammo_usage()));
+}
+float Weapon::low_paint_rearm_level() const
+{
+    const float full = this->tuning_->starting_ammo();
+    return std::min(full, this->low_paint_level() +
+        std::max(this->tuning_->low_paint().rearm_fraction * full, this->ammo_usage()));
+}
+bool Weapon::low_paint() const { return this->ammo() < this->low_paint_level(); }
+float Weapon::low_paint_elapsed() const { return this->low_elapsed_; }
+bool Weapon::low_paint_warned() const { return this->low_warned_; }
+LowPaintCue Weapon::low_paint_cue() const
+{
+    if (!this->low_paint()) { return {}; }
+    return { true, this->ammo() / this->low_paint_level(), this->low_elapsed_,
+        this->player_center().x };
 }
 bool Weapon::can_afford_shot() const
 {
@@ -724,6 +767,8 @@ void Weapon::reset_ammo(bool reset_feedback)
 	// A forced refill is not gameplay recovery, including an infinite-ammo
 	// refill immediately after a paid shot temporarily emptied the tank.
 	this->awaiting_recovery_ = false;
+	this->low_warned_ = false;
+	this->low_elapsed_ = 0.0f;
 	if (reset_feedback)
 	{
 		this->clear_rumble_events();

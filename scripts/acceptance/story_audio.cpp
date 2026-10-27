@@ -389,6 +389,7 @@ int main(int argc, char** argv)
 		check_weapon_starts(world);
 		check_empty_and_recovered(world, content);
 		check_sniper_ready(world, content);
+		check_low_warning(world);
 		check_independent_loops(world);
 		check_roller_contacts(world);
 		check_player_weapon_lifecycle(world);

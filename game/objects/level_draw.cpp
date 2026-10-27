@@ -117,7 +117,11 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		this->timer_,
 		player->team_colour(),
 		this->preferences_->reduce_effects,
-		this->state_ == LevelState::active);
+		this->state_ == LevelState::active,
+		// The weapon stops updating while its player is dead, which would
+		// freeze the blink mid-phase until the respawn refill.
+		player->state() == PlayerState::alive && player->primary_weapon().low_paint(),
+		player->primary_weapon().low_paint_elapsed());
 
 	if (player->showing_debug())
 	{

@@ -230,6 +230,7 @@ std::vector<SoundReference> GameTuning::sound_references() const
 		feedback_sound("ready", entry.feedback_sounds.ready);
 		feedback_sound("lift", entry.feedback_sounds.lift);
 		feedback_sound("settle", entry.feedback_sounds.settle);
+		feedback_sound("low", entry.feedback_sounds.low);
 		if (entry.loop_sounds.present)
 		{
 			for (size_t index = 0; index < entry.loop_sounds.team_a.size(); ++index)

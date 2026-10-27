@@ -253,6 +253,12 @@
         "ammo_regen_delay": 0.5,
         "ammo_regen_rate": 0.4,
         "starting_ammo": 1.0,
+        "low_paint": {
+            "_comment": "POL#38 advance warning, feedback only. Low is below the larger of supply_fraction of the tank and paint for 'shots' shots (at least 2, so a warned tool can still fire); the warning rearms rearm_fraction of a tank (or one shot, if more) above that.",
+            "supply_fraction": 0.25,
+            "shots": 2.0,
+            "rearm_fraction": 0.15
+        },
 
         "sprayer": {
             "offset": { "x": 0.0, "y": 0.0 },
@@ -270,6 +276,7 @@
                 "empty": { "name": "weapon.empty", "volume": 0.8 },
                 "recovered": { "name": "weapon.recovered", "volume": 0.6 },
                 "empty_repeat_delay": 0.65,
+                "low": { "name": "tool.drip", "volume": 1.0 },
                 "stop": { "name": "sprayer.stop", "volume": 0.6 }
             },
             "add_player_velocity": "x_only",
@@ -296,6 +303,7 @@
                 "empty": { "name": "weapon.empty", "volume": 0.8 },
                 "recovered": { "name": "weapon.recovered", "volume": 0.6 },
                 "empty_repeat_delay": 0.65,
+                "low": { "name": "tool.drip", "volume": 1.0 },
                 "ready": { "name": "sniper.ready", "volume": 0.65 }
             }
         },
@@ -317,6 +325,7 @@
                 "empty": { "name": "weapon.empty", "volume": 0.8 },
                 "recovered": { "name": "weapon.recovered", "volume": 0.6 },
                 "empty_repeat_delay": 0.65,
+                "low": { "name": "tool.drip", "volume": 1.0 },
                 "stop": { "name": "roller.stop", "volume": 0.6 },
                 "lift": { "name": "roller.lift", "volume": 0.5 },
                 "settle": { "name": "roller.settle", "volume": 0.6 }
@@ -343,6 +352,7 @@
                 "empty": { "name": "weapon.empty", "volume": 0.8 },
                 "recovered": { "name": "weapon.recovered", "volume": 0.6 },
                 "empty_repeat_delay": 0.65,
+                "low": { "name": "tool.drip", "volume": 1.0 },
                 "stop": { "name": "mister.stop", "volume": 0.6 }
             },
             "add_player_velocity": "x_only",
@@ -368,7 +378,8 @@
             "feedback_sounds": {
                 "empty": { "name": "weapon.empty", "volume": 0.8 },
                 "recovered": { "name": "weapon.recovered", "volume": 0.6 },
-                "empty_repeat_delay": 0.65
+                "empty_repeat_delay": 0.65,
+                "low": { "name": "tool.drip", "volume": 1.0 }
             },
             "add_player_velocity": "x_only",
             "player_velocity_amount": 1.0

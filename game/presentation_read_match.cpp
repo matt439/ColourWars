@@ -117,6 +117,22 @@ namespace presentation_read
 				"beat_duration <= 0.5, opaque ink/paper/text/accent and visible shade required.");
 		}
 
+		const JsonValue low_paint = json.object("low_paint");
+		hud.low_paint.tag = read_colour(low_paint, "tag");
+		hud.low_paint.text = read_colour(low_paint, "text");
+		hud.low_paint.padding = read_vector(low_paint, "padding");
+		hud.low_paint.blink_period = read_positive(low_paint, "blink_period");
+		if (hud.low_paint.padding.x < 0.0f || hud.low_paint.padding.y < 0.0f ||
+			hud.low_paint.padding.x > 16.0f || hud.low_paint.padding.y > 16.0f ||
+			hud.low_paint.blink_period < 0.2f || hud.low_paint.blink_period > 2.0f ||
+			hud.low_paint.tag.a != 1.0f || hud.low_paint.text.a != 1.0f ||
+			hud.low_paint.tag == hud.low_paint.text)
+		{
+			throw std::runtime_error(low_paint.where() +
+				": padding from 0 to 16, blink_period from 0.2 to 2 and distinct opaque "
+				"tag/text required.");
+		}
+
 		const JsonValue identity = json.object("player_identity");
 		hud.player_identity_font = identity.string("font");
 		hud.player_identity_offset = read_vector_unchecked(identity, "offset");
@@ -246,6 +262,22 @@ namespace presentation_read
 					": 'keyline_width' must leave visible fill inside the muzzle size.");
 			}
 			feedback.muzzle_sizes[index] = size;
+		}
+		const JsonValue low = json.object("low_paint");
+		feedback.low_paint_size = read_positive_vector(low, "size");
+		feedback.low_paint_offset = read_vector(low, "offset");
+		feedback.low_paint_blink_period = read_positive(low, "blink_period");
+		feedback.low_paint_dim_alpha = read_unit(low, "dim_alpha");
+		if (feedback.keyline_width * 2.0f >= std::min(feedback.low_paint_size.x, feedback.low_paint_size.y) ||
+			std::max(feedback.low_paint_size.x, feedback.low_paint_size.y) > feedback.status_size * 2.0f ||
+			std::abs(feedback.low_paint_offset.x) > 64.0f || std::abs(feedback.low_paint_offset.y) > 64.0f ||
+			feedback.low_paint_blink_period < 0.2f || feedback.low_paint_blink_period > 2.0f ||
+			feedback.low_paint_dim_alpha >= 1.0f)
+		{
+			throw std::runtime_error(low.where() +
+				": size must leave visible fill and stay within twice 'status_size', "
+				"offset within 64 of the status slot, blink_period from 0.2 to 2 and "
+				"dim_alpha below 1 required.");
 		}
 		return feedback;
 	}

@@ -247,6 +247,49 @@
 		cycling->stop_sounds();
 	}
 
+	// POL#38: one recorded low-paint cue per descent, at the SFX gain, before
+	// the empty cue; a full recovery lets the next descent warn again.
+	void check_low_warning(World& world)
+	{
+		world.level.reset();
+		world.set_sfx_volume(40);
+		for (const auto type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
+			WeaponType::mister, WeaponType::bucket })
+		{
+			world.begin = recorded_sounds(world.device).size();
+			const auto& feedback = world.tuning.weapon(type).feedback_sounds;
+			require(feedback.low.has_value(), "A factory tool has no low-paint cue");
+			auto weapon = world.weapon(world.tuning, type);
+			int low_at = -1;
+			int tick = 0;
+			for (; tick < 2400 && world.wave_plays(feedback.empty.name) == 0; ++tick)
+			{
+				update_weapon(*weapon, true);
+				if (low_at < 0 && world.wave_plays(feedback.low->name) == 1) { low_at = tick; }
+			}
+			require(low_at >= 0 && world.wave_plays(feedback.low->name) == 1 &&
+				world.wave_plays(feedback.empty.name) == 1,
+				"A held descent did not play exactly one low cue before its empty cue");
+			for (int held = 0; held < 120; ++held) { update_weapon(*weapon, true); }
+			require(world.wave_plays(feedback.low->name) == 1, "Dry fire repeated the low cue");
+			for (tick = 0; tick < 600 && weapon->ammo() < world.tuning.starting_ammo(); ++tick)
+			{
+				update_weapon(*weapon, false);
+			}
+			require(world.wave_plays(feedback.low->name) == 1, "Recovery played the low cue");
+			// Dry fire above already repeated the empty cue; descend to the next one.
+			const int empties = world.wave_plays(feedback.empty.name);
+			for (tick = 0; tick < 2400 && world.wave_plays(feedback.empty.name) == empties; ++tick)
+			{
+				update_weapon(*weapon, true);
+			}
+			require(world.wave_plays(feedback.low->name) == 2,
+				"A recovered tool did not warn once on its next descent");
+			world.wave_volume_is(*feedback.low, 0.4f);
+			weapon->stop_sounds();
+		}
+	}
+
 	void check_sniper_ready(World& world, const ContentVariant& content)
 	{
 		const auto& tuning = world.tuning.weapon(WeaponType::sniper);

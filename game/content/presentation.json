@@ -634,6 +634,13 @@
       "shadow_colour": "00000022",
       "reference_width": 1920.0
     },
+    "low_paint": {
+      "_comment": "POL#38: while the tool is low, the PAINT label becomes an ink tag with paper lettering, blinking at blink_period seconds. HUD reference pixels; Reduce effects holds it steady.",
+      "tag": "141414",
+      "text": "FFF5DF",
+      "padding": { "x": 6.0, "y": 2.0 },
+      "blink_period": 0.5
+    },
     "closing_clock": {
       "_comment": "Only the final ten positive displayed seconds. The existing font and clock keep their size and position; coarse paper, shade and detached pen ticks use HUD reference pixels. Tick age comes from the current displayed second; Reduce effects retains the settled card.",
       "ink": "141414",
@@ -760,6 +767,13 @@
       "roller": { "x": 12, "y": 8 },
       "mister": { "x": 20, "y": 18 },
       "bucket": { "x": 20, "y": 16 }
+    },
+    "low_paint": {
+      "_comment": "POL#38: a keylined tank beside the status slot while the tool is low; its team-colour fill shows paint left down to empty. World units; offset is from the status slot and clears the owner's identity badge. Blinks to dim_alpha, steady under Reduce effects.",
+      "size": { "x": 12, "y": 22 },
+      "offset": { "x": 28, "y": 0 },
+      "blink_period": 0.5,
+      "dim_alpha": 0.35
     }
   },
   "movement_feedback": {

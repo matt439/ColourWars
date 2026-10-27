@@ -45,18 +45,66 @@ utility fill frame; no new atlas or build dependency is required.
 
 ## Low-paint advance warning (`POL#38`)
 
-**OPEN, requested by the author 2026-10-27.** Players need both a visual and
-an audio warning when close to exhausting their paint, before they incur the
-existing depletion penalty. The implemented empty-fire and recovery accents
-do not provide that advance warning.
+**Implemented 2026-10-27, requested by the author the same day; listening and
+attended readability remain.** There was no separate depletion penalty in the
+code: the penalty is that an empty tool cannot fire until it regenerates a whole
+shot, and regeneration only starts `weapons.ammo_regen_delay` (0.5 s) after the
+last paid shot. The warning now arrives while at least one paid shot remains.
 
-Next, check the actual supply, shot costs and depletion rules, then add a
-warning threshold and distinct visual/audio cues before exhaustion. Keep the
-warning readable during firing and rearm it after sufficient recovery without
-repeating sound every update. Acceptance: all five tools warn before the
-penalty; the visual cue works with sound muted and at four-player size, and
-the audio cue is distinguishable in the multiplayer mix. Preserve the current
-paint costs, regeneration and penalty while adding the feedback.
+**The line.** A tool is low below the larger of `weapons.low_paint.supply_fraction`
+of the tank (0.25) and `shots` (2) times its own shot cost, capped at a full tank.
+The shipped lines are 0.25 for the sprayer, roller, mister and bucket (about 0.6,
+1.0, 1.25 seconds of held fire and two throws respectively) and 0.6 for the
+sniper, so its warning comes with one shot left. Startup requires `shots >= 2`:
+the shot that crosses the line then always leaves another affordable shot.
+
+**Sound.** The paid shot that crosses the line plays
+`weapons.<tool>.feedback_sounds.low` once. Held fire, dry fire and partial
+refills cannot repeat it; it rearms only after the tank recovers
+`rearm_fraction` (0.15) of a full tank or one shot, whichever is more, above
+the line, or on any refill. The shot term is what keeps the sniper quiet: its
+0.3 shot is larger than the band, and the paint it regenerates between held
+shots would otherwise rearm the warning mid-burst. Like the
+other feedback edges it never fires on a zero-delta update. All five tools use
+the accepted `tool.drip` master at full gain, a provisional choice from the
+existing bank: it is distinct in kind from the empty pump and the recovery
+valve, but measures about 9 dB RMS below those cues (peak -12.7 dBFS against
+-3.0). Whether it carries through a four-player mix, or needs a dedicated
+master, is a listening decision for `POL#23`.
+
+**Pictures.** Two persistent cues show while the tool is below the line,
+including when empty, and blink on the tool's simulated low age (0.5-second
+period; Reduce effects holds them steady). Pause freezes them.
+
+- The HUD's PAINT label inverts into an ink tag with paper lettering
+  (`presentation.json.hud.low_paint`). It changes lightness and shape, never hue
+  against the team colour, and it is the cue that stays legible at four-player
+  size. It shows only while the player is alive: a dead player's weapon stops
+  updating, which would otherwise freeze the blink until the respawn refill.
+- Above the figure, a white keylined tank with a team-colour fill falling from
+  the line to empty (`weapon_feedback.low_paint`, 12x22 world units). It sits 28
+  units right of the player's centre at the status slot's height, clear of the
+  owner's identity badge whichever way the tool faces, and gives way to the
+  brief empty cross and recovery bead in that slot. It is visible to
+  every pane, like the tool's own supply strip; disabling `weapon_feedback`
+  removes it but leaves the HUD tag.
+
+Costs, cadence, regeneration and every projectile are unchanged: the line is
+read only by feedback. The CPU `low_paint` case drives the production weapon
+update for all five tools. It checks each line against tuning, exactly one
+warning per descent with a paid shot still to come, the latch through dry fire,
+rearming only past the band, pulsed fire that never warns again without
+recovering past the rearm line, frozen updates, refill clearing and the tank's
+cull bounds. It also checks that malformed tuning and presentation are rejected.
+`story_audio` records the actual cue: one `tool.drip` per held descent before
+the empty cue, none from dry fire or recovery, one again on the next descent,
+at the SFX gain.
+A Debug 4P Crossfeed launch with paint bots shows the tag and tank on every low
+seat.
+
+**Remaining (`DECISION`).** Listen to the cue in the 1/2/4-player mix (with
+`POL#23`), and look at the tag and tank at four-player size with the sound
+muted. Both values and the cue choice are provisional.
 
 ## Reproduction
 

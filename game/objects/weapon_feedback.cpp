@@ -72,7 +72,7 @@ void WeaponFeedback::draw_block(DrawList& draw_list, const Vector2F& center,
 
 void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,
     const Vector2F& pivot, float angle, WeaponType type, const Colour& team_colour,
-    bool reduce_effects) const
+    bool reduce_effects, const LowPaintCue& low) const
 {
     if (!this->presentation_->enabled) { return; }
     const auto& look = *this->presentation_;
@@ -121,6 +121,23 @@ void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,
 
     const Vector2F status = pivot - Vector2F(0.0f, look.status_offset);
     const float size = look.status_size;
+    if (low.low && this->state_.empty_remaining <= 0.0f && this->state_.recovered_remaining <= 0.0f)
+    {
+        // A white tank keyed in black, its team-colour fill falling from the
+        // low line to empty. Shape and fill height carry it without hue.
+        const float period = look.low_paint_blink_period;
+        const bool bright = reduce_effects || std::fmod(low.elapsed, period) < period * 0.5f;
+        const float alpha = bright ? 1.0f : look.low_paint_dim_alpha;
+        const Vector2F tank = look.low_paint_size;
+        const Vector2F centre = Vector2F(low.body_x, status.y) + look.low_paint_offset;
+        this->draw_block(draw_list, centre, tank, 0.0f, look.highlight, alpha);
+        const float fill = tank.y * std::clamp(low.level, 0.0f, 1.0f);
+        if (fill > 0.0f)
+        {
+            this->draw_block(draw_list, centre + Vector2F(0.0f, (tank.y - fill) * 0.5f),
+                Vector2F(tank.x, fill), 0.0f, team_colour, alpha);
+        }
+    }
     if (this->state_.empty_remaining > 0.0f)
     {
         const float alpha = std::clamp(this->state_.empty_remaining / look.empty_duration, 0.0f, 1.0f);
@@ -149,7 +166,7 @@ void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,
 }
 
 RectangleF WeaponFeedback::bounds(const Vector2F& nozzle, const Vector2F& pivot,
-    WeaponType type) const
+    WeaponType type, const LowPaintCue& low) const
 {
     RectangleF result(pivot, Vector2F::ZERO);
     if (!this->presentation_->enabled) { return result; }
@@ -160,6 +177,12 @@ RectangleF WeaponFeedback::bounds(const Vector2F& nozzle, const Vector2F& pivot,
             look.keyline_width * 2.0f;
         result = RectangleF::union_of(result, RectangleF(nozzle - Vector2F(reach, reach),
             Vector2F(reach * 2.0f, reach * 2.0f)));
+    }
+    if (low.low)
+    {
+        const Vector2F half = look.low_paint_size * 0.5f + Vector2F(look.keyline_width, look.keyline_width);
+        const Vector2F centre = Vector2F(low.body_x, pivot.y - look.status_offset) + look.low_paint_offset;
+        result = RectangleF::union_of(result, RectangleF(centre - half, half * 2.0f));
     }
     if (this->state_.empty_remaining > 0.0f || this->state_.recovered_remaining > 0.0f)
     {

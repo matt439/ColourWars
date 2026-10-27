@@ -642,6 +642,7 @@ legacy names do not make them migration inputs.
 | Redraw and painted support (2026-10-15) | Four independent redraw voices follow the visible pen phase; four wet variants replace dry steps/landings on exposed painted top tiles |
 | Weapons and paint | Sprayer, roller and mister start cues play once per held-fire edge, with independent per-player loop voices; `sniper.shot`, `bucket.throw`, and the first `paint.splash` variant |
 | Weapon feedback (2026-10-15) | Sprayer/roller/mister stop edges; all five tools' empty/recovered cues; sniper cooldown-ready cue; roller lift/settle on completed ground contacts |
+| Low paint (2026-10-27) | All five tools play `tool.drip` once as a paid shot crosses the low line (`POL#38`); provisional, about 9 dB RMS under the other weapon cues |
 | Paint feedback (2026-10-15) | Six rotating splashes, all five tools' impacts, neutral/enemy capture and retiring bare-geometry duds, bounded per paint owner across all surfaces |
 | Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
 | Menu feedback (2026-10-15) | Distinct unready, pending SFX-volume preview, participating-pad lost/back and completed-series cues |

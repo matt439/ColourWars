@@ -83,6 +83,21 @@ public:
 		float dt, float ammo_regen_multiplier = 1.0f);
 
 	float ammo() const;
+	// POL#38: below the larger of the tank share and the shot reserve in
+	// tuning, never above a full tank. Feedback only; firing ignores it.
+	float low_paint_level() const;
+	// The warning rearms at or above this: the low line plus the larger of
+	// the tuned band and one shot, so regeneration between a slow tool's
+	// held shots cannot rearm it mid-burst. Never above a full tank.
+	float low_paint_rearm_level() const;
+	bool low_paint() const;
+	// Simulated seconds continuously low; zero otherwise. Drives the blink.
+	float low_paint_elapsed() const;
+	// Set by the one warning a paid shot raises on entering low paint, and
+	// cleared only by recovery past the rearm line or a refill.
+	bool low_paint_warned() const;
+	// What the tank mark draws from; an inactive cue when not low.
+	LowPaintCue low_paint_cue() const;
 	RumbleEvents take_rumble_events() noexcept;
 	void clear_rumble_events() noexcept;
 	// The same strict cooldown and full-shot paint gate used by firing.
@@ -256,6 +271,7 @@ private:
 	labrador::SoundBank::WaveHandle recovered_sound_;
 	labrador::SoundBank::WaveHandle stop_sound_;
 	labrador::SoundBank::WaveHandle ready_sound_;
+	labrador::SoundBank::WaveHandle low_sound_;
 
 	// Initialized from tuning in the constructor.
 	float ammo_ = 0.0f;
@@ -274,6 +290,9 @@ private:
 	float empty_repeat_remaining_ = 0.0f;
 	bool awaiting_recovery_ = false;
 	bool cooldown_feedback_pending_ = false;
+	// Set by the warning, cleared only by recovery past the rearm line.
+	bool low_warned_ = false;
+	float low_elapsed_ = 0.0f;
 
 	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;

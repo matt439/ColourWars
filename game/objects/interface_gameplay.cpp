@@ -89,7 +89,8 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	float ammo,
 	float timer,
 	const Colour& team_colour,
-	bool reduced_effects, bool clock_running) const
+	bool reduced_effects, bool clock_running,
+	bool low_paint, float low_paint_elapsed) const
 {
 	const HudPresentation& look = *this->look_;
 	const float scale = std::min(
@@ -153,8 +154,11 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 				panel_bottom - panel_top) + padding * 2.0f), scale);
 	this->draw_meter(draw_list, resolution, health, CrudeDrawing::premultiplied(look.health_colour),
 		health_pos, L"HEALTH", scale);
+	const float blink = look.low_paint.blink_period;
+	const bool tagged = low_paint &&
+		(reduced_effects || std::fmod(low_paint_elapsed, blink) < blink * 0.5f);
 	this->draw_meter(draw_list, resolution, ammo, team_colour,
-		ammo_pos, L"PAINT", scale);
+		ammo_pos, L"PAINT", scale, tagged);
 
 	draw_list.set_filter(TextureFilter::point);
 }
@@ -200,7 +204,8 @@ void InterfaceGameplay::draw_meter(DrawList& draw_list,
 	const Colour& colour,
 	const Vector2F& position,
 	const std::wstring& label,
-	float scale) const
+	float scale,
+	bool tagged) const
 {
 	const HudPresentation& look = *this->look_;
 	const Vector2F size(
@@ -226,9 +231,20 @@ void InterfaceGameplay::draw_meter(DrawList& draw_list,
 		this->meter_label_font_, label) * scale;
 	const Vector2F label_position = position -
 		Vector2F(0.0f, label_size.y + look.meter_label_gap * scale);
+	Colour label_colour = look.player_identity_colour;
+	if (tagged)
+	{
+		// An ink tag with paper lettering: the low-paint warning reads by
+		// lightness and shape, never by hue against the team colour.
+		const Vector2F padding = look.low_paint.padding * scale;
+		sprite_sheet->draw(draw_list, this->fill_frame_,
+			RectangleF(label_position - padding, label_size + padding * 2.0f),
+			CrudeDrawing::premultiplied(look.low_paint.tag));
+		label_colour = look.low_paint.text;
+	}
 	draw_list.set_filter(TextureFilter::linear);
 	draw_list.draw_text(this->meter_label_font_, label, label_position,
-		CrudeDrawing::premultiplied(look.player_identity_colour), scale, 0.0f, Vector2F::ZERO, 0.0f);
+		CrudeDrawing::premultiplied(label_colour), scale, 0.0f, Vector2F::ZERO, 0.0f);
 }
 void InterfaceGameplay::draw_timer(DrawList& draw_list,
 	const Vector2F& resolution, float timer, float scale, bool reduced_effects, bool clock_running) const
