@@ -377,12 +377,15 @@ private:
 	{
 		WeaponType type = WeaponType::sprayer;
 		ConfirmationState state = ConfirmationState::unconfirmed;
+		int handicap = 0;
 	};
 	struct Widgets
 	{
 		explicit Widgets(const MenuFocusMotionPresentation& look) : motion(look) {}
 		MenuFocusMotion motion;
 		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		// The row's handicap, under its label.
+		std::unique_ptr<labrador::UiTextDropShadow> handicap = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuIcon> weapon_icon = nullptr;
 		std::unique_ptr<labrador::UiTextDropShadow> weapon_name = nullptr;
@@ -408,6 +411,8 @@ private:
 	static WeaponType random_weapon();
 	void set_level_settings() const;
 	void cycle_weapons(labrador::Direction direction, int player_index);
+	// Off, +1, +2, then back to Off.
+	void cycle_handicap(int player_index);
 	const std::wstring& weapon_description(WeaponType type) const;
 	void check_paper_geometry() const;
 };

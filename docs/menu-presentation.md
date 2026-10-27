@@ -250,6 +250,12 @@ readiness; multiplayer still needs both teams. Bot labels retain their stable
 participant number and explicit difficulty. The runtime and attended gameplay
 qualification belong to [ROAD#10](feature-roadmap.md#ai-bot-players-road10).
 
+Weapon Select also shows each row's handicap (`menu_text.labels.handicap_none`,
+`handicap_plus_one`, `handicap_plus_two`) under the row's label in the detail
+font. X / R cycles an unready row's level; presentation validation fits every
+level beside every label before the first tool tile. The mechanic belongs to
+[ROAD#5](feature-roadmap.md#handicaps).
+
 ## Shared paper focus and press motion
 
 The required `menu_style.motion` object controls the shared paper focus arrow,

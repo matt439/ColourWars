@@ -79,8 +79,8 @@ void MatchBot::open_finish(const MatchBotObservation& view, const MatchBotSuppor
 	double refill = 0.0;
 	if (this->refilling_)
 	{
-		const double per_step = static_cast<double>(this->tuning_->ammo_regen_rate()) /
-			this->tuning_->starting_ammo() / 60.0;
+		const double per_step = static_cast<double>(this->tuning_->ammo_regen_rate()) *
+			view.paint_refill / this->tuning_->starting_ammo() / 60.0;
 		refill = std::ceil(static_cast<double>(this->tuning_->ammo_regen_delay()) * 60.0) + (per_step > 0.0 ?
 			std::ceil(std::max(0.0, static_cast<double>(policy.reserve_resume - view.ammo)) / per_step) : 0.0);
 	}

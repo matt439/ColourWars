@@ -48,6 +48,9 @@ public:
 	bool shuffle_teams();
 	void set_player_weapon(int player_index, WeaponType weapon);
 	WeaponType player_weapon(int player_index) const;
+	// Rejects levels outside handicaps::valid without changing the seat.
+	void set_player_handicap(int player_index, int handicap);
+	int player_handicap(int player_index) const;
 
 	// Player one chooses the count; everyone else explicitly claims an empty
 	// human seat. A disconnected device retains its seat until setup is cancelled.
