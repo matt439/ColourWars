@@ -1424,8 +1424,22 @@ void Presentation::validate_resources(const RenderResources& render,
 	}
 	// Check these additional roles after the established pages so a shared font
 	// or geometry error retains its earlier diagnostic wherever possible.
+	constexpr std::array<BotDifficulty, 3> label_difficulties{
+		BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard };
+	constexpr int label_choices = input_slots::count + static_cast<int>(label_difficulties.size());
+	const auto label_words = [&](int player, int choice)
+	{
+		return choice < input_slots::count ? this->menu_text_.roster_label(player, choice) :
+			this->menu_text_.bot_roster_label(player, label_difficulties[static_cast<size_t>(choice - input_slots::count)]);
+	};
 	const auto label_key = [](int slot)
 	{
+		if (slot >= input_slots::count)
+		{
+			constexpr std::array<const char*, 3> roles{ "bot_easy", "bot_normal", "bot_hard" };
+			return std::string("menu_text.labels.roster_row with menu_text.labels.bot and menu_text.labels.") +
+				roles[static_cast<size_t>(slot - input_slots::count)];
+		}
 		return std::string("menu_text.labels.roster_row with menu_text.labels.") +
 			(input_slots::is_pad(slot) ? "pad" : input_slots::is_keyboard_and_mouse(slot) ? "keyboard_mouse" : "waiting");
 	};
@@ -1465,9 +1479,9 @@ void Presentation::validate_resources(const RenderResources& render,
 			Vector2F(0.0f, main.player_count_spacing.y * static_cast<float>(player + 2));
 		float row_bottom = join_previous_bottom;
 		std::vector<std::string> row_bottom_keys = join_previous_keys;
-		for (int slot = -1; slot < input_slots::count; ++slot)
+		for (int slot = -1; slot < (player == 0 ? input_slots::count : label_choices); ++slot)
 		{
-			const std::wstring label = this->menu_text_.roster_label(player, slot);
+			const std::wstring label = label_words(player, slot);
 			const auto check_join_row = [&](const std::wstring& words, bool reconnect)
 			{
 				const std::string key = label_key(slot) + " at Join" + (reconnect ? " with " + reconnect_key : "");
@@ -1696,7 +1710,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		return RectangleF::union_of(RectangleF(position, size), RectangleF(position + offset, size));
 	};
-	using LabelRows = std::array<std::array<RectangleF, input_slots::count>, 4>;
+	using LabelRows = std::array<std::array<RectangleF, label_choices>, 4>;
 	LabelRows team_rows;
 	LabelRows weapon_rows;
 	LabelRows results_rows;
@@ -1743,9 +1757,9 @@ void Presentation::validate_resources(const RenderResources& render,
 			weapon_contents = RectangleF::union_of(weapon_contents,
 				shadow_bounds(description_position, description_size, main.weapon_description_shadow_offset));
 		}
-		for (int slot = 0; slot < input_slots::count; ++slot)
+		for (int slot = 0; slot < (player == 0 ? input_slots::count : label_choices); ++slot)
 		{
-			const std::wstring words = this->menu_text_.roster_label(player, slot);
+			const std::wstring words = label_words(player, slot);
 			const std::string key = label_key(slot);
 			const RectangleF team_label = shadow_bounds(team_position,
 				label_size(key + " at Team Select", words, this->menu_.detail_font), this->menu_.item_shadow_offset);
@@ -1777,13 +1791,13 @@ void Presentation::validate_resources(const RenderResources& render,
 	const auto check_roster_rows = [&](const LabelRows& rows, float heading_bottom, float bottom,
 		const char* site)
 	{
-		// Every depth is a legal 1-4 seat roster; slots are unique. Checking
-		// only real assignments avoids inventing two keyboard/mouse seats.
+		// Human devices are unique; bot difficulty choices may repeat. P1
+		// remains human. Visit every legal combination of participant labels.
 		const auto visit = [&](const auto& self, int player, unsigned int used, float previous_bottom) -> void
 		{
-			for (int slot = 0; slot < input_slots::count; ++slot)
+			for (int slot = 0; slot < (player == 0 ? input_slots::count : label_choices); ++slot)
 			{
-				const unsigned int bit = 1u << slot;
+				const unsigned int bit = slot < input_slots::count ? 1u << slot : 0u;
 				if ((used & bit) != 0u) { continue; }
 				const RectangleF& bounds = rows[static_cast<size_t>(player)][static_cast<size_t>(slot)];
 				if (!std::isfinite(heading_bottom) || !std::isfinite(bottom) ||
@@ -1858,7 +1872,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		const Vector2F position = results.contribution_position + Vector2F(0.0f,
 			results.contribution_spacing * static_cast<float>(player + 1));
-		for (int slot = 0; slot < input_slots::count; ++slot)
+		for (int slot = 0; slot < (player == 0 ? input_slots::count : label_choices); ++slot)
 		{
 			const std::string key = label_key(slot) + " at Results";
 			RectangleF envelope;
@@ -1869,7 +1883,7 @@ void Presentation::validate_resources(const RenderResources& render,
 				const std::string team_key = key + " with menu_text.results." +
 					(team == &this->menu_text_.results.contribution_team_a ? "contribution_team_a" : "contribution_team_b");
 				const std::string where = this->source_path_ + ": " + team_key;
-				const std::wstring prefix = this->menu_text_.roster_label(player, slot) + *team;
+				const std::wstring prefix = label_words(player, slot) + *team;
 				std::ignore = label_size(team_key, prefix, results.contribution_font);
 				LabelPen prefix_pen;
 				append_label_text(prefix_pen, contribution_font, prefix, where);

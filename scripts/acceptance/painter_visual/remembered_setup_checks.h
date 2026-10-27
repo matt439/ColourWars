@@ -26,7 +26,9 @@ bool remembered_setup_matches(const LastMatchSetup& actual, const MenuLevelSetti
     for (int seat = 0; seat < expected.player_count(); ++seat)
     {
         const auto& player = actual.players[static_cast<size_t>(seat)];
-        if (player.team != expected.player_team(seat) || player.weapon != expected.player_weapon(seat)) { return false; }
+        const auto& wanted = expected.player_settings()[static_cast<size_t>(seat)];
+        if (player.team != wanted.team || player.weapon != wanted.weapon ||
+            player.controller != wanted.controller || player.difficulty != wanted.difficulty) { return false; }
     }
     return true;
 }
@@ -193,6 +195,37 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         require(evidence.good(), "Remembered reader evidence write failed");
         std::cout << "PASS remembered setup separate-process disk reload, seeded Mode/Count/Team/Weapon/Stage, fresh sparse claims and confirmations, reconnect without autojoin and cancelled arena edit\n";
         return;
+    }
+
+    // The persistence API can retain future bot choices before normal setup
+    // and runtime are enabled. The actual GameMenu must still start fresh,
+    // without erasing those choices or turning a bot into an idle participant.
+    {
+        MenuLevelSettings mixed = seed; mixed.set_player_bot(1, BotDifficulty::hard);
+        mixed.set_screen_layout(ScreenLayout::one_player);
+        require(preferences->remember_match_setup_and_save(LastMatchSetup::capture(mixed)),
+            "Cannot seed the private future bot setup");
+        const std::string bot_save = remembered_setup_bytes(save_path);
+        MenuLevelSettings fresh;
+        open(false); tap(4, GamepadButton::a); tap(4, GamepadButton::a);
+        compare(0, fresh, "bot-gate-default-mode"); tap(4, GamepadButton::a);
+        compare(1, fresh, "bot-gate-default-count", true);
+        tap(4, GamepadButton::dpad_down); tap(4, GamepadButton::a);
+        fresh.set_player_count(2); fresh.set_screen_layout(ScreenLayout::two_player);
+        fresh.begin_input_claims(4); compare(2, fresh, "bot-gate-fresh-human-join", true);
+        tap(4, GamepadButton::a); compare(2, fresh, "bot-gate-human-still-unclaimed");
+        painter_scripted_pads::states[3].connected = true; tick(); tick();
+        tap(3, GamepadButton::a);
+        require(fresh.claim_input_slot(3), "Cannot specify the future bot gate's fresh human claim");
+        compare(2, fresh, "bot-gate-explicit-human-claim");
+        Save retained; retained.load_save_file();
+        require(remembered_setup_bytes(save_path) == bot_save && preferences->last_match_setup() &&
+            remembered_setup_matches(*preferences->last_match_setup(), mixed) && retained.last_match_setup() &&
+            remembered_setup_matches(*retained.last_match_setup(), mixed),
+            "The normal GameMenu bot gate changed remembered controller/difficulty metadata in memory or on disk");
+        note("future-bot-metadata-preserved-normal-setup-gated", fresh, true);
+        std::cout << "PASS remembered bot metadata retained in memory and disk while actual GameMenu uses default Mode/Count and fresh human-only Join claims\n";
+        stack.clear();
     }
 
     require(preferences->remember_match_setup_and_save(LastMatchSetup::capture(seed)), "Cannot seed the private prior match choices");

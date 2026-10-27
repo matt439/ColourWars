@@ -461,6 +461,10 @@ namespace presentation_read
 		text.labels.waiting = read_label("waiting", {});
 		text.labels.roster_row = read_label("roster_row",
 			{ { L"{player}", L"P1" }, { L"{device}", L"Pad 1" } });
+		text.labels.bot = read_label("bot", { { L"{difficulty}", L"Normal" } });
+		text.labels.bot_easy = read_label("bot_easy", {});
+		text.labels.bot_normal = read_label("bot_normal", {});
+		text.labels.bot_hard = read_label("bot_hard", {});
 		const JsonValue connection = json.object("connection");
 		text.connection.join_reconnect_suffix = read_menu_line(connection, "join_reconnect_suffix");
 		text.connection.join_ready = read_menu_line(connection, "join_ready");
@@ -715,6 +719,26 @@ std::wstring MenuText::roster_label(int roster_index, int slot) const
 {
 	return format_label_template(this->labels.roster_row,
 		{ { L"{player}", PlayerBadge::label(roster_index) }, { L"{device}", this->device_label(slot) } });
+}
+
+std::wstring MenuText::bot_label(BotDifficulty difficulty) const
+{
+	const std::wstring* words = nullptr;
+	switch (difficulty)
+	{
+	case BotDifficulty::easy: words = &this->labels.bot_easy; break;
+	case BotDifficulty::normal: words = &this->labels.bot_normal; break;
+	case BotDifficulty::hard: words = &this->labels.bot_hard; break;
+	default: throw std::invalid_argument("Bot label requires Easy, Normal or Hard difficulty.");
+	}
+	return format_label_template(this->labels.bot,
+		{ { L"{difficulty}", format_label_template(*words, {}) } });
+}
+
+std::wstring MenuText::bot_roster_label(int roster_index, BotDifficulty difficulty) const
+{
+	return format_label_template(this->labels.roster_row,
+		{ { L"{player}", PlayerBadge::label(roster_index) }, { L"{device}", this->bot_label(difficulty) } });
 }
 
 std::wstring MenuText::stick_connection(int pad_slot, bool connected) const

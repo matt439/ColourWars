@@ -18,6 +18,8 @@
 #include <stdexcept>
 #include <string>
 
+void check_bot_remembered_setup(const std::filesystem::path& save_path);
+
 namespace
 {
     void require(bool condition, const char* message)
@@ -168,7 +170,9 @@ namespace
         for (size_t seat = 0; seat < actual.players.size(); ++seat)
         {
             if (actual.players[seat].team != expected.players[seat].team ||
-                actual.players[seat].weapon != expected.players[seat].weapon) { return false; }
+                actual.players[seat].weapon != expected.players[seat].weapon ||
+                actual.players[seat].controller != expected.players[seat].controller ||
+                actual.players[seat].difficulty != expected.players[seat].difficulty) { return false; }
         }
         return true;
     }
@@ -525,9 +529,11 @@ int main(int argc, char** /*argv*/)
         check_defensive_restore(directory);
         check_validation(directory);
         check_failures_and_independence(directory);
+        check_bot_remembered_setup(directory.save_path());
         std::cout << "PASS remembered setup: all 1-4 seat layouts/five tools, concrete schema, solo B, fresh claims, "
             "deterministic stage fallback/no RNG, legacy/newer/independent sections, malformed recovery, "
             "strict capture/save validation, actual staged-write/replacement failures, unchanged bytes/memory and retry; "
+            "mixed bot rosters/all difficulties, human-only views, metadata recovery and legacy human defaults; "
             "GUID-isolated profile, no window/device\n";
         return 0;
     }

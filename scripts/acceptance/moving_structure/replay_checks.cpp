@@ -52,8 +52,8 @@ namespace
         return fixture;
     }
 
-    // Independent literal legacy wire control, including the old zero shorthand.
-    // This has no dynamic domain; POL36 adds only its pre-existing seat appendix.
+    // Independent literal version-3 wire control, including the old zero shorthand.
+    // Version 4 adds roster metadata; the dynamic domain stays absent.
     void legacy_bytes(const std::filesystem::path& path)
     {
         ReplayFile file = header(); file.build = "legacy"; file.dt_bits = 0; file.seed.reset();
@@ -71,21 +71,28 @@ namespace
             "    \"total\": \"0\",\n    \"level_state\": 0,\n    \"seats\": [\n"
             "      { \"x\": \"0\", \"y\": \"0\", \"vx\": \"0\", \"vy\": \"0\", \"health\": \"0\", "
             "\"ammo\": \"0\", \"respawn\": \"0\", \"move_state\": 0, \"alive\": 0 }\n    ]\n  }\n}\n";
-        file.write(path); require(read_text(path) == expected, "Static legacy replay bytes changed");
+        std::string current = expected;
+        current.replace(current.find("\"version\": 3"), 12, "\"version\": 4");
+        const std::string old_seat = "\"weapon\": \"sprayer\" }";
+        current.replace(current.find(old_seat), old_seat.size(),
+            "\"weapon\": \"sprayer\", \"controller\": \"human\", \"difficulty\": \"normal\" }");
+        file.write(path); require(read_text(path) == current, "Static version-4 replay bytes changed");
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = 1; file.final_print.seats[0].step_paint_team = 2;
-        std::string active = expected;
+        std::string active = current;
         const std::string needle = "\"alive\": 0 }";
         active.replace(active.find(needle), needle.size(),
             "\"alive\": 0, \"paint_underfoot\": { \"support_team\": 1, \"step_team\": 2 } }");
-        file.write(path); require(read_text(path) == active, "POL36-only legacy replay bytes changed");
+        file.write(path); require(read_text(path) == active, "POL36-only version-4 replay bytes changed");
         const auto decoded = ReplayFile::read(path);
         require(!decoded.final_print.horizontal_motion &&
             MatchFingerprint::difference(file.final_print, decoded.final_print).empty(),
             "POL36-only legacy replay changed meaning");
         // Legacy readers still accept their historical variable-width float hex.
         write_text(path, expected);
-        require(!ReplayFile::read(path).final_print.horizontal_motion, "Static domain appeared on legacy read");
+        const ReplayFile legacy = ReplayFile::read(path);
+        require(!legacy.final_print.horizontal_motion && legacy.settings.human_count() == 1 &&
+            legacy.settings.bot_count() == 0, "Static domain or bot appeared on version-3 legacy read");
     }
 
     std::uint64_t legacy_hash(const Level& level, int updates)

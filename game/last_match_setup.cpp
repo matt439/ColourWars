@@ -22,6 +22,9 @@ namespace
 		WeaponType::mister, WeaponType::bucket };
 	constexpr std::array<const char*, 5> weapon_keys{
 		"sprayer", "sniper", "roller", "mister", "bucket" };
+	constexpr std::array<BotDifficulty, 3> difficulties{
+		BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard };
+	constexpr std::array<const char*, 3> difficulty_keys{ "easy", "normal", "hard" };
 
 	ScreenLayout layout_for_count(size_t count)
 	{
@@ -45,6 +48,55 @@ namespace
 	bool valid_best_of(int best_of)
 	{
 		return best_of == 1 || best_of == 3 || best_of == 5;
+	}
+
+	bool valid_controller(PlayerController controller)
+	{
+		return controller == PlayerController::human || controller == PlayerController::bot;
+	}
+
+	bool valid_difficulty(BotDifficulty difficulty)
+	{
+		return std::find(difficulties.begin(), difficulties.end(), difficulty) != difficulties.end();
+	}
+
+	size_t human_count(const std::vector<LastMatchPlayer>& players)
+	{
+		return static_cast<size_t>(std::count_if(players.begin(), players.end(),
+			[](const LastMatchPlayer& player) { return player.controller == PlayerController::human; }));
+	}
+
+	PlayerController read_controller(const JsonValue& player)
+	{
+		try
+		{
+			if (player.identifier("controller") == "bot") { return PlayerController::bot; }
+		}
+		catch (const std::runtime_error&) {}
+		return PlayerController::human;
+	}
+
+	BotDifficulty read_difficulty(const JsonValue& player)
+	{
+		try
+		{
+			const std::string key = player.identifier("difficulty");
+			for (size_t index = 0; index < difficulties.size(); ++index)
+			{
+				if (key == difficulty_keys[index]) { return difficulties[index]; }
+			}
+		}
+		catch (const std::runtime_error&) {}
+		return BotDifficulty::normal;
+	}
+
+	const char* difficulty_key(BotDifficulty difficulty)
+	{
+		for (size_t index = 0; index < difficulties.size(); ++index)
+		{
+			if (difficulty == difficulties[index]) { return difficulty_keys[index]; }
+		}
+		throw std::invalid_argument("Remembered bot difficulty must be Easy, Normal or Hard");
 	}
 
 	bool valid_teams(const std::vector<LastMatchPlayer>& players)
@@ -102,14 +154,11 @@ namespace
 
 LastMatchSetup LastMatchSetup::capture(const MenuLevelSettings& settings)
 {
-	if (settings.bot_count() != 0)
-	{
-		throw std::invalid_argument("Remembering playable bot rosters is pending; cannot capture a bot setup");
-	}
 	LastMatchSetup setup;
 	for (const MenuPlayerSettings& player : settings.player_settings())
 	{
-		setup.players.push_back({ player.team, player.weapon });
+		setup.players.push_back({ player.team, player.weapon, player.controller,
+			player.controller == PlayerController::bot ? player.difficulty : BotDifficulty::normal });
 	}
 	setup.stage = settings.stage();
 	setup.layout = settings.screen_layout();
@@ -121,9 +170,14 @@ LastMatchSetup LastMatchSetup::capture(const MenuLevelSettings& settings)
 
 void LastMatchSetup::validate() const
 {
-	if (this->layout != layout_for_count(this->players.size()))
+	layout_for_count(this->players.size());
+	if (this->players.front().controller != PlayerController::human)
 	{
-		throw std::invalid_argument("Remembered screen layout must match the player count");
+		throw std::invalid_argument("Remembered Player 1 must be the human setup host");
+	}
+	if (this->layout != layout_for_count(human_count(this->players)))
+	{
+		throw std::invalid_argument("Remembered screen layout must match the human count");
 	}
 	if (!valid_teams(this->players))
 	{
@@ -131,6 +185,11 @@ void LastMatchSetup::validate() const
 	}
 	for (const LastMatchPlayer& player : this->players)
 	{
+		if (!valid_controller(player.controller) || !valid_difficulty(player.difficulty) ||
+			(player.controller == PlayerController::human && player.difficulty != BotDifficulty::normal))
+		{
+			throw std::invalid_argument("Remembered controllers and bot difficulties must be valid");
+		}
 		if (!valid_weapon(player.weapon))
 		{
 			throw std::invalid_argument("Remembered weapons must be resolved primary weapons");
@@ -153,7 +212,18 @@ void LastMatchSetup::validate() const
 LastMatchSetup LastMatchSetup::normalised() const
 {
 	LastMatchSetup setup = *this;
-	setup.layout = layout_for_count(setup.players.size());
+	layout_for_count(setup.players.size());
+	for (LastMatchPlayer& player : setup.players)
+	{
+		if (!valid_controller(player.controller)) { player.controller = PlayerController::human; }
+		if (!valid_difficulty(player.difficulty)) { player.difficulty = BotDifficulty::normal; }
+	}
+	setup.players.front().controller = PlayerController::human;
+	for (LastMatchPlayer& player : setup.players)
+	{
+		if (player.controller == PlayerController::human) { player.difficulty = BotDifficulty::normal; }
+	}
+	setup.layout = layout_for_count(human_count(setup.players));
 	if (!valid_teams(setup.players))
 	{
 		for (size_t index = 0; index < setup.players.size(); ++index)
@@ -190,6 +260,7 @@ MenuLevelSettings LastMatchSetup::restore(const StageList& stages) const
 		const LastMatchPlayer& player = setup.players[static_cast<size_t>(index)];
 		settings.set_player_team(index, player.team);
 		settings.set_player_weapon(index, player.weapon);
+		if (player.controller == PlayerController::bot) { settings.set_player_bot(index, player.difficulty); }
 	}
 	settings.set_stage(chosen_stage == stages.end() ? stages.front().name : chosen_stage->name);
 	settings.set_screen_layout(setup.layout);
@@ -216,7 +287,8 @@ void LastMatchSetupSection::read(const JsonValue& root, SaveData& data) const
 	for (size_t index = 0; index < players.size(); ++index)
 	{
 		const JsonValue player = players.at(index);
-		setup.players.push_back({ read_team(player), read_weapon(player) });
+		setup.players.push_back({ read_team(player), read_weapon(player),
+			read_controller(player), read_difficulty(player) });
 	}
 	try
 	{
@@ -268,13 +340,17 @@ void LastMatchSetupSection::write(SaveWriter& writer, const SaveData& data) cons
 		writer.string(player.team == PlayerTeam::b ? "b" : "a");
 		writer.key("weapon");
 		writer.string(weapon_key(player.weapon));
+		writer.key("controller");
+		writer.string(player.controller == PlayerController::bot ? "bot" : "human");
+		writer.key("difficulty");
+		writer.string(difficulty_key(player.difficulty));
 		writer.end_object();
 	}
 	writer.end_array();
 	writer.key("stage");
 	writer.string(setup.stage);
 	writer.key("layout");
-	writer.string(layout_keys[setup.players.size() - 1]);
+	writer.string(layout_keys[human_count(setup.players) - 1]);
 	writer.key("best_of");
 	writer.integer(setup.best_of);
 	if (setup.duration)

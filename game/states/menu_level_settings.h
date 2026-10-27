@@ -58,7 +58,7 @@ public:
 	// Bots occupy their seats without claiming a device; all humans must claim.
 	bool input_roster_complete() const;
 	int player_index_for_slot(int slot) const;
-	// Human labels only until the bot setup/identity presentation is integrated.
+	// Stable participant number, with a human device or explicit bot difficulty.
 	std::wstring player_label(int player_index, const MenuText& text) const;
 
 private:

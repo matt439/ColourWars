@@ -439,6 +439,7 @@ namespace menu_text_acceptance
     void check_connection_text(Variants& variants, World& world);
     void check_connection_bounds(Variants& variants, World& world);
     void check_label_text(Variants& variants, World& world, const MenuText& defaults);
+    void check_bot_label_text(Variants& variants, World& world, const MenuText& defaults);
     void check_label_resources(Variants& variants, World& world);
     void check_label_results_extrema(Variants& variants, World& world);
     void check_confirmation_text(Variants& variants, World& world);

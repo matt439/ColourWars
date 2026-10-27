@@ -1020,6 +1020,14 @@ and the live tune edits, the step size, one run-length list of inputs per seat
 (floats as bit patterns), where the match was suspended, a state hash every 60
 updates and the final state.
 
+New files use **format 4**, with explicit human/bot controller kind and
+Easy/Normal/Hard difficulty for each participant. Layout counts humans, while
+input arrays count all participants. The reader also accepts human-only
+format 3, treating unclaimed seats as human dummies. Present format-4 metadata
+is strict; bot seats cannot own devices and P1 must be human. Human difficulty
+is unused and written as Normal. Playable bot setup/runtime remains gated by
+`ROAD#10`; accepting its metadata does not enable bot matches yet.
+
 **`play <name> [force]`** rebuilds the match with the recorded settings
 verbatim - from a match or from the menus - and feeds every seat its recorded
 input, ignoring every device. At each checkpoint and at the last recorded

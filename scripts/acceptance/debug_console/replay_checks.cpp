@@ -20,6 +20,8 @@
 // on the CPU without a device.
 namespace debug_console_acceptance
 {
+	void check_bot_replay_metadata();
+	void check_bot_replay_inputs(const Level& level);
 	namespace
 	{
 	int count_of_lines(const DebugLog& log, const std::string& text)
@@ -50,6 +52,7 @@ namespace debug_console_acceptance
 
 	void check_replay_codec()
 	{
+		check_bot_replay_metadata();
 		PlayerInputData input;
 		input.x_movement = -0.0f;
 		input.shoot_direction = { 1e-40f, -1.0f };
@@ -145,17 +148,17 @@ namespace debug_console_acceptance
 
 		std::string text;
 		std::string message;
-		for (const int rejected_version : { 2, 4 })
+		for (const int rejected_version : { 2, 5 })
 		{
 			file.write(path);
 			text = read_text(path);
-			text.replace(text.find("\"version\": 3"), 12,
+			text.replace(text.find("\"version\": 4"), 12,
 				"\"version\": " + std::to_string(rejected_version));
 			write_text(path, text);
 			message.clear();
 			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 			require(message.find("format version " + std::to_string(rejected_version) +
-				"; this build reads 3") != std::string::npos,
+				"; this build reads 3 and 4") != std::string::npos,
 				"A previous workshop recording or another format is refused: " + message);
 		}
 		write_text(path, "{ \"version\": 3, ");
@@ -235,6 +238,7 @@ namespace debug_console_acceptance
 		match.settings = plan.settings;
 		director.attach_match(match);
 		match.build();
+		check_bot_replay_inputs(*match.level);
 		require(impl.status_strip().find("BOTS 3x paint") != std::string::npos, "Three paint bots");
 
 		// Record 600 updates, with a suspend (a console, say) at update 300.

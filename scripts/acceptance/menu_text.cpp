@@ -31,6 +31,7 @@ int main(int argc, char** argv)
         check_connection_text(variants, world);
         check_connection_bounds(variants, world);
         check_label_text(variants, world, defaults.menu_text());
+        check_bot_label_text(variants, world, defaults.menu_text());
         check_label_resources(variants, world);
         check_label_results_extrema(variants, world);
         check_confirmation_text(variants, world);

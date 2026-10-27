@@ -287,6 +287,9 @@ namespace menu_text_acceptance
             d["menu_text"]["labels"]["pad"].SetString("{pad}");
             d["menu_text"]["labels"]["keyboard_mouse"].SetString("K");
             d["menu_text"]["labels"]["waiting"].SetString("W");
+            d["menu_text"]["labels"]["bot"].SetString("{difficulty}");
+            for (const char* role : { "bot_easy", "bot_normal", "bot_hard" })
+                { d["menu_text"]["labels"][role].SetString("B"); }
             d["menu_text"]["labels"]["roster_row"].SetString("{player}{device}~");
             d["main_menu"]["team_select"]["spacing"]["x"].SetFloat(273.0f);
             d["main_menu"]["weapon_select"]["spacing"]["x"].SetFloat(273.0f);
@@ -309,6 +312,9 @@ namespace menu_text_acceptance
             d["menu_text"]["labels"]["pad"].SetString("{pad}");
             d["menu_text"]["labels"]["keyboard_mouse"].SetString("K");
             d["menu_text"]["labels"]["waiting"].SetString("W");
+            d["menu_text"]["labels"]["bot"].SetString("{difficulty}");
+            for (const char* role : { "bot_easy", "bot_normal", "bot_hard" })
+                { d["menu_text"]["labels"][role].SetString("B"); }
             d["menu_text"]["labels"]["roster_row"].SetString("{player}{device}~");
             d["main_menu"]["team_select"]["spacing"]["x"].SetFloat(273.0f);
             d["main_menu"]["weapon_select"]["spacing"]["x"].SetFloat(outside ? 249.875f : 250.0f);

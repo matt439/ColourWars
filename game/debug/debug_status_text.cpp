@@ -31,6 +31,21 @@ namespace
 		}
 		return "idle";
 	}
+
+	std::string controller_label(const MenuPlayerSettings& player)
+	{
+		if (player.controller == PlayerController::human)
+		{
+			return device_label(player.num);
+		}
+		switch (player.difficulty)
+		{
+		case BotDifficulty::easy: return "bot easy";
+		case BotDifficulty::normal: return "bot normal";
+		case BotDifficulty::hard: return "bot hard";
+		default: return "bot unknown";
+		}
+	}
 }
 
 std::vector<std::string> DebugDirectorImpl::status_lines() const
@@ -53,7 +68,7 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 			const std::string bot = this->player_ != nullptr ? std::string("replay") :
 				this->bot_driver_ != nullptr ? this->bot_for_seat(static_cast<int>(i), players[i].num) :
 				std::string();
-			lines.push_back("  P" + std::to_string(i + 1) + " " + device_label(players[i].num) +
+			lines.push_back("  P" + std::to_string(i + 1) + " " + controller_label(players[i]) +
 				" team " + (players[i].team == PlayerTeam::a ? "a" : "b") + " " +
 				MatchPlanner::weapon_name(players[i].weapon) +
 				(bot.empty() ? std::string() : " bot " + bot) +
@@ -227,7 +242,7 @@ std::vector<std::string> DebugDirectorImpl::paint_lines() const
 	for (std::size_t i = 0; i < players.size() && i < paint.seats.size(); ++i)
 	{
 		seats += (seats.empty() ? "" : "   ") + std::string("P") + std::to_string(i + 1) + " " +
-			device_label(players[i].num) + " " + percent(paint.seats[i]);
+			controller_label(players[i]) + " " + percent(paint.seats[i]);
 	}
 	if (!seats.empty())
 	{

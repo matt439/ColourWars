@@ -55,8 +55,8 @@ At that point, no further concrete independent implementation was selected by an
 
 **Author-requested next implementation (2026-10-27):** playable AI bot players
 with Easy, Normal and Hard difficulty settings (`ROAD#10`). The roster model
-is implemented and the setup contract is recorded; next integrate setup and runtime,
-then navigation, painting and combat behavior. This
+and saved/replay identity metadata are implemented and the setup contract is recorded;
+next integrate setup, human views and runtime, then navigation, painting and combat. This
 request reopens shipped AI; [scope and acceptance](docs/feature-roadmap.md#ai-bot-players-road10).
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -163,7 +163,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#8` | DEFERRED | LOW | S | More team palette pairs, each checked under colour-vision simulation; later UI art pass. [Scope](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
-| `ROAD#10` | OPEN | HIGH | XL | Integrate bot setup, human views, identity, save/replay and runtime input from the roster foundation; then navigation, painting, combat and reserves. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
+| `ROAD#10` | OPEN | HIGH | XL | Integrate bot setup, human views, world identity and runtime input from the roster/metadata foundation; then navigation, painting, combat and reserves. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
 | `GAP#4.2` | UNSCOPED | MED | L | Other keyboard/pad actions and trigger choices need separate contracts; keyboard Jump and per-slot pad face-button Jump are complete. [Boundary](docs/feature-roadmap.md#pad-jump-face-button-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |

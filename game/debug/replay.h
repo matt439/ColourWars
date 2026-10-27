@@ -16,8 +16,9 @@
 // hashes every 60 updates and the final fingerprint. Written as JSON to
 // %LOCALAPPDATA%\ColourWars\replays\<name>.json. Debug-only.
 //
-// Format version 3 (docs/debug-console.md, "Seed, record and play"):
-//   settings contains the match setup without the retired workshop art mode.
+// Format version 4 (also reads legacy human-only version 3):
+//   settings preserves each seat's controller kind and bot difficulty;
+//   layout counts human views, while inputs remain indexed by participant.
 //   inputs:  one array per seat, each a run-length list of
 //            "[count*]flags|x|aim_x|aim_y|angle|lx|ly|rx|ry" with the floats as
 //            8-hex-digit bit patterns ("0" for +0.0).
@@ -25,7 +26,7 @@
 class ReplayFile
 {
 public:
-	static constexpr int format_version = 3;
+	static constexpr int format_version = 4;
 	static constexpr int checkpoint_interval = 60;
 
 	struct Checkpoint

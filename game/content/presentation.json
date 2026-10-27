@@ -221,7 +221,11 @@
       "pad": "Pad {pad}",
       "keyboard_mouse": "Keyboard/mouse",
       "waiting": "Waiting to join",
-      "roster_row": "{player} - {device}"
+      "roster_row": "{player} - {device}",
+      "bot": "Bot ({difficulty})",
+      "bot_easy": "Easy",
+      "bot_normal": "Normal",
+      "bot_hard": "Hard"
     },
     "connection": {
       "join_reconnect_suffix": " - Reconnect",

@@ -71,11 +71,10 @@ and growth adds unclaimed humans. Copies retain all seat metadata, and the
 existing balanced team shuffle includes bots.
 
 This is the roster model, not playable AI. Normal setup has no bot controls
-yet. Level construction, remembered-setup capture, roster labels and Debug
-replay writing explicitly reject bot rosters until those consumers preserve
-and drive them; they must not silently turn bots into idle dummies or lose
-difficulty. The existing human roster, saves and scripted Debug bots retain
-their behavior.
+yet. The initial slice rejected bot rosters in construction, remembered-setup
+capture, labels and replay writing. The metadata and label consumers are now
+integrated below; level construction still rejects bot rosters before resource
+access until human views and the playable driver are ready.
 
 Validation: Debug and Release builds pass, together with the six selected
 consumer cases `bot_roster`, `settings`, `team_selection`, `remembered_setup`,
@@ -125,11 +124,55 @@ The integration contract for the next slices is:
   enemies, extra paint or speed. Initial values remain provisional until the
   attended comparison establishes distinct, useful difficulties.
 
-**Next implementation:** integrate the Join/Team/Weapon host controls, human
-view mapping, labels and save/replay metadata with a Release-capable bot input
-driver. Then qualify platform navigation/recovery, territory choice, opponent
-engagement and reserve management across the five tools and shipped arenas.
-Keep bot setup unavailable until that path builds and drives the chosen seats.
+#### Saved identity and replay metadata (2026-10-27)
+
+Remembered setups now preserve each participant's explicit controller kind and
+bot difficulty, alongside the existing team and tool. Human seats restore
+unclaimed; bots retain no device. Layout follows the human count while series,
+teams and participant count still describe the whole match. Legacy entries
+default to human/Normal, malformed fields recover independently, and P1 remains
+the human host. Human difficulty is unused and saved canonically as Normal.
+New captures and writes reject invalid metadata before changing the save.
+
+Debug replay format **4** records the same controller/difficulty metadata and
+human layout; its reader also accepts legacy human-only format 3. The version
+change prevents an older reader from silently treating a bot as a human dummy.
+Sparse human seats retain their roster indices. Recording still captures final
+per-participant inputs after its inner filter, and playback replaces those
+inputs; this is a codec/input-order check, not playable bot replay acceptance.
+Invalid roster writes leave existing files and missing directories untouched.
+
+The shared Join/Team/Weapon/Results label formatter now spells out
+`P2 - Bot (Normal)` and its Easy/Hard variants using validated
+`menu_text.labels` copy. Resource validation includes bot fonts, complete row
+bounds and Results percentages. Debug status and paint overlays also distinguish
+bot difficulty from an idle human with `num == -1`. Runtime world identity and
+the human/view mapping remain part of the next slice.
+
+Normal setup remains human-only: `GameMenu` retains a remembered bot setup in
+the save but opens fresh setup choices until runtime integration is ready.
+The level builder's early rejection guard also remains. These guards must be
+removed together with the playable setup/view/driver path, not independently.
+
+Validation: Debug and Release builds pass, with the eight selected consumer
+cases `bot_roster`, `remembered_setup`, `debug_console`, `menu_text`, `settings`,
+`team_selection`, `player_identity` and `moving_structure` in each build.
+The new checks cover all 15 legal human/bot patterns across three difficulty
+variants, legacy/malformed metadata, sparse human gaps, final recorded input
+ordering, bot labels and the retained runtime rejection. Native
+`-RememberedSetupOnly` probes pass on hardware D3D11 in both builds, including
+separate-process reload, restart/series regressions and an actual menu opening
+a fresh human roster without changing the remembered bot save. Both real-bank
+isolated startup checks pass. Evidence: `out/validation/road10-metadata/`.
+These are selected metadata/regression checks, not the full acceptance suite,
+bot gameplay qualification or attended difficulty acceptance.
+
+**Next implementation:** integrate Join/Team/Weapon host controls and explicit
+human view mapping with a Release-capable bot input driver, then carry bot world
+identity through that runtime. Qualify platform navigation/recovery, territory
+choice, opponent engagement and reserve management across the five tools and
+shipped arenas. Keep bot setup unavailable until that path builds and drives
+the chosen seats.
 
 ### Balanced random teams
 

@@ -38,6 +38,9 @@ static_assert(sizeof(DebugDirector) == sizeof(void*));
 // driver and the Release-only checks.
 namespace debug_console_acceptance
 {
+#if COLOURWARS_DEV_TOOLS
+	void check_bot_status_labels(GameTuning& tuning, Presentation& presentation);
+#endif
 	namespace
 	{
 	std::string executable_text(const std::filesystem::path& game_directory)
@@ -152,6 +155,7 @@ int main(int argc, char** argv)
 		if (!background_only) { check_text_field(); }
 		check_director(tuning, presentation);
 		check_match_hooks(tuning, presentation);
+		check_bot_status_labels(tuning, presentation);
 		check_background_policy(game_directory, tuning, presentation);
 		check_chord();
 		check_input_filter(tuning, presentation);

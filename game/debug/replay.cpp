@@ -7,8 +7,10 @@
 #include "engine/core/file_path.h"
 #include "game/debug/match_plan.h"
 #include "game/debug/tune_document.h"
+#include "game/input_slots.h"
 #include "game/objects/horizontal_motion.h"
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <cmath>
 #include <charconv>
@@ -83,6 +85,62 @@ namespace
 			fail(path, std::string("'") + key + "' is not a hex bit pattern");
 		}
 		return bits;
+	}
+
+	const char* difficulty_name(BotDifficulty difficulty, const std::filesystem::path& path)
+	{
+		switch (difficulty)
+		{
+		case BotDifficulty::easy: return "easy";
+		case BotDifficulty::normal: return "normal";
+		case BotDifficulty::hard: return "hard";
+		default: fail(path, "bot difficulty must be easy, normal or hard");
+		}
+	}
+
+	BotDifficulty read_difficulty(const labrador::JsonValue& seat,
+		const std::filesystem::path& path)
+	{
+		const std::string difficulty = seat.identifier("difficulty");
+		if (difficulty == "easy") { return BotDifficulty::easy; }
+		if (difficulty == "normal") { return BotDifficulty::normal; }
+		if (difficulty == "hard") { return BotDifficulty::hard; }
+		fail(path, "bot difficulty must be easy, normal or hard");
+	}
+
+	void validate_roster(const MenuLevelSettings& settings, const std::filesystem::path& path)
+	{
+		const std::vector<MenuPlayerSettings>& seats = settings.player_settings();
+		if (seats.empty() || seats.size() > 4) { fail(path, "settings must have 1-4 seats"); }
+		if (seats.front().controller != PlayerController::human || seats.front().num < 0)
+		{ fail(path, "seat 1 must be a human with a device"); }
+		std::array<bool, input_slots::count> used{};
+		for (const MenuPlayerSettings& seat : seats)
+		{
+			if (seat.controller == PlayerController::bot)
+			{
+				if (seat.num != -1) { fail(path, "a bot seat cannot have a device"); }
+				difficulty_name(seat.difficulty, path);
+			}
+			else if (seat.controller == PlayerController::human)
+			{
+				if (seat.num < -1 || seat.num >= input_slots::count)
+				{ fail(path, "a human device slot is out of range"); }
+				if (seat.num >= 0)
+				{
+					if (used[static_cast<std::size_t>(seat.num)]) { fail(path, "human device slots must be unique"); }
+					used[static_cast<std::size_t>(seat.num)] = true;
+				}
+			}
+			else { fail(path, "controller must be human or bot"); }
+		}
+		const int humans = settings.human_count();
+		const int layout = static_cast<int>(settings.screen_layout());
+		if (layout != static_cast<int>(MatchPlanner::layout_for(humans)))
+		{
+			fail(path, "layout " + std::to_string(layout) + " is not the " + std::to_string(humans) +
+				"-player layout (" + std::to_string(static_cast<int>(MatchPlanner::layout_for(humans))) + ")");
+		}
 	}
     // Strict schema1 helpers are separate from the unchanged legacy codec.
     std::string motion_hex32(std::uint32_t value)
@@ -415,10 +473,7 @@ std::string replay_name(std::string_view requested)
 
 void ReplayFile::write(const std::filesystem::path& path) const
 {
-	if (this->settings.bot_count() != 0)
-	{
-		throw std::invalid_argument("Playable bot replay integration is pending; cannot write a bot recording");
-	}
+	validate_roster(this->settings, path);
     if (this->final_print.horizontal_motion)
     { validate_motion(*this->final_print.horizontal_motion, this->settings.player_settings().size(),
         this->final_print.seats.size(), path); }
@@ -459,7 +514,10 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	{
 		out << "      { \"slot\": " << seats[i].num << ", \"team\": " <<
 			quoted(seats[i].team == PlayerTeam::a ? "a" : seats[i].team == PlayerTeam::b ? "b" : "none") <<
-			", \"weapon\": " << quoted(MatchPlanner::weapon_name(seats[i].weapon)) << " }" <<
+			", \"weapon\": " << quoted(MatchPlanner::weapon_name(seats[i].weapon)) <<
+			", \"controller\": " << quoted(seats[i].controller == PlayerController::bot ? "bot" : "human") <<
+			", \"difficulty\": " << quoted(difficulty_name(seats[i].controller == PlayerController::bot ?
+				seats[i].difficulty : BotDifficulty::normal, path)) << " }" <<
 			(i + 1 < seats.size() ? ",\n" : "\n");
 	}
 	out << "    ]\n  },\n";
@@ -549,9 +607,9 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	const labrador::JsonDocument document = labrador::read_json_file(utf8.c_str());
 	const labrador::JsonValue root = document.root();
 	const int version = root.integer("version");
-	if (version != format_version)
+	if (version != 3 && version != format_version)
 	{
-		fail(path, "format version " + std::to_string(version) + "; this build reads " +
+		fail(path, "format version " + std::to_string(version) + "; this build reads 3 and " +
 			std::to_string(format_version));
 	}
 
@@ -583,8 +641,8 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	file.god = cheats.boolean("god");
 	file.infinite_ammo = cheats.boolean("infinite_ammo");
 
-	// The roster, claimed in seat order as MatchPlanner claims it: devices
-	// first, idle dummies (-1) after.
+	// Controller kind is explicit: an unclaimed human or Debug dummy (-1)
+	// must never become a bot. Legacy version 3 has human seats only.
 	const labrador::JsonValue setup = root.object("settings");
 	const labrador::JsonValue seats = setup.array("seats");
 	const int count = static_cast<int>(seats.size());
@@ -597,21 +655,60 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	std::vector<int> slots;
 	for (int seat = 0; seat < count; ++seat)
 	{
-		slots.push_back(seats.at(static_cast<std::size_t>(seat)).integer("slot"));
+		const labrador::JsonValue entry = seats.at(static_cast<std::size_t>(seat));
+		const int slot = entry.integer("slot");
+		slots.push_back(slot);
+		if (version == 3 && (entry.has("controller") || entry.has("difficulty")))
+		{ fail(path, "version 3 cannot contain controller or difficulty metadata"); }
+		if (version == format_version)
+		{
+			const std::string controller = entry.identifier("controller");
+			const BotDifficulty difficulty = read_difficulty(entry, path);
+			if (controller == "bot")
+			{
+				if (seat == 0) { fail(path, "seat 1 must be human"); }
+				if (slot != -1) { fail(path, "a bot seat cannot have a device"); }
+				rebuilt.set_player_bot(seat, difficulty);
+			}
+			else if (controller != "human") { fail(path, "controller must be human or bot"); }
+			else if (difficulty != BotDifficulty::normal)
+			{ fail(path, "a human seat's difficulty must be normal"); }
+		}
+		if (slot < -1 || slot >= input_slots::count) { fail(path, "device slot is out of range"); }
 	}
 	if (slots.front() < 0)
 	{
 		fail(path, "seat 1 has no device");
 	}
 	rebuilt.begin_input_claims(slots.front());
+	// Claim through the public roster operations without compressing a sparse
+	// human gap. Temporary unused device claims are released after later humans
+	// have reached their original seats; bots are skipped by claim_input_slot.
+	std::array<bool, input_slots::count> occupied{};
+	for (const int slot : slots)
+	{
+		if (slot >= 0) { occupied[static_cast<std::size_t>(slot)] = true; }
+	}
+	std::vector<int> temporary_claims;
 	for (int seat = 1; seat < count; ++seat)
 	{
-		if (slots[static_cast<std::size_t>(seat)] >= 0 &&
-			!rebuilt.claim_input_slot(slots[static_cast<std::size_t>(seat)]))
+		if (rebuilt.player_settings()[static_cast<std::size_t>(seat)].controller == PlayerController::bot)
+		{ continue; }
+		int slot = slots[static_cast<std::size_t>(seat)];
+		if (slot < 0)
+		{
+			const auto unused = std::find(occupied.begin(), occupied.end(), false);
+			if (unused == occupied.end()) { fail(path, "no temporary slot available for a human gap"); }
+			slot = static_cast<int>(unused - occupied.begin());
+			occupied[static_cast<std::size_t>(slot)] = true;
+			temporary_claims.push_back(slot);
+		}
+		if (!rebuilt.claim_input_slot(slot))
 		{
 			fail(path, "seat " + std::to_string(seat + 1) + "'s slot cannot be claimed");
 		}
 	}
+	for (const int slot : temporary_claims) { rebuilt.release_input_slot(slot); }
 	const std::vector<MenuPlayerSettings> claimed = rebuilt.player_settings();
 	for (int seat = 0; seat < count; ++seat)
 	{
@@ -634,15 +731,9 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	rebuilt.set_stage(setup.string("stage"));
 	rebuilt.set_best_of(setup.integer("best_of"));
 	if (setup.has("duration")) { rebuilt.set_duration(setup.number("duration")); }
-	// The layout a plan derives from the seat count, and no other: a build
-	// throws on an unknown layout, and a wrong one overlaps the views.
-	const int layout = setup.integer("layout");
-	if (layout != static_cast<int>(MatchPlanner::layout_for(count)))
-	{
-		fail(path, "layout " + std::to_string(layout) + " is not the " + std::to_string(count) +
-			"-player layout (" + std::to_string(static_cast<int>(MatchPlanner::layout_for(count))) + ")");
-	}
-	rebuilt.set_screen_layout(MatchPlanner::layout_for(count));
+	// Bots remain participants but have no split-screen pane.
+	rebuilt.set_screen_layout(static_cast<labrador::ScreenLayout>(setup.integer("layout")));
+	validate_roster(rebuilt, path);
 
 	file.updates = root.integer("updates");
 	// Array elements read only as strings (JsonValue::as_string): the

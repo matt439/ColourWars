@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <string>
 #include <string_view>
+#include "game/player_control.h"
 
 enum class MenuHeading
 {
@@ -183,6 +184,10 @@ struct MenuLabelText
 	std::wstring keyboard_mouse;
 	std::wstring waiting;
 	std::wstring roster_row;
+	std::wstring bot;
+	std::wstring bot_easy;
+	std::wstring bot_normal;
+	std::wstring bot_hard;
 };
 
 // Authored connection copy; the missing roster is assembled by the menu.
@@ -258,6 +263,8 @@ struct MenuText
 	// are 0-3 and substitute the canonical badge label, never a device number.
 	std::wstring device_label(int slot) const;
 	std::wstring roster_label(int roster_index, int slot) const;
+	std::wstring bot_label(BotDifficulty difficulty) const;
+	std::wstring bot_roster_label(int roster_index, BotDifficulty difficulty) const;
 	// Player numbers are the visible roster numbers 1-4, never device slots.
 	std::wstring pause_title_for_player(int number) const;
 	// Pad slots are 0-3; rounded percentages are -100 through 100 inclusive.

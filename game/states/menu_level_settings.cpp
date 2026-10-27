@@ -211,7 +211,7 @@ std::wstring MenuLevelSettings::player_label(int player_index, const MenuText& t
 		this->player_settings_.at(static_cast<size_t>(player_index));
 	if (player.controller == PlayerController::bot)
 	{
-		throw std::invalid_argument("Playable bot menu integration is pending; cannot label a bot roster");
+		return text.bot_roster_label(player_index, player.difficulty);
 	}
 	return text.roster_label(player_index, player.num);
 }

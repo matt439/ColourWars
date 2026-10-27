@@ -20,7 +20,13 @@ void GameMenu::init()
 	this->menu_level_settings_ = std::make_unique<MenuLevelSettings>();
 	if (const auto& remembered = this->data()->save()->last_match_setup(); remembered)
 	{
-		*this->menu_level_settings_ = remembered->restore(*this->data()->stages());
+		MenuLevelSettings restored = remembered->restore(*this->data()->stages());
+		// Preserve future bot setup metadata on disk, but do not expose seats
+		// through the menu until the playable runtime and human views are ready.
+		if (restored.bot_count() == 0)
+		{
+			*this->menu_level_settings_ = std::move(restored);
+		}
 	}
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), this->menu_level_settings_.get());
