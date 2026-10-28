@@ -60,6 +60,9 @@ namespace colourwars_editor
         LevelDocument& operator=(const LevelDocument&) = delete;
 
         void load(const std::filesystem::path& path);
+        // Saving the loaded/saved file refuses external byte changes, deletion
+        // or unreadability, checked again before replacement. Save As to another
+        // file preserves the open edits and establishes that file's baseline.
         void save(const std::filesystem::path& path);
         void create();
 

@@ -179,6 +179,42 @@ namespace colourwars_editor
             }
             return string(object, "type") + " " + std::to_string(index + 1);
         }
+
+        std::filesystem::path save_target(const std::filesystem::path& path)
+        {
+            return std::filesystem::absolute(path).lexically_normal().make_preferred();
+        }
+
+        bool same_save_target(const std::filesystem::path& path,
+            const std::filesystem::path& baseline)
+        {
+            const std::filesystem::path target = save_target(path);
+            if (CompareStringOrdinal(target.c_str(), -1, baseline.c_str(), -1, TRUE) == CSTR_EQUAL)
+            { return true; }
+            std::error_code error;
+            return std::filesystem::equivalent(target, baseline, error) && !error;
+        }
+
+        void check_saved_source(const std::filesystem::path& path, const std::string& baseline)
+        {
+            std::ifstream input(path, std::ios::binary);
+            if (!input)
+            {
+                fail("Could not read the saved level file. It may have been removed or opened exclusively. "
+                    "Use Save As to preserve your edits in another file.");
+            }
+            const std::string text{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
+            if (input.bad())
+            {
+                fail("Could not read the complete saved level file. "
+                    "Use Save As to preserve your edits in another file.");
+            }
+            if (text != baseline)
+            {
+                fail("The level file has changed outside this editor since it was loaded or saved. "
+                    "Use Save As to preserve your edits in another file.");
+            }
+        }
     }
 
     struct LevelDocument::Impl
@@ -189,6 +225,8 @@ namespace colourwars_editor
         std::vector<std::string> history;
         std::size_t history_index = 0;
         std::string saved;
+        std::filesystem::path source_path;
+        std::string source_bytes;
 
         template<typename Operation> void mutate(Operation operation)
         {
@@ -268,6 +306,8 @@ namespace colourwars_editor
         auto next = std::make_unique<Impl>();
         next->motion_tuning = impl_->motion_tuning;
         next->path = path;
+        next->source_path = save_target(path);
+        next->source_bytes = text;
         next->saved = json_text(document);
         next->history.push_back(next->saved);
         next->document.Swap(document);
@@ -282,6 +322,8 @@ namespace colourwars_editor
         {
             fail("The save destination is not a regular file.");
         }
+        const bool replacing_source = !impl_->path.empty() && same_save_target(path, impl_->source_path);
+        if (replacing_source) { check_saved_source(path, impl_->source_bytes); }
         // Allocate document-state updates before committing any filesystem change.
         // Saving upgrades a legacy file, but a failed write must leave even
         // its omitted format field and undo/redo history untouched.
@@ -292,7 +334,9 @@ namespace colourwars_editor
             saved_document.AddMember("format", level_format::current, saved_document.GetAllocator());
         }
         std::filesystem::path saved_path = path;
+        std::filesystem::path source_path = save_target(path);
         std::string saved_text = json_text(saved_document);
+        std::string source_bytes = saved_text;
         std::vector<std::string> saved_history = impl_->history;
         saved_history[impl_->history_index] = saved_text;
         // A sibling temporary guarantees a same-volume rename. CREATE_NEW owns it
@@ -336,6 +380,9 @@ namespace colourwars_editor
                 throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
                     "Could not close the level file");
             }
+            // Another writer may have changed the destination while the temporary
+            // was written. Refuse before replacement, retaining both authors' work.
+            if (replacing_source) { check_saved_source(path, impl_->source_bytes); }
             // One Windows rename replaces the destination. Separate old->backup,
             // temp->destination renames leave the authored file absent between calls.
             // ReplaceFileW without a backup can also remove it on error 1176.
@@ -356,6 +403,8 @@ namespace colourwars_editor
         impl_->history.swap(saved_history);
         impl_->path.swap(saved_path);
         impl_->saved.swap(saved_text);
+        impl_->source_path.swap(source_path);
+        impl_->source_bytes.swap(source_bytes);
     }
 
     std::vector<Entry> LevelDocument::entries() const

@@ -31,6 +31,7 @@ add_executable(colourwars_editor_acceptance EXCLUDE_FROM_ALL
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/gate_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/slab_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/editing_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/save_guard_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/registration_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/user_stage_checks.cpp")
 target_link_libraries(colourwars_editor_acceptance PRIVATE colourwars_level_document)

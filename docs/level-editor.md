@@ -288,28 +288,31 @@ play remain the attended `ED#5` review.
 
 ### External-change save protection (`ED#7`)
 
-**OPEN, M.** `LevelDocument::load` reads the source bytes but retains only the
-normalized document as its saved state. `LevelDocument::save` already writes a
-complete sibling temporary and atomically replaces the destination; its unique
-temporary prevents collisions between writers' temporary files. It does not
-check whether another editor or text tool changed the destination since this
-document loaded or saved it. Ordinary Save can therefore overwrite that work.
+**Done (2026-10-28).** `LevelDocument` retains the exact bytes read by a
+successful load or written by a successful save, separately from normalized
+JSON used for dirty-state comparison. Same-destination Save compares those
+bytes before creating its sibling temporary and again after writing, flushing
+and closing it, directly before replacement. Changed, missing or unreadable
+files are refused with a diagnostic pointing to Save As. Target identity
+handles relative/case variants and existing equivalent files.
 
-Retain a byte baseline after each successful load and save. Before replacing the
-same file, refuse if it has changed, disappeared or become unreadable, and
-recheck the baseline before replacement. Compare bytes rather than relying on
-size or modification time. Use the existing Save As command to preserve the
-open work elsewhere; this slice adds no automatic merge or silent force-save.
-A refusal must retain the on-disk file, open JSON, path, dirty state and complete
-undo/redo history. A successful Save As establishes the new file's baseline.
+A refusal retains external bytes, open JSON, path, dirty state and complete
+undo/redo history, and removes any temporary. Save As preserves the open work
+elsewhere and establishes its new baseline; a failed Save As retains the
+previous one. The existing atomic replacement remains unchanged. The checks
+detect external writes visible at either comparison; they do not introduce
+file locking or an atomic filesystem compare-and-replace.
 
-Acceptance: use scratch files and two document instances to exercise an
-unchanged save, another writer's save, a same-length external edit with a
-retained timestamp, deletion and read failure. Every refused save preserves
-both the external bytes and the open document/history; Save As then succeeds
-without altering the conflicted file. Failed writes and replacements retain
-the existing atomic-save guarantees, and a successful retry uses the last
-successful baseline. No player save is involved.
+The isolated `level_editor/save_guard_checks.cpp` covers raw versus normalized
+source, unchanged saves, case variants, hard-link aliases, competing editors,
+same-length external edits with retained timestamps, deletion, exclusive-read
+failure, complete history, Save As and latest-success retries. Existing
+write/replacement-failure checks remain in `editing_checks.cpp`.
+
+Independent review and both builds pass. Full editor acceptance passes in
+Debug and Release, including hidden explicit-level launches, controls/status
+checks and graceful shutdown. All files and profiles are isolated. Attended
+GUI/saved-stage play remains `ED#5`; no player save is involved.
 
 ### Per-monitor editor DPI (`ED#8`)
 

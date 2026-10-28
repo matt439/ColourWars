@@ -62,6 +62,7 @@ namespace level_editor_acceptance
     void check_fixed_slabs(const fs::path& repo, const fs::path& scratch);
     void check_palette_and_ramps(const fs::path& scratch);
     void check_history_and_failures(const fs::path& scratch);
+    void check_external_save_changes(const fs::path& scratch);
     void check_stage_registration(const fs::path& repo, const fs::path& scratch);
     void check_user_stage_save(const fs::path& repo, const fs::path& scratch);
 }
