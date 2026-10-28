@@ -391,6 +391,8 @@ namespace
 				": 'keyline_width' must leave visible paint inside width and bead_height.");
 		}
 
+		paint.gate_open_share = read_unit(json.object("gate"), "open_share");
+
 		paint.sound_bank = json.string("sound_bank");
 		const JsonValue choices = json.array("splash_sounds");
 		if (choices.size() == 0)

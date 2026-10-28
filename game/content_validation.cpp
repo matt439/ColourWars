@@ -6,14 +6,54 @@
 #include "game/text_wrap.h"
 #include "game/tunnelling_limits.h"
 #include "game/states/main_menu.h"
+#include "game/team_gate_contract.h"
+#include "game/objects/team_gate_structure_paintable.h"
 
 using namespace labrador;
+
+namespace
+{
+	// A gate closed to a team would push a player spawned inside it out, or
+	// through it. The builder has already refused a malformed gate record.
+	void check_stage_gates(const GameTuning& tuning, const LevelObjectBuilder& builder,
+		const LevelLoadedInfo& info)
+	{
+		const JsonValue objects = info.collision_objects_json();
+		bool any = false;
+		for (size_t index = 0; index < objects.size(); ++index) { any = any || objects.at(index).has("gate"); }
+		if (!any) { return; }
+		const mattmath::Vector2F body = tuning.player().size;
+		std::vector<mattmath::Vector2F> spawns = info.team_a_spawns();
+		for (const mattmath::Vector2F& spawn : info.team_b_spawns()) { spawns.push_back(spawn); }
+		// The built gates, so either authored rectangle spelling is read once.
+		const auto built = builder.build_collision_objects(objects, TeamColour{});
+		for (size_t index = 0; index < built.size(); ++index)
+		{
+			const auto* gate = dynamic_cast<const TeamGateStructurePaintable*>(built[index].get());
+			if (gate == nullptr) { continue; }
+			const mattmath::RectangleF bounds = gate->bounds();
+			for (const mattmath::Vector2F& spawn : spawns)
+			{
+				try
+				{
+					team_gate_contract::require_clear_of_spawn({ bounds.x, bounds.y, bounds.width, bounds.height },
+						{ spawn.x, spawn.y, body.x, body.y });
+				}
+				catch (const std::invalid_argument& error)
+				{
+					throw std::runtime_error(objects.at(index).where() + ": gate: " + error.what());
+				}
+			}
+		}
+	}
+}
 
 void validate_stage_objects(const GameTuning& tuning, const LevelObjectBuilder& builder,
 	RenderResources& render, const AudioResources& audio, const LevelLoadedInfo& info)
 {
 	info.validate_content(builder, render, audio);
 	check_stage_tunnelling(tuning, builder, info.collision_objects_json());
+	check_stage_gates(tuning, builder, info);
 	tuning.validate_match_sounds(render, audio, info.sound_bank_name());
 }
 

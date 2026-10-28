@@ -2,6 +2,7 @@
 #include "game/objects/level.h"
 #include "game/input_slots.h"
 #include "game/controls_text.h"
+#include "game/objects/team_gate_structure_paintable.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -11,6 +12,14 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	// Admit the builder's pending objects before the first frame is drawn.
 	this->scene_->end_tick();
 	this->admit_horizontal_structures();
+	for (CollisionObject* object : this->scene_->collision_objects())
+	{
+		if (auto* gate = dynamic_cast<TeamGateStructurePaintable*>(object))
+		{
+			this->team_gates_.push_back(gate);
+			this->team_gates_view_.push_back(gate);
+		}
+	}
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
 		if (!is_projectile(to_collision_type(object->tag())))

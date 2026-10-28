@@ -28,6 +28,7 @@ int wmain(int argc, wchar_t* argv[])
         check_drift(repo, scratch);
         check_motion(repo, scratch);
         check_paint_drive(repo, scratch);
+        check_team_gate(repo, scratch);
         check_fixed_slabs(repo, scratch);
         check_history_and_failures(scratch);
         check_stage_registration(repo, scratch);

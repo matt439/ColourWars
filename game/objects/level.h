@@ -42,6 +42,7 @@
 #include "game/objects/music_envelope.h"
 #include "game/states/menu_level_settings.h"
 #include <cstdint>
+#include <span>
 #include <string_view>
 
 class MatchBotDriver;
@@ -65,6 +66,7 @@ enum class LevelState
 // and supplies the views and game-specific overlays.
 struct InputBindings;
 class TranslatingStructurePaintable;
+class TeamGateStructurePaintable;
 
 class Level
 {
@@ -211,6 +213,8 @@ public:
 	std::vector<PaintSurfaceSample> paint_surfaces() const;
     bool has_horizontal_motion() const;
     std::vector<HorizontalStructureState> horizontal_structure_states() const;
+    // The stage's team gates in Scene order, settled once a step.
+    std::span<const TeamGateStructurePaintable* const> team_gates() const;
 
 	// Developer tools. Present in every build; only Debug builds call them,
 	// between world updates. `view` indexes players_ (see below).
@@ -261,6 +265,10 @@ private:
     // for this Level; no terrain add/remove API is exposed after admission.
     std::vector<TranslatingStructurePaintable*> horizontal_structures_;
     std::vector<HorizontalSupportRef> horizontal_supports_;
+    // Borrowed from scene_ at admission, like the movers.
+    std::vector<const TeamGateStructurePaintable*> team_gates_view_;
+    std::vector<TeamGateStructurePaintable*> team_gates_;
+    void settle_team_gates();
     struct HorizontalFrame
     {
         std::vector<HorizontalPreparedStep> motions;

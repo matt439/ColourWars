@@ -1850,7 +1850,9 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   sponges grow. The [horizontal movement capability](#horizontal-movement-capability-2026-10-26)
   supplies the motion; paint ownership driving it is new. Arena use follows
   `POL#21`, and bots must ride the objects. The first slice, the
-  [paint ferry](#paint-ferry-road15-first-slice), is on an explicit trial stage.
+  [paint ferry](#paint-ferry-road15-first-slice), is on an explicit trial stage,
+  and so is the second, the [team gate](#team-gate-road15-second-slice), a
+  wall that the team holding its paint walks through.
 - **Player-made stages without rebuilding (`ROAD#16`).** A stage saved by the
   editor played only after a manifest edit and a rebuild. First slice done
   2026-10-28: a per-user stage folder, each file validated on its own, a
@@ -2003,12 +2005,95 @@ the drives the game would refuse, in the game's words. See
 The palette has no ferry entry of its own; a ferry is a moving paintable whose
 drive is switched to paint.
 
-Still open in `ROAD#15`: lifts and other vertical motion (the mover is
-horizontal only), team-gated rails and growing sponges, ferry art that shows
-its heading (the editor draws a ferry like any mover), and attended play. The
-stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
+The stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
 `-StageCountsOnly`, `-StageSummaryOnly`) passed with the tenth stage on MattPC
-in Debug and Release (2026-10-28).
+in Debug and Release (2026-10-28). The second object, and what `ROAD#15` still
+has open, is under [Team gate](#team-gate-road15-second-slice).
+
+### Team gate (`ROAD#15`, second slice)
+
+**Which object next (2026-10-28).** Three candidates were left: vertical
+lifts, team-gated passages (Splatoon's inkrails, which open for the team that
+inks their bulb) and growing sponges. They were weighed against the movement
+and collision code as it is.
+
+- **Lifts** need a second motion axis. The mover, its admission envelope, its
+  displacement budget, the rider carry (`HorizontalCarryStep` is an x
+  displacement), the relative projectile sweeps and the translated shadow are
+  all horizontal by construction. Carrying a rider up means resolving the
+  rider against ceilings and refusing or resolving a crush, which nothing in
+  `Player` does now. It is the largest of the three, and most of it is new
+  physics rather than a paint rule.
+- **Sponges** change their own size. A paintable's tiles, strips, credit and
+  scored area are fixed at construction, and `PaintSurfaceSample` says outright
+  that a scale needs its own scoring rule. Growing also pushes players, which
+  is the crush problem again. It is about as large as a lift, and it reopens
+  scoring.
+- **A team gate** is static. Collision filtering already takes both objects'
+  layer and mask on every pair, every step, so a gate whose mask leaves out one
+  team's players is a mask override, and projectiles still hit it. Nothing
+  moves, so admission, carry, sweeps and replay need nothing new. The one new
+  hazard is a gate closing on a player inside it, and that is answered by not
+  closing while they are there.
+
+The gate is the most tractable honest slice, so it went first. Splatoon's rail
+is a route that appears; this is its ColourWars reading, a wall one team walks
+through, held by the paint on the wall itself rather than a separate bulb.
+
+**What it does (2026-10-28).** A `TeamGateStructurePaintable`, a new final
+subclass of `StructurePaintable`, is a solid paintable wall. The team holding
+more of its own paint, by area over all its faces, walks through it, once that
+team also holds `paint.gate.open_share` (0.25, `tuning.json`) of its paintable
+area. Everyone else collides with it like any wall, and it is shut to both on
+a tie or while unpainted. Shots of both teams always hit it, so it is painted
+from either side whichever way it is open. `Level` settles every gate once a
+step, after the step's movers are committed and before any movement or paint,
+so a gate follows the paint held before the step, as the ferry does. Settling
+changes the team only when no living player of the team it is open for
+overlaps it: a gate never closes on a player inside it, and changes hands the
+step after they are clear. Players who are dead are ignored, and no spawn body
+may overlap a gate, so a respawn cannot land inside one.
+
+It ships on one explicit-only stage, **Turbulence Yard - Gate Trial**
+(`turbulence_gate_trial`, not in Random): the Turbulence blockout with an
+eraser gate, 80 by 240, standing on the floor at its centre, between the two
+lower beds. It is taller than a jump, so the floor route across the middle is
+the gate's, while the upper crossover stays open to both. Its left, top and
+right faces paint; each team reaches its own side face from the floor, so the
+top decides an even exchange. The format is in
+[Team gates](level-format.md#team-gates); the editor authors one from the
+palette ([Team gate authoring](level-editor.md#team-gate-authoring-road15)).
+
+**Bots** need no new policy and none was added. A gate is a structure, so a
+bot sees it in its obstacles, supports and sight line exactly as it sees a
+wall, whichever way the gate is open. A bot walking into a gate shut to it
+jumps or turns as at any wall; one walking into a gate open to it walks
+through, because the collision is gone even though the bot planned around
+it. A gate's faces are scoring tiles, so bots paint them as territory, which
+is what opens it. They do not plan a route through an open gate.
+
+The `team_gate` acceptance case checks the rule in the contract and on a
+standalone gate; walks two scripted humans at the trial's gate (shut to both
+unpainted, open to team A only once team A paints it, held open for a team A
+player standing inside while team B retakes it, then open to team B only); and
+plays three whole 120-second matches with three bots, holding every step of
+the gate to the paint and positions before it, requiring that nobody is ever
+left inside a gate shut to their team and that no bot stays inside one body
+box for 15 seconds. In Debug on MattPC the gate was open for 6311, 6673 and
+6879 of the 7200 steps, changed hands one to two times a match, and bots went
+into it 13 to 17 times; no bot held still for more than 271 steps. Passing is
+a measurement, not a requirement. `instant_replay` replays a round on the Gate
+Trial bit for bit, and `level_format` and the editor checks cover the record.
+
+**Provisional defaults**, open to the author: the 0.25 open share; the paint
+on the wall deciding it, rather than a separate bulb; a tie shutting it to
+both; a gate held open while its team is inside, rather than pushing them out;
+the eraser material; and the trial's single central floor gate.
+
+**Still open in `ROAD#15`:** lifts and other vertical motion, growing sponges,
+art that shows which team a ferry heads for or a gate is open to (both draw as
+their plain material, and only the paint colour says who holds them), bots
+that route through an open gate on purpose, and attended play of both trials.
 
 ### Instant replay (`ROAD#19`)
 

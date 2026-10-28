@@ -236,6 +236,36 @@ objects and players. Put backgrounds in `non_collision_objects`. A frame is
 stretched into the authored rectangle or ramp bounding box; its source texel
 size does not change collision dimensions.
 
+### Team gates
+
+A solid, static `StructurePaintable` may add `"gate": "paint"`
+([`ROAD#15`](feature-roadmap.md#team-gate-road15-second-slice)):
+
+```json
+{ "name": "centre_gate", "type": "StructurePaintable", "collision_type": "STRUCTURE_PAINTABLE",
+  "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "WHITE",
+  "material": "eraser", "rectangle": { "x": 1960, "y": 1040, "width": 80, "height": 240 },
+  "paintable_faces": { "left": true, "top": true, "right": true, "bottom": false },
+  "gate": "paint" }
+```
+
+Players of the team holding more of the gate's own paint, by area over all its
+faces, walk through it, once that team also holds at least
+`paint.gate.open_share` of its paintable area (`tuning.json`, 0.25 for now).
+Everyone else collides with it as with any wall, and it is shut to both teams
+on a tie or while unpainted. Shots of both teams always hit and paint it. The
+gate is settled once a step from the paint held before that step, and it never
+closes on a player of the team it is open for: while one is inside, it stays
+open for that team until they are clear.
+
+`"paint"` is the only value. The record must be a `StructurePaintable` with
+`STRUCTURE_PAINTABLE` collision (a one-way gate is refused), must not carry
+`motion`, and needs at least one paintable face. A gate on any other type,
+including a decorative `Visual`, is refused. At startup no spawn body (the
+tuned player size at a spawn point) may overlap a gate. The game's loader,
+its startup check and the [editor](level-editor.md#team-gate-authoring-road15)
+read all of this through `game/team_gate_contract.h`, in the same words.
+
 ### Decorative drift
 
 A `Visual` may carry a bounded horizontal drift around its authored rectangle:

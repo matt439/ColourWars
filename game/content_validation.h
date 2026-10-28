@@ -23,7 +23,8 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	const PlaySettings& play_settings);
 
 // validate_game_content's two per-stage halves, in the order it runs them: the
-// built objects, their anti-tunnelling bound and the stage's match sounds; then
+// built objects, their anti-tunnelling bound, team gates clear of every spawn
+// body and the stage's match sounds; then
 // the display name and practice lessons against their fonts. A user stage
 // (game/stage_loading.h) passes both before it joins the stage list, so the
 // whole-list check above cannot then fail on it.

@@ -151,6 +151,10 @@
         "highlight": 0.55
       }
     },
+    "gate": {
+      "_comment": "A team gate (ROAD#15) lets through the team holding more of its paint, once that team holds at least open_share of the gate's paintable area. Provisional.",
+      "open_share": 0.25
+    },
     "sound_bank": "paint_exe",
     "splash_sounds": [
       { "name": "paint.splash.01", "volume": 0.20 },

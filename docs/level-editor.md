@@ -428,6 +428,28 @@ No new GUI, native-pixel or human acceptance is claimed here.
 Human GUI handling and saved-stage play remain `ED#5`; Turbulence
 route/readability acceptance remains `POL#21`.
 
+## Team gate authoring (`ROAD#15`)
+
+The palette's **Team gate** entry adds a
+[team gate](feature-roadmap.md#team-gate-road15-second-slice): a solid
+`StructurePaintable` with the `eraser` material, `"gate": "paint"`, and every
+face paintable except the bottom, which stands on the floor. The inspector
+lists `gate (paint: open to the team holding more of it)`. Clearing it removes
+the field and leaves an ordinary paintable block; any other value is written as
+typed and then refused. A gate cannot be added to an existing block in the
+inspector, which only edits fields a record already has; use the palette entry.
+
+The gate is checked by the game's own rule, `game/team_gate_contract.h`: an
+unknown or non-text value, a gate on anything but a `StructurePaintable`, a
+one-way (`STRUCTURE_JUMP_THROUGH`) gate, a moving gate and a gate with no
+paintable face are refused in the game's words, as an edit (document and
+history unchanged) or as a file. So is a gate overlapping a spawn body, which
+the editor sizes from `tuning.json` as it does for movers, with the game's
+startup words. The canvas draws a gate like any eraser block; it does not show
+which team it is open to, which is runtime state. The `level_editor` document
+checks cover the field, palette entry, every refusal and save/reopen of the
+Gate Trial.
+
 ## Fixed scored-slab authoring (`GAP#D5`)
 
 The **Scored slab rising right** and **Scored slab rising left** palette entries

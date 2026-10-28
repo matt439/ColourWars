@@ -90,7 +90,7 @@ namespace
 				shipped.levels.add(name, std::move(definition.info));
 			}
 		}
-		require(shipped.stages.size() == 10, "User-stage acceptance expects the ten shipped stages");
+		require(shipped.stages.size() == 11, "User-stage acceptance expects the eleven shipped stages");
 	}
 
 	rapidjson::Document read_document(const std::filesystem::path& path)
@@ -186,13 +186,13 @@ namespace
 		{
 			Shipped shipped;
 			const UserStageScan result = scan(fixture, content, scratch / "no-such-folder", shipped);
-			require(result.accepted.empty() && result.refused.empty() && shipped.stages.size() == 10,
+			require(result.accepted.empty() && result.refused.empty() && shipped.stages.size() == 11,
 				"A missing user stage folder must add nothing and say nothing");
 		}
 		{
 			Shipped shipped;
 			const UserStageScan result = scan(fixture, content, fresh(scratch / "empty"), shipped);
-			require(result.accepted.empty() && result.refused.empty() && shipped.stages.size() == 10,
+			require(result.accepted.empty() && result.refused.empty() && shipped.stages.size() == 11,
 				"An empty user stage folder must add nothing and say nothing");
 		}
 		{
@@ -202,10 +202,10 @@ namespace
 			Shipped shipped;
 			const UserStageScan result = scan(fixture, content, file, shipped);
 			require(result.accepted.empty() && result.refused.size() == 1 &&
-				result.refused.front().find("is not a folder") != std::string::npos && shipped.stages.size() == 10,
+				result.refused.front().find("is not a folder") != std::string::npos && shipped.stages.size() == 11,
 				"A file where the folder should be must be one refusal line and no stages");
 		}
-		std::cout << "PASS missing, empty and non-folder user stage paths leave the ten shipped stages\n";
+		std::cout << "PASS missing, empty and non-folder user stage paths leave the eleven shipped stages\n";
 	}
 
 	void check_mixed(const Fixture& fixture, const std::filesystem::path& content,
@@ -276,15 +276,15 @@ namespace
 		require(refused(result, "-leading.json", "file name"), "A leading hyphen was not refused");
 		require(refused(result, "emoji_name.json", "display_name"), "An undrawable display name was not refused");
 
-		require(shipped.stages.size() == 12, "Stage Select must offer ten shipped and two user stages");
-		for (size_t index = 0; index < 10; ++index)
+		require(shipped.stages.size() == 13, "Stage Select must offer eleven shipped and two user stages");
+		for (size_t index = 0; index < 11; ++index)
 		{
 			require(!shipped.stages[index].user, "Shipped stages must stay first and unmarked");
 		}
-		const Stage& mine = shipped.stages[10];
+		const Stage& mine = shipped.stages[11];
 		require(mine.name == "my_arena" && mine.display_name == "My Arena" && mine.user && !mine.include_in_random,
 			"A user stage must follow the shipped ones, marked and explicit-only");
-		require(shipped.stages[11].name == "zz-second" && shipped.stages[11].user,
+		require(shipped.stages[12].name == "zz-second" && shipped.stages[12].user,
 			"The second user stage must follow the first");
 		require(shipped.levels.contains("my_arena") && shipped.levels.contains("zz-second") &&
 			!shipped.levels.contains("broken") && !shipped.levels.contains("Crossfeed"),
@@ -293,7 +293,7 @@ namespace
 			"A colliding user stage must not replace the shipped stage");
 		const std::vector<size_t> random = random_stage_indices(shipped.stages);
 		require(random.size() == 4 && std::none_of(random.begin(), random.end(),
-			[](size_t index) { return index >= 10; }), "User stages must not join the Random pool");
+			[](size_t index) { return index >= 11; }), "User stages must not join the Random pool");
 
 		// The startup path after the scan: the whole list, user stages
 		// included, passes the same checks and joins the sound groups.
@@ -302,7 +302,7 @@ namespace
 		AudioResources audio;
 		audio.add_sound_bank("paint_exe", SoundBank::silent());
 		sound_groups::assign(audio, *fixture.tuning, *fixture.presentation, shipped.levels, shipped.stages);
-		std::cout << "PASS a folder of ten files loads its two valid stages after the shipped ten and refuses "
+		std::cout << "PASS a folder of ten files loads its two valid stages after the shipped eleven and refuses "
 			"broken JSON, a missing key, a missing frame, a sound conflict, a shipped-name collision, "
 			"two bad file names and an undrawable name, one line each\n";
 	}
@@ -321,7 +321,7 @@ namespace
 		const UserStageScan once = scan(fixture, content, first, shipped);
 		const UserStageScan twice = load_user_stages(second, fixture.checks(), shipped.levels, shipped.stages);
 		require(once.accepted == std::vector<std::string>{ "Twin" } && twice.accepted.empty() &&
-			refused(twice, "twin.json", "another user stage's ('Twin')") && shipped.stages.size() == 11,
+			refused(twice, "twin.json", "another user stage's ('Twin')") && shipped.stages.size() == 12,
 			"A user stage may not take another user stage's name");
 		std::cout << "PASS a user stage cannot take another user stage's name\n";
 	}

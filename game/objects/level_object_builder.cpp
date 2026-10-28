@@ -5,6 +5,8 @@
 #include "game/objects/drifting_visual.h"
 #include "game/horizontal_motion_contract.h"
 #include "game/objects/translating_structure_paintable.h"
+#include "game/objects/team_gate_structure_paintable.h"
+#include "game/team_gate_contract.h"
 #include "game/objects/fixed_slab_paintable.h"
 #include "game/objects/fixed_slab_shadow.h"
 #include "game/objects/translated_airbrush_shadow.h"
@@ -309,6 +311,28 @@ std::unique_ptr<CollisionObject>
 	{
 		throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
 	}
+	// A team gate is read by the shared rule, so the editor refuses exactly
+	// the gates refused here.
+	bool gate = false;
+	if (json.has("gate"))
+	{
+		team_gate_contract::Record record;
+		record.gate = json.string("gate");
+		record.structure_paintable = type == "StructurePaintable";
+		record.moving = json.has("motion");
+		if (record.structure_paintable)
+		{
+			record.solid = json.string("collision_type") == "STRUCTURE_PAINTABLE";
+			const JsonValue face = json.object("paintable_faces");
+			record.any_paintable_face = face.boolean("left") || face.boolean("top") ||
+				face.boolean("right") || face.boolean("bottom");
+		}
+		try { gate = team_gate_contract::decode(record); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(json.where() + ": gate: " + error.what());
+		}
+	}
 	if (type == "FixedSlabPaintable")
 	{
 		(void)collision_type_of(json, type, { CollisionObjectType::structure_fixed_slab });
@@ -367,6 +391,23 @@ std::unique_ptr<CollisionObject>
 				SpriteFlip::none, 0.0f,
 				material_of(json, collision_type, rectangle, {}, context.mirror_x,
 					this->render_resources_));
+		}
+
+		if (gate)
+		{
+			try
+			{
+				return std::make_unique<TeamGateStructurePaintable>(
+					json.string("sheet_name"), json.string("frame_name"), rectangle,
+					this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
+					team_colours, faces, context.flat, colour_of(json),
+					material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
+						this->render_resources_, context.slabs), context.slabs);
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(json.where() + ": gate: " + error.what());
+			}
 		}
 
 		return std::make_unique<StructurePaintable>(
@@ -437,6 +478,10 @@ std::unique_ptr<GameObject>
 	if (json.has("motion"))
 	{
 		throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
+	}
+	if (json.has("gate"))
+	{
+		throw std::runtime_error(json.where() + ": gate: gate belongs only on a StructurePaintable");
 	}
 	const std::string type = json.string("type");
 	if (type == "Visual")

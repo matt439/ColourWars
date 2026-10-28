@@ -137,6 +137,7 @@ add_executable(ColourWars WIN32
     objects/structure_paintable.cpp
     objects/horizontal_motion.cpp
     objects/translating_structure_paintable.cpp
+    objects/team_gate_structure_paintable.cpp
     objects/translated_airbrush_shadow.cpp
     objects/terrain_material.cpp
     objects/terrain_material_drawings.cpp

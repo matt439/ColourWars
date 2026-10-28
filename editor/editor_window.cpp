@@ -79,7 +79,8 @@ namespace colourwars_editor
         palette_ = control(WC_COMBOBOXW, L"Object to add", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, palette);
         const wchar_t* names[] = {L"Paintable block", L"Solid block", L"Jump-through platform",
             L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn",
-            L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left"};
+            L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left",
+            L"Team gate"};
         for (const wchar_t* name : names) SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
         SendMessageW(palette_, CB_SETCURSEL, 0, 0);
         toolbar_.push_back(control(L"BUTTON", L"+ Add", WS_TABSTOP, add_object));
@@ -514,7 +515,8 @@ namespace colourwars_editor
         case add_object:
         {
             const char* types[] = {"StructurePaintable", "Structure", "StructureJumpThrough", "StructureRampRight",
-                "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft"};
+                "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft",
+                "TeamGate"};
             const LRESULT index = SendMessageW(palette_, CB_GETCURSEL, 0, 0);
             if (index < 0 || index >= static_cast<LRESULT>(std::size(types))) break;
             RECT client{}; GetClientRect(canvas_, &client);

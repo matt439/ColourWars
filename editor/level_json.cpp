@@ -2,6 +2,7 @@
 #include "game/level_format.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
+#include "game/team_gate_contract.h"
 
 #include <rapidjson/error/en.h>
 #include <rapidjson/prettywriter.h>
@@ -251,6 +252,44 @@ namespace colourwars_editor
             }
         }
 
+        // The startup check in game/content_validation.cpp: no spawn body may
+        // overlap a gate, which could close on it.
+        void validate_gate_spawns(const Document& document, const std::filesystem::path& tuning)
+        {
+            const Json& objects = array(document, "collision_objects");
+            bool any = false;
+            for (const Json& object : objects.GetArray()) { any = any || object.HasMember("gate"); }
+            if (!any) { return; }
+            const MotionPlayerSize player = load_motion_player_size(tuning);
+            const Json& spawns = member(document, "spawn_locations");
+            for (rapidjson::SizeType index = 0; index < objects.Size(); ++index)
+            {
+                const Json& object = objects[index];
+                if (!object.HasMember("gate")) { continue; }
+                const Rect box = object_rectangle(object);
+                const team_gate_contract::Rectangle gate{ static_cast<float>(box.x), static_cast<float>(box.y),
+                    static_cast<float>(box.width), static_cast<float>(box.height) };
+                for (const char* team : { "team_a", "team_b" })
+                {
+                    for (const Json& point : array(spawns, team).GetArray())
+                    {
+                        try
+                        {
+                            team_gate_contract::require_clear_of_spawn(gate, { static_cast<float>(number(point, "x")),
+                                static_cast<float>(number(point, "y")), player.width, player.height });
+                        }
+                        catch (const std::invalid_argument& error)
+                        {
+                            std::string name = "collision_objects[" + std::to_string(index) + "]";
+                            if (object.HasMember("name") && object["name"].IsString())
+                            { name += " ('" + string(object, "name") + "')"; }
+                            fail(name + ": gate: " + error.what());
+                        }
+                    }
+                }
+            }
+        }
+
         void validate_object(const Json& object, bool collision)
         {
             if (!object.IsObject())
@@ -258,6 +297,28 @@ namespace colourwars_editor
                 fail("Every level object must be a JSON object.");
             }
             const std::string type = string(object, "type");
+            if (object.HasMember("gate"))
+            {
+                // The game's own rule, so the editor refuses exactly the gates
+                // the game refuses at load, in its words.
+                team_gate_contract::Record record;
+                if (!object["gate"].IsString()) { fail("gate: gate must be 'paint'"); }
+                record.gate = string(object, "gate");
+                record.structure_paintable = collision && type == "StructurePaintable";
+                record.moving = object.HasMember("motion");
+                if (record.structure_paintable)
+                {
+                    record.solid = string(object, "collision_type") == "STRUCTURE_PAINTABLE";
+                    const Json& faces = member(object, "paintable_faces");
+                    for (const char* face : { "left", "top", "right", "bottom" })
+                    {
+                        const Json& value = member(faces, face);
+                        record.any_paintable_face = record.any_paintable_face || (value.IsBool() && value.GetBool());
+                    }
+                }
+                try { team_gate_contract::decode(record); }
+                catch (const std::invalid_argument& error) { fail(std::string("gate: ") + error.what()); }
+            }
             if (type == "FixedSlabPaintable")
             {
                 if (!collision) { fail("A fixed slab is collision geometry, not decoration."); }
@@ -428,6 +489,7 @@ namespace colourwars_editor
             }
             validate_slab_pairs(document);
             validate_motion_geometry(document, motion_tuning);
+            validate_gate_spawns(document, motion_tuning);
         }
 
         Document parse(std::string_view text)
