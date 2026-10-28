@@ -40,6 +40,17 @@ row points to the doc that owns its detail. A fresh thread starts there. Its
 editing rules are at its end; the main one is that a row leaves in the same
 commit that finishes it.
 
+## Commits and pull requests
+
+Commit completed, validated work on a local working branch. If starting from
+`master`, create a working branch before committing. Continue that branch across
+related tasks, accumulating commits until the user requests a pull request.
+
+Open a pull request only when the user explicitly asks, covering the accumulated
+work on that branch. Do not create a new branch or pull request for each commit,
+or split dependent commits across separate pull requests unless asked. Keep work
+local until the user authorizes a push.
+
 ## Build and run
 
 Requires **VCPKG_ROOT** set (`CMakePresets.json` reads it for the toolchain
