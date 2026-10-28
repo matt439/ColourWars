@@ -15,7 +15,8 @@ public:
 	// `tuning` is borrowed and outlives every player this makes.
 	PlayerBuilder(const GameTuning* tuning, const Presentation* presentation);
 
-	// Return players in settings order, which also determines their view indices.
+	// Return participants in roster order. Only humans consume panes, in their
+	// roster order; input slots are the independent MenuPlayerSettings::num.
 	std::vector<std::unique_ptr<Player>> build_players(
 		const MenuLevelSettings& settings,
 		const LevelLoadedInfo* load_info,

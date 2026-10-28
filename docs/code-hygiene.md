@@ -170,33 +170,29 @@ and all byte-preservation/conflict/reset fixtures.
 
 ## Source-comment contract audit (`HYG#8`)
 
-**OPEN, M.** Audit the following bounded groups against implementation and
-callers, then correct comments that overstate, omit or misdescribe today's
-contract. Current exhibits establish that this is real maintenance work:
+**Done (2026-10-28).** Corrected the three bounded comment groups against
+current implementations and callers. Source edits are comments only; the
+executable tokens, APIs, member layouts and behavior are unchanged. An
+independent caller review agreed with the corrections. No new runtime tests
+were added for this comment-only slice.
 
-- **Participant, slot and pane identity:** `player_builder.h` says settings
-  order determines view indices, while `build_players` allocates panes only
-  to humans. Review the related Level, player-builder and menu-settings
-  declarations and their mixed human/bot callers. Describe each index domain
-  precisely without renaming APIs or changing roster behavior.
-- **Shipping versus Debug replay:** `level.h` says the final seat filter is
-  null in Release, although `game_level_dev_tools.cpp` supplies the shipping
-  `RoundTapeRecorder`. That source's Debug-only caller claim also misses the
-  Release forwarding adapter in `debug_director.h`. `round_tape.h` claims any
-  between-step rule edit spoils the tape, but live tuning edits are an
-  acknowledged exception. Follow the actual filter and invalidation paths;
-  preserve all existing shipping/developer-tool boundaries.
-- **Catalog and editor metadata:** `game_data.h` describes only manifest
-  order, and `menu_level_settings.h` calls a stage ID a manifest key, omitting
-  the accepted user-stage path. `LevelDocument::unresolved_resources` still says
-  Stage Select draws stage icons, although it uses a live preview and `ED#6`
-  is retired. Keep legacy icon validation described as such. Retain the
-  accurate rescan, registry ownership and no-match lifetime restrictions.
+Completion evidence, by edited declaration or claim:
 
-For each edited claim, record the declaration and implementation/caller used
-to verify it in the completion evidence. Preserve useful explanations of
-ownership, threading, geometry, determinism and why a workaround exists;
-remove only demonstrably stale narration or redundant restatements. Do not
-expand this into rewording every comment, deleting historical reviews or
-reopening answered engine design decisions. Acceptance is a reviewed
-comment-only diff with unchanged executable tokens and verified named callers.
+| comment location | verified implementation/caller |
+|---|---|
+| `PlayerBuilder::build_players` declaration and local identity comment | `player_builder.cpp` keeps roster order, increments `human_view` only for humans, passes participant to sound and `paint_owners::index(setting.num, participant_index)` to the weapon |
+| `MenuPlayerSettings::num`, `MenuLevelSettings::device_slot` and `Player::player_num` | `menu_level_settings.cpp` assigns human slots, gives bots `-1` and remaps only the device; `Level::apply_player_inputs` reads stable slots; `results_menu.cpp` maps participants through `paint_owners::index` |
+| `paint_owners.h` owner-domain comment and `Player` constructor's sound comment | `PlayerBuilder` uses slot-based human paint credit and participant-derived bot credit; the constructor receives a separate participant sound index |
+| `Level` participant/pane, feedback and acting comments | `Level` constructs `view_participants_` only for humans; `take_rumble_events` retains `player_num()`; `level_dev_tools.cpp` indexes players by participant; `level_draw.cpp::refresh_identity_texts` falls back to bot difficulty or human device; `level_intro.cpp::update_acting` and `draw_acting` index `acts_` alongside `players_` |
+| `Level::update`, `DebugDirector::update_match`, `GameLevel` adapter declarations and `game_level_dev_tools.cpp` heading | `game_states.cpp::update` calls the director in both builds; the Release inline hook forwards to `debug_update_level`, which supplies `RoundTapeRecorder`; `game_level_replay.cpp::step_replay` supplies `RoundTapePlayer` |
+| `Level` shipping setup/replay adapter comment | `game_states.cpp` calls `set_pad_devices` during build and update; `game_level_replay.cpp::start_replay` restores pad mappings and cheats |
+| `DebugDirector` Release overview | `debug_director.h` retains ordinary update forwarding and `opening_mode` pass-through; `debug_director.cpp::run_launch_arguments` retains the Release argument warning |
+| `RoundTape` invalidation overview | `GameLevel::debug_place`, `debug_respawn` and `debug_kill` call `spoil`; `RoundTape::set_cheats` spoils after a recorded step; `tune_commands.cpp` applies live edits without tape invalidation; the `ROAD#19` owner records that exception and Debug-injected suspends |
+| `GameData::stages` and `MenuLevelSettings::set_stage` | `stage_loading.cpp` appends accepted user definitions after manifest stages in file-name order; `MainMenuStageSelect::set_level_settings` chooses the selected stage's registry name |
+| `LevelDocument::unresolved_resources` and `LevelLoadedInfo::validate_content` icon comments | both still check `icon_frame` in `sprite_sheet_1`; `MainMenuStageSelect::update_stage_select_visuals` selects `StagePreview`, not the legacy icon |
+
+The accurate `stage_loading.h` rescan, borrowed-registry and no-match lifetime
+comments were retained: `GameMenu::init` lends the callback to Stage Select,
+whose main-menu entry rescans, while between-round entry does not. Missing
+definitions remain registered but unreachable from the stage list. Historical
+reviews and the engine's design decisions were left untouched.

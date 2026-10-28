@@ -830,7 +830,8 @@ namespace colourwars_editor
         try
         {
             const Document& document = impl_->document;
-            // The game draws stage icons from the stage-select page's sheet.
+            // Match LevelLoadedInfo's legacy icon_frame validation. Stage Select
+            // draws a live preview, but the metadata must still name a real frame.
             const std::string icon = string(document, "icon_frame");
             const auto icons = sheet_of("sprite_sheet_1");
             if (icons == catalog.sprite_frames.end())

@@ -127,10 +127,12 @@ public:
 	void pause_audio() const;
 
 	// `seats`, when given, sees and may replace every participant's final input
-	// after the shipping bots (Debug bots/record/play); null in Release.
+	// after the shipping bots, unless it replaces their inputs. GameLevel passes
+	// the shipping recorder in both builds, optionally wrapping a Debug filter;
+	// instant replay supplies a tape player instead.
 	void update(const std::vector<PlayerInputData>& player_inputs, float dt,
 		SeatInputFilter* seats = nullptr);
-	// Feedback intents, retaining each Player's physical slot. Drain once after
+	// Feedback intents, retaining each Player's stable input slot. Drain once after
 	// a completed tick, including blocked bot/replay/keyboard events; this never
 	// changes simulation/RNG state. A lifecycle stop may explicitly discard them.
 	std::vector<SlotRumbleEvents> take_rumble_events();
@@ -225,20 +227,21 @@ public:
     // The stage's team gates in Scene order, settled once a step.
     std::span<const TeamGateStructurePaintable* const> team_gates() const;
 
-	// Developer tools. Present in every build; only Debug builds call them,
-	// between world updates. `view` indexes players_ (see below).
+	// Developer tools and shipping setup/replay adapters, called between world
+	// updates. `view` here indexes roster participants in players_, not human
+	// panes. Shipping code sets pad mappings and replay also restores cheats.
 	void set_overlays(const LevelOverlays& overlays);
 	void set_players_showing_debug(bool showing);
 	void set_player_cheats(bool damage_immune, bool infinite_ammo);
 	// At rest at `top_left`, respawning first if dead; the weapon and the
 	// cameras follow at once, so the move shows even while the clock is
-	// paused. False: no such view.
+	// paused. False: no such participant.
 	bool place_player(int view, const mattmath::Vector2F& top_left);
 	bool respawn_player(int view);
-	// Dies on the next world update, at the spawn's redraw. False: no such view.
+	// Dies on the next world update, at the spawn's redraw. False: no such participant.
 	bool kill_player(int view);
-	// What each view's HUD names instead of its device ("Bot: paint");
-	// empty entries, or no list, keep the device name.
+	// By participant: an optional identity-label override ("Bot: paint"). Empty
+	// entries keep the shipping bot difficulty label or human device name.
 	void set_seat_labels(std::vector<std::wstring> labels);
 	// The pad each pad input slot reads (MenuLevelSettings::pad_devices), so
 	// a HUD names the pad a reclaimed seat now uses. Rebuilds only on change.
@@ -488,7 +491,7 @@ private:
 	std::unique_ptr<Silhouette> silhouette_;
 	std::unique_ptr<ScreenCursor> cursor_;
 	std::unique_ptr<FigureActing> acting_;
-	// By view: what each figure is doing, and for how long.
+	// By roster participant: what each figure is doing, and for how long.
 	std::vector<FigureAct> acts_;
 	float act_time_ = 0.0f;
 	// What of the world the picture shows, and where its two halves meet.

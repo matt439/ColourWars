@@ -2,8 +2,9 @@
 
 #include "game/input_slots.h"
 
-// Device players retain their stable slot credit. Device-less debug players
-// get separate credit by view; these indices never enter the input readers.
+// Humans retain their stable input-slot credit after pad reassignment. Bots
+// and device-less Debug players get separate credit by roster participant;
+// these owner indices never enter the input readers.
 namespace paint_owners
 {
 	constexpr int dummy_count = 4;

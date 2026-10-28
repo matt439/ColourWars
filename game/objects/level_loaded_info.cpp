@@ -236,7 +236,8 @@ void LevelLoadedInfo::validate_content(const LevelObjectBuilder& builder,
 	const JsonValue root = this->json_doc_.root();
 	try
 	{
-		// Stage icons use the same sheet as the stage-select page.
+		// Legacy icon metadata still resolves against sprite_sheet_1; Stage Select
+		// now draws a live preview rather than this icon.
 		render_resources.sprite_sheet("sprite_sheet_1")->
 			resolve_sprite_frame(this->icon_frame());
 	}

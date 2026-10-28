@@ -159,7 +159,8 @@ private:
 	void sync_rumble();
 	void drain_rumble(float dt);
 
-	// DebugMatchTarget, for the developer tools only.
+	// DebugMatchTarget adapters. debug_update_level also carries ordinary Release
+	// updates through DebugDirector's forwarding hook and the shipping recorder.
 	const MenuLevelSettings& debug_settings() const override;
 	void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) override;
 	void debug_adopt(const MenuLevelSettings& plan, bool reset_session) override;

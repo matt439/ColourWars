@@ -3,9 +3,9 @@
 
 using namespace labrador;
 
-// GameLevel's DebugMatchTarget adapters (game_states.h, "DebugMatchTarget,
-// for the developer tools only"). Present in every build; only Debug builds
-// call them, through the DebugDirector.
+// GameLevel's DebugMatchTarget adapters. DebugDirector also forwards ordinary
+// Release updates through debug_update_level, which wraps any Debug filter in
+// the shipping recorder. The other adapters serve the developer tools.
 
 const MenuLevelSettings& GameLevel::debug_settings() const
 {

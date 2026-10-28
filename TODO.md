@@ -46,7 +46,7 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Sixteen remaining `OPEN` slices have
+**Ready local work (backlog audit, 2026-10-28).** Fifteen remaining `OPEN` slices have
 concrete implementation and acceptance scopes in their owners. They can proceed
 while attended reviews wait, without changing the arena/tuning order above:
 
@@ -59,8 +59,7 @@ while attended reviews wait, without changing the arena/tuning order above:
   guidance (`ED#10`).
 - **Code hygiene:** ordered presentation validation (`HYG#1`), Level motion,
   projectile contacts and save-profile splits (`HYG#2`-`HYG#4`), acceptance and
-  evidence-script splits (`HYG#5`-`HYG#7`), and a source-comment contract audit
-  (`HYG#8`). [Scopes and keep-whole decisions](docs/code-hygiene.md).
+  evidence-script splits (`HYG#5`-`HYG#7`). [Scopes and keep-whole decisions](docs/code-hygiene.md).
 
 These replace the 2026-10-26 exhaustion snapshot. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
@@ -279,7 +278,6 @@ These slices preserve behavior and the game's OOP design.
 | `HYG#5` | OPEN | LOW | M | Split input-binding acceptance by topic, preserving independent oracles, profile lifetimes and relaunch paths. [Scope](docs/code-hygiene.md#input-binding-acceptance-topics-hyg5). |
 | `HYG#6` | OPEN | LOW | M | Split painter evidence metadata by topic while retaining scope precedence, ordered output and dot-sourced behavior. [Scope](docs/code-hygiene.md#painter-evidence-metadata-hyg6). |
 | `HYG#7` | OPEN | LOW | M | Extract colour-document fixture families, preserving JSON bytes, assertions and invocation order. [Scope](docs/code-hygiene.md#colour-document-fixture-families-hyg7). |
-| `HYG#8` | OPEN | LOW | M | Audit stale participant/view, shipping/Debug replay, user-stage and editor-icon comments against actual callers. [Scope](docs/code-hygiene.md#source-comment-contract-audit-hyg8). |
 
 ## Tooling, CI and docs
 

@@ -50,8 +50,9 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 	int human_view = 0;
 	for (auto& setting : settings.player_settings())
 	{
-		// Sound and paint identity use the stable participant, while only humans
-		// consume a screen pane. A bot's unused camera starts fullscreen.
+		// Sound uses the roster participant; paint credit uses a human's stable
+		// input slot or a participant-derived bot owner. Only humans consume a
+		// screen pane. A bot's unused camera starts fullscreen.
 		const int participant_index = static_cast<int>(players.size());
 		const Viewport viewport = setting.controller == PlayerController::bot ?
 			viewport_manager->fullscreen_viewport() : viewport_manager->player_viewport(human_view++);
