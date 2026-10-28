@@ -38,7 +38,7 @@ gate. The earlier figure/animation and other source splits already exist.
 
 | file | lines | audit result |
 |---|---:|---|
-| [presentation_validation.cpp](../game/presentation_validation.cpp) | 2,502 | Ordered helper extraction, `HYG#1`; one large function prevents a simple method move |
+| [presentation_validation.cpp](../game/presentation_validation.cpp) | 25 | Ordered coordinator and nine family sources; `HYG#1` complete |
 | [player.cpp](../game/objects/player.cpp) | 1,848 | Retain the coupled movement/contact/carrier core; figure code is already separate |
 | [input_bindings.cpp](../scripts/acceptance/input_bindings.cpp) | 56 | Four topic sources and shared fixtures; `HYG#5` complete |
 | [evidence-record.ps1](../scripts/check-painter/evidence-record.ps1) | 354 | Four explicit topic helpers; `HYG#6` complete |
@@ -53,25 +53,29 @@ gate. The earlier figure/animation and other source splits already exist.
 
 ## Ordered presentation validation (`HYG#1`)
 
-**OPEN, L.** `Presentation::validate_resources` accounts for roughly 2,150
-lines of the largest source file. Its lambdas and page/layout variables cross
-topic boundaries, and its first-error order is intentional. Moving arbitrary
-blocks to separate files without carrying that context would change or break
-validation.
+**Done (2026-10-28).** `Presentation::validate_resources` is now a 25-line
+ordered coordinator over nine validation families. The private nested worker
+borrows presentation/resources and carries concrete already-computed setup,
+stage, controls and roster geometry/font contexts. It performs no eager
+resource lookup or measurement. Shared helper and metrics definitions live
+with those families; `sound_references` and `validate_stage_counts` moved as
+whole methods. The largest cohesive family remains 737 lines.
 
-Extract private helpers by page/validation family with explicit required
-context and an ordered coordinator, then distribute the helpers into coherent
-translation units. This requires private helper extraction, rather than only
-moving whole existing methods. Keep the public API, calculations, lookup order
-and diagnostic text/precedence intact; do not introduce a generic validation
-framework. `validate_stage_counts` and `sound_references` can move as complete
-methods where they fit.
+The public API and member layout are unchanged. Independent source comparison
+reconstructs all nine original phase statement streams after explicit
+receiver/context transfers, plus sixteen helper bodies, three metrics and the
+two catalog methods. Lookup/calculation order, floating-point operations and
+the Stage/Results/roster interleaving remain intact. The qualified `ROAD#25`
+paper-face boundary is the retained baseline.
 
-Acceptance: Debug/Release builds and existing `menu_text`, `menu_presentation`,
-`weapon_catalog`, `stage_selection` and startup/content checks. Compare the
-first diagnostic for existing invalid fixtures, including candidates with
-multiple invalid fields. `ROAD#25`'s paper-face correction is qualified;
-preserve its corrected face boundary and item diagnostic order as the baseline.
+Debug and Release builds, `menu_presentation`, `weapon_catalog`,
+`stage_selection`, loader/user-stage checks and hidden accepted-bank startup
+pass. The instrumented existing `menu_text` case compares the preserved
+original source against the split with current headers, compiler and generated
+build identity: **3,709 exact first diagnostics match in each preset**. This
+includes five multiple-invalid-field probes across resource and interleaved
+page families. Only scratch filename prefixes are normalized. All existing
+menu-text assertions also pass in both baseline and candidate executions.
 
 ## Level horizontal motion (`HYG#2`)
 

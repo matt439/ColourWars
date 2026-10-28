@@ -46,7 +46,7 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Six remaining `OPEN` slices have
+**Ready local work (backlog audit, 2026-10-28).** Five remaining `OPEN` slices have
 concrete implementation and acceptance scopes in their owners. They can proceed
 while attended reviews wait, without changing the arena/tuning order above:
 
@@ -54,7 +54,6 @@ while attended reviews wait, without changing the arena/tuning order above:
   changed stages in Debug replay (`DBG#8`).
 - **Editor workflow:** per-monitor DPI (`ED#8`), paint-mechanism canvas guides (`ED#9`) and destination-aware save
   guidance (`ED#10`).
-- **Code hygiene:** ordered presentation validation (`HYG#1`). [Scopes and keep-whole decisions](docs/code-hygiene.md).
 
 These replace the 2026-10-26 exhaustion snapshot. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
@@ -256,16 +255,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
 | `DBG#8` | OPEN | MED | M | Fingerprint the loaded stage in Debug recordings and reject changed or legacy unverified definitions before playback mutates state. [Scope](docs/debug-console.md#loaded-stage-replay-fingerprint-dbg8). |
 
-## Code hygiene
-
-**Owner:** [docs/code-hygiene.md](docs/code-hygiene.md). The source-size audit
-selects cohesive seams and records keep-whole decisions; line count is not a cap.
-These slices preserve behavior and the game's OOP design.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `HYG#1` | OPEN | LOW | L | Extract ordered presentation-validation helpers without changing diagnostic precedence or calculations. [Scope](docs/code-hygiene.md#ordered-presentation-validation-hyg1). |
-
 ## Tooling, CI and docs
 
 **Owner:** the file named in each row.
@@ -280,6 +269,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new concrete source/comment seam; all eight scoped maintenance slices are complete |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Closed engine reports (1–22) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |

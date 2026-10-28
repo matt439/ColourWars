@@ -29,6 +29,15 @@ add_executable(ColourWars WIN32
     presentation_read_match.cpp
     presentation_read_menu.cpp
     presentation_validation.cpp
+    presentation_validation_assets.cpp
+    presentation_validation_catalog.cpp
+    presentation_validation_menu.cpp
+    presentation_validation_metrics.cpp
+    presentation_validation_results.cpp
+    presentation_validation_roster.cpp
+    presentation_validation_setup.cpp
+    presentation_validation_stage.cpp
+    presentation_validation_text.cpp
     round_tape.cpp
     rumble.cpp
     rumble_xinput.cpp

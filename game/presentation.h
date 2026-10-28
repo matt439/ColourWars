@@ -686,6 +686,8 @@ public:
 	void set_movement_feedback_enabled(bool enabled);
 
 private:
+	struct Validation;
+
 	std::string source_path_;
 	TeamPalettePresentation team_palette_;
 	MenuStyle menu_;
