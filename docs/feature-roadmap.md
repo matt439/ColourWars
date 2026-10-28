@@ -2508,6 +2508,13 @@ Native evidence: an isolated `+players 4 +bot all paint` Crossfeed capture
 the edge toward each other. Team A's panes show none because those two were on
 screen together. Evidence: `out/validation/road18-teammate-markers/`.
 
+Painter checks on MattPC (2026-10-28): `-IdentityOnly`, `-MonitorOnly` and
+`-SupplyOnly` pass in Debug and Release. `-HudOnly` fails in both builds at
+*HUD meter lost its exterior dark keyline* in its 4P 720x1280 portrait case.
+That case draws `InterfaceGameplay` alone over a blank canvas, with no Level and
+so no markers. At that pane size the HUD scale is 0.1875, which makes the 2 px
+keyline 0.375 px. The failure was not investigated further here.
+
 Left: the threat-marker decision, and an attended readability look at 1, 2 and
 4 panes (chip size at 4P, overlap with the HUD panels at the top corners,
 pointer legibility, whether the fade helps), with a pad (`ROAD#2`).
