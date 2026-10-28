@@ -128,12 +128,35 @@ DebugCompletion DebugRegistry::complete(std::string_view line) const
 	DebugCompletion completion;
 	completion.line = std::string(line);
 
-	// Complete the last statement only.
-	const std::size_t statement_start = line.find_last_of(';') == std::string_view::npos ?
-		0 : line.find_last_of(';') + 1;
-	const std::size_t word_start = line.find_last_of(" \t") == std::string_view::npos ||
-		line.find_last_of(" \t") < statement_start ?
-		statement_start : line.find_last_of(" \t") + 1;
+	// Quoted separators belong to argument data, just as in execution. Inside
+	// quotes, only a backslash immediately before a quote escapes that quote.
+	std::size_t statement_start = 0, word_start = 0;
+	bool quoted = false;
+	for (std::size_t index = 0; index < line.size(); ++index)
+	{
+		const char c = line[index];
+		if (quoted && c == '\\' && index + 1 < line.size() && line[index + 1] == '"')
+		{
+			++index;
+			continue;
+		}
+		if (c == '"')
+		{
+			quoted = !quoted;
+		}
+		else if (!quoted && c == ';')
+		{
+			statement_start = word_start = index + 1;
+		}
+		else if (!quoted && (c == ' ' || c == '\t'))
+		{
+			word_start = index + 1;
+		}
+	}
+	if (quoted)
+	{
+		return completion;
+	}
 	const std::string_view word = line.substr(word_start);
 	const DebugTokens before = tokenize(line.substr(statement_start, word_start - statement_start));
 	if (!before.ok)

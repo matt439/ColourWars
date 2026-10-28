@@ -1306,6 +1306,46 @@ Evidence under `out/validation/implementation-loop-20261028/`: failing baseline
 `dbg9-candidate/3bfe705104f949cf8914753e5d1aa395`. The final receipt verifies
 all six source/test files remained unchanged during qualification.
 
+## Quoted completion boundaries (`DBG#11`)
+
+**Done (2026-10-28).** Tab completion now recognizes statement and word
+boundaries outside double quotes, matching command execution's grammar.
+Previously, completing `echo "text; stag` rewrote quoted argument data as a
+new command name. That unfinished argument now stays unchanged.
+
+The scoped independent shortlist was:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | `DebugRegistry::complete` treats semicolons inside double quotes as statement separators. | Selected as `DBG#11`: preserve quoted text and complete the actual final statement/argument. A bounded boundary scan and literal registry checks; no editor dependency. |
+| 2 | Script discovery accepts only exact lowercase `.cfg`, while Windows execution can open uppercase `.CFG`. | A later discovery-only slice with private execution/list/completion controls. |
+| 3 | Screenshot naming preserves Windows reserved basenames. | Scope a naming policy and pure string checks separately before any implementation; no device-path experiment. |
+
+The boundary scan follows the existing grammar:
+inside quotes, backslash followed immediately by a double quote escapes that
+quote; other backslashes and single quotes are literal. An unfinished
+quoted word stays unchanged with no candidates. Existing raw partial-word
+matching, completed-token parsing, command/variable/live choice pools, sorting,
+deduplication, common prefixes and path suffix behavior remain intact.
+
+The native old-source baseline reproduced the exact quoted-data corruption
+before the production change. Literal CPU cases cover incomplete/closed and
+escaped quotes, immediate backslash/quote pairs, single quotes, adjacent
+segments, real separators and whitespace. A local command observes exact
+previous arguments and the partial word; unfinished quoted text never invokes
+its completion callback. Sorted unique candidates, common prefixes, path
+suffixes and unchanged command/game/log state are also checked.
+
+Both game builds and the complete console acceptance case pass. Debug retains
+the existing scripts, replay, tuning and bind checks; Release retains inert
+hooks, shared layout and absence of developer RTTI. Independent source/test
+review passes, and both source hashes remain unchanged during qualification.
+This does not qualify foreground keyboard delivery or human review.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`dbg11-baseline/87c6620c4e244d4a910617c4e23254ab`, both-preset candidate
+`dbg11-candidate/7ca2e3f98999441b821056aef054525f`.
+
 ## Bind reset persistence (`DBG#10`)
 
 **Done (2026-10-28).** This ranked authoring follow-up fixed an error-handling
