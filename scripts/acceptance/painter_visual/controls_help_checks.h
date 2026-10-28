@@ -276,11 +276,13 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     tap(Key::down);
     const Frame old_before_jump = compare("old-parent-before-jump", false, old, old_words, true);
     tap(Key::enter); tick(); require(stack.depth() == 3, "Old Controls did not open its actual Keyboard Jump child");
+    tap(Key::down); tap(Key::down); // Jump is Keyboard Keys' third row.
     tap(Key::enter); tick(); // Capture observes a fresh neutral frame after entry.
     tap(Key::j); tick();
     require(preferences.input_bindings().keyboard_jump == Key::space,
         "Capturing a pending Jump key applied it without confirmation");
-    tap(Key::down); tap(Key::down); tap(Key::enter); tick();
+    for (int row = 2; row < 7; ++row) { tap(Key::down); } // Apply.
+    tap(Key::enter); tick();
     require(preferences.input_bindings().keyboard_jump == Key::j,
         "Actual Keyboard Jump child did not apply its captured key");
     tap(Key::escape); tick(); require(stack.depth() == 2, "Keyboard Jump did not return to its retained Controls parent");
