@@ -47,7 +47,7 @@ gate. The earlier figure/animation and other source splits already exist.
 | [tune_colour_document_checks.h](../scripts/acceptance/debug_console/tune_colour_document_checks.h) | 1,044 | Independent fixture families, `HYG#7` |
 | [tuning.cpp](../game/tuning.cpp) | 907 | Retain cohesive key-by-key parsing and validation |
 | [level_document.cpp](../editor/level_document.cpp) | 899 | Retain the shared document transaction; save protection remains `ED#7` |
-| [projectile.cpp](../game/objects/projectile.cpp) | 867 | Sweep/contact subsystem, `HYG#3` |
+| [projectile.cpp](../game/objects/projectile.cpp) | 287 | Contacts/sweeps extracted (587 lines), `HYG#3` complete |
 | [weapon.cpp](../game/objects/weapon.cpp) | 855 | Retain the current firing/lifecycle core; motion already has its own file |
 | [save.cpp](../game/save.cpp) | 802 | Profile/effective-preference overlay, `HYG#4` |
 
@@ -92,18 +92,19 @@ the shipping seven-arena replay passes in both configurations.
 
 ## Projectile contacts and sweeps (`HYG#3`)
 
-**OPEN, M.** The private sweep/relative-impact helpers and the contiguous
-`resolve_launch_obstruction` through `flush_paint_audio` definitions form one
-contact subsystem. Move them together into
-`game/objects/projectile_contacts.cpp`, leaving construction, diffusion,
-movement, lifetime and accessors in the existing file.
+**Done (2026-10-28).** Moved the private sweep/relative-impact helpers and
+all eleven definitions from `resolve_launch_obstruction` through
+`flush_paint_audio` into `game/objects/projectile_contacts.cpp` (587 lines).
+Construction, diffusion, movement, lifetime and accessors remain in the
+287-line `projectile.cpp`; the contact helpers remain private to their new
+translation unit.
 
-Preserve sweep interval ordering, launch exemptions, relative moving-surface
-geometry, endpoint deduplication, contact/paint callbacks and audio flush order
-exactly. Keep helpers private to their new translation unit. Acceptance:
-Debug/Release builds and existing `blocked_shot`, `tunnelling`,
-`moving_structure`, `fixed_slab`, paint and replay checks. A discovered contact
-defect gets a separate fix; it is not folded into the move.
+Independent block comparisons confirm identical definitions and retained
+sweep ordering, launch exemptions, relative moving-surface geometry,
+endpoint deduplication and impact/paint/audio callback order. This only moves
+source and adjusts includes/registration. Debug and Release builds and
+`blocked_shot`, `tunnelling`, `moving_structure`, `fixed_slab`, `paint` and
+`instant_replay` pass, including Debug's public-loader replay checks.
 
 ## Save profile overlay (`HYG#4`)
 

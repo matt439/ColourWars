@@ -125,6 +125,7 @@ add_executable(ColourWars WIN32
     objects/view_shake.cpp
     objects/player_input.cpp
     objects/projectile.cpp
+    objects/projectile_contacts.cpp
     objects/projectile_ball.cpp
     objects/projectile_builder.cpp
     objects/projectile_jet.cpp
