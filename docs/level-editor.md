@@ -107,6 +107,43 @@ batch `ed16-candidate/242b010b86634c48b615eb77ee134fdd`. Full checker receipts
 are `out/acceptance/x64-debug/level-editor/cf4ae5c17ae54adb89d413ae48ceb86e`
 and `out/acceptance/x64-release/level-editor/edd33c1f31d64d4ea6c98cb3c1b1d30d`.
 
+#### Mouse-button gesture ownership (`ED#17`)
+
+**Done (2026-10-28).** This ranked authoring follow-up fixed a lost canvas
+edit when a left drag took over a middle-button pan. Left down reacquired the
+pan's existing capture after setting its new drag flag; the native baseline
+already observed cleared gesture flags at that point and a lost final edit.
+Middle up also unconditionally cancelled a newer left preview. Middle down
+already cancelled an older left drag, so the handoff was asymmetric.
+
+The latest admitted button-down now owns the gesture. Left down cancels the
+older gesture after the existing pending-property guard; middle up ends only
+an active pan. Releasing an older button is harmless, and releasing the owner
+ends the gesture without resuming another held button. An empty-space left
+click cancels the previous pan and leaves the canvas idle. Property admission,
+snap, resize and ordinary drop behavior are unchanged.
+
+The actual private hidden-canvas baseline reproduced a lost final rectangle
+with cleared gesture flags while capture remained on the canvas. Ten native
+contexts now pass both button/release orders,
+move/resize, empty-space and valid pending-property handoffs, ordinary controls,
+capture, exact document history, source bytes and caller restoration. These
+checks remain in the separate gesture process. All three editor targets and
+the complete checker pass in both presets, including the prior metadata,
+ramp, save-guidance and four hidden-launch checks. The original 28-transition
+DPI/font fixture remains unchanged and reports GDI 21 to 21 in both presets;
+input-activated aggregate GDI lifetime remains unqualified.
+Invalid inspector text remains guarded before cancellation; its modal error
+and external capture-loss lifecycle are separate scopes. Attended GUI/play
+acceptance remains `ED#5`.
+
+Independent review and four-file source-immutability checks pass. Evidence under
+`out/validation/implementation-loop-20261028/`: failing native baseline
+`ed17-baseline/04e0fd1ccde64c25bc6e9b1bf71797c7`, final both-preset batch
+`ed17-candidate/772dbc04693a4b5a8062f8d7a95873c6`. Full checker receipts are
+`out/acceptance/x64-debug/level-editor/5652c47762c747ba81f4fabdcf6c44ea`
+and `out/acceptance/x64-release/level-editor/c7a3f648b379493b881b4947abf635fb`.
+
 #### Reserved stage filenames (`ED#15`)
 
 **Done (2026-10-28).** The stage id becomes a Windows filename, so the shared

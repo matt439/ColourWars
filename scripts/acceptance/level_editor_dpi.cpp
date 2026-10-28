@@ -84,6 +84,7 @@ namespace colourwars_editor
         static void check_metadata(Editor& editor, const std::filesystem::path& scratch);
         static void check_empty_key_properties(Editor& editor, const std::filesystem::path& scratch);
         static void check_gestures(Editor& editor, const std::filesystem::path& scratch);
+        static void check_button_chords(Editor& editor, const std::filesystem::path& scratch);
         static void check_ramp_hits(Editor& editor, const std::filesystem::path& scratch);
         static void run_gestures(const std::filesystem::path& scratch);
 
@@ -240,6 +241,7 @@ namespace colourwars_editor
 #include "scripts/acceptance/level_editor_dpi/empty_key_checks.h"
 #include "scripts/acceptance/level_editor_dpi/metadata_checks.h"
 #include "scripts/acceptance/level_editor_dpi/gesture_checks.h"
+#include "scripts/acceptance/level_editor_dpi/button_chord_checks.h"
 #include "scripts/acceptance/level_editor_dpi/ramp_hit_checks.h"
 
 int wmain(int argc, wchar_t* argv[])

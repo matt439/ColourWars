@@ -471,7 +471,7 @@ namespace colourwars_editor
         {
             if (!apply_pending()) return 0;
             SetFocus(canvas_);
-            resizing_ = false;
+            cancel_drag();
             if (selection_ && selection_->kind != EntryKind::level && !is_spawn(*selection_) &&
                 !document_.slab_guide(*selection_))
             {
@@ -540,7 +540,7 @@ namespace colourwars_editor
                 { document_.set_rectangle(*selection_, result); refresh(true); }
             }
             return 0;
-        case WM_MBUTTONUP: cancel_drag(); return 0;
+        case WM_MBUTTONUP: if (panning_) cancel_drag(); return 0;
         case WM_CAPTURECHANGED: dragging_ = false; panning_ = false; InvalidateRect(canvas_, nullptr, FALSE); return 0;
         case WM_MOUSEWHEEL:
         {
