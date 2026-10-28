@@ -577,7 +577,10 @@ void DebugDirectorImpl::register_script_commands()
 				for (std::filesystem::directory_iterator it(directory, error), end;
 					!error && it != end; it.increment(error))
 				{
-					if (it->path().extension() == L".cfg")
+					const auto extension = it->path().extension().native();
+					std::error_code kind_error;
+					if (CompareStringOrdinal(extension.c_str(), -1, L".cfg", -1, TRUE) == CSTR_EQUAL &&
+						it->is_regular_file(kind_error))
 					{
 						const std::string stem = labrador::path_to_utf8(it->path().stem());
 						std::string file;

@@ -1306,6 +1306,48 @@ Evidence under `out/validation/implementation-loop-20261028/`: failing baseline
 `dbg9-candidate/3bfe705104f949cf8914753e5d1aa395`. The final receipt verifies
 all six source/test files remained unchanged during qualification.
 
+## Executable script discovery (`DBG#12`)
+
+**Done (2026-10-28).** Script listing and Tab completion now recognize
+mixed-case `.cfg` extensions and require regular files. Previously,
+`exec upper` could run a physical `upper.CFG` on Windows while discovery
+omitted it; Tab also advertised directories named `*.cfg` that execution
+refused and listing omitted.
+
+With quoted completion complete, the ranked next slice is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | The shared script-name callback disagrees with execution about case and regular files. | Selected as `DBG#12`: make discovery reflect executable files while preserving search order and name grammar. Bounded callback change with private files/directories and native execution/list/completion controls. |
+| 2 | The editor font-retirement failure is intermittent even with identical executable bytes. | Continue the separately bounded lifecycle diagnosis; no new feature depends on clearing that gate. |
+| 3 | Reserved screenshot basenames need a defined naming policy. | Keep separate from discovery; no device-path experiment. |
+
+Discovery compares extensions using Windows' case-insensitive ordinal comparison
+([API](https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-comparestringordinal)).
+A separate per-entry regular-file error code preserves directory traversal.
+Stem spelling, name validation, exact deduplication, sorting, directory
+precedence, execution/list file resolution and explicit command-name suffix
+grammar remain unchanged.
+
+The native old-source baseline first executed a private uppercase-extension
+script successfully by stem, then reproduced its missing completion. Candidate
+checks retain eight literal discovered names and ordered summaries, uppercase/
+mixed/lowercase files in both folders, duplicate first-folder precedence and
+a later regular-file fallback behind a directory decoy. Wrong extensions,
+invalid names, directories and unchanged explicit suffix refusals are checked.
+All seventeen input files, the complete private tree and caller path/profile
+state remain unchanged.
+
+Both game builds and the complete console CPU case pass, including the existing
+Debug script/replay/tuning checks and Release's inert/layout/RTTI boundary.
+Independent review confirms only the discovery condition changed; both source
+hashes remained stable. No real profile, window, device or foreground input was
+used by the new checks.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`dbg12-baseline/61543302c85847c5bfa92f293b7b2dfd`, both-preset candidate
+`dbg12-candidate/1adfef9a2f72413f99310aa144cdc843`.
+
 ## Quoted completion boundaries (`DBG#11`)
 
 **Done (2026-10-28).** Tab completion now recognizes statement and word
