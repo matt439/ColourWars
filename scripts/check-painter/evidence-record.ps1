@@ -174,6 +174,9 @@ elseif ($FeedbackTuneColoursOnly) {
 elseif ($PercentageTextOnly) {
     . (Join-Path $PSScriptRoot 'evidence-record/menu-text.ps1') 'PercentageTextOnly'
 }
+elseif ($StageScanOnly) {
+    . (Join-Path $PSScriptRoot 'evidence-record/menu-text.ps1') 'StageScanOnly'
+}
 elseif ($StageCountsOnly) {
     . (Join-Path $PSScriptRoot 'evidence-record/menu-text.ps1') 'StageCountsOnly'
 }

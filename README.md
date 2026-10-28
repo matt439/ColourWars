@@ -153,10 +153,11 @@ in Stage Select, marked "Built by you." Random never picks them.
 The game reads the folder when it starts and again each time Stage Select opens
 from the main menu, so a new or changed file shows up without restarting. It
 is not reread between the rounds of a series. A file the game cannot use is
-left out, and the other stages still load. The game prints one line giving
-the reason to its error output (stderr). You only see that line if you start
-the game from a console with stderr redirected, for example
-`ColourWars.exe 2> stages.txt`.
+left out, and the other stages still load. Stage Select shows a scan issue
+count; press **Down** while browsing to read the filename and reason.
+**Left/Right** changes issue, **Up/Down** changes page, and **A/Enter** or
+**B/Esc** returns to your arena choice. The game also prints the reason to
+stderr, which you can retain with `ColourWars.exe 2> stages.txt`.
 
 The level editor makes these files: **File > Save to My Stages** (Ctrl+M)
 saves into that folder, checking the name as the game does. The editor is

@@ -46,11 +46,10 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Four remaining `OPEN` slices have
+**Ready local work (backlog audit, 2026-10-28).** Three remaining `OPEN` slices have
 concrete implementation and acceptance scopes in their owners. They can proceed
 while attended reviews wait, without changing the arena/tuning order above:
 
-- **Gameplay and diagnostics:** show user-stage refusals in game (`ROAD#32`).
 - **Editor workflow:** per-monitor DPI (`ED#8`), paint-mechanism canvas guides (`ED#9`) and destination-aware save
   guidance (`ED#10`).
 
@@ -82,7 +81,8 @@ comparison and physical-pad check; values remain provisional.
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
 - **User stages:** play a stage made with Save to My Stages, and decide whether user stages
-  may opt into Random and whether the briefing hint is enough of a marker (`ROAD#16`).
+  may opt into Random, whether the briefing hint is enough of a marker, and the
+  provisional scan-details wording (`ROAD#16`).
 - **Series stage rule:** play Same stage, Rotate and Loser's pick, choose the default and
   settle the draw, explicit-only and bot-loser calls (`ROAD#20`).
 - **Keyboard Keys:** rebind on a keyboard and confirm the slice's provisional calls (`GAP#4.2`).
@@ -205,8 +205,7 @@ excluded modes.
 | `ROAD#28` | UNSCOPED | MED | XL | Vertical lifts need vertical carry, ceiling/crush, admission and sweep contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#29` | UNSCOPED | MED | XL | Growing sponges need occupied resize, changing-area scoring and paint-credit contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#30` | DECISION | MED | M | Play the Ferry/Gate Trials from both sides at 1-4P; judge route value, held-open clarity and provisional values. Arena selection remains `POL#21`. [Scope](docs/feature-roadmap.md#paint-object-trial-play-road30). |
-| `ROAD#16` | DECISION | LOW | S | User stages play without a rebuild; the editor saves straight there and Stage Select rescans. Left: attended play of a player-made stage, and the author's calls on Random opt-in and the hint-only marker. [Owner](docs/feature-roadmap.md#user-stages-road16). |
-| `ROAD#32` | OPEN | MED | L | Retain scan results and show refused user-stage files/reasons from main-menu Stage Select, clearing stale errors on rescan. [Scope](docs/feature-roadmap.md#user-stage-refusal-details-in-the-game-road32). |
+| `ROAD#16` | DECISION | LOW | S | User stages and scan details are implemented. Left: attended saved-stage play, Random opt-in and hint-only marker choices, and provisional scan-details wording. [Owner](docs/feature-roadmap.md#user-stages-road16). |
 | `ROAD#17` | DECISION | LOW | M | Overview map in the unused three-player quadrant (Splatoon turf map). Shows territory mid-match, against gap audit 1.1: decide first. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#18` | DECISION | LOW | S | Off-screen teammate markers are in. Left: decide whether enemies get threat markers (an information-model change; see `POL#3` rear threats), and an attended readability look at 1/2/4P. [Owner](docs/feature-roadmap.md#teammate-markers-road18). |
 | `ROAD#20` | DECISION | LOW | S | The Series stage rule is in (Same stage, Rotate, Loser's pick on Mode). Left: play the three, choose the default, and confirm the provisional calls for draws, explicit-only stages and bot-only losers. [Owner](docs/feature-roadmap.md#series-stage-rule-road20). |

@@ -2568,7 +2568,7 @@ copy of Close Quarters from an isolated profile.
 - **A note for players.** The release ZIP ships the root `README.md`
   (`cmake/release_package.cmake`). Its new "Your own stages" section names
   the folder and the name rule, says when the game reads the folder and
-  where a refusal is printed, and points to Save to My Stages, noting that
+  where refusal details are available, and points to Save to My Stages, noting that
   the editor is not in the ZIP.
 
 The `user_stages` case now also runs a session: an unattached folder (every
@@ -2590,34 +2590,48 @@ Provisional decisions, open for the author:
 - **The editor's shortcut** is Ctrl+M (for "My Stages"). Ctrl+Shift+S was
   taken.
 
-Still open: attended play of a real player-made stage (a human gate), and the
-Random and marker calls above.
+Still open: attended play of a real player-made stage (a human gate), the
+Random and marker calls above, and the provisional scan-details action/help
+wording identified in `ROAD#32` below.
 
 ### User-stage refusal details in the game (`ROAD#32`)
 
-**OPEN, MED, L (2026-10-28).** A broken user stage is correctly refused
-without stopping the game, but a player must redirect stderr to find out why.
-`UserStageScan` already returns accepted names and refusal reasons; the
-`GameMenu` rescan callback discards that result. A stage silently absent from
-the picker gives the author no usable repair path in the windowed game.
+**Done (2026-10-28).** `UserStageFolder` retains its latest scan. Main-menu
+Stage Select shows an issue count separately from the chosen arena's briefing;
+Down while browsing opens a covering details page. Left/Right changes issue,
+Up/Down changes page, and Confirm/Back/Pause dismisses. The page owns a copied
+snapshot and four text widgets, preserving the arena cursor underneath.
 
-Retain the latest scan outcome and expose a bounded, dismissible details view
-from main-menu Stage Select when there are refusals. Show the file name and
-the existing validation reason, with paging/wrapping for long diagnostics;
-reuse the current menu input and text-validation paths. A no-refusal scan
-clears old errors. Present scan status separately from the accepted stage's
-briefing, so the Random and user-stage-marker decisions stay independent.
-Any new action label/help copy must be identified for the author's wording;
-the existing refusal text can drive the implementation and fit fixtures.
+Existing filename/reason text is retained. Actual font extents wrap even an
+unbroken filename and divide it into pages. Printable ASCII stays verbatim;
+other UTF-16 units use `\uXXXX`, and invalid UTF-8 bytes use `\xXX`, matching
+the game's current font coverage. Folder-level and aggregate failures count
+as issues too. No-refusal scans clear stale details. Startup/rescan boundaries,
+per-file acceptance and stderr deduplication are unchanged; opening/closing
+details never scans, and matches/series rounds do not offer this view.
 
-Keep the startup/rescan boundary, per-file refusal and stderr deduplication.
-Do not scan during a match or between series rounds, automatically open a
-modal on startup, or turn an optional user-stage failure into a fatal one.
-Acceptance: one valid and one broken file leave the valid stage playable and
-the broken file's reason reachable; fixing, removing or changing the bad file
-updates the details on the next permitted scan. Verify long/non-ASCII file
-diagnostics, no-error/unattached contexts, returning to the selected stage,
-and native menu fit. Use isolated user folders throughout.
+Optional `main_menu.stage_scan` and `menu_text.stage_scan` records own layout
+and copy, with compatible defaults. Diagnostic legends have their own font
+and footer-relative geometry; status/counter text fits its reserved area.
+Resource checks run after the existing ordered presentation checks and cover
+full ASCII glyphs, templates, paper/row geometry and shadow-inclusive legends.
+The provisional new wording is identified in the content: `User-stage scan`,
+`issue(s)`, `Down Scan details`, issue/page navigation and the escape hint.
+The author's wording/readability review joins the existing `ROAD#16` workflow
+review; software qualification does not accept that copy or its Random/marker
+decisions.
+
+Both game builds, `user_stages`, `stage_selection`, `menu_presentation` and
+`menu_text`, plus isolated accepted-audio startup/user-stage fixtures pass in
+Debug and Release. `check-painter.ps1 -StageScanOnly` passes both presets:
+one good/one broken actual folder, selected-stage return and actual valid-match
+start; changed/removed/fixed scans; locked/series/unattached/clean controls;
+three deduplicated stderr lines over six permitted scans. Each run has 151
+menu updates, 181 level updates, 238 readbacks, 156 independent text/raster
+comparisons across six window sizes/aspects, ten full frames and five crops.
+The long Unicode/invalid-byte fixture spans five pages without losing text.
+Review included compact parent/details captures and the 4:3 long-text page.
+All folders and profiles are isolated; human play remains `ROAD#16`.
 
 ### Series stage rule (`ROAD#20`)
 

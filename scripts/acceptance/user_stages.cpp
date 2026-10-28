@@ -6,6 +6,8 @@
 #include "game/presentation.h"
 #include "game/sound_groups.h"
 #include "game/stage_loading.h"
+#include "game/stage_scan_diagnostics.h"
+#include "game/states/menu_context.h"
 #include "game/tuning.h"
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
@@ -14,6 +16,7 @@
 #include "engine/render/sprite_font_file.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -346,7 +349,8 @@ namespace
 
 		UserStageFolder unattached;
 		require(unattached.scan().accepted.empty() && unattached.rescan().accepted.empty() &&
-			!unattached.attached(), "An unattached folder (every probe's GameMenu) must do nothing");
+			!unattached.attached() && unattached.latest_scan().refused.empty(),
+			"An unattached folder (every probe's GameMenu) must do nothing");
 
 		UserStageFolder session;
 		session.attach(folder, fixture.checks(), &fixture.world->audio, &shipped.levels, &shipped.stages);
@@ -356,6 +360,8 @@ namespace
 		});
 		require(session.scan().accepted == std::vector<std::string>{ "b_arena" } && shipped.stages.size() == manifest.size() + 1,
 			"The startup scan must load the folder's one stage");
+		require(session.latest_scan().accepted == std::vector<std::string>{ "b_arena" } &&
+			session.latest_scan().refused.empty(), "Startup scan details were not retained");
 
 		// Saved while the game runs: a new stage that sorts first, an edit and
 		// a broken file.
@@ -369,6 +375,8 @@ namespace
 		});
 		write_text(folder / "broken.json", "{");
 		const UserStageScan second = session.rescan();
+		require(session.latest_scan().accepted == second.accepted && session.latest_scan().refused == second.refused,
+			"The retained rescan outcome lost a refused file");
 		require(second.accepted == std::vector<std::string>{ "a_arena", "b_arena" } &&
 			second.refused.size() == 1 && refused(second, "broken.json", "broken.json"),
 			"A rescan must add a new stage, reread an edited one and refuse a broken one");
@@ -383,6 +391,7 @@ namespace
 
 		// Nothing changed: the same list, and the same refusal.
 		const UserStageScan same = session.rescan();
+		require(session.latest_scan().refused == second.refused, "An unchanged refusal disappeared from details");
 		require(same.accepted == second.accepted && same.refused == second.refused &&
 			names(shipped.stages) == expected, "A rescan with no change must give the same list");
 
@@ -398,11 +407,112 @@ namespace
 			"A vanished or now-broken user stage must leave the list, keeping the shipped stages");
 		require(shipped.levels.get("crossfeed")->display_name() == "Crossfeed",
 			"A rescan must not touch a shipped definition");
+		require(session.latest_scan().refused == third.refused, "Changed refusal details were not refreshed");
+
+		MenuContext menu(nullptr, nullptr, nullptr);
+		require(menu.stage_scan() == nullptr, "Unattached menu context gained scan details");
+		int rescans = 0;
+		menu.set_stage_rescan([&rescans] { ++rescans; });
+		menu.set_stage_scan([&session] { return &session.latest_scan(); });
+		require(menu.stage_scan() == &session.latest_scan() && menu.stage_scan()->refused == third.refused && rescans == 0,
+			"Reading scan details performed a rescan or lost the session result");
+		menu.rescan_stages();
+		require(rescans == 1, "Details callback changed the existing explicit rescan boundary");
+
+		write_level(base, folder / "b_arena.json", [](rapidjson::Document& d)
+		{
+			set_string(d, d, "display_name", "B Arena Fixed");
+		});
+		const UserStageScan fixed = session.rescan();
+		require(fixed.accepted == std::vector<std::string>{ "b_arena" } && fixed.refused.size() == 1 &&
+			session.latest_scan().refused == fixed.refused && shipped.levels.get("b_arena")->display_name() == "B Arena Fixed",
+			"Fixing a refused stage did not update the retained details and playable definition");
+		std::filesystem::remove(folder / "b_arena.json");
+		std::filesystem::remove(folder / "broken.json");
+		const UserStageScan cleared = session.rescan();
+		require(cleared.accepted.empty() && cleared.refused.empty() && menu.stage_scan()->refused.empty() &&
+			names(shipped.stages) == manifest, "A clean rescan retained stale refusal details");
+		menu.set_stage_scan({});
+		require(menu.stage_scan() == nullptr, "Detaching scan details left a stale callback");
 		// The whole list still passes what startup checks.
 		validate_game_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
 			&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);
 		std::cout << "PASS a rescan adds a new user stage, rereads an edited one and drops a deleted or broken one, "
 			"keeping the shipped stages first\n";
+	}
+
+	void check_diagnostics(const Fixture& fixture)
+	{
+		using stage_scan_diagnostics::display_text;
+		using stage_scan_diagnostics::pages;
+		require(display_text("broken.json: missing spawn_locations") == L"broken.json: missing spawn_locations",
+			"Printable refusal copy changed");
+		require(display_text("caf\xC3\xA9.json: \xF0\x9F\x8E\xA8") == L"caf\\u00E9.json: \\uD83C\\uDFA8",
+			"A non-ASCII filename or supplementary character was replaced instead of escaped");
+		require(display_text(std::string("\xC3(", 2)) == L"\\xC3(" &&
+			display_text(std::string("a\0b\n", 4)) == L"a\\u0000b\\u000A",
+			"Malformed UTF-8 or diagnostic controls lost their byte/unit explanation");
+		std::vector<Glyph> glyphs;
+		for (char32_t character = U' '; character <= U'~'; ++character)
+		{
+			glyphs.push_back({ character, mattmath::RectangleI(0, 0, 10, 8), 0.0f, 0.0f, 0.0f });
+		}
+		const Font fixed(TextureHandle{}, std::move(glyphs), 10.0f);
+		const Font proportional(TextureHandle{}, std::vector<Glyph>{
+			{ U'a', mattmath::RectangleI(0, 0, 1, 8), 0.0f, 0.0f, 0.0f },
+			{ U' ', mattmath::RectangleI(0, 0, 1, 8), 0.0f, 0.0f, 0.0f },
+			{ U'b', mattmath::RectangleI(0, 0, 3, 8), 0.0f, 0.0f, 0.5f },
+			{ U'X', mattmath::RectangleI(0, 0, 5, 8), 0.0f, 0.0f, 0.0f } }, 10.0f);
+		require(pages(proportional, "a bbX", 10.0f, 10.0f) ==
+			std::vector<std::wstring>{ L"a ", L"bb", L"X" },
+			"A wide final proportional glyph left an overwide suffix after word wrapping");
+		require(pages(fixed, "abcdefgh", 20.0f, 20.0f) ==
+			std::vector<std::wstring>{ L"ab\ncd", L"ef\ngh" }, "Exact diagnostic width/height edges did not paginate inclusively");
+		require(pages(fixed, "", 20.0f, 20.0f) == std::vector<std::wstring>{ L"" },
+			"An empty diagnostic did not provide a safe empty page");
+		for (const auto area : { mattmath::Vector2F(0.0f, 20.0f), mattmath::Vector2F(20.0f, -1.0f),
+			mattmath::Vector2F(9.0f, 20.0f), mattmath::Vector2F(20.0f, 9.0f) })
+		{
+			bool rejected = false;
+			try { pages(fixed, "W", area.x, area.y); }
+			catch (const std::invalid_argument&) { rejected = true; }
+			require(rejected, "An unusable diagnostic area was accepted");
+		}
+		const std::string long_message = "user stage refused: " + std::string(2001, 'W') +
+			".json: a long unbroken key and caf\xC3\xA9.json need all of their content";
+		for (const char* name : { "lato_black_24", "lato_black_36", "courier_prime_bold_16" })
+		{
+			const Font& font = *fixture.world->render.font(fixture.world->render.resolve_sprite_font(name));
+			const auto laid_out = pages(font, long_message, 400.0f, 120.0f);
+			require(laid_out.size() > 1, "Long refusal fixture did not exercise paging");
+			std::wstring restored;
+			for (const std::wstring& page : laid_out)
+			{
+				const auto size = font.measure(page);
+				require(size.x <= 400.0f && size.y <= 120.0f, "A diagnostic page escaped its actual font bounds");
+				for (const wchar_t character : page) { if (character != L'\n') { restored.push_back(character); } }
+			}
+			require(restored == display_text(long_message), "Wrapping/paging lost refusal filename or reason text");
+		}
+		const auto& look = fixture.presentation->main_menu().stage_scan;
+		const auto& copy = fixture.presentation->menu_text().stage_scan;
+		const Font& source_font = *fixture.world->render.font(fixture.world->render.resolve_sprite_font(look.font));
+		std::vector<Glyph> tall_glyphs;
+		for (char32_t character = U' '; character <= U'~'; ++character)
+		{
+			Glyph glyph = *source_font.find(character);
+			if (character == U'X' || character == U'9') { glyph.subrect.height = 100; }
+			tall_glyphs.push_back(glyph);
+		}
+		const Font tall(TextureHandle{}, std::move(tall_glyphs), source_font.line_spacing());
+		const auto layout = stage_scan_diagnostics::layout(look, fixture.presentation->main_menu().art,
+			fixture.presentation->menu().footer_y, tall, copy);
+		require(layout.unicode_hint.height >= tall.measure(copy.unicode_hint).y * look.text_scale &&
+			layout.progress.height >= tall.measure(copy.progress(9, 9, 9, 9)).y * look.text_scale &&
+			layout.unicode_hint.bottom() < layout.body.y && layout.body.bottom() < layout.progress.y,
+			"A font's tall hint/counter glyph escaped its row into adjacent diagnostic text");
+		std::cout << "PASS refusal display: exact ASCII, UTF-16/invalid-byte escapes, inclusive independent font edges, "
+			"actual proportional/monospace long-token pages and lossless reconstruction\n";
 	}
 
 	void check_hint(const Presentation& presentation)
@@ -411,6 +521,59 @@ namespace
 		require(!text.user_hint.empty() && text.user_hint != text.browse_hint,
 			"Stage Select needs its own user-stage hint in menu_text.stage.user_hint");
 		std::cout << "PASS menu_text.stage.user_hint marks a user stage in Stage Select\n";
+	}
+
+	void check_diagnostic_presentation(const Fixture& fixture, const std::filesystem::path& content,
+		const std::filesystem::path& scratch)
+	{
+		const auto base = read_document(content / "presentation.json");
+		const auto check = [&](const char* name, auto edit, const std::string& refusal)
+		{
+			const auto path = scratch / (std::string("diagnostic-") + name + ".json");
+			write_level(base, path, edit);
+			try
+			{
+				const Presentation candidate(path_to_utf8(path).c_str());
+				candidate.validate_resources(fixture.world->render, fixture.world->audio);
+				require(refusal.empty(), std::string(name) + " unexpectedly passed");
+			}
+			catch (const std::exception& error)
+			{
+				require(!refusal.empty() && std::string(error.what()).find(refusal) != std::string::npos,
+					std::string(name) + ": " + error.what());
+			}
+		};
+		check("legacy-defaults", [](auto& d) {
+			d["main_menu"].RemoveMember("stage_scan"); d["menu_text"].RemoveMember("stage_scan"); }, "");
+		check("missing-counter-token", [](auto& d) {
+			d["menu_text"]["stage_scan"]["counter"].SetString("File {file} of {files} {page}"); }, "stage_scan");
+		check("duplicate-summary-token", [](auto& d) {
+			d["menu_text"]["stage_scan"]["status"].SetString("{count} {count}"); }, "stage_scan");
+		check("unknown-font", [](auto& d) {
+			d["main_menu"]["stage_scan"]["font"].SetString("absent_diagnostic_font"); }, "main_menu.stage_scan");
+		check("thin-paper", [](auto& d) {
+			d["main_menu"]["stage_scan"]["box_size"]["x"].SetFloat(50.0f); }, "main_menu.stage_scan");
+		check("huge-text", [](auto& d) {
+			d["main_menu"]["stage_scan"]["text_scale"].SetFloat(500.0f); }, "main_menu.stage_scan");
+		check("overlapping-status", [](auto& d) {
+			d["main_menu"]["stage_scan"]["status"]["position"]["y"].SetFloat(40.0f); }, "main_menu.stage_scan");
+		check("outside-legend", [](auto& d) {
+			d["main_menu"]["stage_scan"]["prompt_position"]["x"].SetFloat(1900.0f); }, "main_menu.stage_scan");
+		check("long-legend", [](auto& d) {
+			const std::string long_legend(500, 'W');
+			d["menu_text"]["stage_scan"]["details_prompt"].SetString(long_legend.c_str(), d.GetAllocator());
+		}, "main_menu.stage_scan");
+		const auto& copy = fixture.presentation->menu_text().stage_scan;
+		require(copy.summary(0) == copy.no_refusals && copy.summary(37).find(L"37") != std::wstring::npos &&
+			copy.progress(12, 345, 6, 78) == L"Issue 12 of 345   Page 6 of 78", "Diagnostic counters changed their domains");
+		for (const auto indices : { std::array<size_t, 4>{ 0, 1, 1, 1 }, { 2, 1, 1, 1 }, { 1, 1, 0, 1 }, { 1, 1, 2, 1 } })
+		{
+			bool refused = false;
+			try { copy.progress(indices[0], indices[1], indices[2], indices[3]); }
+			catch (const std::invalid_argument&) { refused = true; }
+			require(refused, "An out-of-domain diagnostic counter was accepted");
+		}
+		std::cout << "PASS diagnostic presentation: legacy defaults, exact counters, bad copy/font/layout refusals before navigation\n";
 	}
 }
 
@@ -429,6 +592,8 @@ int main(int argc, char** argv)
 		presentation.validate_resources(world.render, world.audio);
 		const Fixture fixture{ &world, &tuning, &presentation, PlaySettings{} };
 		check_hint(presentation);
+		check_diagnostics(fixture);
+		check_diagnostic_presentation(fixture, content, scratch);
 		check_empty(fixture, content, scratch);
 		check_mixed(fixture, content, scratch);
 		check_user_collision(fixture, content, scratch);

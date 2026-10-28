@@ -467,6 +467,7 @@ public:
 		PlayerTeam picker = PlayerTeam::none);
 	void update_page(float dt) override;
 	void init() override;
+	void on_resume() override;
 protected:
 	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
@@ -497,12 +498,15 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> stage_record_;
 	std::unique_ptr<labrador::UiTextDropShadow> selection_status_;
 	std::unique_ptr<labrador::UiTextDropShadow> selection_hint_;
+	std::unique_ptr<labrador::UiText> stage_scan_status_;
 	std::unique_ptr<labrador::UiTextDropShadow> random_mark_;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> briefing_text_;
 	SelectState select_state_ = SelectState();
 	int displayed_slot_ = -1;
 	ConfirmationState displayed_state_ = ConfirmationState::unconfirmed;
+	bool scan_prompt_visible_ = false;
 	void update_stage_select_visuals();
+	void refresh_scan_prompt();
 	// The record line for this roster's kind of match on `slot`, or empty.
 	std::wstring record_line(int slot) const;
 	void refresh_briefing_paper();

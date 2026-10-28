@@ -37,6 +37,10 @@ void GameMenu::init()
 	if (this->user_stages_ != nullptr)
 	{
 		this->menu_context_->set_stage_rescan([folder = this->user_stages_] { folder->rescan(); });
+		this->menu_context_->set_stage_scan([folder = this->user_stages_]
+		{
+			return &folder->latest_scan();
+		});
 	}
 
 	this->open_menu(MainMenuScreen::title);

@@ -6,6 +6,7 @@ void Presentation::validate_resources(const labrador::RenderResources& render,
 {
     Validation validation(*this, render, audio);
     validation.validate();
+    this->validate_stage_scan_resources(render);
 }
 
 void Presentation::Validation::validate()

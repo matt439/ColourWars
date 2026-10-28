@@ -47,6 +47,8 @@ add_executable(ColourWars WIN32
     session.cpp
     sound_groups.cpp
     stage_loading.cpp
+    stage_scan_diagnostics.cpp
+    presentation_validation_stage_scan.cpp
     text_wrap.cpp
     tuning.cpp
     tuning_validation.cpp
@@ -192,6 +194,7 @@ add_executable(ColourWars WIN32
     states/main_menu_team_select.cpp
     states/main_menu_weapon_select.cpp
     states/menu_context.cpp
+    states/user_stage_refusals_menu.cpp
     states/menu_focus_motion.cpp
     states/menu_input.cpp
     states/menu_level_settings.cpp

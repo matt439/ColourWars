@@ -2,11 +2,13 @@
 #include "game/states/main_menu.h"
 #include "game/states/match_start.h"
 #include "game/states/end_menu_action.h"
+#include "game/states/user_stage_refusals_menu.h"
 #include "game/drawable_text.h"
 #include "game/save.h"
 #include "game/objects/level_end_info.h"
 #include "game/objects/crude_drawing.h"
 #include "game/series_stage_rule.h"
+#include "game/stage_loading.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -30,8 +32,12 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 		this->input()->player_inputs(*this->level_settings());
 	if (this->wait_for_players(inputs))
 	{
+		// The shared connection gate may replace the legend. Restore the scan
+		// action only once the roster is available again.
+		this->scan_prompt_visible_ = false;
 		return;
 	}
+	this->refresh_scan_prompt();
 	const int num_inputs = static_cast<int>(inputs.size());
 	const int player_count = this->player_count();
 
@@ -114,7 +120,19 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 		}
 		else if (this->select_state_.state == ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == labrador::Direction::left)
+			if (inputs[i].direction == Direction::down && !this->between_rounds())
+			{
+				const UserStageScan* scan = this->menu_context()->stage_scan();
+				if (scan != nullptr && !scan->refused.empty())
+				{
+					this->play_wave(this->confirm_sound_);
+					this->input()->reset_actions();
+					this->context()->push(std::make_unique<UserStageRefusalsMenu>(
+						this->menu_context(), scan->refused));
+					return;
+				}
+			}
+			else if (inputs[i].direction == labrador::Direction::left)
 			{
 				this->play_wave(this->direction_sound_);
 				this->cycle_stages(labrador::Direction::left);
@@ -128,6 +146,35 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 	}
 	this->update_stage_select_visuals();
 }
+
+void MainMenuStageSelect::on_resume()
+{
+	MainMenuPage::on_resume();
+	this->input()->reset_actions();
+}
+
+void MainMenuStageSelect::refresh_scan_prompt()
+{
+	const bool visible = !this->between_rounds() &&
+		this->select_state_.state == ConfirmationState::unconfirmed &&
+		this->stage_scan_status_ != nullptr && !this->stage_scan_status_->hidden();
+	if (visible && !this->scan_prompt_visible_)
+	{
+		const StageScanPresentation& look = this->look().stage_scan;
+		PromptBarPresentation prompt = this->presentation().prompt_bar();
+		prompt.font = look.font;
+		prompt.position = look.prompt_position + Vector2F(0.0f, this->menu_style().footer_y);
+		prompt.shadow_offset = look.prompt_shadow_offset;
+		this->set_prompts(this->text().stage_scan.browse_prompt, prompt, look.text_scale);
+	}
+	else if (!visible && this->scan_prompt_visible_)
+	{
+		this->set_player_prompts(this->select_state_.state == ConfirmationState::confirmed ?
+			MenuPrompt::arena_locked : MenuPrompt::arena_browse);
+	}
+	this->scan_prompt_visible_ = visible;
+}
+
 void MainMenuStageSelect::set_level_settings() const
 {
 	this->level_settings()->set_stage(
@@ -200,6 +247,8 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_hint_->set_shadow_scale(hint_scale);
 	this->selection_hint_->set_shadow_offset(this->menu_style().detail_shadow_offset * hint_scale);
 	this->set_player_prompts(confirmed ? MenuPrompt::arena_locked : MenuPrompt::arena_browse);
+	this->scan_prompt_visible_ = false;
+	this->refresh_scan_prompt();
 	this->refresh_briefing_paper();
 	this->check_paper_geometry();
 	this->displayed_slot_ = slot;
@@ -407,6 +456,22 @@ void MainMenuStageSelect::init()
 		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset);
 	this->text_container_->add_child(this->selection_status_.get());
 	this->text_container_->add_child(this->selection_hint_.get());
+	const UserStageScan* scan = this->between_rounds() ? nullptr : this->menu_context()->stage_scan();
+	const bool refused = scan != nullptr && !scan->refused.empty();
+	this->stage_scan_status_ = std::make_unique<UiText>("stage_scan_status",
+		refused ? this->text().stage_scan.summary(scan->refused.size()) : std::wstring(),
+		main.stage_scan.font, main.stage_scan.status.position + Vector2F(0.0f, style.footer_y),
+		resources, style.unhighlight);
+	this->stage_scan_status_->set_scale(main.stage_scan.status_scale);
+	if (refused)
+	{
+		const RectangleF bounds = this->stage_scan_status_->bounds();
+		const float fit = std::min({ 1.0f, main.stage_scan.status.size.x / bounds.width,
+			main.stage_scan.status.size.y / bounds.height });
+		this->stage_scan_status_->set_scale(main.stage_scan.status_scale * fit);
+	}
+	this->stage_scan_status_->set_hidden(!refused);
+	this->text_container_->add_child(this->stage_scan_status_.get());
 	this->update_stage_select_visuals();
 }
 void MainMenuStageSelect::refresh_briefing_paper()

@@ -237,6 +237,16 @@
       "team_a_percentage": "A {percentage}",
       "team_b_percentage": "B {percentage}"
     },
+    "stage_scan": {
+      "_comment": "Provisional diagnostic action/help wording; external refusal text is retained verbatim with non-ASCII escapes.",
+      "heading": "User-stage scan",
+      "status": "User-stage scan: {count} issue(s).",
+      "browse_prompt": "Left/Right Arena   Down Scan details   A/Enter Lock   B/Esc Back",
+      "details_prompt": "Left/Right Issue   Up/Down Page   A/Enter or B/Esc Back",
+      "counter": "Issue {file} of {files}   Page {page} of {pages}",
+      "no_refusals": "No user-stage issues were found.",
+      "unicode_hint": "Other characters use \\uXXXX; invalid UTF-8 uses \\xXX."
+    },
     "stage": {
       "browse_status": "FIND YOUR ARENA",
       "locked_status": "ARENA LOCKED",
@@ -472,6 +482,19 @@
         "bucket": { "name": "Bucket", "frame": "bucket", "paint_frame": "bucket_paint", "supply_strip": "" },
         "random": { "name": "Random", "frame": "random", "paint_frame": "", "supply_strip": "" }
       }
+    },
+    "stage_scan": {
+      "font": "courier_prime_bold_16",
+      "heading_scale": 3.0,
+      "text_scale": 1.5,
+      "status_scale": 1.0,
+      "_comment": "Status and prompt y positions are offsets from menu_style.chrome.footer_y.",
+      "prompt_position": { "x": 150.0, "y": 30.0 },
+      "prompt_shadow_offset": { "x": 1.0, "y": 1.0 },
+      "box_size": { "x": 1840.0, "y": 920.0 },
+      "padding": { "x": 36.0, "y": 24.0 },
+      "gap": 16.0,
+      "status": { "position": { "x": 160.0, "y": 4.0 }, "size": { "x": 1600.0, "y": 24.0 } }
     },
     "stage_select": {
       "preview_position": { "x": 150.0, "y": 330.0 },

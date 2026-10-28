@@ -687,6 +687,7 @@ public:
 
 private:
 	struct Validation;
+	void validate_stage_scan_resources(const labrador::RenderResources& render) const;
 
 	std::string source_path_;
 	TeamPalettePresentation team_palette_;

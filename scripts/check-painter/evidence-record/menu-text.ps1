@@ -595,5 +595,19 @@ switch -Exact ($PainterMenuTextScope) {
         $result.Remove('stage')
         $result.checks = 'End-menu paper, primary continuation, four independent legacy action labels and three independent legacy headings at native 720p/1080p/QHD, 4:3, 16:10 and ultrawide; single match, tied/continuing/completed series, both Exit rows and hidden setup choices. Complete measured heading bounds use the unscaled actual heading font, full-paper centering and a stepped-paper reference with production point filtering. Custom labels/headings and replacement item/heading fonts missing an old glyph; retained/reopened/reversed snapshots through focus movement and repeated typed actions preserve the Session ledger. Owner-controlled pending music exits reject further input and preserve their original action through focus interruption; interrupted Enter releases require fresh selection. Frozen redraw/RNG, Reduce effects and resize remain covered. No physical controllers, human readability or listening acceptance.'
     }
+    'StageScanOnly' {
+        $result.scope = 'stage-scan-only'
+        $result.Remove('stage')
+        $result.stages = @('movement_course', 'my_course', 'broken_stage')
+        $result.player_counts = @(1)
+        $result.palettes = @('blue_orange')
+        $result.weapons = @('sprayer')
+        $result.resolutions = @('1280x720', '1920x1080', '2560x1440', '1600x1200', '1920x1200', '2560x1080')
+        $result.actions = @('real-user-folder-scan', 'Stage-Select-Down', 'dismiss-and-retain-choice', 'actual-valid-stage-start', 'changed-removed-fixed-rescan', 'between-rounds-no-scan', 'unattached-clean-no-action', 'long-Unicode-pages', 'invalid-UTF8-escapes', 'page-clamps', 'file-wrap', 'native-text-raster')
+        $result.input_slots = @(4)
+        $result.inputs = 'Synthetic keyboard messages to actual main-menu Stage Select and UserStageRefusalsMenu in StateContext; isolated optional-stage folder and captured per-file stderr, with no physical-device claim.'
+        foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+        $result.checks = 'One valid and one broken private stage leave the valid stage selectable and reach active play through the production LevelBuilder. Actual Down opens the diagnostic child without an automatic modal or extra scan; Escape restores the exact browsed parent frame and two deliberate confirms choose the retained valid stage. Locked, between-round, unattached and clean-scan contexts do not expose the action; six permitted scans update changed/removed/fixed reasons and retain exactly three deduplicated stderr lines. Two controlled raw diagnostics retain independently specified Unicode/control/invalid-byte escapes through bounded pages. Actual child heading, hint, body, progress and footer are compared to independent supplied UiText/PromptBar rasters at six standard menu sizes/aspects, with complete font/shadow bounds, page clamps, issue wrap/reset and frozen redraw/RNG. Exactly156 text rows,238 readbacks,ten full contexts and five native crops; menu updates are bounded500 and the valid stage countdown separately400. Diagnostic wording and attended readability remain author review.'
+    }
     default { throw "Unknown painter menu-text evidence scope: $PainterMenuTextScope" }
 }
