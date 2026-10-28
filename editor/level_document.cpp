@@ -155,7 +155,8 @@ namespace colourwars_editor
             for (auto it = value.MemberBegin(); it != value.MemberEnd(); ++it)
             {
                 const std::string name(it->name.GetString(), it->name.GetStringLength());
-                const std::string path = prefix + escaped_key(name);
+                // Keep an empty first token distinct from an absolute root field.
+                const std::string path = prefix.empty() && name.empty() ? "/" : prefix + escaped_key(name);
                 if (it->value.IsObject()) { append_properties(it->value, path + "/", properties); }
                 else if (it->value.IsString())
                 {

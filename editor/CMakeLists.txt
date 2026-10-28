@@ -26,6 +26,7 @@ add_executable(colourwars_editor_acceptance EXCLUDE_FROM_ALL
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/fixtures.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/content_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/format_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/empty_key_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/field_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/motion_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/drive_checks.cpp"
@@ -48,6 +49,8 @@ add_executable(colourwars_editor_dpi_acceptance EXCLUDE_FROM_ALL
     editor_canvas.cpp editor_window.cpp window_dpi.cpp)
 target_link_libraries(colourwars_editor_dpi_acceptance PRIVATE colourwars_level_document
     comctl32 comdlg32 shell32 gdi32 user32 shcore)
+target_include_directories(colourwars_editor_dpi_acceptance SYSTEM PRIVATE
+    "${PROJECT_SOURCE_DIR}/external/rapidjson/include")
 target_compile_definitions(colourwars_editor_dpi_acceptance PRIVATE
     COLOURWARS_CONTENT_DIR=L"${PROJECT_SOURCE_DIR}/game/content"
     COLOURWARS_EDITOR_DIR=L"${PROJECT_SOURCE_DIR}/editor")

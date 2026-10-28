@@ -64,6 +64,49 @@ After those three fixes, the next source-based shortlist is:
 | 2 | The editor validates UTF-8, but the game's default-flag level/fingerprint parses do not validate unknown string bytes or raw-NUL suffixes. | A client-owned snapshot check may align admission without an engine update. Moderate diagnostic/precedence risk; scope separately. |
 | 3 | Debug `binds.reset` ignores failure to remove the saved overrides, even though ordinary writes already use atomic replacement. | A blocked private file can expose misleading success and old binds on restart. Small feedback/persistence fix; avoid rewriting the existing atomic writer. |
 
+After completing those slices, fresh source review ranked these independent
+follow-ups:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Empty first metadata keys produce generated paths such as `/display_name`, which the setter interprets as an absolute root field; preview maps also strip that slash and can shadow real object fields. | Selected as `ED#16`: give the empty first token an explicit JSON-pointer slash. Small generation change; qualify exact targets and native inspector/preview behavior while preserving setter aliases and escaping. |
+| 2 | Left-button drag can start during a middle-button pan without ending the pan; middle-button release then cancels the still-held drag. | Bounded input usability work, but define gesture ownership and qualify both button orders before changing it. |
+| 3 | Several check scripts resolve relative evidence directories with `Path.GetFullPath`, which can differ from PowerShell's current location. | Concrete tooling usability candidate; reproduce with separate private provider/process locations before selecting a shared resolution policy. |
+
+#### Empty-key property targets (`ED#16`)
+
+**Done (2026-10-28).** Unknown metadata may contain an empty object-member
+name. The property generator formerly emitted `/display_name` for
+`"":{"display_name":"nested"}`; applying that generated path edited the actual
+root field instead. Object-relative properties had the same alias, and the
+preview map could mistake metadata `type` or `collision_type` for real fields.
+
+An empty first token now gets an explicit `/`, producing `//display_name` for
+its child. Ordinary generated paths, bare/absolute setter aliases, existing
+`~0`/`~1` escaping, unknown metadata and arrays are preserved. No setter API or
+gameplay change was needed.
+
+Both public-model and actual hidden-inspector baselines reproduced wrong-leaf
+edits before the fix. Model checks now cover root/object targets, nested empty
+names, scalar empty leaves, escaped-name siblings, unchanged runtime fields and
+arrays, complete history and private save/reopen. Two actual inspector edits
+retain the real names and preview type; two literal GDI body samples and hit
+points preserve the rectangle beside ramp-shaped metadata. Native history and
+Save/reopen retain the exact two edits and saved clean point.
+
+All three editor targets and the complete checker pass in Debug and Release,
+including prior gestures, ramp hits, save guidance and four hidden launches.
+The original unactivated 28-transition DPI/font fixture still reports GDI
+21 to 21. New inspector input remains in the separate gesture process and does
+not qualify its aggregate GDI lifetime. Independent review and eight-file
+source-immutability checks pass. Attended GUI/saved-stage play remains `ED#5`.
+
+Evidence under `out/validation/implementation-loop-20261028/`: failing model
+and native baseline `ed16-baseline/a3aa67efddf3457191620ea144c8477e`, final
+batch `ed16-candidate/242b010b86634c48b615eb77ee134fdd`. Full checker receipts
+are `out/acceptance/x64-debug/level-editor/cf4ae5c17ae54adb89d413ae48ceb86e`
+and `out/acceptance/x64-release/level-editor/edd33c1f31d64d4ea6c98cb3c1b1d30d`.
+
 #### Reserved stage filenames (`ED#15`)
 
 **Done (2026-10-28).** The stage id becomes a Windows filename, so the shared
