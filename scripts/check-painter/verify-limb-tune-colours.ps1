@@ -6,7 +6,7 @@
 $limbStates=@('default','rgb','rgba128','alpha0')
 $limbUpdates=@('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls','observation_weapon_updates')
 $limbFlags=@('roi_rgba_match','adoption_match','repeat_match','opaque_alpha','active_lids','quiet_disabled_blank','captured_layers_unchanged','delta_support','frozen_resources_inputs_rng')
-function Get-LimbSha([byte[]]$Bytes){[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes))}
+function Get-LimbSha([byte[]]$Bytes){Get-PainterSha256 $Bytes}
 function Assert-LimbKeys($Object,[string[]]$Keys,[string]$Scope){
     if($Object-isnot[pscustomobject]-or(($Object.PSObject.Properties.Name|Sort-Object)-join'|')-cne(($Keys|Sort-Object)-join'|')){throw "Limb exact $Scope JSON schema differs"}
 }

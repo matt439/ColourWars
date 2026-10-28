@@ -18,7 +18,7 @@ $crackSourcePins = @{
     'right/rgba128' = @('2CDEB329F9286136E261A4E9ACC021603379115EE210FAE1F5DEC2CF13CF89F4', '0BC0DF11F5E9D10DBAE2D9BD6B02F3171574A339EB4A2235A81C20D069C322E0')
     'right/alpha0' = @('1F78A117CFAF0204B221C0E2A2EA9C9804024F19BCB0B6A2BB8695D6064BE20F', '79157A1C43865724C2C804AA7763B16A1424F50F4FDD891450FB617A7EA811E9')
 }
-function Get-CrackSha([byte[]]$Bytes) { [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes)) }
+function Get-CrackSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
 function Assert-CrackKeys($Object, [string[]]$Keys, [string]$Scope) {
     if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($Keys | Sort-Object) -join '|')) { throw "Crack exact $Scope JSON schema differs" }
 }

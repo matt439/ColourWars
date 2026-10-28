@@ -1,3 +1,4 @@
+#Requires -Modules Microsoft.PowerShell.Utility
 # Painter visual probe runner. Helpers live beside it in check-painter/ and are
 # dot-sourced into this script's scope. A focused leaf has seven integration points:
 # the param list, the one-leaf guard below, check-painter/evidence-record.ps1,
@@ -167,6 +168,7 @@ function Quote-Path {
     return '"' + [IO.Path]::GetFullPath($Path) + '"'
 }
 
+. (Join-Path $PSScriptRoot 'check-painter/hash.ps1')
 . (Join-Path $PSScriptRoot 'check-painter/contact-sheet.ps1')
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))

@@ -1,4 +1,4 @@
-function Get-PreviewBackingSha([byte[]]$Bytes) { [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes)) }
+function Get-PreviewBackingSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
 function Assert-PreviewBackingKeys($Object,[string[]]$Expected,[string]$Scope) {
     if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name|Sort-Object)-join'|')-cne(($Expected|Sort-Object)-join'|')) { throw "Preview backing exact $Scope schema differs" }
 }

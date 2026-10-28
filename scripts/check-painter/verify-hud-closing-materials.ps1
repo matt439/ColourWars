@@ -1,7 +1,7 @@
 # Standalone isolated leaf: exact schemas before export, decoded PNG bytes after.
 # Uses the official caller's $captures/$run/$debug/$gameDirectory/$result only.
 $cmUpdates = @('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls','observation_weapon_updates')
-function Get-CMSha([byte[]]$Bytes) { [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes)) }
+function Get-CMSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
 function Assert-CMKeys($Object, [string[]]$Expected, [string]$Scope) {
     if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($Expected | Sort-Object) -join '|')) { throw "Closing materials exact $Scope schema differs" }
 }

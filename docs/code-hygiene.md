@@ -25,6 +25,54 @@ without a CMake build limit. The next ranked shortlist is:
 | 1 | Complete build caps: display-awake, failure-reporting, frame-pacing, movement-feedback and paint-fx wrappers still have uncapped `cmake --build` calls. | Selected as `HYG#12`: five argument-only changes, low risk, directly useful on the shared PC. |
 | 2 | Acceptance subset CLI: `Cases` treats `ammo,text_wrap` as one unknown case under `pwsh -File`, while `ExcludeCases` explicitly handles comma lists. | Small usability fix; scope selection normalization and preflight validation before implementation. |
 
+### Painter PowerShell compatibility (`HYG#15`)
+
+**Done (2026-10-28).** A fresh painter review recorded these findings before
+the compatibility fix:
+
+| rank | candidate and evidence | value, scope and risk |
+|---|---|---|
+| 1 | Twelve expressions in eleven focused verifiers use `SHA256.HashData` and `Convert.ToHexString`, unavailable under Windows PowerShell 5.1. The runner explicitly supports that host, but these calls happen after native work. | Selected as `HYG#15`: one compatible hashing helper and narrow call substitutions; preserve exact bytes, uppercase hexadecimal and every oracle. |
+| 2 | Focused-selection wiring repeats 100 switches across the one-leaf guard and argument chain. All current leaves are wired, but a future missed branch could run the full matrix. | Lower priority: scope a fail-closed preflight later; no registry rewrite or speculative discovery CLI. |
+
+The actual retained stage-preview-background verifier first failed at
+`HashData` under PowerShell 5.1, without native execution or evidence writes.
+One shared `SHA256.Create()` / `ComputeHash()` helper now disposes its algorithm
+and returns identical uppercase, hyphenless hex. The twelve substitutions retain
+the eight local wrapper names and every input array/slice.
+
+Actual retained Track and Scribble replays also confirmed five missing
+`Math.Clamp` calls. Their admitted operands are finite doubles with fixed
+0..255 bounds. Inline `Max(0.0, Min(255.0, expression))` now preserves
+each expression exactly once, its existing rounding, alpha division and byte
+casts. Independent review confirms the same quantization for admitted values;
+no numeric admission, literal pin, schema or comparison was weakened.
+
+Four independent Python `hashlib` vectors pass in fresh 5.1 and pwsh hosts:
+empty, ASCII, all byte values and a binary boundary sequence. Each returns one
+uppercase digest without changing input bytes. All eleven actual affected
+verifiers and their PNG completion phases pass under each host, on scratch
+copies with fresh child processes. Hash manifests confirm every original
+retained capture/log/receipt is unchanged. Replay batches under
+`out/validation/implementation-loop-20261028/` are
+`hyg15-replay-Desktop-3fcaef5a41ff4d0d921ab7deb776ce87` and
+`hyg15-replay-Core-ddf1fc3453e24606a66012c6bf198d79`.
+
+The native HUD-health leaf passes under 5.1 Release and pwsh Debug: each checks
+54 readbacks, 12 rows/crops and 36,864 RGB pixels; Debug additionally checks
+nine real tuning commands, 36 readbacks and private Save/rebase/reset behavior.
+Native evidence under `hyg15-native/<preset>/` has IDs
+`6f8feabd3b9647ebb8723325d1ffecdb` (Release) and
+`91f743e4b16641e59b75b3a43d1de942` (Debug).
+
+The initial native preflight also found this session had not loaded the
+standard `Get-FileHash` function. The runner now explicitly requires the
+existing Utility module; it does not install a module or supply a hash shim.
+Fresh direct-runner preflight in both hosts passes fixture hashing before the
+expected missing-tool refusal, with no compilation. All thirteen touched
+scripts parse in both hosts and independent review passes. These checks do
+not establish hardware or attended visual acceptance.
+
 ### Editor build-profile isolation (`HYG#14`)
 
 **Done (2026-10-28).** The next ranked candidate from the

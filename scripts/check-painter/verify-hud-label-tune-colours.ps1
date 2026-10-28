@@ -2,7 +2,7 @@
 # Source-derived regions retain the full multiline identity paper lower strip.
 $labelUpdates=@('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls','observation_weapon_updates')
 $labelStates=@('default','rgb','partial','zero')
-function Get-LabelSha([byte[]]$Bytes) { [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes)) }
+function Get-LabelSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
 function Assert-LabelKeys($Object,[string[]]$Expected,[string]$Scope) {
     if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name|Sort-Object)-join'|')-cne(($Expected|Sort-Object)-join'|')) { throw "HUD label exact $Scope schema differs" }
 }

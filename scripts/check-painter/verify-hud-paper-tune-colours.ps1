@@ -1,7 +1,7 @@
 # HUD shared-paper family: strict source-frozen producer schemas before export,
 # immutable inputs and complete native PNG/PPM RGB parity after contact export.
 $hpUpdates=@('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls','observation_weapon_updates')
-function Get-HPSha([byte[]]$Bytes) { [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes)) }
+function Get-HPSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
 function Assert-HPKeys($Object,[string[]]$Expected,[string]$Scope) {
     if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name|Sort-Object)-join'|') -cne (($Expected|Sort-Object)-join'|')) { throw "HUD paper exact $Scope schema differs" }
 }
