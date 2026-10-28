@@ -1606,8 +1606,46 @@ as the game. In Release:
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
+- **Detecting a changed stage before playback**: recording stores its name,
+  not its loaded definition. See the bounded [stage fingerprint scope](#loaded-stage-replay-fingerprint-dbg8).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side.
+
+## Loaded-stage replay fingerprint (`DBG#8`)
+
+**OPEN, scoped 2026-10-28.** A Debug recording names its stage but fingerprints
+only tuning and presentation. A user can edit that stage, rescan from Stage
+Select and then play the recording against different geometry without an early
+diagnostic; the [user-stage owner](feature-roadmap.md#user-stages-road16) records
+this limit. Add a fingerprint of the actual loaded semantic stage definition to
+the recording header, for shipped and user stages alike. Derive it from the
+loaded definition used to build the recorded match, preserving meaningful field
+and object order; rereading the file would describe newer disk contents rather
+than the definition the match used. Formatting-only JSON changes must not alter
+the fingerprint.
+
+Before `play` arms a recording or requests a match rebuild, compare its stage
+fingerprint with the currently loaded definition. A mismatch must leave the
+current match, pending request and playback state unchanged and report which
+stage differs, with an actionable instruction to restore the recorded definition
+or record a new run. A disk edit without a rescan still compares against the
+unchanged loaded definition. Recordings without a stage fingerprint are refused
+with an explicit legacy-format diagnostic asking for a new recording; the
+existing tuning `force` option does not bypass this guard.
+
+This is a Debug-only input check, not a portable replay format or a stage
+snapshot. Preserve the same-build, same-machine, same-step and single-round
+restrictions of `DBG#2`, the existing tuning/presentation checks and the Release
+exclusion of recording code. Do not reload a stage, change Random membership,
+write a user file or change the shipping instant replay to make playback pass.
+
+Acceptance covers exact replay on an unchanged shipped stage and an unchanged
+user stage; an edit followed by rescan refused before any match or playback
+mutation; an edit without rescan still matching the loaded definition; semantic
+equality despite JSON formatting changes; and the actionable missing-fingerprint
+diagnostic for legacy recordings. Keep the existing checkpoint/final-state replay
+checks and Release exclusion checks passing. No runtime change or qualification
+is claimed by this scope.
 
 ## Background script work (`DBG#6`)
 

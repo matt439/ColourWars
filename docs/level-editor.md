@@ -280,6 +280,106 @@ bounds control camera limits and the match's zoom-out presentation. Resizing
 `out_of_bounds` must keep every spawn inside it. Objects outside those bounds
 can be intentional boundary geometry and are allowed.
 
+## Local implementation backlog (2026-10-28)
+
+These four slices are ready for local implementation. Their document and native
+checks need neither pads nor an author decision; actual GUI comfort and saved-stage
+play remain the attended `ED#5` review.
+
+### External-change save protection (`ED#7`)
+
+**OPEN, M.** `LevelDocument::load` reads the source bytes but retains only the
+normalized document as its saved state. `LevelDocument::save` already writes a
+complete sibling temporary and atomically replaces the destination; its unique
+temporary prevents collisions between writers' temporary files. It does not
+check whether another editor or text tool changed the destination since this
+document loaded or saved it. Ordinary Save can therefore overwrite that work.
+
+Retain a byte baseline after each successful load and save. Before replacing the
+same file, refuse if it has changed, disappeared or become unreadable, and
+recheck the baseline before replacement. Compare bytes rather than relying on
+size or modification time. Use the existing Save As command to preserve the
+open work elsewhere; this slice adds no automatic merge or silent force-save.
+A refusal must retain the on-disk file, open JSON, path, dirty state and complete
+undo/redo history. A successful Save As establishes the new file's baseline.
+
+Acceptance: use scratch files and two document instances to exercise an
+unchanged save, another writer's save, a same-length external edit with a
+retained timestamp, deletion and read failure. Every refused save preserves
+both the external bytes and the open document/history; Save As then succeeds
+without altering the conflicted file. Failed writes and replacements retain
+the existing atomic-save guarantees, and a successful retry uses the last
+successful baseline. No player save is involved.
+
+### Per-monitor editor DPI (`ED#8`)
+
+**OPEN, L.** The editor calls `SetProcessDPIAware`, creates a fixed 16-pixel
+font and uses fixed pixel constants for controls, minimum tracking size and
+its initial window. Its window procedure has no `WM_DPICHANGED` handling.
+The native editor therefore has no layout that follows the current monitor's
+DPI, even though the game has its own DPI policy.
+
+Give the editor per-monitor awareness and scale its font, control geometry,
+spacing and minimum sizes from a 96-DPI layout. Recreate owned GDI resources
+safely when DPI changes, adopt the suggested window rectangle and keep the
+initial window usable within the work area. Preserve canvas world coordinates,
+selection, pending property text and document/history when layout changes;
+DPI is display state, never a level edit. This is editor code and does not
+require a Labrador change or a gameplay display-policy decision (`POL#34`).
+
+Acceptance: check layout calculations at 96, 144 and 192 DPI, including control
+containment, usable property/action controls and minimum-size behavior. Native
+checks exercise DPI-change handling and font replacement while preserving
+canvas coordinate conversion, selection, pending text, dirty state and undo
+history. Existing document and hidden-window checks pass in both presets. An
+actual mixed-monitor comfort review remains `ED#5`; local qualification can run
+without a particular monitor arrangement.
+
+### Paint-mechanism canvas guides (`ED#9`)
+
+**OPEN, M.** `Editor::draw_item` shows mover anchor, travel and standing
+envelopes, but does not distinguish a paint ferry's authored direction from
+an automatic cycle. A team gate draws like an ordinary eraser block. Both
+mechanisms can already be authored and saved, so these omissions make the
+canvas less useful when checking a trial's structure.
+
+Add a distinct schematic gate mark and a paint-ferry direction guide showing
+the authored team-A heading and opposite team-B heading. Use explicit team
+letters and direction shapes so the distinction does not depend on colour.
+Read the existing `gate`, `motion/drive` and `motion/team_a_heads` fields;
+ordinary erasers and cycle movers keep their existing guides. These marks
+describe authored behavior only: they do not simulate paint ownership, gate
+openness or ferry movement. Runtime mechanism cues have separate scopes in
+`ROAD#26` and `ROAD#27`.
+
+Acceptance: guide generation distinguishes an ordinary eraser, team gate,
+cycle mover and both ferry headings. Inspector edits, duplication, undo/redo
+and save/reopen refresh the right guide without changing serialized level
+data. Native canvas checks cover selected and unselected objects and provisional
+drag positions, retaining existing hit-testing and motion-envelope behavior.
+The attended look at the guides remains part of `ED#5`.
+
+### Destination-aware save guidance (`ED#10`)
+
+**OPEN, S.** Save to My Stages correctly says to reopen Stage Select without
+a rebuild. It then makes that file the document's current path, so Ctrl+S
+saves there too. Ordinary Save still says to rebuild, and the normal refresh
+status repeats source-only advice, contradicting the workflow just completed.
+
+Choose save/refresh guidance from the current destination. Files directly in
+My Stages use the main-menu Stage Select rescan instruction; source levels
+retain the rebuild instruction and, for a new source filename, registration
+guidance. A file saved elsewhere must not claim the game already discovers
+it. Reuse the existing folder/name contract where applicable. This changes
+feedback, not save destinations, registration or the user's Random policy.
+
+Acceptance: under a scratch `LOCALAPPDATA`, save to My Stages, edit and use
+ordinary Save, then refresh; each status continues to describe the no-rebuild
+workflow. Source Save and Save As elsewhere give the appropriate guidance,
+and cancellation or a failed save never reports success or changes the
+document's destination. Hidden-window status checks leave the real stage
+folder and player save untouched.
+
 ## Acceptance checks
 
 `ED#5` is `DECISION`: the remaining GUI and saved-stage gameplay checks need an

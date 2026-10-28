@@ -34,7 +34,13 @@ the existing Debug bots remain developer tools.
 
 ### AI bot players (ROAD#10)
 
-**ROAD#10 - OPEN (requested 2026-10-27).** Add playable AI teammates and
+**ROAD#10 - DECISION (readiness audit, 2026-10-28).** Setup, the shipping
+driver, mover painting and pane-clamped labels are integrated. Attended
+Easy/Normal/Hard usefulness and physical-pad checks remain; values are
+provisional. The dated implementation records below retain their original
+checkpoints.
+
+**Original request (2026-10-27).** Add playable AI teammates and
 opponents through normal match setup in Debug and Release, within the existing
 four-player, two-team limit. Keep a bot-free solo-practice option available.
 
@@ -43,12 +49,12 @@ bot during setup. Difficulty should change reaction time, aim accuracy and
 decision quality while using the same movement, weapons, ammunition and scoring
 rules as human players.
 
-The first implementation step is to define the human/bot roster and setup flow,
+The first implementation step was to define the human/bot roster and setup flow,
 bot view allocation, team/weapon selection and difficulty tuning. Build on the
 existing input and seeded Debug-bot experience where useful, preserving the
 game's OOP design. Playable bots need to navigate platforms and recover when
 stuck, seek paintable territory, engage opponents and manage paint reserves
-across all five tools. The current scripted measurement bots do not establish
+across all five tools. Scripted measurement bots alone do not establish
 those capabilities.
 
 Acceptance needs menu setup, mixed human/bot rosters, bot identity, pause and
@@ -1230,9 +1236,10 @@ where the earlier capture clipped them. Evidence:
 `out/validation/road10-mover-paint/` (the failing first hold in
 `road10-mover-paint-v1/`, the master baseline in `road10-mover-paint-master/`).
 
-**Next implementation:** attended difficulty comparison and usefulness remain the
-author's gate. Physical-pad checks were not run. Values remain provisional and
-`ROAD#10` stays OPEN.
+**Remaining acceptance (readiness audit, 2026-10-28):** attended difficulty
+comparison and usefulness remain the author's gate. Physical-pad checks were
+not run. Mover painting and pane-clamped labels are implemented above; values
+remain provisional and `ROAD#10` is `DECISION`.
 
 ### Balanced random teams
 
@@ -1744,7 +1751,7 @@ presets. Phase-2 receipts are under `out/validation/overnight-20261026/phase2/`.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Report filing | [Report 25](review/engine-reports.md#25-no-public-controller-vibration-output--draft-with-isolated-adapter-exhibit) is prepared against published engine master `c03a6f6`. Filing needs separate author authorization and a fresh upstream recheck. |
+| Report filing | [Report 25](review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit) is prepared against published engine master `c03a6f6`. Filing needs separate author authorization and a fresh upstream recheck. |
 
 **Owner, settings page and native adapter qualified.**
 Pad sticks now has a per-slot Rumble row, with pending/Apply/Back semantics.
@@ -1819,7 +1826,8 @@ Bros. and Paint Rumble listed what those games have and ColourWars lacks.
 Online play and new game modes were out of scope. The author asked for every
 gap rated medium value or above to be tracked; the rows are `ROAD#11` to
 `ROAD#24`. Value is how much a couch group would notice the feature; the size
-is a first slice, before attended review. None is scoped yet.
+is a first slice, before attended review. The sections below record the slices
+since selected and their remaining gates.
 
 Two gaps were already tracked and get no new row: a special charged by
 painting is `POL#30`, and more arenas are the current aim (`POL#21`,
@@ -2093,10 +2101,111 @@ on the wall deciding it, rather than a separate bulb; a tie shutting it to
 both; a gate held open while its team is inside, rather than pushing them out;
 the eraser material; and the trial's single central floor gate.
 
-**Still open in `ROAD#15`:** lifts and other vertical motion, growing sponges,
-art that shows which team a ferry heads for or a gate is open to (both draw as
-their plain material, and only the paint colour says who holds them), bots
-that route through an open gate on purpose, and attended play of both trials.
+**Remaining work, split into independent scopes (2026-10-28):** deliberate
+gate routing stays `ROAD#15`; functional gate and ferry cues are `ROAD#26`
+and `ROAD#27`. Vertical lifts (`ROAD#28`) and growing sponges (`ROAD#29`)
+need their own contracts. Attended trial play is `ROAD#30`. Each has its own
+row so implementing one does not imply finishing the others.
+
+### Team-aware bot gate routes (`ROAD#15`)
+
+**OPEN, L (2026-10-28).** The shipping driver currently copies the same
+`Level::bot_obstacles()` and `bot_supports()` to every bot
+(`game/ai/match_bot_driver.cpp`, `game/objects/level.cpp`). A gate remains a
+wall in those observations even when its settled `open_for()` permits the
+bot's team through it. Accidental passage in the trial is not deliberate
+route planning.
+
+Provide team-aware traversal observations and use them for paint goals,
+approaches and local recovery. An open gate is passable for the permitted
+team. Bots of that team also cannot use its top as standing support. Closed
+and hostile gates remain obstacles and supports as before. Replan when settled
+permission changes, including when an occupied gate keeps its old team after
+the paint leader changes. Keep traversal separate from projectile visibility:
+an open gate still catches shots and remains cover in `bot_line_of_sight`.
+Do not remove it from every geometry query or change the gate's collision rule.
+
+Acceptance: a bot deliberately takes a useful floor goal through the gate for
+each permitted team, rejects that route while closed or hostile, and replans
+after takeover and delayed closure. Cover the observation/settlement step
+boundary without changing the no-crush update order. Qualify sight/shot
+occlusion independently, then retain the existing bot route, `team_gate` and
+replay checks in both presets. Trial play and difficulty values retain their
+human gates; no new arena layout or pad is required for this implementation.
+
+### Gate permission cue (`ROAD#26`)
+
+**OPEN, M (2026-10-28).** A gate draws as an ordinary eraser block. Paint
+colour alone cannot state its collision permission: `paint_leader()` can be
+team B while `open_for()` is still team A because an A player is inside.
+
+Add a small functional cue using existing drawing primitives and presentation
+data. Show closed, open-for-A and open-for-B by shape as well as the selected
+team palette; distinguish a held-open gate whose paint leader disagrees.
+Read settled permission, not a second approximation of the paint rule. Publish
+the actual hold reason at settlement: a later shot can change the paint leader
+before drawing, so a leader/permission mismatch alone does not prove that an
+occupant held the gate open. Keep the cue legible in the stage miniature and
+at 1/2/4-player sizes, with reduced effects and no sound. This is information
+for the explicit trial, not the deferred environment-art production pass.
+
+Acceptance: draw checks and native captures cover unpainted/tied, either open
+team, occupied takeover and final closure, including monochrome legibility.
+The cue stays within its declared cull bounds and does not obscure paintable
+faces. Collision, scoring, the open-share value and replay remain unchanged.
+Attended preference is reviewed with `ROAD#30`.
+
+### Ferry direction and stop cue (`ROAD#27`)
+
+**OPEN, M (2026-10-28).** `TranslatingStructurePaintable` exposes
+`drive_heading()` and `motion_state()`, but its drawing only translates its
+ordinary material. A stopped ferry can mean a paint tie or that ownership is
+pushing it against an end stop; those are different actions for a rider.
+
+Add a functional direction cue for paint-driven movers, using existing
+primitives and presentation values. Distinguish left/right ownership demand,
+tie/unpainted hold and ownership demand against a reached end stop; show that
+painting for the other team will reverse the demand. Do not imply that a
+cyclic mover is paint-driven or predict future motion before paint has landed.
+`drive_heading()` reads current paint while the committed motion used pre-step
+paint; publish a read-only cue snapshot that distinguishes ownership demand from the last
+actual movement/end-stop state, rather than conflating those two times.
+
+Acceptance: both authored team-A headings, ties, repaint reversal and both
+endpoints have correct draw states. Check miniature and native 1/2/4-player
+composition, reduced effects and monochrome shape differences. Preserve ferry
+speed, displacement, paint credit and replay. Final trial preference remains
+`ROAD#30`; decorative material art stays in the later polish pass.
+
+### Unscoped paint-object contracts (`ROAD#28`, `ROAD#29`)
+
+**UNSCOPED (2026-10-28).** These are the remaining capabilities from
+`ROAD#15`, not ready implementations or prerequisites of the three slices
+above:
+
+- **Vertical lifts (`ROAD#28`, XL):** define vertical admission and swept
+  displacement, rider support identity and carry, ceilings/crush refusal,
+  projectiles, shadows, editor envelopes and replay before choosing a trial.
+  The current horizontal carry contract does not answer these.
+- **Growing sponges (`ROAD#29`, XL):** define occupied growth/shrink behavior,
+  paint-tile identity, changing scored area and retained paint/contribution
+  credit before choosing an implementation. `PaintSurfaceSample` explicitly
+  requires a scoring rule for scale; resizing a rendered rectangle is not one.
+
+Promote a bounded slice only once its owner records those choices and its
+acceptance. Neither adds a new physics/scoring requirement to an accepted
+arena while `POL#21` remains a geometry decision.
+
+### Paint-object trial play (`ROAD#30`)
+
+**DECISION, M (2026-10-28).** Play the explicit-only Ferry and Gate Trials
+from both sides at 1-4P. Judge whether ownership-driven travel and selective
+passage create useful painting/route choices, whether the gate's held-open
+rule is understandable, and whether the open share and ferry headings feel
+fair. Record keep/change/cut decisions and any value changes. Functional cues
+can be reviewed as `ROAD#26`/`ROAD#27` land; current trial play is already
+available. Neither automated matches nor this review opts a trial into Random
+or selects Turbulence's geometry (`POL#21`).
 
 ### Instant replay (`ROAD#19`)
 
@@ -2161,6 +2270,42 @@ Replay does and requires every taped step to match: player boxes, states, team
 colours and projectile count, then the final paint. Leaving out the pause's
 gaps diverges on Press Tower, and a wrong seed diverges at the first step. The
 case also checks the tape rules.
+
+### Menu cards stay on the paper face (`ROAD#25`)
+
+**OPEN, M (2026-10-28).** Startup's menu-card containment uses the whole
+paper rectangle in `game/presentation_validation.cpp`, while
+`game/states/menu_panel.cpp` draws the face with its shadow offset removed.
+Use that same face boundary for containment, then move the existing Home,
+Options Back, Restore defaults, Pause and End paper-edge fixtures in
+`scripts/acceptance/menu_text/` to the face. The shipped overhangs were
+already corrected; this closes the validator gap that let them through.
+
+Acceptance: a card exactly on the face edge passes, its first overhang into
+shadow fails with the relevant field, and shipped presentation loads in both
+presets. Run the focused `menu_text` case and relevant menu painter checks;
+keep the renderer's paper geometry and intended page layout unchanged.
+
+### No shipping replay tape in untimed practice (`ROAD#31`)
+
+**OPEN, MED, M (2026-10-28).** `GameLevel::build_and_enter_level` unconditionally
+starts `RoundTape`; `RoundTapeRecorder` appends input and timing every logic
+step. The menu's lesson practice is untimed and never offers Watch Replay,
+so its unused tape grows for as long as the player stays.
+
+Start or retain shipping replay capture only for a timed round. Use the built
+level's `practice()` result, rather than assuming that every solo or Movement
+Course launch is untimed: Debug can start the timed course. Clear an old tape
+when rebuilding into practice and prevent suspend/resume gaps accumulating
+there. Keep the independent Debug record/play filter working.
+
+Acceptance: a sustained untimed practice run, pause/resume and restart retain
+no shipping tape steps or gaps; an ordinary timed solo round and a timed
+multiplayer round still offer and reproduce their replay. The shipping filter
+must still forward Debug input/recording when tape capture is disabled.
+Use the actual `GameLevel` path and existing `instant_replay` qualification in
+both presets. No practice wording or keep/cut decision (`POL#19`) is needed
+to fix this resource use.
 
 ### Player profiles (`ROAD#21`)
 
@@ -2371,6 +2516,32 @@ Provisional decisions, open for the author:
 
 Still open: attended play of a real player-made stage (a human gate), and the
 Random and marker calls above.
+
+### User-stage refusal details in the game (`ROAD#32`)
+
+**OPEN, MED, L (2026-10-28).** A broken user stage is correctly refused
+without stopping the game, but a player must redirect stderr to find out why.
+`UserStageScan` already returns accepted names and refusal reasons; the
+`GameMenu` rescan callback discards that result. A stage silently absent from
+the picker gives the author no usable repair path in the windowed game.
+
+Retain the latest scan outcome and expose a bounded, dismissible details view
+from main-menu Stage Select when there are refusals. Show the file name and
+the existing validation reason, with paging/wrapping for long diagnostics;
+reuse the current menu input and text-validation paths. A no-refusal scan
+clears old errors. Present scan status separately from the accepted stage's
+briefing, so the Random and user-stage-marker decisions stay independent.
+Any new action label/help copy must be identified for the author's wording;
+the existing refusal text can drive the implementation and fit fixtures.
+
+Keep the startup/rescan boundary, per-file refusal and stderr deduplication.
+Do not scan during a match or between series rounds, automatically open a
+modal on startup, or turn an optional user-stage failure into a fatal one.
+Acceptance: one valid and one broken file leave the valid stage playable and
+the broken file's reason reachable; fixing, removing or changing the bad file
+updates the details on the next permitted scan. Verify long/non-ASCII file
+diagnostics, no-error/unattached contexts, returning to the selected stage,
+and native menu fit. Use isolated user folders throughout.
 
 ### Series stage rule (`ROAD#20`)
 

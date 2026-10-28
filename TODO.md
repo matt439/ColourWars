@@ -46,23 +46,31 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Implementation exhaustion audit, 2026-10-26.** The audit checked the remaining
-owners beyond their row statuses. It found and completed the bounded Debug
-background-script capability, reconciled stale geometry references and ran the
-25 previously unrun existing Release cases. Remaining play/hardware reviews,
-later art and unselected capability contracts retain their named gates below.
-At that point, no further concrete independent implementation was selected by an owner.
+**Ready local work (backlog audit, 2026-10-28).** Nineteen `OPEN` slices now have
+concrete implementation and acceptance scopes in their owners. They can proceed
+while attended reviews wait, without changing the arena/tuning order above:
 
-**Author-requested next implementation (2026-10-27):** playable AI bot players
-with Easy, Normal and Hard difficulty settings (`ROAD#10`). Setup, saved identity,
-human-only panes and a shipping input driver are integrated. Static arena chains
-include Turbulence's continuous ascent and local recovery. Moving/opposed local
-combat and 200 natural-spawn team trials (120 mixed-tool over three seeds, 40
-sustained 1v1 middle-retention trials) qualify presence; all 450 route gates pass.
-The CQ home-band loop is fixed and slow tools spend shots only where they land.
-The descent latch and refill retreat are decided, the scan cost is measured
-(p99 about 1 ms per step) and bots ride and leave movers. Next is the attended
-difficulty comparison; difficulty values remain provisional.
+- **Stage mechanisms:** deliberate bot gate routes (`ROAD#15`), actual gate
+  permission (`ROAD#26`) and ferry direction/stop cues (`ROAD#27`).
+- **Gameplay and diagnostics:** stop unused replay growth in untimed practice
+  (`ROAD#31`), show user-stage refusals in game (`ROAD#32`), validate menu cards
+  against the paper face (`ROAD#25`), and detect changed stages in Debug replay
+  (`DBG#8`).
+- **Editor workflow:** external-change save protection (`ED#7`), per-monitor DPI
+  (`ED#8`), paint-mechanism canvas guides (`ED#9`) and destination-aware save
+  guidance (`ED#10`).
+- **Code hygiene:** ordered presentation validation (`HYG#1`), Level motion,
+  projectile contacts and save-profile splits (`HYG#2`-`HYG#4`), acceptance and
+  evidence-script splits (`HYG#5`-`HYG#7`), and a source-comment contract audit
+  (`HYG#8`). [Scopes and keep-whole decisions](docs/code-hygiene.md).
+
+These replace the 2026-10-26 exhaustion snapshot. Vertical lifts and growing
+sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
+as ready work. Functional trial cues do not widen the deferred production-art pass.
+
+**Bots (`ROAD#10`):** Easy/Normal/Hard setup and the shipping driver are integrated,
+including mover painting and pane-clamped labels. Next is the attended difficulty
+comparison and physical-pad check; values remain provisional.
 [Scope and acceptance](docs/feature-roadmap.md#ai-bot-players-road10).
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -70,6 +78,8 @@ difficulty comparison; difficulty values remain provisional.
 - **Turbulence play and selection:** choose among the explicit-only comparisons after
   both-side 1-4P pressure, crossing-comfort and regional-value play (`POL#21`).
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
+- **Bots and paint-object trials:** compare Easy/Normal/Hard usefulness (`ROAD#10`)
+  and play the explicit Ferry/Gate Trials from both sides at 1-4P (`ROAD#30`).
 - **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
   recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
   five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
@@ -140,6 +150,10 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
+| `ED#7` | OPEN | MED | M | Refuse same-path saves after an external file change, preserving disk bytes and editor history; recover through Save As. [Scope](docs/level-editor.md#external-change-save-protection-ed7). |
+| `ED#8` | OPEN | MED | L | Scale editor controls, fonts and layout per monitor without changing canvas world coordinates or document state. [Scope](docs/level-editor.md#per-monitor-editor-dpi-ed8). |
+| `ED#9` | OPEN | LOW | M | Distinguish gates and authored ferry headings on the editor canvas, without simulating ownership. [Scope](docs/level-editor.md#paint-mechanism-canvas-guides-ed9). |
+| `ED#10` | OPEN | LOW | S | Make Save/status guidance distinguish My Stages from source files that need a rebuild. [Scope](docs/level-editor.md#destination-aware-save-guidance-ed10). |
 
 ## Audio replacement
 
@@ -181,7 +195,8 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#7` | DECISION | LOW | S | Review the per-pad View shake, Aim marker and Reduce effects overrides on 1-4P panes with pads; the settings, save and CPU checks are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#per-seat-accessibility-toggles-road7). |
 | `ROAD#5` | DECISION | LOW | S | Per-seat Boost (Off/+1/+2: less damage taken, faster paint refill) is built on Weapon Select (mechanic chosen 2026-10-27); judge the provisional values in attended play against bots. [Scope](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
-| `ROAD#10` | OPEN | HIGH | XL | Attended difficulty comparison and usefulness; decide whether bots hold and paint movers and whether world labels clamp to the pane; physical-pad check. Latch, refill retreat (margin 600), scan cost and mover identity are done; values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
+| `ROAD#10` | DECISION | HIGH | M | Compare Easy/Normal/Hard usefulness in attended play and check physical pads. Mover painting and pane-clamped labels are implemented; difficulty values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
+| `ROAD#31` | OPEN | MED | M | Stop shipping replay-tape growth in untimed practice while retaining timed replays and independent Debug recording. [Scope](docs/feature-roadmap.md#no-shipping-replay-tape-in-untimed-practice-road31). |
 | `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
@@ -199,8 +214,14 @@ excluded modes.
 | `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#15` | OPEN | MED | L | Paint-activated stage objects (Splatoon lifts, inkrails, sponges). The paint ferry and the team gate are on their explicit trials; left: vertical lifts, sponges, ferry and gate art, bots routing through open gates, and play. Arena use follows `POL#21`. [Owner](docs/feature-roadmap.md#team-gate-road15-second-slice). |
+| `ROAD#15` | OPEN | MED | L | Give bots team-aware routes through open gates while retaining projectile cover and replanning on permission changes. [Scope](docs/feature-roadmap.md#team-aware-bot-gate-routes-road15). |
+| `ROAD#26` | OPEN | MED | M | Show actual gate permission, closed and occupied hold states with functional shape/palette cues. [Scope](docs/feature-roadmap.md#gate-permission-cue-road26). |
+| `ROAD#27` | OPEN | MED | M | Show paint-ferry ownership direction, tie hold and end stops without changing cyclic movers. [Scope](docs/feature-roadmap.md#ferry-direction-and-stop-cue-road27). |
+| `ROAD#28` | UNSCOPED | MED | XL | Vertical lifts need vertical carry, ceiling/crush, admission and sweep contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
+| `ROAD#29` | UNSCOPED | MED | XL | Growing sponges need occupied resize, changing-area scoring and paint-credit contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
+| `ROAD#30` | DECISION | MED | M | Play the Ferry/Gate Trials from both sides at 1-4P; judge route value, held-open clarity and provisional values. Arena selection remains `POL#21`. [Scope](docs/feature-roadmap.md#paint-object-trial-play-road30). |
 | `ROAD#16` | DECISION | LOW | S | User stages play without a rebuild; the editor saves straight there and Stage Select rescans. Left: attended play of a player-made stage, and the author's calls on Random opt-in and the hint-only marker. [Owner](docs/feature-roadmap.md#user-stages-road16). |
+| `ROAD#32` | OPEN | MED | L | Retain scan results and show refused user-stage files/reasons from main-menu Stage Select, clearing stale errors on rescan. [Scope](docs/feature-roadmap.md#user-stage-refusal-details-in-the-game-road32). |
 | `ROAD#17` | DECISION | LOW | M | Overview map in the unused three-player quadrant (Splatoon turf map). Shows territory mid-match, against gap audit 1.1: decide first. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#18` | DECISION | LOW | S | Off-screen teammate markers are in. Left: decide whether enemies get threat markers (an information-model change; see `POL#3` rear threats), and an attended readability look at 1/2/4P. [Owner](docs/feature-roadmap.md#teammate-markers-road18). |
 | `ROAD#20` | DECISION | LOW | S | The Series stage rule is in (Same stage, Rotate, Loser's pick on Mode). Left: play the three, choose the default, and confirm the provisional calls for draws, explicit-only stages and bot-only losers. [Owner](docs/feature-roadmap.md#series-stage-rule-road20). |
@@ -230,7 +251,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); mouse-button names; audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `ENG#25` | DECISION | LOW | S | Prepared vibration-output draft and qualified isolated XInput exhibit; author authorization and a fresh upstream recheck are required to file. Current task forbids filing. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output--draft-with-isolated-adapter-exhibit). |
+| `ENG#25` | DECISION | LOW | S | Prepared vibration-output draft and qualified isolated XInput exhibit; author authorization and a fresh upstream recheck are required to file. Current task forbids filing. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit). |
 | `ENG#26` | DECISION | LOW | S | Drafted: `Registry` cannot forget a name, so a user-stage rescan leaves a vanished stage's definition registered. Upstream recheck and author authorization are needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit). |
 | `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
@@ -246,6 +267,24 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
+| `DBG#8` | OPEN | MED | M | Fingerprint the loaded stage in Debug recordings and reject changed or legacy unverified definitions before playback mutates state. [Scope](docs/debug-console.md#loaded-stage-replay-fingerprint-dbg8). |
+
+## Code hygiene
+
+**Owner:** [docs/code-hygiene.md](docs/code-hygiene.md). The source-size audit
+selects cohesive seams and records keep-whole decisions; line count is not a cap.
+These slices preserve behavior and the game's OOP design.
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `HYG#1` | OPEN | LOW | L | Extract ordered presentation-validation helpers without changing diagnostic precedence or calculations. [Scope](docs/code-hygiene.md#ordered-presentation-validation-hyg1). |
+| `HYG#2` | OPEN | LOW | M | Move Level's horizontal-motion helpers and admission/step methods together, retaining match update order. [Scope](docs/code-hygiene.md#level-horizontal-motion-hyg2). |
+| `HYG#3` | OPEN | LOW | M | Move projectile sweep/contact helpers and methods together, preserving impact, paint and callback order. [Scope](docs/code-hygiene.md#projectile-contacts-and-sweeps-hyg3). |
+| `HYG#4` | OPEN | LOW | M | Separate save-profile/effective-preference policy from JSON loading, migration and atomic writing. [Scope](docs/code-hygiene.md#save-profile-overlay-hyg4). |
+| `HYG#5` | OPEN | LOW | M | Split input-binding acceptance by topic, preserving independent oracles, profile lifetimes and relaunch paths. [Scope](docs/code-hygiene.md#input-binding-acceptance-topics-hyg5). |
+| `HYG#6` | OPEN | LOW | M | Split painter evidence metadata by topic while retaining scope precedence, ordered output and dot-sourced behavior. [Scope](docs/code-hygiene.md#painter-evidence-metadata-hyg6). |
+| `HYG#7` | OPEN | LOW | M | Extract colour-document fixture families, preserving JSON bytes, assertions and invocation order. [Scope](docs/code-hygiene.md#colour-document-fixture-families-hyg7). |
+| `HYG#8` | OPEN | LOW | M | Audit stale participant/view, shipping/Debug replay, user-stage and editor-icon comments against actual callers. [Scope](docs/code-hygiene.md#source-comment-contract-audit-hyg8). |
 
 ## Tooling, CI and docs
 
@@ -254,7 +293,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
-| `ROAD#25` | OPEN | LOW | M | Startup validation measures menu cards against the whole paper, shadow included; measure the face and move the `menu_text` paper-edge fixtures with it. [Owner](docs/feature-roadmap.md#instant-replay-road19). |
+| `ROAD#25` | OPEN | LOW | M | Validate menu cards against the paper face and move the existing `menu_text` edge fixtures with it. [Scope](docs/feature-roadmap.md#menu-cards-stay-on-the-paper-face-road25). |
 
 ## Areas with no open rows
 
@@ -303,7 +342,8 @@ the owner; a second copy here goes stale unnoticed.
 **`id`:** a stable handle, not an order; a retired id is never reused. Gap-audit rows keep the
 audit's own section number (`GAP#4.2`, `GAP#D3`, `GAP#F8`), ledger rows the report number
 (`ENG#23`); the rest are `PREFIX#n` by owner: `STORY` backstory, `POL` polish plan, `ED` level
-editor, `ROAD` feature roadmap, `DBG` developer console, `DOC`/`CI`/`TOOL` the named file.
+editor, `ROAD` feature roadmap, `DBG` developer console, `HYG` code hygiene,
+`DOC`/`CI`/`TOOL` the named file.
 
 **`status`**, a closed list:
 - `OPEN`: ready to work.
