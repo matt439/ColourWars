@@ -294,11 +294,12 @@ opens from the main menu ([`UserStageFolder::rescan`](../../game/stage_loading.c
 A new or edited file goes through `add`, which is what the rescan needs. A
 file the player deleted, or one that now fails its checks, can only leave the
 game's `StageList`. Its old `LevelLoadedInfo` stays in the registry,
-unreachable from the list, until the game exits. Anything that resolves by
-name without consulting the list, such as the Debug `play` of a recording,
-still finds the stale definition. The cost today is memory and that one
-Debug edge. Every client that reloads user content over a session would meet
-the same thing.
+unreachable from the list, until the game exits. Every name lookup in this
+game goes through the list first (Stage Select, the Debug `stage` and `play`
+commands, which check `MatchPlanner::stage_words`), so today the cost is
+memory only. The registry's own `contains` still answers yes for a stage
+that is gone, which is the trap a later caller would fall into. Every client
+that reloads user content over a session would meet the same thing.
 
 **The ask.** A way to remove a name (or to replace the whole set) with a
 defined meaning for handles already resolved to it. The spelling, and
@@ -306,8 +307,8 @@ whether stale handles throw or stay invalid, are engine decisions.
 
 **What an answer lets this repository delete.** The comment in
 `game/stage_loading.h` and the roadmap's note about stale entries. The rescan
-would remove the names that left the list, and the Debug `play` edge would
-throw "never loaded" as it does for an unknown stage. This is a local draft,
+would remove the names that left the list, so `contains` and `get` would
+agree with it. This is a local draft,
 not a filed issue.
 
 ---

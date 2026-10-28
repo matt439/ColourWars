@@ -383,8 +383,17 @@ namespace colourwars_editor
         // The folder appears only on this explicit save. The dialog needs it to
         // open there, so a cancelled or refused save takes an empty one away again.
         std::error_code error;
+        // The game folder too may be new (the game has never run here); take
+        // away only what this command made, and only while it is empty.
+        const bool parent_existed = std::filesystem::exists(folder.parent_path(), error);
         const bool created = std::filesystem::create_directories(folder, error);
         if (error) throw std::runtime_error("Cannot create " + narrow(folder.wstring()) + ": " + error.message());
+        const auto tidy = [&folder, parent_existed]
+        {
+            std::error_code ignored;
+            if (std::filesystem::remove(folder, ignored) && !parent_existed)
+                std::filesystem::remove(folder.parent_path(), ignored);
+        };
         bool saved = false;
         try
         {
@@ -407,10 +416,10 @@ namespace colourwars_editor
         }
         catch (...)
         {
-            if (created && !saved) std::filesystem::remove(folder, error);
+            if (created && !saved) tidy();
             throw;
         }
-        if (created && !saved) std::filesystem::remove(folder, error);
+        if (created && !saved) tidy();
         return saved;
     }
 

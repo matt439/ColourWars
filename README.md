@@ -142,8 +142,9 @@ The following controls are the defaults:
 To play a stage of your own, put its level file in
 `%LOCALAPPDATA%\ColourWars\stages\` (paste that into Explorer's address bar;
 create the `stages` folder if it is not there). The file name is the stage's
-name: up to 64 letters, digits, `_` or `-`, ending in `.json`, and not the
-name of a stage the game already has. Your stages come after the built-in ones
+name: up to 64 plain letters (A to Z, no accents), digits, `_` or `-`, not
+starting with `-`, ending in `.json`, and not the name of a stage the game
+already has in any mix of capitals. Your stages come after the built-in ones
 in Stage Select, marked "Built by you." Random never picks them.
 
 The game reads the folder when it starts and again each time Stage Select opens
