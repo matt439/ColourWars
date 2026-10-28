@@ -231,5 +231,6 @@ namespace colourwars_editor
         editor.create_window(SW_HIDE, stage);
         require(!IsWindowVisible(editor.window_), "Canvas gesture probe unexpectedly showed its editor");
         check_gestures(editor, scratch);
+        check_ramp_hits(editor, scratch);
     }
 }

@@ -1273,6 +1273,27 @@ recording/replay, binds and current settings. A consumed pad chord must release
 both buttons before it can start another session. The developer hooks and
 collision query are inert in Release; keyboard rebinding is available there.
 
+## Bind word round trips (`DBG#9`)
+
+**OPEN (2026-10-28).** The author approved autonomous bounded follow-ups.
+The next ranked source finding is a persistence defect: a valid
+`bind f12 echo C:\temp\` stores its command, but serializing that spaced line
+places a closing quote after the terminal backslash. The current tokenizer
+reads that pair as a literal quote; a fresh session then rejects the generated
+binds file and falls back to defaults.
+
+Preserve the existing printable-ASCII grammar. Encode a quoted word's terminal
+backslash run outside its closing quote, using the already-supported adjacent
+quoted/bare word segments. Use the same encoder for the forced quoting that
+protects `//` in saved binds; preserve dollar doubling, statement splitting,
+comments and malformed/non-ASCII refusals. No shell escape rules are needed.
+
+First reproduce actual private bind save/reload losing the table. Qualify
+empty/spaced/quoted/semicolon words and trailing backslash runs, launch argument
+reconstruction, saved binds with `$`/`//`/multiple statements, sibling bindings
+and the absence of a spurious `.bad` file. Use isolated test directors and
+scratch profiles; never change the player's binds.
+
 ## History
 
 The console's history (Up / Down) is the last 64 non-blank lines, adjacent

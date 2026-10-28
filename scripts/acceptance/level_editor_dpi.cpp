@@ -83,6 +83,7 @@ namespace colourwars_editor
         static void check_mechanisms(Editor& editor, const std::filesystem::path& scratch);
         static void check_metadata(Editor& editor, const std::filesystem::path& scratch);
         static void check_gestures(Editor& editor, const std::filesystem::path& scratch);
+        static void check_ramp_hits(Editor& editor, const std::filesystem::path& scratch);
         static void run_gestures(const std::filesystem::path& scratch);
 
         static void check_controls(Editor& editor)
@@ -237,6 +238,7 @@ namespace colourwars_editor
 #include "scripts/acceptance/level_editor_dpi/mechanism_checks.h"
 #include "scripts/acceptance/level_editor_dpi/metadata_checks.h"
 #include "scripts/acceptance/level_editor_dpi/gesture_checks.h"
+#include "scripts/acceptance/level_editor_dpi/ramp_hit_checks.h"
 
 int wmain(int argc, wchar_t* argv[])
 {

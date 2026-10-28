@@ -83,12 +83,39 @@ is released. Aggregate GDI stability after input activation remains unqualified;
 no production resource workaround was added. Independent review passes.
 The attended editor/play acceptance remains `ED#5`.
 
+#### Ramp body selection (`ED#14`)
+
+**Done (2026-10-28).** The old-source native baseline reproduced an empty
+ramp corner intercepting the block beneath it. Ramp selection now follows the
+drawn screen-space triangle, with a three-logical-pixel edge tolerance.
+Collapsed triangles retain only finite edge/endpoint targets. Category and
+authored-order priority, selected resize handles, ordinary rectangles, slabs
+and mover poses are preserved.
+
+Both presets pass the full editor checker and all three editor builds.
+The isolated canvas-input mode checks 18 direction/DPI/view contexts,
+219 immutable queries and 36 independent actual GDI body samples. It covers
+edge/end-cap limits, legal zoom/clipping collapse, overlap/spawn/slab priority,
+resize handles and exact history/source preservation. Degenerate geometry is
+isolated from unrelated spawn targets; full-scene priority has separate checks.
+Input-activated DPI changes also assert disposal of each replaced owned font.
+Independent source/oracle review passes. Aggregate GDI stability after input
+activation and attended editor acceptance remain outside these checks.
+
+Evidence under `out/acceptance/<preset>/level-editor/`: Debug
+`c330ea6646f2401a871653f1ed28636a`, Release
+`a1a256d6df694473bbe5ed870b99ede7`; each retains CSV queries and six BMPs.
+The failing baseline is
+`out/validation/implementation-loop-20261028/ed14-baseline/c37833dd52514e31a373b22a3ee62eeb`.
+
 Select an object in the list or click it on the canvas. Drag its body to move
 it, or drag the handle at the bottom-right corner to resize it. Ramp editing
 moves or scales all three vertices together. Spawn markers can be moved;
 their boxes use `player.size` from source `game/content/tuning.json`.
 Fixed scored slabs move without a resize handle; their footprint is fixed.
 Arrow keys cancel an in-progress mouse gesture and nudge the committed position.
+Ramp selection follows the triangular body, so its empty corner lets you
+select an object beneath it.
 
 Use the palette to add paintable platforms, solid structures, jump-through
 platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),

@@ -375,6 +375,38 @@ namespace colourwars_editor
                     continue;
                 }
                 RECT rectangle = screen_rect(item->rectangle);
+                const auto type = item->values.find("type");
+                if (kind == EntryKind::collision && type != item->values.end() && type->second == "StructureRamp")
+                {
+                    const auto collision = item->values.find("collision_type");
+                    const bool left = collision != item->values.end() && collision->second == "STRUCTURE_RAMP_LEFT";
+                    const POINT points[] = {{rectangle.left, rectangle.bottom}, {rectangle.right, rectangle.bottom},
+                        {left ? rectangle.left : rectangle.right, rectangle.top}};
+                    const auto cross = [](POINT a, POINT b, POINT c) {
+                        return (static_cast<double>(b.x) - a.x) * (static_cast<double>(c.y) - a.y)
+                            - (static_cast<double>(b.y) - a.y) * (static_cast<double>(c.x) - a.x);
+                    };
+                    const double area = cross(points[0], points[1], points[2]);
+                    const double sides[] = {cross(points[0], points[1], point), cross(points[1], points[2], point),
+                        cross(points[2], points[0], point)};
+                    if (area != 0.0 && ((sides[0] >= 0.0 && sides[1] >= 0.0 && sides[2] >= 0.0)
+                        || (sides[0] <= 0.0 && sides[1] <= 0.0 && sides[2] <= 0.0))) return item->entry;
+                    const double tolerance = static_cast<double>(pixels(3));
+                    for (int edge = 0; edge < 3; ++edge)
+                    {
+                        const POINT a = points[edge], b = points[(edge + 1) % 3];
+                        const double dx = static_cast<double>(b.x) - a.x, dy = static_cast<double>(b.y) - a.y;
+                        const double px = static_cast<double>(point.x) - a.x, py = static_cast<double>(point.y) - a.y;
+                        const double length_squared = dx * dx + dy * dy;
+                        // Collapsed triangles retain only their finite edges and endpoints.
+                        const double along = length_squared > 0.0
+                            ? std::clamp((px * dx + py * dy) / length_squared, 0.0, 1.0) : 0.0;
+                        const double distance_x = px - along * dx, distance_y = py - along * dy;
+                        if (distance_x * distance_x + distance_y * distance_y <= tolerance * tolerance)
+                            return item->entry;
+                    }
+                    continue;
+                }
                 if (is_spawn(item->entry))
                 {
                     rectangle = screen_rect(Rect{item->rectangle.x, item->rectangle.y,
