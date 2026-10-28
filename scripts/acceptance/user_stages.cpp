@@ -326,6 +326,85 @@ namespace
 		std::cout << "PASS a user stage cannot take another user stage's name\n";
 	}
 
+	std::vector<std::string> names(const StageList& stages)
+	{
+		std::vector<std::string> result;
+		for (const Stage& stage : stages) { result.push_back(stage.name); }
+		return result;
+	}
+
+	void check_rescan(const Fixture& fixture, const std::filesystem::path& content,
+		const std::filesystem::path& scratch)
+	{
+		// What Stage Select does as it opens from the main menu: reread the
+		// folder in place of the user stages, leaving the shipped ten alone.
+		const std::filesystem::path folder = fresh(scratch / "rescan");
+		const rapidjson::Document base = read_document(content / "levels" / "close_quarters.json");
+		Shipped shipped;
+		load_shipped(content, shipped);
+		const std::vector<std::string> manifest = names(shipped.stages);
+
+		UserStageFolder unattached;
+		require(unattached.scan().accepted.empty() && unattached.rescan().accepted.empty() &&
+			!unattached.attached(), "An unattached folder (every probe's GameMenu) must do nothing");
+
+		UserStageFolder session;
+		session.attach(folder, fixture.checks(), &fixture.world->audio, &shipped.levels, &shipped.stages);
+		write_level(base, folder / "b_arena.json", [](rapidjson::Document& d)
+		{
+			set_string(d, d, "display_name", "B Arena");
+		});
+		require(session.scan().accepted == std::vector<std::string>{ "b_arena" } && shipped.stages.size() == 11,
+			"The startup scan must load the folder's one stage");
+
+		// Saved while the game runs: a new stage that sorts first, an edit and
+		// a broken file.
+		write_level(base, folder / "a_arena.json", [](rapidjson::Document& d)
+		{
+			set_string(d, d, "display_name", "A Arena");
+		});
+		write_level(base, folder / "b_arena.json", [](rapidjson::Document& d)
+		{
+			set_string(d, d, "display_name", "B Arena Edited");
+		});
+		write_text(folder / "broken.json", "{");
+		const UserStageScan second = session.rescan();
+		require(second.accepted == std::vector<std::string>{ "a_arena", "b_arena" } &&
+			second.refused.size() == 1 && refused(second, "broken.json", "broken.json"),
+			"A rescan must add a new stage, reread an edited one and refuse a broken one");
+		std::vector<std::string> expected = manifest;
+		expected.push_back("a_arena");
+		expected.push_back("b_arena");
+		require(names(shipped.stages) == expected,
+			"After a rescan the shipped stages stay first and user stages follow in file-name order");
+		require(shipped.stages[11].display_name == "B Arena Edited" &&
+			shipped.levels.get("b_arena")->display_name() == "B Arena Edited" && shipped.stages[11].user &&
+			!shipped.stages[11].include_in_random, "An edited user stage must play its new definition");
+
+		// Nothing changed: the same list, and the same refusal.
+		const UserStageScan same = session.rescan();
+		require(same.accepted == second.accepted && same.refused == second.refused &&
+			names(shipped.stages) == expected, "A rescan with no change must give the same list");
+
+		// One file deleted and the other broken since: both leave the list.
+		std::filesystem::remove(folder / "a_arena.json");
+		write_level(base, folder / "b_arena.json", [](rapidjson::Document& d)
+		{
+			d.RemoveMember("spawn_locations");
+		});
+		const UserStageScan third = session.rescan();
+		require(third.accepted.empty() && third.refused.size() == 2 &&
+			refused(third, "b_arena.json", "spawn_locations") && names(shipped.stages) == manifest,
+			"A vanished or now-broken user stage must leave the list, keeping the shipped ten");
+		require(shipped.levels.get("crossfeed")->display_name() == "Crossfeed",
+			"A rescan must not touch a shipped definition");
+		// The whole list still passes what startup checks.
+		validate_game_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
+			&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);
+		std::cout << "PASS a rescan adds a new user stage, rereads an edited one and drops a deleted or broken one, "
+			"keeping the shipped ten first\n";
+	}
+
 	void check_hint(const Presentation& presentation)
 	{
 		const MenuStageText& text = presentation.menu_text().stage;
@@ -353,6 +432,7 @@ int main(int argc, char** argv)
 		check_empty(fixture, content, scratch);
 		check_mixed(fixture, content, scratch);
 		check_user_collision(fixture, content, scratch);
+		check_rescan(fixture, content, scratch);
 		std::cout << "PASS user stages: per-user folder, per-file validation and refusal, "
 			"no shipped or user name collisions, Stage Select order and marker, outside Random.\n";
 		return 0;

@@ -231,9 +231,15 @@ $build = Join-Path $repo "out/build/$Preset"
 $evidence = Join-Path $repo "out/acceptance/$Preset/level-editor"
 $run = Join-Path $evidence ([Guid]::NewGuid().ToString('N'))
 [System.IO.Directory]::CreateDirectory($run) | Out-Null
+# Save to My Stages writes under LOCALAPPDATA: point it, for the acceptance
+# executable and every editor launch, at a profile inside this run.
+$previousLocalAppData = $env:LOCALAPPDATA
+$isolatedProfile = Join-Path $run 'profile'
+[System.IO.Directory]::CreateDirectory($isolatedProfile) | Out-Null
 
 Push-Location -LiteralPath $repo
 try {
+    $env:LOCALAPPDATA = $isolatedProfile
     if (-not $SkipBuild) {
         foreach ($command in 'cmake', 'cl') {
             if (-not (Get-Command $command -ErrorAction SilentlyContinue)) {
@@ -293,8 +299,15 @@ try {
     [System.IO.Directory]::CreateDirectory($unresolvedRun) | Out-Null
     Test-EditorWindow -Executable $editor -Level (Join-Path $run 'unresolved_icon.json') -RunDirectory $unresolvedRun `
         -ExpectStatus "1 name the game will refuse: icon_frame 'not_an_icon'"
+    if (Test-Path -LiteralPath (Join-Path $isolatedProfile 'ColourWars/save_data.json')) {
+        throw 'The editor wrote a player save into the isolated profile.'
+    }
+    if (Test-Path -LiteralPath (Join-Path $isolatedProfile 'ColourWars/stages')) {
+        throw 'Opening the editor created the user stage folder; only Save to My Stages may.'
+    }
     Write-Host "PASS level editor acceptance ($Preset). Evidence: $run"
 }
 finally {
+    $env:LOCALAPPDATA = $previousLocalAppData
     Pop-Location
 }

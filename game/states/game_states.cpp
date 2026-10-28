@@ -2,9 +2,11 @@
 #include "game/states/game_states.h"
 #include "game/last_match_setup.h"
 #include "game/series_stage_rule.h"
+#include "game/stage_loading.h"
 using namespace labrador;
 
-GameMenu::GameMenu(GameData* game_data) : game_data_(game_data)
+GameMenu::GameMenu(GameData* game_data, UserStageFolder* user_stages) :
+	game_data_(game_data), user_stages_(user_stages)
 {
 
 }
@@ -30,6 +32,12 @@ void GameMenu::init()
 	{
 		if (this->music_) { this->music_->suspend(); }
 	});
+	// Only this frame lends the rescan: a match's frame never sets it, so the
+	// stage list holds still under a running match or series.
+	if (this->user_stages_ != nullptr)
+	{
+		this->menu_context_->set_stage_rescan([folder = this->user_stages_] { folder->rescan(); });
+	}
 
 	this->open_menu(MainMenuScreen::title);
 }

@@ -49,6 +49,16 @@ void MenuContext::suspend_music()
 	if (this->music_suspend_) { this->music_suspend_(); }
 }
 
+void MenuContext::set_stage_rescan(std::function<void()> rescan)
+{
+	this->stage_rescan_ = std::move(rescan);
+}
+
+void MenuContext::rescan_stages()
+{
+	if (this->stage_rescan_) { this->stage_rescan_(); }
+}
+
 void MenuContext::finish_with_music(std::function<void()> finish)
 {
 	if (this->music_exit_) { return; }

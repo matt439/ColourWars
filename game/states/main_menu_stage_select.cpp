@@ -281,6 +281,13 @@ int MainMenuStageSelect::pick_random_stage() const
 }
 void MainMenuStageSelect::init()
 {
+	// A stage the player saved or edited since the last visit joins now. The
+	// list holds still between rounds, where a series is still playing it; a
+	// chosen stage whose file vanished falls back to the first slot below.
+	if (!this->between_rounds())
+	{
+		this->menu_context()->rescan_stages();
+	}
 	// Between rounds the page opens on the stage the rule would play next,
 	// so confirming it straight away keeps a rotation going.
 	this->select_state_.slot = this->slot_of(this->between_rounds() ?

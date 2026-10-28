@@ -81,6 +81,8 @@ difficulty comparison; difficulty values remain provisional.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
+- **User stages:** play a stage made with Save to My Stages, and decide whether user stages
+  may opt into Random and whether the briefing hint is enough of a marker (`ROAD#16`).
 - **Series stage rule:** play Same stage, Rotate and Loser's pick, choose the default and
   settle the draw, explicit-only and bot-loser calls (`ROAD#20`).
 - **Overview map and match variants:** whether a mid-match map may show territory
@@ -92,8 +94,8 @@ difficulty comparison; difficulty values remain provisional.
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
 - **Report filing:** the guarded resize request and example (`ENG#23`) are
-  prepared and locally qualified, alongside the vibration-output draft (`ENG#25`).
-  Filing needs separate author authorization.
+  prepared and locally qualified, alongside the vibration-output draft (`ENG#25`)
+  and the registry-removal draft (`ENG#26`). Filing needs separate author authorization.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -195,7 +197,7 @@ excluded modes.
 | `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#15` | OPEN | MED | L | Paint-activated stage objects (Splatoon lifts, inkrails, sponges). The paint ferry is on the explicit Ferry Trial; left: vertical lifts, team rails, sponges, ferry art and play. Arena use follows `POL#21`. [Owner](docs/feature-roadmap.md#paint-ferry-road15-first-slice). |
-| `ROAD#16` | OPEN | LOW | S | User stages load from `%LOCALAPPDATA%\ColourWars\stages` without a rebuild; left: editor saving straight there, a rescan without restart, a release README note, attended play. Random opt-in is an author call. [Owner](docs/feature-roadmap.md#user-stages-road16). |
+| `ROAD#16` | DECISION | LOW | S | User stages play without a rebuild; the editor saves straight there and Stage Select rescans. Left: attended play of a player-made stage, and the author's calls on Random opt-in and the hint-only marker. [Owner](docs/feature-roadmap.md#user-stages-road16). |
 | `ROAD#17` | DECISION | LOW | M | Overview map in the unused three-player quadrant (Splatoon turf map). Shows territory mid-match, against gap audit 1.1: decide first. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#18` | UNSCOPED | LOW | M | Off-screen teammate and threat markers (Splatoon ally silhouettes); relates to `POL#3` rear threats and `ROAD#10` label clamping. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#20` | DECISION | LOW | S | The Series stage rule is in (Same stage, Rotate, Loser's pick on Mode). Left: play the three, choose the default, and confirm the provisional calls for draws, explicit-only stages and bot-only losers. [Owner](docs/feature-roadmap.md#series-stage-rule-road20). |
@@ -218,7 +220,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The two live drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The three live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
@@ -226,6 +228,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#25` | DECISION | LOW | S | Prepared vibration-output draft and qualified isolated XInput exhibit; author authorization and a fresh upstream recheck are required to file. Current task forbids filing. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output--draft-with-isolated-adapter-exhibit). |
+| `ENG#26` | DECISION | LOW | S | Drafted: `Registry` cannot forget a name, so a user-stage rescan leaves a vanished stage's definition registered. Upstream recheck and author authorization are needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit). |
 | `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 

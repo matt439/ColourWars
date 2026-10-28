@@ -23,6 +23,9 @@ namespace colourwars_editor
         // be read (its problem is then in `problems` and its names go unchecked).
         std::map<std::string, std::optional<std::set<std::string>>> sprite_frames;
         std::map<std::string, std::optional<std::set<std::string>>> sound_effects;
+        // The manifest's level names: the shipped stages a player's own stage
+        // may not be named after (Save to My Stages, ROAD#16).
+        std::vector<std::string> stages;
         std::vector<std::string> problems;
         bool manifest_read = false;
     };

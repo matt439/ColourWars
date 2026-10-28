@@ -5,9 +5,10 @@
 #include "game/drawable_text.h"
 #include "game/objects/level_object_builder.h"
 #include "game/sound_groups.h"
+#include "game/user_stage_contract.h"
 
 #include <algorithm>
-#include <cctype>
+#include <cstdio>
 #include <cwctype>
 #include <system_error>
 
@@ -15,33 +16,6 @@ using namespace labrador;
 
 namespace
 {
-	constexpr size_t MAX_USER_STAGE_NAME = 64;
-
-	// The registration helper's basename rule (docs/level-editor.md), so a
-	// user stage can later be registered under the same name.
-	bool usable_name(const std::string& name)
-	{
-		if (name.empty() || name.size() > MAX_USER_STAGE_NAME || name.front() == '-')
-		{
-			return false;
-		}
-		return std::all_of(name.begin(), name.end(), [](char character)
-		{
-			const unsigned char value = static_cast<unsigned char>(character);
-			return value < 0x80 && (std::isalnum(value) || character == '_' || character == '-');
-		});
-	}
-
-	bool same_name(const std::string& first, const std::string& second)
-	{
-		return first.size() == second.size() && std::equal(first.begin(), first.end(),
-			second.begin(), [](char a, char b)
-			{
-				return std::tolower(static_cast<unsigned char>(a)) ==
-					std::tolower(static_cast<unsigned char>(b));
-			});
-	}
-
 	bool json_extension(const std::filesystem::path& path)
 	{
 		std::wstring extension = path.extension().wstring();
@@ -150,15 +124,13 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 		{
 			label = path_to_utf8(file.filename());
 			const std::string name = path_to_utf8(file.stem());
-			if (!usable_name(name))
+			if (!user_stage_contract::usable_name(name))
 			{
-				scan.refused.push_back(refusal(label, "the file name must be 1 to " +
-					std::to_string(MAX_USER_STAGE_NAME) +
-					" ASCII letters, digits, '_' or '-', not starting with '-'"));
+				scan.refused.push_back(refusal(label, user_stage_contract::name_rule()));
 				continue;
 			}
 			const auto taken = std::find_if(stages.begin(), stages.end(),
-				[&name](const Stage& stage) { return same_name(stage.name, name); });
+				[&name](const Stage& stage) { return user_stage_contract::same_name(stage.name, name); });
 			if (taken != stages.end())
 			{
 				scan.refused.push_back(refusal(label, std::string("the name '") + name +
@@ -187,4 +159,82 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 		}
 	}
 	return scan;
+}
+
+void UserStageFolder::attach(std::filesystem::path directory, const UserStageChecks& checks,
+	AudioResources* audio, Registry<LevelLoadedInfo>* level_infos, StageList* stages)
+{
+	this->directory_ = std::move(directory);
+	this->checks_ = checks;
+	this->audio_ = audio;
+	this->level_infos_ = level_infos;
+	this->stages_ = stages;
+}
+
+bool UserStageFolder::attached() const
+{
+	return this->stages_ != nullptr;
+}
+
+UserStageScan UserStageFolder::read_into(StageList& stages) const
+{
+	// The user stages are the tail; the manifest's are never reread.
+	stages.erase(std::remove_if(stages.begin(), stages.end(),
+		[](const Stage& stage) { return stage.user; }), stages.end());
+	return load_user_stages(this->directory_, this->checks_, *this->level_infos_, stages);
+}
+
+void UserStageFolder::report(const UserStageScan& scan)
+{
+	std::set<std::string> now(scan.refused.begin(), scan.refused.end());
+	for (const std::string& line : scan.refused)
+	{
+		if (this->reported_.count(line) == 0)
+		{
+			std::fprintf(stderr, "%s\n", line.c_str());
+		}
+	}
+	std::fflush(stderr);
+	this->reported_ = std::move(now);
+}
+
+UserStageScan UserStageFolder::scan()
+{
+	if (!this->attached())
+	{
+		return {};
+	}
+	UserStageScan result = this->read_into(*this->stages_);
+	this->report(result);
+	return result;
+}
+
+UserStageScan UserStageFolder::rescan()
+{
+	if (!this->attached())
+	{
+		return {};
+	}
+	// Build the new list beside the live one, so a failure keeps a usable list.
+	StageList next = *this->stages_;
+	UserStageScan result = this->read_into(next);
+	try
+	{
+		// Each accepted stage passed sound_groups::check_candidate against the
+		// list before it, so this cannot fail on them; if it ever does, the
+		// session goes on with the shipped stages alone.
+		sound_groups::assign(*this->audio_, *this->checks_.tuning, *this->checks_.presentation,
+			*this->level_infos_, next);
+	}
+	catch (const std::exception& failure)
+	{
+		next.erase(std::remove_if(next.begin(), next.end(),
+			[](const Stage& stage) { return stage.user; }), next.end());
+		result.accepted.clear();
+		result.refused.push_back(refusal(path_to_utf8(this->directory_),
+			std::string("every user stage left out: ") + failure.what()));
+	}
+	*this->stages_ = std::move(next);
+	this->report(result);
+	return result;
 }

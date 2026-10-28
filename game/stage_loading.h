@@ -10,6 +10,7 @@
 #include "game/tuning.h"
 #include <filesystem>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -60,3 +61,48 @@ struct UserStageScan
 UserStageScan load_user_stages(const std::filesystem::path& directory,
 	const UserStageChecks& checks, labrador::Registry<LevelLoadedInfo>& level_infos,
 	StageList& stages);
+
+// ROAD#16: the player's stage folder for a whole session. wWinMain owns one
+// above the Application and attaches it once the manifest has loaded; scan()
+// is the startup read. rescan() rereads the folder in place of the user stages
+// already loaded, so a stage saved or edited while the game runs plays without
+// a restart. Its caller guarantees that no match holds a definition: GameMenu
+// lends it to Stage Select, which calls it as it opens from the main menu and
+// never between series rounds. Manifest stages stay first and untouched; user
+// stages follow in file-name order. A file that vanished, or now fails its
+// checks, leaves the list; its old definition stays in the registry,
+// unreachable from the list, because the registry has no remove.
+// Unattached, both do nothing.
+class UserStageFolder
+{
+public:
+	UserStageFolder() = default;
+	UserStageFolder(const UserStageFolder&) = delete;
+	UserStageFolder& operator=(const UserStageFolder&) = delete;
+
+	// All borrowed, and outliving this. `audio` is the checks' audio, mutable
+	// so a rescan can regroup the sounds.
+	void attach(std::filesystem::path directory, const UserStageChecks& checks,
+		labrador::AudioResources* audio, labrador::Registry<LevelLoadedInfo>* level_infos,
+		StageList* stages);
+	bool attached() const;
+
+	// Startup: before validate_game_content and sound_groups::assign, which
+	// wWinMain then runs over the whole list. Prints every refusal on stderr.
+	UserStageScan scan();
+
+	// Later: replaces the user stages and regroups the sounds. Prints only the
+	// refusals the previous scan did not, so reopening Stage Select is quiet.
+	UserStageScan rescan();
+
+private:
+	std::filesystem::path directory_;
+	UserStageChecks checks_;
+	labrador::AudioResources* audio_ = nullptr;
+	labrador::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
+	StageList* stages_ = nullptr;
+	std::set<std::string> reported_;
+
+	UserStageScan read_into(StageList& stages) const;
+	void report(const UserStageScan& scan);
+};

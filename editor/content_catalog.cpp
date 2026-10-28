@@ -95,6 +95,12 @@ namespace colourwars_editor
             {
                 if (!group.IsObject() || !group.HasMember("kind") || !group["kind"].IsString()) continue;
                 const std::string kind = text(group["kind"], "manifest.json");
+                if (kind == "level")
+                {
+                    for (const Json& value : array(group, "names", "manifest.json").GetArray())
+                        catalog.stages.push_back(text(value, "manifest.json"));
+                    continue;
+                }
                 const bool sheet = kind == "sprite_sheet";
                 if (!sheet && kind != "sound_bank") continue;
                 if (!group.HasMember("directory"))
@@ -122,6 +128,7 @@ namespace colourwars_editor
             catalog.problems.push_back(error.what());
             catalog.sprite_frames.clear();
             catalog.sound_effects.clear();
+            catalog.stages.clear();
         }
         return catalog;
     }

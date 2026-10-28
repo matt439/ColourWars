@@ -31,11 +31,15 @@
 // GameMenu is alone only during transitions. Its context and settings survive
 // matches; menu pages are rebuilt when returning from a match.
 
+class UserStageFolder;
+
 // Owns shared menu state and routes between setup pages and matches.
 class GameMenu final : public labrador::State
 {
 public:
-	explicit GameMenu(GameData* game_data);
+	// `user_stages`, when given, is rescanned as Stage Select opens from the
+	// main menu (ROAD#16); probes leave it out and keep their stage list.
+	explicit GameMenu(GameData* game_data, UserStageFolder* user_stages = nullptr);
 	void update(float dt) override;
 	void draw(labrador::Renderer& renderer) const override;
 	void init() override;
@@ -43,6 +47,7 @@ public:
 
 private:
 	GameData* game_data_ = nullptr;
+	UserStageFolder* user_stages_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
 	std::unique_ptr<MenuLevelSettings> menu_level_settings_ = nullptr;
 	std::unique_ptr<MenuContext> menu_context_ = nullptr;

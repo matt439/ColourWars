@@ -1855,7 +1855,9 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   editor played only after a manifest edit and a rebuild. First slice done
   2026-10-28: a per-user stage folder, each file validated on its own, a
   broken one refused without stopping startup; manifest stages stay
-  never-optional. See [User stages](#user-stages-road16) below.
+  never-optional. The editor's Save to My Stages, a rescan as Stage Select
+  opens and a README note for players followed the same day. Attended play
+  and two author calls remain. See [User stages](#user-stages-road16) below.
 
 ### Awareness and presentation
 
@@ -2206,11 +2208,69 @@ on master until that list gains them.
 A Debug launch with `+stage my_arena +players 2 +bot all paint` played a user
 copy of Close Quarters from an isolated profile.
 
-Still open: the editor saving straight to the folder (today the player copies
-the file there, or uses Save As), picking up a new or edited file without a
-restart (Debug `reload` rereads tuning and presentation only), a player-facing
-note in the release package's README, and attended play of a real
-player-made stage.
+**Done 2026-10-28 (follow-ups).** Three more pieces landed:
+
+- **The editor saves straight to the folder.** **File > Save to My Stages...**
+  (Ctrl+M) opens a save dialog in the folder. It refuses a name the game
+  would refuse, using the same code: the name rule, the case-blind
+  comparison and the folder's place under `LOCALAPPDATA` moved into
+  `game/user_stage_contract.h`. That header uses the standard library only
+  and is included by the game's scan, `directory_consts` and the editor, as
+  `horizontal_motion_contract.h` is. Shipped names come from the source
+  manifest (`ContentCatalog::stages`). The editor asks before it replaces
+  one of the player's own stages, creates the folder only on this command
+  (removing it again if a cancelled or refused save leaves it empty), and
+  never touches the save. See
+  [Play the level](level-editor.md#play-the-level).
+- **A rescan without a restart.** `UserStageFolder` (`game/stage_loading.h`)
+  owns the folder for the session. `wWinMain` declares it above the
+  `Application`, attaches it after the manifest and runs the startup scan
+  through it. `GameMenu` takes it as an optional second argument and lends it
+  to its `MenuContext` as a rescan hook. `MainMenuStageSelect::init` calls the
+  hook as the page opens from the main menu. A match's `MenuContext` never
+  has the hook, and the page also skips it between rounds, so the list holds
+  still while a match or series could be using it. A rescan builds the new
+  list beside the live one: the manifest stages unchanged, then the folder's
+  stages in file-name order. Each new or edited file is checked as at
+  startup and replaces its registry entry. The sound groups are then
+  reassigned over the new list (it cannot fail on stages that each passed
+  `check_candidate`, and if it does the session keeps only the shipped
+  stages). Only refusals the previous scan did not print reach stderr, so
+  reopening the page stays quiet. A stage whose file vanished or now fails
+  leaves the list. Stage Select's `slot_of` already falls back to the first
+  slot for a remembered or current stage that is gone. The old definition
+  stays in the registry, unreachable from the list, because
+  `labrador::Registry` has no remove. That costs memory only; see the draft
+  report in [engine reports](review/engine-reports.md). Probes that build a
+  `GameMenu` without the folder keep their fixed lists. The Debug `reload`
+  command still rereads only tuning and presentation.
+- **A note for players.** The release ZIP ships the root `README.md`
+  (`cmake/release_package.cmake`). Its new "Your own stages" section names
+  the folder and the name rule, says when the game reads the folder and
+  where a refusal is printed, and points to Save to My Stages, noting that
+  the editor is not in the ZIP.
+
+The `user_stages` case now also runs a session: an unattached folder (every
+probe's) does nothing. A startup scan loads one stage. A rescan adds a new
+stage that sorts first, rereads an edited one (both the list and the registry
+show the new name), and refuses a broken file. A rescan with no change gives
+the same list. A rescan after one file is deleted and the other broken
+returns to the shipped ten, leaving Crossfeed untouched and the whole list
+passing `validate_game_content`. The editor's document checks
+(`check-level-editor.ps1`) cover Save to My Stages under a scratch
+`LOCALAPPDATA` ([Acceptance checks](level-editor.md#acceptance-checks)).
+
+Provisional decisions, open for the author:
+
+- **When to rescan.** Only as Stage Select opens from the main menu. It is the
+  one screen that shows the list, and nothing there holds a definition. A
+  file watcher or a Debug command would add moving parts for no extra
+  player-visible effect.
+- **The editor's shortcut** is Ctrl+M (for "My Stages"). Ctrl+Shift+S was
+  taken.
+
+Still open: attended play of a real player-made stage (a human gate), and the
+Random and marker calls above.
 
 ### Series stage rule (`ROAD#20`)
 

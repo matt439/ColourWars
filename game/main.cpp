@@ -58,6 +58,10 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// Populated alongside the registry in manifest order.
 		StageList stages;
 
+		// The player's stage folder, attached once the manifest has loaded.
+		// GameMenu lends it to Stage Select, which rescans as it opens.
+		UserStageFolder user_stages;
+
 		// Resolve early content reads beside the executable, as load_manifest does.
 		const std::string content_root = executable_directory();
 
@@ -103,16 +107,11 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 
 		// The player's own stages join after the manifest's, each checked on its
 		// own: a broken one is refused with one stderr line and startup goes on.
-		const UserStageScan user_stages = load_user_stages(
-			path_from_utf8(user_stage_directory()),
+		user_stages.attach(path_from_utf8(user_stage_directory()),
 			UserStageChecks{ &tuning, &presentation, app.render_resources(),
 				app.audio_resources(), &save.play_settings() },
-			level_infos, stages);
-		for (const std::string& line : user_stages.refused)
-		{
-			std::fprintf(stderr, "%s\n", line.c_str());
-		}
-		std::fflush(stderr);
+			app.audio_resources(), &level_infos, &stages);
+		user_stages.scan();
 
 		// Check every name, stage and authored string against the loaded assets
 		// before the first menu. The Debug `reload` command runs the same checks.
@@ -147,7 +146,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		debug.run_launch_arguments(arguments);
 
 		phase = FailurePhase::running;
-		return app.run(std::make_unique<GameMenu>(&data));
+		return app.run(std::make_unique<GameMenu>(&data, &user_stages));
 	}
 	catch (...)
 	{
