@@ -5,11 +5,13 @@
 #include "game/level_format.h"
 #include <Windows.h>
 
+#include <array>
 #include <cmath>
 #include <exception>
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
 
 namespace level_editor_acceptance
 {
@@ -189,6 +191,106 @@ namespace level_editor_acceptance
         require(!document.dirty() && parse(document.serialize())["format"].GetInt() == level_format::current &&
             parse(document.serialize())["author_extension"] == legacy["author_extension"],
             "Legacy history save did not retain its upgraded version");
+
+        // A zero source byte is not JSON's escaped \u0000. A valid prefix must
+        // not make Load silently accept (and later save away) a file suffix.
+        LevelDocument raw_nul;
+        std::string escaped_source = raw_nul.serialize();
+        escaped_source.insert(escaped_source.find('{') + 1, R"("nul_positive":"keep\u0000tail",)");
+        const fs::path raw_baseline = scratch / "raw-nul-live.json";
+        write(raw_baseline, escaped_source);
+        raw_nul.load(raw_baseline);
+        const std::string initial_raw = raw_nul.serialize();
+        const Entry raw_level = entry(raw_nul, EntryKind::level);
+        bool escaped_offered = false;
+        for (const Property& property : raw_nul.properties(raw_level))
+            escaped_offered |= property.path == "nul_positive" &&
+                property.value == std::string("keep") + '\0' + "tail";
+        require(escaped_offered && initial_raw.find('\0') == std::string::npos,
+            "Escaped JSON NUL must remain valid metadata without a raw source zero");
+        raw_nul.set_property(raw_level, "/display_name", "Raw NUL first");
+        const std::string raw_first = raw_nul.serialize();
+        raw_nul.set_property(raw_level, "/display_name", "Raw NUL second");
+        const std::string raw_second = raw_nul.serialize();
+        require(raw_nul.undo() && raw_nul.can_undo() && raw_nul.can_redo() && raw_nul.dirty(),
+            "Raw-NUL refusal fixture needs a complete dirty undo/redo branch");
+        const auto full_raw_history = [&]
+        {
+            require(raw_nul.path() == raw_baseline && raw_nul.serialize() == raw_first && raw_nul.dirty() &&
+                raw_nul.can_undo() && raw_nul.can_redo() &&
+                raw_nul.undo() && raw_nul.serialize() == initial_raw && !raw_nul.dirty() &&
+                !raw_nul.can_undo() && raw_nul.can_redo() &&
+                raw_nul.redo() && raw_nul.serialize() == raw_first && raw_nul.dirty() &&
+                raw_nul.redo() && raw_nul.serialize() == raw_second && raw_nul.dirty() && !raw_nul.can_redo() &&
+                raw_nul.undo() && raw_nul.serialize() == raw_first && raw_nul.can_undo() && raw_nul.can_redo(),
+                "A refused raw-NUL load changed exact history snapshots, saved state or path");
+        };
+        const std::string zero(1, '\0');
+        const std::array<std::pair<const char*, std::string>, 5> suffixes{ {
+            { "garbage", zero + "discarded source bytes" },
+            { "bare", zero },
+            { "whitespace-before", std::string(" \t\r\n") + zero },
+            { "whitespace-after", zero + " \t\r\n" },
+            { "second-root", zero + R"({"author_note":"must not disappear"})" }
+        } };
+        for (bool bom : { false, true })
+        {
+            const std::string prefix = bom ? "\xEF\xBB\xBF" : "";
+            for (const auto& [name, suffix] : suffixes)
+            {
+                const fs::path invalid = scratch / (std::string(bom ? "raw-nul-bom-" : "raw-nul-") + name + ".json");
+                const std::string bytes = prefix + initial_raw + suffix;
+                write(invalid, bytes);
+                std::string diagnostic;
+                reject_without_change(raw_nul, [&]
+                {
+                    try { raw_nul.load(invalid); }
+                    catch (const std::exception& error) { diagnostic = error.what(); throw; }
+                }, "Load accepted a valid JSON prefix followed by raw NUL source bytes");
+                // Existing parser offsets exclude an optional UTF-8 BOM.
+                require(diagnostic.find(invalid.filename().string()) != std::string::npos &&
+                    diagnostic.find("Invalid JSON at byte " + std::to_string(bytes.find('\0') - prefix.size()) + ":") != std::string::npos,
+                    "Raw-NUL load refusal must identify its file and BOM-stripped zero-byte offset");
+                require(contents(invalid) == bytes && contents(raw_baseline) == escaped_source,
+                    "A refused raw-NUL load changed either the invalid source or the open saved file");
+                full_raw_history();
+            }
+            const fs::path malformed_nul = scratch /
+                (bom ? "raw-nul-bom-malformed-first.json" : "raw-nul-malformed-first.json");
+            const std::string malformed_bytes = prefix + "{broken" + zero + "later suffix";
+            write(malformed_nul, malformed_bytes);
+            std::string malformed_diagnostic;
+            reject_without_change(raw_nul, [&]
+            {
+                try { raw_nul.load(malformed_nul); }
+                catch (const std::exception& error) { malformed_diagnostic = error.what(); throw; }
+            }, "Malformed JSON with a later raw NUL was accepted");
+            require(malformed_diagnostic.find(malformed_nul.filename().string()) != std::string::npos &&
+                malformed_diagnostic.find("Invalid JSON at byte 1: Missing a name for object member.") != std::string::npos,
+                "A later raw NUL replaced the existing malformed-JSON first diagnostic");
+            require(contents(malformed_nul) == malformed_bytes && contents(raw_baseline) == escaped_source,
+                "Malformed-JSON refusal changed source bytes");
+            full_raw_history();
+        }
+        raw_nul.save(raw_baseline);
+        require(contents(raw_baseline) == raw_first && !raw_nul.dirty() &&
+            raw_nul.can_undo() && raw_nul.can_redo(),
+            "Refused raw-NUL loads damaged the original save baseline or retained history");
+        LevelDocument raw_reopened;
+        raw_reopened.load(raw_baseline);
+        require(raw_reopened.serialize() == raw_first,
+            "Saving after raw-NUL refusals lost escaped metadata or the live document");
+        const fs::path whitespace_path = scratch / "raw-nul-valid-whitespace.json";
+        const std::string whitespace_bytes = initial_raw + " \t\r\n";
+        write(whitespace_path, whitespace_bytes);
+        LevelDocument whitespace_document;
+        whitespace_document.load(whitespace_path);
+        require(whitespace_document.serialize() == initial_raw && !whitespace_document.dirty() &&
+            !whitespace_document.can_undo() && !whitespace_document.can_redo() &&
+            contents(whitespace_path) == whitespace_bytes,
+            "Ordinary trailing JSON whitespace or escaped NUL metadata was refused or changed");
+        std::cout << "PASS raw-NUL source refusal: complete suffix admission, byte offsets, first parser errors, "
+            "source bytes and full history; escaped NUL and ordinary trailing whitespace preserved\n";
         std::cout << "PASS shared current format, legacy save upgrade, unknown fields, strict version gate and transactional history\n";
     }
 

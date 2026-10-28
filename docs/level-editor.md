@@ -452,6 +452,38 @@ configure/build, then restored the original `VCPKG_MANIFEST_INSTALL=ON`
 cache settings and ran the full checker with `-SkipBuild`. No network fetch
 was retried. These automated checks do not close the attended `ED#5` gate.
 
+### Raw-NUL JSON admission (`ED#12`)
+
+**Done (2026-10-28).** Source review recorded this shortlist after `ED#11`;
+the first row describes the parser before the fix:
+
+| rank | candidate and evidence | value, scope and risk |
+|---|---|---|
+| 1 | The bundled RapidJSON reader treats a raw zero byte after a complete JSON root as EOF, even inside the supplied length. `level_json::parse` checks only the parser error, so Load or a numeric edit can accept a prefix and later Save drops the suffix. | Selected as `ED#12`: prevent silent source-byte loss with a narrow client parse guard and transactional regressions. Escaped JSON `\u0000` remains valid. |
+| 2 | The editor checker redirects `LOCALAPPDATA` before configure, giving vcpkg a fresh registry cache even when dependencies are installed. A normal configure hit an unavailable GitHub connection during `ED#11`. | A separate tooling follow-up can isolate runtime after build preflight. Lower priority; the existing offline build plus `-SkipBuild` path already permits qualification. |
+
+The public Load regression first reproduced accepted raw-NUL suffixes in
+`out/validation/implementation-loop-20261028/ed12-baseline/6e140c3b1bb04fc79522a1a9019a647b`.
+The client parse helper now checks the complete input after existing parser-error
+handling, retaining malformed-JSON diagnostic precedence. It rejects actual zero
+bytes in otherwise successful input with the existing BOM-stripped byte-offset
+convention; decoded NUL in valid escaped JSON remains accepted.
+This follows JSON's [grammar and string-escape rules](https://www.rfc-editor.org/rfc/rfc8259):
+a raw zero is neither trailing whitespace nor an unescaped string character.
+The regressions cover bare/trailing-whitespace/second-root/garbage suffixes
+with and without BOM, prior malformed diagnostics, numeric property input,
+escaped-NUL positives and ordinary trailing whitespace. Refusals retain exact
+model/history snapshots, paths, saved baselines and both open and rejected
+source files. Independent review, all three editor targets and the full editor
+checker pass in both presets. Evidence is under
+`out/acceptance/<preset>/level-editor/`: Debug
+`9d50fd1d0bdb4f8fa92d2319b0746843`, Release
+`423da374a22a46ff9a80f8b2ba7c6a8d`.
+
+Builds used the installed-dependency offline workflow above, restoring both
+manifest-install cache settings to `ON` before runtime checks. No engine or
+vendored RapidJSON source changed. The attended `ED#5` gate remains open.
+
 ## Acceptance checks
 
 `ED#5` is `DECISION`: the remaining GUI and saved-stage gameplay checks need an
