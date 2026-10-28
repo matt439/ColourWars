@@ -6,9 +6,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$outputRoot = if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory) } else {
+$outputRoot = if ($OutputDirectory) { Resolve-CheckFileSystemPath $OutputDirectory } else {
     Join-Path $repo 'out/validation/acceptance-process'
 }
 $run = [IO.Path]::GetFullPath((Join-Path $outputRoot ([Guid]::NewGuid().ToString('N'))))

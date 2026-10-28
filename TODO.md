@@ -49,8 +49,9 @@ when they don't compete with it.
 **Independent implementation (2026-10-28).** Select bounded work from the
 [maintenance](docs/code-hygiene.md#follow-up-shortlist-2026-10-28) and
 [authoring](docs/level-editor.md#authoring-follow-up-shortlist-2026-10-28)
-shortlists while attended reviews wait. Continue with a scoped candidate from
-those lists after the completed overlap selection (`ED#18`).
+shortlists while attended reviews wait. Next is aligning authored editor origins
+to the current grid (`ED#19`), whose Release DPI qualification is under
+diagnosis. Continue independent scoped work alongside that qualification.
 This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.
@@ -138,6 +139,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
+| `ED#19` | OPEN | LOW | S | Qualify the prepared Align origin to grid implementation after a Release DPI font assertion; Debug and Release model checks pass. [Scope](docs/level-editor.md#align-authored-origins-to-the-grid-ed19). |
 
 ## Audio replacement
 

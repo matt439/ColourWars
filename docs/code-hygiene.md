@@ -5,6 +5,44 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order.
 
+## Tool-runner evidence paths (`HYG#20`)
+
+**Done (2026-10-28).** Continued the established caller-relative path contract
+for `check-acceptance-process.ps1`, `check-stage-registration.ps1` and
+`check-debug-console.ps1`. These three converted explicit output paths
+with process-relative `Path.GetFullPath`.
+
+The current ranked scope is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Three remaining runners have private preflight stops before native helpers, compilers or UI/process work. | Selected as `HYG#20`: reuse the existing filesystem resolver, preserving defaults, run layout and failure receipts. Three imports and three substitutions; independent of editor DPI diagnosis. |
+| 2 | Startup has another caller-relative output conversion and can stop at a private `Add-Type` fault after output creation. | A separate bounded follow-up with an inert executable and explicit fault boundary. |
+| 3 | Failure-reporting compiles a C# interop helper before output resolution. | Qualify its own initialization order separately; disclose helper compilation rather than claiming a compiler-free check. |
+
+The scripts use `Resolve-CheckFileSystemPath` for their output values, retaining
+acceptance-process's GUID root, registration's preset-bearing default but
+direct explicit root, and debug-console's flat output directory. Defaults and
+preflight order stay intact; `run-balance` keeps its repository-relative rule.
+
+Exact private copies reproduced misplaced relative output in all three old
+scripts before implementation. Fresh PS5 and pwsh candidate hosts each pass
+12 cases: relative Unicode/space paths, absolute/default controls and explicit
+non-filesystem refusal. An absent compiler stops acceptance-process; empty
+PATH plus `-SkipBuild` stops registration at its required-CMake check; an inert
+executable and synthetic throwing debug driver stop before the real helper,
+tuning reads, profile cleanup or process/UI work. Exact receipt/file boundaries,
+five source hashes, private input bytes and caller environment/location/stack
+are preserved. No Git/CIM, CMake/compiler, native helper or probe executable
+ran. The existing denied queries remain stopped.
+
+Independent review confirms exactly three imports and three output-expression
+substitutions, with all remaining script text unchanged. Evidence under
+`out/validation/implementation-loop-20261028/`: baseline
+`hyg20-baseline/683fad45e43b467dabbe2b71a77b896e`, candidate PS5
+`hyg20-candidate/f8ae203df8ea451ba8a739c205730a63` and pwsh
+`hyg20-candidate/b71d92d89f9148f5944fe9011a2c2861`.
+
 ## Probe-wrapper evidence paths (`HYG#19`)
 
 **Done (2026-10-28).** Extended `HYG#17`'s caller-relative filesystem contract
@@ -18,7 +56,7 @@ The ranked follow-up shortlist is:
 | rank | evidence and candidate | value, scope and risk |
 |---|---|---|
 | 1 | Four build/probe wrappers retain the same process-relative output conversion. Each can stop at missing-tool preflight before Git, compiler or native work. | Selected as `HYG#19`: reuse the existing filesystem resolver, preserving defaults, preset/GUID suffixes, preflight order and normal receipts. Four imports and four substitutions; low risk. |
-| 2 | Five other wrappers have the same conversion, but different startup/helper boundaries. | Trace their independent initialization requirements in a later scope; failure-reporting loads a native helper before path resolution. |
+| 2 | Five other wrappers had the same conversion, but different startup/helper boundaries. | Three are completed by `HYG#20`; startup and failure-reporting retain separate initialization requirements. |
 | 3 | Vertical lifts (`ROAD#28`) would add a new gameplay affordance. | Current loader, carry, projectile, shadow, bot and replay paths explicitly model horizontal motion. Define the coordinated physics contract before promoting that larger capability; an axis toggle is insufficient. |
 
 Each wrapper now dot-sources `check-path.ps1` and resolves its output value
@@ -135,7 +173,8 @@ Independent review and six-file source-immutability checks pass. Evidence under
 `hyg17-qualification/967a47bcf11643eba088bbe5a8c5f3aa`, native batch
 `hyg17-native/1f97aa8d62eb480787300d0710db3bf8` (leaf
 `e067d5a5840546299ce439f626526c7d`). Four more wrappers are qualified by
-`HYG#19`; the remaining five need separate scoping. The observed initialization location
+`HYG#19` and three by `HYG#20`; startup and failure-reporting need separate
+scoping. The observed initialization location
 leak is resolved by `HYG#18` above, without retrying the denied metadata query.
 
 ## Follow-up shortlist (2026-10-28)

@@ -80,7 +80,7 @@ authoring shortlist is:
 | rank | evidence and candidate | value, scope and risk |
 |---|---|---|
 | 1 | Canvas hit testing returns the first object in category/reverse-document order. A buried collider or decoration needs the Level Contents list even when its geometry is under the pointer. | Selected as `ED#18`: Ctrl+click cycles the existing eligible hits, with selection only. Preserve plain click and all current shape predicates; bounded native selection/history checks. |
-| 2 | Drag and arrow snap round displacement, so an imported off-grid origin stays off-grid. | A future explicit Align selection to grid command could help precise authoring while retaining ordinary relative movement. Define validation/no-op/history behavior before implementation. |
+| 2 | Drag and arrow snap round displacement, so an imported off-grid origin stays off-grid. | Selected next as `ED#19`: align the authored origin in one validated, undoable operation, preserving ordinary relative movement and slab geometry. |
 
 #### Cycle overlapping canvas objects (`ED#18`)
 
@@ -121,6 +121,51 @@ Evidence under `out/validation/implementation-loop-20261028/`: baseline
 `ed18-candidate/2e2b7a80952e40d696ca823907656dbf`. Full checker receipts:
 `out/acceptance/x64-debug/level-editor/82aadf314c82420f9ba8571ce1c2c7ba`
 and `out/acceptance/x64-release/level-editor/716a3770d7034f6a990da6b6b8cf5489`.
+
+#### Align authored origins to the grid (`ED#19`)
+
+**OPEN (2026-10-28).** Add **Edit > Align origin to grid**. Imported geometry
+can start off-grid; relative dragging and nudging retain that offset. Align
+both coordinates to the current 1/10/25/50/100-unit grid with one undo step.
+This explicit command uses `std::round` (half steps away from zero) regardless
+of Shift, while existing drag/nudge controls keep their behavior.
+
+**Qualification in progress.** The prepared implementation remains uncommitted
+while complete Debug checks pass. Release builds and all model checks pass, but the original DPI fixture
+stopped at `DPI transition retained its replaced owned font`, before Release
+gesture and hidden-launch checks. The failed run is retained under
+`out/validation/implementation-loop-20261028/ed19-candidate/1cf1306d7d2544c3b610c62f5af65630`
+(Release checker `436b5efa01ad4901a70ecba01b9b6a5b`). Diagnose the actual
+font-deletion result without weakening that gate before closing this item.
+
+Use `LevelDocument::align_origin(const Entry&, int grid)` as the atomic model
+operation. Reject nonpositive grids and level metadata. For rectangular/TLBR
+objects, ramps, bounds and moving anchors, align the geometric left/top. For
+spawns align their stored point; for fixed slabs align the authored `slab/x,y`
+endpoint, not the reconstructed rotated bounding box. Preserve the existing
+size, direction, motion and metadata through the current geometry writers.
+An already aligned origin returns before mutation, preserving number types,
+the saved point and redo history. Other changes use one `Impl::mutate` and its
+existing validation, so refused geometry leaves the entire model unchanged.
+
+Add one Edit menu item with its command identifier appended after existing
+IDs. Enable it for selected geometry, including bounds/spawns/slabs and
+already aligned entries; disable it for no selection or level metadata.
+Use the current command gesture barrier and pending-property guard, then
+refresh the inspector. Help explains grid/Shift behavior and slab origins;
+no new toolbar or accelerator is needed.
+
+Establish the old-source native baseline on literal off-grid coordinates
+before implementing the operation. Then qualify every supported grid,
+positive/negative half steps, rectangle/TLBR/ramp/bounds/spawn/mover/slab
+origins, no-op types/redo, exact one-step history and private save/reload.
+Refusal controls include the team-spawn midpoint, blocked mover corridors and
+slab endpoint limits. Native commands qualify menu enablement, valid pending
+edits, gesture cancellation/late releases, view/source/history and caller
+restoration. Direct controller calls may catch geometry errors before the
+window's modal handler; invalid pending-property dialogs remain unqualified.
+Use the separate gesture process and complete both-preset editor checks,
+preserving the original DPI/font fixture and attended `ED#5` gate.
 
 #### Empty-key property targets (`ED#16`)
 
