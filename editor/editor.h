@@ -43,10 +43,13 @@ namespace colourwars_editor
     {
     public:
         explicit Editor(HINSTANCE instance);
+        ~Editor();
         int run(int show, const std::filesystem::path& initial_path);
 
     private:
+        friend struct EditorDpiProbe;
         HINSTANCE instance_;
+        UINT dpi_ = 96;
         HWND window_ = nullptr;
         HWND canvas_ = nullptr;
         HWND object_list_ = nullptr;
@@ -98,6 +101,9 @@ namespace colourwars_editor
         HWND control(const wchar_t*, const wchar_t*, DWORD, int);
         void create_controls();
         void create_menu();
+        void create_window(int show, const std::filesystem::path& initial_path);
+        void change_dpi(UINT dpi, const RECT& suggested);
+        int pixels(int logical) const;
         void layout();
         void command(int);
         void refresh(bool keep_property = false);
@@ -115,6 +121,8 @@ namespace colourwars_editor
         void set_status(const std::wstring&);
         void error(const std::exception&);
         void paint(HDC, const RECT&);
+        void line(HDC, int, int, int, int, COLORREF, int width = 1, int style = PS_SOLID) const;
+        void outline(HDC, const RECT&, COLORREF, int width = 1, int style = PS_SOLID) const;
         void draw_item(HDC, const DrawItem&);
         void draw_blockout(HDC);
         void fit(const Rect&);

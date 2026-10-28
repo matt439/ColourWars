@@ -1,4 +1,5 @@
 #include "editor/editor.h"
+#include "editor/paint_mechanism_guide.h"
 #include "editor/win32_text.h"
 
 #include <windows.h>
@@ -28,10 +29,14 @@ namespace colourwars_editor
         DeleteObject(brush);
     }
 
-    void line(HDC dc, int x1, int y1, int x2, int y2, COLORREF colour,
-        int width = 1, int style = PS_SOLID)
+    }
+
+    void Editor::line(HDC dc, int x1, int y1, int x2, int y2, COLORREF colour,
+        int width, int style) const
     {
-        HPEN pen = CreatePen(style, width, colour);
+        const LOGBRUSH brush{ BS_SOLID, colour, 0 };
+        HPEN pen = ExtCreatePen(PS_GEOMETRIC | PS_ENDCAP_FLAT | PS_JOIN_MITER | static_cast<DWORD>(style),
+            static_cast<DWORD>(pixels(width)), &brush, 0, nullptr);
         HGDIOBJ previous = SelectObject(dc, pen);
         MoveToEx(dc, x1, y1, nullptr);
         LineTo(dc, x2, y2);
@@ -39,21 +44,20 @@ namespace colourwars_editor
         DeleteObject(pen);
     }
 
-    void outline(HDC dc, const RECT& rectangle, COLORREF colour, int width = 1,
-        int style = PS_SOLID)
+    void Editor::outline(HDC dc, const RECT& rectangle, COLORREF colour, int width,
+        int style) const
     {
         line(dc, rectangle.left, rectangle.top, rectangle.right, rectangle.top, colour, width, style);
         line(dc, rectangle.right, rectangle.top, rectangle.right, rectangle.bottom, colour, width, style);
         line(dc, rectangle.right, rectangle.bottom, rectangle.left, rectangle.bottom, colour, width, style);
         line(dc, rectangle.left, rectangle.bottom, rectangle.left, rectangle.top, colour, width, style);
     }
-    }
 
     void Editor::fit(const Rect& rectangle)
     {
         RECT client{}; GetClientRect(canvas_, &client);
-        zoom_ = std::clamp(std::min((client.right - 80.0) / std::max(rectangle.width, 100.0),
-            (client.bottom - 80.0) / std::max(rectangle.height, 100.0)), 0.005, 10.0);
+        zoom_ = std::clamp(std::min((client.right - static_cast<double>(pixels(80))) / std::max(rectangle.width, 100.0),
+            (client.bottom - static_cast<double>(pixels(80))) / std::max(rectangle.height, 100.0)), 0.005, 10.0);
         view_x_ = rectangle.x + rectangle.width / 2.0 - client.right / (2.0 * zoom_);
         view_y_ = rectangle.y + rectangle.height / 2.0 - client.bottom / (2.0 * zoom_);
         InvalidateRect(canvas_, nullptr, FALSE);
@@ -109,7 +113,7 @@ namespace colourwars_editor
             outline(dc, screen, colours[item.entry.index % 4], 1, PS_DASH);
             SetTextColor(dc, colours[item.entry.index % 4]);
             const std::wstring label = wide(item.entry.label);
-            TextOutW(dc, screen.left + 5, screen.top + 4, label.c_str(), static_cast<int>(label.size()));
+            TextOutW(dc, screen.left + pixels(5), screen.top + pixels(4), label.c_str(), static_cast<int>(label.size()));
         }
         else if (is_spawn(item.entry))
         {
@@ -118,10 +122,10 @@ namespace colourwars_editor
                 blockout_tuning_ ? blockout_tuning_->player_height : 0.0});
             const COLORREF colour = item.entry.kind == EntryKind::spawn_a ? RGB(70, 163, 250) : RGB(255, 158, 75);
             outline(dc, screen, colour, 2);
-            line(dc, screen.left - 5, screen.top, screen.left + 5, screen.top, colour, 2);
-            line(dc, screen.left, screen.top - 5, screen.left, screen.top + 5, colour, 2);
+            line(dc, screen.left - pixels(5), screen.top, screen.left + pixels(5), screen.top, colour, 2);
+            line(dc, screen.left, screen.top - pixels(5), screen.left, screen.top + pixels(5), colour, 2);
             const std::wstring label = (item.entry.kind == EntryKind::spawn_a ? L"A" : L"B") + std::to_wstring(item.entry.index + 1);
-            SetTextColor(dc, colour); TextOutW(dc, screen.left + 3, screen.top - 21, label.c_str(), static_cast<int>(label.size()));
+            SetTextColor(dc, colour); TextOutW(dc, screen.left + pixels(3), screen.top - pixels(21), label.c_str(), static_cast<int>(label.size()));
         }
         else
         {
@@ -181,12 +185,49 @@ namespace colourwars_editor
                 }
             }
         }
+        if (item.entry.kind == EntryKind::collision)
+        {
+            if (const auto guide = paint_mechanism_guide(item.values))
+            {
+                // The screen rectangle already follows the mover's initial phase
+                // and selected drag preview. These marks never alter its envelope.
+                const double scale = static_cast<double>(dpi_) / 96.0;
+                TEXTMETRICW font_metrics{};
+                const double line_height = GetTextMetricsW(dc, &font_metrics) ?
+                    static_cast<double>(font_metrics.tmHeight) / scale : 24.0;
+                PaintMechanismDrawing drawing = paint_mechanism_drawing(*guide,
+                    { 0.0, 0.0, static_cast<double>(screen.right - screen.left) / scale,
+                        static_cast<double>(screen.bottom - screen.top) / scale },
+                    line_height);
+                drawing.panel = { screen.left + drawing.panel.x * scale, screen.top + drawing.panel.y * scale,
+                    drawing.panel.width * scale, drawing.panel.height * scale };
+                for (MechanismStroke& stroke : drawing.strokes)
+                {
+                    stroke = { screen.left + stroke.x1 * scale, screen.top + stroke.y1 * scale,
+                        screen.left + stroke.x2 * scale, screen.top + stroke.y2 * scale };
+                }
+                for (MechanismLabel& label : drawing.labels)
+                { label.x = screen.left + label.x * scale; label.y = screen.top + label.y * scale; }
+                const RECT panel{ static_cast<LONG>(drawing.panel.x), static_cast<LONG>(drawing.panel.y),
+                    static_cast<LONG>(drawing.panel.x + drawing.panel.width),
+                    static_cast<LONG>(drawing.panel.y + drawing.panel.height) };
+                fill(dc, panel, RGB(36, 45, 57));
+                outline(dc, panel, RGB(181, 197, 213));
+                for (const MechanismStroke& stroke : drawing.strokes)
+                    line(dc, static_cast<int>(stroke.x1), static_cast<int>(stroke.y1),
+                        static_cast<int>(stroke.x2), static_cast<int>(stroke.y2), RGB(240, 225, 190), 2);
+                SetTextColor(dc, RGB(240, 225, 190));
+                for (const MechanismLabel& label : drawing.labels)
+                    TextOutW(dc, static_cast<int>(label.x), static_cast<int>(label.y), label.text.c_str(),
+                        static_cast<int>(label.text.size()));
+            }
+        }
         if (selected)
         {
             if (motion) { screen = screen_rect(motion->anchor); }
             outline(dc, screen, RGB(255, 255, 255), 2);
             if (!is_spawn(item.entry) && !slab)
-                fill(dc, RECT{screen.right - 5, screen.bottom - 5, screen.right + 6, screen.bottom + 6}, RGB(255, 255, 255));
+                fill(dc, RECT{screen.right - pixels(5), screen.bottom - pixels(5), screen.right + pixels(6), screen.bottom + pixels(6)}, RGB(255, 255, 255));
         }
     }
 
@@ -196,7 +237,7 @@ namespace colourwars_editor
         {
             SetTextColor(dc, RGB(255, 190, 120));
             const std::wstring text = L"Blockout aids unavailable: " + blockout_error_;
-            TextOutW(dc, 16, 43, text.c_str(), static_cast<int>(text.size()));
+            TextOutW(dc, pixels(16), pixels(43), text.c_str(), static_cast<int>(text.size()));
             return;
         }
         for (const ScoringFace& face : scoring_faces_)
@@ -269,10 +310,10 @@ namespace colourwars_editor
                 : L"Spawn sizes and scoring area still follow current source tuning.",
             L"Guide boxes start at selection; no collision test or guaranteed route. Source tuning.json."};
         RECT client{}; GetClientRect(canvas_, &client);
-        fill(dc, RECT{8, 38, client.right - 8, 128}, RGB(28, 36, 46));
+        fill(dc, RECT{pixels(8), pixels(38), client.right - pixels(8), pixels(128)}, RGB(28, 36, 46));
         SetTextColor(dc, RGB(181, 197, 213));
         for (int index = 0; index < 4; ++index)
-            TextOutW(dc, 16, 43 + index * 21, lines[index].c_str(), static_cast<int>(lines[index].size()));
+            TextOutW(dc, pixels(16), pixels(43 + index * 21), lines[index].c_str(), static_cast<int>(lines[index].size()));
     }
 
     void Editor::paint(HDC dc, const RECT& client)
@@ -281,7 +322,7 @@ namespace colourwars_editor
         SetBkMode(dc, TRANSPARENT);
         HGDIOBJ old_font = SelectObject(dc, font_);
         double spacing = static_cast<double>(snap_);
-        while (spacing * zoom_ < 28.0) spacing *= 2.0;
+        while (spacing * zoom_ < pixels(28)) spacing *= 2.0;
         const double pixel_spacing = spacing * zoom_;
         const double first_x = -std::fmod(view_x_, spacing) * zoom_;
         const double first_y = -std::fmod(view_y_, spacing) * zoom_;
@@ -307,8 +348,8 @@ namespace colourwars_editor
         if (show_blockout_) draw_blockout(dc);
         const std::wstring legend = L"GEOMETRY VIEW    " + std::to_wstring(static_cast<int>(std::round(zoom_ * 100.0)))
             + L"%    |    Grid " + std::to_wstring(static_cast<int>(spacing));
-        fill(dc, RECT{8, 8, 370, 35}, RGB(28, 36, 46));
-        SetTextColor(dc, RGB(181, 197, 213)); TextOutW(dc, 16, 13, legend.c_str(), static_cast<int>(legend.size()));
+        fill(dc, RECT{pixels(8), pixels(8), pixels(370), pixels(35)}, RGB(28, 36, 46));
+        SetTextColor(dc, RGB(181, 197, 213)); TextOutW(dc, pixels(16), pixels(13), legend.c_str(), static_cast<int>(legend.size()));
         SelectObject(dc, old_font);
     }
 
@@ -339,15 +380,15 @@ namespace colourwars_editor
                     rectangle = screen_rect(Rect{item->rectangle.x, item->rectangle.y,
                         blockout_tuning_ ? blockout_tuning_->player_width : 0.0,
                         blockout_tuning_ ? blockout_tuning_->player_height : 0.0});
-                    rectangle.right = std::max(rectangle.right, rectangle.left + 18);
-                    rectangle.bottom = std::max(rectangle.bottom, rectangle.top + 24);
+                    rectangle.right = std::max(rectangle.right, rectangle.left + pixels(18));
+                    rectangle.bottom = std::max(rectangle.bottom, rectangle.top + pixels(24));
                 }
-                InflateRect(&rectangle, 3, 3);
+                InflateRect(&rectangle, pixels(3), pixels(3));
                 if (PtInRect(&rectangle, point)) return item->entry;
                 if (item->motion)
                 {
                     rectangle = screen_rect(item->motion->initial_pose);
-                    InflateRect(&rectangle, 3, 3);
+                    InflateRect(&rectangle, pixels(3), pixels(3));
                     if (PtInRect(&rectangle, point)) return item->entry;
                 }
             }
@@ -402,7 +443,7 @@ namespace colourwars_editor
                 !document_.slab_guide(*selection_))
             {
                 const RECT rectangle = screen_rect(document_.rectangle(*selection_));
-                resizing_ = std::abs(point.x - rectangle.right) <= 9 && std::abs(point.y - rectangle.bottom) <= 9;
+                resizing_ = std::abs(point.x - rectangle.right) <= pixels(9) && std::abs(point.y - rectangle.bottom) <= pixels(9);
             }
             if (!resizing_)
             {
@@ -411,7 +452,8 @@ namespace colourwars_editor
                 if (selection_ && selection_->kind == EntryKind::bounds)
                 {
                     RECT rectangle = screen_rect(document_.rectangle(*selection_));
-                    RECT inner = rectangle; InflateRect(&rectangle, 5, 5); InflateRect(&inner, -5, -5);
+                    RECT inner = rectangle;
+                    InflateRect(&rectangle, pixels(5), pixels(5)); InflateRect(&inner, -pixels(5), -pixels(5));
                     on_bound = PtInRect(&rectangle, point) && !PtInRect(&inner, point);
                 }
                 if (!on_bound)

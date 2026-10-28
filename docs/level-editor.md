@@ -245,7 +245,10 @@ user stage appears in Stage Select after the shipped stages, with "Built by
 you." in the briefing, and `+stage <name>` starts it from the Debug command
 line. It is never a Random candidate. The game checks it as it checks a
 shipped stage. A file that fails prints one `user stage refused: <file>:
-<reason>` line on stderr and is left out; the game goes on without it. See
+<reason>` line on stderr and is left out; the game goes on without it. Main-menu
+Stage Select also shows an issue count: Down while browsing opens the retained
+filename/reason details, with issue/page controls and a return to the same
+arena choice. See
 [User stages](feature-roadmap.md#user-stages-road16).
 
 To ship a stage with the game, register it instead. A new file in
@@ -316,72 +319,87 @@ GUI/saved-stage play remains `ED#5`; no player save is involved.
 
 ### Per-monitor editor DPI (`ED#8`)
 
-**OPEN, L.** The editor calls `SetProcessDPIAware`, creates a fixed 16-pixel
-font and uses fixed pixel constants for controls, minimum tracking size and
-its initial window. Its window procedure has no `WM_DPICHANGED` handling.
-The native editor therefore has no layout that follows the current monitor's
-DPI, even though the game has its own DPI policy.
+**Done (2026-10-28).** The editor requests per-monitor
+v2 awareness, with a per-monitor v1 fallback. Fonts, controls, spacing, toolbar
+wrapping and minimum sizes use one 96-DPI layout. Initial and minimum windows
+are clamped to the monitor work area; compact layouts keep property actions
+reachable before the optional hint. `WM_DPICHANGED` adopts the suggested window
+rectangle, replaces the shared control font before deleting its predecessor,
+and relays out the controls.
 
-Give the editor per-monitor awareness and scale its font, control geometry,
-spacing and minimum sizes from a 96-DPI layout. Recreate owned GDI resources
-safely when DPI changes, adopt the suggested window rectangle and keep the
-initial window usable within the work area. Preserve canvas world coordinates,
-selection, pending property text and document/history when layout changes;
-DPI is display state, never a level edit. This is editor code and does not
-require a Labrador change or a gameplay display-policy decision (`POL#34`).
+A DPI transition cancels an uncommitted pointer preview without applying pending
+property text, fitting the canvas or editing the document. World coordinates,
+view, selection and full history remain intact. The game display-policy decision
+(`POL#34`) and Labrador pin are independent.
 
-Acceptance: check layout calculations at 96, 144 and 192 DPI, including control
-containment, usable property/action controls and minimum-size behavior. Native
-checks exercise DPI-change handling and font replacement while preserving
-canvas coordinate conversion, selection, pending text, dirty state and undo
-history. Existing document and hidden-window checks pass in both presets. An
-actual mixed-monitor comfort review remains `ED#5`; local qualification can run
-without a particular monitor arrangement.
+`window_layout_checks.cpp` checks 96/144/192 geometry. The separate hidden,
+in-process `colourwars_editor_dpi_acceptance` target sends actual DPI messages
+with valid same-process rectangles and checks font/control/minimum geometry,
+suggested placement, pending text and selection, coordinate/hit conversion,
+undo/redo and GDI resource counts. Actual mixed-monitor comfort remains `ED#5`.
+
+All three editor targets build in Debug and Release. Complete editor checks
+pass in both, including 28 DPI transitions and stable GDI counts (21 to 21),
+the document model and hidden launch/status/close checks. No monitor
+arrangement or gameplay display policy is accepted by those synthetic messages.
 
 ### Paint-mechanism canvas guides (`ED#9`)
 
-**OPEN, M.** `Editor::draw_item` shows mover anchor, travel and standing
-envelopes, but does not distinguish a paint ferry's authored direction from
-an automatic cycle. A team gate draws like an ordinary eraser block. Both
-mechanisms can already be authored and saved, so these omissions make the
-canvas less useful when checking a trial's structure.
+**Done (2026-10-28).** Paint gates have a schematic
+lintel/posts and `A / B` label. Paint ferries have a `PAINT FERRY` plaque with
+explicit A/B letters and opposing arrows from the authored `team_a_heads`.
+Ordinary erasers and automatic cycle movers have no mechanism plaque. These
+marks read current inspector properties and follow initial/provisional poses;
+they describe authored behavior without simulating ownership, permission or
+movement. Runtime cues remain `ROAD#26`/`ROAD#27`.
 
-Add a distinct schematic gate mark and a paint-ferry direction guide showing
-the authored team-A heading and opposite team-B heading. Use explicit team
-letters and direction shapes so the distinction does not depend on colour.
-Read the existing `gate`, `motion/drive` and `motion/team_a_heads` fields;
-ordinary erasers and cycle movers keep their existing guides. These marks
-describe authored behavior only: they do not simulate paint ownership, gate
-openness or ferry movement. Runtime mechanism cues have separate scopes in
-`ROAD#26` and `ROAD#27`.
+Screen-space plaques scale with DPI. Actual GDI font line height controls row
+spacing, arrow centers and panel height, so the labels and schematic stay apart.
+They do not extend hit geometry or alter travel/standing envelopes.
 
-Acceptance: guide generation distinguishes an ordinary eraser, team gate,
-cycle mover and both ferry headings. Inspector edits, duplication, undo/redo
-and save/reopen refresh the right guide without changing serialized level
-data. Native canvas checks cover selected and unselected objects and provisional
-drag positions, retaining existing hit-testing and motion-envelope behavior.
-The attended look at the guides remains part of `ED#5`.
+`mechanism_guide_checks.cpp` covers both headings, inspector/history,
+duplication and save/reopen. The native DPI target draws actual selected,
+unselected and provisional canvas objects at 96/144/192 DPI, comparing text
+and stroke pixels with independent expected guides. It retains three BMP
+sheets and a CSV, with font extents, separation, history and hit/envelope checks.
+An attended look remains `ED#5`.
+
+Both presets pass 45 native contexts and 90 actual canvas raster passes,
+including label/stroke containment and separation, selected/provisional
+translation and unchanged complete history, hit and envelope behavior.
+Review included the retained 96, 144 and 192 DPI sheets.
 
 ### Destination-aware save guidance (`ED#10`)
 
-**OPEN, S.** Save to My Stages correctly says to reopen Stage Select without
-a rebuild. It then makes that file the document's current path, so Ctrl+S
-saves there too. Ordinary Save still says to rebuild, and the normal refresh
-status repeats source-only advice, contradicting the workflow just completed.
+**Done (2026-10-28).** Save and refresh classify the
+current destination through the shared folder/name contract. A file directly
+in My Stages keeps the main-menu Stage Select/no-rebuild instruction after
+ordinary Save or refresh. Registered source files need a rebuild; new source
+filenames also need registration. Elsewhere/nested destinations say they are
+not discovered. Unavailable manifest/folder context gives qualified guidance.
+Destinations, registration and Random policy are unchanged.
 
-Choose save/refresh guidance from the current destination. Files directly in
-My Stages use the main-menu Stage Select rescan instruction; source levels
-retain the rebuild instruction and, for a new source filename, registration
-guidance. A file saved elsewhere must not claim the game already discovers
-it. Reuse the existing folder/name contract where applicable. This changes
-feedback, not save destinations, registration or the user's Random policy.
+The native check exposed a dialog boundary bug: cancellation could leave the
+process working directory in the newly created stage folder, preventing its
+empty-directory cleanup. The
+[legacy dialog calls](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-openfilenamew)
+now restore the previous directory before returning. The initial folder uses
+an absolute native path; the suggested basename, chosen destination and
+existing validation/overwrite rules stay the same.
 
-Acceptance: under a scratch `LOCALAPPDATA`, save to My Stages, edit and use
-ordinary Save, then refresh; each status continues to describe the no-rebuild
-workflow. Source Save and Save As elsewhere give the appropriate guidance,
-and cancellation or a failed save never reports success or changes the
-document's destination. Hidden-window status checks leave the real stage
-folder and player save untouched.
+The model checks cover each destination and unavailable context. The hidden
+window helper targets only its own HWNDs under scratch `LOCALAPPDATA`: it saves
+to My Stages, edits and ordinarily saves, refreshes, cancels dialogs, refuses an
+externally changed file and uses Save As elsewhere. A source-level launch is
+read-only. File hashes and the absence of a player save bound the checks.
+
+The complete checker passes in Debug and Release. Each native guidance run
+records seven status transitions and three strict cancellation/failure
+invariants, exact chosen-file writes, graceful exit and no player save.
+The helper supplies a complete scratch profile (Local/Roaming AppData and
+Desktop), verified to resolve there through the Shell; it restores the parent
+environment afterward. This keeps an unavailable real Desktop from becoming
+a fixture dependency.
 
 ## Acceptance checks
 
@@ -394,8 +412,9 @@ document behaviour and hidden-window operation, not that manual acceptance.
 ./scripts/check-level-editor.ps1 -Preset x64-release
 ```
 
-These build and run a native document-model check followed by a hidden GUI
-launch/open/respond/close check. Neither creates a game graphics/audio device.
+These build and run the native document model, a hidden in-process DPI/canvas
+probe and hidden GUI launch/open/respond/close and save-guidance checks. None
+creates a game graphics/audio device.
 They cover the shipped levels, the canonical template, unknown-field preservation, both rectangle
 encodings, ramps, the palette, undo/redo and save
 state, Unicode paths and failure recovery. Evidence and generated test levels
@@ -405,7 +424,7 @@ and each palette kind's default material, refusal of unknown and mismatched
 materials (in edits and loaded files), and inserting and clearing a material.
 They check the resource-name warnings against source content, and a third
 hidden launch reads the status line of a level the game would refuse.
-Save to My Stages is checked without its dialog. The checks find the folder
+The Save to My Stages model checks find the folder
 under a scratch `LOCALAPPDATA` without creating it, and refuse a case-only
 shipped-name collision, a space, a leading hyphen, a 65-character name, a
 non-ASCII name, a non-`.json` file, and files outside the folder or in a
@@ -415,14 +434,19 @@ that a second save under another spelling is reported as a replacement of
 the same file and leaves one file, and that no save file appears.
 The script points `LOCALAPPDATA` at its run folder for every launch. It also
 checks that opening the editor creates neither a save nor the stage folder.
-The dialog and the replace question are modal, so they are part of the manual
-pass.
+The hidden save-guidance helper also drives its own file dialogs, checking
+Save to My Stages, ordinary Save/refresh, cancellation, failed-save recovery
+and Save As elsewhere. It waits for a responsive owner and the operation's
+observable results, including folder cleanup and saved file/status changes,
+before issuing the next action. Attended dialog usability and the replace
+question remain part of the manual pass.
 The document checks also cover the shared current version, legacy save upgrades,
 unknown-field preservation, strict format type/version rejection before other
 field decoding, filename diagnostics, failed-upgrade recovery and retained
 undo/redo branches across a successful upgrade.
 Use `-SkipBuild` only after
-building both `colourwars_editor_acceptance` and `ColourWarsEditor` for the
+building `colourwars_editor_acceptance`, `colourwars_editor_dpi_acceptance`
+and `ColourWarsEditor` for the
 current source.
 
 On 2026-10-15, both presets passed the document checks (including the optional
@@ -430,6 +454,11 @@ Random setting) and hidden GUI launch/open/respond/close checks. Evidence:
 `out/acceptance/x64-debug/level-editor/088ef35b371047ee97c715f163c61008/`
 and `out/acceptance/x64-release/level-editor/2ca17df03ee24d7683cb8131b44fb245/`.
 The manual GUI and saved-stage play checks below remain open (`ED#5`).
+
+On 2026-10-28, both presets also pass the expanded DPI/canvas and native
+save-guidance checks: Debug `8c23b3aacabc4e26a2b4e25bb1986fcd`, Release
+`9f85cf04ebba419c94034365360a57bf`, under the same evidence root. These are
+software checks; the attended GUI and saved-stage play boundary remains.
 
 For a manual GUI check, open each shipped arena, select a platform, move and
 resize it, edit a field, duplicate/delete, undo/redo, and save a copy. Reopen

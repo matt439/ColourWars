@@ -253,7 +253,7 @@ try {
         Invoke-Logged -Command 'cmake' -Arguments @('--preset', $Preset) `
             -LogPath (Join-Path $run 'configure.log')
         Invoke-Logged -Command 'cmake' `
-            -Arguments @('--build', '--preset', $Preset, '--target', 'colourwars_editor_acceptance', 'ColourWarsEditor') `
+            -Arguments @('--build', '--preset', $Preset, '--target', 'colourwars_editor_acceptance', 'ColourWarsEditor', 'colourwars_editor_dpi_acceptance', '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
 
@@ -286,6 +286,12 @@ try {
 
     Invoke-Logged -Command $executable -Arguments @($repo, $run) `
         -LogPath (Join-Path $run 'run.log')
+    $dpiProbe = Join-Path $build 'editor/colourwars_editor_dpi_acceptance.exe'
+    if (-not (Test-Path -LiteralPath $dpiProbe -PathType Leaf)) {
+        throw "Missing editor DPI executable: $dpiProbe. Run without -SkipBuild first."
+    }
+    Invoke-Logged -Command $dpiProbe -Arguments @((Join-Path $run 'dpi-window')) `
+        -LogPath (Join-Path $run 'dpi-window.log')
     $editor = Join-Path $build 'editor/ColourWarsEditor.exe'
     if (-not (Test-Path -LiteralPath $editor -PathType Leaf)) {
         throw "Missing editor executable: $editor. Run without -SkipBuild first."
@@ -305,6 +311,10 @@ try {
     if (Test-Path -LiteralPath (Join-Path $isolatedProfile 'ColourWars/stages')) {
         throw 'Opening the editor created the user stage folder; only Save to My Stages may.'
     }
+    . (Join-Path $PSScriptRoot 'check-level-editor-save-guidance.ps1')
+    # The model check owns save-guidance/; dialog cancellation needs fresh targets.
+    Test-EditorSaveGuidance -Executable $editor -Level (Join-Path $run 'king_of_the_hill.json') `
+        -RunDirectory (Join-Path $run 'save-guidance-window') -SourceLevel (Join-Path $repo 'game/content/levels/king_of_the_hill.json')
     Write-Host "PASS level editor acceptance ($Preset). Evidence: $run"
 }
 finally {

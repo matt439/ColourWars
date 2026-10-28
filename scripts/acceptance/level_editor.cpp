@@ -32,6 +32,9 @@ int wmain(int argc, wchar_t* argv[])
         check_fixed_slabs(repo, scratch);
         check_history_and_failures(scratch);
         check_external_save_changes(scratch);
+        check_save_guidance(scratch);
+        check_paint_mechanism_guides(repo, scratch);
+        check_editor_window_layout(scratch);
         check_stage_registration(repo, scratch);
         check_user_stage_save(repo, scratch);
         std::cout << "PASS level editor document acceptance\n";

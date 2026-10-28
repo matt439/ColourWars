@@ -63,6 +63,9 @@ namespace level_editor_acceptance
     void check_palette_and_ramps(const fs::path& scratch);
     void check_history_and_failures(const fs::path& scratch);
     void check_external_save_changes(const fs::path& scratch);
+    void check_save_guidance(const fs::path& scratch);
+    void check_paint_mechanism_guides(const fs::path& repo, const fs::path& scratch);
+    void check_editor_window_layout(const fs::path& scratch);
     void check_stage_registration(const fs::path& repo, const fs::path& scratch);
     void check_user_stage_save(const fs::path& repo, const fs::path& scratch);
 }

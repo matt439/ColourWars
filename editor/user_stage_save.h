@@ -13,6 +13,11 @@
 // dialog. Nothing here reads or writes the player's save.
 namespace colourwars_editor
 {
+    // Windows folder identity used by destination validation and save guidance.
+    // Resolves relative segments and compares without case; neither folder needs
+    // to exist and nothing is created.
+    bool same_stage_folder(const std::filesystem::path& first, const std::filesystem::path& second);
+
     // %LOCALAPPDATA%\ColourWars\stages, the game's user_stage_directory. Throws
     // when LOCALAPPDATA is unset: the game then reads beside its own
     // executable, which the editor cannot know. Never creates the folder.

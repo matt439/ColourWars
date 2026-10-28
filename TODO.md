@@ -46,14 +46,11 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Three remaining `OPEN` slices have
-concrete implementation and acceptance scopes in their owners. They can proceed
-while attended reviews wait, without changing the arena/tuning order above:
-
-- **Editor workflow:** per-monitor DPI (`ED#8`), paint-mechanism canvas guides (`ED#9`) and destination-aware save
-  guidance (`ED#10`).
-
-These replace the 2026-10-26 exhaustion snapshot. Vertical lifts and growing
+**Independent implementation (2026-10-28).** The scoped hygiene, replay,
+diagnostics and editor slices are qualified. Select further bounded work from
+the [ranked maintenance shortlist](docs/code-hygiene.md#follow-up-shortlist-2026-10-28)
+while attended reviews wait; Unicode folder matching is the next candidate.
+This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.
 
@@ -140,9 +137,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
-| `ED#8` | OPEN | MED | L | Scale editor controls, fonts and layout per monitor without changing canvas world coordinates or document state. [Scope](docs/level-editor.md#per-monitor-editor-dpi-ed8). |
-| `ED#9` | OPEN | LOW | M | Distinguish gates and authored ferry headings on the editor canvas, without simulating ownership. [Scope](docs/level-editor.md#paint-mechanism-canvas-guides-ed9). |
-| `ED#10` | OPEN | LOW | S | Make Save/status guidance distinguish My Stages from source files that need a rebuild. [Scope](docs/level-editor.md#destination-aware-save-guidance-ed10). |
 
 ## Audio replacement
 

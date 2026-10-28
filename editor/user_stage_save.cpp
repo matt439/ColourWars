@@ -27,18 +27,6 @@ namespace colourwars_editor
             return text;
         }
 
-        // Windows paths compare without case; the folder need not exist yet.
-        bool same_folder(const fs::path& first, const fs::path& second)
-        {
-            const auto normal = [](const fs::path& path)
-            {
-                fs::path result = fs::absolute(path).lexically_normal();
-                if (!result.has_filename()) result = result.parent_path();
-                return folded(result.native());
-            };
-            return normal(first) == normal(second);
-        }
-
         bool shipped_name(const std::vector<std::string>& shipped, const std::string& name,
             std::string& taken)
         {
@@ -61,6 +49,17 @@ namespace colourwars_editor
         }
     }
 
+    bool same_stage_folder(const fs::path& first, const fs::path& second)
+    {
+        const auto normal = [](const fs::path& path)
+        {
+            fs::path result = fs::absolute(path).lexically_normal();
+            if (!result.has_filename()) result = result.parent_path();
+            return folded(result.native());
+        };
+        return normal(first) == normal(second);
+    }
+
     fs::path user_stage_folder()
     {
         size_t length = 0;
@@ -76,7 +75,7 @@ namespace colourwars_editor
     UserStageTarget check_user_stage_target(const fs::path& folder, const fs::path& chosen,
         const std::vector<std::string>& shipped)
     {
-        if (!same_folder(chosen.parent_path(), folder))
+        if (!same_stage_folder(chosen.parent_path(), folder))
             throw std::runtime_error("Save to My Stages saves directly in " + shown(folder) +
                 ", which the game reads at startup and when Stage Select opens. "
                 "Use Save As for any other folder.");

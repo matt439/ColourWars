@@ -1,6 +1,9 @@
 #include "editor/editor.h"
 #include "editor/win32_text.h"
 #include "editor/user_stage_save.h"
+#include "editor/save_guidance.h"
+#include "editor/window_dpi.h"
+#include "editor/window_layout.h"
 
 #include <windows.h>
 #include <commctrl.h>
@@ -17,8 +20,51 @@
 
 namespace colourwars_editor
 {
+    namespace
+    {
+        std::wstring destination_guidance(const std::filesystem::path& path,
+            const ContentCatalog& catalog, bool saved)
+        {
+            std::optional<std::filesystem::path> my_stages;
+            try { my_stages = user_stage_folder(); }
+            catch (const std::runtime_error&) {}
+            return save_guidance(path, std::filesystem::path(COLOURWARS_CONTENT_DIR) / L"levels",
+                catalog, my_stages, saved);
+        }
+
+        HFONT editor_font(UINT dpi)
+        {
+            HFONT font = CreateFontW(-editor_pixels(16, dpi), 0, 0, 0, FW_NORMAL,
+                FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+            if (!font) { throw std::runtime_error("Could not create the editor font."); }
+            return font;
+        }
+
+        bool editor_file_dialog(OPENFILENAMEW& dialog, bool save)
+        {
+            // The legacy dialog can retain its selected directory despite
+            // OFN_NOCHANGEDIR. Release that current-directory handle before
+            // returning a path or cleaning up a cancelled My Stages folder.
+            const std::filesystem::path original = std::filesystem::current_path();
+            const BOOL accepted = save ? GetSaveFileNameW(&dialog) : GetOpenFileNameW(&dialog);
+            const DWORD error = accepted ? 0 : CommDlgExtendedError();
+            std::filesystem::current_path(original);
+            if (!accepted && error != 0) { throw std::runtime_error("The file dialog could not be opened."); }
+            return accepted != FALSE;
+        }
+    }
+
     Editor::Editor(HINSTANCE instance) : instance_(instance),
         document_(std::filesystem::path(COLOURWARS_CONTENT_DIR) / L"tuning.json") {}
+    Editor::~Editor()
+    {
+        if (window_ && IsWindow(window_)) { DestroyWindow(window_); }
+        if (menu_ && IsMenu(menu_)) { DestroyMenu(menu_); }
+        if (accelerators_) { DestroyAcceleratorTable(accelerators_); }
+        if (font_) { DeleteObject(font_); }
+    }
+    int Editor::pixels(int logical) const { return editor_pixels(logical, dpi_); }
     HWND Editor::control(const wchar_t* type, const wchar_t* text, DWORD style, int id)
     {
         HWND child = CreateWindowExW(0, type, text, WS_CHILD | WS_VISIBLE | style,
@@ -68,8 +114,8 @@ namespace colourwars_editor
 
     void Editor::create_controls()
     {
-        font_ = CreateFontW(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+        dpi_ = editor_window_dpi(window_);
+        font_ = editor_font(dpi_);
         create_menu();
         toolbar_.push_back(control(L"BUTTON", L"New", WS_TABSTOP, file_new));
         toolbar_.push_back(control(L"BUTTON", L"Open...", WS_TABSTOP, file_open));
@@ -93,21 +139,21 @@ namespace colourwars_editor
         object_heading_ = control(L"STATIC", L"LEVEL CONTENTS", SS_LEFT, 0);
         inspector_heading_ = control(L"STATIC", L"PROPERTIES", SS_LEFT, 0);
         object_list_ = control(WC_LISTBOXW, L"Level contents", LBS_NOTIFY | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | WS_BORDER, objects_list);
-        SendMessageW(object_list_, LB_SETHORIZONTALEXTENT, 650, 0);
+        SendMessageW(object_list_, LB_SETHORIZONTALEXTENT, pixels(650), 0);
         property_list_ = control(WC_LISTVIEWW, L"Properties", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_TABSTOP | WS_BORDER, properties_list);
         ListView_SetExtendedListViewStyle(property_list_, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
         LVCOLUMNW column{};
         column.mask = LVCF_TEXT | LVCF_WIDTH;
-        column.pszText = const_cast<wchar_t*>(L"Property"); column.cx = 155;
+        column.pszText = const_cast<wchar_t*>(L"Property"); column.cx = pixels(155);
         ListView_InsertColumn(property_list_, 0, &column);
-        column.pszText = const_cast<wchar_t*>(L"Value"); column.cx = 150;
+        column.pszText = const_cast<wchar_t*>(L"Value"); column.cx = pixels(150);
         ListView_InsertColumn(property_list_, 1, &column);
         property_label_ = control(L"STATIC", L"Select a property to edit", SS_LEFT, 0);
         value_edit_ = control(L"EDIT", L"", ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP, property_value);
         SendMessageW(value_edit_, EM_SETLIMITTEXT, 32767, 0);
         apply_ = control(L"BUTTON", L"Apply", WS_TABSTOP, apply_property);
         revert_ = control(L"BUTTON", L"Revert", WS_TABSTOP, revert_property);
-        hint_ = control(L"STATIC", L"Drag to move. Drag the white corner to resize.\r\n\r\nWheel: zoom   Middle drag: pan\r\nF: frame selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\n\r\nCyan: exposed scoring faces.\r\nMovers: white anchor, blue travel, gold standing corridor; filled initial pose.\r\nPreview shows geometry, not textures.", SS_LEFT, 0);
+        hint_ = control(L"STATIC", L"Drag: move   White corner: resize\r\nWheel: zoom   Middle drag: pan\r\nF: selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\nCyan: exposed scoring faces\r\nMovers: white anchor; blue travel;\r\ngold corridor; filled initial pose\r\nGeometry preview; no textures", SS_LEFT, 0);
         status_ = control(L"STATIC", L"", SS_LEFT, 0);
         canvas_ = CreateWindowExW(0, L"ColourWarsEditorCanvas", L"Level canvas",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 1, 1, window_, nullptr, instance_, this);
@@ -119,32 +165,57 @@ namespace colourwars_editor
         // SetMenu sends WM_SIZE while WM_CREATE is still constructing the controls.
         if (!canvas_ || toolbar_.size() != 8) return;
         RECT client{}; GetClientRect(window_, &client);
-        const int width = client.right, height = client.bottom;
-        const int left = 255, right = 335, top = 86, bottom = 28;
-        int x = 10;
-        for (size_t index = 0; index < 5; ++index)
+        if (client.right <= 0 || client.bottom <= 0) { return; }
+        const EditorWindowLayout positions = editor_window_layout(client.right, client.bottom, dpi_);
+        const auto move = [](HWND control, const RECT& rectangle, int drop = 0)
         {
-            MoveWindow(toolbar_[index], x, 10, 66, 30, TRUE); x += 72;
+            MoveWindow(control, rectangle.left, rectangle.top, rectangle.right - rectangle.left,
+                rectangle.bottom - rectangle.top + drop, TRUE);
+        };
+        for (size_t index = 0; index < toolbar_.size(); ++index) { move(toolbar_[index], positions.toolbar[index]); }
+        move(palette_, positions.palette, positions.combo_drop_height);
+        move(grid_, positions.grid, positions.combo_drop_height);
+        move(object_heading_, positions.object_heading);
+        move(inspector_heading_, positions.inspector_heading);
+        move(object_list_, positions.object_list);
+        move(canvas_, positions.canvas);
+        move(property_list_, positions.property_list);
+        move(property_label_, positions.property_label);
+        move(value_edit_, positions.value_edit);
+        move(apply_, positions.apply);
+        move(revert_, positions.revert);
+        if (positions.show_hint) { move(hint_, positions.hint); }
+        ShowWindow(hint_, positions.show_hint ? SW_SHOWNA : SW_HIDE);
+        move(status_, positions.status);
+        const int property_width = positions.property_list.right - positions.property_list.left;
+        ListView_SetColumnWidth(property_list_, 0, property_width / 2);
+        ListView_SetColumnWidth(property_list_, 1, std::max(1, property_width - property_width / 2 - pixels(20)));
+        SendMessageW(object_list_, LB_SETHORIZONTALEXTENT, pixels(650), 0);
+    }
+
+    void Editor::change_dpi(UINT dpi, const RECT& suggested)
+    {
+        HFONT replacement = dpi != dpi_ ? editor_font(dpi) : nullptr;
+        // A pointer gesture belongs to the old client geometry. Cancel its
+        // preview without committing it or applying pending inspector text.
+        cancel_drag();
+        if (replacement)
+        {
+            HFONT previous = font_;
+            font_ = replacement;
+            dpi_ = dpi;
+            EnumChildWindows(window_, [](HWND child, LPARAM font) -> BOOL
+            {
+                SendMessageW(child, WM_SETFONT, static_cast<WPARAM>(font), TRUE);
+                return TRUE;
+            }, reinterpret_cast<LPARAM>(replacement));
+            if (previous) { DeleteObject(previous); }
         }
-        MoveWindow(palette_, x + 8, 10, 205, 300, TRUE); x += 219;
-        MoveWindow(toolbar_[5], x, 10, 70, 30, TRUE); x += 84;
-        MoveWindow(toolbar_[6], x, 10, 100, 30, TRUE); x += 106;
-        MoveWindow(toolbar_[7], x, 10, 85, 30, TRUE); x += 98;
-        MoveWindow(grid_, x, 10, 100, 220, TRUE);
-        MoveWindow(object_heading_, 12, 59, left - 22, 22, TRUE);
-        MoveWindow(inspector_heading_, width - right + 12, 59, right - 22, 22, TRUE);
-        MoveWindow(object_list_, 10, top, left - 20, height - top - bottom - 10, TRUE);
-        MoveWindow(canvas_, left, 51, width - left - right, height - 51 - bottom - 10, TRUE);
-        const int panel_x = width - right + 12;
-        const int inspector_height = std::max(180, height - top - bottom - 310);
-        MoveWindow(property_list_, panel_x, top, right - 24, inspector_height, TRUE);
-        const int edit_y = top + inspector_height + 12;
-        MoveWindow(property_label_, panel_x, edit_y, right - 24, 24, TRUE);
-        MoveWindow(value_edit_, panel_x, edit_y + 28, right - 24, 28, TRUE);
-        MoveWindow(apply_, panel_x, edit_y + 65, 94, 30, TRUE);
-        MoveWindow(revert_, panel_x + 102, edit_y + 65, 94, 30, TRUE);
-        MoveWindow(hint_, panel_x, edit_y + 113, right - 24, 190, TRUE);
-        MoveWindow(status_, 12, height - bottom + 2, width - 24, 24, TRUE);
+        SetWindowPos(window_, nullptr, suggested.left, suggested.top,
+            suggested.right - suggested.left, suggested.bottom - suggested.top,
+            SWP_NOZORDER | SWP_NOACTIVATE);
+        layout();
+        RedrawWindow(window_, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
     }
 
     void Editor::error(const std::exception& exception)
@@ -222,7 +293,7 @@ namespace colourwars_editor
                 + L" the game will refuse: " + wide(unresolved_.front()));
         else if (!content_catalog_.problems.empty())
             set_status(ready + L"Resource names unchecked: " + wide(content_catalog_.problems.front()));
-        else set_status(ready + L"Save source levels, then rebuild the game to play changes.");
+        else set_status(ready + destination_guidance(document_.path(), content_catalog_, false));
         InvalidateRect(canvas_, nullptr, FALSE);
     }
 
@@ -311,12 +382,7 @@ namespace colourwars_editor
         dialog.lpstrInitialDir = directory.c_str(); dialog.lpstrDefExt = L"json";
         dialog.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST
             | (save_as ? OFN_OVERWRITEPROMPT : OFN_FILEMUSTEXIST);
-        const BOOL accepted = save_as ? GetSaveFileNameW(&dialog) : GetOpenFileNameW(&dialog);
-        if (!accepted)
-        {
-            if (CommDlgExtendedError()) throw std::runtime_error("The file dialog could not be opened.");
-            return std::nullopt;
-        }
+        if (!editor_file_dialog(dialog, save_as)) { return std::nullopt; }
         return std::filesystem::path(buffer.data());
     }
 
@@ -347,7 +413,8 @@ namespace colourwars_editor
         }
         document_.save(path);
         refresh(true);
-        set_status(L"Saved " + path.wstring() + L"  |  Rebuild to stage changes. New filenames also need a manifest entry (see Help).");
+        set_status(L"Saved " + path.filename().wstring() + L"  |  " +
+            destination_guidance(path, content_catalog_, true) + L"  |  " + path.wstring());
         return true;
     }
 
@@ -356,7 +423,7 @@ namespace colourwars_editor
         std::array<wchar_t, 32768> buffer{};
         const std::wstring filename = wide(suggested_user_stage_name(document_, content_catalog_.stages)) + L".json";
         wcscpy_s(buffer.data(), buffer.size(), filename.c_str());
-        const std::wstring directory = folder.wstring();
+        const std::filesystem::path directory = std::filesystem::absolute(folder).lexically_normal().make_preferred();
         OPENFILENAMEW dialog{};
         dialog.lStructSize = sizeof(dialog); dialog.hwndOwner = window_;
         dialog.lpstrFilter = L"ColourWars level (*.json)\0*.json\0";
@@ -365,11 +432,7 @@ namespace colourwars_editor
         dialog.lpstrTitle = L"Save to My Stages";
         // The overwrite question is asked below, in the game's own terms.
         dialog.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST;
-        if (!GetSaveFileNameW(&dialog))
-        {
-            if (CommDlgExtendedError()) throw std::runtime_error("The file dialog could not be opened.");
-            return std::nullopt;
-        }
+        if (!editor_file_dialog(dialog, true)) { return std::nullopt; }
         return std::filesystem::path(buffer.data());
     }
 
@@ -410,8 +473,8 @@ namespace colourwars_editor
                     colourwars_editor::save_user_stage(document_, folder, target);
                     saved = true;
                     refresh(true);
-                    set_status(L"Saved to My Stages as '" + wide(target.name) + L"'  |  " + target.file.wstring() +
-                        L"  |  Open Stage Select from the game's main menu to play it; no rebuild needed.");
+                    set_status(L"Saved to My Stages as '" + wide(target.name) + L"'  |  " +
+                        destination_guidance(target.file, content_catalog_, true) + L"  |  " + target.file.wstring());
                 }
             }
         }
@@ -535,7 +598,16 @@ namespace colourwars_editor
         case WM_CREATE: create_controls(); return 0;
         case WM_SIZE: layout(); return 0;
         case WM_GETMINMAXINFO:
-            reinterpret_cast<MINMAXINFO*>(lparam)->ptMinTrackSize = POINT{1150, 720}; return 0;
+        {
+            const RECT work = editor_monitor_work_area(MonitorFromWindow(window_, MONITOR_DEFAULTTONEAREST));
+            const SIZE minimum = minimum_editor_size(dpi_, work);
+            reinterpret_cast<MINMAXINFO*>(lparam)->ptMinTrackSize = POINT{minimum.cx, minimum.cy};
+            return 0;
+        }
+        case WM_DPICHANGED:
+            if (LOWORD(wparam) != 0 && lparam != 0)
+            { change_dpi(LOWORD(wparam), *reinterpret_cast<const RECT*>(lparam)); }
+            return 0;
         case WM_COMMAND:
             if (LOWORD(wparam) == objects_list && HIWORD(wparam) == LBN_SELCHANGE && !refreshing_)
             {
@@ -596,24 +668,35 @@ namespace colourwars_editor
         catch (const std::exception& exception) { editor->error(exception); return message_id == WM_CREATE ? -1 : 0; }
     }
 
-    int Editor::run(int show, const std::filesystem::path& initial_path)
+    void Editor::create_window(int show, const std::filesystem::path& initial_path)
     {
-        SetProcessDPIAware();
+        enable_editor_dpi_awareness();
         INITCOMMONCONTROLSEX common{sizeof(common), ICC_LISTVIEW_CLASSES | ICC_STANDARD_CLASSES};
         InitCommonControlsEx(&common);
         WNDCLASSEXW type{};
         type.cbSize = sizeof(type); type.hInstance = instance_; type.lpfnWndProc = window_proc;
         type.hCursor = LoadCursorW(nullptr, IDC_ARROW); type.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
         type.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1); type.lpszClassName = L"ColourWarsLevelEditor";
-        if (!RegisterClassExW(&type)) throw std::runtime_error("Could not register the editor window.");
+        if (!RegisterClassExW(&type) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
+        { throw std::runtime_error("Could not register the editor window."); }
         type.lpfnWndProc = canvas_proc; type.lpszClassName = L"ColourWarsEditorCanvas"; type.hbrBackground = nullptr;
-        if (!RegisterClassExW(&type)) throw std::runtime_error("Could not register the canvas.");
+        if (!RegisterClassExW(&type) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
+        { throw std::runtime_error("Could not register the canvas."); }
+        const HMONITOR monitor = MonitorFromPoint(POINT{}, MONITOR_DEFAULTTOPRIMARY);
+        dpi_ = editor_monitor_dpi(monitor);
+        const RECT initial = initial_editor_rectangle(dpi_, editor_monitor_work_area(monitor));
         if (!CreateWindowExW(WS_EX_CONTROLPARENT, L"ColourWarsLevelEditor", L"ColourWars Level Editor",
-            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1500, 940,
+            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, initial.left, initial.top,
+            initial.right - initial.left, initial.bottom - initial.top,
             nullptr, nullptr, instance_, this)) throw std::runtime_error("Could not open the editor.");
         if (initial_path.empty()) document_.create(); else document_.load(initial_path);
         refresh(); layout(); command(view_match);
         ShowWindow(window_, show); UpdateWindow(window_);
+    }
+
+    int Editor::run(int show, const std::filesystem::path& initial_path)
+    {
+        create_window(show, initial_path);
         MSG message_data{};
         while (GetMessageW(&message_data, nullptr, 0, 0) > 0)
         {
@@ -635,7 +718,6 @@ namespace colourwars_editor
                 && !(message_data.message == WM_KEYDOWN && message_data.wParam == VK_TAB && IsDialogMessageW(window_, &message_data)))
             { TranslateMessage(&message_data); DispatchMessageW(&message_data); }
         }
-        DestroyAcceleratorTable(accelerators_); DeleteObject(font_);
         return static_cast<int>(message_data.wParam);
     }
 }
