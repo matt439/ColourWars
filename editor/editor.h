@@ -128,6 +128,7 @@ namespace colourwars_editor
         void fit(const Rect&);
         RECT screen_rect(const Rect&) const;
         POINT screen_point(double, double) const;
+        std::vector<Entry> hits(POINT) const;
         std::optional<Entry> hit(POINT) const;
         double snapped(double) const;
         void cancel_drag();

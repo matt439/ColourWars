@@ -353,8 +353,9 @@ namespace colourwars_editor
         SelectObject(dc, old_font);
     }
 
-    std::optional<Entry> Editor::hit(POINT point) const
+    std::vector<Entry> Editor::hits(POINT point) const
     {
+        std::vector<Entry> result;
         for (EntryKind kind : {EntryKind::spawn_b, EntryKind::spawn_a, EntryKind::collision, EntryKind::decoration})
         {
             for (std::vector<DrawItem>::const_reverse_iterator item = draw_items_.rbegin(); item != draw_items_.rend(); ++item)
@@ -371,7 +372,7 @@ namespace colourwars_editor
                         if ((b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x) < 0.0)
                         { inside = false; break; }
                     }
-                    if (inside) { return item->entry; }
+                    if (inside) { result.push_back(item->entry); }
                     continue;
                 }
                 RECT rectangle = screen_rect(item->rectangle);
@@ -390,7 +391,8 @@ namespace colourwars_editor
                     const double sides[] = {cross(points[0], points[1], point), cross(points[1], points[2], point),
                         cross(points[2], points[0], point)};
                     if (area != 0.0 && ((sides[0] >= 0.0 && sides[1] >= 0.0 && sides[2] >= 0.0)
-                        || (sides[0] <= 0.0 && sides[1] <= 0.0 && sides[2] <= 0.0))) return item->entry;
+                        || (sides[0] <= 0.0 && sides[1] <= 0.0 && sides[2] <= 0.0)))
+                    { result.push_back(item->entry); continue; }
                     const double tolerance = static_cast<double>(pixels(3));
                     for (int edge = 0; edge < 3; ++edge)
                     {
@@ -403,7 +405,7 @@ namespace colourwars_editor
                             ? std::clamp((px * dx + py * dy) / length_squared, 0.0, 1.0) : 0.0;
                         const double distance_x = px - along * dx, distance_y = py - along * dy;
                         if (distance_x * distance_x + distance_y * distance_y <= tolerance * tolerance)
-                            return item->entry;
+                        { result.push_back(item->entry); break; }
                     }
                     continue;
                 }
@@ -416,16 +418,22 @@ namespace colourwars_editor
                     rectangle.bottom = std::max(rectangle.bottom, rectangle.top + pixels(24));
                 }
                 InflateRect(&rectangle, pixels(3), pixels(3));
-                if (PtInRect(&rectangle, point)) return item->entry;
+                if (PtInRect(&rectangle, point)) { result.push_back(item->entry); continue; }
                 if (item->motion)
                 {
                     rectangle = screen_rect(item->motion->initial_pose);
                     InflateRect(&rectangle, pixels(3), pixels(3));
-                    if (PtInRect(&rectangle, point)) return item->entry;
+                    if (PtInRect(&rectangle, point)) { result.push_back(item->entry); }
                 }
             }
         }
-        return std::nullopt;
+        return result;
+    }
+
+    std::optional<Entry> Editor::hit(POINT point) const
+    {
+        const auto candidates = hits(point);
+        return candidates.empty() ? std::nullopt : std::optional<Entry>{candidates.front()};
     }
 
     double Editor::snapped(double value) const
@@ -472,6 +480,22 @@ namespace colourwars_editor
             if (!apply_pending()) return 0;
             SetFocus(canvas_);
             cancel_drag();
+            if (wparam & MK_CONTROL)
+            {
+                const auto candidates = hits(point);
+                if (!candidates.empty())
+                {
+                    auto next = candidates.begin();
+                    if (selection_)
+                    {
+                        auto current = std::find_if(candidates.begin(), candidates.end(),
+                            [&](const Entry& entry) { return same_entry(entry, *selection_); });
+                        if (current != candidates.end() && ++current != candidates.end()) next = current;
+                    }
+                    select(*next);
+                }
+                return 0;
+            }
             if (selection_ && selection_->kind != EntryKind::level && !is_spawn(*selection_) &&
                 !document_.slab_guide(*selection_))
             {

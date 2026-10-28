@@ -205,7 +205,7 @@ namespace colourwars_editor
         SendMessageW(value_edit_, EM_SETLIMITTEXT, 32767, 0);
         apply_ = control(L"BUTTON", L"Apply", WS_TABSTOP, apply_property);
         revert_ = control(L"BUTTON", L"Revert", WS_TABSTOP, revert_property);
-        hint_ = control(L"STATIC", L"Drag: move   White corner: resize\r\nWheel: zoom   Middle drag: pan\r\nF: selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\nCyan: exposed scoring faces\r\nMovers: white anchor; blue travel;\r\ngold corridor; filled initial pose\r\nGeometry preview; no textures", SS_LEFT, 0);
+        hint_ = control(L"STATIC", L"Drag: move   White corner: resize\r\nWheel: zoom   Middle drag: pan\r\nF: selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\nCyan: exposed scoring faces\r\nMovers: white anchor; blue travel;\r\ngold corridor; filled initial pose\r\nCtrl+click: cycle overlaps", SS_LEFT, 0);
         status_ = control(L"STATIC", L"", SS_LEFT, 0);
         canvas_ = CreateWindowExW(0, L"ColourWarsEditorCanvas", L"Level canvas",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 1, 1, window_, nullptr, instance_, this);
@@ -581,6 +581,7 @@ namespace colourwars_editor
             MessageBoxW(window_,
                 L"Open a level from game/content/levels, or start a new one.\n\n"
                 L"Select objects on the canvas or in Level Contents. Drag to move; use the white bottom-right corner to resize. "
+                L"Ctrl+click cycles through overlapping objects without moving them. "
                 L"Select a property, edit its value and click Apply (or press Enter). Changes apply before selection/save; Escape or Revert discards an uncommitted value.\n\n"
                 L"Wheel zooms around the pointer. Middle drag pans. F frames selection; Home fits the arena. "
                 L"Arrows nudge by the snap amount; Shift bypasses snap. Ctrl+D duplicates, Delete removes, Ctrl+Z/Y undo/redo. "

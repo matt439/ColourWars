@@ -73,6 +73,55 @@ follow-ups:
 | 2 | Left-button drag can start during a middle-button pan without ending the pan; middle-button release then cancels the still-held drag. | Bounded input usability work, but define gesture ownership and qualify both button orders before changing it. |
 | 3 | Several check scripts resolve relative evidence directories with `Path.GetFullPath`, which can differ from PowerShell's current location. | Concrete tooling usability candidate; reproduce with separate private provider/process locations before selecting a shared resolution policy. |
 
+After those fixes and tooling slices, source review found no further small
+defect in the inspected gesture/property/save paths. The next additive
+authoring shortlist is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Canvas hit testing returns the first object in category/reverse-document order. A buried collider or decoration needs the Level Contents list even when its geometry is under the pointer. | Selected as `ED#18`: Ctrl+click cycles the existing eligible hits, with selection only. Preserve plain click and all current shape predicates; bounded native selection/history checks. |
+| 2 | Drag and arrow snap round displacement, so an imported off-grid origin stays off-grid. | A future explicit Align selection to grid command could help precise authoring while retaining ordinary relative movement. Define validation/no-op/history behavior before implementation. |
+
+#### Cycle overlapping canvas objects (`ED#18`)
+
+**Done (2026-10-28).** Ctrl+click is a selection-only way to reach
+overlapping objects. It uses the existing hit eligibility and priority: team B
+spawns, team A spawns, collisions, decorations; each category visits later
+document entries first. If the current selection is eligible at that point,
+it selects the next hit and wraps. Otherwise it selects the first hit. One hit
+selects it; no hit retains the selection. Bounds retain their ordinary outline-edit
+behavior and do not join this object cycle.
+
+One ordered hit collector owns the existing ramp/slab tolerances and mover
+anchor/initial-pose tests. A mover counts once even when both rectangles hit.
+Ordinary clicks retain their first-hit selection and move/resize behavior.
+Ctrl+click applies pending properties through the existing guard, cancels an
+older gesture, changes only selection and acquires no capture. Mouse movement
+and button release after that selection cannot create an edit. The shortcut
+appears in the existing Help and eight-line hint; the inspector layout
+is unchanged.
+
+The private actual-message baseline failed to select the literal buried entry.
+Both presets now pass 28 Ctrl-click queries covering cycling/wrap and category
+order, absent current selection, single/no hit, shape exclusions/boundaries,
+mover deduplication, valid pending edits, cancelled previews, unchanged
+view/source/history and no capture. Ordinary click and selected-bounds resize
+controls retain their behavior. These tests run in the separate `--gestures`
+process; the original aggregate DPI/font fixture is unchanged and still reports
+28 transitions and GDI 21 to 21.
+
+All three editor targets and complete checkers pass in Debug and Release,
+including earlier metadata, gestures, 219 ramp queries, save guidance and four
+hidden launches. Independent review and six-file source-immutability checks
+pass. Invalid-property modal behavior, aggregate input-activated GDI lifetime
+and attended GUI/saved-stage play (`ED#5`) remain separate qualifications.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`ed18-baseline/ac87f34221bf41508231cf6157a712cb`, both-preset batch
+`ed18-candidate/2e2b7a80952e40d696ca823907656dbf`. Full checker receipts:
+`out/acceptance/x64-debug/level-editor/82aadf314c82420f9ba8571ce1c2c7ba`
+and `out/acceptance/x64-release/level-editor/716a3770d7034f6a990da6b6b8cf5489`.
+
 #### Empty-key property targets (`ED#16`)
 
 **Done (2026-10-28).** Unknown metadata may contain an empty object-member
@@ -237,6 +286,8 @@ Fixed scored slabs move without a resize handle; their footprint is fixed.
 Arrow keys cancel an in-progress mouse gesture and nudge the committed position.
 Ramp selection follows the triangular body, so its empty corner lets you
 select an object beneath it.
+Ctrl+click cycles through overlapping objects without starting a drag. Repeated
+clicks wrap through the same hit order; empty space retains the selection.
 
 Use the palette to add paintable platforms, solid structures, jump-through
 platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),
@@ -294,6 +345,7 @@ them.
 | Action | Control |
 |---|---|
 | Select and move | Left click and drag |
+| Select overlapping objects without moving them | Ctrl+click repeatedly |
 | Resize selected geometry | Drag its bottom-right handle |
 | Pan | Middle mouse button and drag |
 | Zoom | Mouse wheel |
