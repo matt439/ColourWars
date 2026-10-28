@@ -124,6 +124,12 @@ or touch the player's save. `scripts/check-startup.ps1` separately checks a
 hidden game process, its per-monitor DPI awareness, isolated save, diagnostics
 and graceful shutdown.
 
+Use `-Cases ammo,text_wrap` to select a subset, including with `pwsh -File`.
+PowerShell arrays also work; names are trimmed and case-insensitive, while
+empty names, unknown names and duplicate selections are refused. `-ExcludeCases`
+removes cases from the chosen/default list. `scripts/check-acceptance-selection.ps1`
+checks these rules without starting CMake, a compiler or the native helper.
+
 Each acceptance executable has a runtime deadline of 3,600 seconds, adjustable
 with `-RunTimeoutSeconds`. Its merged output is retained while it runs in a
 `*-run.log.raw` sidecar and decoded into the usual UTF-8 log on completion.

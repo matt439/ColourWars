@@ -25,6 +25,33 @@ without a CMake build limit. The next ranked shortlist is:
 | 1 | Complete build caps: display-awake, failure-reporting, frame-pacing, movement-feedback and paint-fx wrappers still have uncapped `cmake --build` calls. | Selected as `HYG#12`: five argument-only changes, low risk, directly useful on the shared PC. |
 | 2 | Acceptance subset CLI: `Cases` treats `ammo,text_wrap` as one unknown case under `pwsh -File`, while `ExcludeCases` explicitly handles comma lists. | Small usability fix; scope selection normalization and preflight validation before implementation. |
 
+### Acceptance subset CLI (`HYG#13`)
+
+**Done (2026-10-28).** After completing the build caps, the second candidate
+now normalizes each explicit `Cases` value by splitting commas, trimming each
+name and applying invariant lowercase. It preserves array arguments and order,
+default Debug/Release selections, unknown-name and duplicate refusals,
+Debug-only tool restrictions, and exclusion behavior. Empty selected names,
+including empty comma fields, remain errors. No discovery/list option or
+default-case expansion is needed for this defect.
+
+The new selection checker first reproduced the comma/whitespace failures on
+the old runner. All 22 checks then pass in fresh PowerShell 5.1 and pwsh hosts:
+the actual selected list/order, defaults, arrays, normalization, empty/unknown
+names, duplicate precedence, Debug-only restrictions and exclusions. An actual
+current-host `-File` child verifies command-line binding. These checks use
+private scratch directories and empty PATH, stopping at the required
+missing-CMake preflight; no native helper, compiler or CMake starts. Caller
+PATH/location are restored and the receipts include source hashes.
+
+Final receipts under `out/validation/implementation-loop-20261028/hyg13-selection/`:
+PowerShell 5.1 `ps5/b631eb4adade4c1992a1907ebb8bee0e`, pwsh
+`ps7/ae967210690e4a3696968c998ac2b865`. A real native `-File` invocation using
+`-Cases " ammo , TeXt_WrAp "` also passes ammunition/text wrapping in Debug
+under 5.1 and Release under pwsh. Independent source review and whitespace
+checks pass. CI runs selection qualification in both shells alongside process
+qualification and retains their receipts/logs; hosted CI has not run locally.
+
 ### Remaining local build caps (`HYG#12`)
 
 **Done (2026-10-28).** Each of the five wrappers above now passes

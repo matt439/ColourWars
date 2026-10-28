@@ -23,8 +23,11 @@ $availableCases = @($acceptanceCases) + @('balance_runner', 'bot_trials', 'bot_c
 $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
     if (-not $Cases) { throw 'Cases must contain at least one case name.' }
     @($Cases | ForEach-Object {
-        if ([string]::IsNullOrWhiteSpace($_)) { throw 'Cases must contain nonempty names.' }
-        $_.ToLowerInvariant()
+        # '-File' binds comma lists as one string; arrays remain supported.
+        foreach ($name in ($_ -split ',')) {
+            if ([string]::IsNullOrWhiteSpace($name)) { throw 'Cases must contain nonempty names.' }
+            $name.Trim().ToLowerInvariant()
+        }
     })
 } else {
     @($acceptanceCases) + @(if ($Preset -eq 'x64-debug') { 'balance_runner' })

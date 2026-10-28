@@ -250,6 +250,8 @@ From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:
 ```powershell
 ./scripts/run-acceptance.ps1 -Preset x64-debug
 ./scripts/run-acceptance.ps1 -Preset x64-release
+# A focused subset from a native command prompt or PowerShell:
+pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset x64-debug -SkipBuild -Cases ammo,text_wrap
 ```
 
 These commands configure/build the game, then compile small native checks
