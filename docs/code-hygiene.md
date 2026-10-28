@@ -25,6 +25,40 @@ without a CMake build limit. The next ranked shortlist is:
 | 1 | Complete build caps: display-awake, failure-reporting, frame-pacing, movement-feedback and paint-fx wrappers still have uncapped `cmake --build` calls. | Selected as `HYG#12`: five argument-only changes, low risk, directly useful on the shared PC. |
 | 2 | Acceptance subset CLI: `Cases` treats `ammo,text_wrap` as one unknown case under `pwsh -File`, while `ExcludeCases` explicitly handles comma lists. | Small usability fix; scope selection normalization and preflight validation before implementation. |
 
+### Editor build-profile isolation (`HYG#14`)
+
+**Done (2026-10-28).** The next ranked candidate from the
+[editor review](level-editor.md#raw-nul-json-admission-ed12) was an observed
+tooling defect: `check-level-editor.ps1` redirected `LOCALAPPDATA` before
+configure, so vcpkg lost the caller's existing registry cache. During `ED#11`,
+this triggered a fresh registry fetch that failed at the unavailable GitHub
+connection despite installed dependencies. It was selected after both metadata
+preservation slices were qualified.
+
+The profile assignment now follows build/cache preflight and precedes
+the first acceptance executable. Build tools inherit the caller's environment;
+the document/native checks and every editor launch retain the private profile.
+`SkipBuild`, arguments, concurrency, nested guidance isolation and the outer
+`finally` restoration are unchanged. Dependency-root and install-policy
+settings are unchanged by the source fix.
+
+The baseline captured the actual configure-call environment, then returned an
+explicit failure before executing CMake; it confirmed the redirected profile.
+The final one-off receipt records two real forwarded CMake invocations per
+preset, both inheriting the caller's profile, followed by complete passing
+document/native/window checks and caller restoration. The build used installed
+dependencies with manifest installation temporarily off, then restored the
+original `ON` cache settings; the failed network fetch was not retried.
+Independent ordering review and parsing pass in PowerShell 5.1 and pwsh.
+
+Profile receipts are under `out/validation/implementation-loop-20261028/hyg14-profile/`:
+baseline `baseline/8d625ab173d94d2388a31f2cd61aeed3`, final
+`candidate/8ac69dfe92b84b7588d25cb97de0a339`. Full editor evidence is under
+`out/acceptance/<preset>/level-editor/`: Debug
+`8efc0067637248eeb2ff6b426bbfb32c`, Release
+`46b5227ad30748b8862add8a01be105e`. These source/tooling checks do not establish
+attended editor, gameplay or hardware acceptance.
+
 ### Acceptance subset CLI (`HYG#13`)
 
 **Done (2026-10-28).** After completing the build caps, the second candidate

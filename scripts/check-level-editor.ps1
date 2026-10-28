@@ -239,7 +239,6 @@ $isolatedProfile = Join-Path $run 'profile'
 
 Push-Location -LiteralPath $repo
 try {
-    $env:LOCALAPPDATA = $isolatedProfile
     if (-not $SkipBuild) {
         foreach ($command in 'cmake', 'cl') {
             if (-not (Get-Command $command -ErrorAction SilentlyContinue)) {
@@ -284,6 +283,8 @@ try {
         throw "Missing editor acceptance executable: $executable. Run without -SkipBuild first."
     }
 
+    # Build tools retain the caller's dependency cache; every runtime check is isolated.
+    $env:LOCALAPPDATA = $isolatedProfile
     Invoke-Logged -Command $executable -Arguments @($repo, $run) `
         -LogPath (Join-Path $run 'run.log')
     $dpiProbe = Join-Path $build 'editor/colourwars_editor_dpi_acceptance.exe'

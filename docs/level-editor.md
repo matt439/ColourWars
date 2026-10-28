@@ -455,12 +455,12 @@ was retried. These automated checks do not close the attended `ED#5` gate.
 ### Raw-NUL JSON admission (`ED#12`)
 
 **Done (2026-10-28).** Source review recorded this shortlist after `ED#11`;
-the first row describes the parser before the fix:
+the rows describe source before their associated fixes:
 
 | rank | candidate and evidence | value, scope and risk |
 |---|---|---|
 | 1 | The bundled RapidJSON reader treats a raw zero byte after a complete JSON root as EOF, even inside the supplied length. `level_json::parse` checks only the parser error, so Load or a numeric edit can accept a prefix and later Save drops the suffix. | Selected as `ED#12`: prevent silent source-byte loss with a narrow client parse guard and transactional regressions. Escaped JSON `\u0000` remains valid. |
-| 2 | The editor checker redirects `LOCALAPPDATA` before configure, giving vcpkg a fresh registry cache even when dependencies are installed. A normal configure hit an unavailable GitHub connection during `ED#11`. | A separate tooling follow-up can isolate runtime after build preflight. Lower priority; the existing offline build plus `-SkipBuild` path already permits qualification. |
+| 2 | The editor checker redirects `LOCALAPPDATA` before configure, giving vcpkg a fresh registry cache even when dependencies are installed. A normal configure hit an unavailable GitHub connection during `ED#11`. | Implemented separately as [HYG#14](code-hygiene.md#editor-build-profile-isolation-hyg14): isolate runtime after build preflight. |
 
 The public Load regression first reproduced accepted raw-NUL suffixes in
 `out/validation/implementation-loop-20261028/ed12-baseline/6e140c3b1bb04fc79522a1a9019a647b`.
