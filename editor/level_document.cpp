@@ -573,7 +573,7 @@ namespace colourwars_editor
         {
             Json& object = entry_json(document, entry);
             const std::string pointer_text = path.starts_with('/') ? path : "/" + path;
-            const rapidjson::Pointer pointer(pointer_text.c_str());
+            const rapidjson::Pointer pointer(pointer_text.data(), pointer_text.size());
             if (!pointer.IsValid()) { fail("Invalid property path."); }
             Json* target = pointer.Get(object);
             if (target == nullptr && entry.kind == EntryKind::level &&
@@ -595,7 +595,8 @@ namespace colourwars_editor
                 if (value.empty()) { object.RemoveMember("material"); return; }
                 if (target == nullptr)
                 {
-                    object.AddMember("material", Json(value.c_str(), document.GetAllocator()),
+                    object.AddMember("material",
+                        Json(value.data(), static_cast<rapidjson::SizeType>(value.size()), document.GetAllocator()),
                         document.GetAllocator());
                     return;
                 }
@@ -612,7 +613,8 @@ namespace colourwars_editor
                 const auto put = [&](const char* key, const std::string& text)
                 {
                     if (motion.HasMember(key)) { motion.RemoveMember(key); }
-                    motion.AddMember(Json(key, allocator), Json(text.c_str(), allocator), allocator);
+                    motion.AddMember(Json(key, allocator),
+                        Json(text.data(), static_cast<rapidjson::SizeType>(text.size()), allocator), allocator);
                 };
                 if (pointer_text == "/motion/team_a_heads")
                 {
@@ -812,7 +814,8 @@ namespace colourwars_editor
                 if (value.HasMember("name") && value["name"].IsString())
                 {
                     const std::string name = string(value, "name") + " copy";
-                    value["name"].SetString(name.c_str(), document.GetAllocator());
+                    value["name"].SetString(name.data(), static_cast<rapidjson::SizeType>(name.size()),
+                        document.GetAllocator());
                     added.label = name;
                 }
             }

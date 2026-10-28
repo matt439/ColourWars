@@ -81,6 +81,7 @@ namespace colourwars_editor
     struct EditorDpiProbe
     {
         static void check_mechanisms(Editor& editor, const std::filesystem::path& scratch);
+        static void check_metadata(Editor& editor, const std::filesystem::path& scratch);
 
         static void check_controls(Editor& editor)
         {
@@ -125,6 +126,7 @@ namespace colourwars_editor
             Editor editor(GetModuleHandleW(nullptr));
             editor.create_window(SW_HIDE, stage);
             require(!IsWindowVisible(editor.window_), "Native DPI probe unexpectedly showed its editor");
+            check_metadata(editor, scratch);
             PROCESS_DPI_AWARENESS awareness = PROCESS_DPI_UNAWARE;
             require(SUCCEEDED(GetProcessDpiAwareness(nullptr, &awareness)) && awareness == PROCESS_PER_MONITOR_DPI_AWARE,
                 "Editor process is not per-monitor DPI aware");
@@ -229,6 +231,7 @@ namespace colourwars_editor
 }
 
 #include "scripts/acceptance/level_editor_dpi/mechanism_checks.h"
+#include "scripts/acceptance/level_editor_dpi/metadata_checks.h"
 
 int wmain(int argc, wchar_t* argv[])
 {

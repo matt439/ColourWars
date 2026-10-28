@@ -75,6 +75,12 @@ it is corrected or discarded with Escape or **Revert**.
 Use the inspector for exact coordinates, paintable faces, sprite-sheet and
 frame names, colours, and other object properties.
 
+Imported metadata containing an embedded NUL character is shown as escaped,
+read-only text. The inspector keeps those values and keys intact when you
+save or change selection. You can select and copy the preview; edit the JSON
+file externally to change it. String previews use quotes and escapes such as
+`\u0000` and `\\`, while numbers and booleans keep their usual form.
+
 ### Materials
 
 Collision objects carry an optional `material`, the terrain-atlas look the game
@@ -285,9 +291,9 @@ can be intentional boundary geometry and are allowed.
 
 ## Local implementation backlog (2026-10-28)
 
-These four slices are ready for local implementation. Their document and native
-checks need neither pads nor an author decision; actual GUI comfort and saved-stage
-play remain the attended `ED#5` review.
+These independent source slices need neither pads nor an author decision.
+Their entries record implementation status and document/native qualification;
+actual GUI comfort and saved-stage play remain the attended `ED#5` review.
 
 ### External-change save protection (`ED#7`)
 
@@ -401,6 +407,50 @@ The helper supplies a complete scratch profile (Local/Roaming AppData and
 Desktop), verified to resolve there through the Shell; it restores the parent
 environment afterward. This keeps an unavailable real Desktop from becoming
 a fixture dependency.
+
+### NUL-bearing metadata preservation (`ED#11`)
+
+**Done (2026-10-28).** Valid unknown JSON metadata such as
+`"note":"keep\u0000suffix"` retained all bytes in the document, but the
+inspector passed its decoded value to a
+[null-terminated Win32 text message](https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-settext).
+The truncated control text appeared pending and was silently auto-applied by
+an untouched Save or a selection change. NUL-bearing property keys also reached
+a null-terminated JSON Pointer constructor and could address a prefix sibling.
+
+Ordinary plaintext editing is unchanged. A property whose value, path or label
+contains NUL now has a typed, escaped read-only preview in the list and enabled
+value control. An early label explains its read-only status; Apply/Revert are
+disabled, and pending/apply excludes the preview. Underlying metadata and
+history survive Save, selection and refresh. No editable escape grammar was
+added. RapidJSON's explicit-length Pointer constructor is used
+so direct model edits address the complete key rather than a prefix sibling.
+The same audit found null-terminated writes when duplicating object names and
+inserting missing material/motion strings. These now retain their full lengths:
+copies keep metadata suffixes, and NUL-suffixed invalid enums reach validation
+rather than becoming accepted prefixes. Escaped previews distinguish a literal
+backslash from a decoded NUL. The preview also covers NUL-bearing object-list
+names and individual unresolved resource warnings, retaining the remaining
+reason and save question. Surrounding prompts, raw diagnostics and model text
+are unchanged.
+
+Both failures were reproduced before the fix under
+`out/validation/implementation-loop-20261028/ed11-baseline/84d7f8ddd9d34945b1d71abd6df26ea1`:
+the model edited the wrong key and an actual untouched native Save wrote only
+`keep`. Independent review, all three editor targets and the complete editor
+checker now pass in Debug and Release. The added checks cover exact keys/bytes,
+Save/reopen, selection/refresh, full history, typed previews, duplication,
+invalid-enum refusals, normal editing and complete resource status text.
+Final checker evidence is under `out/acceptance/<preset>/level-editor/`:
+Debug `940f7c6bacab493eaa91fb01919eeb47`, Release
+`e05985fefdae496a978b3d85c1750c52`.
+
+A normal configure attempt stopped at an unavailable GitHub vcpkg-registry
+connection before compilation. Qualification used the already-installed
+dependencies with manifest installation disabled only for the offline
+configure/build, then restored the original `VCPKG_MANIFEST_INSTALL=ON`
+cache settings and ran the full checker with `-SkipBuild`. No network fetch
+was retried. These automated checks do not close the attended `ED#5` gate.
 
 ## Acceptance checks
 

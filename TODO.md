@@ -49,8 +49,9 @@ when they don't compete with it.
 **Independent implementation (2026-10-28).** The scoped hygiene, replay,
 diagnostics and editor slices are qualified. Select further bounded work from
 the [ranked maintenance shortlist](docs/code-hygiene.md#follow-up-shortlist-2026-10-28)
-while attended reviews wait. Acceptance subset selection, probe runtime
-deadlines and local build caps are qualified.
+while attended reviews wait. NUL-bearing editor metadata preservation,
+acceptance subset selection, probe runtime deadlines and local build caps
+are qualified.
 This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.

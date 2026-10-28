@@ -32,6 +32,58 @@ namespace colourwars_editor
                 catalog, my_stages, saved);
         }
 
+        bool contains_nul(const std::string& text) { return text.find('\0') != std::string::npos; }
+
+        bool read_only_property(const Property& property)
+        {
+            return contains_nul(property.path) || contains_nul(property.label) || contains_nul(property.value);
+        }
+
+        // Preview only: these escapes are never parsed as inspector input or
+        // substituted for the document's complete raw strings and paths.
+        std::wstring quoted_preview(const std::string& text)
+        {
+            constexpr wchar_t digits[] = L"0123456789abcdef";
+            std::wstring result = L"\"";
+            for (wchar_t character : wide(text))
+            {
+                switch (character)
+                {
+                case L'"': result += L"\\\""; break;
+                case L'\\': result += L"\\\\"; break;
+                case L'\b': result += L"\\b"; break;
+                case L'\f': result += L"\\f"; break;
+                case L'\n': result += L"\\n"; break;
+                case L'\r': result += L"\\r"; break;
+                case L'\t': result += L"\\t"; break;
+                default:
+                {
+                    const unsigned code = static_cast<unsigned>(character);
+                    if (code < 0x20)
+                    {
+                        result += L"\\u00";
+                        result += digits[(code >> 4) & 0xf]; result += digits[code & 0xf];
+                    }
+                    else { result += character; }
+                    break;
+                }
+                }
+            }
+            result += L'"';
+            return result;
+        }
+
+        std::wstring visible_text(const std::string& text)
+        {
+            return contains_nul(text) ? quoted_preview(text) : wide(text);
+        }
+
+        std::wstring property_value_text(const Property& property, bool read_only)
+        {
+            return read_only && !property.numeric && !property.boolean
+                ? quoted_preview(property.value) : wide(property.value);
+        }
+
         HFONT editor_font(UINT dpi)
         {
             HFONT font = CreateFontW(-editor_pixels(16, dpi), 0, 0, 0, FW_NORMAL,
@@ -251,7 +303,7 @@ namespace colourwars_editor
         for (size_t index = 0; index < entries_.size(); ++index)
         {
             const Entry& entry = entries_[index];
-            const std::wstring label = wide(entry.label);
+            const std::wstring label = visible_text(entry.label);
             SendMessageW(object_list_, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
             if (selection_ && same_entry(entry, *selection_))
             {
@@ -290,7 +342,7 @@ namespace colourwars_editor
         if (!errors.empty()) set_status(L"Needs attention: " + wide(errors.front()));
         else if (!unresolved_.empty())
             set_status(ready + std::to_wstring(unresolved_.size()) + (unresolved_.size() == 1 ? L" name" : L" names")
-                + L" the game will refuse: " + wide(unresolved_.front()));
+                + L" the game will refuse: " + visible_text(unresolved_.front()));
         else if (!content_catalog_.problems.empty())
             set_status(ready + L"Resource names unchecked: " + wide(content_catalog_.problems.front()));
         else set_status(ready + destination_guidance(document_.path(), content_catalog_, false));
@@ -309,7 +361,9 @@ namespace colourwars_editor
         for (size_t index = 0; index < properties_.size(); ++index)
         {
             const Property& property = properties_[index];
-            std::wstring name = wide(property.label), value = wide(property.value);
+            const bool read_only = read_only_property(property);
+            std::wstring name = read_only ? quoted_preview(property.label) : wide(property.label);
+            std::wstring value = property_value_text(property, read_only);
             LVITEMW item{}; item.mask = LVIF_TEXT; item.iItem = static_cast<int>(index); item.pszText = name.data();
             ListView_InsertItem(property_list_, &item);
             ListView_SetItemText(property_list_, static_cast<int>(index), 1, value.data());
@@ -326,17 +380,23 @@ namespace colourwars_editor
     {
         property_index_ = index;
         const bool exists = index >= 0 && static_cast<size_t>(index) < properties_.size();
-        EnableWindow(value_edit_, exists); EnableWindow(apply_, exists); EnableWindow(revert_, exists);
+        const bool read_only = exists && read_only_property(properties_[static_cast<size_t>(index)]);
+        EnableWindow(value_edit_, exists);
+        SendMessageW(value_edit_, EM_SETREADONLY, read_only, 0);
+        EnableWindow(apply_, exists && !read_only); EnableWindow(revert_, exists && !read_only);
         if (!exists) { SetWindowTextW(value_edit_, L""); SetWindowTextW(property_label_, L"Select a property to edit"); return; }
         const Property& property = properties_[static_cast<size_t>(index)];
-        SetWindowTextW(value_edit_, wide(property.value).c_str());
-        SetWindowTextW(property_label_, wide(property.label + (property.boolean ? " (true / false)" : "")).c_str());
+        SetWindowTextW(value_edit_, property_value_text(property, read_only).c_str());
+        const std::wstring label = read_only ? L"Read-only escaped text: " + quoted_preview(property.label)
+            : wide(property.label + (property.boolean ? " (true / false)" : ""));
+        SetWindowTextW(property_label_, label.c_str());
     }
 
     bool Editor::pending() const
     {
-        return property_index_ >= 0 && static_cast<size_t>(property_index_) < properties_.size()
-            && window_text(value_edit_) != wide(properties_[static_cast<size_t>(property_index_)].value);
+        if (property_index_ < 0 || static_cast<size_t>(property_index_) >= properties_.size()) return false;
+        const Property& property = properties_[static_cast<size_t>(property_index_)];
+        return !read_only_property(property) && window_text(value_edit_) != wide(property.value);
     }
 
     bool Editor::apply_pending()
@@ -393,7 +453,7 @@ namespace colourwars_editor
         std::wstring text = L"The game will refuse this stage at startup:\n";
         constexpr size_t shown = 8;
         for (size_t index = 0; index < std::min(shown, unresolved_.size()); ++index)
-            text += L"\n- " + wide(unresolved_[index]);
+            text += L"\n- " + visible_text(unresolved_[index]);
         if (unresolved_.size() > shown) text += L"\n- and " + std::to_wstring(unresolved_.size() - shown) + L" more";
         text += L"\n\nNames are checked against game/content/manifest.json and the sheets and banks it lists. Save anyway?";
         return MessageBoxW(window_, text.c_str(), L"Unresolved resource names",
