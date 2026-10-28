@@ -39,13 +39,13 @@ std::wstring PlayerBadge::label(int roster_index)
 }
 
 void PlayerBadge::draw(DrawList& draw_list, const RectangleF& rectangle,
-    int roster_index) const
+    int roster_index, float opacity) const
 {
     if (roster_index < 0 || roster_index >= static_cast<int>(digits.size()))
     {
         throw std::invalid_argument("Player badge requires a roster index from 0 to 3");
     }
-    if (rectangle.width <= 0.0f || rectangle.height <= 0.0f) { return; }
+    if (rectangle.width <= 0.0f || rectangle.height <= 0.0f || opacity <= 0.0f) { return; }
 
     const auto& look = *this->look_;
     if (!look.enabled) { return; }
@@ -57,9 +57,18 @@ void PlayerBadge::draw(DrawList& draw_list, const RectangleF& rectangle,
         (rectangle.height - border * 2.0f) / 7.0f);
     const Vector2F origin = rectangle.center() - Vector2F(cell * 7.0f, cell * 5.0f) / 2.0f;
 
+    // Opaque at full strength, so an ordinary badge draws exactly as before.
+    const auto tint = [opacity](const Colour& colour)
+    {
+        return opacity >= 1.0f ? colour : CrudeDrawing::premultiplied(
+            Colour(colour.r, colour.g, colour.b, colour.a * opacity));
+    };
+    const Colour background = tint(look.background_colour);
+    const Colour ink = tint(look.ink_colour);
+
     draw_list.set_filter(TextureFilter::point);
-    this->fill(draw_list, rectangle, look.background_colour);
-    this->frame_rectangle(draw_list, rectangle, border, look.ink_colour);
+    this->fill(draw_list, rectangle, background);
+    this->frame_rectangle(draw_list, rectangle, border, ink);
     for (size_t row = 0; row < letter_p.size(); ++row)
     {
         for (int column = 0; column < 3; ++column)
@@ -69,13 +78,12 @@ void PlayerBadge::draw(DrawList& draw_list, const RectangleF& rectangle,
                 static_cast<float>(row) * cell);
             if ((letter_p[row] & mask) != 0u)
             {
-                this->fill(draw_list, RectangleF(origin + offset, Vector2F(cell)),
-                    look.ink_colour);
+                this->fill(draw_list, RectangleF(origin + offset, Vector2F(cell)), ink);
             }
             if ((digits[static_cast<size_t>(roster_index)][row] & mask) != 0u)
             {
                 this->fill(draw_list, RectangleF(origin + offset + Vector2F(cell * 4.0f, 0.0f),
-                    Vector2F(cell)), look.ink_colour);
+                    Vector2F(cell)), ink);
             }
         }
     }

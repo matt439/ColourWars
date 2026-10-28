@@ -148,6 +148,24 @@ struct CursorMarkerPresentation
 	float paper_width = 0.0f;
 };
 
+// ROAD#18: a chip at the pane edge for each living teammate whose body is
+// outside that pane's view, in their team colour with their roster badge and
+// a pointer toward them. HUD reference pixels (scaled with the pane as the HUD
+// is); fade_in is seconds from leaving the view to full strength, and a
+// viewer's Reduce effects shows the chip at full strength at once.
+struct TeammateMarkerPresentation
+{
+	bool enabled = true;
+	labrador::Colour ink;
+	mattmath::Vector2F size;
+	float keyline_width = 0.0f;
+	float badge_inset = 0.0f;
+	float pointer_length = 0.0f;
+	float pointer_width = 0.0f;
+	float margin = 0.0f;
+	float fade_in = 0.0f;
+};
+
 // Static paper backing for the live HUD, in HUD reference pixels.
 struct HudPaperPresentation
 {
@@ -190,6 +208,7 @@ struct HudPresentation
 	ClosingClockPresentation closing_clock;
 	HudLowPaintPresentation low_paint;
 	CursorMarkerPresentation cursor_marker;
+	TeammateMarkerPresentation teammate_marker;
 
 	std::string player_identity_font;
 	mattmath::Vector2F player_identity_offset = { 0.0f, 0.0f };

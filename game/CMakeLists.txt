@@ -118,6 +118,7 @@ add_executable(ColourWars WIN32
     objects/player.cpp
     objects/player_figure.cpp
     objects/player_badge.cpp
+    objects/teammate_marker.cpp
     objects/player_builder.cpp
     objects/player_camera.cpp
     objects/view_shake.cpp

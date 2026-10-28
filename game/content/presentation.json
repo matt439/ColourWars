@@ -696,6 +696,18 @@
       "ink_width": 3.0,
       "paper_width": 2.0
     },
+    "teammate_marker": {
+      "_comment": "ROAD#18: in each human pane, a teammate (human or bot) whose body is outside the pane's view gets a chip clamped margin inside the pane edge, on the line from the pane centre toward them, with an ink pointer aimed at them. Ink keyline, the teammate's team colour, then their P# badge inset badge_inset inside it. HUD reference pixels, scaled with the pane like the rest of the HUD. fade_in seconds from leaving the view to full strength; a viewer's Reduce effects shows it at full strength at once. Threat (enemy) markers are an author decision and are not drawn.",
+      "enabled": true,
+      "ink": "141414",
+      "size": { "x": 72.0, "y": 58.0 },
+      "keyline_width": 3.0,
+      "badge_inset": 6.0,
+      "pointer_length": 16.0,
+      "pointer_width": 12.0,
+      "margin": 10.0,
+      "fade_in": 0.25
+    },
     "low_paint": {
       "_comment": "POL#38: while the tool is low, the PAINT label becomes an ink tag with paper lettering, blinking at blink_period seconds. HUD reference pixels; Reduce effects holds it steady.",
       "tag": "141414",

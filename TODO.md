@@ -87,6 +87,8 @@ difficulty comparison; difficulty values remain provisional.
   settle the draw, explicit-only and bot-loser calls (`ROAD#20`).
 - **Overview map and match variants:** whether a mid-match map may show territory
   (`ROAD#17`), and whether variants count as modes (`ROAD#22`).
+- **Off-screen markers:** whether enemies get threat markers, and a readability look at the
+  teammate markers at 1/2/4P (`ROAD#18`).
 - **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
   treatment (`POL#34`); current behavior is documented, with no candidate accepted.
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
@@ -199,7 +201,7 @@ excluded modes.
 | `ROAD#15` | OPEN | MED | L | Paint-activated stage objects (Splatoon lifts, inkrails, sponges). The paint ferry and the team gate are on their explicit trials; left: vertical lifts, sponges, ferry and gate art, bots routing through open gates, and play. Arena use follows `POL#21`. [Owner](docs/feature-roadmap.md#team-gate-road15-second-slice). |
 | `ROAD#16` | DECISION | LOW | S | User stages play without a rebuild; the editor saves straight there and Stage Select rescans. Left: attended play of a player-made stage, and the author's calls on Random opt-in and the hint-only marker. [Owner](docs/feature-roadmap.md#user-stages-road16). |
 | `ROAD#17` | DECISION | LOW | M | Overview map in the unused three-player quadrant (Splatoon turf map). Shows territory mid-match, against gap audit 1.1: decide first. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#18` | UNSCOPED | LOW | M | Off-screen teammate and threat markers (Splatoon ally silhouettes); relates to `POL#3` rear threats and `ROAD#10` label clamping. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#18` | DECISION | LOW | S | Off-screen teammate markers are in. Left: decide whether enemies get threat markers (an information-model change; see `POL#3` rear threats), and an attended readability look at 1/2/4P. [Owner](docs/feature-roadmap.md#teammate-markers-road18). |
 | `ROAD#20` | DECISION | LOW | S | The Series stage rule is in (Same stage, Rotate, Loser's pick on Mode). Left: play the three, choose the default, and confirm the provisional calls for draws, explicit-only stages and bot-only losers. [Owner](docs/feature-roadmap.md#series-stage-rule-road20). |
 | `ROAD#21` | DECISION | LOW | S | Player profiles are in and their MattPC painter checks pass. Left: try profiles with real pads (`ROAD#2`). [Owner](docs/feature-roadmap.md#player-profiles-road21). |
 | `ROAD#22` | DECISION | LOW | M | Match variants (low gravity, endless paint, tool roulette), mostly tuning overrides. Decide whether they count as modes, which are ruled out. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |

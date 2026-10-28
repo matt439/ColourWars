@@ -37,6 +37,7 @@
 #include "game/objects/idle_drip.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player_badge.h"
+#include "game/objects/teammate_marker.h"
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
 #include "game/objects/music_envelope.h"
@@ -202,6 +203,11 @@ public:
 	// human pane follows that pane's Reduce effects, not the bot's.
 	float player_identity_emphasis_for(int view, int viewer_slot) const;
 	mattmath::RectangleF player_identity_bounds_for(int view, int viewer_slot) const;
+	// ROAD#18: one marker per living teammate (human or bot) whose body is
+	// outside human pane `view`'s camera, during live play only, in that pane's
+	// HUD pixels and roster order. Empty for an invalid pane. Opacity follows
+	// the time each has been out of view and the pane pad's Reduce effects.
+	std::vector<TeammateMarkerPlacement> teammate_markers(int view) const;
 	// Reacquire one's own figure after a covering menu or focus loss.
 	void emphasise_players();
 	const BlockedShotFeedback& blocked_shot_feedback() const;
@@ -260,6 +266,10 @@ private:
 	std::unique_ptr<BlockedShotFeedback> blocked_shot_feedback_;
 	std::unique_ptr<PlayerBadge> player_badge_;
 	std::vector<float> player_identity_remaining_;
+	std::unique_ptr<TeammateMarker> teammate_marker_;
+	// By human pane, then participant: seconds that teammate's body has been
+	// outside the pane's view. Presentation only, advanced by live ticks.
+	std::vector<float> teammate_marker_age_;
     std::unique_ptr<labrador::Scene> scene_ = nullptr;
     // Admitted fixed movers explicitly refuse retirement. These borrows live
     // for this Level; no terrain add/remove API is exposed after admission.
@@ -566,6 +576,9 @@ private:
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
 	void update_player_identity(float dt);
+	void update_teammate_markers(float dt);
+	// The HUD's scale for human pane `view`, as InterfaceGameplay computes it.
+	float hud_scale(int view) const;
 	// Rebuilds identity_texts_. Main thread, never from a draw.
 	void refresh_identity_texts();
 	int pad_device(int slot) const;

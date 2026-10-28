@@ -1868,8 +1868,8 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   makes it the natural place. A map shows territory mid-match, which bends the
   withheld-score decision (gap audit 1.1), so the author decides first.
 - **Off-screen teammate and threat markers (`ROAD#18`).** Splatoon shows
-  allies through walls. Relates to the `POL#3` rear-threat review and the
-  `ROAD#10` label-clamping question.
+  allies through walls. Teammate markers done 2026-10-28; threat markers are
+  an author decision. See [Teammate markers](#teammate-markers-road18) below.
 - **End-of-round instant replay (`ROAD#19`, done 2026-10-27).** TowerFall
   replays each round's final seconds and can save a GIF. The End menu now
   offers Watch Replay; see [Instant replay](#instant-replay-road19) below.
@@ -2429,6 +2429,88 @@ Provisional calls the author should confirm in play:
 
 The practice hint moved beside Single Match, and Mode's row spacing went from
 100 to 96, to make room for the row; that is an art-pass call too.
+
+### Teammate markers (`ROAD#18`)
+
+**Teammate half done 2026-10-28; threat markers are a DECISION.** In each
+human pane, a living teammate whose body is wholly outside that pane's view
+gets a chip at the pane edge. The chip sits on the line from the pane centre
+toward the teammate, pulled in until it and its pointer are `margin` inside
+the edge. It has an ink keyline, a fill in the teammate's team colour and their
+roster badge (`P2`, the same drawing as the world badge), plus a stepped ink
+pointer with a team-colour core aimed at them. Bots count as teammates and get
+markers in the human panes, though they have no pane themselves. Enemies, the
+pane's own player and dead teammates are never marked. A teammate even partly
+in view has no marker: their world badge, which `ROAD#10` already keeps inside
+the pane, does that job. Markers show during live play only, not in the
+countdown, the opening or the overview.
+
+How it is built: `TeammateMarker` (`game/objects/teammate_marker.h`) is a new
+`CrudeDrawing`, beside `PlayerBadge`. Its static `place` does the geometry for
+one pane, camera and body. `Level::teammate_markers(view)` lists a pane's
+markers in roster order, and `draw_player_overlay` draws them in HUD
+coordinates just before the HUD, so a pane's own panels stay on top where a
+chip reaches a corner. Each marker fades in over `fade_in` from the moment its
+teammate leaves the view; the age is per pane and per teammate, advanced by live
+ticks only. `PlayerBadge::draw` gained an optional opacity so the badge fades
+with its chip.
+
+Content: `presentation.json` `hud.teammate_marker`: `enabled`, `ink`, `size`
+(72x58), `keyline_width` (3), `badge_inset` (6), `pointer_length` (16),
+`pointer_width` (12), `margin` (10) and `fade_in` (0.25 s), in HUD reference
+pixels scaled with the pane as the rest of the HUD is. The loader requires
+sizes from 16 to 128, a keyline of at most 8 and an inset of at most 16 that
+together leave at least half the chip for the badge, a pointer of at most 48
+that is wider than the keyline and at most half the chip, a margin of at most 64,
+a fade of at most 1 s, and an opaque ink.
+
+Accessibility: no new toggle. A viewer pad's Reduce effects (its `ROAD#7`
+override, or Shared with the Options switch) shows a marker at full strength
+at once instead of fading it. The keyboard seat follows the shared switch. The
+marker never blinks or moves on its own, so nothing else needed reducing.
+
+Provisional calls (author to confirm at the readability look):
+
+- no Options or per-pad toggle of its own. If one is wanted it should be a fourth
+  `pad_comfort` field next to View shake, Aim marker and Reduce effects
+  (Off / Shared / On), with an Options switch, as `ROAD#7` set out;
+- HUD scale, so at 4P a chip is half its 1P size (36x29 px at 1080p);
+- drawn under the HUD panels;
+- a full marker for a teammate wholly off-screen, nothing for one partly in
+  view, and nothing while dead or respawning;
+- the stable follow camera, not the shaken one, decides on-screen, so view
+  shake never makes a marker flicker;
+- a 0.25 s fade-in.
+
+**Threat markers are not drawn (DECISION).** Marking enemies off-screen would
+show every player where the other team is, a change to the game's information
+model: rear threats are currently found by looking and listening (the `POL#3`
+C2 rear-threat recognition review in [polish-crossfeed.md](polish-crossfeed.md)).
+The author decides whether threats get any marker (always, only recent damage
+sources, only within some distance) and how that fits the withheld-score
+decision (gap audit 1.1) and `ROAD#17`'s overview map. Until then only teammates
+are marked.
+
+CPU acceptance: `teammate_markers` builds real Levels on Movement Course at 1,
+2, 3 and 4 human panes, at 1280x720 and 1920x1080. The rosters include a bot
+teammate in P2 with P3 owning the second pane, and an enemy in every roster. In
+every pane it places teammates on screen, straddling the edge and off screen in
+eight headings. It checks one marker per off-screen teammate and none for
+enemies, self or a teammate in view. Each marker must be the presented size,
+inside the margin with its pointer, on the line toward its teammate, aimed at
+them and clamped to the edge. A death clears the marker and a respawn restores
+it. The case also checks the fade from 0 to full, per-pad and shared Reduce
+effects, the disabled presentation, and 38 malformed `teammate_marker`
+variants (256 placed markers in all).
+
+Native evidence: an isolated `+players 4 +bot all paint` Crossfeed capture
+(seed 2, 1080p) shows P4's chip in P2's pane and P2's chip in P4's pane, both at
+the edge toward each other. Team A's panes show none because those two were on
+screen together. Evidence: `out/validation/road18-teammate-markers/`.
+
+Left: the threat-marker decision, and an attended readability look at 1, 2 and
+4 panes (chip size at 4P, overlap with the HUD panels at the top corners,
+pointer legibility, whether the fade helps), with a pad (`ROAD#2`).
 
 ## Menu navigation follow-up (GAP#4.4)
 

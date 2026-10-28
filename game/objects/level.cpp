@@ -244,6 +244,9 @@ Level::Level(std::unique_ptr<Scene> scene,
 		&presentation->player_identity(), render_resources);
 	this->player_identity_remaining_.assign(this->players_.size(),
 		presentation->player_identity().emphasis_duration);
+	this->teammate_marker_ = std::make_unique<TeammateMarker>(
+		&presentation->hud().teammate_marker, render_resources);
+	this->teammate_marker_age_.assign(this->view_participants_.size() * this->players_.size(), 0.0f);
 	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources);
 	this->blocked_shot_feedback_ = std::make_unique<BlockedShotFeedback>(
 		&presentation->blocked_shot(), render_resources);
@@ -610,6 +613,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 
 	// Count once per tick for all debug overlays.
 	this->projectile_count_ = this->count_projectiles();
+	this->update_teammate_markers(dt);
 
 	// Players must remain in the arena; unlike projectiles, they cannot be retired.
 	for (const Player* player : this->players_)
