@@ -316,9 +316,15 @@ $previousPath = $env:PATH
 $previousLocalAppData = $env:LOCALAPPDATA
 $process = $null
 $failure = $null
-. (Join-Path $PSScriptRoot 'check-painter/evidence-record.ps1')
-if ($RumbleOnly -and $Preset -eq 'x64-debug') {
-    $result.background_supplement = 'Debug-only actual GameLevel script.background checks: native private-HWND facts; synthetic StateContext activation and injected hard gates; neutral physical actions, truthful presence, script/bot/replay, Music/SFX group mute before shots, recording motors and unchanged private Save. No physical pad, listening, real OS focus/power-sleep, CI1 or performance acceptance.'
+try {
+    . (Join-Path $PSScriptRoot 'check-painter/evidence-record.ps1')
+    if ($RumbleOnly -and $Preset -eq 'x64-debug') {
+        $result.background_supplement = 'Debug-only actual GameLevel script.background checks: native private-HWND facts; synthetic StateContext activation and injected hard gates; neutral physical actions, truthful presence, script/bot/replay, Music/SFX group mute before shots, recording motors and unchanged private Save. No physical pad, listening, real OS focus/power-sleep, CI1 or performance acceptance.'
+    }
+}
+catch {
+    Pop-Location
+    throw
 }
 try {
     if (-not $SkipBuild) {

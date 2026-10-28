@@ -5,6 +5,47 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order.
 
+## Painter initialization cleanup (`HYG#18`)
+
+**Done (2026-10-28).** The first `HYG#17` native attempt exposed a separate
+cleanup defect: painter pushes the repository location, then constructs its
+evidence record before entering the `try` that restores the caller. An
+initialization error therefore leaves PowerShell in the repository. The outer
+qualification wrapper restored its own caller, but the runner did not.
+
+The current bounded shortlist is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | The retained failed native receipt reports `checker_caller_location_restored=false` after evidence initialization threw. | Selected as `HYG#18`: guard only initialization with a catch that pops the runner's location and rethrows the original error. Small failure-cleanup change; preserve normal cleanup and failed-initialization receipt semantics. |
+| 2 | Nine other validation wrappers still use process-relative explicit output paths. | Extend the established filesystem resolver in a later bounded scope, after tracing each wrapper's path base and preflight order. |
+
+The evidence-record load and Debug rumble supplement now have a narrow
+`try`/`catch`. Failure restores the single pushed location and rethrows the
+original error. Successful initialization continues into the existing normal
+`try`/`finally`, which still owns environment/process cleanup and its own
+single pop. Failed initialization still writes no incomplete result record.
+Git queries, settings, renderer behavior and public options are unchanged.
+
+An ignored private fault-injection harness reproduced the old-source location
+and extra-stack-frame leak. Fresh PowerShell 5.1 and pwsh candidate hosts pass
+both initialization-failure and normal-cleanup controls. Exact private copies
+of the runner use a synthetic evidence helper that throws before metadata
+collection; local dummy tool commands throw if invoked. Original exception
+identity/type/id/message, caller location/stack, process directory, environment,
+private inputs and five source hashes are preserved. The successful synthetic
+helper followed by a missing private cache retains the existing failed receipt
+and single restoration. No Git, compiler, CMake, native helper or GPU runs.
+The actual denied worktree-status query remains stopped.
+
+Independent review and all 145 focused painter-selection cases pass in each
+host. Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`hyg18-baseline/aa54ae3c8ed84152b9f27272fdb89d1b`; candidate PS5
+`hyg18-candidate/0800c8425bd34f24ae33b8c4152aeb30` and pwsh
+`hyg18-candidate/46237d47052d4f00a4a94b90d6f92fca`; selection checks
+`hyg18-selection/ps5/106c335c33c545169e4430b30f0034af` and
+`hyg18-selection/pwsh/83fe48e2719b4be3897fb2ed46f6d16f`.
+
 ## Caller-relative validation paths (`HYG#17`)
 
 **Done (2026-10-28).** Fresh source review found that explicit relative
@@ -57,10 +98,8 @@ Independent review and six-file source-immutability checks pass. Evidence under
 `hyg17-qualification/967a47bcf11643eba088bbe5a8c5f3aa`, native batch
 `hyg17-native/1f97aa8d62eb480787300d0710db3bf8` (leaf
 `e067d5a5840546299ce439f626526c7d`). Other wrappers remain candidates for a
-later bounded scope. A separate observed cleanup issue also remains: an
-evidence-initialization error happens before painter's `try` and can leave
-the caller's PowerShell location changed. Scope that failure path with a
-synthetic private helper, without retrying the denied metadata query.
+later bounded scope. The separately observed evidence-initialization location
+leak is resolved by `HYG#18` above, without retrying the denied metadata query.
 
 ## Follow-up shortlist (2026-10-28)
 

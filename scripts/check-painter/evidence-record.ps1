@@ -1,7 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1.
 # The result.json evidence record: its base shape, every focused scope's
 # selection and post-chain fixups. Topic bodies stay in dot-sourced helpers.
-# Runs before the try, so an override error still skips the result.json write.
+# Runs before the native-run try, so an override error still skips result.json.
 
 $worktreeStatus = $null
 if (-not $OmitWorktreeStatus) { $worktreeStatus = @(& git status --short) }

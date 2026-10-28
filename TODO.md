@@ -49,8 +49,8 @@ when they don't compete with it.
 **Independent implementation (2026-10-28).** Select bounded work from the
 [maintenance](docs/code-hygiene.md#follow-up-shortlist-2026-10-28) and
 [authoring](docs/level-editor.md#authoring-follow-up-shortlist-2026-10-28)
-shortlists while attended reviews wait. Recheck current source for the next
-bounded, independent slice rather than reopening an attended decision.
+shortlists while attended reviews wait. Continue with a scoped candidate from
+those lists after the completed painter cleanup (`HYG#18`).
 This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.
@@ -261,7 +261,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
-| Code hygiene and maintenance | [code-hygiene.md](docs/code-hygiene.md) | a concrete bounded maintenance defect; the current splits, compatibility and preflight slices are qualified |
+| Code hygiene and maintenance | [code-hygiene.md](docs/code-hygiene.md) | a scoped maintenance or usability finding |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Closed engine reports (1–22) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
