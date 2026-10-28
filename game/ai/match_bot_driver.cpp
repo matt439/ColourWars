@@ -3,8 +3,10 @@
 #include "game/ai/match_bot_ballistics.h"
 #include "game/ai/match_bot_territory.h"
 #include "game/objects/level.h"
+#include "game/objects/team_gate_structure_paintable.h"
 #include "game/objects/weapon.h"
 #include "engine/core/step_timer.h"
+#include <array>
 #include <cmath>
 #include <limits>
 
@@ -119,11 +121,28 @@ float MatchBotDriver::engagement_distance(const Player& player, const GameTuning
 
 void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Level& level)
 {
+	// Input is observed before this step settles gates. React to the permission
+	// actually published by the last settlement, including occupied holds.
+	const auto gates = level.team_gates();
+	this->gate_permissions_.resize(gates.size(), PlayerTeam::none);
+	std::array<bool, 2> changed{};
+	for (size_t index = 0; index < gates.size(); ++index)
+	{
+		const PlayerTeam before = this->gate_permissions_[index];
+		const PlayerTeam after = gates[index]->open_for();
+		if (before == after) { continue; }
+		if (before != PlayerTeam::none) { changed[static_cast<size_t>(before)] = true; }
+		if (after != PlayerTeam::none) { changed[static_cast<size_t>(after)] = true; }
+		this->gate_permissions_[index] = after;
+	}
 	bool wants_territory = false;
 	for (size_t seat = 0; seat < this->bots_.size() && seat < seats.size() &&
 		seat < static_cast<size_t>(level.player_count()); ++seat)
 	{
 		const Player& player = level.player(static_cast<int>(seat));
+		if (this->bots_[seat] != nullptr && player.team() != PlayerTeam::none &&
+			changed[static_cast<size_t>(player.team())])
+		{ this->bots_[seat]->replan_traversal(); }
 		wants_territory = wants_territory || (this->bots_[seat] != nullptr && player.state() == PlayerState::alive &&
 			(this->bots_[seat]->needs_territory() || support_shot(*this->bots_[seat], player)));
 	}
@@ -156,8 +175,8 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 		view.shot_empty = weapon.readiness() == WeaponReadiness::empty;
 		view.engage_distance = engagement_distance(player, *this->tuning_);
 		view.weapon = weapon.type();
-		view.obstacles = obstacles;
-		view.supports = supports;
+		view.obstacles = gates.empty() ? obstacles : level.bot_obstacles(player.team());
+		view.supports = gates.empty() ? supports : level.bot_supports(player.team());
 		view.ramps = ramps;
 		const float sight = this->tuning_->bots().sight_distance;
 		if (view.alive)
@@ -223,8 +242,10 @@ void MatchBotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Lev
 						const PaintSurfaceSample& surface = surfaces[static_cast<size_t>(bot->random() % surfaces.size())];
 						if (surface.team == player.team()) { continue; }
 						const Vector2F point = paint_point(surface, this->tuning_->paint().thickness + view.size.x * 0.05f);
-						if (Vector2F::distance_squared(point, view.center) <= sight * sight &&
-							level.bot_line_of_sight(view.center, point)) { view.territory.push_back(point); }
+						if (Vector2F::distance_squared(point, view.center) > sight * sight) { continue; }
+						if (level.bot_line_of_sight(view.center, point)) { view.territory.push_back(point); }
+						else if (!gates.empty() && level.bot_traversal_line_of_sight(view.center, point, player.team()))
+						{ view.route_territory.push_back(point); }
 					}
 				}
 			}

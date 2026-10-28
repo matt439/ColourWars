@@ -2015,8 +2015,8 @@ drive is switched to paint.
 
 The stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
 `-StageCountsOnly`, `-StageSummaryOnly`) passed with the tenth stage on MattPC
-in Debug and Release (2026-10-28). The second object, and what `ROAD#15` still
-has open, is under [Team gate](#team-gate-road15-second-slice).
+in Debug and Release (2026-10-28). The second object and its bot-route
+qualification are under [Team gate](#team-gate-road15-second-slice).
 
 ### Team gate (`ROAD#15`, second slice)
 
@@ -2072,13 +2072,11 @@ top decides an even exchange. The format is in
 [Team gates](level-format.md#team-gates); the editor authors one from the
 palette ([Team gate authoring](level-editor.md#team-gate-authoring-road15)).
 
-**Bots** need no new policy and none was added. A gate is a structure, so a
-bot sees it in its obstacles, supports and sight line exactly as it sees a
-wall, whichever way the gate is open. A bot walking into a gate shut to it
-jumps or turns as at any wall; one walking into a gate open to it walks
-through, because the collision is gone even though the bot planned around
-it. A gate's faces are scoring tiles, so bots paint them as territory, which
-is what opens it. They do not plan a route through an open gate.
+**Bots in the initial gate slice** treated every gate as a wall for planning,
+even when collision permitted passage. A gate's faces are scoring tiles, so
+bots painted them as territory and could walk through incidentally. Deliberate
+team-aware passage is now implemented and qualified in the
+[route slice](#team-aware-bot-gate-routes-road15) below.
 
 The `team_gate` acceptance case checks the rule in the contract and on a
 standalone gate; walks two scripted humans at the trial's gate (shut to both
@@ -2101,37 +2099,61 @@ on the wall deciding it, rather than a separate bulb; a tie shutting it to
 both; a gate held open while its team is inside, rather than pushing them out;
 the eraser material; and the trial's single central floor gate.
 
-**Remaining work, split into independent scopes (2026-10-28):** deliberate
-gate routing stays `ROAD#15`; functional gate and ferry cues are `ROAD#26`
-and `ROAD#27`. Vertical lifts (`ROAD#28`) and growing sponges (`ROAD#29`)
-need their own contracts. Attended trial play is `ROAD#30`. Each has its own
-row so implementing one does not imply finishing the others.
+**Remaining work, split into independent scopes (2026-10-28):** functional
+gate and ferry cues are `ROAD#26` and `ROAD#27`. Vertical lifts (`ROAD#28`)
+and growing sponges (`ROAD#29`) need their own contracts. Attended trial play
+is `ROAD#30`. Deliberate gate routing (`ROAD#15`) is complete below; each
+remaining scope keeps its own row.
 
 ### Team-aware bot gate routes (`ROAD#15`)
 
-**OPEN, L (2026-10-28).** The shipping driver currently copies the same
-`Level::bot_obstacles()` and `bot_supports()` to every bot
-(`game/ai/match_bot_driver.cpp`, `game/objects/level.cpp`). A gate remains a
-wall in those observations even when its settled `open_for()` permits the
-bot's team through it. Accidental passage in the trial is not deliberate
-route planning.
+**Implemented (2026-10-28).** `Level::bot_obstacles(team)` and
+`bot_supports(team)` omit only gates whose settled `open_for()` permits that
+team through. Their top is no longer a standing support for that team;
+closed and hostile gates retain both roles. Filtering preserves every other
+support's identity. The shared traversal observations feed standing goals,
+approaches, ascents, descents and local recovery.
 
-Provide team-aware traversal observations and use them for paint goals,
-approaches and local recovery. An open gate is passable for the permitted
-team. Bots of that team also cannot use its top as standing support. Closed
-and hostile gates remain obstacles and supports as before. Replan when settled
-permission changes, including when an occupied gate keeps its old team after
-the paint leader changes. Keep traversal separate from projectile visibility:
-an open gate still catches shots and remains cover in `bot_line_of_sight`.
-Do not remove it from every geometry query or change the gate's collision rule.
+Sampled non-team paint beyond a permitted gate can supply a navigation-only
+goal. It cannot supply an occluded paint aim or reveal an enemy. Enemy sight,
+support-paint qualification and ordinary paint targets still use projectile
+visibility; `bot_line_of_sight` and actual shots retain every gate as cover.
+The policy separately checks body clearance on candidate routes.
 
-Acceptance: a bot deliberately takes a useful floor goal through the gate for
-each permitted team, rejects that route while closed or hostile, and replans
-after takeover and delayed closure. Cover the observation/settlement step
-boundary without changing the no-crush update order. Qualify sight/shot
-occlusion independently, then retain the existing bot route, `team_gate` and
-replay checks in both presets. Trial play and difficulty values retain their
-human gates; no new arena layout or pad is required for this implementation.
+The shipping driver watches settled permissions and invalidates affected
+teams' held routes, ascent/descent/ramp/finish state and recovery decisions
+before resampling. It retains reserve policy and the private random sequence.
+A paint-leader change alone does not invalidate a route while an occupant
+holds its old permission. Input observation still precedes gate settlement:
+the first observation after settlement sees the new permission. Collision,
+no-crush settlement, tuning and authored stages are unchanged.
+
+**Qualification (Debug and Release, 2026-10-28).** The default
+`bot_gate_routes` acceptance case checks six mirrored policy/difficulty
+controls whose fallback initially heads away from the route, closed-route
+rejection, separate navigation/paint aim and RNG-preserving invalidation.
+Actual Level observations cover closed and either-team permissions, stable
+support IDs, occupied takeover and the input-before-settlement boundary.
+Four paired shipping-driver experiments cover direct and occupied takeovers
+from both teams, retaining decisions before settlement and replanning on the
+first observation afterwards, before ordinary reaction/replan expiry.
+Actual projectile launch sweeps stop both teams' shots at either open gate.
+
+Two isolated public-loader fixtures contain a flush scored floor patch beyond
+a tall gate and ordinary non-scoring floor elsewhere. Each permitted team
+reaches and paints the patch; each 420-step final-input tape reproduces the
+sampled player, projectile-count and exact paint state at every step.
+These capability fixtures do not alter a shipped arena.
+
+Both game builds, the new case and twelve retained acceptance cases pass:
+`bot_driver`, `bot_runtime`, `bot_recovery`, `bot_ballistics`, `bot_navigation`,
+`bot_territory`, `bot_mover_routes`, `bot_arena_routes`, `bot_hill_routes`,
+`bot_turbulence_routes`, `team_gate` and `instant_replay`. Hidden startup with
+the accepted audio bank also passes in both presets. Receipts are under
+`out/validation/road15-gate-routes/`; the new case is in `focused/<preset>/`.
+This is scoped software qualification, not the full acceptance suite or
+attended difficulty, route-value or physical-pad acceptance. Those human
+gates remain `ROAD#10`, `ROAD#30` and `ROAD#2`.
 
 ### Gate permission cue (`ROAD#26`)
 

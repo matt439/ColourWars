@@ -184,12 +184,15 @@ public:
 	bool is_bot(int participant) const;
 	BotDifficulty bot_difficulty(int participant) const;
 	std::wstring_view bot_identity(int participant) const;
-	// Conservative current structural bounds for bot planning and sight. No
-	// projectile/player state is exposed by these geometry queries.
-	std::vector<mattmath::RectangleF> bot_obstacles() const;
-	std::vector<MatchBotSupport> bot_supports() const;
+	// Conservative traversal bounds. A permitted team's open gates are neither
+	// obstacles nor standing supports; none retains all structural bounds.
+	std::vector<mattmath::RectangleF> bot_obstacles(PlayerTeam team = PlayerTeam::none) const;
+	std::vector<MatchBotSupport> bot_supports(PlayerTeam team = PlayerTeam::none) const;
 	std::vector<MatchBotRamp> bot_ramps() const;
+	// Projectile cover includes every gate, even one the bot can walk through.
 	bool bot_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to) const;
+	// Candidate route visibility only; the policy separately sweeps its body.
+	bool bot_traversal_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to, PlayerTeam team) const;
 	// Cosmetic camera by participant; player(index).camera() remains the stable aim/follow camera.
 	labrador::Camera view_camera(int view) const;
 	// Null for tools without an idle drip. Index follows player(view).

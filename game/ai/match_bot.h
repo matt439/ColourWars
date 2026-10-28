@@ -42,6 +42,9 @@ struct MatchBotObservation
 	std::vector<Enemy> enemies;
 	// Sampled visible non-team scoring tiles, refreshed only for a replan.
 	std::vector<mattmath::Vector2F> territory;
+	// Non-team paint beyond a permitted gate: useful route destinations, but
+	// occluded by projectile cover and never offered as paint aim targets.
+	std::vector<mattmath::Vector2F> route_territory;
 	// Deterministic visible top paint on the current support, aim only. It
 	// never supplies a standing/descent goal or consumes the navigation RNG.
 	// A deliberate tool with none there may take another scoring top whose
@@ -68,6 +71,9 @@ public:
 	MatchBot(const GameTuning* tuning, BotDifficulty difficulty, std::uint64_t seed);
 	PlayerInputData think(const MatchBotObservation& view);
 	bool needs_territory() const;
+	// Settled gate permission changed. Discard held traversal state and replan
+	// on this observation, retaining the reserve policy and random sequence.
+	void replan_traversal();
 	// A slow straight tool that qualifies each support shot before firing.
 	bool deliberate(WeaponType weapon) const;
 	// A finishing window is pending or open; the driver requalifies support aim.

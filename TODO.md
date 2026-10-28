@@ -46,12 +46,12 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Nineteen `OPEN` slices now have
+**Ready local work (backlog audit, 2026-10-28).** Eighteen remaining `OPEN` slices have
 concrete implementation and acceptance scopes in their owners. They can proceed
 while attended reviews wait, without changing the arena/tuning order above:
 
-- **Stage mechanisms:** deliberate bot gate routes (`ROAD#15`), actual gate
-  permission (`ROAD#26`) and ferry direction/stop cues (`ROAD#27`).
+- **Stage mechanisms:** actual gate permission (`ROAD#26`) and ferry
+  direction/stop cues (`ROAD#27`).
 - **Gameplay and diagnostics:** stop unused replay growth in untimed practice
   (`ROAD#31`), show user-stage refusals in game (`ROAD#32`), validate menu cards
   against the paper face (`ROAD#25`), and detect changed stages in Debug replay
@@ -214,7 +214,6 @@ excluded modes.
 | `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#15` | OPEN | MED | L | Give bots team-aware routes through open gates while retaining projectile cover and replanning on permission changes. [Scope](docs/feature-roadmap.md#team-aware-bot-gate-routes-road15). |
 | `ROAD#26` | OPEN | MED | M | Show actual gate permission, closed and occupied hold states with functional shape/palette cues. [Scope](docs/feature-roadmap.md#gate-permission-cue-road26). |
 | `ROAD#27` | OPEN | MED | M | Show paint-ferry ownership direction, tie hold and end stops without changing cyclic movers. [Scope](docs/feature-roadmap.md#ferry-direction-and-stop-cue-road27). |
 | `ROAD#28` | UNSCOPED | MED | XL | Vertical lifts need vertical carry, ceiling/crush, admission and sweep contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |

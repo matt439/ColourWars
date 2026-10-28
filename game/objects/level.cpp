@@ -21,6 +21,13 @@ using namespace labrador;
 
 namespace
 {
+    bool passable_gate(const CollisionObject* object, PlayerTeam team)
+    {
+        if (team == PlayerTeam::none) { return false; }
+        const auto* gate = dynamic_cast<const TeamGateStructurePaintable*>(object);
+        return gate != nullptr && gate->open_for() == team;
+    }
+
     using HorizontalBox = horizontal_motion_contract::Box;
 
     double horizontal_finite(double value)
@@ -908,18 +915,19 @@ std::wstring_view Level::bot_identity(int participant) const
 	return text == nullptr ? std::wstring_view{} : text->text();
 }
 
-std::vector<RectangleF> Level::bot_obstacles() const
+std::vector<RectangleF> Level::bot_obstacles(PlayerTeam team) const
 {
 	std::vector<RectangleF> bounds;
 	for (const CollisionObject* object : this->projectile_targets_)
 	{
-		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr)
+		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
+			!passable_gate(object, team))
 		{ bounds.push_back(object->shape()->bounding_box()); }
 	}
 	return bounds;
 }
 
-std::vector<MatchBotSupport> Level::bot_supports() const
+std::vector<MatchBotSupport> Level::bot_supports(PlayerTeam team) const
 {
 	std::vector<MatchBotSupport> supports;
 	// The target list is fixed for the match, so a position in it is a stable
@@ -930,7 +938,8 @@ std::vector<MatchBotSupport> Level::bot_supports() const
 		++id;
 		const CollisionObjectType type = to_collision_type(object->tag());
 		if (is_structure(type) && !is_structure_ramp(type) &&
-			type != CollisionObjectType::structure_fixed_slab && object->shape() != nullptr)
+			type != CollisionObjectType::structure_fixed_slab && object->shape() != nullptr &&
+			!passable_gate(object, team))
 		{
 			supports.push_back({ object->shape()->bounding_box(),
 				type == CollisionObjectType::structure_jump_through,
@@ -958,12 +967,18 @@ std::vector<MatchBotRamp> Level::bot_ramps() const
 
 bool Level::bot_line_of_sight(Vector2F from, Vector2F to) const
 {
+	return this->bot_traversal_line_of_sight(from, to, PlayerTeam::none);
+}
+
+bool Level::bot_traversal_line_of_sight(Vector2F from, Vector2F to, PlayerTeam team) const
+{
 	if (!std::isfinite(from.x) || !std::isfinite(from.y) ||
 		!std::isfinite(to.x) || !std::isfinite(to.y)) { return false; }
 	const Segment sight(from, to);
 	for (const CollisionObject* object : this->projectile_targets_)
 	{
 		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
+			!passable_gate(object, team) &&
 			rectangle_segment_intersect(object->shape()->bounding_box(), sight)) { return false; }
 	}
 	return true;
