@@ -41,7 +41,7 @@ gate. The earlier figure/animation and other source splits already exist.
 | [presentation_validation.cpp](../game/presentation_validation.cpp) | 2,502 | Ordered helper extraction, `HYG#1`; one large function prevents a simple method move |
 | [player.cpp](../game/objects/player.cpp) | 1,848 | Retain the coupled movement/contact/carrier core; figure code is already separate |
 | [input_bindings.cpp](../scripts/acceptance/input_bindings.cpp) | 56 | Four topic sources and shared fixtures; `HYG#5` complete |
-| [evidence-record.ps1](../scripts/check-painter/evidence-record.ps1) | 1,403 | Evidence-metadata groups, `HYG#6` |
+| [evidence-record.ps1](../scripts/check-painter/evidence-record.ps1) | 354 | Four explicit topic helpers; `HYG#6` complete |
 | [painter_visual.cpp](../scripts/acceptance/painter_visual.cpp) | 1,347 | Retain the explicit include/setup/dispatch entry; no registry redesign selected |
 | [level.cpp](../game/objects/level.cpp) | 966 | Horizontal-motion subsystem extracted (380 lines), `HYG#2` complete |
 | [tune_colour_document_checks.h](../scripts/acceptance/debug_console/tune_colour_document_checks.h) | 17 | Ordered topic coordinator; `HYG#7` complete |
@@ -141,22 +141,25 @@ reader and unchanged-save checks. No player data or hardware is used.
 
 ## Painter evidence metadata (`HYG#6`)
 
-**OPEN, M.** The evidence script has a base ordered record, a long focused-scope
-precedence chain and common final fixups. Extract its branch bodies into
-coherent arena, menu/text, colour and action/HUD groups; keep the base,
-selection precedence and final fixups explicit in the entry script.
+**Done (2026-10-28).** The 354-line entry retains its ordered base record,
+all 98 explicit precedence conditions and the four final fixups. Their bodies
+are dot-sourced from coherent arena (15 branches), colour (31), menu/text (44)
+and action/HUD (8) helpers under `scripts/check-painter/evidence-record/`.
+The unique selector parameters do not shadow existing inputs; no moved body
+uses the helper's script path. There is no registry or painter-matrix change.
 
-Preserve dot-sourced variable scope, ordered keys, exact evidence strings,
-path selection and failure behavior. The runner loads this before its `try`,
-so relocating a failure is also a behavior change. Avoid replacing the chain
-with an implicit registry or changing the painter matrix.
+Independent inspection and PowerShell token comparison retain every condition,
+body token, literal string, ordered key and dot-sourced failure boundary. Base
+and final-fixup statements are byte-identical. All five scripts parse. The
+baseline/candidate harness passes 800 ordered metadata comparisons: every one
+of 99 focused switches in both presets, adjacent/first-winner precedence,
+PracticeReplay overrides and combined final fixups. Only game revision, engine
+revision and working-tree metadata are normalized.
 
-Acceptance: parse all resulting PowerShell files and evaluate old/new metadata
-construction for every focused switch in both presets, comparing ordered
-output with only revision/working-tree metadata normalized. Exercise combined
-switch precedence too, then run representative existing focused native leaves.
-A full painter matrix is not needed solely for moved metadata, and a higher
-timeout is not a substitute for preserving it.
+Representative native `FerryDirectionOnly`, `OptionsDefaultsOnly`,
+`CrackTuneColourOnly` and `ResumeOnly` leaves pass in Debug and Release,
+covering every extracted group and retaining their existing scope receipts.
+No full painter matrix or new timing claim was needed for this source move.
 
 ## Colour-document fixture families (`HYG#7`)
 
