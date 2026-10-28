@@ -177,21 +177,43 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     {
         const int slot = stage ? slots[0] : slots[1];
         const auto trigger = [&] { tap(slot, stage ? GamepadButton::dpad_right : GamepadButton::a); };
+        // A reduced draw is the page at rest. Reduce effects also holds the
+        // Stage preview's drifting backdrop clouds at their anchors (POL#9), so
+        // there the current rest is drawn reduced too, and the normal rest
+        // must still match it everywhere outside the preview image.
+        const auto at_rest = [&](const Frame& reduced, const char* message)
+        {
+            const Frame normal = frame();
+            if (!stage) { require(reduced.pixels == normal.pixels, message); return; }
+            play.reduce_effects = true; const Frame reduced_rest = frame(); play.reduce_effects = false;
+            const auto& stage_look = look.stage_select;
+            const RectangleI preview = project(RectangleF(stage_look.preview_position, stage_look.preview_size));
+            bool outside_same = normal.width == reduced_rest.width && normal.height == reduced_rest.height;
+            for (int y = 0; outside_same && y < normal.height; ++y)
+            {
+                for (int x = 0; x < normal.width; ++x)
+                {
+                    if (x >= preview.x && x < preview.right() && y >= preview.y && y < preview.bottom()) { continue; }
+                    if (!same_pixel(normal, reduced_rest, hud_pixel_offset(normal, x, y))) { outside_same = false; break; }
+                }
+            }
+            require(reduced.pixels == reduced_rest.pixels && outside_same, message);
+        };
         open(stage); trigger(); const Frame moving = frame(); frozen(moving);
         play.reduce_effects = true; const Frame reduced = frame(); play.reduce_effects = false;
         require(moving.pixels == frame().pixels, "Reduced Join/Stage drawing advanced its cosmetic clock");
-        tick(settled); require(reduced.pixels == frame().pixels, "Applied Reduce effects did not settle Join/Stage immediately");
+        tick(settled); at_rest(reduced, "Applied Reduce effects did not settle Join/Stage immediately");
         open(stage); trigger(); stack.notify_activation(false); const Frame inactive = frame();
         stack.notify_activation(true); tick(settled);
         require(inactive.pixels == frame().pixels, "Activation retained or restarted Join/Stage motion");
         open(stage); trigger(); play.reduce_effects = true; const Frame covered = frame(); play.reduce_effects = false;
         stack.push(std::make_unique<MainMenuCredits>(&context)); stack.pop();
-        require(covered.pixels == frame().pixels, "A test-pushed covering page retained Join/Stage motion");
+        at_rest(covered, "A test-pushed covering page retained Join/Stage motion");
         tick();
         open(stage); trigger(); play.reduce_effects = true; const Frame debug_rest = frame(); play.reduce_effects = false;
         page->debug_reset_input(slots[0]);
-        require(debug_rest.pixels == frame().pixels, "Developer reset retained Join/Stage motion");
-        tick(settled); require(debug_rest.pixels == frame().pixels, "Developer reset restarted Join/Stage motion");
+        at_rest(debug_rest, "Developer reset retained Join/Stage motion");
+        tick(settled); at_rest(debug_rest, "Developer reset restarted Join/Stage motion");
         open(stage); play.reduce_effects = true; trigger(); const Frame quiet = frame(); tick(settled);
         require(quiet.pixels == frame().pixels, "Reduced-effects Join/Stage input animated"); play.reduce_effects = false;
         open(stage); trigger(); const int missing_slot = stage ? slots[2] : slots[1];

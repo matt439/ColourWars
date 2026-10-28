@@ -235,6 +235,8 @@ void stage_entry_stage_matrix(Application& app, LevelBuilder& builder,
         const std::string stem = "countdown-stage-" + std::string(stage.stage);
         countdown_capture(app, *level, preferences, card, output, stem, records, true);
         const Frame initial = render(*level, *app.renderer());
+        std::vector<Camera> initial_cameras;
+        for (int view = 0; view < level->player_count(); ++view) { initial_cameras.push_back(level->player(view).camera()); }
         for (const Vector2I size : { Vector2I(1024, 768), Vector2I(960, 1080), Vector2I(2560, 720) })
         {
             resize(app, *level, size);
@@ -244,6 +246,21 @@ void stage_entry_stage_matrix(Application& app, LevelBuilder& builder,
                 (stem + '-' + std::to_string(size.x) + 'x' + std::to_string(size.y) + "-entry-detail.ppm"));
         }
         resize(app, *level, native);
+        // The follow camera keeps its deadzone history across a resize, and a
+        // narrow pane's minimum world width changes its vertical extent too, so
+        // a round trip may leave the world framed elsewhere (polish-crossfeed:
+        // no forced recenter). Its scale is a function of the layout alone; put
+        // back only the history-dependent translation, then demand the frame.
+        for (int view = 0; view < level->player_count(); ++view)
+        {
+            Player& player = const_cast<Player&>(level->player(view));
+            Camera camera = player.camera();
+            require(camera.scale == initial_cameras[static_cast<size_t>(view)].scale,
+                "Player camera scale did not return with the native layout");
+            camera.translation = initial_cameras[static_cast<size_t>(view)].translation;
+            player.set_camera(camera);
+        }
+        level->refresh_layout();
         require(initial.pixels == render(*level, *app.renderer()).pixels,
             "Stage entry retained stale fitting after an aspect-ratio round-trip");
         const int countdown_ticks = static_cast<int>(std::ceil(tuning.match().countdown / dt)) + 2;
