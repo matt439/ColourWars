@@ -134,9 +134,11 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
         require(readbacks < 56, "Contribution team exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    // All actual24-font rows measure41 high. Four literal54x42 badges occupy
-    //414,679.5 through468,856.5; the unchanged heading ends676, prompt starts880.
-    const RectangleF contribution_region(408.0f, 678.0f, 756.0f, 183.0f);
+    // All actual24-font rows measure38 high (Lato Black 24's whole-pixel line
+    // spacing), so each literal54x42 badge centres 2 above its row: the four
+    // occupy 414,678 through468,857; the unchanged heading ends673, prompt
+    // starts880. The band starts on 675, a whole pixel at 720p.
+    const RectangleF contribution_region(408.0f, 675.0f, 756.0f, 183.0f);
     const RectangleF legend_region(450.0f, 633.0f, 900.0f, 45.0f);
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);
     const RectangleF session_region(420.0f, 339.0f, 1080.0f, 135.0f);
@@ -177,9 +179,9 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
             labels[row] = std::make_unique<UiTextDropShadow>("independent-contribution-row", words[row], font,
                 Vector2F(480.0f, y), app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
             metrics.text[row] = labels[row]->bounds();
-            metrics.badge[row] = RectangleF(414.0f, y - 0.5f, 54.0f, 42.0f);
+            metrics.badge[row] = RectangleF(414.0f, y - 2.0f, 54.0f, 42.0f);
             const RectangleF full = RectangleF::union_of(metrics.text[row], metrics.badge[row]);
-            require(metrics.text[row].width > 0.0f && metrics.text[row].height == 41.0f && panel.contains(full) &&
+            require(metrics.text[row].width > 0.0f && metrics.text[row].height == 38.0f && panel.contains(full) &&
                 contribution_region.contains(full) && metrics.badge[row].right() + 12.0f == metrics.text[row].x &&
                 (row == 0 ? legend.bounds().bottom() < metrics.badge[row].y :
                     metrics.badge[row - 1].bottom() < metrics.badge[row].y) && full.bottom() < look.proceed_y,

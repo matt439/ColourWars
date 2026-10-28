@@ -186,7 +186,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); for (const auto& widget : text) { widget->draw(list); }
         const auto& footer = snapshot.prompt_bar();
-        const UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / back    P1: Up/Down Row, Left/Right Human / Bot",
+        const UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
             footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         prompt.draw(list); const Frame expected = read(renderer);
         const std::string stem = "join-paper-" + name + '-' + std::to_string(settings.player_count()) + "p-" +
