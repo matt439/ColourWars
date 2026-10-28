@@ -2131,10 +2131,22 @@ tape is not offered, and the End menu then has its usual rows. A live `tune`
 edit or a suspend injected by `play` is not seen. A replay of such a round may
 differ from what was played, which is acceptable for a developer build.
 
-The End paper grew from 820 to 900 units tall, with rows 118 apart from y 300
+The End paper grew from 820 to 900 units tall, with rows 117 apart from y 300
 (previously 125 from 330), so six rows fit with the item font's descenders.
 Validation checks Watch Replay on row 1, the setup actions on both their rows,
 and Exit on rows 1 and 5.
+
+Rows were first 118 apart, which hung Exit's row-5 focus card 3 units into the
+paper's drop shadow (card bottom 985, face bottom 982). The End painter check
+now also puts Exit on row 5 and requires its card on the face (2026-10-28).
+
+Startup validation did not catch this, nor the Credits Back card that the
+Settings painter check caught the same day: it measures each card against the
+whole paper box, shadow included. Measuring against the face (`ROAD#25`) is a
+one-line change in `presentation_validation.cpp`. With both overhangs fixed the
+shipped content passes it, but the `menu_text` acceptance case's hand-built
+paper-edge fixtures (Home, Options Back, Restore defaults, Pause, End) are pinned
+to the box edge and move with it.
 
 On MattPC (2026-10-27), `check-painter.ps1` with `-EndMenuOnly` (which runs the End
 headings and series re-pick checks too), `-RoundHeadingOnly`, `-SeriesScoreOnly` and

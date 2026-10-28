@@ -254,6 +254,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
+| `ROAD#25` | OPEN | LOW | M | Startup validation measures menu cards against the whole paper, shadow included; measure the face and move the `menu_text` paper-edge fixtures with it. [Owner](docs/feature-roadmap.md#instant-replay-road19). |
 
 ## Areas with no open rows
 

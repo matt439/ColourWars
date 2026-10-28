@@ -297,11 +297,16 @@ namespace menu_text_acceptance
             d["menu_style"]["fonts"]["item"].SetString("menu_text_descender");
             d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(115.0f);
             d["menu_text"]["items"]["options"].SetString("Fit");
-            // Mode's rows sit 96 apart, too close for descender-tall labels;
-            // only Keep's descender is under test here.
-            for (const char* key : { "single_match", "match_length", "series_stage" })
+            // Mode's rows sit 96 apart and End's 117, too close for
+            // descender-tall labels; only Keep's descender is under test here.
+            for (const char* key : { "single_match", "match_length", "series_stage",
+                "watch_replay", "change_teams", "change_weapons", "change_level" })
             {
                 d["menu_text"]["items"][key].SetString("Fit");
+            }
+            for (const char* key : { "play_series_again", "replay_draw" })
+            {
+                d["menu_text"]["end"][key].SetString("Fit");
             }
         });
         tight_display.validate_resources(world.render, world.audio);
