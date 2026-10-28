@@ -70,8 +70,8 @@ methods where they fit.
 Acceptance: Debug/Release builds and existing `menu_text`, `menu_presentation`,
 `weapon_catalog`, `stage_selection` and startup/content checks. Compare the
 first diagnostic for existing invalid fixtures, including candidates with
-multiple invalid fields. Keep `ROAD#25`'s paper-face correction separate and
-refresh this split's baseline if that correction lands first.
+multiple invalid fields. `ROAD#25`'s paper-face correction is qualified;
+preserve its corrected face boundary and item diagnostic order as the baseline.
 
 ## Level horizontal motion (`HYG#2`)
 

@@ -314,7 +314,7 @@ void Presentation::validate_resources(const RenderResources& render,
 			size *= scale;
 		}
 		const Vector2F top = (Vector2F(1920.0f, content_height) - paper_size) / 2.0f;
-		const Vector2F bottom = top + paper_size;
+		const Vector2F bottom = top + paper_size - Vector2F(art.shadow_offset);
 		if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
 			position.x - padding.x < top.x || position.y - padding.y < top.y ||
 			position.x + size.x + padding.x > bottom.x ||

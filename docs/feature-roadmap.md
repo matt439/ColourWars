@@ -2313,18 +2313,21 @@ case also checks the tape rules.
 
 ### Menu cards stay on the paper face (`ROAD#25`)
 
-**OPEN, M (2026-10-28).** Startup's menu-card containment uses the whole
-paper rectangle in `game/presentation_validation.cpp`, while
-`game/states/menu_panel.cpp` draws the face with its shadow offset removed.
-Use that same face boundary for containment, then move the existing Home,
-Options Back, Restore defaults, Pause and End paper-edge fixtures in
-`scripts/acceptance/menu_text/` to the face. The shipped overhangs were
-already corrected; this closes the validator gap that let them through.
+**Done (2026-10-28).** `check_menu_item` now uses the resting paper face's
+right/bottom boundary: the whole paper size minus its existing shadow offset,
+matching `MenuPaperArtwork::draw_card`. The renderer, authored presentation and
+intended page layout are unchanged. Font/measurement/fitting checks still
+precede containment, with the same diagnostic text and field order.
 
-Acceptance: a card exactly on the face edge passes, its first overhang into
-shadow fails with the relevant field, and shipped presentation loads in both
-presets. Run the focused `menu_text` case and relevant menu painter checks;
-keep the renderer's paper geometry and intended page layout unchanged.
+Home, Options Back, Restore defaults, Pause and End paper-edge fixtures now
+place their inclusive pass at the face, then refuse the first overhang into
+shadow with the existing relevant item diagnostic. The focused `menu_text`
+case passes in Debug and Release. Native `MainMenuOnly`, `SettingsMenuOnly`,
+`OptionsDefaultsOnly`, `PauseMenuOnly` and `EndMenuOnly` checks pass in both
+presets across six sizes/aspects (720p, 1080p, QHD, 4:3, 16:10 and ultrawide),
+including retained/reopened labels, focus cards/arrows and complete-page
+bounds. Representative full-page and contact-sheet captures were inspected.
+This is the corrected baseline for the separate `HYG#1` extraction.
 
 ### No shipping replay tape in untimed practice (`ROAD#31`)
 

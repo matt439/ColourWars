@@ -50,7 +50,7 @@ namespace menu_text_acceptance
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& end = original.end_menu();
         const auto top = (mattmath::Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f;
-        const auto bottom = top + end.box_size;
+        const auto bottom = top + end.box_size - mattmath::Vector2F(end.art.shadow_offset);
         const float left_position = top.x + end.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - end.art.focus_padding.x;
         // The first static label is row 1. Exit sits on row 3 between a
@@ -80,7 +80,7 @@ namespace menu_text_acceptance
         // the paper, leaving no valid heading before it. Heading paper-top
         // and first-row contacts are tested independently below instead.
         // Exact bottom contact is below the shared footer but within End's
-        // full-height paper. At the failing position, rows 1-4 still fit;
+        // full-height paper face. At the failing position, rows 1-4 still fit;
         // only Exit on row 5, below Watch Replay, crosses that paper's boundary.
         require(bottom_position + end.layout.spacing.y * 4.0f + 20.0f +
             end.art.focus_padding.y + 0.25f < bottom.y,

@@ -46,14 +46,13 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Nine remaining `OPEN` slices have
+**Ready local work (backlog audit, 2026-10-28).** Eight remaining `OPEN` slices have
 concrete implementation and acceptance scopes in their owners. They can proceed
 while attended reviews wait, without changing the arena/tuning order above:
 
 - **Stage mechanisms:** ferry direction/stop cues (`ROAD#27`).
-- **Gameplay and diagnostics:** show user-stage refusals in game (`ROAD#32`), validate menu cards
-  against the paper face (`ROAD#25`), and detect changed stages in Debug replay
-  (`DBG#8`).
+- **Gameplay and diagnostics:** show user-stage refusals in game (`ROAD#32`) and detect
+  changed stages in Debug replay (`DBG#8`).
 - **Editor workflow:** per-monitor DPI (`ED#8`), paint-mechanism canvas guides (`ED#9`) and destination-aware save
   guidance (`ED#10`).
 - **Code hygiene:** ordered presentation validation (`HYG#1`) and painter evidence
@@ -278,7 +277,6 @@ These slices preserve behavior and the game's OOP design.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
-| `ROAD#25` | OPEN | LOW | M | Validate menu cards against the paper face and move the existing `menu_text` edge fixtures with it. [Scope](docs/feature-roadmap.md#menu-cards-stay-on-the-paper-face-road25). |
 
 ## Areas with no open rows
 
