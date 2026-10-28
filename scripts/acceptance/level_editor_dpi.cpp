@@ -82,6 +82,8 @@ namespace colourwars_editor
     {
         static void check_mechanisms(Editor& editor, const std::filesystem::path& scratch);
         static void check_metadata(Editor& editor, const std::filesystem::path& scratch);
+        static void check_gestures(Editor& editor, const std::filesystem::path& scratch);
+        static void run_gestures(const std::filesystem::path& scratch);
 
         static void check_controls(Editor& editor)
         {
@@ -193,6 +195,8 @@ namespace colourwars_editor
                 editor.drag_preview_ = { 900, 900, 500, 400 };
                 const RECT suggested = initial_editor_rectangle(dpi, work);
                 SendMessageW(editor.window_, WM_DPICHANGED, MAKEWPARAM(dpi, dpi), reinterpret_cast<LPARAM>(&suggested));
+                if (previous_dpi != dpi)
+                { require(GetObjectType(previous) == 0, "DPI transition retained its replaced owned font"); }
                 RECT actual{}; GetWindowRect(editor.window_, &actual);
                 require(editor.dpi_ == dpi && same_rectangle(actual, suggested) && !IsWindowVisible(editor.window_),
                     "WM_DPICHANGED failed to adopt its rectangle/DPI or showed the hidden editor");
@@ -232,15 +236,19 @@ namespace colourwars_editor
 
 #include "scripts/acceptance/level_editor_dpi/mechanism_checks.h"
 #include "scripts/acceptance/level_editor_dpi/metadata_checks.h"
+#include "scripts/acceptance/level_editor_dpi/gesture_checks.h"
 
 int wmain(int argc, wchar_t* argv[])
 {
     try
     {
-        if (argc != 2) { throw std::runtime_error("Usage: colourwars_editor_dpi_acceptance <scratch-directory>"); }
+        const bool gestures = argc == 3 && std::wstring(argv[2]) == L"--gestures";
+        if (argc != 2 && !gestures)
+        { throw std::runtime_error("Usage: colourwars_editor_dpi_acceptance <scratch-directory> [--gestures]"); }
         const std::filesystem::path scratch = std::filesystem::absolute(argv[1]);
         std::filesystem::create_directories(scratch);
-        colourwars_editor::EditorDpiProbe::run(scratch);
+        if (gestures) { colourwars_editor::EditorDpiProbe::run_gestures(scratch); }
+        else { colourwars_editor::EditorDpiProbe::run(scratch); }
         return 0;
     }
     catch (const std::exception& error)

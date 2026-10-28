@@ -54,7 +54,7 @@ raw-NUL JSON refusal, acceptance subset selection, probe runtime deadlines
 and local build caps are qualified. The editor checker now preserves the
 build-phase dependency cache while isolating runtime checks. Focused painter
 checks now support PowerShell 5.1 and reject unmapped focused requests before
-tool setup. Next is the canvas gesture/nudge fix (`ED#13`).
+tool setup. Canvas arrows now cancel stale pointer previews before nudging.
 This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.
@@ -142,7 +142,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
-| `ED#13` | OPEN | MED | S | Prevent a stale canvas drag from overwriting an arrow nudge on mouse release. [Scope](docs/level-editor.md#arrow-edits-during-canvas-gestures-ed13). |
 
 ## Audio replacement
 

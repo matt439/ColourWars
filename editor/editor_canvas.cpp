@@ -410,6 +410,7 @@ namespace colourwars_editor
 
     void Editor::nudge(int x, int y)
     {
+        if (dragging_ || panning_) cancel_drag();
         if (!selection_ || selection_->kind == EntryKind::level || !apply_pending()) return;
         Rect rectangle = document_.rectangle(*selection_);
         const double step = (GetKeyState(VK_SHIFT) & 0x8000) ? 1.0 : static_cast<double>(snap_);

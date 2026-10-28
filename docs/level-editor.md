@@ -58,18 +58,37 @@ wait. A fresh source review ranked these independent authoring defects:
 
 #### Arrow edits during canvas gestures (`ED#13`)
 
-**OPEN.** Reproduce a move/resize preview followed by an arrow and late mouse
-release. Cancel the transient gesture before committing the nudge, matching
-other editor commands. Check actual hidden-window messages, geometry, capture,
-selection and undo/redo; a late release must add no edit. Preserve ordinary
-drag/resize and arrow behavior, including snap and Shift fine movement. This
-does not establish the attended editor/play acceptance in `ED#5`.
+**Done (2026-10-28).** Actual hidden-window messages first reproduced a mouse
+release overwriting the preceding arrow edit. Nudging now cancels an active
+drag, resize or pan before pending-property admission, matching other editor
+commands. A late release cannot commit its discarded preview.
+
+Native checks cover move/resize/pan interruption, capture and selection,
+ordinary drops, grid/Shift nudges, valid pending properties, exact undo/redo
+and unchanged private source files. All three editor targets build and the
+full editor checker passes in Debug and Release. Evidence under
+`out/acceptance/<preset>/level-editor/`: Debug
+`e9675199e60d4271918c9dc0c8f76d10`, Release
+`4d11991322ff4eca89b3eac164269f18`. The original failing case is retained in
+`out/validation/implementation-loop-20261028/ed13-baseline/8c1b0ca3f3304ee1b98da6ef2ed52bea`.
+
+Gesture qualification runs in a separate `--gestures` invocation of the same
+native acceptance target, with its own scratch/log. Canvas
+[`SetFocus`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setfocus)
+also activates the hidden parent; this host could not restore the preceding
+null activation state. Mixing those lifetimes changed aggregate GDI counts.
+The default DPI check therefore retains its original 28 transitions and exact
+21-to-21 resource equality, with an added assertion that every replaced font
+is released. Aggregate GDI stability after input activation remains unqualified;
+no production resource workaround was added. Independent review passes.
+The attended editor/play acceptance remains `ED#5`.
 
 Select an object in the list or click it on the canvas. Drag its body to move
 it, or drag the handle at the bottom-right corner to resize it. Ramp editing
 moves or scales all three vertices together. Spawn markers can be moved;
 their boxes use `player.size` from source `game/content/tuning.json`.
 Fixed scored slabs move without a resize handle; their footprint is fixed.
+Arrow keys cancel an in-progress mouse gesture and nudge the committed position.
 
 Use the palette to add paintable platforms, solid structures, jump-through
 platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),

@@ -293,6 +293,8 @@ try {
     }
     Invoke-Logged -Command $dpiProbe -Arguments @((Join-Path $run 'dpi-window')) `
         -LogPath (Join-Path $run 'dpi-window.log')
+    Invoke-Logged -Command $dpiProbe -Arguments @((Join-Path $run 'canvas-gestures'), '--gestures') `
+        -LogPath (Join-Path $run 'canvas-gestures.log')
     $editor = Join-Path $build 'editor/ColourWarsEditor.exe'
     if (-not (Test-Path -LiteralPath $editor -PathType Leaf)) {
         throw "Missing editor executable: $editor. Run without -SkipBuild first."
