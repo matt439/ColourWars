@@ -46,12 +46,11 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Five remaining `OPEN` slices have
+**Ready local work (backlog audit, 2026-10-28).** Four remaining `OPEN` slices have
 concrete implementation and acceptance scopes in their owners. They can proceed
 while attended reviews wait, without changing the arena/tuning order above:
 
-- **Gameplay and diagnostics:** show user-stage refusals in game (`ROAD#32`) and detect
-  changed stages in Debug replay (`DBG#8`).
+- **Gameplay and diagnostics:** show user-stage refusals in game (`ROAD#32`).
 - **Editor workflow:** per-monitor DPI (`ED#8`), paint-mechanism canvas guides (`ED#9`) and destination-aware save
   guidance (`ED#10`).
 
@@ -253,7 +252,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
-| `DBG#8` | OPEN | MED | M | Fingerprint the loaded stage in Debug recordings and reject changed or legacy unverified definitions before playback mutates state. [Scope](docs/debug-console.md#loaded-stage-replay-fingerprint-dbg8). |
 
 ## Tooling, CI and docs
 

@@ -24,6 +24,8 @@
 //            "[count*]flags|x|aim_x|aim_y|angle|lx|ly|rx|ry" with the floats as
 //            8-hex-digit bit patterns ("0" for +0.0).
 //   dt, hashes and fingerprint floats as hex bit patterns: bit-exact.
+//   stage_hash identifies the loaded semantic stage definition. The codec
+//   retains hash-less legacy files, but play requires this field.
 class ReplayFile
 {
 public:
@@ -41,6 +43,7 @@ public:
 	std::optional<unsigned int> seed;
 	std::uint64_t tuning_hash = 0;
 	std::uint64_t presentation_hash = 0;
+	std::optional<std::uint64_t> stage_hash;
 	// For a person reading the file: the live tune edits in force when it was
 	// recorded. The hashes are what play checks.
 	std::vector<std::string> tune_diff;

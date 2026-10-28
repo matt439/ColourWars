@@ -2,8 +2,8 @@
 
 // What the debug_console acceptance pieces share: the fakes the director is
 // driven against, the test director and stages, the scratch folders, the log
-// and file helpers, and the checks main calls. Compiled in Release too, where
-// only require, FakeMatch and FakePage are used.
+// and file helpers, and the checks main calls. Release uses require, FakeMatch,
+// FakePage and the loaded-stage semantic checks.
 #include "game/debug/dev_tools.h"
 #include "game/debug/debug_director.h"
 #include "game/input_slots.h"
@@ -30,6 +30,7 @@
 namespace debug_console_acceptance
 {
 	void require(bool condition, const std::string& message);
+	void check_loaded_stage_semantics();
 
 	// A match as the director sees it: counts updates and rebuilds, records
 	// each update's jump/debug/intro edges, and can finish after a number of updates.

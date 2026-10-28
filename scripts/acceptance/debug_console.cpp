@@ -138,6 +138,7 @@ int main(int argc, char** argv)
 		const bool background_only = argc == 3;
 		const std::filesystem::path game_directory = argv[1];
 		check_executable(game_directory);
+		check_loaded_stage_semantics();
 		check_launch_detection();
 
 		GameTuning tuning((game_directory / "tuning.json").string().c_str());

@@ -12,6 +12,8 @@
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/objects/level.h"
+#include "game/objects/level_loaded_info.h"
+#include <algorithm>
 #include <bit>
 #include <charconv>
 
@@ -221,6 +223,16 @@ ReplayFile DebugDirectorImpl::replay_header(const DebugMatchTarget& match)
 	file.god = this->god_;
 	file.infinite_ammo = this->infinite_ammo_;
 	file.settings = match.debug_settings();
+	const std::string& stage = file.settings.stage();
+	const auto* levels = this->data_ != nullptr ? this->data_->level_infos() : nullptr;
+	if (levels == nullptr || !levels->contains(stage))
+	{
+		throw std::runtime_error("record: stage '" + stage +
+			"' has no loaded definition; a recording requires the definition used to build its match");
+	}
+	// Rescans occur only while no match holds a definition, so this is the
+	// same immutable registry entry LevelBuilder just used, never newer disk bytes.
+	file.stage_hash = levels->get(stage)->semantic_hash();
 	return file;
 }
 
@@ -555,10 +567,32 @@ void DebugDirectorImpl::register_replay_commands()
 			{
 				return DebugStatus::failure(std::string("play: ") + e.what());
 			}
-			if (!this->planner().is_stage_word(file.settings.stage()))
+			if (!file.stage_hash)
+			{
+				return DebugStatus::failure("play: legacy recording '" + name +
+					"' has no stage fingerprint for '" + file.settings.stage() +
+					"'; record a new run with this build");
+			}
+			const StageList* stages = this->data_ != nullptr ? this->data_->stages() : nullptr;
+			if (stages == nullptr || std::none_of(stages->begin(), stages->end(),
+				[&file](const Stage& stage) { return stage.name == file.settings.stage(); }))
 			{
 				return DebugStatus::failure("play: the recording's stage '" + file.settings.stage() +
 					"' is not loaded");
+			}
+			const auto* levels = this->data_ != nullptr ? this->data_->level_infos() : nullptr;
+			if (levels == nullptr || !levels->contains(file.settings.stage()))
+			{
+				return DebugStatus::failure("play: the recording's stage '" + file.settings.stage() +
+					"' has no loaded definition; restore the stage definition or record a new run");
+			}
+			const std::uint64_t stage_hash = levels->get(file.settings.stage())->semantic_hash();
+			if (*file.stage_hash != stage_hash)
+			{
+				return DebugStatus::failure("play: stage '" + file.settings.stage() +
+					"' differs from the recording (recorded " + hex64(*file.stage_hash) +
+					", loaded " + hex64(stage_hash) +
+					"); restore the recorded stage definition or record a new run");
 			}
 			if (this->last_dt_bits_ != 0 && this->last_dt_bits_ != file.dt_bits)
 			{

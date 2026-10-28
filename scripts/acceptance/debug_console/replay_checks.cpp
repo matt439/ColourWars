@@ -20,6 +20,7 @@
 // on the CPU without a device.
 namespace debug_console_acceptance
 {
+	void check_loaded_stage_replay(const std::filesystem::path& game_directory);
 	void check_bot_replay_metadata();
 	void check_bot_replay_inputs(const Level& level);
 	namespace
@@ -210,6 +211,7 @@ namespace debug_console_acceptance
 
 	std::string check_replay_cpu_match(const std::filesystem::path& game_directory)
 	{
+		check_loaded_stage_replay(game_directory);
 		ScratchContent scratch(game_directory, L"replay");
 		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
 		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());

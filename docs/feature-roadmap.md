@@ -2487,9 +2487,11 @@ finished round records under the file name, Stage Select and Results show its
 best, and the remembered setup restores it while the file is there (falling
 back to the first stage, as for a retired stage, when it is not). Instant
 replay rebuilds the round from the loaded definition in memory. The Debug
-`record`/`play` files name the stage; playing one needs the file in the folder,
-and a file edited since the recording plays its new geometry, which the replay
-does not detect.
+Debug recordings now fingerprint the loaded semantic definition (`DBG#8`).
+Playback requires the current catalog entry and matching loaded definition;
+an edited/rescanned stage or a legacy unverified recording is refused before
+playback changes, even with `force`. An edit without rescan still uses the
+unchanged loaded snapshot. The usual same-build replay limits remain.
 
 Provisional decisions, open for the author:
 

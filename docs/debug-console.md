@@ -1606,46 +1606,65 @@ as the game. In Release:
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
-- **Detecting a changed stage before playback**: recording stores its name,
-  not its loaded definition. See the bounded [stage fingerprint scope](#loaded-stage-replay-fingerprint-dbg8).
+- **Loaded-stage replay fingerprint qualification**: the guard is implemented;
+  the scoped [local replay checks](#loaded-stage-replay-fingerprint-dbg8) are pending.
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side.
 
 ## Loaded-stage replay fingerprint (`DBG#8`)
 
-**OPEN, scoped 2026-10-28.** A Debug recording names its stage but fingerprints
-only tuning and presentation. A user can edit that stage, rescan from Stage
-Select and then play the recording against different geometry without an early
-diagnostic; the [user-stage owner](feature-roadmap.md#user-stages-road16) records
-this limit. Add a fingerprint of the actual loaded semantic stage definition to
-the recording header, for shipped and user stages alike. Derive it from the
-loaded definition used to build the recorded match, preserving meaningful field
-and object order; rereading the file would describe newer disk contents rather
-than the definition the match used. Formatting-only JSON changes must not alter
-the fingerprint.
+**Done (2026-10-28).** Debug recordings now carry
+`stage_hash`, the loaded semantic stage definition for both shipped and user
+stages. `LevelLoadedInfo` reads one owned byte snapshot and supplies those same
+bytes to Labrador's checked parser and a private client-side semantic hash.
+The hash is cached on the definition; recording and playback never reopen its
+path. The cache has the same class layout in Debug and Release, and does not
+change the stage's game meaning or the shipping instant replay.
 
-Before `play` arms a recording or requests a match rebuild, compare its stage
-fingerprint with the currently loaded definition. A mismatch must leave the
-current match, pending request and playback state unchanged and report which
-stage differs, with an actionable instruction to restore the recorded definition
-or record a new run. A disk edit without a rescan still compares against the
-unchanged loaded definition. Recordings without a stage fingerprint are refused
-with an explicit legacy-format diagnostic asking for a new recording; the
-existing tuning `force` option does not bypass this guard.
+The versioned hash retains decoded values, authored member order and array/object
+order, including fields the current loader does not use. Whitespace and equivalent
+JSON escapes do not matter. Equal numeric spellings such as `1`, `1.0` and `1e0`
+share a representation; exact integers above 2^53 are never rounded through a
+double. A floating negative zero remains distinct from positive zero, as it does
+in the loaded numeric value; integer `-0` is already positive zero after parsing.
+This is a conservative identity for the loaded definition, not a stage snapshot
+or a portable replay format.
 
-This is a Debug-only input check, not a portable replay format or a stage
-snapshot. Preserve the same-build, same-machine, same-step and single-round
-restrictions of `DBG#2`, the existing tuning/presentation checks and the Release
-exclusion of recording code. Do not reload a stage, change Random membership,
-write a user file or change the shipping instant replay to make playback pass.
+`replay_header` captures the registry definition `LevelBuilder` used for the
+recorded match. User-stage rescans are forbidden while a match holds a definition,
+so that entry cannot be replaced underneath it. Before `play` can arm playback or
+request a rebuild, it requires a fingerprint, an exact current stage-catalog
+entry and a loaded registry definition, then compares their hashes. Catalog
+membership matters because a refused or removed user stage's old definition can
+remain registered. A disk edit without a rescan still compares with the unchanged
+loaded definition.
 
-Acceptance covers exact replay on an unchanged shipped stage and an unchanged
-user stage; an edit followed by rescan refused before any match or playback
-mutation; an edit without rescan still matching the loaded definition; semantic
-equality despite JSON formatting changes; and the actionable missing-fingerprint
-diagnostic for legacy recordings. Keep the existing checkpoint/final-state replay
-checks and Release exclusion checks passing. No runtime change or qualification
-is claimed by this scope.
+A mismatch identifies the stage and asks for the recorded definition to be
+restored or a new run to be recorded. It leaves the current match, pending request
+and active or pending playback unchanged. Legacy files remain readable by the
+version-3/4 codec, but `play` refuses a missing fingerprint with an explicit
+legacy-format instruction to record again. The tuning `force` option cannot
+bypass either stage guard. Existing tuning, presentation, checkpoint and final
+state checks remain in place.
+
+This is a Debug-only input check. The same-build, same-machine, same-step and
+single-round restrictions of `DBG#2` and Release's recording-code exclusion are
+unchanged. No reload, user-file mutation or Random-membership change is used to
+make playback pass. Attended runtime and hardware qualification are separate.
+
+**Local qualification (Debug and Release, 2026-10-28):** the existing
+`debug_console` case passes, retaining its checkpoint/final-state and Release
+executable exclusion checks. New isolated shipped and user-stage recordings
+each reproduce 240 steps, four checkpoints and final MATCH. Semantic controls
+cover formatting/escape/equal-number normalization, source/member order,
+unknown fields, exact large integers, embedded string bytes and signed zero.
+Actual rescans cover formatting-only replacement, geometry changes and removal;
+a disk edit without rescan keeps the loaded snapshot. Legacy/force, malformed
+hash, missing catalog/service and active/pending replay controls refuse before
+match, queued request, playback or warning side effects. Loader `level_format`,
+`user_stages` and hidden startup with one valid/one refused isolated stage and
+the accepted audio bank also pass in both presets. No hardware or attended-play
+gate is closed by these checks.
 
 ## Background script work (`DBG#6`)
 
