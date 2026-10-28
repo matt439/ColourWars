@@ -35,7 +35,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 
 	this->level_object_builder_ = std::make_unique<LevelObjectBuilder>(
 		this->render_resources_, this->audio_resources_, this->preferences_,
-		&tuning->paint());
+		&tuning->paint(), &presentation->gate_permission());
 }
 
 std::unique_ptr<Level>

@@ -2099,8 +2099,8 @@ on the wall deciding it, rather than a separate bulb; a tie shutting it to
 both; a gate held open while its team is inside, rather than pushing them out;
 the eraser material; and the trial's single central floor gate.
 
-**Remaining work, split into independent scopes (2026-10-28):** functional
-gate and ferry cues are `ROAD#26` and `ROAD#27`. Vertical lifts (`ROAD#28`)
+**Remaining work, split into independent scopes (2026-10-28):** the functional
+gate cue (`ROAD#26`) is implemented below; the ferry cue remains `ROAD#27`. Vertical lifts (`ROAD#28`)
 and growing sponges (`ROAD#29`) need their own contracts. Attended trial play
 is `ROAD#30`. Deliberate gate routing (`ROAD#15`) is complete below; each
 remaining scope keeps its own row.
@@ -2157,25 +2157,42 @@ gates remain `ROAD#10`, `ROAD#30` and `ROAD#2`.
 
 ### Gate permission cue (`ROAD#26`)
 
-**OPEN, M (2026-10-28).** A gate draws as an ordinary eraser block. Paint
-colour alone cannot state its collision permission: `paint_leader()` can be
-team B while `open_for()` is still team A because an A player is inside.
+**Implemented (2026-10-28).** A steady paper plaque shows a closed X or the
+permitted team's A/B glyph and passage mark, accented with that team's selected
+palette colour. Two pause bars beside the glyph identify occupied hold. The shape carries the
+same information without hue or sound, including with Reduce effects. Match
+construction and Stage Select's live miniature both supply the cue.
 
-Add a small functional cue using existing drawing primitives and presentation
-data. Show closed, open-for-A and open-for-B by shape as well as the selected
-team palette; distinguish a held-open gate whose paint leader disagrees.
-Read settled permission, not a second approximation of the paint rule. Publish
-the actual hold reason at settlement: a later shot can change the paint leader
-before drawing, so a leader/permission mismatch alone does not prove that an
-occupant held the gate open. Keep the cue legible in the stage miniature and
-at 1/2/4-player sizes, with reduced effects and no sound. This is information
-for the explicit trial, not the deferred environment-art production pass.
+`held_open()` records the actual reason at settlement, alongside `open_for()`:
+only a living permitted occupant retaining a different paint leader sets it.
+A later shot cannot invent or clear that reason before the next settlement.
+The plaque reads these settled facts, rather than recomputing permission from
+current paint. Its size, keyline, inset and contrasting ink/paper are in
+`presentation.json`'s `gate_permission`; it scales down inside the body's
+paint-free interior, leaving face bands and existing cull bounds intact. The
+permission/hold marks sit toward the top so the occupant and its badge do not
+hide the important state at the bottom of the gate.
 
-Acceptance: draw checks and native captures cover unpainted/tied, either open
-team, occupied takeover and final closure, including monochrome legibility.
-The cue stays within its declared cull bounds and does not obscure paintable
-faces. Collision, scoring, the open-share value and replay remain unchanged.
-Attended preference is reviewed with `ROAD#30`.
+**Software qualification (Debug and Release, 2026-10-28).** Both game builds,
+`team_gate`, `menu_presentation`, `bot_gate_routes`, `instant_replay` and
+`terrain` pass, as does hidden startup with the accepted audio bank. Independent
+checks cover either team's occupied takeover, late paint, restored lead, ties,
+departure, dead/hostile occupants and final closure. Small/no-interior bodies,
+cull containment and exact paint-surface/credit/permission preservation are
+checked separately. Presentation fixtures reject missing, malformed, nonfinite,
+invisible and low-contrast values. Receipts are under
+`out/validation/road26-gate-cue/`.
+
+The focused native check, `scripts/check-painter.ps1 -GatePermissionOnly`,
+passes in both presets on D3D11 / RTX 5080.
+It compares seven controlled states in eight Levels built by LevelBuilder, all six
+palettes, native 1/2/4-player scales and the actual Stage Select miniature fit.
+Qualified base draws isolate the plaque's changed pixels; frozen/reduced draws
+retain paint, credit, permission, RNG and Debug replay fingerprints. Exact ink
+masks distinguish closed/A/B/held shapes independently of hue, and the actual
+StagePreview supplies a nonempty closed-sign witness. It retains 22 context
+frames, 155 unscaled crops and 112 state rows per preset. These are controlled
+inspection states; attended clarity and preference remain `ROAD#30`.
 
 ### Ferry direction and stop cue (`ROAD#27`)
 
@@ -2224,9 +2241,9 @@ arena while `POL#21` remains a geometry decision.
 from both sides at 1-4P. Judge whether ownership-driven travel and selective
 passage create useful painting/route choices, whether the gate's held-open
 rule is understandable, and whether the open share and ferry headings feel
-fair. Record keep/change/cut decisions and any value changes. Functional cues
-can be reviewed as `ROAD#26`/`ROAD#27` land; current trial play is already
-available. Neither automated matches nor this review opts a trial into Random
+fair. Record keep/change/cut decisions and any value changes. The gate cue
+(`ROAD#26`) is ready for review; the ferry cue follows with `ROAD#27`. Current
+trial play is already available. Neither automated matches nor this review opts a trial into Random
 or selects Turbulence's geometry (`POL#21`).
 
 ### Instant replay (`ROAD#19`)

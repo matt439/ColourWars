@@ -230,6 +230,7 @@ Presentation::Presentation(const JsonDocument& document)
 		throw std::runtime_error(combat.where() +
 			": repeat delay must cover the hurt duration and keylines must leave visible fill.");
 	}
+	this->gate_permission_ = read_gate_permission(root);
 	this->weapon_feedback_ = read_weapon_feedback(root);
 	this->blocked_shot_ = read_blocked_shot(root);
 	this->idle_drips_ = read_idle_drips(root);
@@ -309,6 +310,11 @@ const MatchPresentation& Presentation::match() const
 const CameraPresentation& Presentation::camera() const
 {
 	return this->camera_;
+}
+
+const GatePermissionPresentation& Presentation::gate_permission() const
+{
+	return this->gate_permission_;
 }
 
 const MovementFeedbackPresentation& Presentation::movement_feedback() const

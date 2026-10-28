@@ -60,6 +60,7 @@ namespace presentation_read
 	PromptBarPresentation read_prompt_bar(const labrador::JsonValue& root);
 	HudPresentation read_hud(const labrador::JsonValue& root);
 	PlayerIdentityPresentation read_player_identity(const labrador::JsonValue& root);
+	GatePermissionPresentation read_gate_permission(const labrador::JsonValue& root);
 	std::array<IdleDripPresentation, 5> read_idle_drips(const labrador::JsonValue& root);
 	WeaponFeedbackPresentation read_weapon_feedback(const labrador::JsonValue& root);
 	BlockedShotPresentation read_blocked_shot(const labrador::JsonValue& root);

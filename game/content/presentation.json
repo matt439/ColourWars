@@ -823,6 +823,14 @@
       "bucket": { "interval_min": 4.8, "interval_max": 9.6, "size": 5, "stretch": 4, "nozzle_inset": 64, "nozzle_underside": 8 }
     }
   },
+  "gate_permission": {
+    "_comment": "ROAD#26: steady functional gate plaque in world units, scaled down inside the paint-free body. Ink/paper shape states show closed, the permitted team and an occupied hold; the team accent follows the selected palette. It is retained in miniatures and with Reduce effects.",
+    "ink": "17171C",
+    "paper": "FFFFFF",
+    "size": { "x": 56, "y": 112 },
+    "inset": 10,
+    "keyline_width": 4
+  },
   "weapon_feedback": {
     "_comment": "Cosmetic shot/supply pulses and optional local aim/readiness marker. The marker shows direction, not a predicted hit; the roller keeps its contact effect and has no marker.",
     "enabled": true,

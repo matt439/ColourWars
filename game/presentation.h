@@ -63,6 +63,17 @@ struct MatchPresentation
 	CountdownArtPresentation countdown_art;
 };
 
+// ROAD#26: a steady, in-body plaque for settled gate permission. World units;
+// drawing scales the plaque down to preserve the gate's paintable faces.
+struct GatePermissionPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	mattmath::Vector2F size;
+	float inset = 0.0f;
+	float keyline_width = 0.0f;
+};
+
 // World-camera accent sizes in world units, and their timing in seconds.
 struct ViewShakePresentation
 {
@@ -644,6 +655,7 @@ public:
 	const HudPresentation& hud() const;
 	const PlayerIdentityPresentation& player_identity() const;
 	const MatchPresentation& match() const;
+	const GatePermissionPresentation& gate_permission() const;
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const CombatFeedbackPresentation& combat_feedback() const;
@@ -676,6 +688,7 @@ private:
 	HudPresentation hud_;
 	PlayerIdentityPresentation player_identity_;
 	MatchPresentation match_;
+	GatePermissionPresentation gate_permission_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
 	CombatFeedbackPresentation combat_feedback_;

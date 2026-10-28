@@ -101,6 +101,19 @@ elseif ($PressTowerOnly) {
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.checks = 'Exactly four native720p full frames and sixteen unscaled640x360 player-pane crops/CSV rows inspect stair landings and hoist exits in clean and controlled-heavy paint. Two actual Level builds and eight frozen readbacks use at most1404 neutral updates. Staged rectangles, current player size and camera/pane policy independently reconstruct station, target and viewport receipts; every crop RGB row equals its full-frame pane. Repeated drawing preserves pixels, public/paint state, RNG and Debug replay fingerprint. This is controlled native inspection only: no attended readability, spawn pressure, route feasibility, physical-pad, listening, performance, competitive balance or arena acceptance.'
 }
+elseif ($GatePermissionOnly) {
+    $result.scope = 'gate-permission-only'
+    $result.stage = 'turbulence_gate_trial'
+    $result.player_counts = @(1, 2, 4)
+    $result.palettes = @('blue_orange', 'pink_green', 'blue_yellow', 'purple_gold', 'red_azure', 'magenta_forest')
+    $result.weapons = @('sprayer')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('unpainted', 'open-a', 'late-b', 'held-a', 'open-b', 'held-a-tie', 'closed-tie', 'actual-stage-preview')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result.inputs = 'Eight public LevelBuilder Levels use actual trial geometry and production settlement. Neutral sparse-slot PlayerInputData, controlled initial/occupant placements and direct real projectile contacts establish each inspection state. Retained initial native station cameras isolate state-shape comparisons; full contexts use current actual Level views. The miniature fit is computed from actual Stage Select presentation and stage overview bounds.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Seven states cover unpainted, either permitted team, paint arriving after settlement without an occupied hold, occupied enemy takeover, an occupied tie and final tied closure. All six palettes at4P plus blue/orange1P/2P use native-scale and actual menu-fit miniature rendering. Exact configured-ink masks establish shape distinctions without hue; qualified StructurePaintable base draws prove all changed pixels remain inside the plaque, clear of scoring faces. Repeated/reduced-effects draws preserve pixels, public state, score/credit, settled permission/hold, RNG and Debug fingerprint. Actual StagePreview has a nonempty native closed-sign pixel witness. Exactly22 full contexts,155 unscaled native/monochrome crops and112 CSV rows are retained. This establishes software/raster qualification; attended trial play, human readability, physical-pad, listening, performance and competitive balance acceptance remain separate.'
+}
 elseif ($SurfaceFinishOnly) {
     $result.scope = 'surface-finish-only'
     $result.Remove('stage')

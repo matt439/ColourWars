@@ -220,6 +220,30 @@ namespace presentation_read
 		return identity;
 	}
 
+	GatePermissionPresentation read_gate_permission(const JsonValue& root)
+	{
+		const JsonValue json = root.object("gate_permission");
+		GatePermissionPresentation cue;
+		cue.ink = read_colour(json, "ink");
+		cue.paper = read_colour(json, "paper");
+		cue.size = read_positive_vector(json, "size");
+		cue.inset = read_non_negative(json, "inset");
+		cue.keyline_width = read_positive(json, "keyline_width");
+		const auto brightness = [](const Colour& colour)
+		{
+			return 0.2126f * colour.r + 0.7152f * colour.g + 0.0722f * colour.b;
+		};
+		if (cue.keyline_width * 4.0f >= std::min(cue.size.x, cue.size.y) ||
+			cue.ink.a != 1.0f || cue.paper.a != 1.0f ||
+			std::abs(brightness(cue.ink) - brightness(cue.paper)) < 0.5f)
+		{
+			throw std::runtime_error(json.where() +
+				": keyline_width must leave glyph room within size; ink and paper must be opaque "
+				"with at least 0.5 monochrome brightness separation.");
+		}
+		return cue;
+	}
+
 	std::array<IdleDripPresentation, 5> read_idle_drips(const JsonValue& root)
 	{
 		const JsonValue json = root.object("idle_drip");

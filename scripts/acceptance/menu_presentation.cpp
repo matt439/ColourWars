@@ -175,6 +175,63 @@ namespace
             "Authored team assets changed their A/centre/B order or readiness defaults");
     }
 
+    void check_gate_permission(Variants& variants)
+    {
+        const auto reversed = variants.load([](rapidjson::Document& d)
+        {
+            d["gate_permission"]["ink"].SetString("FFFFFF");
+            d["gate_permission"]["paper"].SetString("000000");
+            d["gate_permission"]["inset"].SetFloat(0.0f);
+        });
+        require(reversed.gate_permission().ink == Colour::white &&
+            reversed.gate_permission().paper == Colour::black &&
+            reversed.gate_permission().inset == 0.0f,
+            "Gate permission rejected an opaque high-contrast reversed palette or zero inset");
+        for (const char* key : { "ink", "paper", "size", "inset", "keyline_width" })
+        {
+            variants.rejects("gate_permission", key, [key](rapidjson::Document& d)
+                { d["gate_permission"].RemoveMember(key); });
+            variants.rejects("gate_permission", key, [key](rapidjson::Document& d)
+                { d["gate_permission"][key].SetNull(); });
+        }
+        for (const char* key : { "inset", "keyline_width" })
+        {
+            variants.rejects("gate_permission", key, [key](rapidjson::Document& d)
+                { d["gate_permission"][key].SetFloat(-1.0f); });
+            variants.rejects("gate_permission", key, [key](rapidjson::Document& d)
+                { d["gate_permission"][key].SetDouble(1e100); });
+        }
+        variants.rejects("gate_permission", "keyline_width", [](rapidjson::Document& d)
+            { d["gate_permission"]["keyline_width"].SetFloat(0.0f); });
+        variants.rejects("gate_permission", "keyline_width", [](rapidjson::Document& d)
+        {
+            auto& cue = d["gate_permission"];
+            cue["keyline_width"].SetFloat(cue["size"]["x"].GetFloat() / 4.0f);
+        });
+        for (const char* axis : { "x", "y" })
+        {
+            variants.rejects("gate_permission", "size", [axis](rapidjson::Document& d)
+                { d["gate_permission"]["size"][axis].SetFloat(0.0f); });
+            variants.rejects("gate_permission", "size", [axis](rapidjson::Document& d)
+                { d["gate_permission"]["size"][axis].SetDouble(1e100); });
+        }
+        for (const char* key : { "ink", "paper" })
+        {
+            variants.rejects("gate_permission", key, [key](rapidjson::Document& d)
+                { d["gate_permission"][key].SetString("FFFFFF80"); });
+        }
+        variants.rejects("gate_permission", "ink", [](rapidjson::Document& d)
+        {
+            d["gate_permission"]["ink"].SetString("FFFFFF");
+            d["gate_permission"]["paper"].SetString("FFFFFF");
+        });
+        variants.rejects("gate_permission", "paper", [](rapidjson::Document& d)
+        {
+            d["gate_permission"]["ink"].SetString("303030");
+            d["gate_permission"]["paper"].SetString("505050");
+        });
+    }
+
     void check_camera_options(Variants& variants)
     {
         struct Field
@@ -447,6 +504,7 @@ int main(int argc, char** argv)
         check_defaults(defaults);
         defaults.validate_resources(world.render, world.audio);
         check_camera_options(variants);
+        check_gate_permission(variants);
         check_layout(variants, world);
         check_setup_panel(variants, world);
         check_setup_geometry(variants, world);

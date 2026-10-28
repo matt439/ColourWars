@@ -101,6 +101,112 @@ namespace
         std::cout << "PASS team gate object: opens only once settled, for the leader only, and keeps taking shots\n";
     }
 
+    bool contains(const RectangleF& outer, const RectangleF& inner)
+    {
+        return inner.left() >= outer.left() && inner.top() >= outer.top() &&
+            inner.right() <= outer.right() && inner.bottom() <= outer.bottom();
+    }
+
+    void check_permission_geometry(World& world)
+    {
+        auto& assets = world.assets;
+        const PaintTuning& paint = assets.tuning.paint();
+        const auto build = [&](const RectangleF& body, const GatePermissionPresentation* cue)
+        {
+            return std::make_unique<TeamGateStructurePaintable>("sprite_sheet_1", "square_white_4", body,
+                &assets.render, &assets.audio, &assets.preferences, &paint, TeamColour{},
+                PaintableFaces{ true, true, true, true }, std::span<const RectangleF>{},
+                Colour::white, nullptr, std::span<const PaintPolygon>{}, cue);
+        };
+        const GatePermissionPresentation& authored = assets.presentation.gate_permission();
+        const RectangleF large(400.0f, 300.0f, 400.0f, 400.0f);
+        require(build(large, nullptr)->permission_bounds() == RectangleF::ZERO,
+            "A gate without a cue published a permission plaque");
+        require(build(large, &authored)->permission_bounds() ==
+            RectangleF(large.center().x - authored.size.x * 0.5f,
+                large.top() + std::max(authored.inset, paint.thickness), authored.size.x, authored.size.y),
+            "A roomy gate did not retain the authored plaque size and upper interior placement");
+
+        GatePermissionPresentation paint_inset = authored;
+        paint_inset.inset = 0.0f;
+        GatePermissionPresentation wide_inset = authored;
+        wide_inset.inset = paint.thickness + 16.0f;
+        for (const GatePermissionPresentation* cue :
+            std::array<const GatePermissionPresentation*, 3>{ &authored, &paint_inset, &wide_inset })
+        {
+            const float inset = std::max(cue->inset, paint.thickness);
+            for (const RectangleF& body : {
+                RectangleF(31.0f, 47.0f, inset * 2.0f, 240.0f),
+                RectangleF(31.0f, 47.0f, 240.0f, inset * 2.0f),
+                RectangleF(31.0f, 47.0f, inset, 240.0f),
+                RectangleF(31.0f, 47.0f, 240.0f, inset) })
+            {
+                require(build(body, cue)->permission_bounds() == RectangleF::ZERO,
+                    "A gate without a paint-free interior published a permission plaque");
+            }
+            for (const RectangleF& body : {
+                large,
+                RectangleF(31.0f, 47.0f, inset * 2.0f + 0.125f, 240.0f),
+                RectangleF(31.0f, 47.0f, 240.0f, inset * 2.0f + 0.125f),
+                RectangleF(31.0f, 47.0f, inset * 2.0f + 0.25f, inset * 2.0f + 0.25f) })
+            {
+                const auto gate = build(body, cue);
+                const RectangleF plaque = gate->permission_bounds();
+                const RectangleF interior(body.x + inset, body.y + inset,
+                    body.width - inset * 2.0f, body.height - inset * 2.0f);
+                require(std::isfinite(plaque.x) && std::isfinite(plaque.y) &&
+                    std::isfinite(plaque.width) && std::isfinite(plaque.height) &&
+                    plaque.width > 0.0f && plaque.height > 0.0f,
+                    "A narrow or shallow gate produced an empty or invalid permission plaque");
+                require(contains(interior, plaque), "A permission plaque covered a paintable face");
+                require(plaque.width <= cue->size.x && plaque.height <= cue->size.y,
+                    "A small gate grew its permission plaque beyond the authored size");
+                for (const float units : { 0.5f, 1.0f, 2.0f, 4.0f, 16.0f })
+                {
+                    require(contains(gate->cull_bounds(units), plaque),
+                        "A permission plaque escaped its declared cull at a pane or miniature scale");
+                }
+            }
+        }
+
+        const RectangleF body(400.0f, 300.0f, 80.0f, 240.0f);
+        const auto plain = build(body, nullptr);
+        const auto cued = build(body, &authored);
+        const std::vector<Player*> nobody;
+        const auto unchanged = [&]()
+        {
+            const auto plain_surfaces = paint_surfaces_acceptance::snapshot(*plain);
+            const auto cued_surfaces = paint_surfaces_acceptance::snapshot(*cued);
+            require(paint_surfaces_acceptance::sample_state(plain_surfaces) ==
+                paint_surfaces_acceptance::sample_state(cued_surfaces),
+                "Adding a permission cue changed exact paint geometry, ownership or credit");
+            paint_surfaces_acceptance::same_total(plain->paint_total(), cued->paint_total());
+            require(plain->mask() == cued->mask() && plain->open_for() == cued->open_for() &&
+                plain->held_open() == cued->held_open(), "Adding a permission cue changed collision permission");
+            for (const float units : { 0.5f, 1.0f, 2.0f, 4.0f, 16.0f })
+            {
+                require(plain->cull_bounds(units) == cued->cull_bounds(units),
+                    "Adding an interior permission cue changed paint culling bounds");
+            }
+        };
+        unchanged();
+        for (const PlayerTeam team : { PlayerTeam::a, PlayerTeam::b, PlayerTeam::a })
+        {
+            for (const RectangleF& splash : { RectangleF(390.0f, 290.0f, 40.0f, 120.0f),
+                RectangleF(380.0f, 280.0f, 120.0f, 280.0f) })
+            {
+                const int owner = team == PlayerTeam::a ? 0 : 1;
+                assets.paint(*plain, splash, team, owner);
+                assets.paint(*cued, splash, team, owner);
+                plain->settle(nobody); cued->settle(nobody);
+                plain->update(dt); cued->update(dt);
+                unchanged();
+            }
+        }
+        std::cout << "PASS gate cue geometry: absent and interior-less cues are empty; narrow/shallow plaques "
+            "stay clear of paint and inside culling; cues preserve exact paint, credit, permission and culling\n";
+    }
+
     std::unique_ptr<Level> two_humans(World& world)
     {
         MenuLevelSettings settings;
@@ -113,6 +219,115 @@ namespace
         settings.begin_input_claims(0);
         require(settings.claim_input_slot(1), "Cannot claim the second real input slot");
         return world.build(settings, 5150);
+    }
+
+    // ROAD#26: the cue reports the reason recorded at settlement, not a
+    // comparison of permission with paint that may have arrived afterwards.
+    void check_settled_hold_reason(World& world)
+    {
+        auto& assets = world.assets;
+        for (const PlayerTeam permitted : { PlayerTeam::a, PlayerTeam::b })
+        {
+            std::unique_ptr<Level> level = two_humans(world);
+            const std::vector<PlayerInputData> idle = physical_inputs();
+            for (int tick = 0; tick < 900 && level->state() != LevelState::active; ++tick)
+            { level->update(idle, dt); }
+            require(level->state() == LevelState::active, "Hold-reason fixture did not reach play");
+            const RectangleF bounds(1960.0f, 1040.0f, 80.0f, 240.0f);
+            TeamGateStructurePaintable gate("sprite_sheet_1", "square_white_4", bounds,
+                &assets.render, &assets.audio, &assets.preferences, &assets.tuning.paint(),
+                TeamColour{}, { true, false, true, false });
+            const std::vector<Player*> nobody;
+            const int seat = permitted == PlayerTeam::a ? 0 : 1;
+            Player& player = const_cast<Player&>(level->player(seat));
+            const PlayerTeam hostile = permitted == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
+            const std::vector<Player*> occupant{ nullptr, &player };
+            const RectangleF whole(1940.0f, 1020.0f, 120.0f, 280.0f);
+            const Vector2F inside(bounds.left() + 14.0f,
+                bounds.bottom() - level->player(seat).rectangle().height);
+            const Vector2F clear(bounds.right() + 100.0f, inside.y);
+            require(gate.open_for() == PlayerTeam::none && !gate.held_open(),
+                "A new gate reported an occupied hold");
+            gate.settle(nobody);
+            require(!gate.held_open(), "An unpainted gate reported an occupied hold");
+
+            // Equal independent side faces give an exact nonzero paint tie.
+            assets.paint(gate, RectangleF(1940.0f, 1020.0f, 40.0f, 280.0f), PlayerTeam::a, 0);
+            assets.paint(gate, RectangleF(2020.0f, 1020.0f, 40.0f, 280.0f), PlayerTeam::b, 1);
+            const PaintTotal tie = gate.paint_total();
+            require(tie.team_a > 0.0f && tie.team_a == tie.team_b,
+                "Hold-reason fixture did not create an exact painted tie");
+            gate.settle(nobody);
+            require(gate.open_for() == PlayerTeam::none && !gate.held_open(),
+                "A painted tie opened or reported an occupied hold");
+
+            assets.paint(gate, whole, permitted, seat);
+            gate.settle(nobody);
+            require(gate.open_for() == permitted && !gate.held_open(),
+                "A paint-driven opening reported an occupied hold");
+            level->place_player(seat, inside);
+            gate.settle(occupant);
+            require(!gate.held_open(), "An occupant holding the paint lead invented a hold reason");
+
+            assets.paint(gate, whole, hostile, 1 - seat);
+            require(gate.paint_leader() == hostile && gate.open_for() == permitted && !gate.held_open(),
+                "Paint after settlement invented an occupied hold before settlement");
+            gate.settle(occupant);
+            require(gate.open_for() == permitted && gate.held_open(),
+                "Occupied takeover did not publish its actual hold reason");
+
+            // The published reason remains that settlement's observation even
+            // when a later shot restores the permitted team's paint lead.
+            assets.paint(gate, whole, permitted, seat);
+            require(gate.paint_leader() == permitted && gate.held_open(),
+                "A later shot rewrote the settled occupied-hold reason");
+            gate.settle(occupant);
+            require(gate.open_for() == permitted && !gate.held_open(),
+                "Regaining the paint lead left an obsolete occupied-hold reason");
+
+            assets.paint(gate, whole, hostile, 1 - seat);
+            gate.settle(occupant);
+            require(gate.held_open(), "Repeated occupied takeover lost its hold reason");
+            level->place_player(seat, clear);
+            gate.settle(occupant);
+            require(gate.open_for() == hostile && !gate.held_open(),
+                "Leaving the gate did not clear the hold reason and change permission");
+
+            // A hostile occupant cannot preserve the current permission.
+            level->place_player(seat, inside);
+            assets.paint(gate, whole, permitted, seat);
+            gate.settle(occupant);
+            require(gate.open_for() == permitted && !gate.held_open(),
+                "An occupant of the other team falsely preserved permission");
+
+            // A tie closes after the permitted occupant leaves, and its hold
+            // reason clears at the same settlement as the permission.
+            assets.paint(gate, RectangleF(1940.0f, 1020.0f, 40.0f, 280.0f), PlayerTeam::a, 0);
+            assets.paint(gate, RectangleF(2020.0f, 1020.0f, 40.0f, 280.0f), PlayerTeam::b, 1);
+            gate.settle(occupant);
+            require(gate.paint_leader() == PlayerTeam::none && gate.open_for() == permitted && gate.held_open(),
+                "A painted tie did not retain occupied permission with a hold reason");
+            level->place_player(seat, clear);
+            gate.settle(occupant);
+            require(gate.open_for() == PlayerTeam::none && !gate.held_open(),
+                "Final closure retained an occupied hold");
+
+            assets.paint(gate, whole, permitted, seat);
+            gate.settle(nobody);
+            level->place_player(seat, inside);
+            assets.paint(gate, whole, hostile, 1 - seat);
+            gate.settle(occupant);
+            require(gate.held_open(), "Death control did not establish an occupied hold");
+            player.kill();
+            player.update(dt);
+            require(player.state() == PlayerState::dead, "Death control left its occupant alive");
+            player.place_at(inside);
+            gate.settle(occupant);
+            require(gate.open_for() == hostile && !gate.held_open(),
+                "A dead permitted occupant retained an occupied hold");
+        }
+        std::cout << "PASS gate hold reason: either team, exact painted ties, actual occupied takeover, "
+            "late paint, lead restoration, hostile/dead occupants, departure and final closure\n";
     }
 
     bool overlaps(const RectangleF& a, const RectangleF& b, float tolerance = 0.0f)
@@ -261,6 +476,8 @@ namespace
             const PlayerTeam after = gate.open_for();
             const PlayerTeam expected = leader == before || rider ? before : leader;
             require(after == expected, "The gate did not follow the paint held before the step");
+            require(gate.held_open() == (leader != before && rider),
+                "The gate hold cue disagreed with the actual pre-step occupied-hold reason");
             held_for_rider += leader != before && rider ? 1 : 0;
             changes += after != before ? 1 : 0;
             open_steps += after != PlayerTeam::none ? 1 : 0;
@@ -319,7 +536,9 @@ int main(int argc, char** argv)
         World world(std::filesystem::absolute(argv[1]), "team-gate",
             "Team gate trial needs authored support '", "turbulence_gate_trial");
         check_object(world);
+        check_permission_geometry(world);
         check_walks(world);
+        check_settled_hold_reason(world);
         const Roster rosters[] = {
             { 41731, { WeaponType::sprayer, WeaponType::roller, WeaponType::bucket, WeaponType::mister },
                 BotDifficulty::hard },

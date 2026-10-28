@@ -300,6 +300,9 @@
     elseif ($PressTowerOnly) {
         $result.diagnostic = 'Press Tower focused native inspection passed: four-player stair landings and hoist exits, each clean and controlled-heavy paint. Exactly four full720p frames, sixteen unscaled native pane crops/CSV rows, eight readbacks and two actual Level fixtures retain sparse-slot/camera/target receipts, whole-frame-to-crop RGB parity and frozen pixels/public/paint state/RNG/Debug fingerprint. Controlled standing stations and projectile paint contacts are labeled; route feasibility, human readability, spawn pressure, balance, physical pads, listening, performance and arena acceptance remain open. Other painter matrices were not run.'
     }
+    elseif ($GatePermissionOnly) {
+        $result.diagnostic = 'Gate permission hardware matrix passed: seven controlled settled/late-paint/occupied/closure states in eight public Builder Levels; actual native1/2/4P camera scales and the actual Stage Select miniature fit, all six palettes, exact ink-mask shape distinctions, reduced-effects parity, qualified base-draw differentials confined to the paint-free plaque, actual StagePreview pixel witness and frozen public/paint/permission/RNG/Debug fingerprint. Exactly22 full contexts,155 unscaled crops and112 rows. Controlled contacts/placements; attended trial play and human readability remain ROAD#30.'
+    }
     elseif ($SurfaceFinishOnly) {
         $result.diagnostic = 'Surface-finish-only checks passed: literal primer/disabled/buried/owned-corner pixel checks at half/quarter/eighth scale in 1P/4P, all six selected actual arenas in clean/heavy 1P/4P native 720p, 24 full frames/60 native panes/two synthetic crops/60 readbacks, frozen public/paint state, RNG and Debug fingerprint. Controlled stations and paint contacts; attended readability remains open.'
     }
