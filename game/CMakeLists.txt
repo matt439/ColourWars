@@ -33,6 +33,7 @@ add_executable(ColourWars WIN32
     rumble.cpp
     rumble_xinput.cpp
     save.cpp
+    save_profiles.cpp
     series_stage_rule.cpp
     session.cpp
     sound_groups.cpp

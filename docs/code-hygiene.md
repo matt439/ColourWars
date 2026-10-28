@@ -49,7 +49,7 @@ gate. The earlier figure/animation and other source splits already exist.
 | [level_document.cpp](../editor/level_document.cpp) | 899 | Retain the shared document transaction; save protection remains `ED#7` |
 | [projectile.cpp](../game/objects/projectile.cpp) | 287 | Contacts/sweeps extracted (587 lines), `HYG#3` complete |
 | [weapon.cpp](../game/objects/weapon.cpp) | 855 | Retain the current firing/lifecycle core; motion already has its own file |
-| [save.cpp](../game/save.cpp) | 802 | Profile/effective-preference overlay, `HYG#4` |
+| [save.cpp](../game/save.cpp) | 602 | Profile overlay extracted (209 lines), `HYG#4` complete |
 
 ## Ordered presentation validation (`HYG#1`)
 
@@ -108,18 +108,18 @@ source and adjusts includes/registration. Debug and Release builds and
 
 ## Save profile overlay (`HYG#4`)
 
-**OPEN, M.** Move `copy_slot`, the preference/binding setters and
-effective-preference/profile operations (`refresh_effective`, wearing,
-creation/rename/deletion and Boost persistence) into `game/save_profiles.cpp`.
-Keep JSON sections, schema migration, file loading and atomic writing together
-in `save.cpp`; this separates profile policy from the persistence mechanism.
+**Done (2026-10-28).** Moved `copy_slot`, the play-preference/binding setters,
+effective-preference accessors and profile/wearing/Boost operations into
+`game/save_profiles.cpp` (209 lines). The 602-line `save.cpp` retains JSON
+sections, migration, loading and atomic writing. Display settings stay with
+the resolution conversion used by serialization; they have no profile overlay.
 
-Preserve effective-setting reference identity, per-slot association, change
-ordering and existing write-failure behavior. Do not change the save schema or
-repair unrelated save semantics. Acceptance: Debug/Release builds and existing
-`player_profiles`, `settings`, `input_bindings`, `handicap` and
-`remembered_setup` checks, including their existing failed-save and relaunch
-paths. Use isolated profiles throughout.
+Independent comparison confirms identical helper and method bodies, including
+effective-reference identity, per-slot association, mutation/write order and
+failure semantics. The public API and save schema are unchanged. Debug and
+Release builds and the existing `player_profiles`, `settings`,
+`input_bindings`, `handicap` and `remembered_setup` checks pass, including
+isolated real write/replacement failures, active-setting recovery and reloads.
 
 ## Input-binding acceptance topics (`HYG#5`)
 
