@@ -13,8 +13,8 @@
 // dialog. Nothing here reads or writes the player's save.
 namespace colourwars_editor
 {
-    // Windows folder identity used by destination validation and save guidance.
-    // Resolves relative segments and compares without case; neither folder needs
+    // Folder matching used by destination validation and save guidance.
+    // Resolves relative segments and uses Windows ordinal case rules; neither folder needs
     // to exist and nothing is created.
     bool same_stage_folder(const std::filesystem::path& first, const std::filesystem::path& second);
 

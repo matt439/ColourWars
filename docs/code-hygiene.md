@@ -8,8 +8,8 @@ arena/tuning order.
 ## Follow-up shortlist (2026-10-28)
 
 The author authorized autonomous selection once ready work is exhausted or
-blocked. While the remaining editor slices are in qualification, these are
-the ranked independent candidates:
+blocked. This ranked shortlist was recorded during editor qualification;
+its evidence describes the code before the associated fixes:
 
 | rank | candidate and evidence | value, scope and risk |
 |---|---|---|
@@ -27,6 +27,27 @@ execution, scope switches and `-SkipBuild` behavior are unchanged.
 PowerShell parsing and scoped whitespace checks pass. Review confirmed the
 only command change is the explicit job limit; no new test repeats that
 literal argument, and no game/runtime behavior changed.
+
+### Windows folder case matching (`HYG#10`)
+
+**Done (2026-10-28).** A new regression case first failed on the original
+comparison: not-yet-created Unicode case aliases were rejected. The helper
+now uses `CompareStringOrdinal` with case ignored, as the save guard already
+does. Absolute/lexical normalization and trailing separators are unchanged;
+no locale is changed and no filesystem identity lookup was added.
+
+The checks exercise both directions of e-acute and a-umlaut case pairs before
+creation, then independently verify existing aliases through the filesystem.
+They retain ASCII/dot/separator behavior, distinct/sibling/nested refusals,
+ASCII filename and shipped-name rules, source/My Stages guidance, actual
+save/reopen/ordinary Save and original replacement spelling.
+
+Independent review, all three editor targets and complete editor checks pass
+in Debug and Release. Evidence: Debug `ef93762bdefe4e70bdc6d0de24e3b914`,
+Release `c71f6a2d9fbe4077a32ac99b6059d1cf`, under
+`out/acceptance/<preset>/level-editor/`. The original failing run is retained
+in `out/validation/implementation-loop-20261028/hyg10-baseline-run.log`.
+Discovery destinations, junction/symlink policy and human gates are unchanged.
 
 ## Scope and working rules
 

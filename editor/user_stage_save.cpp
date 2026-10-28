@@ -1,6 +1,8 @@
 #include "editor/user_stage_save.h"
 #include "game/user_stage_contract.h"
 
+#include <windows.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <cwctype>
@@ -55,9 +57,11 @@ namespace colourwars_editor
         {
             fs::path result = fs::absolute(path).lexically_normal();
             if (!result.has_filename()) result = result.parent_path();
-            return folded(result.native());
+            return result.native();
         };
-        return normal(first) == normal(second);
+        const std::wstring first_normal = normal(first);
+        const std::wstring second_normal = normal(second);
+        return CompareStringOrdinal(first_normal.c_str(), -1, second_normal.c_str(), -1, TRUE) == CSTR_EQUAL;
     }
 
     fs::path user_stage_folder()
