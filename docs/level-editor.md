@@ -342,6 +342,7 @@ All three editor targets build in Debug and Release. Complete editor checks
 pass in both, including 28 DPI transitions and stable GDI counts (21 to 21),
 the document model and hidden launch/status/close checks. No monitor
 arrangement or gameplay display policy is accepted by those synthetic messages.
+CI explicitly builds all three targets before its `-SkipBuild` editor check.
 
 ### Paint-mechanism canvas guides (`ED#9`)
 
