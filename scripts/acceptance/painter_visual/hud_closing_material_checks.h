@@ -11,12 +11,14 @@ struct ClosingMaterialPatch { const char* name; RectangleI box; size_t material;
 const std::array<ClosingMaterialPatch, 12>& closing_material_patches()
 {
     static const std::array<ClosingMaterialPatch, 12> patches{ {
-        { "ink-body-first", { 900, 44, 16, 2 }, 0, false }, { "ink-body-second", { 879, 60, 2, 8 }, 0, false },
-        { "paper-first", { 900, 46, 16, 4 }, 1, false }, { "paper-second", { 881, 56, 4, 12 }, 1, false },
-        { "ink-tick-left-top", { 863, 74, 14, 1 }, 0, true }, { "ink-tick-left-bottom", { 863, 103, 14, 1 }, 0, true },
-        { "ink-tick-right-top", { 1049, 74, 14, 1 }, 0, true }, { "ink-tick-right-bottom", { 1049, 103, 14, 1 }, 0, true },
-        { "accent-left-top", { 864, 76, 12, 1 }, 2, true }, { "accent-left-bottom", { 864, 104, 12, 1 }, 2, true },
-        { "accent-right-top", { 1050, 76, 12, 1 }, 2, true }, { "accent-right-bottom", { 1050, 104, 12, 1 }, 2, true },
+        // Lato 0:10 (137 x 77) at (891.5,54): face (875.5,44,169,97), whole-pixel
+        // floor raster; tick rows 75..78 / 105..108, accents rows 77 / 106.
+        { "ink-body-first", { 900, 44, 16, 2 }, 0, false }, { "ink-body-second", { 875, 60, 2, 8 }, 0, false },
+        { "paper-first", { 900, 46, 16, 4 }, 1, false }, { "paper-second", { 877, 56, 4, 12 }, 1, false },
+        { "ink-tick-left-top", { 859, 75, 14, 1 }, 0, true }, { "ink-tick-left-bottom", { 859, 105, 14, 1 }, 0, true },
+        { "ink-tick-right-top", { 1052, 75, 14, 1 }, 0, true }, { "ink-tick-right-bottom", { 1052, 105, 14, 1 }, 0, true },
+        { "accent-left-top", { 860, 77, 12, 1 }, 2, true }, { "accent-left-bottom", { 860, 106, 12, 1 }, 2, true },
+        { "accent-right-top", { 1053, 77, 12, 1 }, 2, true }, { "accent-right-bottom", { 1053, 106, 12, 1 }, 2, true },
     } }; return patches;
 }
 std::vector<float> closing_material_fixed_style(const HudPresentation& look)
@@ -64,9 +66,9 @@ public:
         const std::array<std::string, 3> names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };
         for (size_t i = 0; i < names.size(); ++i)
         { require(fonts_[i] == resources->resolve_sprite_font(names[i]) && font_pointers_[i] == resources->font(fonts_[i]), "Closing material font handle/resource changed"); }
-        require(font_pointers_[1]->line_spacing() == 74.21875f, "Closing timer font source line spacing changed");
+        require(font_pointers_[1]->line_spacing() == hud_timer_line_spacing, "Closing timer font source line spacing changed");
         for (const auto& item : hud_timer_cases())
-        { require(resources->measure_text(fonts_[1], item.text) == Vector2F(item.width, 74.21875f), "Closing literal context font metrics changed"); }
+        { require(resources->measure_text(fonts_[1], item.text) == Vector2F(item.width, hud_timer_line_spacing), "Closing literal context font metrics changed"); }
         for (const auto& value : { closing_materials(look_), closing_materials(expected_) })
         { for (const auto& colour : value) { require(colour.a == 1.0f, "Closing material existing alpha-one reader policy changed"); } }
     }
@@ -158,7 +160,7 @@ public:
         } }
         require(changed ? differences > 0 : differences == 0, "Closing active selected-material locality response differs");
     }
-    static RectangleI envelope() { return { 862, 43, 202, 100 }; }
+    static RectangleI envelope() { return { 858, 43, 209, 103 }; }
     static Frame compact(const Frame& frame) { return foreground_crop(frame, envelope(), 0); }
     void failure(const char* scope, size_t context, const Frame& actual_frame, const Frame& reference) const
     {
@@ -167,7 +169,7 @@ public:
         for (const auto& pair : { std::pair<const Frame*, const char*>(&actual_frame, "-actual.rgba"), { &reference, "-reference.rgba" } })
         { std::ofstream file(output_ / (stem + pair.second), std::ios::binary); file.write(reinterpret_cast<const char*>(pair.first->pixels.data()), static_cast<std::streamsize>(pair.first->pixels.size())); require(file.good(), "Cannot retain closing material failure RGBA"); }
         std::ofstream record(output_ / (stem + ".json"));
-        record << "{\"scope\":\"" << scope << "\",\"context\":\"" << hud_timer_cases().at(context).name << "\",\"frame_width\":1920,\"frame_height\":1080,\"crop_x\":862,\"crop_y\":43,\"crop_width\":202,\"crop_height\":100,\"readbacks\":" << readbacks_ << ",\"diagnostic\":\"source-hypothesis-failure; no fitting or tolerance\"}\n";
+        record << "{\"scope\":\"" << scope << "\",\"context\":\"" << hud_timer_cases().at(context).name << "\",\"frame_width\":1920,\"frame_height\":1080,\"crop_x\":858,\"crop_y\":43,\"crop_width\":209,\"crop_height\":103,\"readbacks\":" << readbacks_ << ",\"diagnostic\":\"source-hypothesis-failure; no fitting or tolerance\"}\n";
         require(record.good(), "Cannot retain closing material failure record");
     }
     size_t readbacks() const { return readbacks_; }
@@ -276,9 +278,9 @@ void hud_closing_material_consumer_checks(Application& app, const Presentation& 
     require(baseline.pixels != fractional[0].pixels, "Closing material beat counterexample failed to distinguish detached ticks");
     require(csv.good() && branches.good() && controls.good() && probe.readbacks() == 64 && rows == 27 && crops == 9 && control_pixels > 0 && control_pixels <= 528, "Closing material shared frozen counters differ");
     std::ofstream summary(output / "hud-closing-materials-consumer-summary.json");
-    summary << "{\"scope\":\"opaque-closing-material-patches-and-applicability\",\"readbacks\":64,\"csv_rows\":27,\"main_rows\":5,\"branch_rows\":16,\"control_rows\":6,\"crops\":9,\"crop_width\":202,\"crop_height\":100,\"crop_pixels\":181800,\"ppm_bytes\":545535,\"patches\":12,\"patch_pixels\":264,\"independent_observations\":11,\"patch_pixel_checks\":2904,\"repeat_checks\":21,\"copied_adoption_checks\":5,\"normal_invariance_checks\":5,\"accent_invariance_checks\":2,\"settled_reduced_checks\":3,\"beat_counterexamples\":1,\"controls\":6,\"patch_control_discriminations\":24,\"control_discriminating_pixels\":" << control_pixels << ",\"calibration_pixel_checks\":2048,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
+    summary << "{\"scope\":\"opaque-closing-material-patches-and-applicability\",\"readbacks\":64,\"csv_rows\":27,\"main_rows\":5,\"branch_rows\":16,\"control_rows\":6,\"crops\":9,\"crop_width\":209,\"crop_height\":103,\"crop_pixels\":193743,\"ppm_bytes\":581364,\"patches\":12,\"patch_pixels\":264,\"independent_observations\":11,\"patch_pixel_checks\":2904,\"repeat_checks\":21,\"copied_adoption_checks\":5,\"normal_invariance_checks\":5,\"accent_invariance_checks\":2,\"settled_reduced_checks\":3,\"beat_counterexamples\":1,\"controls\":6,\"patch_control_discriminations\":24,\"control_discriminating_pixels\":" << control_pixels << ",\"calibration_pixel_checks\":2048,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain closing material shared summary");
-    std::cout << "PASS closing materials: 64 reads, 27 rows and 9 native 202 by 100 crops; 12 opaque source patches, 24 per-site negative discriminations and normal/settled/reduced invariance.\n";
+    std::cout << "PASS closing materials: 64 reads, 27 rows and 9 native 209 by 103 crops; 12 opaque source patches, 24 per-site negative discriminations and normal/settled/reduced invariance.\n";
 }
 #if COLOURWARS_DEV_TOOLS
 void hud_closing_material_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning,
@@ -421,7 +423,7 @@ void hud_closing_material_tune_checks(Application& app, Registry<LevelLoadedInfo
     require(csv.good() && refusals.good() && commands == 17 && accepted == 14 && queries == 3 && refused == 3 && rows == 10 && crops == 4 && probe.readbacks() == 40 &&
         impl.tune_document("presentation")->edits().empty() && impl.tune_document("tuning")->edits().empty(), "Closing material Debug frozen command/row/crop/readback counters or final ledger differ");
     std::ofstream summary(output / "hud-closing-materials-tune-summary.json");
-    summary << "{\"scope\":\"debug-live-opaque-closing-materials\",\"commands\":17,\"accepted_commands\":14,\"queries\":3,\"refused_commands\":3,\"states\":10,\"readbacks\":40,\"csv_rows\":10,\"refusal_json_records\":3,\"refusal_raster_reads\":0,\"crops\":4,\"crop_pixels\":80800,\"ppm_bytes\":242460,\"saved_tokens\":2,\"presentation_save_commands\":1,\"patch_pixel_checks\":2640,\"repeat_checks\":10,\"copied_adoption_checks\":10,\"sibling_checks\":10,\"saved_frame_equalities\":3,\"calibration_pixel_checks\":1280,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
+    summary << "{\"scope\":\"debug-live-opaque-closing-materials\",\"commands\":17,\"accepted_commands\":14,\"queries\":3,\"refused_commands\":3,\"states\":10,\"readbacks\":40,\"csv_rows\":10,\"refusal_json_records\":3,\"refusal_raster_reads\":0,\"crops\":4,\"crop_pixels\":86108,\"ppm_bytes\":258384,\"saved_tokens\":2,\"presentation_save_commands\":1,\"patch_pixel_checks\":2640,\"repeat_checks\":10,\"copied_adoption_checks\":10,\"sibling_checks\":10,\"saved_frame_equalities\":3,\"calibration_pixel_checks\":1280,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain closing material Debug summary");
     std::cout << "PASS closing material commands: 17 statements (3 value-less live queries, 11 mutations/Save, 3 atomic alpha refusals), 10 rendered states, 40 extra reads, 4 crops and one exact two-token private Save. Refusals have no raster reads.\n";
 }

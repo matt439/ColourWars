@@ -38,7 +38,7 @@ foreach ($path in @($cmSummaryPath, $cmMainPath, $cmBranchPath, $cmControlPath, 
 }
 if (@(Get-ChildItem -LiteralPath $captures -Filter 'hud-closing-materials-failure-*').Count) { throw 'Closing material source-hypothesis failure artifacts remain' }
 $cmSummary = Get-Content -LiteralPath $cmSummaryPath -Raw | ConvertFrom-Json
-$cmCounts = [ordered]@{readbacks=64;csv_rows=27;main_rows=5;branch_rows=16;control_rows=6;crops=9;crop_width=202;crop_height=100;crop_pixels=181800;ppm_bytes=545535;patches=12;patch_pixels=264;independent_observations=11;patch_pixel_checks=2904;repeat_checks=21;copied_adoption_checks=5;normal_invariance_checks=5;accent_invariance_checks=2;settled_reduced_checks=3;beat_counterexamples=1;controls=6;patch_control_discriminations=24;calibration_pixel_checks=2048;private_game_saves=0}
+$cmCounts = [ordered]@{readbacks=64;csv_rows=27;main_rows=5;branch_rows=16;control_rows=6;crops=9;crop_width=209;crop_height=103;crop_pixels=193743;ppm_bytes=581364;patches=12;patch_pixels=264;independent_observations=11;patch_pixel_checks=2904;repeat_checks=21;copied_adoption_checks=5;normal_invariance_checks=5;accent_invariance_checks=2;settled_reduced_checks=3;beat_counterexamples=1;controls=6;patch_control_discriminations=24;calibration_pixel_checks=2048;private_game_saves=0}
 Assert-CMKeys $cmSummary (@($cmCounts.Keys) + $cmUpdates + @('scope','control_discriminating_pixels')) 'shared'
 foreach ($key in $cmCounts.Keys) { Assert-CMInt $cmSummary $key $cmCounts[$key] }
 foreach ($key in $cmUpdates) { Assert-CMInt $cmSummary $key 0 }
@@ -78,7 +78,7 @@ for ($i=0; $i -lt 6; ++$i) {
 if ($cmSumPixels -ne $cmControlPixels -or $cmSumDiscriminations -ne 24) { throw 'Closing material observed negative controls do not reconcile' }
 $cmCropNames = @($cmStates | ForEach-Object { "hud-closing-materials-$_.ppm" })
 $cmCropNames += @('fractional-closing','reduced-closing') | ForEach-Object { $context = $_; @('all','accent') | ForEach-Object { "hud-closing-materials-$context-$_.ppm" } }
-$script:closingMaterialsObserved = [ordered]@{consumer=$cmSummary;readbacks=64;csv_rows=27;crops=9;crop_pixels=181800;ppm_bytes=545535;controls=6;control_discriminating_pixels=$cmControlPixels;calibration_pixel_checks=2048;private_game_saves=0;opacity_policy='alpha exactly 1; equal opaque siblings valid';reference_scope='12 literal opaque fill patches only; copied full HUD adoption and full-frame applicability controls are separate';png_count=0;png_crops=@();png_complete=$false}
+$script:closingMaterialsObserved = [ordered]@{consumer=$cmSummary;readbacks=64;csv_rows=27;crops=9;crop_pixels=193743;ppm_bytes=581364;controls=6;control_discriminating_pixels=$cmControlPixels;calibration_pixel_checks=2048;private_game_saves=0;opacity_policy='alpha exactly 1; equal opaque siblings valid';reference_scope='12 literal opaque fill patches only; copied full HUD adoption and full-frame applicability controls are separate';png_count=0;png_crops=@();png_complete=$false}
 if ($debug) {
     $tunePath = Join-Path $captures 'hud-closing-materials-tune-summary.json'; $tuneCsv = Join-Path $captures 'hud-closing-materials-tune.csv'
     $refusalPath = Join-Path $captures 'hud-closing-materials-tune-refusals.json'; $transcript = Join-Path $captures 'hud-closing-materials-tune-commands.log'
@@ -86,7 +86,7 @@ if ($debug) {
         if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw 'Closing material required Debug evidence missing' }; $cmInputs.Add($path)
     }
     $tune = Get-Content -LiteralPath $tunePath -Raw | ConvertFrom-Json
-    $tuneCounts = [ordered]@{commands=17;accepted_commands=14;queries=3;refused_commands=3;states=10;readbacks=40;csv_rows=10;refusal_json_records=3;refusal_raster_reads=0;crops=4;crop_pixels=80800;ppm_bytes=242460;saved_tokens=2;presentation_save_commands=1;patch_pixel_checks=2640;repeat_checks=10;copied_adoption_checks=10;sibling_checks=10;saved_frame_equalities=3;calibration_pixel_checks=1280;private_game_saves=0}
+    $tuneCounts = [ordered]@{commands=17;accepted_commands=14;queries=3;refused_commands=3;states=10;readbacks=40;csv_rows=10;refusal_json_records=3;refusal_raster_reads=0;crops=4;crop_pixels=86108;ppm_bytes=258384;saved_tokens=2;presentation_save_commands=1;patch_pixel_checks=2640;repeat_checks=10;copied_adoption_checks=10;sibling_checks=10;saved_frame_equalities=3;calibration_pixel_checks=1280;private_game_saves=0}
     Assert-CMKeys $tune (@($tuneCounts.Keys) + $cmUpdates + @('scope')) 'Debug'
     foreach ($key in $tuneCounts.Keys) { Assert-CMInt $tune $key $tuneCounts[$key] }
     foreach ($key in $cmUpdates) { Assert-CMInt $tune $key 0 }
@@ -135,17 +135,17 @@ if ($debug) {
         @($log | Where-Object { $_ -cmatch 'opaque ink/paper/text/accent' }).Count -ne 3) { throw 'Closing material real edit/reset/Save/refusal transcript counts differ' }
     $cmCropNames += @('baseline','paired-pending','ink-accent-overwrite','final-saved') | ForEach-Object { "hud-closing-materials-tune-$_.ppm" }
     $script:closingMaterialsObserved.developer_commands = $tune; $script:closingMaterialsObserved.readbacks = 104; $script:closingMaterialsObserved.csv_rows = 37
-    $script:closingMaterialsObserved.crops = 13; $script:closingMaterialsObserved.crop_pixels = 262600; $script:closingMaterialsObserved.ppm_bytes = 787995; $script:closingMaterialsObserved.calibration_pixel_checks = 3328
+    $script:closingMaterialsObserved.crops = 13; $script:closingMaterialsObserved.crop_pixels = 279851; $script:closingMaterialsObserved.ppm_bytes = 839748; $script:closingMaterialsObserved.calibration_pixel_checks = 3328
 } elseif (@(Get-ChildItem -LiteralPath $captures -Filter 'hud-closing-materials-tune-*').Count) { throw 'Release closing material leaf must contain no Debug artifacts' }
 $actualPpms = @(Get-ChildItem -LiteralPath $captures -Filter 'hud-closing-materials-*.ppm' -File)
 if ($actualPpms.Count -ne $cmCropNames.Count -or (($actualPpms.Name | Sort-Object) -join '|') -cne (($cmCropNames | Sort-Object) -join '|')) { throw 'Closing material exact native PPM inventory differs' }
-$header = [Text.Encoding]::ASCII.GetBytes("P6`n202 100`n255`n")
+$header = [Text.Encoding]::ASCII.GetBytes("P6`n209 103`n255`n")
 $cmPpms = @(foreach ($name in $cmCropNames) {
     $path = Join-Path $captures $name; $bytes = [IO.File]::ReadAllBytes($path)
-    if ($bytes.Length -ne 60615 -or $header.Length -ne 15) { throw 'Closing material canonical P6 length differs' }
+    if ($bytes.Length -ne 64596 -or $header.Length -ne 15) { throw 'Closing material canonical P6 length differs' }
     for ($i=0; $i -lt 15; ++$i) { if ($bytes[$i] -ne $header[$i]) { throw 'Closing material canonical P6 header differs' } }
-    $rgb = [byte[]]::new(60600); [Array]::Copy($bytes,15,$rgb,0,60600); $cmInputs.Add($path)
-    [ordered]@{name=$name;width=202;height=100;pixels=20200;header_bytes=15;bytes=60615;sha256=(Get-CMSha $bytes);rgb_payload_sha256=(Get-CMSha $rgb)}
+    $rgb = [byte[]]::new(64581); [Array]::Copy($bytes,15,$rgb,0,64581); $cmInputs.Add($path)
+    [ordered]@{name=$name;width=209;height=103;pixels=21527;header_bytes=15;bytes=64596;sha256=(Get-CMSha $bytes);rgb_payload_sha256=(Get-CMSha $rgb)}
 })
 if (@(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' -or $_ -ceq 'Save was successful.' }).Count -or
     @(Get-Content -LiteralPath (Join-Path $run 'run.err') | Where-Object { $_ -match '^save failure:' }).Count) { throw 'Closing material leaf unexpectedly called or failed a game Save' }
@@ -171,25 +171,25 @@ function Complete-HudClosingMaterialsEvidence {
         if (($bytes[8..11] -join ',') -cne '0,0,0,13' -or [Text.Encoding]::ASCII.GetString($bytes,12,4) -cne 'IHDR') { throw 'Closing material PNG initial IHDR differs' }
         $width=0L; $height=0L
         for ($i=0; $i -lt 4; ++$i) { $width=$width*256+$bytes[16+$i]; $height=$height*256+$bytes[20+$i] }
-        if ($width -ne 202 -or $height -ne 100 -or $bytes[24] -ne 8 -or $bytes[25] -notin @(2,6) -or $bytes[26] -ne 0 -or $bytes[27] -ne 0 -or $bytes[28] -notin @(0,1)) { throw 'Closing material native RGB/RGBA PNG IHDR differs' }
+        if ($width -ne 209 -or $height -ne 103 -or $bytes[24] -ne 8 -or $bytes[25] -notin @(2,6) -or $bytes[26] -ne 0 -or $bytes[27] -ne 0 -or $bytes[28] -notin @(0,1)) { throw 'Closing material native RGB/RGBA PNG IHDR differs' }
         $bitmap = [Drawing.Bitmap]::new($path)
         try {
-            if ($bitmap.Width -ne 202 -or $bitmap.Height -ne 100) { throw 'Closing material decoded PNG dimensions differ' }
-            $rgb = [byte[]]::new(60600)
-            for ($y=0; $y -lt 100; ++$y) { for ($x=0; $x -lt 202; ++$x) {
-                $pixel=$bitmap.GetPixel($x,$y); $at=($y*202+$x)*3
+            if ($bitmap.Width -ne 209 -or $bitmap.Height -ne 103) { throw 'Closing material decoded PNG dimensions differ' }
+            $rgb = [byte[]]::new(64581)
+            for ($y=0; $y -lt 103; ++$y) { for ($x=0; $x -lt 209; ++$x) {
+                $pixel=$bitmap.GetPixel($x,$y); $at=($y*209+$x)*3
                 if ($pixel.A -ne 255) { throw 'Closing material decoded PNG alpha is not opaque' }
                 $rgb[$at]=$pixel.R; $rgb[$at+1]=$pixel.G; $rgb[$at+2]=$pixel.B
             } }
         } finally { $bitmap.Dispose() }
-        for ($i=0; $i -lt 60600; ++$i) { if ($rgb[$i] -ne $ppmBytes[15+$i]) { throw 'Closing material decoded PNG differs from complete PPM RGB' } }
+        for ($i=0; $i -lt 64581; ++$i) { if ($rgb[$i] -ne $ppmBytes[15+$i]) { throw 'Closing material decoded PNG differs from complete PPM RGB' } }
         $digest = Get-CMSha $rgb
         if ($digest -cne $ppm.rgb_payload_sha256) { throw 'Closing material decoded PNG RGB fingerprint differs' }
-        $metadata=[ordered]@{name=[IO.Path]::GetFileName($path);source_ppm=$ppm.name;scope='closing-material-clock-envelope-only';width=202;height=100;pixels=20200;bit_depth=[int]$bytes[24];colour_type=[int]$bytes[25];ppm_sha256=$ppm.sha256;png_sha256=(Get-CMSha $bytes);decoded_rgb_sha256=$digest;decoded_rgb_matches_ppm=$true;alpha_opaque=$true}
+        $metadata=[ordered]@{name=[IO.Path]::GetFileName($path);source_ppm=$ppm.name;scope='closing-material-clock-envelope-only';width=209;height=103;pixels=21527;bit_depth=[int]$bytes[24];colour_type=[int]$bytes[25];ppm_sha256=$ppm.sha256;png_sha256=(Get-CMSha $bytes);decoded_rgb_sha256=$digest;decoded_rgb_matches_ppm=$true;alpha_opaque=$true}
         $metadata | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath "$path.metadata.json" -Encoding utf8
         $metadata
     })
     $script:closingMaterialsObserved.png_crops=$evidence; $script:closingMaterialsObserved.png_count=$evidence.Count
-    $script:closingMaterialsObserved.png_pixels=$evidence.Count*20200; $script:closingMaterialsObserved.png_rgb_bytes=$evidence.Count*60600
+    $script:closingMaterialsObserved.png_pixels=$evidence.Count*21527; $script:closingMaterialsObserved.png_rgb_bytes=$evidence.Count*64581
     $script:closingMaterialsObserved.png_complete=$true
 }

@@ -1716,6 +1716,18 @@ The local RapidJSON span reader and in-memory candidate validation
 The engine declined to keep source spans, so the span reader and splice stay
 this tool's.
 
+HUD painter fixtures re-pinned to the OFL fonts (2026-10-28): the HUD timer,
+closing materials/shade/text, HUD paper and HUD label probes pinned Gill Sans
+MT Bold metrics, and 95c1da3b renamed their fonts without updating them. They
+now pin Lato Black (`lato_black_48` line spacing 77, `_36` 58, `_24` 38) and
+the geometry it moves: clock text at (891.5,54), timer glyph ROI
+[901,68,1032,120) (131x52), clock envelope [858,43,1067,146) (209x103),
+identity/HEALTH/PAINT label ROIs 380x111/125x28/97x28, paper crops
+487x142/327x181/209x103 and their patch sites, and timer witnesses (911,79)
+and (970,117). Checks, controls and tolerances are unchanged; only the pinned
+literals and the counts derived from them moved. The dated figures below were
+measured against the Gill atlases.
+
 Shared HUD paper material family (2026-10-24), **verified**:
 paths 56-58 select `presentation.hud.paper.ink`, `.paper` and `.shade`
 as live borrowed colours. Only three exact allowlist rows change production.

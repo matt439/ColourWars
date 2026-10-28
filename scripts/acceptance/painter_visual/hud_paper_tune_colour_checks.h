@@ -15,15 +15,15 @@ const std::array<HudPaperSite, 35>& hud_paper_sites()
         { "identity-ink-first", { 400, 44, 8, 2 }, 0, 0, 1 },
         { "identity-ink-second", { 41, 60, 2, 8 }, 0, 0, 1 },
         { "identity-paper-first-flat", { 400, 46, 8, 2 }, 0, 1, 1 },
-        { "identity-shade-base-first", { 400, 182, 8, 2 }, 0, 2, 1 },
-        { "identity-shade-base-second", { 527, 80, 2, 8 }, 0, 2, 1 },
-        { "identity-shade-bottom-one", { 400, 173, 8, 2 }, 0, 3, 1 },
-        { "identity-shade-bottom-two", { 400, 175, 8, 2 }, 0, 3, 2 },
-        { "identity-shade-bottom-three", { 400, 177, 8, 2 }, 0, 3, 3 },
-        { "identity-shade-right-one", { 517, 80, 2, 8 }, 0, 3, 1 },
-        { "identity-shade-right-two", { 519, 80, 2, 8 }, 0, 3, 2 },
-        { "identity-shade-right-three", { 521, 80, 2, 8 }, 0, 3, 3 },
-        { "meters-ink-first", { 1580, 44, 8, 2 }, 1, 0, 1 },
+        { "identity-shade-base-first", { 400, 181, 8, 2 }, 0, 2, 1 },
+        { "identity-shade-base-second", { 523, 80, 2, 8 }, 0, 2, 1 },
+        { "identity-shade-bottom-one", { 400, 172, 8, 2 }, 0, 3, 1 },
+        { "identity-shade-bottom-two", { 400, 174, 8, 2 }, 0, 3, 2 },
+        { "identity-shade-bottom-three", { 400, 176, 8, 2 }, 0, 3, 3 },
+        { "identity-shade-right-one", { 513, 80, 2, 8 }, 0, 3, 1 },
+        { "identity-shade-right-two", { 515, 80, 2, 8 }, 0, 3, 2 },
+        { "identity-shade-right-three", { 517, 80, 2, 8 }, 0, 3, 3 },
+        { "meters-ink-first", { 1580, 43, 8, 2 }, 1, 0, 1 },
         { "meters-ink-second", { 1539, 60, 2, 8 }, 1, 0, 1 },
         { "meters-paper-first-flat", { 1580, 46, 8, 2 }, 1, 1, 1 },
         { "meters-shade-base-first", { 1580, 218, 8, 2 }, 1, 2, 1 },
@@ -35,16 +35,16 @@ const std::array<HudPaperSite, 35>& hud_paper_sites()
         { "meters-shade-right-two", { 1853, 80, 2, 8 }, 1, 3, 2 },
         { "meters-shade-right-three", { 1855, 80, 2, 8 }, 1, 3, 3 },
         { "timer-ink-first", { 900, 44, 8, 2 }, 2, 0, 1 },
-        { "timer-ink-second", { 879, 60, 2, 8 }, 2, 0, 1 },
+        { "timer-ink-second", { 875, 60, 2, 8 }, 2, 0, 1 },
         { "timer-paper-first-flat", { 900, 46, 8, 2 }, 2, 1, 1 },
-        { "timer-shade-base-first", { 900, 139, 8, 2 }, 2, 2, 1 },
-        { "timer-shade-base-second", { 1042, 80, 2, 8 }, 2, 2, 1 },
-        { "timer-shade-bottom-one", { 900, 130, 8, 2 }, 2, 3, 1 },
-        { "timer-shade-bottom-two", { 900, 132, 8, 2 }, 2, 3, 2 },
-        { "timer-shade-bottom-three", { 900, 134, 8, 2 }, 2, 3, 3 },
-        { "timer-shade-right-one", { 1033, 80, 2, 8 }, 2, 3, 1 },
-        { "timer-shade-right-two", { 1035, 80, 2, 8 }, 2, 3, 2 },
-        { "timer-shade-right-three", { 1037, 80, 2, 8 }, 2, 3, 3 },
+        { "timer-shade-base-first", { 900, 142, 8, 2 }, 2, 2, 1 },
+        { "timer-shade-base-second", { 1045, 80, 2, 8 }, 2, 2, 1 },
+        { "timer-shade-bottom-one", { 900, 133, 8, 2 }, 2, 3, 1 },
+        { "timer-shade-bottom-two", { 900, 135, 8, 2 }, 2, 3, 2 },
+        { "timer-shade-bottom-three", { 900, 137, 8, 2 }, 2, 3, 3 },
+        { "timer-shade-right-one", { 1036, 80, 2, 8 }, 2, 3, 1 },
+        { "timer-shade-right-two", { 1038, 80, 2, 8 }, 2, 3, 2 },
+        { "timer-shade-right-three", { 1040, 80, 2, 8 }, 2, 3, 3 },
         { "meters-health-direct-ink-border", { 1580, 95, 8, 2 }, 1, 0, 1 },
         { "meters-paint-direct-ink-border", { 1580, 181, 8, 2 }, 1, 0, 1 },
     } }; return sites;
@@ -62,44 +62,45 @@ const std::array<HudPaperTuple, 6>& hud_paper_palettes()
 }
 const std::array<std::vector<Glyph>, 3>& hud_paper_literal_glyphs()
 {
+    // Lato Black 24/48/36 atlases (95c1da3b), read from the shipped spritefonts.
     static const std::array<std::vector<Glyph>, 3> glyphs{ {
         std::vector<Glyph>{
-            { static_cast<char32_t>(65), { 145, 31, 25, 23 }, 5.0f, 11.0f, -5.0f },
-            { static_cast<char32_t>(69), { 49, 83, 17, 23 }, 7.0f, 11.0f, -4.0f },
-            { static_cast<char32_t>(72), { 226, 51, 23, 23 }, 7.0f, 11.0f, -3.0f },
-            { static_cast<char32_t>(73), { 211, 126, 6, 23 }, 7.0f, 11.0f, -2.0f },
-            { static_cast<char32_t>(76), { 164, 80, 18, 23 }, 7.0f, 11.0f, -5.0f },
-            { static_cast<char32_t>(78), { 172, 55, 23, 23 }, 7.0f, 11.0f, -3.0f },
-            { static_cast<char32_t>(80), { 123, 81, 18, 23 }, 7.0f, 11.0f, -4.0f },
-            { static_cast<char32_t>(84), { 99, 58, 22, 23 }, 6.0f, 11.0f, -5.0f },
+            { static_cast<char32_t>(65), { 215, 28, 24, 25 }, 4.0f, 7.0f, -6.0f },
+            { static_cast<char32_t>(69), { 201, 109, 16, 25 }, 7.0f, 7.0f, -5.0f },
+            { static_cast<char32_t>(72), { 203, 55, 21, 25 }, 7.0f, 7.0f, -3.0f },
+            { static_cast<char32_t>(73), { 103, 113, 6, 25 }, 7.0f, 7.0f, -3.0f },
+            { static_cast<char32_t>(76), { 58, 113, 15, 25 }, 7.0f, 7.0f, -5.0f },
+            { static_cast<char32_t>(78), { 153, 56, 21, 25 }, 7.0f, 7.0f, -3.0f },
+            { static_cast<char32_t>(80), { 236, 82, 18, 25 }, 7.0f, 7.0f, -5.0f },
+            { static_cast<char32_t>(84), { 22, 61, 19, 25 }, 5.0f, 7.0f, -5.0f },
         },
         std::vector<Glyph>{
-            { static_cast<char32_t>(48), { 311, 57, 31, 47 }, 12.0f, 21.0f, -8.0f },
-            { static_cast<char32_t>(49), { 140, 112, 11, 45 }, 22.0f, 22.0f, 2.0f },
-            { static_cast<char32_t>(50), { 262, 109, 30, 46 }, 13.0f, 21.0f, -8.0f },
-            { static_cast<char32_t>(52), { 223, 204, 31, 45 }, 12.0f, 22.0f, -8.0f },
-            { static_cast<char32_t>(58), { 322, 154, 12, 33 }, 13.0f, 35.0f, -8.0f },
+            { static_cast<char32_t>(48), { 428, 152, 35, 48 }, 11.0f, 15.0f, -9.0f },
+            { static_cast<char32_t>(49), { 330, 202, 31, 48 }, 13.0f, 15.0f, -7.0f },
+            { static_cast<char32_t>(50), { 219, 157, 33, 48 }, 12.0f, 15.0f, -8.0f },
+            { static_cast<char32_t>(52), { 352, 152, 36, 48 }, 10.0f, 15.0f, -9.0f },
+            { static_cast<char32_t>(58), { 119, 115, 11, 33 }, 13.0f, 30.0f, -7.0f },
         },
         std::vector<Glyph>{
-            { static_cast<char32_t>(32), { 505, 1, 1, 1 }, 31.0f, 92.0f, -19.0f },
-            { static_cast<char32_t>(47), { 331, 110, 13, 34 }, 8.0f, 17.0f, -8.0f },
-            { static_cast<char32_t>(49), { 193, 116, 8, 34 }, 17.0f, 17.0f, 1.0f },
-            { static_cast<char32_t>(65), { 406, 37, 38, 34 }, 8.0f, 17.0f, -9.0f },
-            { static_cast<char32_t>(69), { 486, 37, 25, 34 }, 11.0f, 17.0f, -6.0f },
-            { static_cast<char32_t>(75), { 237, 74, 32, 34 }, 11.0f, 17.0f, -8.0f },
-            { static_cast<char32_t>(77), { 266, 38, 36, 34 }, 11.0f, 17.0f, -5.0f },
-            { static_cast<char32_t>(80), { 194, 80, 26, 34 }, 12.0f, 17.0f, -7.0f },
-            { static_cast<char32_t>(84), { 413, 73, 33, 34 }, 9.0f, 17.0f, -7.0f },
-            { static_cast<char32_t>(97), { 396, 145, 25, 24 }, 9.0f, 27.0f, -9.0f },
-            { static_cast<char32_t>(98), { 128, 84, 25, 34 }, 10.0f, 17.0f, -7.0f },
-            { static_cast<char32_t>(100), { 155, 84, 25, 34 }, 9.0f, 17.0f, -6.0f },
-            { static_cast<char32_t>(101), { 450, 145, 24, 24 }, 9.0f, 27.0f, -7.0f },
-            { static_cast<char32_t>(109), { 143, 120, 41, 24 }, 10.0f, 27.0f, -5.0f },
-            { static_cast<char32_t>(111), { 368, 145, 26, 24 }, 9.0f, 27.0f, -6.0f },
-            { static_cast<char32_t>(114), { 237, 146, 19, 24 }, 11.0f, 27.0f, -8.0f },
-            { static_cast<char32_t>(115), { 258, 146, 19, 24 }, 9.0f, 27.0f, -8.0f },
-            { static_cast<char32_t>(117), { 143, 146, 24, 24 }, 10.0f, 27.0f, -6.0f },
-            { static_cast<char32_t>(121), { 379, 1, 25, 35 }, 8.0f, 27.0f, -9.0f },
+            { static_cast<char32_t>(32), { 380, 40, 1, 1 }, 31.0f, 95.0f, -21.0f },
+            { static_cast<char32_t>(47), { 214, 1, 21, 39 }, 9.0f, 10.0f, -7.0f },
+            { static_cast<char32_t>(49), { 447, 115, 23, 36 }, 10.0f, 11.0f, -5.0f },
+            { static_cast<char32_t>(65), { 463, 39, 36, 36 }, 7.0f, 11.0f, -9.0f },
+            { static_cast<char32_t>(69), { 472, 115, 23, 36 }, 11.0f, 11.0f, -6.0f },
+            { static_cast<char32_t>(75), { 27, 49, 31, 36 }, 11.0f, 11.0f, -9.0f },
+            { static_cast<char32_t>(77), { 438, 1, 39, 36 }, 11.0f, 11.0f, -4.0f },
+            { static_cast<char32_t>(80), { 209, 80, 27, 36 }, 11.0f, 11.0f, -8.0f },
+            { static_cast<char32_t>(84), { 465, 77, 29, 36 }, 8.0f, 11.0f, -8.0f },
+            { static_cast<char32_t>(97), { 1, 153, 22, 26 }, 9.0f, 21.0f, -6.0f },
+            { static_cast<char32_t>(98), { 287, 1, 24, 37 }, 10.0f, 10.0f, -7.0f },
+            { static_cast<char32_t>(100), { 313, 1, 24, 37 }, 9.0f, 10.0f, -6.0f },
+            { static_cast<char32_t>(101), { 29, 125, 24, 26 }, 9.0f, 21.0f, -7.0f },
+            { static_cast<char32_t>(109), { 55, 124, 36, 26 }, 10.0f, 21.0f, -6.0f },
+            { static_cast<char32_t>(111), { 1, 125, 26, 26 }, 9.0f, 21.0f, -7.0f },
+            { static_cast<char32_t>(114), { 60, 49, 16, 26 }, 10.0f, 21.0f, -8.0f },
+            { static_cast<char32_t>(115), { 371, 153, 19, 26 }, 9.0f, 21.0f, -7.0f },
+            { static_cast<char32_t>(117), { 324, 152, 23, 26 }, 10.0f, 21.0f, -6.0f },
+            { static_cast<char32_t>(121), { 324, 116, 26, 34 }, 8.0f, 21.0f, -8.0f },
         },
     } }; return glyphs;
 }
@@ -165,10 +166,10 @@ public:
                     "HUD paper ordinal glyph source metadata changed");
             }
         }
-        require(font_pointers_[0]->line_spacing() == 37.109375f && font_pointers_[1]->line_spacing() == 74.21875f && font_pointers_[2]->line_spacing() == 55.6640625f, "HUD paper source font line spacing changed");
-        require(font_pointers_[0]->measure(L"HEALTH") == Vector2F(145, 37.109375f) && font_pointers_[0]->measure(L"PAINT") == Vector2F(112, 37.109375f) &&
-            font_pointers_[1]->measure(L"2:04") == Vector2F(130, 74.21875f) && font_pointers_[1]->measure(L"0:10") == Vector2F(130, 74.21875f) &&
-            font_pointers_[2]->measure(L"P1  /  TEAM A\nKeyboard/mouse") == Vector2F(386, 117.6640625f), "HUD paper source font measures changed");
+        require(font_pointers_[0]->line_spacing() == 38.0f && font_pointers_[1]->line_spacing() == hud_timer_line_spacing && font_pointers_[2]->line_spacing() == 58.0f, "HUD paper source font line spacing changed");
+        require(font_pointers_[0]->measure(L"HEALTH") == Vector2F(129, 38) && font_pointers_[0]->measure(L"PAINT") == Vector2F(101, 38) &&
+            font_pointers_[1]->measure(L"2:04") == Vector2F(137, hud_timer_line_spacing) && font_pointers_[1]->measure(L"0:10") == Vector2F(137, hud_timer_line_spacing) &&
+            font_pointers_[2]->measure(L"P1  /  TEAM A\nKeyboard/mouse") == Vector2F(382, 116), "HUD paper source font measures changed");
         for (const auto& tuple : { hud_paper_values(look_), hud_paper_values(expected_) })
         { require(tuple[0].a == 1.0f && tuple[1].a == 1.0f && tuple[0] != tuple[1] && tuple[2].a > 0.0f, "HUD paper existing distinct-opaque/positive-shade domain changed"); }
     }
@@ -312,7 +313,7 @@ public:
         catch (...) { failure("negative-control", 0, reference, wrong); throw; } return pixels;
     }
     static RectangleI crop_box(size_t panel)
-    { static const std::array<RectangleI, 3> boxes{ RectangleI(40, 43, 491, 144), RectangleI(1538, 43, 327, 180), RectangleI(862, 43, 202, 100) }; return boxes.at(panel); }
+    { static const std::array<RectangleI, 3> boxes{ RectangleI(40, 43, 487, 142), RectangleI(1538, 42, 327, 181), RectangleI(858, 43, 209, 103) }; return boxes.at(panel); }
     static Frame compact(const Frame& frame, size_t panel) { return foreground_crop(frame, crop_box(panel), 0); }
     size_t readbacks() const { return readbacks_; }
     void failure(const char* stage, size_t context, const Frame& frame, const Frame& reference, bool actual_available = true) const
@@ -392,8 +393,8 @@ void HudPaperColourProbe::geometry() const
     const Vector2F timer_pos((resolution.x - timer_size.x) / 2.0f - resolution.x * look_.timer_offset.x, resolution.y * look_.timer_offset.y);
     const std::array<RectangleF, 3> faces{ identity_face, meters_face, RectangleF(timer_pos - padding, timer_size + padding * 2.0f) };
     require(scale == 1.0f && label_pos == Vector2F(123.599998474121094f, 54) &&
-        identity_face.bottom() == 181.6640625f && meters_face.bottom() == 217.360015869140625f && faces[2].bottom() == 138.21875f &&
-        timer_pos == Vector2F(895, 54), "HUD paper source float32 operation order or geometry changed; decimal rounding is not permitted");
+        identity_face.bottom() == 180 && meters_face.bottom() == 217.360015869140625f && faces[2].bottom() == 141 &&
+        timer_pos == Vector2F(891.5f, 54), "HUD paper source float32 operation order or geometry changed; decimal rounding is not permitted");
     const float pen = look_.paper.keyline_width * scale, step = pen * 2.0f, shadow = look_.paper.shadow_offset * scale;
     const auto raster = [](const RectangleF& box)
     { const int x = static_cast<int>(box.x), y = static_cast<int>(box.y); return RectangleI(x, y, static_cast<int>(box.right()) - x, static_cast<int>(box.bottom()) - y); };
@@ -520,7 +521,7 @@ HudPaperFrames hud_paper_consumer_checks(HudPaperColourProbe& probe, HudPresenta
     { probe.equality("settled-reduced", 7, branch[state][7], branch[state][3]); probe.equality("tick-counterexample", 7, branch[state][7], branch[state][2], false); }
     require(csv.good() && branches.good() && controls.good() && probe.readbacks() == 64 && rows == 29 && crops == 18 && control_pixels > 0 && control_pixels <= 3232,
         "HUD paper shared frozen reads/rows/crops/control counters differ");
-    std::ofstream summary(output / "hud-paper-consumer-summary.json"); summary << "{\"scope\":\"hud-paper-material-patches-and-branch-isolation\",\"main_observations\":9,\"main_reads\":36,\"raw_references\":9,\"control_reads\":12,\"controls\":12,\"control_site_discriminations\":202,\"control_pixel_upper_bound\":3232,\"branch_observations\":8,\"branch_reads\":16,\"readbacks\":64,\"main_rows\":9,\"control_rows\":12,\"branch_rows\":8,\"csv_rows\":29,\"repeat_checks\":17,\"copied_adoption_checks\":9,\"independent_observations\":17,\"patch_pixel_checks\":8464,\"normal_reduced_equalities\":2,\"closing_region_invariance_checks\":3,\"closing_region_pixels\":60600,\"closing_full_hud_positive_changes\":3,\"settled_reduced_equalities\":2,\"tick_counterexamples\":2,\"unselected_region_checks\":35,\"unselected_pixel_checks\":15008,\"band_canvas_relations\":3,\"band_canvas_pixels\":864,\"base_canvas_site_relations\":18,\"base_canvas_pixels\":288,\"crops\":18,\"crop_pixels\":898584,\"ppm_bytes\":2696022,\"calibration_pixel_checks\":2048,\"patches\":35,\"patch_pixels\":560,\"closing_patch_sites\":24,\"closing_patch_pixels\":384,\"flat_first_paper_sites\":3,\"composed_unique_second_paper_sites\":6,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0,\"control_discriminating_pixels\":" << control_pixels << "}\n";
+    std::ofstream summary(output / "hud-paper-consumer-summary.json"); summary << "{\"scope\":\"hud-paper-material-patches-and-branch-isolation\",\"main_observations\":9,\"main_reads\":36,\"raw_references\":9,\"control_reads\":12,\"controls\":12,\"control_site_discriminations\":202,\"control_pixel_upper_bound\":3232,\"branch_observations\":8,\"branch_reads\":16,\"readbacks\":64,\"main_rows\":9,\"control_rows\":12,\"branch_rows\":8,\"csv_rows\":29,\"repeat_checks\":17,\"copied_adoption_checks\":9,\"independent_observations\":17,\"patch_pixel_checks\":8464,\"normal_reduced_equalities\":2,\"closing_region_invariance_checks\":3,\"closing_region_pixels\":64581,\"closing_full_hud_positive_changes\":3,\"settled_reduced_equalities\":2,\"tick_counterexamples\":2,\"unselected_region_checks\":35,\"unselected_pixel_checks\":15008,\"band_canvas_relations\":3,\"band_canvas_pixels\":864,\"base_canvas_site_relations\":18,\"base_canvas_pixels\":288,\"crops\":18,\"crop_pixels\":899208,\"ppm_bytes\":2697894,\"calibration_pixel_checks\":2048,\"patches\":35,\"patch_pixels\":560,\"closing_patch_sites\":24,\"closing_patch_pixels\":384,\"flat_first_paper_sites\":3,\"composed_unique_second_paper_sites\":6,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0,\"control_discriminating_pixels\":" << control_pixels << "}\n";
     require(summary.good(), "Cannot retain HUD paper shared summary"); set_hud_paper_values(look, hud_paper_palettes()[0]);
     std::cout << "PASS HUD paper: 64 reads, 29 rows, 18 native crops; 35 material sites, 202 per-site control discriminations and separate closing-clock isolation. No updates, input polls or game Saves.\n";
     return references;

@@ -60,16 +60,16 @@ void hud_closing_text_colour_consumer_checks(Application& app, const Presentatio
             "Closing text beat accents must still distinguish exact10 from reduced10");
     }
     require(csv.good() && branches.good() && probe.readbacks() == 50 && rows == 18 && crops == 4 && controls == 2 &&
-        control_pixels > 0 && control_pixels <= 12444, "Closing shared finite read/row/crop/control budget differs");
+        control_pixels > 0 && control_pixels <= 13624, "Closing shared finite read/row/crop/control budget differs");
     std::ofstream summary(output / "hud-closing-text-colour-consumer-summary.json");
     summary << "{\"scope\":\"opaque-closing-text-glyph-roi-and-normal-invariance\",\"main_context\":\"running-exact-ten\",\"readbacks\":50,\"csv_rows\":18,\"main_rows\":4,\"branch_rows\":14,"
-        "\"crops\":4,\"crop_width\":122,\"crop_height\":51,\"crop_pixels\":24888,\"ppm_bytes\":74720,\"roi_pixels\":6222,"
-        "\"independent_roi_observations\":8,\"roi_pixel_checks\":49776,\"repeat_checks\":18,\"copied_adoption_checks\":4,"
+        "\"crops\":4,\"crop_width\":131,\"crop_height\":52,\"crop_pixels\":27248,\"ppm_bytes\":81800,\"roi_pixels\":6812,"
+        "\"independent_roi_observations\":8,\"roi_pixel_checks\":54496,\"repeat_checks\":18,\"copied_adoption_checks\":4,"
         "\"normal_colour_invariance_checks\":5,\"reduce_effects_checks\":6,\"controls\":2,\"control_discriminating_pixels\":" << control_pixels << ',' <<
         "\"calibration_pixel_checks\":1600,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,"
         "\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain closing-text shared summary");
-    std::cout << "PASS opaque closing text: 50 reads, 18 rows, four native 122 by 51 crops; correct closing branch/no normal shadow, "
+    std::cout << "PASS opaque closing text: 50 reads, 18 rows, four native 131 by 52 crops; correct closing branch/no normal shadow, "
         "wrong opaque tint and added-shadow controls, exact normal/Reduce Effects guards. No alpha1 tint discriminators claimed.\n";
 }
 

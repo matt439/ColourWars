@@ -38,7 +38,7 @@ foreach ($path in @($csSummaryPath,$csMainPath,$csBranchPath,$csControlPath,(Joi
 }
 if (@(Get-ChildItem -LiteralPath $captures -Filter 'closing-shade-failure-*').Count) { throw 'Closing shade source-hypothesis failure artifacts remain' }
 $csSummary = Get-Content -LiteralPath $csSummaryPath -Raw | ConvertFrom-Json
-$csCounts = [ordered]@{main_observations=8;main_reads=32;branch_observations=14;branch_reads=28;raw_references=8;controls=8;control_reads=8;control_site_discriminations=48;control_pixel_upper_bound=768;readbacks=68;main_rows=8;branch_rows=14;control_rows=8;csv_rows=30;repeat_checks=22;copied_adoption_checks=8;independent_patch_observations=12;patch_pixel_checks=1536;normal_invariance_checks=5;normal_reduced_relations=2;settled_reduced_relations=2;beat_counterexamples=2;crops=12;calibration_pixel_checks=2176;band_canvas_invariance_checks=4;band_canvas_pixel_checks=384;base_canvas_site_relations=8;base_canvas_relation_pixels=128;patches=8;patch_pixels=128;crop_width=202;crop_height=100;crop_pixels=242400;ppm_bytes=727380;private_game_saves=0}
+$csCounts = [ordered]@{main_observations=8;main_reads=32;branch_observations=14;branch_reads=28;raw_references=8;controls=8;control_reads=8;control_site_discriminations=48;control_pixel_upper_bound=768;readbacks=68;main_rows=8;branch_rows=14;control_rows=8;csv_rows=30;repeat_checks=22;copied_adoption_checks=8;independent_patch_observations=12;patch_pixel_checks=1536;normal_invariance_checks=5;normal_reduced_relations=2;settled_reduced_relations=2;beat_counterexamples=2;crops=12;calibration_pixel_checks=2176;band_canvas_invariance_checks=4;band_canvas_pixel_checks=384;base_canvas_site_relations=8;base_canvas_relation_pixels=128;patches=8;patch_pixels=128;crop_width=209;crop_height=103;crop_pixels=258324;ppm_bytes=775152;private_game_saves=0}
 foreach ($key in $csUpdates) { $csCounts[$key] = 0 }
 Assert-CSKeys $csSummary (@($csCounts.Keys) + @('scope','control_discriminating_pixels')) 'shared'
 foreach ($key in $csCounts.Keys) { Assert-CSInt $csSummary $key $csCounts[$key] }
@@ -74,7 +74,7 @@ for ($i=0; $i -lt 8; ++$i) {
 if ($csSumPixels -ne $csControlPixels -or $csSumSites -ne 48) { throw 'Closing shade observed control totals do not reconcile' }
 $csCropNames = @(foreach ($state in $csStates) { foreach ($background in $csBackgrounds) { "closing-shade-colour-$state-$background.ppm" } })
 $csCropNames += @(foreach ($context in @('fractional-closing','reduced-closing')) { foreach ($state in @('default','partial')) { "closing-shade-colour-$context-$state.ppm" } })
-$script:closingShadeObserved = [ordered]@{consumer=$csSummary;readbacks=68;csv_rows=30;crops=12;crop_pixels=242400;ppm_bytes=727380;controls=8;control_site_discriminations=48;control_discriminating_pixels=$csControlPixels;calibration_pixel_checks=2176;private_game_saves=0;default_token='00000055';opacity_policy='positive alpha; zero refused; band submitted alpha separately scales by .12';reference_scope='eight source material patches only; base Canvas and opaque-paper band underlays; full RGB retained in both; complete copied HUD proves adoption separately';png_count=0;png_crops=@();png_complete=$false}
+$script:closingShadeObserved = [ordered]@{consumer=$csSummary;readbacks=68;csv_rows=30;crops=12;crop_pixels=258324;ppm_bytes=775152;controls=8;control_site_discriminations=48;control_discriminating_pixels=$csControlPixels;calibration_pixel_checks=2176;private_game_saves=0;default_token='00000055';opacity_policy='positive alpha; zero refused; band submitted alpha separately scales by .12';reference_scope='eight source material patches only; base Canvas and opaque-paper band underlays; full RGB retained in both; complete copied HUD proves adoption separately';png_count=0;png_crops=@();png_complete=$false}
 if ($debug) {
     $tunePath=Join-Path $captures 'closing-shade-tune-summary.json'; $tuneCsv=Join-Path $captures 'closing-shade-tune.csv'
     $refusalPath=Join-Path $captures 'closing-shade-tune-refusal.json'; $transcript=Join-Path $captures 'closing-shade-tune-commands.log'
@@ -126,13 +126,13 @@ if ($debug) {
 } elseif (@(Get-ChildItem -LiteralPath $captures -Filter 'closing-shade-tune-*').Count) { throw 'Release closing shade must contain no Debug artifacts' }
 $actualPpms=@(Get-ChildItem -LiteralPath $captures -Filter 'closing-shade-colour-*.ppm' -File)
 if ($actualPpms.Count -ne 12 -or (($actualPpms.Name|Sort-Object)-join'|') -cne (($csCropNames|Sort-Object)-join'|')) { throw 'Closing shade exact native PPM inventory differs' }
-$header=[Text.Encoding]::ASCII.GetBytes("P6`n202 100`n255`n")
+$header=[Text.Encoding]::ASCII.GetBytes("P6`n209 103`n255`n")
 $csPpms=@(foreach ($name in $csCropNames) {
     $path=Join-Path $captures $name; $bytes=[IO.File]::ReadAllBytes($path)
-    if ($bytes.Length -ne 60615 -or $header.Length -ne 15) { throw 'Closing shade canonical P6 length differs' }
+    if ($bytes.Length -ne 64596 -or $header.Length -ne 15) { throw 'Closing shade canonical P6 length differs' }
     for ($i=0;$i -lt 15;++$i) { if ($bytes[$i] -ne $header[$i]) { throw 'Closing shade canonical P6 header differs' } }
-    $rgb=[byte[]]::new(60600); [Array]::Copy($bytes,15,$rgb,0,60600); $csInputs.Add($path)
-    [ordered]@{name=$name;width=202;height=100;pixels=20200;header_bytes=15;bytes=60615;sha256=(Get-CSha $bytes);rgb_payload_sha256=(Get-CSha $rgb)}
+    $rgb=[byte[]]::new(64581); [Array]::Copy($bytes,15,$rgb,0,64581); $csInputs.Add($path)
+    [ordered]@{name=$name;width=209;height=103;pixels=21527;header_bytes=15;bytes=64596;sha256=(Get-CSha $bytes);rgb_payload_sha256=(Get-CSha $rgb)}
 })
 if (@(Get-Content -LiteralPath (Join-Path $run 'run.log')|Where-Object{$_ -match 'Saving\.\.\.$' -or $_ -ceq 'Save was successful.'}).Count -or
     @(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object{$_ -match '^save failure:'}).Count) { throw 'Closing shade leaf called or failed a game Save' }
@@ -158,24 +158,24 @@ function Complete-HudClosingShadeEvidence {
         if (($bytes[8..11]-join',') -cne '0,0,0,13' -or [Text.Encoding]::ASCII.GetString($bytes,12,4) -cne 'IHDR') { throw 'Closing shade PNG initial IHDR differs' }
         $width=0L; $height=0L
         for ($i=0;$i -lt 4;++$i) { $width=$width*256+$bytes[16+$i]; $height=$height*256+$bytes[20+$i] }
-        if ($width -ne 202 -or $height -ne 100 -or $bytes[24] -ne 8 -or $bytes[25] -notin @(2,6) -or $bytes[26] -ne 0 -or $bytes[27] -ne 0 -or $bytes[28] -notin @(0,1)) { throw 'Closing shade native RGB/RGBA PNG IHDR differs' }
+        if ($width -ne 209 -or $height -ne 103 -or $bytes[24] -ne 8 -or $bytes[25] -notin @(2,6) -or $bytes[26] -ne 0 -or $bytes[27] -ne 0 -or $bytes[28] -notin @(0,1)) { throw 'Closing shade native RGB/RGBA PNG IHDR differs' }
         $bitmap=[Drawing.Bitmap]::new($path)
         try {
-            if ($bitmap.Width -ne 202 -or $bitmap.Height -ne 100) { throw 'Closing shade decoded PNG dimensions differ' }
-            $rgb=[byte[]]::new(60600)
-            for ($y=0;$y -lt 100;++$y) { for ($x=0;$x -lt 202;++$x) {
-                $pixel=$bitmap.GetPixel($x,$y); $at=($y*202+$x)*3
+            if ($bitmap.Width -ne 209 -or $bitmap.Height -ne 103) { throw 'Closing shade decoded PNG dimensions differ' }
+            $rgb=[byte[]]::new(64581)
+            for ($y=0;$y -lt 103;++$y) { for ($x=0;$x -lt 209;++$x) {
+                $pixel=$bitmap.GetPixel($x,$y); $at=($y*209+$x)*3
                 if ($pixel.A -ne 255) { throw 'Closing shade decoded PNG alpha is not opaque' }
                 $rgb[$at]=$pixel.R; $rgb[$at+1]=$pixel.G; $rgb[$at+2]=$pixel.B
             } }
         } finally { $bitmap.Dispose() }
-        for ($i=0;$i -lt 60600;++$i) { if ($rgb[$i] -ne $ppmBytes[15+$i]) { throw 'Closing shade decoded PNG differs from full retained PPM RGB' } }
+        for ($i=0;$i -lt 64581;++$i) { if ($rgb[$i] -ne $ppmBytes[15+$i]) { throw 'Closing shade decoded PNG differs from full retained PPM RGB' } }
         $digest=Get-CSha $rgb
         if ($digest -cne $ppm.rgb_payload_sha256) { throw 'Closing shade decoded PNG RGB fingerprint differs' }
-        $metadata=[ordered]@{name=[IO.Path]::GetFileName($path);source_ppm=$ppm.name;scope='closing-shade-clock-envelope-context';width=202;height=100;pixels=20200;bit_depth=[int]$bytes[24];colour_type=[int]$bytes[25];ppm_sha256=$ppm.sha256;png_sha256=(Get-CSha $bytes);decoded_rgb_sha256=$digest;decoded_rgb_matches_ppm=$true;alpha_opaque=$true}
+        $metadata=[ordered]@{name=[IO.Path]::GetFileName($path);source_ppm=$ppm.name;scope='closing-shade-clock-envelope-context';width=209;height=103;pixels=21527;bit_depth=[int]$bytes[24];colour_type=[int]$bytes[25];ppm_sha256=$ppm.sha256;png_sha256=(Get-CSha $bytes);decoded_rgb_sha256=$digest;decoded_rgb_matches_ppm=$true;alpha_opaque=$true}
         $metadata|ConvertTo-Json -Depth 5|Set-Content -LiteralPath "$path.metadata.json" -Encoding utf8
         $metadata
     })
     $script:closingShadeObserved.png_crops=$evidence; $script:closingShadeObserved.png_count=12
-    $script:closingShadeObserved.png_pixels=242400; $script:closingShadeObserved.png_rgb_bytes=727200; $script:closingShadeObserved.png_complete=$true
+    $script:closingShadeObserved.png_pixels=258324; $script:closingShadeObserved.png_rgb_bytes=774972; $script:closingShadeObserved.png_complete=$true
 }

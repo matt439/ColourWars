@@ -40,7 +40,7 @@ foreach ($path in @($hpSummaryPath,$hpMainPath,$hpBranchPath,$hpControlPath,(Joi
 }
 if (@(Get-ChildItem -LiteralPath $captures -Filter 'hud-paper-tune-failure-*').Count) { throw 'HUD paper source-hypothesis failure artifacts remain' }
 $hpSummary=Get-Content -LiteralPath $hpSummaryPath -Raw|ConvertFrom-Json
-$hpCounts=[ordered]@{main_observations=9;main_reads=36;raw_references=9;control_reads=12;controls=12;control_site_discriminations=202;control_pixel_upper_bound=3232;branch_observations=8;branch_reads=16;readbacks=64;main_rows=9;control_rows=12;branch_rows=8;csv_rows=29;repeat_checks=17;copied_adoption_checks=9;independent_observations=17;patch_pixel_checks=8464;normal_reduced_equalities=2;closing_region_invariance_checks=3;closing_region_pixels=60600;closing_full_hud_positive_changes=3;settled_reduced_equalities=2;tick_counterexamples=2;unselected_region_checks=35;unselected_pixel_checks=15008;band_canvas_relations=3;band_canvas_pixels=864;base_canvas_site_relations=18;base_canvas_pixels=288;crops=18;crop_pixels=898584;ppm_bytes=2696022;calibration_pixel_checks=2048;patches=35;patch_pixels=560;closing_patch_sites=24;closing_patch_pixels=384;flat_first_paper_sites=3;composed_unique_second_paper_sites=6;private_game_saves=0}
+$hpCounts=[ordered]@{main_observations=9;main_reads=36;raw_references=9;control_reads=12;controls=12;control_site_discriminations=202;control_pixel_upper_bound=3232;branch_observations=8;branch_reads=16;readbacks=64;main_rows=9;control_rows=12;branch_rows=8;csv_rows=29;repeat_checks=17;copied_adoption_checks=9;independent_observations=17;patch_pixel_checks=8464;normal_reduced_equalities=2;closing_region_invariance_checks=3;closing_region_pixels=64581;closing_full_hud_positive_changes=3;settled_reduced_equalities=2;tick_counterexamples=2;unselected_region_checks=35;unselected_pixel_checks=15008;band_canvas_relations=3;band_canvas_pixels=864;base_canvas_site_relations=18;base_canvas_pixels=288;crops=18;crop_pixels=899208;ppm_bytes=2697894;calibration_pixel_checks=2048;patches=35;patch_pixels=560;closing_patch_sites=24;closing_patch_pixels=384;flat_first_paper_sites=3;composed_unique_second_paper_sites=6;private_game_saves=0}
 foreach ($key in $hpUpdates) { $hpCounts[$key]=0 }
 Assert-HPKeys $hpSummary (@($hpCounts.Keys)+@('scope','control_discriminating_pixels')) 'shared'
 foreach ($key in $hpCounts.Keys) { Assert-HPInt $hpSummary $key $hpCounts[$key] }
@@ -76,11 +76,11 @@ for ($i=0;$i -lt 12;++$i) {
 }
 if ($hpSumSites -ne 202 -or $hpSumPixels -ne $hpControlPixels) { throw 'HUD paper observed control totals do not reconcile' }
 $hpCropStates=@('default','ink','paper','shade-opaque','shade-partial','joint')
-$hpPanels=@('identity|491|144|70704','meters|327|180|58860','timer|202|100|20200')
+$hpPanels=@('identity|487|142|69154','meters|327|181|59187','timer|209|103|21527')
 $hpCropPlan=@(foreach ($state in $hpCropStates) { foreach ($panel in $hpPanels) {
     $parts=$panel.Split('|'); [ordered]@{name="hud-paper-colour-$state-$($parts[0]).ppm";panel=$parts[0];width=[int]$parts[1];height=[int]$parts[2];pixels=[int]$parts[3]}
 } })
-$script:hudPaperObserved=[ordered]@{consumer=$hpSummary;readbacks=64;csv_rows=29;crops=18;crop_pixels=898584;ppm_bytes=2696022;controls=12;control_site_discriminations=202;control_discriminating_pixels=$hpControlPixels;calibration_pixel_checks=2048;private_game_saves=0;opacity_policy='ink/paper distinct and opaque; shade positive alpha; no new contrast rule';reference_scope='35 literal material sites: three shared panels plus two direct meter ink borders; composed second-paper underlays overlap band sites; bounded closing-clock region only is invariant';png_count=0;png_crops=@();png_complete=$false}
+$script:hudPaperObserved=[ordered]@{consumer=$hpSummary;readbacks=64;csv_rows=29;crops=18;crop_pixels=899208;ppm_bytes=2697894;controls=12;control_site_discriminations=202;control_discriminating_pixels=$hpControlPixels;calibration_pixel_checks=2048;private_game_saves=0;opacity_policy='ink/paper distinct and opaque; shade positive alpha; no new contrast rule';reference_scope='35 literal material sites: three shared panels plus two direct meter ink borders; composed second-paper underlays overlap band sites; bounded closing-clock region only is invariant';png_count=0;png_crops=@();png_complete=$false}
 if ($debug) {
     $tunePath=Join-Path $captures 'hud-paper-tune-summary.json'; $tuneCsv=Join-Path $captures 'hud-paper-tune.csv'
     $refusalPath=Join-Path $captures 'hud-paper-tune-refusals.json'; $transcript=Join-Path $captures 'hud-paper-tune-commands.log'
@@ -153,7 +153,7 @@ $hpPpms=@(foreach ($crop in $hpCropPlan) {
 })
 $hpTotalPixels=0L; $hpTotalPpmBytes=0L
 foreach ($ppm in $hpPpms) { $hpTotalPixels += [long]$ppm.pixels; $hpTotalPpmBytes += [long]$ppm.bytes }
-if ($hpTotalPixels -ne 898584 -or $hpTotalPpmBytes -ne 2696022) { throw 'HUD paper native crop totals differ' }
+if ($hpTotalPixels -ne 899208 -or $hpTotalPpmBytes -ne 2697894) { throw 'HUD paper native crop totals differ' }
 if (@(Get-Content -LiteralPath (Join-Path $run 'run.log')|Where-Object{$_ -match 'Saving\.\.\.$' -or $_ -ceq 'Save was successful.'}).Count -or
     @(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object{$_ -match '^save failure:'}).Count) { throw 'HUD paper leaf called or failed a game Save' }
 $script:hudPaperVerified=[ordered]@{directory=[IO.Path]::GetFullPath($captures);ppms=$hpPpms;inputs=@(foreach($path in $hpInputs){[ordered]@{path=$path;sha256=(Get-FileHash -LiteralPath $path).Hash}})}
@@ -195,5 +195,5 @@ function Complete-HudPaperTuneColourEvidence {
         $metadata
     })
     $script:hudPaperObserved.png_crops=$evidence; $script:hudPaperObserved.png_count=18
-    $script:hudPaperObserved.png_pixels=898584; $script:hudPaperObserved.png_rgb_bytes=2695752; $script:hudPaperObserved.png_complete=$true
+    $script:hudPaperObserved.png_pixels=899208; $script:hudPaperObserved.png_rgb_bytes=2697624; $script:hudPaperObserved.png_complete=$true
 }
