@@ -93,6 +93,26 @@ jobs:
           call "%VCVARS%"
           cmake --build --preset ${{ matrix.preset }}
 
+      - name: Acceptance process ownership and deadlines
+        if: matrix.preset == 'x64-debug'
+        run: |
+          call "%VCVARS%"
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-acceptance-process.ps1
+          if errorlevel 1 exit /b 1
+          pwsh -NoProfile -File scripts/check-acceptance-process.ps1
+
+      - name: Upload acceptance process evidence
+        if: always() && matrix.preset == 'x64-debug'
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-process
+          path: |
+            out/validation/acceptance-process/**/*.json
+            out/validation/acceptance-process/**/*.log
+            out/validation/acceptance-process/**/*.raw
+          if-no-files-found: ignore
+          retention-days: 7
+
       # Four cases at a time on the runner's four cores. Pull requests leave
       # out the four Debug simulations that take three to eight minutes each
       # under checked iterators; Release still runs them on every pull

@@ -8,7 +8,9 @@ param(
     [string[]] $ExcludeCases,
     [ValidateRange(1, 64)]
     [int] $Parallel = 1,
-    [switch] $CompileOnly
+    [switch] $CompileOnly,
+    [ValidateRange(1, 86400)]
+    [int] $RunTimeoutSeconds = 3600
 )
 
 $ErrorActionPreference = 'Stop'
@@ -100,6 +102,8 @@ if ($env:VSCMD_ARG_TGT_ARCH -and $env:VSCMD_ARG_TGT_ARCH -ne 'x64') {
 
 Push-Location -LiteralPath $repo
 $previousPath = $env:PATH
+$probeControl = $null
+$caseCancellation = [Threading.CancellationTokenSource]::new()
 try {
     if (-not $SkipBuild) {
         Write-Host "Configure and build $Preset; logs: $evidence"
@@ -193,6 +197,11 @@ try {
     # DLL imports still resolve from the same staged folder as the game.
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
+    if (-not $CompileOnly) {
+        . (Join-Path $PSScriptRoot 'acceptance-process.ps1')
+        Initialize-AcceptanceProcess
+        $probeControl = [ColourWars.Acceptance.OwnedRunControl]::new()
+    }
     $specs = @()
     foreach ($case in $selectedCases) {
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
@@ -244,6 +253,10 @@ try {
             Executable = $executable
             Arguments = $caseArguments
             Evidence = $evidence
+            WorkingDirectory = $repo
+            RunTimeoutSeconds = $RunTimeoutSeconds
+            ProbeControl = $probeControl
+            CancellationToken = $caseCancellation.Token
             # The new console tool emits UTF-8 paths. Native decoding is
             # process-wide, so it runs on its own after any parallel batch.
             Utf8 = $case -eq 'balance_runner'
@@ -261,19 +274,46 @@ try {
         $lines = @()
         $failure = $null
         $log = Join-Path $Spec.Evidence "$($Spec.Case)-build.log"
-        $output = & $Spec.Compiler "@$($Spec.ResponseFile)" 2>&1
-        $code = $LASTEXITCODE
+        $compileSkipped = $Spec.CancellationToken.IsCancellationRequested -or
+            ($null -ne $Spec.ProbeControl -and $Spec.ProbeControl.IsCancellationRequested)
+        if ($compileSkipped) {
+            $output = @('Acceptance cancelled before compilation; no probe launched.')
+            $code = 1
+        } else {
+            # Compiler execution remains uncontained: shared compiler-service
+            # ownership has not been established by the probe-runtime wrapper.
+            $output = & $Spec.Compiler "@$($Spec.ResponseFile)" 2>&1
+            $code = $LASTEXITCODE
+        }
         $output | Out-File -LiteralPath $log -Encoding utf8
         if ($code -ne 0) {
             $lines = $output
-            $failure = "$($Spec.Compiler) exited with $code. See $log"
+            $failure = if ($compileSkipped) { "Compilation cancelled before launch. See $log" }
+                else { "$($Spec.Compiler) exited with $code. See $log" }
         } elseif (-not $CompileOnly) {
             $log = Join-Path $Spec.Evidence "$($Spec.Case)-run.log"
-            $output = & $Spec.Executable @($Spec.Arguments) 2>&1
-            $code = $LASTEXITCODE
-            $output | Out-File -LiteralPath $log -Encoding utf8
-            $lines = $output
-            if ($code -ne 0) { $failure = "$($Spec.Executable) exited with $code. See $log" }
+            $command = $null
+            try {
+                $command = [ColourWars.Acceptance.OwnedCommand]::Start(
+                    $Spec.Executable, [string[]]$Spec.Arguments, $Spec.WorkingDirectory,
+                    $log, [Console]::OutputEncoding.CodePage, $Spec.RunTimeoutSeconds, $Spec.ProbeControl)
+                while (-not $command.Poll(100)) { }
+                $native = $command.Result
+                $lines = @(Get-Content -LiteralPath $log -Encoding utf8 -ErrorAction Stop)
+                if ($native.Outcome -ne 'exited' -or -not $native.CleanupCompleted) {
+                    $failure = "$($Spec.Executable): $($native.Outcome): $($native.Message). See $log"
+                } elseif ($null -eq $native.ExitCode) {
+                    $failure = "$($Spec.Executable) has no confirmed exit code. See $log"
+                } elseif ($native.ExitCode -ne 0) {
+                    $failure = "$($Spec.Executable) exited with $($native.ExitCode). See $log"
+                }
+            } catch [System.Management.Automation.PipelineStoppedException] {
+                throw
+            } catch {
+                $failure = "$($Spec.Executable): probe runner failed: $_. See $log"
+            } finally {
+                if ($null -ne $command) { $command.Dispose() }
+            }
         }
         [pscustomobject]@{
             Case = $Spec.Case
@@ -329,6 +369,19 @@ try {
                 }
             }
         } finally {
+            if ($pending.Count -gt 0) {
+                $caseCancellation.Cancel()
+                if ($null -ne $probeControl) { $probeControl.Cancel() }
+                # Do not Stop compiling pipelines: compiler descendants may be
+                # shared. Queued work observes cancellation before compiling;
+                # active compilation finishes before its runspace is disposed.
+                foreach ($item in $pending) {
+                    while (-not $item.Handle.IsCompleted) { [Threading.Thread]::Sleep(100) }
+                    try { [void]$item.Shell.EndInvoke($item.Handle) }
+                    catch { }
+                    finally { $item.Shell.Dispose() }
+                }
+            }
             $pool.Dispose()
         }
     } else {
@@ -354,6 +407,12 @@ try {
     Write-Host "PASS $operation ($Preset). Evidence: $evidence"
 }
 finally {
-    $env:PATH = $previousPath
-    Pop-Location
+    try {
+        $caseCancellation.Cancel()
+        if ($null -ne $probeControl) { $probeControl.Dispose() }
+    } finally {
+        $caseCancellation.Dispose()
+        $env:PATH = $previousPath
+        Pop-Location
+    }
 }

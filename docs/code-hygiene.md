@@ -49,6 +49,62 @@ Release `c71f6a2d9fbe4077a32ac99b6059d1cf`, under
 in `out/validation/implementation-loop-20261028/hyg10-baseline-run.log`.
 Discovery destinations, junction/symlink policy and human gates are unchanged.
 
+### Acceptance probe deadlines (`HYG#11`)
+
+**Done (2026-10-28).** A hung acceptance executable previously held its serial
+run or parallel slot indefinitely, and its buffered output was written only
+on exit. `RunTimeoutSeconds` (default 3,600) now bounds the executable
+phase after successful compilation. The runner preserves case order, `Parallel`,
+`CompileOnly`, UTF-16 compiler response files and the serial UTF-8 tool scope.
+
+The Windows-specific process helper supports Windows PowerShell 5.1 and pwsh.
+It launches the probe suspended, assigns it to a private
+kill-on-close [Job Object](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects),
+then resumes it. Explicit inherited output handles keep parallel cases separate.
+It retains merged output incrementally in a raw sidecar and finalizes the existing
+UTF-8 log with its captured encoding. PowerShell polls in short interruptible
+steps inside `try/finally`; disposal/cancellation cleans only owned jobs and
+queued probes do not launch after cancellation. Launch failure, timeout and
+uncertain cleanup fail the case. A containment denial cancels the run instead
+of launching uncontained or repeatedly retrying that denied action.
+
+Compiler and initial CMake execution remain outside this slice. `/MP`
+enables [synchronous PDB writes](https://learn.microsoft.com/en-us/cpp/build/reference/fs-force-synchronous-pdb-writes?view=msvc-170)
+through MSPDBSRV; current flags do not establish exclusive ownership of such
+a server if supplied by compiler environment options. A compiler job could
+therefore capture shared work. This is an ownership uncertainty, not proof
+that the current invocation starts one. Compiler invocation is preserved, and
+already-running compiles finish during parallel cancellation. A core cancellation
+token also skips queued `CompileOnly` compiles without loading the native helper.
+
+Independent review and syntax parsing pass in both shells. The isolated native
+fixture passes eleven real-process checks in each: success/nonzero/missing
+launch, Unicode/quoted arguments, legacy decoding, large merged output,
+flushed partial output on timeout, owned sleeping-child cleanup, an unrelated
+owned sentinel surviving, normal-parent-exit child cleanup, parallel log
+separation, queued cancellation and serial pipeline interruption. The interruption
+check exercises PowerShell pipeline cancellation and `finally`, not injected
+console input. Known process handles replace global process inventory.
+An additional guard extracts the actual runner's `runCase` script block and
+checks canceled `CompileOnly` work never calls its compiler delegate.
+
+Final receipts under `out/validation/implementation-loop-20261028/hyg11-process/`:
+PowerShell 5.1 `ps5/8a785e248f9947939621af5259d47d39`, pwsh
+`ps7/91ec7c2faf4f42118ccd9c647b7f959a`. Each records source hashes and case facts.
+Actual runner checks also pass: Debug ammunition/text wrapping with two slots
+under 5.1, Release equivalents serially under pwsh, and Debug `balance_runner`'s
+UTF-8 path. Both fresh shells compile into Unicode/spaced output paths without
+loading the helper or running the executable; response files remain UTF-16 LE.
+Caller PATH, location and console output encoding are restored.
+
+A one-second Debug `menu_text` runtime deadline produces the expected named
+timeout, retaining both logs and restoring the caller environment. That case
+emits nothing before its first completed check, so its retained logs are empty;
+the isolated fixture separately proves flushed partial-output retention. The
+interrupted `menu_text` run is not a gameplay acceptance pass. The sixteen CI
+change-detection regressions pass. CI now runs the isolated fixture in both
+shells and retains receipts/logs; hosted CI itself has not run locally.
+
 ## Scope and working rules
 
 File length identifies candidates to inspect, not a maximum or a reason to cut

@@ -124,6 +124,16 @@ or touch the player's save. `scripts/check-startup.ps1` separately checks a
 hidden game process, its per-monitor DPI awareness, isolated save, diagnostics
 and graceful shutdown.
 
+Each acceptance executable has a runtime deadline of 3,600 seconds, adjustable
+with `-RunTimeoutSeconds`. Its merged output is retained while it runs in a
+`*-run.log.raw` sidecar and decoded into the usual UTF-8 log on completion.
+Timeout or cancellation cleans only that probe's private Windows Job Object;
+compilation and the initial CMake build have no new deadline. Already-running
+parallel compiles finish during cancellation; queued compiles are skipped.
+`-CompileOnly` does not load the native process helper. From the same Developer
+shell, `scripts/check-acceptance-process.ps1` qualifies ownership, deadlines,
+logging and cancellation with isolated processes under PowerShell 5.1 and pwsh.
+
 To run engine tests, configure the submodule as its own top-level project:
 
 ```
