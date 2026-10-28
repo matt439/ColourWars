@@ -67,10 +67,19 @@ namespace level_editor_acceptance
             "Save to My Stages must use the game's %LOCALAPPDATA%\\ColourWars\\stages");
         require(!fs::exists(profile / "ColourWars"), "Finding the folder must not create it");
 
+        // Read the manifest's level names independently, so a new shipped
+        // stage does not need a count updated here.
+        std::vector<std::string> manifest_stages;
+        const rapidjson::Document manifest = parse(contents(repo / "game/content/manifest.json"));
+        for (const auto& kind : manifest["assets"].GetArray())
+        {
+            if (std::string(kind["kind"].GetString()) != "level") { continue; }
+            for (const auto& name : kind["names"].GetArray()) { manifest_stages.emplace_back(name.GetString()); }
+        }
         const ContentCatalog catalog = load_content_catalog(repo / "game/content");
-        require(catalog.manifest_read && catalog.stages.size() == 10 &&
+        require(catalog.manifest_read && !manifest_stages.empty() && catalog.stages == manifest_stages &&
             std::find(catalog.stages.begin(), catalog.stages.end(), "crossfeed") != catalog.stages.end(),
-            "The catalog must list the manifest's ten shipped stages");
+            "The catalog must list the manifest's shipped stages");
         const std::vector<std::string>& shipped = catalog.stages;
 
         // The game's own refusals, before anything is written.
