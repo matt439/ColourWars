@@ -1342,6 +1342,19 @@ still only reads.
   of its own window procedure dies silently, which is the one failure mode T6
   is meant to rule out.
 
+- **`MouseButton` has no names, as `Key` had none before report 13.** Found
+  2026-10-28 by the [keyboard actions slice](../feature-roadmap.md#keyboard-actions-slice-gap42),
+  against the pin `1e60fb2`: Shoot may take a mouse button, and the save spells
+  the five buttons itself (`mouse_left`, `mouse_right`, `mouse_middle`,
+  `mouse_x1`, `mouse_x2`) in `game/input_bindings.cpp` beside the keys, which
+  use `labrador::key_name`. The exhibit is that five-row table. It is too small
+  to file alone: the ask is `mouse_button_name`/`mouse_button_from_name` next to
+  `MouseButton`, with the same file-format promise, and it rides with the next
+  input report. The game's tokens are prefixed so that a bare engine spelling
+  (`left`, `x1`) cannot collide with a key name in the same field; an answer
+  would replace the table's name column and keep the prefix as the client's.
+  Parked as `ENG#PARKED`.
+
 - **Runtime install facts: the engine's runtime DLLs, the redistributable CRT
   and refusing a debug CRT.** Report 15 kept this half separate from its
   staging slice, and the engine left it to PI-11, which "stays undecided". The

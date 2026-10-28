@@ -81,8 +81,15 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
         auto owned = std::make_unique<KeyboardJumpMenu>(&context, owner); page = owned.get(); stack.push(std::move(owned));
-        tick(); if (owner >= 0) { tap_pad(owner, GamepadButton::a); } else { tap_key(Key::enter); }
-        tick(); require(page->capture_active(), "Actual Jump menu did not enter capture");
+        tick();
+        // Jump is the Keyboard Keys page's third row, after Move left and Move right.
+        for (int row = 0; row < 2; ++row)
+        { if (owner >= 0) { tap_pad(owner, GamepadButton::dpad_down); } else { tap_key(Key::down); } }
+        require(page->capture_action() == KeyboardAction::jump || !page->capture_active(),
+            "Ownership fixture could not reach the Jump row");
+        if (owner >= 0) { tap_pad(owner, GamepadButton::a); } else { tap_key(Key::enter); }
+        tick(); require(page->capture_active() && page->capture_action() == KeyboardAction::jump,
+            "Actual Keyboard Keys menu did not enter Jump capture");
     };
 
     open(0); app.keyboard()->on_key_down(Key::k); tick();

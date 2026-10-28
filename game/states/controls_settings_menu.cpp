@@ -173,9 +173,9 @@ void ControlsSettingsMenu::init()
 void ControlsSettingsMenu::refresh_help()
 {
 	// MenuPage captured this copy when it was constructed. Refresh only the
-	// effective key, retaining the page's authored template, font and geometry.
+	// effective keys, retaining the page's authored template, font and geometry.
 	this->controls_->set_text(controls_text::controls_help(this->text().help.controls,
-		this->save()->input_bindings().keyboard_jump));
+		this->save()->input_bindings()));
 	this->controls_->set_scale(1.0f);
 	const RectangleF bounds = this->controls_->bounds();
 	this->controls_->set_scale(std::min({ 1.0f, this->controls_limit_.width / bounds.width,

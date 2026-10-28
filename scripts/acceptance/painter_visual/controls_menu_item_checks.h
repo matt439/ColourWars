@@ -11,7 +11,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     constexpr std::array<MenuItem, 9> stick_roles{ MenuItem::pad, MenuItem::move_deadzone,
         MenuItem::aim_deadzone, MenuItem::rumble, MenuItem::view_shake, MenuItem::aim_marker,
         MenuItem::reduce_effects, MenuItem::apply, MenuItem::back };
-    const std::array<const wchar_t*, 11> controls_legacy{ L"Pad sticks", L"Keyboard Jump", L"Pad Buttons", L"Profiles", L"Music volume", L"SFX volume",
+    const std::array<const wchar_t*, 11> controls_legacy{ L"Pad sticks", L"Keyboard Keys", L"Pad Buttons", L"Profiles", L"Music volume", L"SFX volume",
         L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
     const std::array<const wchar_t*, 9> stick_legacy{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
         L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };

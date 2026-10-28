@@ -16,12 +16,26 @@ namespace menu_text_acceptance
         { Key::z, L"Z" }, { Key::space, L"Space" }
     };
 
-    std::wstring expected_jump_help(const std::wstring& authored, const wchar_t* label)
+    // Substitutes {jump} and, where present, the optional keyboard tokens.
+    std::wstring expected_keys_help(std::wstring authored, const wchar_t* jump, const wchar_t* left = L"A",
+        const wchar_t* right = L"D", const wchar_t* drop = L"S", const wchar_t* shoot = L"Left click",
+        const wchar_t* pause = L"Esc")
     {
         const auto at = authored.find(L"{jump}");
         require(at != std::wstring::npos, "Controls help oracle requires its declared token");
-        return authored.substr(0, at) + label + authored.substr(at + 6);
+        authored = authored.substr(0, at) + jump + authored.substr(at + 6);
+        for (const auto& [token, label] : { std::pair{ std::wstring_view(L"{left}"), left },
+            std::pair{ std::wstring_view(L"{right}"), right }, std::pair{ std::wstring_view(L"{drop}"), drop },
+            std::pair{ std::wstring_view(L"{shoot}"), shoot }, std::pair{ std::wstring_view(L"{pause}"), pause } })
+        {
+            const auto found = authored.find(token);
+            if (found != std::wstring::npos) { authored.replace(found, token.size(), label); }
+        }
+        return authored;
     }
+
+    std::wstring expected_jump_help(const std::wstring& authored, const wchar_t* label)
+    { return expected_keys_help(authored, label); }
     }
 
     void check_help_text(Variants& variants, World& world)
@@ -197,8 +211,13 @@ namespace menu_text_acceptance
             {
                 const char* font_group = std::string(entry.key) == "heading" ? "heading" : nullptr;
                 if (font_group != nullptr) { d["menu_style"]["fonts"][font_group].SetString("menu_text_limited"); }
-                else { d["controls_settings"][std::string(entry.key) == "capture" || std::string(entry.key) == "reset" ?
-                    "item_font" : "help_font"].SetString("menu_text_limited"); }
+                else
+                {
+                    const std::string key(entry.key);
+                    const bool row = key == "move_left" || key == "move_right" || key == "jump" || key == "drop" ||
+                        key == "shoot" || key == "pause" || key == "reset";
+                    d["controls_settings"][row ? "item_font" : "help_font"].SetString("menu_text_limited");
+                }
                 d["menu_text"]["keyboard_jump"][entry.key].SetString(entry.key_template ? "Glyph~ {key}" : "Glyph~", d.GetAllocator());
             }, &world);
         }
@@ -219,27 +238,48 @@ namespace menu_text_acceptance
             require(std::isfinite(full_scale) && full_scale > 0.0f && full_scale <= 1.0f &&
                 mattmath::RectangleF(look.controls_position, look.controls_size).contains(full_widget.bounds()),
                 "A complete actual-font Controls variant escaped its fitted help rectangle");
-            const std::wstring current = std::wstring(L"Current: ") + label;
-            const std::wstring pending = std::wstring(L"Pending: ") + label;
             const std::wstring release = std::wstring(L"Release ") + label + L" to keep this choice.";
-            require(jump.current_key(label) == current && jump.pending_key(label) == pending && jump.release_key(label) == release &&
-                world.render.can_render(jump_font, current) && world.render.can_render(jump_font, pending) &&
-                world.render.can_render(jump_font, release), "Keyboard Jump's actual font lost one of its 27 complete formatted labels");
-            require(jump.help_block(label, L"Space") == current + L"\nPending: Space\n" + jump.help &&
-                jump.help_block(L"Space", label) == L"Current: Space\n" + pending + L'\n' + jump.help,
-                "Keyboard Jump help joined the wrong current/pending labels or lost its captured authored help");
+            require(jump.release_key(label) == release && world.render.can_render(jump_font, release),
+                "Keyboard Keys' actual font lost one of its 27 complete formatted key labels");
         }
-        for (const wchar_t* invalid : { L"", L"space", L"a", L"Enter", L"A + B", L"{key}" })
+        for (const wchar_t* label : { L"Left click", L"Right click", L"Middle click", L"Mouse 4", L"Mouse 5" })
         {
-            for (const auto formatter : { &KeyboardJumpMenuText::current_key, &KeyboardJumpMenuText::pending_key,
-                &KeyboardJumpMenuText::release_key })
-            {
-                bool rejected = false;
-                try { std::ignore = (jump.*formatter)(invalid); }
-                catch (const std::invalid_argument&) { rejected = true; }
-                require(rejected, "Keyboard Jump formatter accepted a label outside A-Z and Space");
-            }
+            const std::wstring release = std::wstring(L"Release ") + label + L" to keep this choice.";
+            require(jump.release_key(label) == release && world.render.can_render(jump_font, release),
+                "Keyboard Keys' actual font lost one of its five Shoot mouse labels");
         }
+        for (const wchar_t* invalid : { L"", L"space", L"a", L"Enter", L"A + B", L"{key}", L"left click", L"None", L"Mouse 6" })
+        {
+            bool rejected = false;
+            try { std::ignore = jump.release_key(invalid); }
+            catch (const std::invalid_argument&) { rejected = true; }
+            require(rejected, "Keyboard Keys formatter accepted a label outside A-Z, Space and the Shoot mouse buttons");
+        }
+        // Every effective keyboard key reaches the shipped Controls help.
+        InputBindings custom;
+        custom.keyboard_move_left = Key::j; custom.keyboard_move_right = Key::l; custom.keyboard_jump = Key::a;
+        custom.keyboard_drop = Key::k; custom.keyboard_shoot = { Key::none, MouseButton::right }; custom.keyboard_pause = Key::p;
+        const std::wstring custom_help = controls_text::controls_help(shipped.menu_text().help.controls, custom);
+        require(custom_help == expected_keys_help(help_text[0].text, L"A", L"J", L"L", L"K", L"Right click", L"Esc / P") &&
+            world.render.can_render(jump_font, custom_help),
+            "Controls help did not name every effective keyboard key or lost its actual font coverage");
+        custom.keyboard_shoot = { Key::f, MouseButton::none }; custom.keyboard_pause = Key::none;
+        require(controls_text::controls_help(L"{jump} {left} {right} {drop} {shoot} {pause}", custom) == L"A J L K F Esc" &&
+            controls_text::controls_help(L"{jump}", custom) == L"A",
+            "Optional keyboard tokens did not substitute independently or were required");
+        for (const wchar_t* invalid : { L"{left} {left} {jump}", L"{jump} {pause}{pause}", L"{shoot}", L"{jump} {Left}",
+            L"{jump} {moveleft}", L"{jump} {left" })
+        {
+            bool rejected = false;
+            try { std::ignore = controls_text::controls_help(invalid, custom); }
+            catch (const std::invalid_argument&) { rejected = true; }
+            require(rejected, "Controls help accepted a repeated, missing-Jump or malformed keyboard token");
+        }
+        InputBindings conflicting; conflicting.keyboard_move_left = Key::space;
+        bool conflict_rejected = false;
+        try { std::ignore = controls_text::controls_help(shipped.menu_text().help.controls, conflicting); }
+        catch (const std::invalid_argument&) { conflict_rejected = true; }
+        require(conflict_rejected, "Controls help formatted a conflicting keyboard preference");
         for (const Key invalid : { Key::none, Key::enter, Key::escape })
         {
             bool rejected = false;

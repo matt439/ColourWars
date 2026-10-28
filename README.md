@@ -100,8 +100,11 @@ Mouse aim follows the cursor and the roller keeps its fixed aim.
 Open **Pad Buttons** to choose Jump, Shoot and Pause for each Pad 1-4 slot, each
 with an optional second control: A/B/X/Y, LB/RB, LT/RT, a stick press (LS/RS) or
 Start. The defaults are A / LT Jump, RT Shoot and Start Pause, and a control in use
-on that pad is skipped. **Keyboard Jump** changes the shared keyboard player's Jump
-key. These choices leave menu and intro controls unchanged.
+on that pad is skipped. **Keyboard Keys** changes the shared keyboard player's
+Move left, Move right, Jump, Drop, Shoot (a key or a mouse button) and an extra
+Pause key: select a row and press the new key. Esc always pauses, Down always
+drops and a key in use is refused. These choices leave menu and intro controls
+unchanged.
 **Profiles** keeps up to eight named profiles, each carrying a person's
 deadzones, rumble, comfort switches, pad buttons and Boost. Choose which pad
 wears one there, or press X/R on Join to cycle a joined pad through them; the

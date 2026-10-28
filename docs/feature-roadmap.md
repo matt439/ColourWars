@@ -2698,10 +2698,12 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 ## Action bindings (`GAP#4.2`)
 
 **Default evaluators and keyboard Jump rebinding are implemented and validated.**
-**Keyboard Jump and per-slot pad Jump/Shoot/Pause rebinding are implemented (`GAP#4.2`).**
-The pad defaults are unchanged (A / LT Jump, RT Shoot, Start Pause). Keyboard
-actions other than Jump remain unscoped; the pad contract is
-[below](#pad-buttons-slice-gap42), after the face-button slice it replaced.
+**Every keyboard action and per-slot pad Jump/Shoot/Pause rebinding are implemented (`GAP#4.2`).**
+The pad defaults are unchanged (A / LT Jump, RT Shoot, Start Pause), and so are
+the keyboard's (A / D, Space, S / Down, left click, Esc). The pad contract is
+[below](#pad-buttons-slice-gap42), after the face-button slice it replaced; the
+keyboard's is the [keyboard actions slice](#keyboard-actions-slice-gap42). What
+is left is the author's call on that slice's provisional choices.
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
@@ -2980,8 +2982,8 @@ ports the Pad Jump native matrix to the new page, adding a skipped-conflict
 Shoot Apply. Physical-pad comfort remains `ROAD#2`, and rebinding artwork belongs
 to the later UI pass.
 
-**Remaining scope: UNSCOPED.** Keyboard actions other than Jump (move, drop,
-shoot, pause) still need their own contract.
+Keyboard actions other than Jump are the
+[keyboard actions slice](#keyboard-actions-slice-gap42) below.
 
 Labrador declined the action-evaluation request (engine report 21, formerly
 `GAP#F2`) in `197aff1`: evaluating a binding table is the action map, which its
@@ -2990,6 +2992,102 @@ rules that disagree. The evaluator stays client code; see the
 [closed entry](review/engine-reports.md#21-digital-action-evaluation-remains-client-code--declined-197aff1).
 Pad Buttons is now a real pad-rebinding caller, but it chose discrete cycling
 over capture, so a pad-capture request still has no caller.
+
+### Keyboard actions slice (`GAP#4.2`)
+
+**Contract (2026-10-28).** The keyboard seat's six gameplay actions become
+rebindable on one page: Move left, Move right, Jump, Drop, Shoot and Pause.
+Mouse aim stays on the mouse, F1 stays the gameplay debug control, and menus,
+intro skip and the developer keys keep their fixed keys whatever the player
+chooses.
+
+- **Domain.** Every action takes one control. Move left, Move right, Jump and
+  Drop take one key from the Keyboard Jump slice's domain (A-Z and Space, the
+  same save names and labels). Shoot takes one of those keys or one mouse
+  button (Left, Right, Middle, Mouse 4, Mouse 5), because its shipping default
+  is the left click and the hand on the mouse is the one that aims. Mouse
+  buttons on the other actions are not in this slice.
+- **Fixed aliases.** Escape always pauses a match (it is also menu Back and the
+  capture's cancel key), so the Pause row is **Pause (also)**: one optional
+  extra key, default None. Down always drops beside the chosen Drop key. Neither
+  alias is in the domain, so neither can be taken by another action.
+- **Defaults** are the controls the game always had: A, D, Space, S (and Down),
+  left click, Esc. An untouched keyboard behaves exactly as before.
+- **Conflicts.** One control does one action. Capturing a control another row
+  already uses is refused with a status, as Keyboard Jump refused A/D/S and Pad
+  Buttons skips controls in use; nothing is swapped silently. Jump's refusal
+  now follows the pending choices, so A is free for Jump once Move left moves.
+- **Reserved keys.** Escape, Enter, Backspace, the arrows, F1-F12 and the grave
+  key are outside the domain, so the console, the debug menu, the F-key binds
+  and menu navigation cannot be captured. A bare developer bind on a chosen key
+  stays a warning, now for every effective key rather than Jump alone.
+- **Menus.** Menu navigation is unaffected: W/A/S/D and the arrows still move,
+  Enter/Space still select, Esc/Backspace still go back, R still shuffles, and
+  the menu prompts keep naming those fixed keys. The extra Pause key opens the
+  pause menu from a match; Esc or Back closes it, as before.
+- **Page.** Controls / audio's **Keyboard Keys** row (the Keyboard Jump row's
+  place) opens the existing child, grown to Move left, Move right, Jump, Drop,
+  Shoot, Pause (also), Reset all keys, Apply, Back on the same Controls layout.
+  Each action row shows its pending control; activating it runs the existing
+  press-and-release capture for that action (Shoot also accepts a click). Reset
+  restores every default pending; Apply merges the six choices into the latest
+  preferences, keeping pad profiles; Back discards. The capture's ownership,
+  neutral, chord, focus and cancel rules are unchanged.
+- **Save.** Version 3 stays: `input_bindings` keeps `keyboard_jump` and gains a
+  `keyboard` object `{ "move_left": "a", "move_right": "d", "drop": "s",
+  "shoot": "mouse_left", "pause": "none" }` (mouse tokens `mouse_left`,
+  `mouse_right`, `mouse_middle`, `mouse_x1`, `mouse_x2`). A missing object reads
+  the defaults. A damaged object, or one that conflicts with Jump, recovers the
+  five to the defaults; if Jump then conflicts, Jump recovers to Space too. Pad
+  profiles and every other section survive.
+- **What the keyboard seat is shown.** The match-opening keyboard reminder and
+  the Controls help name the effective keys (`{left}`, `{right}`, `{drop}`,
+  `{shoot}` and `{pause}` join `{jump}` in the help template, each at most
+  once). Menu prompts are unchanged because menu keys are.
+
+**Provisional calls (author may revise).** Refuse rather than swap on conflict;
+mouse buttons for Shoot only; Escape and Down kept as fixed aliases; one
+control per action with no keyboard alternates; the A-Z/Space domain kept
+rather than widened to digits, arrows or modifiers.
+
+**Implemented 2026-10-28.** `InputBindings` gains the five keyboard choices
+beside `keyboard_jump`, with `KeyboardAction`, a `DesktopControl` (a key or a
+mouse button) and per-action domain, name, label and conflict queries in
+[input_bindings.h](../game/input_bindings.h). `effective_action_bindings` writes
+the six into the desktop table, keeping Escape, Down, F1, the intro skip and
+every menu key; `PlayerInput` rebuilds its copy only when a keyboard choice
+changes, so adopting a held key still makes no edge. `KeyboardJumpCapture` now
+targets one action against the pending choices and, for Shoot only, counts mouse
+buttons in the same neutral/chord/focus rules. `KeyboardJumpMenu` keeps its
+class and widgets and grows to the nine rows above, each action an `OptionRow`
+whose activation starts that action's capture. The Controls help, the opening
+reminder and the developer-bind warnings name the effective keys. The page text
+is `menu_text.keyboard_jump` in `presentation.json`, validated for every label
+in every row, every release message and the help with and without the warning.
+
+The game spells the five mouse tokens itself, because `MouseButton` has no
+names as `Key` has; that ask is parked in the
+[engine-report ledger](review/engine-reports.md#what-is-deliberately-not-here).
+One fixed interaction carries over: as everywhere in the menus, the first
+direction after a capture needs one neutral frame, so a click released and an
+arrow pressed in the same frame moves nothing.
+
+**Checks.** `input_bindings` covers the six domains against explicit token and
+label tables, twenty reserved keys, defaults equal to the old table, per-profile
+conflicts, the custom and keyed-Shoot mappings, the actual reader (moved keys,
+fixed Down/Escape/Space/menu A, held adoption, focus, conflict refusal), the
+save schema and round trip, refusal before mutation and recovery for thirteen
+damaged objects with and without a clashing Jump. `keyboard_jump_capture` runs
+every key for every action against pending choices (142 accepted, 20 refused),
+all five Shoot clicks, clicks ignored elsewhere, key-and-click chords, focus and
+Escape. `menu_text` pins the copy, the tokens and the mouse labels.
+`check-painter.ps1 -KeyboardJumpOnly` drives the real page through Controls,
+moving Move left, Shoot (a right click), the extra Pause and Jump onto the freed
+A, and checks Apply's merge, the reload and Reset all keys.
+
+**Left (`DECISION`).** Try the page on a keyboard and confirm or change the
+provisional calls above. Widening the domain, keyboard alternates and the
+extra Pause key closing the pause menu (Esc does that today) are not started.
 
 ## Per-player menu focus (`GAP#D1`)
 

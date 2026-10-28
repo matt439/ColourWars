@@ -45,10 +45,15 @@ namespace menu_text_acceptance
             require(text.pad_buttons.*entry.field == entry.text,
                 std::string("Pad Buttons menu default changed: ") + entry.key);
         }
-        require(text.keyboard_jump.current_key(L"Space") == L"Current: Space" &&
-            text.keyboard_jump.pending_key(L"J") == L"Pending: J" &&
-            text.keyboard_jump.release_key(L"W") == L"Release W to keep this choice.",
-            "Keyboard Jump wrappers changed their literal copy or required key substitution");
+        require(text.keyboard_jump.release_key(L"W") == L"Release W to keep this choice." &&
+            text.keyboard_jump.release_key(L"Right click") == L"Release Right click to keep this choice." &&
+            text.keyboard_jump.row(0) == L"Move left" && text.keyboard_jump.row(2) == L"Jump" &&
+            text.keyboard_jump.row(5) == L"Pause (also)",
+            "Keyboard Keys wrappers changed their literal copy, row order or required key substitution");
+        bool row_rejected = false;
+        try { std::ignore = text.keyboard_jump.row(6); }
+        catch (const std::out_of_range&) { row_rejected = true; }
+        require(row_rejected, "Keyboard Keys row lookup accepted a seventh action");
         for (const auto& entry : status_text)
         {
             require(text.status.*entry.field == entry.text, std::string("Save-status default changed: ") + entry.key);

@@ -372,7 +372,7 @@ private:
 	// words and fitting, retaining the text widget's original font and copy.
 	const InputBindings* input_bindings_ = nullptr;
 	labrador::TextDropShadow* keyboard_controls_ = nullptr;
-	std::wstring keyboard_jump_label_;
+	std::wstring keyboard_controls_words_;
 	labrador::TextDropShadow* gamepad_controls_ = nullptr;
 	std::vector<int> gamepad_slots_;
 	std::array<PadProfile, input_slots::pad_count> gamepad_pads_{};

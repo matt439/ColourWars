@@ -1011,8 +1011,11 @@ the separate controls item font or shared menu detail font.
 | `pad_association` | Multiline explanation of Pad 1-4 profile association |
 | `aim_cutoff` | Unscaled caption above the right-stick preview |
 
-`controls` preserves this exact shipped text, including the authored line breaks
-and spacing:
+`controls` preserves this exact shipped text with the default keyboard keys,
+including the authored line breaks and spacing. The template spells the
+keyboard keys as `{jump}` (required once) and `{left}`, `{right}`, `{drop}`,
+`{shoot}` and `{pause}` (each optional, at most once); the page substitutes the
+saved keys, and `{pause}` is `Esc` followed by any extra Pause key:
 
 ```text
 CONTROLLER
@@ -1022,7 +1025,7 @@ Jump: A / LT (hold for height)
 Pause: Start    Debug: Back / View
 KEYBOARD + MOUSE
 Move: A / D    Drop: S / Down
-Aim: mouse cursor    Shoot: left click
+Aim: mouse cursor    Shoot: Left click
 Jump: Space (hold for height)
 Pause: Esc    Debug: F1
 MENUS
@@ -1064,6 +1067,17 @@ paper/help/status regions; validation measures every control label in every
 row's value column. The shared Controls block names the defaults; the opening
 reminder uses the actual roster's saved controls, including mixed four-pad
 profiles. See the [pad buttons slice](feature-roadmap.md#pad-buttons-slice-gap42).
+
+`menu_text.keyboard_jump` owns the Keyboard Keys page (formerly Keyboard Jump):
+the heading, the six action-row labels (Move left, Move right, Jump, Drop,
+Shoot, Pause (also)), the reset label, multiline help, the capture statuses
+(`capture_ready_mouse` is Shoot's, which also takes a click) and the
+`capture_release` template, whose `{key}` is any key or Shoot mouse label. The
+rows show the pending controls, whose labels (A-Z, Space, Left click ... Mouse
+5, None) are the game's. Validation measures every label in every row's value
+column, the release template with every label, and the help with and without
+the developer-bind warning. See the
+[keyboard actions slice](feature-roadmap.md#keyboard-actions-slice-gap42).
 
 Startup checks actual help-font glyphs and finite, positive measured bounds.
 The help region begins at `controls_settings.controls_position`, has size

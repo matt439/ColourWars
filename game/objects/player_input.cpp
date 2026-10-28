@@ -14,7 +14,7 @@ PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
 {
 	if (this->input_bindings_ == nullptr) { throw std::invalid_argument("PlayerInput requires input bindings"); }
 	this->keyboard_bindings_ = effective_action_bindings(*this->input_bindings_);
-	this->keyboard_jump_ = this->input_bindings_->keyboard_jump;
+	this->keyboard_choices_ = *this->input_bindings_;
 	this->pad_profiles_ = this->input_bindings_->pads;
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
@@ -24,10 +24,10 @@ PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
 
 const ActionBindings& PlayerInput::effective_bindings() const
 {
-	if (this->keyboard_jump_ != this->input_bindings_->keyboard_jump)
+	if (!same_keyboard(this->keyboard_choices_, *this->input_bindings_))
 	{
 		this->keyboard_bindings_ = effective_action_bindings(*this->input_bindings_);
-		this->keyboard_jump_ = this->input_bindings_->keyboard_jump;
+		this->keyboard_choices_ = *this->input_bindings_;
 	}
 	return this->keyboard_bindings_;
 }

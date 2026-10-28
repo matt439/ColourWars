@@ -239,17 +239,19 @@ namespace presentation_read
 		const JsonValue jump = json.object("keyboard_jump");
 		KeyboardJumpMenuText& keys = text.keyboard_jump;
 		for (const auto& field : { std::pair{ "heading", &KeyboardJumpMenuText::heading },
-			std::pair{ "capture", &KeyboardJumpMenuText::capture }, std::pair{ "reset", &KeyboardJumpMenuText::reset },
-			std::pair{ "current", &KeyboardJumpMenuText::current }, std::pair{ "pending", &KeyboardJumpMenuText::pending },
+			std::pair{ "move_left", &KeyboardJumpMenuText::move_left }, std::pair{ "move_right", &KeyboardJumpMenuText::move_right },
+			std::pair{ "jump", &KeyboardJumpMenuText::jump }, std::pair{ "drop", &KeyboardJumpMenuText::drop },
+			std::pair{ "shoot", &KeyboardJumpMenuText::shoot }, std::pair{ "pause", &KeyboardJumpMenuText::pause },
+			std::pair{ "reset", &KeyboardJumpMenuText::reset },
 			std::pair{ "pending_status", &KeyboardJumpMenuText::pending_status }, std::pair{ "saved_status", &KeyboardJumpMenuText::saved_status },
 			std::pair{ "capture_wait_neutral", &KeyboardJumpMenuText::capture_wait_neutral }, std::pair{ "capture_ready", &KeyboardJumpMenuText::capture_ready },
+			std::pair{ "capture_ready_mouse", &KeyboardJumpMenuText::capture_ready_mouse },
 			std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release }, std::pair{ "capture_rejected", &KeyboardJumpMenuText::capture_rejected },
 			std::pair{ "capture_conflict", &KeyboardJumpMenuText::capture_conflict }, std::pair{ "capture_cancelled", &KeyboardJumpMenuText::capture_cancelled },
 			std::pair{ "debug_collision", &KeyboardJumpMenuText::debug_collision } })
 		{ keys.*field.second = read_menu_line(jump, field.first); }
 		keys.help = read_menu_block(jump, "help");
-		for (const auto& field : { std::pair{ "current", &KeyboardJumpMenuText::current },
-			std::pair{ "pending", &KeyboardJumpMenuText::pending }, std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release } })
+		for (const auto& field : { std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release } })
 		{
 			try { std::ignore = controls_text::key_line(keys.*field.second, L"Space"); }
 			catch (const std::invalid_argument& error)
@@ -539,17 +541,15 @@ namespace presentation_read
 	}
 }
 
-std::wstring KeyboardJumpMenuText::current_key(std::wstring_view label) const
-{ return controls_text::key_line(this->current, label); }
-
-std::wstring KeyboardJumpMenuText::pending_key(std::wstring_view label) const
-{ return controls_text::key_line(this->pending, label); }
-
 std::wstring KeyboardJumpMenuText::release_key(std::wstring_view label) const
 { return controls_text::key_line(this->capture_release, label); }
 
-std::wstring KeyboardJumpMenuText::help_block(std::wstring_view current_label, std::wstring_view pending_label) const
-{ return this->current_key(current_label) + L'\n' + this->pending_key(pending_label) + L'\n' + this->help; }
+const std::wstring& KeyboardJumpMenuText::row(size_t index) const
+{
+	const std::array<const std::wstring*, 6> rows{ &this->move_left, &this->move_right, &this->jump,
+		&this->drop, &this->shoot, &this->pause };
+	return *rows.at(index);
+}
 
 const std::wstring& PadButtonsMenuText::row(size_t index) const
 {

@@ -114,10 +114,10 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	}
 	if (anyone_on_keyboard)
 	{
-		const Key key = this->input_bindings_ ? this->input_bindings_->keyboard_jump : Key::space;
-		add_reminder(L"KEYBOARD + MOUSE", controls_text::keyboard_controls_reminder(key));
+		const InputBindings bindings = this->input_bindings_ ? *this->input_bindings_ : InputBindings{};
+		this->keyboard_controls_words_ = controls_text::keyboard_controls_reminder(bindings);
+		add_reminder(L"KEYBOARD + MOUSE", this->keyboard_controls_words_);
 		this->keyboard_controls_ = this->controls_reminders_.back().text.get();
-		this->keyboard_jump_label_ = input_key_label(key);
 	}
 	this->centre_controls_text();
 
@@ -135,12 +135,12 @@ void Level::refresh_keyboard_controls()
 	}
 	if (this->keyboard_controls_)
 	{
-		const Key key = this->input_bindings_ ? this->input_bindings_->keyboard_jump : Key::space;
-		const std::wstring_view label = input_key_label(key);
-		if (this->keyboard_jump_label_ != label)
+		const std::wstring words = controls_text::keyboard_controls_reminder(
+			this->input_bindings_ ? *this->input_bindings_ : InputBindings{});
+		if (this->keyboard_controls_words_ != words)
 		{
-			this->keyboard_controls_->set_text(controls_text::keyboard_controls_reminder(key));
-			this->keyboard_jump_label_ = label;
+			this->keyboard_controls_->set_text(words);
+			this->keyboard_controls_words_ = words;
 			changed = true;
 		}
 	}

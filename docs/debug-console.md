@@ -1244,10 +1244,12 @@ The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
   says. **`grave`, `f10` and `f11` are reserved** (console, debug menu). Bare
   binds on A, D, S, Space, Down, Escape and F1 keep their existing warning;
   Space still skips the opening after Jump is rebound, and Enter retains its
-  existing omission. A bare bind on the effective saved Jump key also warns:
-  it does both. The Keyboard Jump page warns about an existing bare bind on
-  its pending key. These are warnings, so the bind and gameplay source both
-  remain available. See the [keyboard Jump slice](feature-roadmap.md#action-bindings-gap42).
+  existing omission. A bare bind on any effective saved keyboard key (Move
+  left/right, Jump, Drop, a keyed Shoot or the extra Pause) also warns: it
+  does both. The Keyboard Keys page warns about an existing bare bind on any
+  of its pending keys. These are warnings, so the bind and gameplay source both
+  remain available. See the [keyboard Jump slice](feature-roadmap.md#action-bindings-gap42)
+  and the [keyboard actions slice](feature-roadmap.md#keyboard-actions-slice-gap42).
 - Modifiers match exactly: Shift+F5 does not run F5's bind. (Before phase 4,
   Shift+F5 restarted like F5.)
 - Binds run only in a match, and not while the live console is open. The echo
@@ -1262,14 +1264,14 @@ The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
 There is no free F-key for the perf overlay: F12 is the Windows debugger hotkey
 (it breaks into an attached debugger). `bind shift+f2 "overlay perf"` gives it one.
 
-While the Keyboard Jump page captures a physical key, it owns input before
+While the Keyboard Keys page captures a physical key (or Shoot's click), it owns input before
 developer page hooks run. Grave/F10/F11 presses and the pad Back+Start chord
 cannot open developer UI or leak into it afterward. Capture discards queued
 scripts, match/leave requests, goto, screenshots, reload content and armed
 record/replay work, with one cancellation notice. It retains active
 recording/replay, binds and current settings. A consumed pad chord must release
 both buttons before it can start another session. The developer hooks and
-collision query are inert in Release; keyboard Jump rebinding is available there.
+collision query are inert in Release; keyboard rebinding is available there.
 
 ## History
 
