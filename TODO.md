@@ -50,7 +50,7 @@ when they don't compete with it.
 [maintenance](docs/code-hygiene.md#follow-up-shortlist-2026-10-28) and
 [authoring](docs/level-editor.md#authoring-follow-up-shortlist-2026-10-28)
 shortlists while attended reviews wait. Continue with a scoped candidate from
-those lists after the completed painter cleanup (`HYG#18`).
+those lists after the completed probe-wrapper paths (`HYG#19`).
 This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.

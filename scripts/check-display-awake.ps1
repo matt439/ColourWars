@@ -6,9 +6,10 @@ param(
 )
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if (!$OutputDirectory) { $OutputDirectory=Join-Path $repo 'out/validation/display-awake' }
-$run=Join-Path (Join-Path ([IO.Path]::GetFullPath($OutputDirectory)) $Preset) ([Guid]::NewGuid().ToString('N'))
+$run=Join-Path (Join-Path (Resolve-CheckFileSystemPath $OutputDirectory) $Preset) ([Guid]::NewGuid().ToString('N'))
 $working=Join-Path $run 'working';$profile=Join-Path $run 'profile';$evidence=Join-Path $run 'evidence'
 foreach($directory in @($run,$working,$profile,$evidence,(Join-Path $profile 'ColourWars'))) { [IO.Directory]::CreateDirectory($directory)|Out-Null }
 $save=Join-Path $profile 'ColourWars/save_data.json'

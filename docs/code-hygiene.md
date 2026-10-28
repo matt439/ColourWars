@@ -5,6 +5,43 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order.
 
+## Probe-wrapper evidence paths (`HYG#19`)
+
+**Done (2026-10-28).** Extended `HYG#17`'s caller-relative filesystem contract
+to `check-movement-feedback.ps1`, `check-paint-fx.ps1`,
+`check-display-awake.ps1` and `check-frame-pacing.ps1`. Their explicit
+`OutputDirectory` values used `Path.GetFullPath`, so distinct PowerShell
+and process directories placed evidence under the wrong caller directory.
+
+The ranked follow-up shortlist is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Four build/probe wrappers retain the same process-relative output conversion. Each can stop at missing-tool preflight before Git, compiler or native work. | Selected as `HYG#19`: reuse the existing filesystem resolver, preserving defaults, preset/GUID suffixes, preflight order and normal receipts. Four imports and four substitutions; low risk. |
+| 2 | Five other wrappers have the same conversion, but different startup/helper boundaries. | Trace their independent initialization requirements in a later scope; failure-reporting loads a native helper before path resolution. |
+| 3 | Vertical lifts (`ROAD#28`) would add a new gameplay affordance. | Current loader, carry, projectile, shadow, bot and replay paths explicitly model horizontal motion. Define the coordinated physics contract before promoting that larger capability; an axis toggle is insufficient. |
+
+Each wrapper now dot-sources `check-path.ps1` and resolves its output value
+through `Resolve-CheckFileSystemPath`. Existing default roots, run hierarchies,
+options and preflight order remain unchanged. `run-balance` retains its
+documented repository-relative policy.
+
+Exact private copies reproduced misplaced relative output in all four old
+scripts. Fresh PowerShell 5.1 and pwsh candidate hosts each pass 16 cases:
+relative Unicode/space paths, absolute and default-root controls, and explicit
+non-filesystem refusal for every wrapper. Empty private PATH stops each
+runner at missing-CMake preflight, before Git, metadata/CIM, compilation,
+native helpers or GPU work. Literal roots, preset/GUID layout, existing failed
+receipt boundaries, five source hashes, private input files and caller
+environment/location/stack remain correct. Independent review passes. The
+denied worktree-status and global process queries remain stopped.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`hyg19-baseline/15f709722f8940a798475e02c95cca95`; candidate PS5
+`hyg19-candidate/8efa89e5510c42acbea157d5dab619de` and pwsh
+`hyg19-candidate/59468bc27ab042829558f504b1b3e9a9`. This qualification
+establishes path/preflight behavior, with no new runtime or hardware claim.
+
 ## Painter initialization cleanup (`HYG#18`)
 
 **Done (2026-10-28).** The first `HYG#17` native attempt exposed a separate
@@ -97,8 +134,8 @@ Independent review and six-file source-immutability checks pass. Evidence under
 `hyg17-baseline/85f23b68914e44108d3f6e396f6451cb`, final four-host CPU batch
 `hyg17-qualification/967a47bcf11643eba088bbe5a8c5f3aa`, native batch
 `hyg17-native/1f97aa8d62eb480787300d0710db3bf8` (leaf
-`e067d5a5840546299ce439f626526c7d`). Other wrappers remain candidates for a
-later bounded scope. The separately observed evidence-initialization location
+`e067d5a5840546299ce439f626526c7d`). Four more wrappers are qualified by
+`HYG#19`; the remaining five need separate scoping. The observed initialization location
 leak is resolved by `HYG#18` above, without retrying the denied metadata query.
 
 ## Follow-up shortlist (2026-10-28)
