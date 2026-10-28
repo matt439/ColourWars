@@ -107,12 +107,17 @@ void DebugDirectorImpl::save_binds()
 	}
 	const std::filesystem::path path = *directory / L"binds.cfg";
 	const std::string text = this->binds_.save_text();
-	std::error_code ignored;
 	if (this->binds_ == DebugBinds::defaults())
 	{
 		// Nothing differs: no file, so a later change to a default reaches
 		// this profile too.
-		std::filesystem::remove(path, ignored);
+		std::error_code removed;
+		std::filesystem::remove(path, removed);
+		if (removed)
+		{
+			this->log_.warning("binds: cannot remove " + labrador::path_to_utf8(path) +
+				"; the change holds for this session");
+		}
 		return;
 	}
 	if (!debug_files::write_file(path, text))

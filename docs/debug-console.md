@@ -1306,6 +1306,35 @@ Evidence under `out/validation/implementation-loop-20261028/`: failing baseline
 `dbg9-candidate/3bfe705104f949cf8914753e5d1aa395`. The final receipt verifies
 all six source/test files remained unchanged during qualification.
 
+## Bind reset persistence (`DBG#10`)
+
+**Done (2026-10-28).** This ranked authoring follow-up fixed an error-handling
+gap: `save_binds` ignored removal errors when the table returned to defaults.
+A blocked `binds.cfg` retained overrides for the next session while the reset
+reported current-session success. Ordinary failed writes already warned that
+a change holds only for this session.
+
+The defaults branch now checks the removal error and uses the same warning
+policy, naming the file. Current-session defaults and command success,
+successful/absent-file removal, the loading guard and the existing atomic
+writer are unchanged. This also covers reaching defaults through `unbind`,
+not just `binds.reset`.
+
+An owned read handle on a private saved override reproduced the missing
+warning, with reads/writes allowed and deletion withheld. The new checks cover
+reset and unbind, saved bytes, active defaults, warning severity/path and a
+fresh session retaining the saved override while locked. After handle release,
+retry removes the file without a warning and a fresh session loads defaults;
+an absent file also produces no warning. No ACL, security attribute or real
+player profile is changed.
+
+Both game builds and full console acceptance pass, including prior Debug
+script/replay/tuning/bind checks and the Release inert/layout/RTTI boundary.
+Independent review and four-file source-immutability checks pass. Evidence
+under `out/validation/implementation-loop-20261028/`: failing private baseline
+`dbg10-baseline/1e76223c74134073af356fddd48ede3a`, final both-preset batch
+`dbg10-candidate/53b37c8972294ef797f71362378d6d72`.
+
 ## History
 
 The console's history (Up / Down) is the last 64 non-blank lines, adjacent
