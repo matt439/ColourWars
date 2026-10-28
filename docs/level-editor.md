@@ -56,6 +56,47 @@ wait. A fresh source review ranked these independent authoring defects:
 | 2 | Ramp drawing is triangular, but `Editor::hit` accepts the entire rectangle, including its empty half. | Improve selection of overlapping geometry; define edge tolerance and preserve selection priority before implementation. |
 | 3 | Debug `quote_word` does not protect a quoted word's trailing backslash, which the tokenizer consumes with the closing quote. | Useful for paths and saved binds; needs grammar and persistence qualification. Larger scope than the canvas fix. |
 
+After those three fixes, the next source-based shortlist is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | The shared `user_stage_contract::usable_name` accepts `CON`, `NUL`, `COM1` and other Windows device stems, although Save to My Stages produces ordinary `.json` paths. | Selected as `ED#15`: reject unusable names before destination access, sharing the rule between editor and game. Small change with pure-name and private-target checks. |
+| 2 | The editor validates UTF-8, but the game's default-flag level/fingerprint parses do not validate unknown string bytes or raw-NUL suffixes. | A client-owned snapshot check may align admission without an engine update. Moderate diagnostic/precedence risk; scope separately. |
+| 3 | Debug `binds.reset` ignores failure to remove the saved overrides, even though ordinary writes already use atomic replacement. | A blocked private file can expose misleading success and old binds on restart. Small feedback/persistence fix; avoid rewriting the existing atomic writer. |
+
+#### Reserved stage filenames (`ED#15`)
+
+**Done (2026-10-28).** The stage id becomes a Windows filename, so the shared
+editor/game contract now enforces the documented
+[reserved-name rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+alongside the existing ASCII/length/leading-character rules. It rejects `CON`,
+`PRN`, `AUX`, `NUL`, `COM1`-`COM9` and `LPT1`-`LPT9` without case; their
+`.json` extension does not make them ordinary files. Non-ASCII spellings
+remain covered by the existing ASCII-only rule. Explicit ASCII folding keeps
+the new match independent of locale. Valid neighboring identifiers, name
+collisions, source registration and folder policy are unchanged.
+
+The pure old-source contract first reproduced accepting `CON`, before any
+reserved path access. Tests now cover 22 reserved stems in three ASCII cases,
+17 valid neighbors and prior character/length rules. Sixty-six actual editor
+target refusals preserve an absent ordinary folder, private source and full
+history; only safe `console_map.json` performs save/reopen. The shared refusal
+explains the Windows restriction. No reserved destination is opened, written
+or inspected, and no player's stage folder is involved.
+
+Both game/editor builds, consumer user-stage checks, the full editor checker
+and native stage-scan details pass in both presets. Native checks include the
+longer shared refusal text, pagination and real menu transitions. Independent
+review and source-immutability checks pass. This does not establish attended
+wording, editor play or hardware acceptance.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`ed15-baseline/98db2c0ac3f74994a601e83d9f8255f2`, final both-preset batch
+`ed15-candidate/dbeb4001dff44ec49b4cda9caa3757ee`. Full editor runs under
+`out/acceptance/<preset>/level-editor/`: Debug
+`c912cc96102b452dac0628b5f08d090d`, Release
+`2bda6f3f55fb406e8cc19627ebf0b816`.
+
 #### Arrow edits during canvas gestures (`ED#13`)
 
 **Done (2026-10-28).** Actual hidden-window messages first reproduced a mouse

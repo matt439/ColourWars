@@ -9,6 +9,7 @@
 #include "game/stage_scan_diagnostics.h"
 #include "game/states/menu_context.h"
 #include "game/tuning.h"
+#include "game/user_stage_contract.h"
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
@@ -41,6 +42,57 @@ namespace
 	void require(bool condition, const std::string& message)
 	{
 		if (!condition) { throw std::runtime_error(message); }
+	}
+
+	void check_name_contract()
+
+	{
+		// Baseline first: this is a pure string check, before creating scratch or
+		// constructing any reserved destination. Never exercise a device path.
+		require(!user_stage_contract::usable_name("CON"), "Reserved Windows stage name was accepted");
+		const char* reserved[] = { "CON", "PRN", "AUX", "NUL",
+			"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+			"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+		for (const char* name : reserved)
+		{
+			std::string lower(name), mixed(name);
+			for (std::size_t index = 0; index < lower.size(); ++index)
+			{
+				if (lower[index] >= 'A' && lower[index] <= 'Z')
+				{
+					lower[index] = static_cast<char>(lower[index] + ('a' - 'A'));
+					if (index % 2 != 0) { mixed[index] = lower[index]; }
+				}
+			}
+			for (const std::string& spelling : { std::string(name), lower, mixed })
+			{
+				require(!user_stage_contract::usable_name(spelling),
+					"A reserved Windows stage stem was accepted: " + spelling);
+			}
+		}
+		// These are identifier checks only, especially COM10/LPT0; no path or
+		// filesystem operation is used to decide what Windows would open.
+		for (const char* name : { "console", "console_map", "nul_map", "con_1", "prn1", "auxiliary",
+			"COM10", "LPT0", "my_con", "_lpt9", "lpt_9", "A0b9_-", "a-", "_", "con_", "nul-stage", "COM1_copy" })
+		{
+			require(user_stage_contract::usable_name(name), "A valid neighboring stage identifier was refused: " + std::string(name));
+		}
+		require(user_stage_contract::usable_name(std::string(64, 'a')) &&
+			!user_stage_contract::usable_name(std::string(65, 'a')), "Stage name length boundaries changed");
+		for (const std::string& name : { std::string(), std::string("-arena"), std::string("bad name"),
+			std::string("arena.v1"), std::string("arena/name"), std::string("caf\xC3\xA9"), std::string(1, '\0') })
+		{
+			require(!user_stage_contract::usable_name(name), "Existing ASCII/leading-character stage-name refusal changed");
+		}
+		const std::string rule = user_stage_contract::name_rule();
+		std::string explanation = rule;
+		for (char& character : explanation)
+			if (character >= 'A' && character <= 'Z') { character = static_cast<char>(character + ('a' - 'A')); }
+		require(explanation.find("ascii") != std::string::npos && explanation.find("64") != std::string::npos &&
+			(explanation.find("reserv") != std::string::npos || explanation.find("device") != std::string::npos),
+			"The shared name-rule diagnostic does not explain reserved stems and existing character limits");
+		std::cout << "PASS stage name contract: 22 reserved ASCII stems in three cases, valid neighbors, "
+			"length/ASCII/leading rules and explanatory diagnostics; no reserved path I/O\n";
 	}
 
 	struct World
@@ -582,6 +634,7 @@ int main(int argc, char** argv)
 	try
 	{
 		require(argc == 2, "Usage: user_stages.exe <staged game directory>");
+		check_name_contract();
 		const std::filesystem::path content(argv[1]);
 		const std::filesystem::path scratch = fresh(
 			std::filesystem::absolute(argv[0]).parent_path() / "user-stages-fixtures");
