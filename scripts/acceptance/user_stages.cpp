@@ -167,6 +167,139 @@ namespace
 		require(output.good(), "Cannot write fixture " + path_to_utf8(path));
 	}
 
+	std::string read_bytes(const std::filesystem::path& path)
+	{
+		std::ifstream input(path, std::ios::binary);
+		require(input.good(), "Cannot read source fixture " + path_to_utf8(path));
+		const std::string text{ std::istreambuf_iterator<char>(input), {} };
+		require(!input.bad(), "Cannot read complete source fixture " + path_to_utf8(path));
+		return text;
+	}
+
+	std::string with_source_metadata(const std::string& stage, const std::string& member)
+	{
+		const std::size_t end = stage.find_last_of('}');
+		require(end != std::string::npos, "Complete-source fixture needs the shipped stage's closing root");
+		return stage.substr(0, end) + ',' + member + stage.substr(end);
+	}
+
+	void check_runtime_source(const std::filesystem::path& content, const std::filesystem::path& scratch)
+	{
+		const auto original = content / "levels/close_quarters.json";
+		const std::string stage = read_bytes(original);
+		const auto path = scratch / "complete-source.json";
+		const std::string name = path_to_utf8(path);
+		write_text(path, stage);
+		const LevelLoadedInfo pristine(name.c_str());
+		pristine.validate();
+		const auto refusal = [&](const std::string& bytes)
+		{
+			write_text(path, bytes);
+			std::string diagnostic;
+			try { const LevelLoadedInfo loaded(name.c_str()); }
+			catch (const std::runtime_error& error) { diagnostic = error.what(); }
+			require(read_bytes(path) == bytes, "Runtime admission changed its private source bytes");
+			return diagnostic;
+		};
+		const auto named_offset = [&](const std::string& diagnostic, std::size_t offset)
+		{
+			require(diagnostic.find(name) != std::string::npos &&
+				diagnostic.find("(offset " + std::to_string(offset) + ')') != std::string::npos,
+				"Runtime source refusal lost its source or original-snapshot byte offset: " + diagnostic);
+		};
+
+		// First new regression: a real complete stage was previously accepted as
+		// its prefix when the bounded input contained a raw NUL and more bytes.
+		const std::string hidden_suffix = stage + std::string(1, '\0') + R"({"hidden":true})";
+		const std::string baseline = refusal(hidden_suffix);
+		require(!baseline.empty(), "Runtime accepted a raw NUL JSON suffix.");
+		named_offset(baseline, stage.size());
+		for (const std::string& prefix : { std::string(), std::string("\xef\xbb\xbf") })
+		{
+			for (const std::string& suffix : { std::string(1, '\0'),
+				std::string(" \r\n") + '\0' + "trailing bytes" })
+			{
+				const std::string bytes = prefix + stage + suffix;
+				const std::string diagnostic = refusal(bytes);
+				require(diagnostic.find("NUL") != std::string::npos, "Runtime did not identify a raw NUL suffix");
+				named_offset(diagnostic, bytes.find('\0'));
+			}
+		}
+
+		const std::array<std::string, 6> malformed{ std::string("\x80"), std::string("\xc0\xaf"),
+			std::string("\xc2"), std::string("\xed\xa0\x80"), std::string("\xf4\x90\x80\x80"), std::string("\xff") };
+		std::size_t malformed_cases = 0;
+		for (const std::string& prefix : { std::string(), std::string("\xef\xbb\xbf") })
+		{
+			for (const std::string& invalid : malformed)
+			{
+				for (bool key : { false, true })
+				{
+					const std::string member = key ? "\"unknown-" + invalid + "\":true" :
+						"\"unknown\":{\"text\":\"" + invalid + "\"}";
+					const std::string bytes = prefix + with_source_metadata(stage, member);
+					const std::string diagnostic = refusal(bytes);
+					require(diagnostic.find("encoding") != std::string::npos,
+						"Runtime accepted malformed UTF-8 in an unknown value or key");
+					named_offset(diagnostic, prefix.size() + stage.find_last_of('}') + 1 + member.find(invalid));
+					++malformed_cases;
+				}
+			}
+		}
+
+		// Preserve diagnostics already owned by the engine syntax parser, even
+		// when a later byte would also fail the new complete-source check.
+		for (const std::string& bytes : { std::string("{\"format\":2,}"),
+			std::string("{\"format\":1,\"text\":\"") + '\0' + "\"}",
+			std::string("{\"format\":2,\"unknown\":\"") + malformed[1] + "\",}" })
+		{
+			std::string expected;
+			try { const auto document = parse_json(bytes, name); }
+			catch (const std::runtime_error& error) { expected = error.what(); }
+			require(!expected.empty() && refusal(bytes) == expected,
+				"Complete-source validation replaced an earlier engine syntax diagnostic");
+		}
+		for (const std::string& format : { std::string("2"), std::string("true") })
+		{
+			const std::string base = "{\"format\":" + format + '}';
+			const std::string expected = refusal(base);
+			require(expected.find("format") != std::string::npos &&
+				refusal(base + '\0' + "suffix") == expected &&
+				refusal("{\"format\":" + format + ",\"unknown\":\"" + malformed[1] + "\"}") == expected,
+				"Complete-source validation changed unsupported/malformed format diagnostic precedence");
+		}
+
+		const auto hash = [&](const std::string& bytes)
+		{
+			write_text(path, bytes);
+			const LevelLoadedInfo loaded(name.c_str());
+			loaded.validate();
+			require(read_bytes(path) == bytes, "Loading a valid snapshot changed its bytes");
+			return loaded.semantic_hash();
+		};
+		const std::string metadata = with_source_metadata(stage,
+			std::string(R"("unknown":{"text":"A\u0000B","utf8":"caf)") + "\xc3\xa9" +
+			R"(","number":1,"order":{"first":true,"second":null}})");
+		const std::string equivalent = with_source_metadata(stage,
+			R"("unknown":{"text":"\u0041\u0000B","utf8":"caf\u00e9","number":1e0,"order":{"first":true,"second":null}})");
+		const std::uint64_t valid_hash = hash(metadata);
+		require(hash(equivalent) == valid_hash && hash("\xef\xbb\xbf" + equivalent + " \r\n\t") == valid_hash &&
+			hash(stage) == hash("\xef\xbb\xbf" + stage),
+			"Complete-source admission changed valid UTF-8/BOM/escaped-NUL/equal-number semantic meaning");
+		require(hash(with_source_metadata(stage,
+			R"("unknown":{"text":"A\u0000B","utf8":"caf\u00e9","number":1,"order":{"second":null,"first":true}})")) != valid_hash,
+			"Runtime fingerprint lost authored unknown-member order");
+		write_text(path, metadata);
+		const LevelLoadedInfo cached(name.c_str());
+		write_text(path, hidden_suffix);
+		require(cached.semantic_hash() == valid_hash && !cached.display_name().empty(),
+			"An admitted runtime definition reread subsequently malformed disk bytes");
+		require(read_bytes(original) == stage, "Runtime source checks changed the staged input asset");
+		std::cout << "PASS complete runtime source: raw NUL suffixes, " << malformed_cases <<
+			" malformed UTF-8 key/value/BOM cases, original offsets, syntax/format precedence, "
+			"valid decoded/hash equivalence and cached private snapshot\n";
+	}
+
 	template<class Edit>
 	void write_level(const rapidjson::Document& base, const std::filesystem::path& path, Edit edit)
 	{
@@ -219,6 +352,33 @@ namespace
 		{
 			return line.rfind(prefix, 0) == 0 && line.find(reason, prefix.size()) != std::string::npos;
 		});
+	}
+
+	void check_runtime_source_scan(const Fixture& fixture, const std::filesystem::path& content,
+		const std::filesystem::path& scratch)
+	{
+		const auto folder = fresh(scratch / "complete-source-scan");
+		const std::string stage = read_bytes(content / "levels/close_quarters.json");
+		write_text(folder / "a-valid.json", stage);
+		write_text(folder / "b-nul.json", stage + '\0' + "unparsed suffix");
+		write_text(folder / "c-value.json", with_source_metadata(stage, "\"unknown\":\"\xc0\xaf\""));
+		write_text(folder / "d-key.json", with_source_metadata(stage, "\"unknown-\xed\xa0\x80\":true"));
+		Shipped shipped;
+		const UserStageScan result = scan(fixture, content, folder, shipped);
+		require(result.accepted == std::vector<std::string>{ "a-valid" } && result.refused.size() == 3 &&
+			shipped.stages.size() == 12 && shipped.levels.contains("a-valid") &&
+			!shipped.levels.contains("b-nul") && !shipped.levels.contains("c-value") && !shipped.levels.contains("d-key"),
+			"Mixed runtime source scan lost its valid sibling or published malformed definitions");
+		require(refused(result, "b-nul.json", "NUL") && refused(result, "c-value.json", "encoding") &&
+			refused(result, "d-key.json", "encoding"), "Mixed runtime source scan lost per-file refusal causes");
+		for (const std::string& diagnostic : result.refused)
+		{
+			require(diagnostic.find("(offset ") != std::string::npos &&
+				diagnostic.find('\n') == std::string::npos && diagnostic.find('\r') == std::string::npos,
+				"Mixed runtime source refusal lost its byte location or one-line boundary");
+		}
+		std::cout << "PASS complete runtime source scan: valid sibling retained, raw NUL and malformed "
+			"UTF-8 value/key refused independently before registry publication\n";
 	}
 
 	void check_directory(const std::filesystem::path& scratch)
@@ -638,6 +798,7 @@ int main(int argc, char** argv)
 		const std::filesystem::path content(argv[1]);
 		const std::filesystem::path scratch = fresh(
 			std::filesystem::absolute(argv[0]).parent_path() / "user-stages-fixtures");
+		check_runtime_source(content, scratch);
 		check_directory(scratch);
 		World world(content);
 		const GameTuning tuning((content / "tuning.json").string().c_str());
@@ -647,6 +808,7 @@ int main(int argc, char** argv)
 		check_hint(presentation);
 		check_diagnostics(fixture);
 		check_diagnostic_presentation(fixture, content, scratch);
+		check_runtime_source_scan(fixture, content, scratch);
 		check_empty(fixture, content, scratch);
 		check_mixed(fixture, content, scratch);
 		check_user_collision(fixture, content, scratch);

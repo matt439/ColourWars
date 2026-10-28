@@ -35,6 +35,38 @@ for the current loader. The Publisher documents in
 [game/art/sources/levels](../game/art/sources/levels) are layout source material,
 not runtime assets.
 
+## Complete runtime source admission (`ROAD#33`)
+
+**Done (2026-10-28).** The runtime now enforces the documented UTF-8,
+single-object source contract, including unknown keys and values. Its existing
+private fingerprint parse validates encoding, then checks the complete owned
+snapshot for raw NUL bytes that an explicit-length parse can otherwise treat
+as end-of-input. Newly rejected data names the source and original byte offset.
+
+The engine syntax parse and format check still run first, preserving their
+diagnostic precedence. The two parses, one owned snapshot, BOM behavior,
+decoded values and semantic hash algorithm/version are unchanged. No engine,
+submodule, schema or gameplay change was needed.
+
+The actual private-file baseline reproduced acceptance of a complete stage
+followed by raw NUL and suffix bytes. Both presets now pass raw-NUL/BOM suffix
+refusal, 24 malformed UTF-8 key/value/BOM cases, exact offsets, unchanged
+syntax/format precedence, valid UTF-8/escaped-NUL/equal-number hash equivalence
+and cached-snapshot checks. A mixed private scan retains its valid sibling and
+refuses malformed files before registry publication. Runtime assets remain
+byte-identical and no player's stage folder is used.
+
+Both game builds, the full `user_stages`, `level_format` and `debug_console`
+cases, and native stage-scan details pass. Independent review and final source
+immutability checks pass. Attended editor play, wording and hardware gates
+remain separate.
+
+Evidence under `out/validation/implementation-loop-20261028/`: failing baseline
+`road33-baseline/e9a3468ea16645848abbdf0ea273f176`; Debug build/console/user-stage
+results in `road33-candidate/47497c7e22ac4733b6042b40e458358f`; remaining Debug
+checks and full Release qualification in
+`road33-recovery/c6852b42363d4db4bf2f876e1dd01da0`.
+
 ## Root fields
 
 | Key | Type | Meaning |

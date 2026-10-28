@@ -7,6 +7,7 @@
 #include "game/drawable_text.h"
 #include "engine/core/file_path.h"
 #include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 #include <bit>
 #include <cmath>
 #include <fstream>
@@ -122,12 +123,23 @@ namespace
 		}
 	};
 
-	std::uint64_t hash_stage_snapshot(std::string_view snapshot)
+	std::uint64_t hash_stage_snapshot(std::string_view snapshot, const char* source_path)
 	{
 		rapidjson::Document parsed;
-		parsed.Parse(snapshot.data(), snapshot.size());
+		parsed.Parse<rapidjson::kParseDefaultFlags | rapidjson::kParseValidateEncodingFlag>(snapshot.data(), snapshot.size());
 		if (parsed.HasParseError())
-		{ throw std::logic_error("The already-parsed loaded stage snapshot could not be fingerprinted."); }
+		{
+			throw std::runtime_error(std::string("LevelLoadedInfo - '") + source_path +
+				"' is not valid JSON: " + rapidjson::GetParseError_En(parsed.GetParseError()) +
+				" (offset " + std::to_string(parsed.GetErrorOffset()) + ")");
+		}
+		// An explicit-length parse can still stop at raw NUL; inspect the entire snapshot.
+		const std::size_t nul = snapshot.find('\0');
+		if (nul != std::string_view::npos)
+		{
+			throw std::runtime_error(std::string("LevelLoadedInfo - '") + source_path +
+				"' is not valid JSON: Unescaped NUL byte. (offset " + std::to_string(nul) + ")");
+		}
 		return StageSemanticHash{}.of(parsed);
 	}
 }
@@ -148,7 +160,7 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path, std::string snapshot) :
 		throw std::runtime_error(root.where() + ": unsupported 'format'; expected " +
 			std::to_string(level_format::current) + " (or an untagged legacy level).");
 	}
-	this->semantic_hash_ = hash_stage_snapshot(snapshot);
+	this->semantic_hash_ = hash_stage_snapshot(snapshot, json_path);
 }
 
 void LevelLoadedInfo::validate() const
