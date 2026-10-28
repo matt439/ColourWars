@@ -5,6 +5,7 @@
 #include "game/drawable_text.h"
 
 #include <optional>
+#include <vector>
 #include <stdexcept>
 #include <string>
 
@@ -21,14 +22,37 @@ void GameTuning::validate_resources(const RenderResources& render,
 {
 	const ResourceValidation check(this->source_path_, render, audio);
 	check.font("match.controls_text.font", this->match_.controls_font);
-	for (const Key key : controls_text::jump_keys())
+	const auto check_reminder = [&](const std::wstring& words)
 	{
-		const std::wstring words = controls_text::keyboard_controls_reminder(key);
 		const std::string where = this->source_path_ + ": match.controls_text.font";
 		drawable_text::check_font_can_draw(&render, this->match_.controls_font, words, where);
 		const Vector2F size = render.measure_text(render.resolve_sprite_font(this->match_.controls_font), words);
 		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
 		{ throw std::runtime_error(where + " requires finite positive effective keyboard reminder bounds."); }
+	};
+	for (const Key key : controls_text::jump_keys())
+	{
+		check_reminder(controls_text::keyboard_controls_reminder(key));
+	}
+	// Every control each keyboard action can show (Shoot's mouse buttons,
+	// Pause's extra key), the others at their defaults where that is valid.
+	for (size_t index = 0; index < keyboard_action_count; ++index)
+	{
+		const KeyboardAction action = static_cast<KeyboardAction>(index);
+		std::vector<DesktopControl> choices;
+		if (action == KeyboardAction::pause) { choices.push_back({}); }
+		for (const Key key : controls_text::jump_keys()) { choices.push_back({ key, MouseButton::none }); }
+		if (action == KeyboardAction::shoot)
+		{
+			for (const MouseButton button : shoot_mouse_buttons()) { choices.push_back({ Key::none, button }); }
+		}
+		for (const DesktopControl& choice : choices)
+		{
+			InputBindings bindings;
+			set_keyboard_control(bindings, action, choice);
+			if (keyboard_control_conflict(bindings, action, choice)) { continue; }
+			check_reminder(controls_text::keyboard_controls_reminder(bindings));
+		}
 	}
 	check.frame("paint.frame", this->paint_.sheet, this->paint_.frame);
 	const auto splash = [&](ProjectileType type, const char* key)

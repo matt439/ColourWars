@@ -3,7 +3,10 @@
 #include "engine/math/triangle.h"
 #include "game/objects/airbrush_shadow.h"
 #include "game/objects/drifting_visual.h"
+#include "game/horizontal_motion_contract.h"
 #include "game/objects/translating_structure_paintable.h"
+#include "game/objects/team_gate_structure_paintable.h"
+#include "game/team_gate_contract.h"
 #include "game/objects/fixed_slab_paintable.h"
 #include "game/objects/fixed_slab_shadow.h"
 #include "game/objects/translated_airbrush_shadow.h"
@@ -12,6 +15,7 @@
 #include "engine/collision/narrow_phase.h"
 #include <cmath>
 #include <initializer_list>
+#include <optional>
 
 using namespace mattmath;
 using namespace labrador;
@@ -159,24 +163,19 @@ namespace
 		}
 		HorizontalMotionSpec result{ anchor, motion.number("travel_x"),
 			motion.number("period"), motion.number("phase") };
-		const std::string drive = motion.has("drive") ? motion.string("drive") : "cycle";
-		if (drive == "paint")
+		// The drive rule is shared with the level editor; only the JSON typing
+		// and the message's location are the loader's.
+		const auto text = [&motion](const char* key)
+		{ return motion.has(key) ? std::optional<std::string>(motion.string(key)) : std::nullopt; };
+		try
 		{
-			const std::string heads = motion.string("team_a_heads");
-			if (heads != "right" && heads != "left")
-			{
-				throw std::runtime_error(motion.where() + ": team_a_heads must be 'right' or 'left'");
-			}
-			result.drive = HorizontalDrive::paint;
-			result.team_a_heading = heads == "right" ? 1 : -1;
+			const auto drive = horizontal_motion_contract::decode_drive(text("drive"), text("team_a_heads"));
+			result.drive = drive.drive;
+			result.team_a_heading = drive.team_a_heading;
 		}
-		else if (drive != "cycle")
+		catch (const std::invalid_argument& error)
 		{
-			throw std::runtime_error(motion.where() + ": drive must be 'cycle' or 'paint'");
-		}
-		else if (motion.has("team_a_heads"))
-		{
-			throw std::runtime_error(motion.where() + ": team_a_heads belongs only on a paint drive");
+			throw std::runtime_error(motion.where() + ": " + error.what());
 		}
 		try { HorizontalMotion::validate_spec(result); }
 		catch (const std::invalid_argument& error)
@@ -312,6 +311,28 @@ std::unique_ptr<CollisionObject>
 	{
 		throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
 	}
+	// A team gate is read by the shared rule, so the editor refuses exactly
+	// the gates refused here.
+	bool gate = false;
+	if (json.has("gate"))
+	{
+		team_gate_contract::Record record;
+		record.gate = json.string("gate");
+		record.structure_paintable = type == "StructurePaintable";
+		record.moving = json.has("motion");
+		if (record.structure_paintable)
+		{
+			record.solid = json.string("collision_type") == "STRUCTURE_PAINTABLE";
+			const JsonValue face = json.object("paintable_faces");
+			record.any_paintable_face = face.boolean("left") || face.boolean("top") ||
+				face.boolean("right") || face.boolean("bottom");
+		}
+		try { gate = team_gate_contract::decode(record); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(json.where() + ": gate: " + error.what());
+		}
+	}
 	if (type == "FixedSlabPaintable")
 	{
 		(void)collision_type_of(json, type, { CollisionObjectType::structure_fixed_slab });
@@ -370,6 +391,23 @@ std::unique_ptr<CollisionObject>
 				SpriteFlip::none, 0.0f,
 				material_of(json, collision_type, rectangle, {}, context.mirror_x,
 					this->render_resources_));
+		}
+
+		if (gate)
+		{
+			try
+			{
+				return std::make_unique<TeamGateStructurePaintable>(
+					json.string("sheet_name"), json.string("frame_name"), rectangle,
+					this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
+					team_colours, faces, context.flat, colour_of(json),
+					material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
+						this->render_resources_, context.slabs), context.slabs);
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(json.where() + ": gate: " + error.what());
+			}
 		}
 
 		return std::make_unique<StructurePaintable>(
@@ -440,6 +478,10 @@ std::unique_ptr<GameObject>
 	if (json.has("motion"))
 	{
 		throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
+	}
+	if (json.has("gate"))
+	{
+		throw std::runtime_error(json.where() + ": gate: gate belongs only on a StructurePaintable");
 	}
 	const std::string type = json.string("type");
 	if (type == "Visual")

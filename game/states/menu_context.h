@@ -27,6 +27,10 @@ public:
 	void update_music(float dt);
 	void set_music_suspend(std::function<void()> suspend);
 	void suspend_music();
+	// ROAD#16: rereads the player's stage folder. Only GameMenu lends one,
+	// and only as the main-menu Stage Select opens; otherwise nothing.
+	void set_stage_rescan(std::function<void()> rescan);
+	void rescan_stages();
 	// Keep the outgoing page visible and ignore further input until its owner
 	// finishes the fade. Callbacks capture the state context, never the page.
 	void finish_with_music(std::function<void()> finish);
@@ -40,5 +44,6 @@ private:
 	std::unique_ptr<ConnectionAudio> connection_audio_;
 	std::function<void(float)> music_update_;
 	std::function<void()> music_suspend_;
+	std::function<void()> stage_rescan_;
 	std::function<void()> music_exit_;
 };

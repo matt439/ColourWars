@@ -162,8 +162,9 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 |---|---|---|---|
 | 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | prepared and qualified locally 2026-10-24; upstream checked 02:24:30 UTC at pin `19cf650`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
 | 25 | No public controller vibration output | [Isolated XInput adapter](../../game/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | prepared locally 2026-10-26; published master checked at `c03a6f6`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
+| 26 | `Registry` cannot forget a name | [`UserStageFolder::rescan`](../../game/stage_loading.cpp) leaves a vanished user stage's definition registered | drafted locally 2026-10-28 against pin `1e60fb2`; not rechecked upstream; unfiled, awaiting separate authorization |
 
-Nothing else is outstanding, on either side, beyond reports 23 and 25 below and the
+Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -280,6 +281,35 @@ gates. No physical motor or feel acceptance is claimed. Receipts are under
 native request/factory and direct SDK dependency; the client policy and its
 regressions remain useful. This is a local draft, not a filed issue. Separate
 authorization and a fresh upstream recheck are required before filing.
+
+## 26. `Registry` cannot forget a name - **draft with rescan exhibit**
+
+**Checked against the pin only** (`1e60fb2`, 2026-10-28). The published
+upstream has not been checked. `labrador::Registry` (`engine/core/registry.h`)
+offers `add`, which replaces the resource of a name it already holds, plus
+`resolve`, `get` and `contains`. It has no way to remove a name.
+
+**Exhibit.** `ROAD#16` rereads the player's stage folder each time Stage Select
+opens from the main menu ([`UserStageFolder::rescan`](../../game/stage_loading.cpp)).
+A new or edited file goes through `add`, which is what the rescan needs. A
+file the player deleted, or one that now fails its checks, can only leave the
+game's `StageList`. Its old `LevelLoadedInfo` stays in the registry,
+unreachable from the list, until the game exits. Every name lookup in this
+game goes through the list first (Stage Select, the Debug `stage` and `play`
+commands, which check `MatchPlanner::stage_words`), so today the cost is
+memory only. The registry's own `contains` still answers yes for a stage
+that is gone, which is the trap a later caller would fall into. Every client
+that reloads user content over a session would meet the same thing.
+
+**The ask.** A way to remove a name (or to replace the whole set) with a
+defined meaning for handles already resolved to it. The spelling, and
+whether stale handles throw or stay invalid, are engine decisions.
+
+**What an answer lets this repository delete.** The comment in
+`game/stage_loading.h` and the roadmap's note about stale entries. The rescan
+would remove the names that left the list, so `contains` and `get` would
+agree with it. This is a local draft,
+not a filed issue.
 
 ---
 
@@ -1311,6 +1341,19 @@ still only reads.
   again with a reproduction, the ask writes itself: an engine that throws out
   of its own window procedure dies silently, which is the one failure mode T6
   is meant to rule out.
+
+- **`MouseButton` has no names, as `Key` had none before report 13.** Found
+  2026-10-28 by the [keyboard actions slice](../feature-roadmap.md#keyboard-actions-slice-gap42),
+  against the pin `1e60fb2`: Shoot may take a mouse button, and the save spells
+  the five buttons itself (`mouse_left`, `mouse_right`, `mouse_middle`,
+  `mouse_x1`, `mouse_x2`) in `game/input_bindings.cpp` beside the keys, which
+  use `labrador::key_name`. The exhibit is that five-row table. It is too small
+  to file alone: the ask is `mouse_button_name`/`mouse_button_from_name` next to
+  `MouseButton`, with the same file-format promise, and it rides with the next
+  input report. The game's tokens are prefixed so that a bare engine spelling
+  (`left`, `x1`) cannot collide with a key name in the same field; an answer
+  would replace the table's name column and keep the prefix as the client's.
+  Parked as `ENG#PARKED`.
 
 - **Runtime install facts: the engine's runtime DLLs, the redistributable CRT
   and refusing a debug CRT.** Report 15 kept this half separate from its

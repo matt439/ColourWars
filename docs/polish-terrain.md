@@ -299,6 +299,19 @@ fixture explicitly places the real players above the platforms so the normal
 cameras show clouds; it establishes no route or jump reachability. These are
 art/renderer checks; the author's later stage approval is recorded below.
 
+The probe first framed cloud_3. The selected C2 camera
+([polish-crossfeed.md](polish-crossfeed.md), 1280-unit minimum world width)
+shows 720 world units of height in each 4P 1080p pane, and Close Quarters'
+`camera_bounds` top is y 4300. A cloud's top therefore cannot project below
+`(y - 4300) * 0.75` px. cloud_3 (y 4414) stays at 85.5 px in every 4P
+composition. That is inside the probe's 120 px HUD band, although the
+capture shows it clear of the actual HUD panels, under the clock. cloud_1 and
+cloud_5 are in the same position. Since 2026-10-28 the fixture places the
+roster right of cloud_4 (y 4551, 188 px). It still requires the cloud's whole
+drift span to sit inside pane 1, below 120 px and above the bottom 100 px.
+Whether the high clouds should move clear of the 4P HUD band is an art
+decision that has not been made.
+
 Local evidence is under `out/validation/cloud-drift/` and `out/acceptance/`.
 Final renderer run IDs are Debug `d47fffce9a4342f3ade57904128a1741` and Release
 `3b239ecb30a345f3bce5c803adfe3f1d`.

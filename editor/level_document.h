@@ -76,7 +76,9 @@ namespace colourwars_editor
 
         // Palette: Structure, StructureJumpThrough, StructurePaintable,
         // MovingPaintable, MovingJumpThrough, StructureRampRight,
-        // StructureRampLeft, FixedSlabRight, FixedSlabLeft, Visual, SpawnA, SpawnB.
+        // StructureRampLeft, FixedSlabRight, FixedSlabLeft, TeamGate, Visual, SpawnA,
+        // SpawnB. A TeamGate is a solid eraser StructurePaintable with "gate": "paint"
+        // and its bottom face unpainted, as it stands on the floor.
         Entry add_object(const std::string& type, const Rect& rectangle);
         Entry duplicate(const Entry& entry);
         void erase(const Entry& entry);

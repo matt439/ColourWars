@@ -3,6 +3,7 @@
 #include "game/input_slots.h"
 #include "game/objects/structure.h"
 #include "game/objects/translating_structure_paintable.h"
+#include "game/objects/team_gate_structure_paintable.h"
 #include "game/simulation.h"
 #include "game/horizontal_motion_contract.h"
 #include "game/ai/match_bot_driver.h"
@@ -243,6 +244,9 @@ Level::Level(std::unique_ptr<Scene> scene,
 		&presentation->player_identity(), render_resources);
 	this->player_identity_remaining_.assign(this->players_.size(),
 		presentation->player_identity().emphasis_duration);
+	this->teammate_marker_ = std::make_unique<TeammateMarker>(
+		&presentation->hud().teammate_marker, render_resources);
+	this->teammate_marker_age_.assign(this->view_participants_.size() * this->players_.size(), 0.0f);
 	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources);
 	this->blocked_shot_feedback_ = std::make_unique<BlockedShotFeedback>(
 		&presentation->blocked_shot(), render_resources);
@@ -561,6 +565,9 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	this->blocked_shot_feedback_->update(dt);
 	this->apply_player_inputs(player_inputs, seats);
     if (horizontal != nullptr) { this->commit_horizontal_frame(*horizontal); }
+	// Before any of this step's movement or paint, so a gate follows the
+	// paint held before the step and its overlap test sees where players are.
+	this->settle_team_gates();
 
 	this->scene_->update(dt);
 	this->resolve_projectile_movement();
@@ -606,6 +613,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 
 	// Count once per tick for all debug overlays.
 	this->projectile_count_ = this->count_projectiles();
+	this->update_teammate_markers(dt);
 
 	// Players must remain in the arena; unlike projectiles, they cannot be retired.
 	for (const Player* player : this->players_)
@@ -1073,6 +1081,16 @@ std::vector<PaintSurfaceSample> Level::paint_surfaces() const
         paintable->append_paint_surfaces(samples, source_index++);
     }
     return samples;
+}
+
+std::span<const TeamGateStructurePaintable* const> Level::team_gates() const
+{
+    return this->team_gates_view_;
+}
+
+void Level::settle_team_gates()
+{
+    for (TeamGateStructurePaintable* gate : this->team_gates_) { gate->settle(this->players_); }
 }
 
 bool Level::has_horizontal_motion() const

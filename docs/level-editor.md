@@ -25,7 +25,9 @@ You can also pass a level path as the first argument:
 
 The editor's file dialogs start in `game/content/levels/` in this checkout.
 Edit source files there: the copies beside `ColourWars.exe` are replaced by
-the next build. The editor does not read or write the player's save.
+the next build. **File > Save to My Stages** instead saves into the
+player's own stage folder, which the game reads without a rebuild ([Play the
+level](#play-the-level)). The editor does not read or write the player's save.
 
 Open a level with **File > Open** or start with **File > New**. Save As lets
 you keep an existing arena while experimenting with a copy. The title marks
@@ -113,6 +115,7 @@ them.
 | Undo / redo | Ctrl+Z / Ctrl+Y |
 | New / open / save | Ctrl+N / Ctrl+O / Ctrl+S |
 | Save as | Ctrl+Shift+S |
+| Save to My Stages ([play without a rebuild](#play-the-level)) | Ctrl+M |
 
 The document keeps undo/redo history for edits. A successful save marks the
 current revision as saved; undoing back to that revision clears the unsaved
@@ -217,7 +220,36 @@ prompt is a modal box, so it belongs to the manual pass in `ED#5`.
 For an existing stage, save its source JSON, rebuild the game and choose the
 stage from the game menu. The build copies the revised file beside the game.
 
-A new file is not automatically a menu stage. To register it:
+To play a level without rebuilding, choose **File > Save to My Stages...**
+(Ctrl+M). The save dialog opens in `%LOCALAPPDATA%\ColourWars\stages\`, beside
+the save, which is the folder the game reads player-made stages from. It
+offers the open file's name. A copy of a shipped stage is offered `my_<name>`,
+and a new level `my_stage`. The editor then applies the game's own rules
+(`game/user_stage_contract.h`, shared with the game's scan). The name must be
+1 to 64 ASCII letters, digits, `_` or `-`, not starting with `-`. It may not
+be a shipped stage's name in any case; the names come from the source
+manifest. The file must go directly in that folder: use Save As for any other
+folder. If one of your stages already has that name (in any case), the editor
+asks whether to replace it; No is the default. The replacement keeps the
+existing file's spelling. The folder is created only by this command. If you
+cancel, or the name is refused, a folder the command created is removed again
+while it is still empty. After the save, the open document edits the saved
+file, so Ctrl+S saves there too. Without `LOCALAPPDATA` the command refuses:
+the game would then read `save/stages` beside its own executable, which the
+editor cannot know. Like the other saves, it never touches the player's save.
+
+The game reads that folder at startup and again each time Stage Select opens
+from the main menu. A stage saved while the game runs joins the list, and an
+edited one plays its new version. You can also copy a file there by hand. A
+user stage appears in Stage Select after the shipped stages, with "Built by
+you." in the briefing, and `+stage <name>` starts it from the Debug command
+line. It is never a Random candidate. The game checks it as it checks a
+shipped stage. A file that fails prints one `user stage refused: <file>:
+<reason>` line on stderr and is left out; the game goes on without it. See
+[User stages](feature-roadmap.md#user-stages-road16).
+
+To ship a stage with the game, register it instead. A new file in
+`game/content/levels/` is not automatically a menu stage. To register it:
 
 1. Save it as `game/content/levels/<name>.json`.
 2. Add `<name>` without the extension to the `level` asset group's `names`
@@ -270,6 +302,18 @@ and each palette kind's default material, refusal of unknown and mismatched
 materials (in edits and loaded files), and inserting and clearing a material.
 They check the resource-name warnings against source content, and a third
 hidden launch reads the status line of a level the game would refuse.
+Save to My Stages is checked without its dialog. The checks find the folder
+under a scratch `LOCALAPPDATA` without creating it, and refuse a case-only
+shipped-name collision, a space, a leading hyphen, a 65-character name, a
+non-ASCII name, a non-`.json` file, and files outside the folder or in a
+sub-folder. They accept the 64-character limit and the offered names. They
+check that the first save creates the folder and file and reloads unchanged,
+that a second save under another spelling is reported as a replacement of
+the same file and leaves one file, and that no save file appears.
+The script points `LOCALAPPDATA` at its run folder for every launch. It also
+checks that opening the editor creates neither a save nor the stage folder.
+The dialog and the replace question are modal, so they are part of the manual
+pass.
 The document checks also cover the shared current version, legacy save upgrades,
 unknown-field preservation, strict format type/version rejection before other
 field decoding, filename diagnostics, failed-upgrade recovery and retained
@@ -311,6 +355,27 @@ distance and the period and phase remain unchanged. The inspector exposes
 New movers start at travel 120, period 6.4 and phase 0 as editable authoring
 defaults, not an accepted arena placement or balance choice.
 
+A mover is made a [paint ferry](feature-roadmap.md#paint-ferry-road15-first-slice)
+(`ROAD#15`) in the same inspector. `motion/drive (cycle or paint)` is always
+listed, as `cycle` when the record omits it; `motion/team_a_heads (right or
+left)` is listed when present, and a paint drive's phase is labelled
+`0 left end to 0.5 right end`. Setting the drive to `paint` adds team A heading
+`right` unless the mover already has a heading. Setting `cycle`, or clearing the
+drive, removes the heading, and a cleared drive is omitted rather than written
+as `cycle`. Typing `cycle` over an omitted drive changes nothing. Any other
+value is written as typed and then refused.
+
+The drive is checked by the game's own rule, not a copy:
+`horizontal_motion_contract::decode_drive` reads the two text fields and
+`validate_drive` the paint-drive phase, and the game's `LevelObjectBuilder`
+calls the same two. An unknown drive, a paint drive without a heading or with
+one other than right/left, a heading on a cycle (explicit or by default), a
+paint drive whose phase is past 0.5, and a non-text drive or heading are each
+refused. As an edit, the refusal leaves the document and history unchanged; as
+a file, the load is refused, and every drive rule above is in the same words
+as the game's load error (only the non-text type error is each side's own).
+So a bad drive never reaches a save.
+
 The filled body shows its initial phase. A white dashed outline marks the
 anchor, blue dashes the complete travel envelope, and gold dots the expanded
 standing corridor. Selection and resize handles edit the anchor; clicking the
@@ -325,6 +390,10 @@ bounds or intersects another structure, duplication is refused. Anchor, motion,
 static-geometry and bounds edits validate the complete candidate before changing
 the document or undo/redo branch. Save/reopen retains unknown root, object and
 motion metadata, rectangle/TLBR encoding and ignored alternative geometry.
+The `level_editor` document checks open, save and reopen the shipped Ferry Trial
+(`turbulence_ferry_trial`) unchanged, flip and switch its drives with undo, turn
+a palette mover into a ferry, and refuse each bad drive shape both as an edit
+and as a file.
 
 The application supplies source `game/content/tuning.json` for player size;
 the registration helper supplies the same repository context. Tools using the
@@ -358,6 +427,28 @@ No new GUI, native-pixel or human acceptance is claimed here.
 
 Human GUI handling and saved-stage play remain `ED#5`; Turbulence
 route/readability acceptance remains `POL#21`.
+
+## Team gate authoring (`ROAD#15`)
+
+The palette's **Team gate** entry adds a
+[team gate](feature-roadmap.md#team-gate-road15-second-slice): a solid
+`StructurePaintable` with the `eraser` material, `"gate": "paint"`, and every
+face paintable except the bottom, which stands on the floor. The inspector
+lists `gate (paint: open to the team holding more of it)`. Clearing it removes
+the field and leaves an ordinary paintable block; any other value is written as
+typed and then refused. A gate cannot be added to an existing block in the
+inspector, which only edits fields a record already has; use the palette entry.
+
+The gate is checked by the game's own rule, `game/team_gate_contract.h`: an
+unknown or non-text value, a gate on anything but a `StructurePaintable`, a
+one-way (`STRUCTURE_JUMP_THROUGH`) gate, a moving gate and a gate with no
+paintable face are refused in the game's words, as an edit (document and
+history unchanged) or as a file. So is a gate overlapping a spawn body, which
+the editor sizes from `tuning.json` as it does for movers, with the game's
+startup words. The canvas draws a gate like any eraser block; it does not show
+which team it is open to, which is runtime state. The `level_editor` document
+checks cover the field, palette entry, every refusal and save/reopen of the
+Gate Trial.
 
 ## Fixed scored-slab authoring (`GAP#D5`)
 

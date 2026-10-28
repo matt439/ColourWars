@@ -179,11 +179,22 @@
                 "frame_name": { "type": "string" },
                 "colour": { "$ref": "#/definitions/colour" },
                 "drift": { "$ref": "#/definitions/drift" },
-                "motion": { "$ref": "#/definitions/motion" }
+                "motion": { "$ref": "#/definitions/motion" },
+                "gate": {
+                    "description": "A team gate: a solid, static paintable that players of the team holding more of its paint (and at least tuning paint.gate.open_share of its area) walk through; everyone else collides with it. Needs a paintable face; no spawn body may overlap it (a runtime check).",
+                    "enum": ["paint"]
+                }
             },
             "dependencies": {
                 "drift": { "properties": { "type": { "enum": ["Visual"] } } },
-                "motion": { "properties": { "type": { "enum": ["StructurePaintable"] } } }
+                "motion": { "properties": { "type": { "enum": ["StructurePaintable"] } } },
+                "gate": {
+                    "properties": {
+                        "type": { "enum": ["StructurePaintable"] },
+                        "collision_type": { "enum": ["STRUCTURE_PAINTABLE"] },
+                        "motion": { "not": {} }
+                    }
+                }
             },
             "additionalProperties": true
         },

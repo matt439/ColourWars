@@ -33,9 +33,11 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     Save preferences;
     const auto reset = [&]
     {
-        auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play = PlaySettings{};
-        play.music_volume = play.sfx_volume = 0;
-        require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720,
+        // Save lends out an effective copy of its stored play settings, so a
+        // reset goes through the setter: both copies, and the file, start over.
+        PlaySettings play; play.music_volume = play.sfx_volume = 0;
+        require(preferences.set_play_settings_and_save(play) &&
+            preferences.set_display_settings_and_save(ScreenResolution::s_1280_720,
             false, TeamColourPair::blue_yellow), "Cannot seed the isolated value save");
     };
     const auto saved_bytes = [&]
@@ -188,9 +190,13 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
             tap(Key::down); compare(name + "-fullscreen-off", false, 1, words.off, snapshot, true, off_fit);
             tap(Key::right); compare(name + "-fullscreen-on", false, 1, words.on, snapshot, true, on_fit);
             tap(Key::left); compare(name + "-fullscreen-off-reset", false, 1, words.off, snapshot, true, off_fit);
-            tap(Key::down); tap(Key::right);
+            // Blue/Yellow is no longer the last fixed pair (ROAD#8), so Random
+            // is as many Rights away as there are pairs from it to the end, and
+            // as many Lefts lead back.
+            tap(Key::down);
+            for (int pair = static_cast<int>(TeamColourPair::blue_yellow); pair < static_cast<int>(TeamColourPair::count); ++pair) { tap(Key::right); }
             compare(name + "-palette-random", false, 2, words.random, snapshot, true, custom ? (short_values ? 3 : 1) : 0);
-            tap(Key::left);
+            for (int pair = static_cast<int>(TeamColourPair::blue_yellow); pair < static_cast<int>(TeamColourPair::count); ++pair) { tap(Key::left); }
             compare(name + "-palette-fixed-reset", false, 2,
                 snapshot.team_palette().fixed_pair(TeamColourPair::blue_yellow).label, snapshot, true, custom ? 3 : 0);
             for (int pair = static_cast<int>(TeamColourPair::blue_yellow); pair < static_cast<int>(TeamColourPair::count); ++pair) { tap(Key::right); }

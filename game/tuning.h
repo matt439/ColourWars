@@ -227,6 +227,10 @@ struct PaintTuning
 	float splash_scale = 0.0f;
 	PaintRunoffTuning runoff;
 
+	// A team gate opens only for the team holding more of its paint and at
+	// least this share of its paintable area (game/team_gate_contract.h).
+	float gate_open_share = 0.0f;
+
 	std::string sound_bank;
 	std::vector<SoundTuning> splash_sounds;
 	SoundTuning capture_sound;

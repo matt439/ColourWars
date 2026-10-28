@@ -1244,10 +1244,12 @@ The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
   says. **`grave`, `f10` and `f11` are reserved** (console, debug menu). Bare
   binds on A, D, S, Space, Down, Escape and F1 keep their existing warning;
   Space still skips the opening after Jump is rebound, and Enter retains its
-  existing omission. A bare bind on the effective saved Jump key also warns:
-  it does both. The Keyboard Jump page warns about an existing bare bind on
-  its pending key. These are warnings, so the bind and gameplay source both
-  remain available. See the [keyboard Jump slice](feature-roadmap.md#action-bindings-gap42).
+  existing omission. A bare bind on any effective saved keyboard key (Move
+  left/right, Jump, Drop, a keyed Shoot or the extra Pause) also warns: it
+  does both. The Keyboard Keys page warns about an existing bare bind on any
+  of its pending keys. These are warnings, so the bind and gameplay source both
+  remain available. See the [keyboard Jump slice](feature-roadmap.md#action-bindings-gap42)
+  and the [keyboard actions slice](feature-roadmap.md#keyboard-actions-slice-gap42).
 - Modifiers match exactly: Shift+F5 does not run F5's bind. (Before phase 4,
   Shift+F5 restarted like F5.)
 - Binds run only in a match, and not while the live console is open. The echo
@@ -1262,14 +1264,14 @@ The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
 There is no free F-key for the perf overlay: F12 is the Windows debugger hotkey
 (it breaks into an attached debugger). `bind shift+f2 "overlay perf"` gives it one.
 
-While the Keyboard Jump page captures a physical key, it owns input before
+While the Keyboard Keys page captures a physical key (or Shoot's click), it owns input before
 developer page hooks run. Grave/F10/F11 presses and the pad Back+Start chord
 cannot open developer UI or leak into it afterward. Capture discards queued
 scripts, match/leave requests, goto, screenshots, reload content and armed
 record/replay work, with one cancellation notice. It retains active
 recording/replay, binds and current settings. A consumed pad chord must release
 both buttons before it can start another session. The developer hooks and
-collision query are inert in Release; keyboard Jump rebinding is available there.
+collision query are inert in Release; keyboard rebinding is available there.
 
 ## History
 
@@ -1713,6 +1715,18 @@ The local RapidJSON span reader and in-memory candidate validation
 (`labrador::parse_json`, engine report 12) already provide the required route.
 The engine declined to keep source spans, so the span reader and splice stay
 this tool's.
+
+HUD painter fixtures re-pinned to the OFL fonts (2026-10-28): the HUD timer,
+closing materials/shade/text, HUD paper and HUD label probes pinned Gill Sans
+MT Bold metrics, and 95c1da3b renamed their fonts without updating them. They
+now pin Lato Black (`lato_black_48` line spacing 77, `_36` 58, `_24` 38) and
+the geometry it moves: clock text at (891.5,54), timer glyph ROI
+[901,68,1032,120) (131x52), clock envelope [858,43,1067,146) (209x103),
+identity/HEALTH/PAINT label ROIs 380x111/125x28/97x28, paper crops
+487x142/327x181/209x103 and their patch sites, and timer witnesses (911,79)
+and (970,117). Checks, controls and tolerances are unchanged; only the pinned
+literals and the counts derived from them moved. The dated figures below were
+measured against the Gill atlases.
 
 Shared HUD paper material family (2026-10-24), **verified**:
 paths 56-58 select `presentation.hud.paper.ink`, `.paper` and `.shade`

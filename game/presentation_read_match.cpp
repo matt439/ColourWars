@@ -151,6 +151,33 @@ namespace presentation_read
 				"and distinct opaque ink/paper required.");
 		}
 
+		const JsonValue teammate = json.object("teammate_marker");
+		TeammateMarkerPresentation& ally = hud.teammate_marker;
+		ally.enabled = teammate.boolean("enabled");
+		ally.ink = read_colour(teammate, "ink");
+		ally.size = read_positive_vector(teammate, "size");
+		ally.keyline_width = read_positive(teammate, "keyline_width");
+		ally.badge_inset = read_non_negative(teammate, "badge_inset");
+		ally.pointer_length = read_positive(teammate, "pointer_length");
+		ally.pointer_width = read_positive(teammate, "pointer_width");
+		ally.margin = read_non_negative(teammate, "margin");
+		ally.fade_in = read_non_negative(teammate, "fade_in");
+		// The badge needs room inside the keyline, and the pointer must read
+		// as narrower than the chip it leaves.
+		const float ally_short = std::min(ally.size.x, ally.size.y);
+		if (ally.size.x < 16.0f || ally.size.y < 16.0f || ally.size.x > 128.0f || ally.size.y > 128.0f ||
+			ally.keyline_width > 8.0f || ally.badge_inset > 16.0f ||
+			(ally.keyline_width + ally.badge_inset) * 2.0f >= ally_short * 0.5f ||
+			ally.pointer_length > 48.0f || ally.pointer_width * 2.0f > ally_short ||
+			ally.pointer_width <= ally.keyline_width ||
+			ally.margin > 64.0f || ally.fade_in > 1.0f || ally.ink.a != 1.0f)
+		{
+			throw std::runtime_error(teammate.where() +
+				": size from 16 to 128, keyline_width <= 8 and badge_inset <= 16 leaving at least half the "
+				"chip for the badge, pointer_length <= 48, pointer_width wider than the keyline and at most "
+				"half the chip, margin <= 64, fade_in <= 1 and an opaque ink required.");
+		}
+
 		const JsonValue identity = json.object("player_identity");
 		hud.player_identity_font = identity.string("font");
 		hud.player_identity_offset = read_vector_unchecked(identity, "offset");

@@ -1850,11 +1850,16 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   sponges grow. The [horizontal movement capability](#horizontal-movement-capability-2026-10-26)
   supplies the motion; paint ownership driving it is new. Arena use follows
   `POL#21`, and bots must ride the objects. The first slice, the
-  [paint ferry](#paint-ferry-road15-first-slice), is on an explicit trial stage.
+  [paint ferry](#paint-ferry-road15-first-slice), is on an explicit trial stage,
+  and so is the second, the [team gate](#team-gate-road15-second-slice), a
+  wall that the team holding its paint walks through.
 - **Player-made stages without rebuilding (`ROAD#16`).** A stage saved by the
-  editor plays only after a manifest edit and a rebuild. User stages need
-  their own folder, validated individually so that a broken one is refused
-  without stopping startup; manifest stages stay never-optional.
+  editor played only after a manifest edit and a rebuild. First slice done
+  2026-10-28: a per-user stage folder, each file validated on its own, a
+  broken one refused without stopping startup; manifest stages stay
+  never-optional. The editor's Save to My Stages, a rescan as Stage Select
+  opens and a README note for players followed the same day. Attended play
+  and two author calls remain. See [User stages](#user-stages-road16) below.
 
 ### Awareness and presentation
 
@@ -1863,8 +1868,8 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   makes it the natural place. A map shows territory mid-match, which bends the
   withheld-score decision (gap audit 1.1), so the author decides first.
 - **Off-screen teammate and threat markers (`ROAD#18`).** Splatoon shows
-  allies through walls. Relates to the `POL#3` rear-threat review and the
-  `ROAD#10` label-clamping question.
+  allies through walls. Teammate markers done 2026-10-28; threat markers are
+  an author decision. See [Teammate markers](#teammate-markers-road18) below.
 - **End-of-round instant replay (`ROAD#19`, done 2026-10-27).** TowerFall
   replays each round's final seconds and can save a GIF. The End menu now
   offers Watch Replay; see [Instant replay](#instant-replay-road19) below.
@@ -1882,7 +1887,9 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   Teams, the roster and bot difficulty stay locked, because the ledger counts
   team wins and a seat swap would change who is winning. The re-picks last for
   the rest of the series only; the setup the main menu remembers is the one
-  that started it. Still open: a stage rotation or loser's pick rule.
+  that started it. Done 2026-10-28: a Series stage rule on the Mode page (Same
+  stage, Rotate, Loser's pick); see [Series stage rule](#series-stage-rule-road20)
+  below. Left: the author plays the rules and says which they like.
 - **Player profiles (`ROAD#21`, done 2026-10-27).** Smash name tags carry a
   person's controls, rumble and records. Deadzones, rumble, binds and
   accessibility toggles followed the pad slot (`POL#18`, `ROAD#7`, `ROAD#9`,
@@ -1986,13 +1993,110 @@ paint held before it. In a Linux build of the same objects, ferries moved in
 all three matches and bots rode a moving ferry in two of them (121 to 136
 steps). Riding is a measurement, not a requirement.
 
-Still open in `ROAD#15`: lifts and other vertical motion (the mover is
-horizontal only), team-gated rails and growing sponges, editor checks for the
-drive fields (the editor keeps them as metadata, and the game refuses a bad
-one at load), ferry art that shows its heading, and attended play. The
-stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
-`-StageCountsOnly`, `-StageSummaryOnly`) have not yet been run with the tenth
-stage; they run only on MattPC.
+**Editor drive checks (2026-10-28).** The level editor authors a ferry in
+the inspector: `motion/drive` (shown as `cycle` when absent) and
+`motion/team_a_heads`. Switching a mover to `paint` adds team A heading right
+unless it has a heading, and switching to `cycle` or clearing the drive drops
+it. The drive rule itself (`decode_drive`, `validate_drive`) moved into the
+engine-free `game/horizontal_motion_contract.h`, which the game's loader and
+the editor both call, so the editor refuses at load and on every edit exactly
+the drives the game would refuse, in the game's words. See
+[Moving-structure authoring](level-editor.md#moving-structure-authoring-gapd5).
+The palette has no ferry entry of its own; a ferry is a moving paintable whose
+drive is switched to paint.
+
+The stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
+`-StageCountsOnly`, `-StageSummaryOnly`) passed with the tenth stage on MattPC
+in Debug and Release (2026-10-28). The second object, and what `ROAD#15` still
+has open, is under [Team gate](#team-gate-road15-second-slice).
+
+### Team gate (`ROAD#15`, second slice)
+
+**Which object next (2026-10-28).** Three candidates were left: vertical
+lifts, team-gated passages (Splatoon's inkrails, which open for the team that
+inks their bulb) and growing sponges. They were weighed against the movement
+and collision code as it is.
+
+- **Lifts** need a second motion axis. The mover, its admission envelope, its
+  displacement budget, the rider carry (`HorizontalCarryStep` is an x
+  displacement), the relative projectile sweeps and the translated shadow are
+  all horizontal by construction. Carrying a rider up means resolving the
+  rider against ceilings and refusing or resolving a crush, which nothing in
+  `Player` does now. It is the largest of the three, and most of it is new
+  physics rather than a paint rule.
+- **Sponges** change their own size. A paintable's tiles, strips, credit and
+  scored area are fixed at construction, and `PaintSurfaceSample` says outright
+  that a scale needs its own scoring rule. Growing also pushes players, which
+  is the crush problem again. It is about as large as a lift, and it reopens
+  scoring.
+- **A team gate** is static. Collision filtering already takes both objects'
+  layer and mask on every pair, every step, so a gate whose mask leaves out one
+  team's players is a mask override, and projectiles still hit it. Nothing
+  moves, so admission, carry, sweeps and replay need nothing new. The one new
+  hazard is a gate closing on a player inside it, and that is answered by not
+  closing while they are there.
+
+The gate is the most tractable honest slice, so it went first. Splatoon's rail
+is a route that appears; this is its ColourWars reading, a wall one team walks
+through, held by the paint on the wall itself rather than a separate bulb.
+
+**What it does (2026-10-28).** A `TeamGateStructurePaintable`, a new final
+subclass of `StructurePaintable`, is a solid paintable wall. The team holding
+more of its own paint, by area over all its faces, walks through it, once that
+team also holds `paint.gate.open_share` (0.25, `tuning.json`) of its paintable
+area. Everyone else collides with it like any wall, and it is shut to both on
+a tie or while unpainted. Shots of both teams always hit it, so it is painted
+from either side whichever way it is open. `Level` settles every gate once a
+step, after the step's movers are committed and before any movement or paint,
+so a gate follows the paint held before the step, as the ferry does. Settling
+changes the team only when no living player of the team it is open for
+overlaps it: a gate never closes on a player inside it, and changes hands the
+step after they are clear. Players who are dead are ignored, and no spawn body
+may overlap a gate, so a respawn cannot land inside one.
+
+It ships on one explicit-only stage, **Turbulence Yard - Gate Trial**
+(`turbulence_gate_trial`, not in Random): the Turbulence blockout with an
+eraser gate, 80 by 240, standing on the floor at its centre, between the two
+lower beds. It is taller than a jump, so the floor route across the middle is
+the gate's, while the upper crossover stays open to both. Its left, top and
+right faces paint; each team reaches its own side face from the floor, so the
+top decides an even exchange. The format is in
+[Team gates](level-format.md#team-gates); the editor authors one from the
+palette ([Team gate authoring](level-editor.md#team-gate-authoring-road15)).
+
+**Bots** need no new policy and none was added. A gate is a structure, so a
+bot sees it in its obstacles, supports and sight line exactly as it sees a
+wall, whichever way the gate is open. A bot walking into a gate shut to it
+jumps or turns as at any wall; one walking into a gate open to it walks
+through, because the collision is gone even though the bot planned around
+it. A gate's faces are scoring tiles, so bots paint them as territory, which
+is what opens it. They do not plan a route through an open gate.
+
+The `team_gate` acceptance case checks the rule in the contract and on a
+standalone gate; walks two scripted humans at the trial's gate (shut to both
+unpainted, open to team A only once team A paints it, held open for a team A
+player standing inside while team B retakes it, then open to team B only); and
+plays three whole 120-second matches with three bots, holding every step of
+the gate to the paint and positions before it, requiring that nobody is ever
+left inside a gate shut to their team and that no bot stays inside one body
+box for 15 seconds. In Debug on MattPC the gate was open for 6311, 6673 and
+6879 of the 7200 steps, changed hands one to two times a match, and bots went
+into it 13 to 17 times; no bot held still for more than 271 steps. Passing is
+a measurement, not a requirement. `instant_replay` replays a round on the Gate
+Trial bit for bit, and `level_format` and the editor checks cover the record.
+Release measured the same three matches. With the eleventh stage, the
+stage-select painter checks (`-StagePaperOnly`, `-StageCountsOnly`,
+`-StageSummaryOnly`) passed on MattPC in Debug and Release (2026-10-28).
+
+**Provisional defaults**, open to the author: the 0.25 open share; the paint
+on the wall deciding it, rather than a separate bulb; a tie shutting it to
+both; a gate held open while its team is inside, rather than pushing them out;
+the eraser material; and the trial's single central floor gate.
+
+**Still open in `ROAD#15`:** lifts and other vertical motion, growing sponges,
+art that shows which team a ferry heads for or a gate is open to (both draw as
+their plain material, and only the paint colour says who holds them), bots
+that route through an open gate on purpose, and attended play of both trials.
 
 ### Instant replay (`ROAD#19`)
 
@@ -2027,16 +2131,28 @@ tape is not offered, and the End menu then has its usual rows. A live `tune`
 edit or a suspend injected by `play` is not seen. A replay of such a round may
 differ from what was played, which is acceptable for a developer build.
 
-The End paper grew from 820 to 900 units tall, with rows 118 apart from y 300
+The End paper grew from 820 to 900 units tall, with rows 117 apart from y 300
 (previously 125 from 330), so six rows fit with the item font's descenders.
 Validation checks Watch Replay on row 1, the setup actions on both their rows,
 and Exit on rows 1 and 5.
+
+Rows were first 118 apart, which hung Exit's row-5 focus card 3 units into the
+paper's drop shadow (card bottom 985, face bottom 982). The End painter check
+now also puts Exit on row 5 and requires its card on the face (2026-10-28).
+
+Startup validation did not catch this, nor the Credits Back card that the
+Settings painter check caught the same day: it measures each card against the
+whole paper box, shadow included. Measuring against the face (`ROAD#25`) is a
+one-line change in `presentation_validation.cpp`. With both overhangs fixed the
+shipped content passes it, but the `menu_text` acceptance case's hand-built
+paper-edge fixtures (Home, Options Back, Restore defaults, Pause, End) are pinned
+to the box edge and move with it.
 
 On MattPC (2026-10-27), `check-painter.ps1` with `-EndMenuOnly` (which runs the End
 headings and series re-pick checks too), `-RoundHeadingOnly`, `-SeriesScoreOnly` and
 `-SessionResultOnly` passed in Debug and Release. `-EndContinuationOnly` failed because its
 fixed comparison crop sat at the old row position. The crop now starts 30 units higher with the
-rows; that switch still needs re-running on MattPC.
+rows, and `-EndContinuationOnly` passed in Debug and Release on MattPC (2026-10-28).
 
 The `instant_replay` acceptance case plays a 20 s round on each of the five
 arenas and the Ferry Trial, whose movers follow the paint, as `GameLevel` plays it: a full intro, three shipping bots, a scripted
@@ -2083,8 +2199,339 @@ write-through, cycling, rename, delete, Boost carry-back and recovery from a
 damaged section. `presentation.json` validation fits the page's copy and the
 widest worn name on Join; the Pad rows scale it to fit like any setting value.
 
-Still open: the painter checks for the Controls page and its children, which
-follow the new row but run only on MattPC, and play with real pads.
+On MattPC (2026-10-28) the painter checks the Controls page and its children
+touch (`check-painter.ps1 -ControlsMenuOnly`, `-MenuMotionOnly`,
+`-PausedOptionsOnly`, `-KeyboardJumpOnly`, `-RumbleOnly`, `-PercentageTextOnly`,
+`-StickSettingsOnly`, plus `-MenuTextOnly`) pass in Debug and Release. The first
+run found one real defect: the heading at y 54 is 115 tall and reached 3 px into
+the first row's focus-card envelope on Controls and Pad sticks, so the rows now
+start at y 186 (was 180). Startup validation checks the heading only against the
+focus padding, which is why it passed. The rest were stale probe fixtures: the
+pinned prompt list lacked the two profile prompts and Join's `X/R Profile`, a
+Home fixture still drew the card POL#37 removed, the percentage probe's exact
+update count grew by the Profiles row's nine updates (180 to 189), and two
+probe resets wrote through the working copy `play_settings()` now returns
+instead of saving.
+
+Still open: play with real pads.
+
+### User stages (`ROAD#16`)
+
+**Scope (2026-10-28).** A player who saves a level with the editor should be
+able to play it by starting the game, with no manifest edit, CMake list or
+rebuild. The slice is the smallest that a player can use: a per-user folder
+the game reads at startup, the same checks a shipped stage gets, and a refusal
+that costs the player one stage rather than the game. Shipped stages keep the
+engine's content-root rule (beside the executable, named by the manifest) and
+stay never-optional: one the manifest names and the disk lacks still fails
+startup.
+
+**Done 2026-10-28.** The folder is `%LOCALAPPDATA%\ColourWars\stages\`,
+beside the save (`directory_consts::user_stage_directory`; the
+executable-relative `save/stages` when there is no `LOCALAPPDATA`, as for the
+screenshots and replays). The game does not create it. After the manifest
+loads, `load_user_stages` (`game/stage_loading.h`) reads every `*.json` directly
+in it, in file-name order, and checks each on its own:
+
+- the file name is the stage's id: 1 to 64 ASCII letters, digits, `_` or `-`,
+  not starting with `-` (the registration helper's rule, so the file can
+  later be registered unchanged);
+- no stage already has that id, compared without case: a user stage cannot
+  replace a shipped one or another user stage;
+- the level format and structure (`LevelLoadedInfo::validate`) and a drawable
+  `display_name`, which is how the manifest's `level` kind reads a shipped
+  stage (`read_stage_definition`, now shared by both);
+- the per-stage halves of `validate_game_content`, split out as
+  `validate_stage_objects` (built objects and resources, tunnelling, match
+  sounds) and `validate_stage_text` (name and lesson fonts);
+- the sound groups (`sound_groups::check_candidate`): a stage may not play as
+  music a sound the game plays as an effect;
+- the arena counter (`ARENA 11 / 11`) still fits with one more stage.
+
+A file that fails any of these is left out and prints one line on stderr,
+`user stage refused: <file>: <reason>`, where the reason is the same
+diagnostic a shipped stage would fail startup with. Startup goes on. A missing
+or empty folder says nothing; a file where the folder should be is one line.
+Other files and sub-folders are ignored. The accepted stages then pass the
+whole-list `validate_game_content` and join the sound groups with the shipped
+ones; because each passed the same checks first, that cannot fail on them.
+
+User stages follow the shipped ones in Stage Select, in file-name order, and
+count in its arena counter. The briefing card marks one with its own hint,
+"Built by you." over "Confirm to lock your choice." (`menu_text.stage.user_hint`),
+in the browse hint's place; nothing else on the page moves, so the Stage
+painter fixtures are unchanged. `+stage <name>` starts one from the Debug
+command line.
+
+Records and replay work with them, because both are keyed by the stage id: a
+finished round records under the file name, Stage Select and Results show its
+best, and the remembered setup restores it while the file is there (falling
+back to the first stage, as for a retired stage, when it is not). Instant
+replay rebuilds the round from the loaded definition in memory. The Debug
+`record`/`play` files name the stage; playing one needs the file in the folder,
+and a file edited since the recording plays its new geometry, which the replay
+does not detect.
+
+Provisional decisions, open for the author:
+
+- **Random.** User stages are never Random candidates, whatever their
+  `include_in_random` says; the Random hint's count is unchanged. An unfinished
+  stage turning up in a party's Random pick seemed worse than having to choose
+  it. Honouring an explicit `"include_in_random": true` would be a one-line
+  change.
+- **Names and records.** The id is the bare file name, the same namespace as
+  the shipped stages, so a user stage keeps its records when it is later
+  registered. The cost is that a future shipped stage with the same name
+  refuses the user stage and inherits its records.
+- **Marker.** The hint is the only marker. A mark on the name or preview would
+  move the page and its painter fixtures.
+
+The `user_stages` acceptance case points `LOCALAPPDATA` at a scratch folder
+before it asks for the directory, and scans scratch folders beside its own
+executable (one with a non-ASCII name): a missing, empty and non-folder path;
+two valid stages, one asking for Random; and broken JSON, a level without
+spawns, a missing sprite frame, a music/effect conflict, a case-only collision
+with Crossfeed, two bad file names, an undrawable name, a text file and a
+`.json` folder. It requires the valid two in order after the shipped stages,
+marked and outside Random, each bad file refused in one line naming the
+cause, the shipped Crossfeed untouched, and the whole list then passing
+`validate_game_content` and `sound_groups::assign`. A second scan checks a
+collision between two user stages. `check-startup.ps1 -UserStageFixture` starts
+the real game with one valid and one broken user stage in its isolated
+profile: the window comes up, and stderr carries exactly the one refusal line;
+CI runs it on both presets after the other startup checks. On MattPC
+(2026-10-28, Debug) the Stage painter checks (`-StagePaperOnly`,
+`-StageCountsOnly`, `-StageSummaryOnly`) passed unchanged. They needed a local,
+uncommitted fix first: the probe's `menu_text_checks.h` still lists 19 prompts
+after `ROAD#21` added the two Profiles prompts, so no painter check compiles
+on master until that list gains them.
+A Debug launch with `+stage my_arena +players 2 +bot all paint` played a user
+copy of Close Quarters from an isolated profile.
+
+**Done 2026-10-28 (follow-ups).** Three more pieces landed:
+
+- **The editor saves straight to the folder.** **File > Save to My Stages...**
+  (Ctrl+M) opens a save dialog in the folder. It refuses a name the game
+  would refuse, using the same code: the name rule, the case-blind
+  comparison and the folder's place under `LOCALAPPDATA` moved into
+  `game/user_stage_contract.h`. That header uses the standard library only
+  and is included by the game's scan, `directory_consts` and the editor, as
+  `horizontal_motion_contract.h` is. Shipped names come from the source
+  manifest (`ContentCatalog::stages`). The editor asks before it replaces
+  one of the player's own stages, creates the folder only on this command
+  (removing it again if a cancelled or refused save leaves it empty), and
+  never touches the save. See
+  [Play the level](level-editor.md#play-the-level).
+- **A rescan without a restart.** `UserStageFolder` (`game/stage_loading.h`)
+  owns the folder for the session. `wWinMain` declares it above the
+  `Application`, attaches it after the manifest and runs the startup scan
+  through it. `GameMenu` takes it as an optional second argument and lends it
+  to its `MenuContext` as a rescan hook. `MainMenuStageSelect::init` calls the
+  hook as the page opens from the main menu. A match's `MenuContext` never
+  has the hook, and the page also skips it between rounds, so the list holds
+  still while a match or series could be using it. A rescan builds the new
+  list beside the live one: the manifest stages unchanged, then the folder's
+  stages in file-name order. Each new or edited file is checked as at
+  startup and replaces its registry entry. The sound groups are then
+  reassigned over the new list (it cannot fail on stages that each passed
+  `check_candidate`, and if it does the session keeps only the shipped
+  stages). Only refusals the previous scan did not print reach stderr, so
+  reopening the page stays quiet. A stage whose file vanished or now fails
+  leaves the list. Stage Select's `slot_of` already falls back to the first
+  slot for a remembered or current stage that is gone. The old definition
+  stays in the registry, unreachable from the list, because
+  `labrador::Registry` has no remove. That costs memory only; see the draft
+  report in [engine reports](review/engine-reports.md). Probes that build a
+  `GameMenu` without the folder keep their fixed lists. The Debug `reload`
+  command still rereads only tuning and presentation.
+- **A note for players.** The release ZIP ships the root `README.md`
+  (`cmake/release_package.cmake`). Its new "Your own stages" section names
+  the folder and the name rule, says when the game reads the folder and
+  where a refusal is printed, and points to Save to My Stages, noting that
+  the editor is not in the ZIP.
+
+The `user_stages` case now also runs a session: an unattached folder (every
+probe's) does nothing. A startup scan loads one stage. A rescan adds a new
+stage that sorts first, rereads an edited one (both the list and the registry
+show the new name), and refuses a broken file. A rescan with no change gives
+the same list. A rescan after one file is deleted and the other broken
+returns to the shipped stages, leaving Crossfeed untouched and the whole list
+passing `validate_game_content`. The editor's document checks
+(`check-level-editor.ps1`) cover Save to My Stages under a scratch
+`LOCALAPPDATA` ([Acceptance checks](level-editor.md#acceptance-checks)).
+
+Provisional decisions, open for the author:
+
+- **When to rescan.** Only as Stage Select opens from the main menu. It is the
+  one screen that shows the list, and nothing there holds a definition. A
+  file watcher or a Debug command would add moving parts for no extra
+  player-visible effect.
+- **The editor's shortcut** is Ctrl+M (for "My Stages"). Ctrl+Shift+S was
+  taken.
+
+Still open: attended play of a real player-made stage (a human gate), and the
+Random and marker calls above.
+
+### Series stage rule (`ROAD#20`)
+
+**Done 2026-10-28.** The Mode page has a Series stage row under Match length,
+an option row like it: Left and Right (or Select) cycle **Same stage**,
+**Rotate** and **Loser's pick**. It decides which stage a series' next round
+plays. Same stage is the default and is what every series did before; a single
+match has no next round, so the row does nothing there. The rule is saved with
+the remembered setup (`"last_match.stage_rule"`, written only when it is not
+Same; save version 5). A save without it, or with a spelling this build does not
+know, reads as Same, so old saves play as they did. The row's value, Stage
+Select's picking heading and the Mode prompt are `presentation.json` text with
+startup fit checks ([Mode labels](menu-presentation.md#mode-and-player-count-labels)).
+
+What each rule does, decided on the round that just finished
+(`game/series_stage_rule.h`):
+
+- **A draw replays its stage under every rule.** The End menu already calls it
+  Replay Draw, and a round that settles nothing should be played again on
+  the same ground.
+- **Same stage** keeps the stage.
+- **Rotate** moves on to the next stage of the Random pool, in manifest
+  order, wrapping. It never rotates *into* a stage left out of Random: those
+  are trials and comparisons that a person chooses on purpose. A series
+  started on one plays it once and then joins the pool at the first pool
+  stage after it in the manifest. With an empty pool the stage stays.
+- **Loser's pick** gives the next stage to the team that lost. Next Round
+  opens Stage Select in the End menu's frame, under the heading *Team A picks
+  the arena* (or B), and only that team's seats can browse, lock or back out;
+  the other seats' input is ignored. Back returns to the End menu. The page
+  opens on the stage just played. A losing team made only of bots cannot pick,
+  so the stage rotates as under Rotate instead.
+- **Play Series Again** after a completed series follows the rule too, since
+  the last round was decisive; a single match's Rematch never moves.
+- **Change Level by hand wins.** Change Level (and Change Weapons, which goes
+  on to Stage Select) still opens the full Stage Select for everyone, and the
+  stage confirmed there is played as chosen: the Stage page returns the new
+  End action `play_chosen_stage`, which the rule never moves. Under Rotate the
+  page opens on the stage the rotation would play next, so confirming it at
+  once keeps the rotation going.
+
+Between rounds the rule changes only the series' own copy of the settings, so
+the setup the main menu remembers is still the one that started the series.
+
+The `series_stage_rule` acceptance case covers each rule's next stage, draws,
+explicit-only stages, bot-only losers, single matches, Play Series Again, a
+stage chosen by hand overriding every rule, the remembered-setup round trip,
+old and malformed saves, and the menu text. The painter series re-pick check
+(`check-painter.ps1 -EndMenuOnly`) drives the real End menu and Stage Select
+under each rule, including the restricted pick, and the setup text check
+(`-SetupPaperOnly`) draws the new Mode row. On MattPC (2026-10-28, Debug)
+`-EndMenuOnly`, `-SetupPaperOnly`, `-DurationTextOnly`, `-SetupMotionOnly`,
+`-RememberedSetupOnly`, `-MainMenuOnly`, `-HomeReturnFocusOnly` and
+`-StagePaperOnly` pass. `-MenuTextOnly` had stopped compiling when `ROAD#21`
+added two prompts; its prompt list is brought up to date, and it now runs but
+fails first on Home's Credits label, a page this change does not touch.
+
+Provisional calls the author should confirm in play:
+
+- which rule is the better default once tried (Same stays the default so
+  nothing changes until then);
+- whether Rotate should include the series' starting stage when it is
+  explicit-only, rather than leaving it after one round;
+- whether a draw under Loser's pick should hand the pick to the team that lost
+  the previous decisive round instead of replaying;
+- whether a bot-only loser should pick for itself (a random pool stage) rather
+  than rotate.
+
+The practice hint moved beside Single Match, and Mode's row spacing went from
+100 to 96, to make room for the row; that is an art-pass call too.
+
+### Teammate markers (`ROAD#18`)
+
+**Teammate half done 2026-10-28; threat markers are a DECISION.** In each
+human pane, a living teammate whose body is wholly outside that pane's view
+gets a chip at the pane edge. The chip sits on the line from the pane centre
+toward the teammate, pulled in until it and its pointer are `margin` inside
+the edge. It has an ink keyline, a fill in the teammate's team colour and their
+roster badge (`P2`, the same drawing as the world badge), plus a stepped ink
+pointer with a team-colour core aimed at them. Bots count as teammates and get
+markers in the human panes, though they have no pane themselves. Enemies, the
+pane's own player and dead teammates are never marked. A teammate even partly
+in view has no marker: their world badge, which `ROAD#10` already keeps inside
+the pane, does that job. Markers show during live play only, not in the
+countdown, the opening or the overview.
+
+How it is built: `TeammateMarker` (`game/objects/teammate_marker.h`) is a new
+`CrudeDrawing`, beside `PlayerBadge`. Its static `place` does the geometry for
+one pane, camera and body. `Level::teammate_markers(view)` lists a pane's
+markers in roster order, and `draw_player_overlay` draws them in HUD
+coordinates just before the HUD, so a pane's own panels stay on top where a
+chip reaches a corner. Each marker fades in over `fade_in` from the moment its
+teammate leaves the view; the age is per pane and per teammate, advanced by live
+ticks only. `PlayerBadge::draw` gained an optional opacity so the badge fades
+with its chip.
+
+Content: `presentation.json` `hud.teammate_marker`: `enabled`, `ink`, `size`
+(72x58), `keyline_width` (3), `badge_inset` (6), `pointer_length` (16),
+`pointer_width` (12), `margin` (10) and `fade_in` (0.25 s), in HUD reference
+pixels scaled with the pane as the rest of the HUD is. The loader requires
+sizes from 16 to 128, a keyline of at most 8 and an inset of at most 16 that
+together leave at least half the chip for the badge, a pointer of at most 48
+that is wider than the keyline and at most half the chip, a margin of at most 64,
+a fade of at most 1 s, and an opaque ink.
+
+Accessibility: no new toggle. A viewer pad's Reduce effects (its `ROAD#7`
+override, or Shared with the Options switch) shows a marker at full strength
+at once instead of fading it. The keyboard seat follows the shared switch. The
+marker never blinks or moves on its own, so nothing else needed reducing.
+
+Provisional calls (author to confirm at the readability look):
+
+- no Options or per-pad toggle of its own. If one is wanted it should be a fourth
+  `pad_comfort` field next to View shake, Aim marker and Reduce effects
+  (Off / Shared / On), with an Options switch, as `ROAD#7` set out;
+- HUD scale, so at 4P a chip is half its 1P size (36x29 px at 1080p);
+- drawn under the HUD panels;
+- a full marker for a teammate wholly off-screen, nothing for one partly in
+  view, and nothing while dead or respawning;
+- the stable follow camera, not the shaken one, decides on-screen, so view
+  shake never makes a marker flicker;
+- a 0.25 s fade-in.
+
+**Threat markers are not drawn (DECISION).** Marking enemies off-screen would
+show every player where the other team is, a change to the game's information
+model: rear threats are currently found by looking and listening (the `POL#3`
+C2 rear-threat recognition review in [polish-crossfeed.md](polish-crossfeed.md)).
+The author decides whether threats get any marker (always, only recent damage
+sources, only within some distance) and how that fits the withheld-score
+decision (gap audit 1.1) and `ROAD#17`'s overview map. Until then only teammates
+are marked.
+
+CPU acceptance: `teammate_markers` builds real Levels on Movement Course at 1,
+2, 3 and 4 human panes, at 1280x720 and 1920x1080. The rosters include a bot
+teammate in P2 with P3 owning the second pane, and an enemy in every roster. In
+every pane it places teammates on screen, straddling the edge and off screen in
+eight headings. It checks one marker per off-screen teammate and none for
+enemies, self or a teammate in view. Each marker must be the presented size,
+inside the margin with its pointer, on the line toward its teammate, aimed at
+them and clamped to the edge. A death clears the marker and a respawn restores
+it. The case also checks the fade from 0 to full, per-pad and shared Reduce
+effects, the disabled presentation, and 38 malformed `teammate_marker`
+variants (256 placed markers in all).
+
+Native evidence: an isolated `+players 4 +bot all paint` Crossfeed capture
+(seed 2, 1080p) shows P4's chip in P2's pane and P2's chip in P4's pane, both at
+the edge toward each other. Team A's panes show none because those two were on
+screen together. Evidence: `out/validation/road18-teammate-markers/`.
+
+Painter checks on MattPC (2026-10-28): `-IdentityOnly`, `-MonitorOnly` and
+`-SupplyOnly` pass in Debug and Release. `-HudOnly` fails in both builds at
+*HUD meter lost its exterior dark keyline* in its 4P 720x1280 portrait case.
+That case draws `InterfaceGameplay` alone over a blank canvas, with no Level and
+so no markers. At that pane size the HUD scale is 0.1875, which makes the 2 px
+keyline 0.375 px. The base branch without these markers fails `-HudOnly` the
+same way in Debug (rerun at review), so the failure predates `ROAD#18` and is
+not fixed here.
+
+Left: the threat-marker decision, and an attended readability look at 1, 2 and
+4 panes (chip size at 4P, overlap with the HUD panels at the top corners,
+pointer legibility, whether the fade helps), with a pad (`ROAD#2`).
 
 ## Menu navigation follow-up (GAP#4.4)
 
@@ -2263,10 +2710,12 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 ## Action bindings (`GAP#4.2`)
 
 **Default evaluators and keyboard Jump rebinding are implemented and validated.**
-**Keyboard Jump and per-slot pad Jump/Shoot/Pause rebinding are implemented (`GAP#4.2`).**
-The pad defaults are unchanged (A / LT Jump, RT Shoot, Start Pause). Keyboard
-actions other than Jump remain unscoped; the pad contract is
-[below](#pad-buttons-slice-gap42), after the face-button slice it replaced.
+**Every keyboard action and per-slot pad Jump/Shoot/Pause rebinding are implemented (`GAP#4.2`).**
+The pad defaults are unchanged (A / LT Jump, RT Shoot, Start Pause), and so are
+the keyboard's (A / D, Space, S / Down, left click, Esc). The pad contract is
+[below](#pad-buttons-slice-gap42), after the face-button slice it replaced; the
+keyboard's is the [keyboard actions slice](#keyboard-actions-slice-gap42). What
+is left is the author's call on that slice's provisional choices.
 [Action bindings](../game/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
@@ -2545,8 +2994,8 @@ ports the Pad Jump native matrix to the new page, adding a skipped-conflict
 Shoot Apply. Physical-pad comfort remains `ROAD#2`, and rebinding artwork belongs
 to the later UI pass.
 
-**Remaining scope: UNSCOPED.** Keyboard actions other than Jump (move, drop,
-shoot, pause) still need their own contract.
+Keyboard actions other than Jump are the
+[keyboard actions slice](#keyboard-actions-slice-gap42) below.
 
 Labrador declined the action-evaluation request (engine report 21, formerly
 `GAP#F2`) in `197aff1`: evaluating a binding table is the action map, which its
@@ -2555,6 +3004,102 @@ rules that disagree. The evaluator stays client code; see the
 [closed entry](review/engine-reports.md#21-digital-action-evaluation-remains-client-code--declined-197aff1).
 Pad Buttons is now a real pad-rebinding caller, but it chose discrete cycling
 over capture, so a pad-capture request still has no caller.
+
+### Keyboard actions slice (`GAP#4.2`)
+
+**Contract (2026-10-28).** The keyboard seat's six gameplay actions become
+rebindable on one page: Move left, Move right, Jump, Drop, Shoot and Pause.
+Mouse aim stays on the mouse, F1 stays the gameplay debug control, and menus,
+intro skip and the developer keys keep their fixed keys whatever the player
+chooses.
+
+- **Domain.** Every action takes one control. Move left, Move right, Jump and
+  Drop take one key from the Keyboard Jump slice's domain (A-Z and Space, the
+  same save names and labels). Shoot takes one of those keys or one mouse
+  button (Left, Right, Middle, Mouse 4, Mouse 5), because its shipping default
+  is the left click and the hand on the mouse is the one that aims. Mouse
+  buttons on the other actions are not in this slice.
+- **Fixed aliases.** Escape always pauses a match (it is also menu Back and the
+  capture's cancel key), so the Pause row is **Pause (also)**: one optional
+  extra key, default None. Down always drops beside the chosen Drop key. Neither
+  alias is in the domain, so neither can be taken by another action.
+- **Defaults** are the controls the game always had: A, D, Space, S (and Down),
+  left click, Esc. An untouched keyboard behaves exactly as before.
+- **Conflicts.** One control does one action. Capturing a control another row
+  already uses is refused with a status, as Keyboard Jump refused A/D/S and Pad
+  Buttons skips controls in use; nothing is swapped silently. Jump's refusal
+  now follows the pending choices, so A is free for Jump once Move left moves.
+- **Reserved keys.** Escape, Enter, Backspace, the arrows, F1-F12 and the grave
+  key are outside the domain, so the console, the debug menu, the F-key binds
+  and menu navigation cannot be captured. A bare developer bind on a chosen key
+  stays a warning, now for every effective key rather than Jump alone.
+- **Menus.** Menu navigation is unaffected: W/A/S/D and the arrows still move,
+  Enter/Space still select, Esc/Backspace still go back, R still shuffles, and
+  the menu prompts keep naming those fixed keys. The extra Pause key opens the
+  pause menu from a match; Esc or Back closes it, as before.
+- **Page.** Controls / audio's **Keyboard Keys** row (the Keyboard Jump row's
+  place) opens the existing child, grown to Move left, Move right, Jump, Drop,
+  Shoot, Pause (also), Reset all keys, Apply, Back on the same Controls layout.
+  Each action row shows its pending control; activating it runs the existing
+  press-and-release capture for that action (Shoot also accepts a click). Reset
+  restores every default pending; Apply merges the six choices into the latest
+  preferences, keeping pad profiles; Back discards. The capture's ownership,
+  neutral, chord, focus and cancel rules are unchanged.
+- **Save.** Version 3 stays: `input_bindings` keeps `keyboard_jump` and gains a
+  `keyboard` object `{ "move_left": "a", "move_right": "d", "drop": "s",
+  "shoot": "mouse_left", "pause": "none" }` (mouse tokens `mouse_left`,
+  `mouse_right`, `mouse_middle`, `mouse_x1`, `mouse_x2`). A missing object reads
+  the defaults. A damaged object, or one that conflicts with Jump, recovers the
+  five to the defaults; if Jump then conflicts, Jump recovers to Space too. Pad
+  profiles and every other section survive.
+- **What the keyboard seat is shown.** The match-opening keyboard reminder and
+  the Controls help name the effective keys (`{left}`, `{right}`, `{drop}`,
+  `{shoot}` and `{pause}` join `{jump}` in the help template, each at most
+  once). Menu prompts are unchanged because menu keys are.
+
+**Provisional calls (author may revise).** Refuse rather than swap on conflict;
+mouse buttons for Shoot only; Escape and Down kept as fixed aliases; one
+control per action with no keyboard alternates; the A-Z/Space domain kept
+rather than widened to digits, arrows or modifiers.
+
+**Implemented 2026-10-28.** `InputBindings` gains the five keyboard choices
+beside `keyboard_jump`, with `KeyboardAction`, a `DesktopControl` (a key or a
+mouse button) and per-action domain, name, label and conflict queries in
+[input_bindings.h](../game/input_bindings.h). `effective_action_bindings` writes
+the six into the desktop table, keeping Escape, Down, F1, the intro skip and
+every menu key; `PlayerInput` rebuilds its copy only when a keyboard choice
+changes, so adopting a held key still makes no edge. `KeyboardJumpCapture` now
+targets one action against the pending choices and, for Shoot only, counts mouse
+buttons in the same neutral/chord/focus rules. `KeyboardJumpMenu` keeps its
+class and widgets and grows to the nine rows above, each action an `OptionRow`
+whose activation starts that action's capture. The Controls help, the opening
+reminder and the developer-bind warnings name the effective keys. The page text
+is `menu_text.keyboard_jump` in `presentation.json`, validated for every label
+in every row, every release message and the help with and without the warning.
+
+The game spells the five mouse tokens itself, because `MouseButton` has no
+names as `Key` has; that ask is parked in the
+[engine-report ledger](review/engine-reports.md#what-is-deliberately-not-here).
+One fixed interaction carries over: as everywhere in the menus, the first
+direction after a capture needs one neutral frame, so a click released and an
+arrow pressed in the same frame moves nothing.
+
+**Checks.** `input_bindings` covers the six domains against explicit token and
+label tables, twenty reserved keys, defaults equal to the old table, per-profile
+conflicts, the custom and keyed-Shoot mappings, the actual reader (moved keys,
+fixed Down/Escape/Space/menu A, held adoption, focus, conflict refusal), the
+save schema and round trip, refusal before mutation and recovery for thirteen
+damaged objects with and without a clashing Jump. `keyboard_jump_capture` runs
+every key for every action against pending choices (142 accepted, 20 refused),
+all five Shoot clicks, clicks ignored elsewhere, key-and-click chords, focus and
+Escape. `menu_text` pins the copy, the tokens and the mouse labels.
+`check-painter.ps1 -KeyboardJumpOnly` drives the real page through Controls,
+moving Move left, Shoot (a right click), the extra Pause and Jump onto the freed
+A, and checks Apply's merge, the reload and Reset all keys.
+
+**Left (`DECISION`).** Try the page on a keyboard and confirm or change the
+provisional calls above. Widening the domain, keyboard alternates and the
+extra Pause key closing the pause menu (Esc does that today) are not started.
 
 ## Per-player menu focus (`GAP#D1`)
 

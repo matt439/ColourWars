@@ -37,11 +37,13 @@
 #include "game/objects/idle_drip.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player_badge.h"
+#include "game/objects/teammate_marker.h"
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
 #include "game/objects/music_envelope.h"
 #include "game/states/menu_level_settings.h"
 #include <cstdint>
+#include <span>
 #include <string_view>
 
 class MatchBotDriver;
@@ -65,6 +67,7 @@ enum class LevelState
 // and supplies the views and game-specific overlays.
 struct InputBindings;
 class TranslatingStructurePaintable;
+class TeamGateStructurePaintable;
 
 class Level
 {
@@ -200,6 +203,11 @@ public:
 	// human pane follows that pane's Reduce effects, not the bot's.
 	float player_identity_emphasis_for(int view, int viewer_slot) const;
 	mattmath::RectangleF player_identity_bounds_for(int view, int viewer_slot) const;
+	// ROAD#18: one marker per living teammate (human or bot) whose body is
+	// outside human pane `view`'s camera, during live play only, in that pane's
+	// HUD pixels and roster order. Empty for an invalid pane. Opacity follows
+	// the time each has been out of view and the pane pad's Reduce effects.
+	std::vector<TeammateMarkerPlacement> teammate_markers(int view) const;
 	// Reacquire one's own figure after a covering menu or focus loss.
 	void emphasise_players();
 	const BlockedShotFeedback& blocked_shot_feedback() const;
@@ -211,6 +219,8 @@ public:
 	std::vector<PaintSurfaceSample> paint_surfaces() const;
     bool has_horizontal_motion() const;
     std::vector<HorizontalStructureState> horizontal_structure_states() const;
+    // The stage's team gates in Scene order, settled once a step.
+    std::span<const TeamGateStructurePaintable* const> team_gates() const;
 
 	// Developer tools. Present in every build; only Debug builds call them,
 	// between world updates. `view` indexes players_ (see below).
@@ -256,11 +266,19 @@ private:
 	std::unique_ptr<BlockedShotFeedback> blocked_shot_feedback_;
 	std::unique_ptr<PlayerBadge> player_badge_;
 	std::vector<float> player_identity_remaining_;
+	std::unique_ptr<TeammateMarker> teammate_marker_;
+	// By human pane, then participant: seconds that teammate's body has been
+	// outside the pane's view. Presentation only, advanced by live ticks.
+	std::vector<float> teammate_marker_age_;
     std::unique_ptr<labrador::Scene> scene_ = nullptr;
     // Admitted fixed movers explicitly refuse retirement. These borrows live
     // for this Level; no terrain add/remove API is exposed after admission.
     std::vector<TranslatingStructurePaintable*> horizontal_structures_;
     std::vector<HorizontalSupportRef> horizontal_supports_;
+    // Borrowed from scene_ at admission, like the movers.
+    std::vector<const TeamGateStructurePaintable*> team_gates_view_;
+    std::vector<TeamGateStructurePaintable*> team_gates_;
+    void settle_team_gates();
     struct HorizontalFrame
     {
         std::vector<HorizontalPreparedStep> motions;
@@ -354,7 +372,7 @@ private:
 	// words and fitting, retaining the text widget's original font and copy.
 	const InputBindings* input_bindings_ = nullptr;
 	labrador::TextDropShadow* keyboard_controls_ = nullptr;
-	std::wstring keyboard_jump_label_;
+	std::wstring keyboard_controls_words_;
 	labrador::TextDropShadow* gamepad_controls_ = nullptr;
 	std::vector<int> gamepad_slots_;
 	std::array<PadProfile, input_slots::pad_count> gamepad_pads_{};
@@ -558,6 +576,9 @@ private:
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
 	void update_player_identity(float dt);
+	void update_teammate_markers(float dt);
+	// The HUD's scale for human pane `view`, as InterfaceGameplay computes it.
+	float hud_scale(int view) const;
 	// Rebuilds identity_texts_. Main thread, never from a draw.
 	void refresh_identity_texts();
 	int pad_device(int slot) const;

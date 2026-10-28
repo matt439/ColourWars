@@ -30,10 +30,10 @@
             throw 'The Contribution team leaf does not match its frozen summary, CSV schema, rows or update/readback/proceed budgets.'
         }
         $contributionTeamState = @{
-            '0' = @('4', '4', 'A', '18.7%', '680', '679.5')
-            '1' = @('2', '2', 'B', '25.0%', '725', '724.5')
-            '2' = @('-1', '7', 'A', '31.2%', '770', '769.5')
-            '3' = @('0', '0', 'B', '25.0%', '815', '814.5')
+            '0' = @('4', '4', 'A', '18.7%', '680', '678')
+            '1' = @('2', '2', 'B', '25.0%', '725', '723')
+            '2' = @('-1', '7', 'A', '31.2%', '770', '768')
+            '3' = @('0', '0', 'B', '25.0%', '815', '813')
         }
         $contributionTeamDefaultValues = @(
             'P1 - Keyboard/mouse | Team A | 18.7%',

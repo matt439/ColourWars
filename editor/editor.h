@@ -18,7 +18,7 @@ namespace colourwars_editor
 {
     enum Command : int
     {
-        file_new = 100, file_open, file_save, file_save_as, file_exit,
+        file_new = 100, file_open, file_save, file_save_as, file_save_user_stage, file_exit,
         edit_undo, edit_redo, edit_duplicate, edit_delete,
         view_fit, view_selection, view_match, view_bounds, view_blockout, help_controls,
         add_object, apply_property, revert_property, objects_list,
@@ -109,6 +109,8 @@ namespace colourwars_editor
         bool confirm_unresolved();
         bool save(bool save_as);
         std::optional<std::filesystem::path> choose_file(bool save_as);
+        bool save_user_stage();
+        std::optional<std::filesystem::path> choose_user_stage(const std::filesystem::path& folder);
         void select(const Entry&);
         void set_status(const std::wstring&);
         void error(const std::exception&);

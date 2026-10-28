@@ -221,10 +221,17 @@ void DebugDirectorImpl::register_bind_commands()
 					return DebugStatus::failure("bind: " + tokens.error);
 				}
 			}
-			const labrador::Key jump = this->data_ != nullptr && this->data_->save() != nullptr ?
-				this->data_->save()->input_bindings().keyboard_jump : labrador::Key::space;
-			const bool effective_jump = !chord->ctrl && !chord->shift && chord->key == jump;
-			if ((debug_keys::player_key(*chord) || effective_jump) && !this->binds_loading_)
+			// Every effective keyboard key warns, not only the seven defaults.
+			const InputBindings keys = this->data_ != nullptr && this->data_->save() != nullptr ?
+				this->data_->save()->input_bindings() : InputBindings{};
+			bool effective_key = false;
+			for (std::size_t index = 0; index < keyboard_action_count; ++index)
+			{
+				const DesktopControl control = keyboard_control(keys, static_cast<KeyboardAction>(index));
+				effective_key = effective_key || (control.key != labrador::Key::none && chord->key == control.key);
+			}
+			effective_key = effective_key && !chord->ctrl && !chord->shift;
+			if ((debug_keys::player_key(*chord) || effective_key) && !this->binds_loading_)
 			{
 				log.warning("bind: " + name + " also moves the keyboard player in a match");
 			}

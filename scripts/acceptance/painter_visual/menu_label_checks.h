@@ -179,6 +179,24 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
                 Vector2F(main.team_select.size.x * 3.0f, main.team_select.size.y)));
             row.inflate(art.focus_padding); const MenuPaperArtwork row_paper(row, app.render_resources(), &style, &row_art, &focus); row_paper.draw(list);
         }
+        if (role == 0)
+        {
+            // Join underlines the host's row: the first seat after P1 that is
+            // waiting or a bot, as nothing here moves it. Independent rectangle,
+            // one rule below the label and one rule high.
+            const auto seats = expected.player_settings(); int host_row = -1;
+            for (size_t index = 1; index < seats.size() && host_row < 0; ++index)
+            {
+                if (seats[index].controller == PlayerController::bot || seats[index].num < 0) { host_row = static_cast<int>(index); }
+            }
+            if (seat == host_row)
+            {
+                const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
+                const RectangleF underline(text_bounds.x, text_bounds.bottom() + style.rule_height, text_bounds.width, style.rule_height);
+                require(panel.contains(underline), "Independent Join host underline escapes its paper");
+                sheet->draw(list, sheet->resolve_sprite_frame(style.fill_frame), underline, art.focus_ink);
+            }
+        }
         if (role != 3) { list.set_filter(TextureFilter::linear); }
         text->draw(list); const Frame wanted = read(renderer);
         RectangleF bounds = text_bounds; bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);

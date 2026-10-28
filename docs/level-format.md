@@ -42,7 +42,7 @@ not runtime assets.
 | `format` | Optional integer | `1`; omission selects legacy format 1. |
 | `display_name` | String | Authored stage label. Startup checks it against the game's drawable text rules and fonts. |
 | `icon_frame` | String | Existing frame in `sprite_sheet_1`. Required legacy icon metadata; stage selection now draws a live arena preview. |
-| `include_in_random` | Optional boolean | Defaults to `true`; `false` keeps an experimental stage out of Random without removing its explicit menu entry. |
+| `include_in_random` | Optional boolean | Defaults to `true`; `false` keeps an experimental stage out of Random without removing its explicit menu entry. A [user stage](feature-roadmap.md#user-stages-road16) is never in Random, whatever this says. |
 | `sound` | Object | Bank identifier and independent optional music/sting pairs, below. |
 | `spawn_locations` | Object | `team_a` and `team_b` arrays of points, at least four entries each. |
 | `level_bounds` | Object | All four named rectangles, below. |
@@ -167,8 +167,10 @@ more of the mover's own paint, by area over all its faces: toward
 B. It holds on a tie, including no paint, and stops at either end. Its speed is
 a cycle's leg speed, `2 * travel_x / period`. `phase` must be in [0, 0.5],
 where 0 is the left end and 0.5 the right. `team_a_heads` is required with a
-paint drive and refused with a cycle. The editor keeps both fields as metadata
-but does not check them yet; the game refuses a bad record at load.
+paint drive and refused with a cycle. The game's loader and the
+[editor](level-editor.md#moving-structure-authoring-gapd5) read both fields
+through one rule in `game/horizontal_motion_contract.h`, so the editor refuses
+a bad record before save and the game refuses it at load.
 
 This is the existing horizontal triangular mover, with its existing safety
 limits. On actual Level admission the entire platform envelope and expanded
@@ -233,6 +235,36 @@ Objects are created in array order, with non-collision objects before collision
 objects and players. Put backgrounds in `non_collision_objects`. A frame is
 stretched into the authored rectangle or ramp bounding box; its source texel
 size does not change collision dimensions.
+
+### Team gates
+
+A solid, static `StructurePaintable` may add `"gate": "paint"`
+([`ROAD#15`](feature-roadmap.md#team-gate-road15-second-slice)):
+
+```json
+{ "name": "centre_gate", "type": "StructurePaintable", "collision_type": "STRUCTURE_PAINTABLE",
+  "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "WHITE",
+  "material": "eraser", "rectangle": { "x": 1960, "y": 1040, "width": 80, "height": 240 },
+  "paintable_faces": { "left": true, "top": true, "right": true, "bottom": false },
+  "gate": "paint" }
+```
+
+Players of the team holding more of the gate's own paint, by area over all its
+faces, walk through it, once that team also holds at least
+`paint.gate.open_share` of its paintable area (`tuning.json`, 0.25 for now).
+Everyone else collides with it as with any wall, and it is shut to both teams
+on a tie or while unpainted. Shots of both teams always hit and paint it. The
+gate is settled once a step from the paint held before that step, and it never
+closes on a player of the team it is open for: while one is inside, it stays
+open for that team until they are clear.
+
+`"paint"` is the only value. The record must be a `StructurePaintable` with
+`STRUCTURE_PAINTABLE` collision (a one-way gate is refused), must not carry
+`motion`, and needs at least one paintable face. A gate on any other type,
+including a decorative `Visual`, is refused. At startup no spawn body (the
+tuned player size at a spawn point) may overlap a gate. The game's loader,
+its startup check and the [editor](level-editor.md#team-gate-authoring-road15)
+read all of this through `game/team_gate_contract.h`, in the same words.
 
 ### Decorative drift
 
@@ -431,7 +463,10 @@ Point a JSON editor at [level.schema.json](level.schema.json), then open the fil
 in ColourWarsEditor and save a copy. Register an intended runtime stage using
 the manifest and asset-list steps in [Play the level](level-editor.md#play-the-level).
 Rebuild and run it in the game: the schema does not resolve its assets, the
-editor only warns about names, and neither establishes playability.
+editor only warns about names, and neither establishes playability. To try a
+stage without registering or rebuilding, put it in the player's stage folder
+instead; the game applies the same checks to it at startup and refuses it
+alone if it fails ([Play the level](level-editor.md#play-the-level)).
 
 From an x64 Visual Studio Developer shell at the repository root:
 

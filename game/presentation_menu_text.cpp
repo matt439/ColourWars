@@ -239,17 +239,19 @@ namespace presentation_read
 		const JsonValue jump = json.object("keyboard_jump");
 		KeyboardJumpMenuText& keys = text.keyboard_jump;
 		for (const auto& field : { std::pair{ "heading", &KeyboardJumpMenuText::heading },
-			std::pair{ "capture", &KeyboardJumpMenuText::capture }, std::pair{ "reset", &KeyboardJumpMenuText::reset },
-			std::pair{ "current", &KeyboardJumpMenuText::current }, std::pair{ "pending", &KeyboardJumpMenuText::pending },
+			std::pair{ "move_left", &KeyboardJumpMenuText::move_left }, std::pair{ "move_right", &KeyboardJumpMenuText::move_right },
+			std::pair{ "jump", &KeyboardJumpMenuText::jump }, std::pair{ "drop", &KeyboardJumpMenuText::drop },
+			std::pair{ "shoot", &KeyboardJumpMenuText::shoot }, std::pair{ "pause", &KeyboardJumpMenuText::pause },
+			std::pair{ "reset", &KeyboardJumpMenuText::reset },
 			std::pair{ "pending_status", &KeyboardJumpMenuText::pending_status }, std::pair{ "saved_status", &KeyboardJumpMenuText::saved_status },
 			std::pair{ "capture_wait_neutral", &KeyboardJumpMenuText::capture_wait_neutral }, std::pair{ "capture_ready", &KeyboardJumpMenuText::capture_ready },
+			std::pair{ "capture_ready_mouse", &KeyboardJumpMenuText::capture_ready_mouse },
 			std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release }, std::pair{ "capture_rejected", &KeyboardJumpMenuText::capture_rejected },
 			std::pair{ "capture_conflict", &KeyboardJumpMenuText::capture_conflict }, std::pair{ "capture_cancelled", &KeyboardJumpMenuText::capture_cancelled },
 			std::pair{ "debug_collision", &KeyboardJumpMenuText::debug_collision } })
 		{ keys.*field.second = read_menu_line(jump, field.first); }
 		keys.help = read_menu_block(jump, "help");
-		for (const auto& field : { std::pair{ "current", &KeyboardJumpMenuText::current },
-			std::pair{ "pending", &KeyboardJumpMenuText::pending }, std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release } })
+		for (const auto& field : { std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release } })
 		{
 			try { std::ignore = controls_text::key_line(keys.*field.second, L"Space"); }
 			catch (const std::invalid_argument& error)
@@ -319,6 +321,9 @@ namespace presentation_read
 				throw std::runtime_error(values.where() + ": " + field.first + ": " + error.what());
 			}
 		}
+		text.values.series_stage_same = read_menu_line(values, "series_stage_same");
+		text.values.series_stage_rotate = read_menu_line(values, "series_stage_rotate");
+		text.values.series_stage_losers_pick = read_menu_line(values, "series_stage_losers_pick");
 		text.values.resolution = read_menu_line(values, "resolution");
 		try
 		{
@@ -403,6 +408,7 @@ namespace presentation_read
 		text.stage.random_navigation = read_menu_line(stage, "random_navigation");
 		text.stage.locked_hint = read_menu_block(stage, "locked_hint");
 		text.stage.browse_hint = read_menu_block(stage, "browse_hint");
+		text.stage.user_hint = read_menu_block(stage, "user_hint");
 		text.stage.solo_mode = read_menu_line(stage, "solo_mode");
 		text.stage.single_match_mode = read_menu_line(stage, "single_match_mode");
 		const auto read_stage_summary = [&](const char* key, const wchar_t* token)
@@ -440,6 +446,8 @@ namespace presentation_read
 		{
 			throw std::runtime_error(stage.where() + ": random_hint: " + error.what());
 		}
+		text.stage.team_a_picks = read_menu_line(stage, "team_a_picks");
+		text.stage.team_b_picks = read_menu_line(stage, "team_b_picks");
 		const JsonValue records = json.object("records");
 		text.records.new_best = read_menu_line(records, "new_best");
 		text.records.stage_best = read_menu_line(records, "stage_best");
@@ -533,17 +541,15 @@ namespace presentation_read
 	}
 }
 
-std::wstring KeyboardJumpMenuText::current_key(std::wstring_view label) const
-{ return controls_text::key_line(this->current, label); }
-
-std::wstring KeyboardJumpMenuText::pending_key(std::wstring_view label) const
-{ return controls_text::key_line(this->pending, label); }
-
 std::wstring KeyboardJumpMenuText::release_key(std::wstring_view label) const
 { return controls_text::key_line(this->capture_release, label); }
 
-std::wstring KeyboardJumpMenuText::help_block(std::wstring_view current_label, std::wstring_view pending_label) const
-{ return this->current_key(current_label) + L'\n' + this->pending_key(pending_label) + L'\n' + this->help; }
+const std::wstring& KeyboardJumpMenuText::row(size_t index) const
+{
+	const std::array<const std::wstring*, 6> rows{ &this->move_left, &this->move_right, &this->jump,
+		&this->drop, &this->shoot, &this->pause };
+	return *rows.at(index);
+}
 
 const std::wstring& PadButtonsMenuText::row(size_t index) const
 {
@@ -712,6 +718,17 @@ std::wstring MenuText::setting_resolution(int width, int height) const
 	}
 	return format_label_template(this->values.resolution,
 		{ { L"{width}", std::to_wstring(width) }, { L"{height}", std::to_wstring(height) } });
+}
+
+const std::wstring& MenuText::series_stage_value(SeriesStageRule rule) const
+{
+	switch (rule)
+	{
+	case SeriesStageRule::same: return this->values.series_stage_same;
+	case SeriesStageRule::rotate: return this->values.series_stage_rotate;
+	case SeriesStageRule::losers_pick: return this->values.series_stage_losers_pick;
+	}
+	throw std::invalid_argument("Unknown series stage rule");
 }
 
 std::wstring MenuText::stage_best_of_mode(int best_of) const

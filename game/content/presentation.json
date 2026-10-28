@@ -115,26 +115,30 @@
     "home_subtitle": "Paint the arena. Claim the win.",
     "display_trial_countdown": "Reverting in {seconds}s",
     "help": {
-      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
       "pad_association": "Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
       "aim_cutoff": "Right stick: radial cutoff"
     },
     "keyboard_jump": {
-      "heading": "Keyboard Jump",
-      "capture": "Choose Jump key",
-      "reset": "Reset to Space",
-      "current": "Current: {key}",
-      "pending": "Pending: {key}",
-      "help": "Choose one A-Z key or Space.\nA / D / S already control movement or drop.\nApply activates and saves your choice.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
-      "pending_status": "Apply to activate this Jump key.",
-      "saved_status": "Jump key applied and saved.",
+      "heading": "Keyboard Keys",
+      "move_left": "Move left",
+      "move_right": "Move right",
+      "jump": "Jump",
+      "drop": "Drop",
+      "shoot": "Shoot",
+      "pause": "Pause (also)",
+      "reset": "Reset all keys",
+      "help": "Select a row, then press its new key.\nUse one A-Z key or Space;\nShoot may also take a mouse button.\nOne key does one action;\nkeys in use are refused.\nEsc always pauses and Down always drops.\nApply activates and saves your keys.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
+      "pending_status": "Apply to activate these keys.",
+      "saved_status": "Keyboard keys applied and saved.",
       "capture_wait_neutral": "Release all keys before choosing.",
       "capture_ready": "Press one key. Esc / pad Back cancels.",
+      "capture_ready_mouse": "Press a key or click. Esc / pad Back cancels.",
       "capture_release": "Release {key} to keep this choice.",
       "capture_rejected": "Use one A-Z key or Space. Try again.",
-      "capture_conflict": "Key already used for movement or drop.",
+      "capture_conflict": "That key already does another action.",
       "capture_cancelled": "Gesture cancelled; pending key unchanged.",
-      "debug_collision": "Jump key also has a developer bind."
+      "debug_collision": "A chosen key also has a developer bind."
     },
     "pad_buttons": {
       "heading": "Pad Buttons",
@@ -190,7 +194,10 @@
       "duration_minutes": "{value} min",
       "duration_default": "Default ({value})",
       "resolution": "{width}x{height}",
-      "shared": "Shared ({value})"
+      "shared": "Shared ({value})",
+      "series_stage_same": "Same stage",
+      "series_stage_rotate": "Rotate",
+      "series_stage_losers_pick": "Loser's pick"
     },
     "confirmations": {
       "restart": "Are you sure you want to restart?",
@@ -240,13 +247,16 @@
       "random_navigation": "<   SURPRISE ME   >",
       "locked_hint": "Confirm again to start.\nBack to change your choice.",
       "browse_hint": "Left/Right to browse.\nConfirm to lock your choice.",
+      "user_hint": "Built by you.\nConfirm to lock your choice.",
       "solo_mode": "SOLO PRACTICE",
       "single_match_mode": "SINGLE MATCH",
       "best_of_mode": "BEST OF {best_of}",
       "solo_roster": "{players} PLAYER",
       "versus_roster": "{players} PLAYERS / 2 TEAMS",
       "numbered_navigation": "<   ARENA {index} / {total}   >",
-      "random_hint": "Random: {count} available arenas.\nConfirm to lock your choice."
+      "random_hint": "Random: {count} available arenas.\nConfirm to lock your choice.",
+      "team_a_picks": "Team A picks the arena",
+      "team_b_picks": "Team B picks the arena"
     },
     "records": {
       "new_best": "NEW BEST",
@@ -306,7 +316,7 @@
       "options": "Left/Right Change    A/Enter Select    B/Esc Back",
       "controls": "Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)",
       "sticks": "D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)",
-      "mode": "A/Enter Select    Left/Right Match length    B/Esc Back",
+      "mode": "A/Enter Select    Left/Right Change    B/Esc Back",
       "join": "A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
       "team": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
       "team_shuffle": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",
@@ -363,11 +373,12 @@
       "restore_defaults": "Restore defaults",
       "keep": "Keep",
       "revert": "Revert",
-      "keyboard_jump": "Keyboard Jump",
+      "keyboard_jump": "Keyboard Keys",
       "pad_buttons": "Pad Buttons",
       "rumble": "Rumble",
       "watch_replay": "Watch Replay",
-      "profiles": "Profiles"
+      "profiles": "Profiles",
+      "series_stage": "Series stage"
     }
   },
 
@@ -408,8 +419,8 @@
     "credits": {
       "font": "lato_black_24",
       "heading_position": { "x": 180.0, "y": 80.0 },
-      "position": { "x": 180.0, "y": 240.0 },
-      "back_position": { "x": 180.0, "y": 840.0 },
+      "position": { "x": 180.0, "y": 230.0 },
+      "back_position": { "x": 180.0, "y": 830.0 },
       "text": "ColourWars - Matt Harding\nBuilt with the Labrador engine (MIT).\nMicrosoft - DirectX Tool Kit, DirectXTex, DirectXMath (MIT); XAudio2Redist (Microsoft licence).\nMicrosoft content tools - XWBTool, MakeSpriteFont and texconv (MIT).\nRapidJSON - THL A29 Limited, a Tencent company, and Milo Yip (MIT).\nCollision routines - Christer Ericson, Real-Time Collision Detection (2005).\nFonts - Lato, Bowlby One and Courier Prime (SIL Open Font License 1.1).\nMenu artwork - generated for ColourWars with OpenAI image generation.\n\nAccepted replacement audio sources (CC0):\nJoseph SARDIN / BigSoundBank; OwlishMedia / owlstorm; unkleceeg;\nMateusz Dabrowski / FreePats; Versilian Studios LLC / VCSL.\nOriginal audio arrangements and production code - authored with Codex (MIT).\nFull notices, source credits and licence terms: NOTICE, LICENSE and licenses/\ninside the release folder. Legacy commercial audio is not distributed."
     },
     "fonts": {
@@ -434,7 +445,7 @@
       "x_offset": 250.0,
       "max_width": 920.0
     },
-    "mode_select_spacing": { "x": 250.0, "y": 100.0 },
+    "mode_select_spacing": { "x": 250.0, "y": 96.0 },
     "player_count_spacing": { "x": 250.0, "y": 100.0 },
     "team_select": {
       "warning_position": { "x": 150.0, "y": 860.0 },
@@ -526,7 +537,7 @@
       "volume_preview": { "name": "ui.volume_preview", "volume": 0.7 }
     },
     "layout": {
-      "position": { "x": 220.0, "y": 180.0 },
+      "position": { "x": 220.0, "y": 186.0 },
       "size": { "x": 300.0, "y": 46.0 },
       "spacing": { "x": 510.0, "y": 64.0 }
     }
@@ -580,7 +591,7 @@
     "layout": {
       "position": { "x": 700.0, "y": 300.0 },
       "size": { "x": 100.0, "y": 50.0 },
-      "spacing": { "x": 100.0, "y": 118.0 }
+      "spacing": { "x": 100.0, "y": 117.0 }
     }
   },
 
@@ -688,6 +699,18 @@
       "size": 44.0,
       "ink_width": 3.0,
       "paper_width": 2.0
+    },
+    "teammate_marker": {
+      "_comment": "ROAD#18: in each human pane, a teammate (human or bot) whose body is outside the pane's view gets a chip clamped margin inside the pane edge, on the line from the pane centre toward them, with an ink pointer aimed at them. Ink keyline, the teammate's team colour, then their P# badge inset badge_inset inside it. HUD reference pixels, scaled with the pane like the rest of the HUD. fade_in seconds from leaving the view to full strength; a viewer's Reduce effects shows it at full strength at once. Threat (enemy) markers are an author decision and are not drawn.",
+      "enabled": true,
+      "ink": "141414",
+      "size": { "x": 72.0, "y": 58.0 },
+      "keyline_width": 3.0,
+      "badge_inset": 6.0,
+      "pointer_length": 16.0,
+      "pointer_width": 12.0,
+      "margin": 10.0,
+      "fade_in": 0.25
     },
     "low_paint": {
       "_comment": "POL#38: while the tool is low, the PAINT label becomes an ink tag with paper lettering, blinking at blink_period seconds. HUD reference pixels; Reduce effects holds it steady.",

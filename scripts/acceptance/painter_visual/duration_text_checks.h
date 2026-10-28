@@ -139,9 +139,10 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const auto pixels = [&]
     {
-        // Covers the full row including shade/arrow, but no neighbouring row.
+        // Covers the full row including shade/arrow, but no neighbouring row:
+        // row 5 sits at 630 with Mode's rows 96 apart (ROAD#20).
         return app.resolution_manager()->resolution_ivec() == Vector2I(1280, 720) ?
-            RectangleI(56, 420, 1168, 80) : RectangleI(84, 630, 1752, 120);
+            RectangleI(56, 410, 1168, 72) : RectangleI(84, 615, 1752, 108);
     };
     std::ofstream records(output / "duration-values.csv");
     records << "case,width,height,focus,duration_override,live_default,expected_value,font,value_width,value_height,row_width,row_height,scale,full_row_match,ornament_inside,frozen_state_rng\n";
@@ -154,7 +155,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
             "Duration drawing changed frozen page pixels or consumed match RNG");
         const Frame wanted = reference(snapshot, expected, snapshot.menu().item_font);
         const RowMetrics measured = metrics;
-        require(RectangleF(84.0f, 630.0f, 1752.0f, 120.0f).contains(measured.ornament),
+        require(RectangleF(84.0f, 615.0f, 1752.0f, 108.0f).contains(measured.ornament),
             "Duration comparison crop omitted part of the complete independent ornament");
         const RectangleI area = pixels();
         const Frame observed = foreground_crop(actual, area, 0), expected_crop = foreground_crop(wanted, area, 0);
@@ -259,7 +260,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     std::ofstream summary(output / "duration-summary.json");
     summary << "{\"outcome\":\"passed\",\"scope\":\"duration-text-only\",\"updates\":86,\"readbacks\":76,"
         "\"csv_rows\":25,\"compact_crops\":5,\"page_openings\":8,\"font_negative_controls\":1,"
-        "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":467200}\n";
+        "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":420480}\n";
     require(summary.good(), "Cannot retain duration leaf summary");
     std::cout << "PASS duration text leaf: actual Mode duration cycle/Left/Enter/wrap, independent default/explicit/fractional/scientific literals; "
         "live numeric tuning with captured old/new templates and numeric-bearing font through refresh/reopen/reversal; "

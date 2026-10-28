@@ -43,13 +43,36 @@ struct PadProfile
 	bool operator==(const PadProfile&) const = default;
 };
 
-// Gameplay preferences: the shared keyboard Jump key and one pad profile per
+// The keyboard seat's rebindable actions, in page and save order. Mouse aim,
+// F1 debug, intro skip and menus stay fixed; Escape always pauses and Down
+// always drops beside the choices below.
+enum class KeyboardAction : std::uint8_t { move_left, move_right, jump, drop, shoot, pause, count };
+inline constexpr std::size_t keyboard_action_count = static_cast<std::size_t>(KeyboardAction::count);
+
+// One desktop control: a key, or (Shoot only) a mouse button. Both none is
+// "unbound", valid only for the optional extra Pause key.
+struct DesktopControl
+{
+	labrador::Key key = labrador::Key::none;
+	labrador::MouseButton button = labrador::MouseButton::none;
+	bool operator==(const DesktopControl&) const = default;
+};
+
+// Gameplay preferences: the shared keyboard keys and one pad profile per
 // physical XInput slot. Menu/intro aliases stay fixed.
 struct InputBindings
 {
 	labrador::Key keyboard_jump = labrador::Key::space;
+	labrador::Key keyboard_move_left = labrador::Key::a;
+	labrador::Key keyboard_move_right = labrador::Key::d;
+	labrador::Key keyboard_drop = labrador::Key::s;
+	DesktopControl keyboard_shoot{ labrador::Key::none, labrador::MouseButton::left };
+	// In addition to the fixed Escape.
+	labrador::Key keyboard_pause = labrador::Key::none;
 	std::array<PadProfile, input_slots::pad_count> pads{};
 	void validate() const;
+	// Only the six keyboard choices: each in its action's domain, none twice.
+	void validate_keyboard() const;
 	bool operator==(const InputBindings&) const = default;
 };
 
@@ -60,10 +83,33 @@ struct InputBindings
 // other default gameplay keyboard sources, excluding Jump and intro skip.
 bool keyboard_jump_key_supported(labrador::Key key);
 std::array<labrador::Key, 27> keyboard_jump_keys();
+// Against the default keyboard choices, as the Keyboard Jump slice defined it.
 std::optional<GameAction> keyboard_jump_conflict(labrador::Key key);
 std::string_view input_key_name(labrador::Key key);
 std::wstring_view input_key_label(labrador::Key key);
 labrador::Key input_key_from_name(std::string_view name);
+
+// The keyboard actions slice (GAP#4.2). Every action's keys are the A-Z/Space
+// domain above; Shoot also takes the five mouse buttons below, and Pause may be
+// none. Save tokens are the key names, "mouse_left" ... "mouse_x2" and "none";
+// labels are "A", "Space", "Left click", "Mouse 4", "None". Other values and
+// spellings throw invalid_argument.
+std::array<labrador::MouseButton, 5> shoot_mouse_buttons();
+bool keyboard_control_supported(KeyboardAction action, const DesktopControl& control);
+std::string_view desktop_control_name(const DesktopControl& control);
+std::wstring_view desktop_control_label(const DesktopControl& control);
+DesktopControl desktop_control_from_name(std::string_view name);
+// "move_left", "move_right", "jump", "drop", "shoot", "pause".
+std::string_view keyboard_action_name(KeyboardAction action);
+GameAction keyboard_game_action(KeyboardAction action);
+DesktopControl keyboard_control(const InputBindings& bindings, KeyboardAction action);
+// Throws invalid_argument for a control outside the action's domain.
+void set_keyboard_control(InputBindings& bindings, KeyboardAction action, const DesktopControl& control);
+// The other action in `bindings` already using `control`; none never conflicts.
+std::optional<KeyboardAction> keyboard_control_conflict(const InputBindings& bindings,
+	KeyboardAction action, const DesktopControl& control);
+// Whether the two preferences' keyboard choices are identical.
+bool same_keyboard(const InputBindings& left, const InputBindings& right);
 
 // The eleven bindable controls in page order (none excluded). Canonical save
 // tokens are "none", "a", "lb", "lt", "ls", "start" and so on; labels are what
@@ -80,7 +126,8 @@ std::string_view pad_action_name(PadAction action);
 std::optional<PadAction> pad_control_conflict(const PadProfile& profile,
 	PadAction action, bool alternate, PadControl control);
 
-// A validated copy with only the gameplay Jump keyboard source replaced.
+// A validated copy with the keyboard choices written into Move left/right,
+// Jump, Drop (beside Down), Shoot and Pause (beside Escape).
 ActionBindings effective_action_bindings(const InputBindings& preferences);
 // Also replace the selected physical slot's Jump, Shoot and Pause sources.
 // A trigger used for Shoot keeps the shoot threshold; on Jump or Pause it uses

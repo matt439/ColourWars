@@ -46,7 +46,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
 
     std::optional<EndMenuAction> choice;
     int delivered = 0;
-    const auto open = [&]
+    const auto open = [&](const Session& round = Session())
     {
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : keys) { app.keyboard()->on_key_up(key); }
@@ -54,7 +54,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
         app.mouse()->poll(); app.mouse()->poll();
         input.reset_actions(); choice.reset(); delivered = 0;
         stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
-        stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, series),
+        stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, round.is_series() ? round : series),
             [&](const EndMenuAction& result) { choice = result; ++delivered; });
         tick(); tick();
         require(stack.depth() == 2 && !choice, "Series End menu did not open on neutral input");
@@ -66,6 +66,12 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     const auto next_round = [&](const char* message)
     {
         require(choice == EndMenuAction::restart && delivered == 1 && stack.depth() == 1, message);
+    };
+    // A stage confirmed between rounds plays as chosen by hand, whatever the
+    // series stage rule would have picked.
+    const auto chosen_round = [&](const char* message)
+    {
+        require(choice == EndMenuAction::play_chosen_stage && delivered == 1 && stack.depth() == 1, message);
     };
     const auto evidence = [&](const std::string& name)
     {
@@ -110,7 +116,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     evidence("tools-stage");
     tap(Key::enter); still_open("Locking the stage between rounds started the round early");
     tap(Key::enter);
-    next_round("The stage confirmation after re-picked tools did not play the next round");
+    chosen_round("The stage confirmation after re-picked tools did not play the next round");
     require(settings.stage() == "movement_course", "Passing through the stage page changed the stage");
     roster_kept("Re-picking tools changed the series roster, teams or bot");
 
@@ -119,7 +125,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     still_open("Change Level between rounds closed the End frame instead of opening the stages");
     evidence("stage");
     tap(Key::right); tap(Key::enter); tap(Key::enter);
-    next_round("The re-picked stage did not play the next round");
+    chosen_round("The re-picked stage did not play the next round");
     require(settings.stage() == "king_of_the_hill" && settings.player_weapon(0) == WeaponType::sniper &&
         settings.player_weapon(1) == WeaponType::roller, "Re-picking the stage changed the stage or tools wrongly");
     roster_kept("Re-picking the stage changed the series roster, teams or bot");
@@ -142,7 +148,65 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     require(choice == EndMenuAction::exit && delivered == 1 && stack.depth() == 1,
         "Exit was not the row under Change Level between rounds");
     roster_kept("Series re-pick navigation changed the roster");
+
+    // Series stage rule (ROAD#20). Under Rotate, Change Level opens on the
+    // stage the rotation would play, so confirming it keeps the rotation.
+    settings.set_series_stage_rule(SeriesStageRule::rotate);
+    settings.set_stage("movement_course");
+    open(); tap(Key::enter);
+    next_round("Rotate's Next Round did not play straight on");
+    open(); tap(Key::down); tap(Key::down); tap(Key::enter);
+    still_open("Change Level under Rotate closed the End frame");
+    evidence("rotate-stage");
+    tap(Key::enter); tap(Key::enter);
+    chosen_round("Confirming the rotated stage did not play it as chosen");
+    require(settings.stage() == "king_of_the_hill", "Change Level under Rotate did not open on the rotated stage");
+
+    // Loser's pick: P1's team A beat the bot, whose team cannot pick, so
+    // Next Round plays on (the round rotates in the match).
+    settings.set_series_stage_rule(SeriesStageRule::losers_pick);
+    settings.set_stage("movement_course");
+    open(); tap(Key::enter);
+    next_round("A bot-only loser's Next Round did not play straight on");
+    // After a draw nobody picks: Replay Draw plays the same stage.
+    LevelEndInfo draw;
+    draw.total_area = 100.0f; draw.team_a_area = 40.0f; draw.team_b_area = 40.0f;
+    Session drawn(3); drawn.finish_round(draw);
+    open(drawn); tap(Key::enter);
+    next_round("Replay Draw under Loser's pick opened a pick");
+    // When the bot's team B wins, P1's team A lost and picks: Next Round
+    // opens Stage Select in the End frame under a heading naming the team.
+    LevelEndInfo defeat;
+    defeat.total_area = 100.0f; defeat.team_a_area = 30.0f; defeat.team_b_area = 60.0f;
+    Session lost(3); lost.finish_round(defeat);
+    open(lost); tap(Key::enter);
+    still_open("Loser's pick Next Round closed the End frame instead of opening the pick");
+    evidence("losers-pick");
+    tap(Key::escape);
+    still_open("Back from the loser's pick left the End frame");
+    tap(Key::enter); still_open("Next Round did not reopen the loser's pick");
+    tap(Key::right); tap(Key::enter); tap(Key::enter);
+    chosen_round("The loser's pick did not play the chosen stage");
+    require(settings.stage() == "king_of_the_hill", "The loser's pick did not reach the series' settings");
+    roster_kept("The loser's pick changed the roster");
+
+    // Only the picking team's seats choose: with team B picking, P1's
+    // keyboard (team A) neither browses, locks nor backs out.
+    stack.clear(); stack.notify_activation(true);
+    for (const Key key : keys) { app.keyboard()->on_key_up(key); }
+    app.keyboard()->poll(); app.keyboard()->poll(); input.reset_actions(); choice.reset(); delivered = 0;
+    stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
+    stack.push<EndMenuAction>(std::make_unique<MainMenuStageSelect>(&context, std::optional<Session>(series), PlayerTeam::b),
+        [&](const EndMenuAction& result) { choice = result; ++delivered; });
+    tick(); tick();
+    tap(Key::right); tap(Key::enter); tap(Key::enter); tap(Key::escape);
+    still_open("A seat outside the picking team chose or left the loser's pick");
+    require(settings.stage() == "king_of_the_hill", "A seat outside the picking team changed the stage");
+    evidence("team-b-picks");
+    settings.set_series_stage_rule(SeriesStageRule::same);
     std::cout << "PASS series re-pick: actual End menu between rounds opens Weapon then Stage Select in its frame; "
-        "re-picked tools and Boost, then the stage, play the next round; Back returns to the End menu without "
-        "committing; teams, roster, bot and best-of stay; Exit follows Change Level\n";
+        "re-picked tools and Boost, then the stage, play the next round as chosen; Back returns to the End menu "
+        "without committing; teams, roster, bot and best-of stay; Exit follows Change Level; Rotate opens Change "
+        "Level on the rotated stage; Loser's pick plays on for a bot loser and a draw, and otherwise opens Stage "
+        "Select for the losing team alone under its heading\n";
 }

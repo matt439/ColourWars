@@ -68,6 +68,9 @@ public:
         const std::wstring& device_label);
 
 private:
+    // hud.paper.keyline_width at this HUD scale, never below one device
+    // pixel: a thinner rectangle can fall between pixel centres and vanish.
+    float paper_pen(float scale) const;
     void draw_paper_panel(labrador::DrawList& draw_list,
         const mattmath::RectangleF& face, float scale) const;
     void draw_meter(labrador::DrawList& draw_list,

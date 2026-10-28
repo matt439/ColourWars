@@ -7,8 +7,8 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     using Help = decltype(MenuText{}.help);
     const Help legacy{
         L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\n"
-        L"Pause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\n"
-        L"Aim: mouse cursor    Shoot: left click\nJump: {jump} (hold for height)\nPause: Esc    Debug: F1\n"
+        L"Pause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\n"
+        L"Aim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Debug: F1\n"
         L"MENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
         L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
         L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
@@ -38,11 +38,22 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         // Do not use the formatter under test to construct the raster oracle.
         const Key key = preferences.input_bindings().keyboard_jump;
         require(key == Key::space || key == Key::j, "Help fixture encountered an undeclared effective Jump key");
+        InputBindings others = preferences.input_bindings(); others.keyboard_jump = Key::space;
+        require(same_keyboard(others, InputBindings{}), "Help fixture encountered undeclared keyboard keys");
         const std::wstring label = key == Key::space ? L"Space" : L"J";
         const size_t token = authored.find(L"{jump}");
         require(token != std::wstring::npos && authored.find(L"{jump}", token + 6) == std::wstring::npos,
             "Independent help fixture lost its single authored Jump token");
-        return authored.substr(0, token) + label + authored.substr(token + 6);
+        std::wstring result = authored.substr(0, token) + label + authored.substr(token + 6);
+        // The other keyboard tokens, where authored, name the defaults.
+        for (const auto& [name, words] : { std::pair{ std::wstring_view(L"{left}"), L"A" },
+            std::pair{ std::wstring_view(L"{right}"), L"D" }, std::pair{ std::wstring_view(L"{drop}"), L"S" },
+            std::pair{ std::wstring_view(L"{shoot}"), L"Left click" }, std::pair{ std::wstring_view(L"{pause}"), L"Esc" } })
+        {
+            const size_t at = result.find(name);
+            if (at != std::wstring::npos) { result.replace(at, name.size(), words); }
+        }
+        return result;
     };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
@@ -265,11 +276,13 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     tap(Key::down);
     const Frame old_before_jump = compare("old-parent-before-jump", false, old, old_words, true);
     tap(Key::enter); tick(); require(stack.depth() == 3, "Old Controls did not open its actual Keyboard Jump child");
+    tap(Key::down); tap(Key::down); // Jump is Keyboard Keys' third row.
     tap(Key::enter); tick(); // Capture observes a fresh neutral frame after entry.
     tap(Key::j); tick();
     require(preferences.input_bindings().keyboard_jump == Key::space,
         "Capturing a pending Jump key applied it without confirmation");
-    tap(Key::down); tap(Key::down); tap(Key::enter); tick();
+    for (int row = 2; row < 7; ++row) { tap(Key::down); } // Apply.
+    tap(Key::enter); tick();
     require(preferences.input_bindings().keyboard_jump == Key::j,
         "Actual Keyboard Jump child did not apply its captured key");
     tap(Key::escape); tick(); require(stack.depth() == 2, "Keyboard Jump did not return to its retained Controls parent");

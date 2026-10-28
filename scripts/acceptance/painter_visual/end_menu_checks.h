@@ -492,6 +492,14 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
                 look.layout.spacing.y * (ongoing ? 3.0f : 4.0f)), exit_size);
             exit.inflate(art.focus_padding);
             require(panel.contains(exit), "End-menu last action card escapes its panel");
+            // A round with a replay adds Watch Replay above the setup actions,
+            // so Exit drops a row. Its card must stay on the paper's face, not
+            // hang into the drop shadow below it.
+            RectangleF replay_exit = exit;
+            replay_exit.y += look.layout.spacing.y;
+            const RectangleF face(panel.x, panel.y,
+                panel.width - art.shadow_offset, panel.height - art.shadow_offset);
+            require(face.contains(replay_exit), "End-menu Exit card under Watch Replay hangs off the paper face");
             RectangleF primary(look.layout.position, measured);
             primary.inflate(art.focus_padding + Vector2F(art.keyline_width + 2.0f));
             require(panel.contains(primary), "End-menu continuation text/card does not fit its paper panel");

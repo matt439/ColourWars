@@ -6,6 +6,7 @@
 #include "game/save.h"
 #include "game/objects/level_end_info.h"
 #include "game/objects/crude_drawing.h"
+#include "game/series_stage_rule.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -15,8 +16,9 @@ using namespace labrador;
 #pragma region MainMenuStageSelect
 
 MainMenuStageSelect::MainMenuStageSelect(MenuContext* context,
-	std::optional<Session> between_rounds) :
+	std::optional<Session> between_rounds, PlayerTeam picker) :
 	MainMenuPage(context, std::move(between_rounds)),
+	picker_(this->between_rounds() ? picker : PlayerTeam::none),
 	stage_motion_(context->data()->presentation()->menu().motion)
 {
 
@@ -35,6 +37,11 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
+		// Under Loser's pick only the picking team's seats choose.
+		if (this->picker_ != PlayerTeam::none && this->level_settings()->player_team(i) != this->picker_)
+		{
+			continue;
+		}
 		if (inputs[i].action == MenuInputAction::back)
 		{
 			if (this->select_state_.state == ConfirmationState::unconfirmed)
@@ -84,7 +91,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 				{
 					this->menu_context()->finish_with_music([context = this->context()]
 					{
-						context->pop(EndMenuAction::restart);
+						context->pop(EndMenuAction::play_chosen_stage);
 					});
 				}
 				else
@@ -182,6 +189,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_hint_->set_text(confirmed ?
 		this->text().stage.locked_hint : random ?
 		this->text().stage_random_hint(random_stage_indices(*this->data()->stages()).size()) :
+		this->is_user_stage(slot) ? this->text().stage.user_hint :
 		this->text().stage.browse_hint);
 	const RectangleF hint_bounds = RectangleF::union_of(
 		this->selection_hint_->text_bounds_at(Vector2F::ZERO, 1.0f),
@@ -260,6 +268,12 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 	}
 	return L"ERROR";
 }
+bool MainMenuStageSelect::is_user_stage(int slot) const
+{
+	const StageList* stages = this->data()->stages();
+	return slot >= 0 && slot < static_cast<int>(stages->size()) &&
+		stages->at(static_cast<size_t>(slot)).user;
+}
 int MainMenuStageSelect::pick_random_stage() const
 {
 	return static_cast<int>(random_stage_index(*this->data()->stages(),
@@ -267,7 +281,18 @@ int MainMenuStageSelect::pick_random_stage() const
 }
 void MainMenuStageSelect::init()
 {
-	this->select_state_.slot = this->slot_of(this->level_settings()->stage());
+	// A stage the player saved or edited since the last visit joins now. The
+	// list holds still between rounds, where a series is still playing it; a
+	// chosen stage whose file vanished falls back to the first slot below.
+	if (!this->between_rounds())
+	{
+		this->menu_context()->rescan_stages();
+	}
+	// Between rounds the page opens on the stage the rule would play next,
+	// so confirming it straight away keeps a rotation going.
+	this->select_state_.slot = this->slot_of(this->between_rounds() ?
+		series_next_stage(*this->level_settings(), *this->data()->stages(), *this->between_rounds(), false) :
+		this->level_settings()->stage());
 	const MenuStyle& style = this->menu_style();
 	const MainMenuPresentation& main = this->look();
 	const StageSelectPresentation& look = this->look().stage_select;
@@ -287,6 +312,8 @@ void MainMenuStageSelect::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f,
 			main.stage_box_size), resources, &style, &this->paper_art_, &this->focus_);
 	this->heading_ = std::make_unique<UiTextDropShadow>("heading",
+		this->picker_ == PlayerTeam::a ? this->text().stage.team_a_picks :
+		this->picker_ == PlayerTeam::b ? this->text().stage.team_b_picks :
 		this->text().heading(MenuHeading::arena), style.heading_font,
 		this->calculate_widget_position(0, 0), resources,
 		this->paper_art_.ink, clear_shadow, style.heading_shadow_offset);

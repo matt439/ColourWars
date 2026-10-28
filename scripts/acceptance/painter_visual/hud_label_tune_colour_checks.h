@@ -6,7 +6,7 @@ const wchar_t* hud_label_identity() { return L"P1  /  TEAM A\nKeyboard/mouse"; }
 const char* hud_label_subject(HudLabelSubject subject)
 { return subject == HudLabelSubject::foreground ? "foreground" : subject == HudLabelSubject::shadow ? "shadow" : "pair"; }
 std::array<RectangleI, 3> hud_label_rois()
-{ return { RectangleI(133, 70, 380, 105), RectangleI(1561, 64, 141, 26), RectangleI(1561, 150, 108, 26) }; }
+{ return { RectangleI(133, 63, 380, 111), RectangleI(1561, 59, 125, 28), RectangleI(1561, 145, 97, 28) }; }
 std::vector<float> hud_label_fixed_style(const HudPresentation& look, HudLabelSubject subject)
 {
     auto copy = look;
@@ -63,10 +63,11 @@ public:
         const std::array<std::string, 3> names{ look_.player_identity_font, look_.meter_label_font, look_.timer_font };
         for (size_t i = 0; i < names.size(); ++i)
         { require(fonts_[i] == resources->resolve_sprite_font(names[i]) && font_pointers_[i] == resources->font(fonts_[i]), "HUD label font handle/pointer changed"); }
-        require(font_pointers_[0]->line_spacing() == 55.6640625f && font_pointers_[1]->line_spacing() == 37.109375f &&
-            resources->measure_text(fonts_[0], hud_label_identity()) == Vector2F(386, 117.6640625f) &&
-            resources->measure_text(fonts_[1], L"HEALTH") == Vector2F(145, 37.109375f) &&
-            resources->measure_text(fonts_[1], L"PAINT") == Vector2F(112, 37.109375f),
+        // Lato Black 36/24 (95c1da3b): whole-pixel line spacings 58 and 38.
+        require(font_pointers_[0]->line_spacing() == 58.0f && font_pointers_[1]->line_spacing() == 38.0f &&
+            resources->measure_text(fonts_[0], hud_label_identity()) == Vector2F(382, 116) &&
+            resources->measure_text(fonts_[1], L"HEALTH") == Vector2F(129, 38) &&
+            resources->measure_text(fonts_[1], L"PAINT") == Vector2F(101, 38),
             "HUD source-derived case-sensitive font metrics changed");
         for (const auto pair : { std::pair<char32_t, char32_t>(U'P', U'p'), { U'H', U'h' }, { U'A', U'a' } })
         {
@@ -75,14 +76,14 @@ public:
         }
         const auto positions = origins();
         require(positions[0] == Vector2F(123.59999847412109375f, 54) &&
-            positions[1] == Vector2F(1555.199951171875f, 54.09062957763671875f) &&
-            positions[2] == Vector2F(1555.199951171875f, 140.490631103515625f),
+            positions[1] == Vector2F(1555.199951171875f, 53.20000457763671875f) &&
+            positions[2] == Vector2F(1555.199951171875f, 139.600006103515625f),
             "HUD label source float32 origins changed; decimal rounding is not permitted");
         const RectangleF identity_face(Vector2F(1920.0f * .03f, 54) - Vector2F(16, 10),
-            Vector2F(386 + 66, 117.6640625f) + Vector2F(32, 20));
+            Vector2F(382 + 66, 116) + Vector2F(32, 20));
         const float inside_bottom = identity_face.bottom() - 2;
-        require(inside_bottom == 179.6640625f && static_cast<int>(inside_bottom - 6) == 173 &&
-            static_cast<int>(inside_bottom - 4) == 175 && identity_face.right() - 2 - 6 > 513 &&
+        require(inside_bottom == 178 && static_cast<int>(inside_bottom - 6) == 172 &&
+            static_cast<int>(inside_bottom - 4) == hud_label_rois()[0].bottom() && identity_face.right() - 2 - 6 > hud_label_rois()[0].right() &&
             look_.paper.shade.a * .12f == .04f, "HUD identity paper lower strip hypothesis changed");
         bounds(font_pointers_[0], hud_label_identity(), positions[0], Vector2F(2, 2), hud_label_rois()[0]);
         bounds(font_pointers_[1], L"HEALTH", positions[1], Vector2F::ZERO, hud_label_rois()[1]);
@@ -95,8 +96,8 @@ public:
         // Meter y subtracts each actual font measurement.
         const float x = 1920.0f - 1920.0f * .19f;
         return { Vector2F(1920.0f * .03f, 1080.0f * .05f) + Vector2F(54 + 12, 0),
-            Vector2F(x, 1080.0f * .09f) - Vector2F(0, 37.109375f + 6),
-            Vector2F(x, 1080.0f * .17f) - Vector2F(0, 37.109375f + 6) };
+            Vector2F(x, 1080.0f * .09f) - Vector2F(0, 38.0f + 6),
+            Vector2F(x, 1080.0f * .17f) - Vector2F(0, 38.0f + 6) };
     }
     Frame actual()
     { return render([&](DrawList& list) { draw_hud(list, hud_); }); }
@@ -112,8 +113,8 @@ public:
         {
             for (const auto& box : hud_label_rois()) { rectangle(list, box, Colour(255, 245, 223)); }
             // Full multiline identity is NOT flat paper: only pass3's source
-            // shade enters rows173/174. Literal crop material precedes text.
-            rectangle(list, { 133, 173, 380, 2 }, Colour(0.0f, 0.0f, 0.0f, .04f));
+            // shade enters rows172/173. Literal crop material precedes text.
+            rectangle(list, { 133, 172, 380, 2 }, Colour(0.0f, 0.0f, 0.0f, .04f));
             list.set_filter(TextureFilter::linear);
             const auto tint = [&](const Colour& colour, bool selected)
             {
@@ -158,9 +159,9 @@ public:
                 if (region < 0) { require(same, "HUD wrong reference escaped the complete declared text support"); }
                 else if (!same) { ++differences[static_cast<size_t>(region)]; }
             } }
-            require(differences[0] > 0 && differences[0] <= 39900, "HUD identity negative tint/order must discriminate");
+            require(differences[0] > 0 && differences[0] <= 42180, "HUD identity negative tint/order must discriminate");
             if (subject_ == HudLabelSubject::foreground)
-            { require(differences[1] > 0 && differences[1] <= 3666 && differences[2] > 0 && differences[2] <= 2808, "Both HEALTH and PAINT call sites must separately discriminate"); }
+            { require(differences[1] > 0 && differences[1] <= 3500 && differences[2] > 0 && differences[2] <= 2716, "Both HEALTH and PAINT call sites must separately discriminate"); }
             else { require(differences[1] == 0 && differences[2] == 0, "Identity shadow reference changed an unshadowed meter label"); }
             if (mode == HudLabelReference::reversed_order)
             {
@@ -207,7 +208,7 @@ public:
         std::ofstream receipt(output_ / (stem + ".json"));
         receipt << "{\"scope\":\"source-hypothesis-failure-no-fitting\",\"subject\":\"" << hud_label_subject(subject_)
             << "\",\"frame_width\":1920,\"frame_height\":1080,\"readbacks\":" << readbacks_
-            << ",\"identity_roi\":[133,70,380,105],\"health_roi\":[1561,64,141,26],\"paint_roi\":[1561,150,108,26]}\n";
+            << ",\"identity_roi\":[133,63,380,111],\"health_roi\":[1561,59,125,28],\"paint_roi\":[1561,145,97,28]}\n";
         require(receipt.good(), "Cannot preserve HUD label failure receipt");
     }
 private:
@@ -247,7 +248,7 @@ private:
         size_t count = 0;
         for (const auto& box : hud_label_rois()) { for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x)
         { const size_t at = offset(x, y); require(same_pixel(observed, reference, at) && observed.pixels[at + 3] == 255, "HUD label ordered glyph/paper RGBA reference differs"); ++count; } } }
-        require(count == 46374, "HUD label independent three-region comparison count differs");
+        require(count == 48396, "HUD label independent three-region comparison count differs");
     }
     void rectangle(DrawList& list, const RectangleI& box, const Colour& colour) const
     {
@@ -330,10 +331,10 @@ void hud_label_colour_consumer_checks(Application& app, const Presentation& pres
         require(probe.readbacks() == (subject == HudLabelSubject::foreground ? 19U : 20U), "HUD label shared role budget differs"); reads += probe.readbacks();
     }
     require(csv.good() && reads == 39 && rows == 8 && crops == 16 && control_frames == 7 && discriminations == 13 &&
-        control_pixels > 0 && control_pixels <= 298722, "HUD label shared finite counters differ");
+        control_pixels > 0 && control_pixels <= 313908, "HUD label shared finite counters differ");
     std::ofstream summary(output / "hud-label-colour-consumer-summary.json");
     summary << "{\"scope\":\"three-foreground-labels-and-identity-shadow\",\"context\":\"prepared-normal-123.25\",\"readbacks\":39,\"csv_rows\":8,\"foreground_readbacks\":19,\"shadow_readbacks\":20,"
-        "\"crops\":16,\"crop_pixels\":345096,\"ppm_bytes\":1035520,\"roi_pixels\":46374,\"independent_observations\":8,\"roi_pixel_checks\":370992,\"repeat_checks\":8,\"copied_adoption_checks\":8,"
+        "\"crops\":16,\"crop_pixels\":362304,\"ppm_bytes\":1087140,\"roi_pixels\":48396,\"independent_observations\":8,\"roi_pixel_checks\":387168,\"repeat_checks\":8,\"copied_adoption_checks\":8,"
         "\"controls\":7,\"roi_control_discriminations\":13,\"control_discriminating_pixels\":" << control_pixels << ",\"shadow_meter_invariance_checks\":6,\"calibration_pixel_checks\":1248,\"private_game_saves\":0,"
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot preserve HUD label shared summary");
@@ -451,7 +452,7 @@ void hud_label_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
         impl.tune_document("tuning")->edits().empty(), "HUD label paired Debug finite counters/final ledger differ");
     std::ofstream summary(output / "hud-label-tune-summary.json");
     summary << "{\"scope\":\"debug-paired-hud-label-live\",\"commands\":15,\"states\":15,\"readbacks\":60,\"csv_rows\":15,\"crops\":0,\"saved_tokens\":2,\"presentation_save_commands\":1,"
-        "\"roi_pixel_checks\":695610,\"repeat_checks\":15,\"copied_adoption_checks\":15,\"sibling_checks\":15,\"calibration_pixel_checks\":1920,\"private_game_saves\":0,"
+        "\"roi_pixel_checks\":725940,\"repeat_checks\":15,\"copied_adoption_checks\":15,\"sibling_checks\":15,\"calibration_pixel_checks\":1920,\"private_game_saves\":0,"
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot preserve HUD label paired Debug summary");
     std::cout << "PASS HUD label real paired commands: 15 statements and rendered states, 60 additional reads, 15 rows, "

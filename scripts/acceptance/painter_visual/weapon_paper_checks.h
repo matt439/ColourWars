@@ -252,9 +252,11 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
     {
         // A description in words, too wide for the screen on one line from any tile
         // (it starts at least x_offset in), fits the paper in two lines once the page
-        // wraps it to main_menu.weapon_description.max_width.
+        // wraps it to main_menu.weapon_description.max_width. Lato Black 24 sets
+        // "paint" 77 wide and a space 3, so 22 words are 1757 against the 1670
+        // the screen leaves and wrap 11 + 11 (877 each) inside the 920 measure.
         Presentation wrapped = original; auto& look = const_cast<MainMenuPresentation&>(wrapped.main_menu());
-        std::wstring words = L"paint"; for (int i = 1; i < 20; ++i) { words += L" paint"; }
+        std::wstring words = L"paint"; for (int i = 1; i < 22; ++i) { words += L" paint"; }
         const FontHandle font = app.render_resources()->resolve_sprite_font(look.weapon_description_font);
         require(app.render_resources()->measure_text(font, words).x > 1920.0f - look.weapon_description_x_offset, "The wrapping fixture would fit the paper unwrapped");
         const std::wstring lines = text_wrap::wrap(*app.render_resources(), font, words, look.weapon_description_max_width);

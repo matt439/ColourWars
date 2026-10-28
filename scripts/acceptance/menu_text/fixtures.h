@@ -63,7 +63,7 @@ namespace menu_text_acceptance
         { "options", L"Left/Right Change    A/Enter Select    B/Esc Back" },
         { "controls", L"Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)" },
         { "sticks", L"D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)" },
-        { "mode", L"A/Enter Select    Left/Right Match length    B/Esc Back" },
+        { "mode", L"A/Enter Select    Left/Right Change    B/Esc Back" },
         { "join", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot" },
         { "team", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" },
         { "team_shuffle", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams" },
@@ -94,8 +94,8 @@ namespace menu_text_acceptance
     constexpr HelpText help_text[]{
         { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\n"
             L"Jump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\n"
-            L"Move: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\n"
-            L"Jump: {jump} (hold for height)\nPause: Esc    Debug: F1\nMENUS\n"
+            L"Move: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\n"
+            L"Jump: {jump} (hold for height)\nPause: {pause}    Debug: F1\nMENUS\n"
             L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
             L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
             L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
@@ -109,23 +109,28 @@ namespace menu_text_acceptance
         bool multiline = false; bool key_template = false;
     };
     constexpr KeyboardJumpText keyboard_jump_text[]{
-        { "heading", L"Keyboard Jump", &KeyboardJumpMenuText::heading },
-        { "capture", L"Choose Jump key", &KeyboardJumpMenuText::capture },
-        { "reset", L"Reset to Space", &KeyboardJumpMenuText::reset },
-        { "current", L"Current: {key}", &KeyboardJumpMenuText::current, false, true },
-        { "pending", L"Pending: {key}", &KeyboardJumpMenuText::pending, false, true },
-        { "help", L"Choose one A-Z key or Space.\nA / D / S already control movement or drop.\n"
-            L"Apply activates and saves your choice.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
+        { "heading", L"Keyboard Keys", &KeyboardJumpMenuText::heading },
+        { "move_left", L"Move left", &KeyboardJumpMenuText::move_left },
+        { "move_right", L"Move right", &KeyboardJumpMenuText::move_right },
+        { "jump", L"Jump", &KeyboardJumpMenuText::jump },
+        { "drop", L"Drop", &KeyboardJumpMenuText::drop },
+        { "shoot", L"Shoot", &KeyboardJumpMenuText::shoot },
+        { "pause", L"Pause (also)", &KeyboardJumpMenuText::pause },
+        { "reset", L"Reset all keys", &KeyboardJumpMenuText::reset },
+        { "help", L"Select a row, then press its new key.\nUse one A-Z key or Space;\nShoot may also take a mouse button.\n"
+            L"One key does one action;\nkeys in use are refused.\nEsc always pauses and Down always drops.\n"
+            L"Apply activates and saves your keys.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
             &KeyboardJumpMenuText::help, true },
-        { "pending_status", L"Apply to activate this Jump key.", &KeyboardJumpMenuText::pending_status },
-        { "saved_status", L"Jump key applied and saved.", &KeyboardJumpMenuText::saved_status },
+        { "pending_status", L"Apply to activate these keys.", &KeyboardJumpMenuText::pending_status },
+        { "saved_status", L"Keyboard keys applied and saved.", &KeyboardJumpMenuText::saved_status },
         { "capture_wait_neutral", L"Release all keys before choosing.", &KeyboardJumpMenuText::capture_wait_neutral },
         { "capture_ready", L"Press one key. Esc / pad Back cancels.", &KeyboardJumpMenuText::capture_ready },
+        { "capture_ready_mouse", L"Press a key or click. Esc / pad Back cancels.", &KeyboardJumpMenuText::capture_ready_mouse },
         { "capture_release", L"Release {key} to keep this choice.", &KeyboardJumpMenuText::capture_release, false, true },
         { "capture_rejected", L"Use one A-Z key or Space. Try again.", &KeyboardJumpMenuText::capture_rejected },
-        { "capture_conflict", L"Key already used for movement or drop.", &KeyboardJumpMenuText::capture_conflict },
+        { "capture_conflict", L"That key already does another action.", &KeyboardJumpMenuText::capture_conflict },
         { "capture_cancelled", L"Gesture cancelled; pending key unchanged.", &KeyboardJumpMenuText::capture_cancelled },
-        { "debug_collision", L"Jump key also has a developer bind.", &KeyboardJumpMenuText::debug_collision }
+        { "debug_collision", L"A chosen key also has a developer bind.", &KeyboardJumpMenuText::debug_collision }
     };
     struct PadButtonsText {
         const char* key; const wchar_t* text; std::wstring PadButtonsMenuText::* field;
@@ -325,7 +330,8 @@ namespace menu_text_acceptance
     constexpr StageCueText stage_cue_text[]{
         { "random_navigation", L"<   SURPRISE ME   >", &MenuStageText::random_navigation, false },
         { "locked_hint", L"Confirm again to start.\nBack to change your choice.", &MenuStageText::locked_hint, true },
-        { "browse_hint", L"Left/Right to browse.\nConfirm to lock your choice.", &MenuStageText::browse_hint, true }
+        { "browse_hint", L"Left/Right to browse.\nConfirm to lock your choice.", &MenuStageText::browse_hint, true },
+        { "user_hint", L"Built by you.\nConfirm to lock your choice.", &MenuStageText::user_hint, true }
     };
     constexpr DefaultText items[]{
         { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
@@ -342,9 +348,9 @@ namespace menu_text_acceptance
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
-        { "keyboard_jump", L"Keyboard Jump" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
+        { "keyboard_jump", L"Keyboard Keys" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
         { "watch_replay", L"Watch Replay" },
-        { "profiles", L"Profiles" }
+        { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }
     };
 
     struct World

@@ -111,7 +111,10 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     {
         stack.clear(); in_trial = false; direct_page = nullptr; direct_result.reset(); direct_results = 0;
         app.set_resolution(ScreenResolution::s_1280_720); app.set_fullscreen(false); hide();
-        const_cast<PlaySettings&>(preferences.play_settings()) = expected;
+        // Seed the durable play preferences, not only Save's effective view:
+        // since ROAD#21 play_settings() is derived from them plus worn
+        // profiles, and every later save serializes the durable copy.
+        require(preferences.set_play_settings_and_save(expected), "Cannot seed private display trial play preferences");
         require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720, saved_fullscreen, TeamColourPair::blue_yellow), "Cannot seed private display trial preferences");
         metadata_fullscreen = saved_fullscreen; before_bytes = bytes();
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }

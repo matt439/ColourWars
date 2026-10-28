@@ -100,8 +100,11 @@ Mouse aim follows the cursor and the roller keeps its fixed aim.
 Open **Pad Buttons** to choose Jump, Shoot and Pause for each Pad 1-4 slot, each
 with an optional second control: A/B/X/Y, LB/RB, LT/RT, a stick press (LS/RS) or
 Start. The defaults are A / LT Jump, RT Shoot and Start Pause, and a control in use
-on that pad is skipped. **Keyboard Jump** changes the shared keyboard player's Jump
-key. These choices leave menu and intro controls unchanged.
+on that pad is skipped. **Keyboard Keys** changes the shared keyboard player's
+Move left, Move right, Jump, Drop, Shoot (a key or a mouse button) and an extra
+Pause key: select a row and press the new key. Esc always pauses, Down always
+drops and a key in use is refused. These choices leave menu and intro controls
+unchanged.
 **Profiles** keeps up to eight named profiles, each carrying a person's
 deadzones, rumble, comfort switches, pad buttons and Boost. Choose which pad
 wears one there, or press X/R on Join to cycle a joined pad through them; the
@@ -136,6 +139,30 @@ The following controls are the defaults:
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
 | Menu confirm | A | Enter or Space |
 | Menu back | B | Escape or Backspace |
+
+## Your own stages
+
+To play a stage of your own, put its level file in
+`%LOCALAPPDATA%\ColourWars\stages\` (paste that into Explorer's address bar;
+create the `stages` folder if it is not there). The file name is the stage's
+name: up to 64 plain letters (A to Z, no accents), digits, `_` or `-`, not
+starting with `-`, ending in `.json`, and not the name of a stage the game
+already has in any mix of capitals. Your stages come after the built-in ones
+in Stage Select, marked "Built by you." Random never picks them.
+
+The game reads the folder when it starts and again each time Stage Select opens
+from the main menu, so a new or changed file shows up without restarting. It
+is not reread between the rounds of a series. A file the game cannot use is
+left out, and the other stages still load. The game prints one line giving
+the reason to its error output (stderr). You only see that line if you start
+the game from a console with stderr redirected, for example
+`ColourWars.exe 2> stages.txt`.
+
+The level editor makes these files: **File > Save to My Stages** (Ctrl+M)
+saves into that folder, checking the name as the game does. The editor is
+built from source and does not come in the ZIP; see
+[the editor guide](docs/level-editor.md) and
+[the level format](docs/level-format.md).
 
 It is also the first client of [Labrador](https://github.com/matt439/Labrador),
 a 2D game engine, which this repository consumes as a submodule. The engine is

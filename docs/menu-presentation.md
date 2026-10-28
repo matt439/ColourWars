@@ -594,7 +594,7 @@ two fixed Stage Select mode labels:
 | `menu_text.confirmations` | `restart`, `quit`, `exit`, `display` |
 | `menu_text.display_trial_countdown` | One countdown string with exactly one `{seconds}` token |
 | `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
-| `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective`, `random_navigation`, `locked_hint`, `browse_hint`, `solo_mode`, `single_match_mode` |
+| `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective`, `random_navigation`, `locked_hint`, `browse_hint`, `user_hint`, `solo_mode`, `single_match_mode` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
@@ -735,8 +735,8 @@ adopts the edits. The names are string settings edited in JSON, outside numeric
 
 ### Mode and Player Count labels
 
-Eight required `menu_text.items` roles preserve the existing
-mode-selection and player-count choices:
+Nine required `menu_text.items` roles preserve the existing
+mode-selection and player-count choices and the Series stage row (`ROAD#20`):
 
 | Key | Shipped text | Use |
 |---|---|---|
@@ -744,16 +744,33 @@ mode-selection and player-count choices:
 | `best_of_three` | `Best of 3` | Mode row 3 |
 | `best_of_five` | `Best of 5` | Mode row 4 |
 | `match_length` | `Match length` | Mode duration-row label, row 5 |
+| `series_stage` | `Series stage` | Mode series-stage-row label, row 6 |
 | `one_player_practice` | `1 Player (practice)` | Player Count row 2 |
 | `two_players` | `2 Players` | Player Count row 3 |
 | `three_players` | `3 Players` | Player Count row 4 |
 | `four_players` | `4 Players` | Player Count row 5 |
 
-Both pages reuse `menu_text.items.back` at row 6. The separate required
-`menu_text.solo_practice_hint` defaults to `Solo practice: choose Single Match`
-at Mode row 7. Rows use the existing widget origin and each page's authored
-spacing; these are display roles, with the existing choice order, actions and
-input handling retained.
+Player Count reuses `menu_text.items.back` at row 6 and Mode at row 7, under
+Series stage. The separate required `menu_text.solo_practice_hint` defaults to
+`Solo practice: choose Single Match` and sits on Single Match's row 2, one
+`setup_focus_padding.x` after that row's complete focus card (label, padding
+and shade), so it never touches the card; it must fit the paper and the right
+margin and stay clear of every lower Mode row's complete card. It moved there from row 7
+when Series stage took a row, and Mode's shipped
+`main_menu.mode_select_spacing.y` went from 100 to 96 so that Back on row 7
+still fits the 920-high paper. Rows use the existing widget origin and each
+page's authored spacing; these are display roles, with the existing choice
+order, actions and input handling retained.
+
+The Series stage values are `menu_text.values.series_stage_same` (`Same
+stage`), `series_stage_rotate` (`Rotate`) and `series_stage_losers_pick`
+(`Loser's pick`), drawn in the item font at the duration's value column.
+Startup draws each one in a real row and checks the complete row, card and
+arrow fit the paper and row stride, as it does for every duration value. Under
+Loser's pick, Stage Select's heading becomes `menu_text.stage.team_a_picks` or
+`team_b_picks` (`Team A picks the arena`, `Team B picks the arena`), checked
+like `headings.arena` against `main_menu.stage_box_size`. The Mode prompt reads
+`Left/Right Change` because two rows now take Left and Right.
 
 The same normalized, nonblank, single-line text rules apply. Mode and Player
 Count labels use `menu_style.fonts.item` and retain
@@ -770,14 +787,15 @@ absolute item-shadow y offset must be at most the page's vertical spacing
 (`main_menu.mode_select_spacing.y` or `main_menu.player_count_spacing.y`). This
 retains the existing text and shadow extents within one row's stride. The
 additional paper/card checks above include art padding, shade and arrow space.
-`match_length` must additionally satisfy
+`match_length` and `series_stage` must additionally satisfy
 `measured_width + abs(item_shadow.x) <= 2 * main_menu.mode_select_spacing.x`
-to fit before its existing duration-value column. That is one complete
+to fit before their value column. That is one complete
 `OptionRow`, so this column check adds no inner focus padding. Boundary equality
 is accepted.
 
 The nonfocusable solo hint uses its detail-font measurement and item shadow
-with the same footer, right-margin and left/top checks. It has no row-height
+with the same footer, right-margin and left/top checks, placed one card
+padding after Single Match's complete card. It has no row-height
 cap or focus-padding allowance.
 
 The strings come from the page's captured `MenuText`; presentation changes
@@ -993,8 +1011,11 @@ the separate controls item font or shared menu detail font.
 | `pad_association` | Multiline explanation of Pad 1-4 profile association |
 | `aim_cutoff` | Unscaled caption above the right-stick preview |
 
-`controls` preserves this exact shipped text, including the authored line breaks
-and spacing:
+`controls` preserves this exact shipped text with the default keyboard keys,
+including the authored line breaks and spacing. The template spells the
+keyboard keys as `{jump}` (required once) and `{left}`, `{right}`, `{drop}`,
+`{shoot}` and `{pause}` (each optional, at most once); the page substitutes the
+saved keys, and `{pause}` is `Esc` followed by any extra Pause key:
 
 ```text
 CONTROLLER
@@ -1004,7 +1025,7 @@ Jump: A / LT (hold for height)
 Pause: Start    Debug: Back / View
 KEYBOARD + MOUSE
 Move: A / D    Drop: S / Down
-Aim: mouse cursor    Shoot: left click
+Aim: mouse cursor    Shoot: Left click
 Jump: Space (hold for height)
 Pause: Esc    Debug: F1
 MENUS
@@ -1046,6 +1067,17 @@ paper/help/status regions; validation measures every control label in every
 row's value column. The shared Controls block names the defaults; the opening
 reminder uses the actual roster's saved controls, including mixed four-pad
 profiles. See the [pad buttons slice](feature-roadmap.md#pad-buttons-slice-gap42).
+
+`menu_text.keyboard_jump` owns the Keyboard Keys page (formerly Keyboard Jump):
+the heading, the six action-row labels (Move left, Move right, Jump, Drop,
+Shoot, Pause (also)), the reset label, multiline help, the capture statuses
+(`capture_ready_mouse` is Shoot's, which also takes a click) and the
+`capture_release` template, whose `{key}` is any key or Shoot mouse label. The
+rows show the pending controls, whose labels (A-Z, Space, Left click ... Mouse
+5, None) are the game's. Validation measures every label in every row's value
+column, the release template with every label, and the help with and without
+the developer-bind warning. See the
+[keyboard actions slice](feature-roadmap.md#keyboard-actions-slice-gap42).
 
 Startup checks actual help-font glyphs and finite, positive measured bounds.
 The help region begins at `controls_settings.controls_position`, has size
@@ -1377,16 +1409,17 @@ compose `BEST OF ` with the best-of value in C++.
 
 ### Fixed Stage Select navigation and hints
 
-Three more required `menu_text.stage` fields supply complete fixed cues:
+Four more required `menu_text.stage` fields supply complete fixed cues:
 
 | Key | Use |
 |---|---|
 | `random_navigation` | Random slot navigation, shipped as `<   SURPRISE ME   >` |
 | `locked_hint` | Confirmed stage choice, including Random |
 | `browse_hint` | Unconfirmed concrete stage choice |
+| `user_hint` | Unconfirmed user stage ([`ROAD#16`](feature-roadmap.md#user-stages-road16)), in place of `browse_hint` |
 
 Random navigation follows the shared normalized, nonblank, single-line rules.
-The two hints use the same normalized authored-block rules as the objective
+The three hints use the same normalized authored-block rules as the objective
 strings: printable text, LF breaks between nonblank lines and no automatic
 wrapping. The complete shipped locked hint is:
 
@@ -1401,6 +1434,17 @@ The complete shipped browse hint is:
 Left/Right to browse.
 Confirm to lock your choice.
 ```
+
+The complete shipped user-stage hint, the only mark a user stage carries, is:
+
+```text
+Built by you.
+Confirm to lock your choice.
+```
+
+It keeps the browse hint's second line and draws only characters the other
+two hints draw, so a font that can draw them can draw it; startup checks its
+fit the same way as theirs.
 
 Random navigation uses the actual `menu_style.fonts.detail`, shipped as
 `lato_black_36`, and the unscaled `UiTextDropShadow` style at

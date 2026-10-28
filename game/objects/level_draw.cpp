@@ -138,6 +138,15 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	// The HUD uses pane-local coordinates, so draw it with the identity camera.
 	list.set_camera(Camera::DEFAULT_CAMERA);
 
+	// Teammates out of this pane's view, under the HUD so a pane's own health,
+	// paint and clock stay on top where a chip reaches a corner.
+	for (const TeammateMarkerPlacement& marker : this->teammate_markers(view_index))
+	{
+		this->teammate_marker_->draw(list, marker,
+			this->players_[static_cast<std::size_t>(marker.participant)]->team_colour(),
+			*this->player_badge_);
+	}
+
 	this->interface_gameplay_->draw_gameplay_interface_prepared(list,
 		player_vp.size(),
 		participant,
@@ -289,6 +298,63 @@ void Level::update_player_identity(float dt)
 	for (float& remaining : this->player_identity_remaining_)
 	{
 		remaining = std::max(0.0f, remaining - std::max(0.0f, dt));
+	}
+}
+
+float Level::hud_scale(int view) const
+{
+	const HudPresentation& look = this->presentation_->hud();
+	const Vector2F pane = this->viewport_manager_->player_viewport(view).size();
+	return std::min(pane.x / look.player_identity_reference_width, pane.y / look.reference_height);
+}
+
+std::vector<TeammateMarkerPlacement> Level::teammate_markers(int view) const
+{
+	std::vector<TeammateMarkerPlacement> markers;
+	const TeammateMarkerPresentation& look = this->presentation_->hud().teammate_marker;
+	if (view < 0 || view >= this->view_count() || !look.enabled ||
+		this->state_ != LevelState::active) { return markers; }
+	const int viewer = this->participant_for_view(view);
+	const Player& own = this->player(viewer);
+	const Vector2F pane = Viewport(this->viewport_manager_->player_viewport(view).pixel_rect()).size();
+	const float scale = this->hud_scale(view);
+	const bool steady = this->preferences_->reduce_effects_for(own.player_num());
+	for (int participant = 0; participant < this->player_count(); ++participant)
+	{
+		const Player& mate = this->player(participant);
+		if (participant == viewer || mate.team() != own.team() ||
+			mate.state() != PlayerState::alive || mate.health() <= 0.0f) { continue; }
+		std::optional<TeammateMarkerPlacement> placed = TeammateMarker::place(
+			look, pane, own.camera(), mate.rectangle(), scale);
+		if (!placed) { continue; }
+		placed->participant = participant;
+		const float age = this->teammate_marker_age_[
+			static_cast<std::size_t>(view * this->player_count() + participant)];
+		placed->opacity = steady || look.fade_in <= 0.0f ? 1.0f :
+			std::clamp(age / look.fade_in, 0.0f, 1.0f);
+		markers.push_back(*placed);
+	}
+	return markers;
+}
+
+void Level::update_teammate_markers(float dt)
+{
+	const TeammateMarkerPresentation& look = this->presentation_->hud().teammate_marker;
+	const int count = this->player_count();
+	for (int view = 0; view < this->view_count(); ++view)
+	{
+		const Player& own = this->player(this->participant_for_view(view));
+		const Vector2F pane = Viewport(this->viewport_manager_->player_viewport(view).pixel_rect()).size();
+		const float scale = this->hud_scale(view);
+		for (int participant = 0; participant < count; ++participant)
+		{
+			float& age = this->teammate_marker_age_[static_cast<std::size_t>(view * count + participant)];
+			const Player& mate = this->player(participant);
+			const bool away = mate.state() == PlayerState::alive && mate.health() > 0.0f &&
+				TeammateMarker::place(look, pane, own.camera(), mate.rectangle(), scale).has_value();
+			// Held at the fade's end so a long absence never grows without bound.
+			age = away ? std::min(age + std::max(0.0f, dt), std::max(look.fade_in, 0.0f)) : 0.0f;
+		}
 	}
 }
 

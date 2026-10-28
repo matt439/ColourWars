@@ -81,8 +81,15 @@ difficulty comparison; difficulty values remain provisional.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
+- **User stages:** play a stage made with Save to My Stages, and decide whether user stages
+  may opt into Random and whether the briefing hint is enough of a marker (`ROAD#16`).
+- **Series stage rule:** play Same stage, Rotate and Loser's pick, choose the default and
+  settle the draw, explicit-only and bot-loser calls (`ROAD#20`).
+- **Keyboard Keys:** rebind on a keyboard and confirm the slice's provisional calls (`GAP#4.2`).
 - **Overview map and match variants:** whether a mid-match map may show territory
   (`ROAD#17`), and whether variants count as modes (`ROAD#22`).
+- **Off-screen markers:** whether enemies get threat markers, and a readability look at the
+  teammate markers at 1/2/4P (`ROAD#18`).
 - **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
   treatment (`POL#34`); current behavior is documented, with no candidate accepted.
 - **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
@@ -90,8 +97,8 @@ difficulty comparison; difficulty values remain provisional.
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
 - **Report filing:** the guarded resize request and example (`ENG#23`) are
-  prepared and locally qualified, alongside the vibration-output draft (`ENG#25`).
-  Filing needs separate author authorization.
+  prepared and locally qualified, alongside the vibration-output draft (`ENG#25`)
+  and the registry-removal draft (`ENG#26`). Filing needs separate author authorization.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -175,7 +182,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#5` | DECISION | LOW | S | Per-seat Boost (Off/+1/+2: less damage taken, faster paint refill) is built on Weapon Select (mechanic chosen 2026-10-27); judge the provisional values in attended play against bots. [Scope](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
 | `ROAD#10` | OPEN | HIGH | XL | Attended difficulty comparison and usefulness; decide whether bots hold and paint movers and whether world labels clamp to the pane; physical-pad check. Latch, refill retreat (margin 600), scan cost and mover identity are done; values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
-| `GAP#4.2` | UNSCOPED | LOW | M | Keyboard actions other than Jump (move, drop, shoot, pause) need their own contract; keyboard Jump and per-slot pad Jump/Shoot/Pause rebinding are complete. [Boundary](docs/feature-roadmap.md#pad-buttons-slice-gap42). |
+| `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
@@ -192,13 +199,12 @@ excluded modes.
 | `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#15` | OPEN | MED | L | Paint-activated stage objects (Splatoon lifts, inkrails, sponges). The paint ferry is on the explicit Ferry Trial; left: stage-select painter checks on MattPC, vertical lifts, team rails, sponges, editor drive checks, ferry art and play. Arena use follows `POL#21`. [Owner](docs/feature-roadmap.md#paint-ferry-road15-first-slice). |
-| `ROAD#16` | UNSCOPED | LOW | M | Play editor-saved stages without rebuilding: a user-stage folder validated per stage, refusing a broken one without stopping startup. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#15` | OPEN | MED | L | Paint-activated stage objects (Splatoon lifts, inkrails, sponges). The paint ferry and the team gate are on their explicit trials; left: vertical lifts, sponges, ferry and gate art, bots routing through open gates, and play. Arena use follows `POL#21`. [Owner](docs/feature-roadmap.md#team-gate-road15-second-slice). |
+| `ROAD#16` | DECISION | LOW | S | User stages play without a rebuild; the editor saves straight there and Stage Select rescans. Left: attended play of a player-made stage, and the author's calls on Random opt-in and the hint-only marker. [Owner](docs/feature-roadmap.md#user-stages-road16). |
 | `ROAD#17` | DECISION | LOW | M | Overview map in the unused three-player quadrant (Splatoon turf map). Shows territory mid-match, against gap audit 1.1: decide first. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#18` | UNSCOPED | LOW | M | Off-screen teammate and threat markers (Splatoon ally silhouettes); relates to `POL#3` rear threats and `ROAD#10` label clamping. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#19` | OPEN | LOW | S | End-of-round instant replay shipped; left: re-run `check-painter.ps1 -EndContinuationOnly` on MattPC after its crop moved with the End rows (the other End painter checks passed). [Owner](docs/feature-roadmap.md#instant-replay-road19). |
-| `ROAD#20` | UNSCOPED | LOW | S | Stage rotation or loser's pick between series rounds; tools, Boost and stage can now be re-picked by hand between rounds. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#21` | DECISION | LOW | S | Player profiles are in. Left: run the painter checks the eleven-row Controls page touches on MattPC (`check-painter.ps1 -ControlsMenuOnly`, `-MenuMotionOnly`, `-PausedOptionsOnly`, `-KeyboardJumpOnly`, `-RumbleOnly`, `-PercentageTextOnly`, `-StickSettingsOnly`), which CI does not run, and try profiles with real pads. [Owner](docs/feature-roadmap.md#player-profiles-road21). |
+| `ROAD#18` | DECISION | LOW | S | Off-screen teammate markers are in. Left: decide whether enemies get threat markers (an information-model change; see `POL#3` rear threats), and an attended readability look at 1/2/4P. [Owner](docs/feature-roadmap.md#teammate-markers-road18). |
+| `ROAD#20` | DECISION | LOW | S | The Series stage rule is in (Same stage, Rotate, Loser's pick on Mode). Left: play the three, choose the default, and confirm the provisional calls for draws, explicit-only stages and bot-only losers. [Owner](docs/feature-roadmap.md#series-stage-rule-road20). |
+| `ROAD#21` | DECISION | LOW | S | Player profiles are in and their MattPC painter checks pass. Left: try profiles with real pads (`ROAD#2`). [Owner](docs/feature-roadmap.md#player-profiles-road21). |
 | `ROAD#22` | DECISION | LOW | M | Match variants (low gravity, endless paint, tool roulette), mostly tuning overrides. Decide whether they count as modes, which are ruled out. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#23` | UNSCOPED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The reader is Labrador's, so the engine part is a report with an exhibit; Steam Input covers a Steam release. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#24` | UNSCOPED | LOW | M | Pad aim assist so pad players can hold their own against the one mouse player; relates to `POL#3`, `POL#18` and `ROAD#5`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
@@ -217,14 +223,15 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The two live drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. The three live drafts remain unfiled. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); mouse-button names; audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#25` | DECISION | LOW | S | Prepared vibration-output draft and qualified isolated XInput exhibit; author authorization and a fresh upstream recheck are required to file. Current task forbids filing. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output--draft-with-isolated-adapter-exhibit). |
+| `ENG#26` | DECISION | LOW | S | Drafted: `Registry` cannot forget a name, so a user-stage rescan leaves a vanished stage's definition registered. Upstream recheck and author authorization are needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit). |
 | `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
@@ -247,6 +254,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
+| `ROAD#25` | OPEN | LOW | M | Startup validation measures menu cards against the whole paper, shadow included; measure the face and move the `menu_text` paper-edge fixtures with it. [Owner](docs/feature-roadmap.md#instant-replay-road19). |
 
 ## Areas with no open rows
 

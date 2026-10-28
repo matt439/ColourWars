@@ -137,7 +137,7 @@ namespace menu_text_acceptance
             const auto authored = variants.load([&](rapidjson::Document& d)
             {
                 d["menu_text"]["stage"]["random_navigation"].SetString("Fit");
-                for (const char* key : { "locked_hint", "browse_hint" })
+                for (const char* key : { "locked_hint", "browse_hint", "user_hint" })
                 {
                     d["menu_text"]["stage"][key].SetString(wide ? std::string(200, 'W').c_str() : "Fit", d.GetAllocator());
                 }
@@ -148,7 +148,7 @@ namespace menu_text_acceptance
         const auto multiline = variants.load([](rapidjson::Document& d)
         {
             d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
-            for (const char* key : { "locked_hint", "browse_hint" })
+            for (const char* key : { "locked_hint", "browse_hint", "user_hint" })
             {
                 d["menu_text"]["stage"][key].SetString("Fit\nFit\nFit\nFit\nFit");
             }
@@ -227,13 +227,14 @@ namespace menu_text_acceptance
             d["menu_style"]["chrome"]["brand_font"].SetString(font.c_str(), d.GetAllocator());
             d["menu_text"]["stage"]["locked_hint"].SetString("Fit");
             d["menu_text"]["stage"]["browse_hint"].SetString("Fit");
+            d["menu_text"]["stage"]["user_hint"].SetString("Fit");
             d["menu_text"]["stage"][key].SetString("~");
         };
         add_font("menu_stage_hint_panel_edge", 951, 223);
         add_font("menu_stage_hint_panel_overflow", 951, 224);
         add_font("menu_stage_hint_footer_edge", 951, 323);
         add_font("menu_stage_hint_footer_overflow", 951, 324);
-        for (const char* key : { "locked_hint", "browse_hint" })
+        for (const char* key : { "locked_hint", "browse_hint", "user_hint" })
         {
             const std::string field = std::string("stage.") + key;
             variants.load([&](rapidjson::Document& d) { use_hint(d, "menu_stage_hint_panel_edge", key); }).validate_resources(world.render, world.audio);
@@ -269,6 +270,7 @@ namespace menu_text_acceptance
             d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
             d["menu_text"]["stage"]["locked_hint"].SetString("Fit");
             d["menu_text"]["stage"]["browse_hint"].SetString("Fit");
+            d["menu_text"]["stage"]["user_hint"].SetString("Fit");
             d["main_menu"]["stage_select"]["briefing_padding"]["x"].SetFloat(7.0f);
             d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(-1.0f);
         };
@@ -495,6 +497,7 @@ namespace menu_text_acceptance
             d["menu_style"]["shadow"]["detail_offset"]["y"].SetFloat(-1.5f);
             d["menu_text"]["stage"]["locked_hint"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
             d["menu_text"]["stage"]["browse_hint"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+            d["menu_text"]["stage"]["user_hint"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
         };
         variants.load(negative).validate_resources(world.render, world.audio);
         variants.rejects("stage.browse_status", [&](rapidjson::Document& d)

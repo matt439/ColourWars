@@ -39,7 +39,9 @@ public:
 	// entries keep the defaults. An older "pad_jump" face-button array is still
 	// read when "pads" is absent, without changing version-3 meanings.
 	// 4 adds the independent "profiles" list; older saves have none.
-	static constexpr int version = 4;
+	// 5 adds "last_match.stage_rule", the series stage rule; older saves have
+	// none and read as Same, which is how they played.
+	static constexpr int version = 5;
 
 	Save() = default;
 	void load_save_file();

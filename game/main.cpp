@@ -1,10 +1,10 @@
 #include "game/pch.h"
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
+#include "engine/core/file_path.h"
 #include "engine/core/registry.h"
 #include "game/content_validation.h"
 #include "game/directory_consts.h"
-#include "game/drawable_text.h"
 #include "game/fatal_report.h"
 #include "game/debug/debug_director.h"
 #include "game/game_data.h"
@@ -15,6 +15,8 @@
 #include "game/save.h"
 #include "game/simulation.h"
 #include "game/sound_groups.h"
+#include "game/stage_loading.h"
+#include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -56,6 +58,10 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// Populated alongside the registry in manifest order.
 		StageList stages;
 
+		// The player's stage folder, attached once the manifest has loaded.
+		// GameMenu lends it to Stage Select, which rescans as it opens.
+		UserStageFolder user_stages;
+
 		// Resolve early content reads beside the executable, as load_manifest does.
 		const std::string content_root = executable_directory();
 
@@ -87,19 +93,10 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 				[&level_infos, &stages](const std::string& directory,
 					const std::string& name, bool /*optional*/)
 				{
-					auto info = std::make_unique<LevelLoadedInfo>(
-						(directory + name + ".json").c_str());
-
-					// Validate the definition before exposing it in stage selection.
-					info->validate();
-
-					// Validate authored display text now; the menu converts it again for display.
-					drawable_text::widen_drawable(info->display_name(),
-						"the display_name in " + directory + name + ".json");
-
-					stages.push_back(Stage{ name, info->display_name(),
-						info->icon_frame(), info->include_in_random() });
-					level_infos.add(name, std::move(info));
+					StageDefinition definition =
+						read_stage_definition(directory + name + ".json", name);
+					stages.push_back(std::move(definition.stage));
+					level_infos.add(name, std::move(definition.info));
 				},
 				nullptr
 			});
@@ -107,6 +104,14 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// Asset directories resolve relative to the manifest.
 		phase = FailurePhase::manifest;
 		app.load_manifest(MANIFEST_PATH);
+
+		// The player's own stages join after the manifest's, each checked on its
+		// own: a broken one is refused with one stderr line and startup goes on.
+		user_stages.attach(path_from_utf8(user_stage_directory()),
+			UserStageChecks{ &tuning, &presentation, app.render_resources(),
+				app.audio_resources(), &save.play_settings() },
+			app.audio_resources(), &level_infos, &stages);
+		user_stages.scan();
 
 		// Check every name, stage and authored string against the loaded assets
 		// before the first menu. The Debug `reload` command runs the same checks.
@@ -141,7 +146,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		debug.run_launch_arguments(arguments);
 
 		phase = FailurePhase::running;
-		return app.run(std::make_unique<GameMenu>(&data));
+		return app.run(std::make_unique<GameMenu>(&data, &user_stages));
 	}
 	catch (...)
 	{

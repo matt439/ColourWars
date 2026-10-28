@@ -1,6 +1,6 @@
 // Isolated leaf probe for four preference percentages. No broad Controls matrix,
 // pad injection, gameplay state, foreground input or hardware qualification.
-// Successful run: 180 explicit StateContext updates, 87 readbacks, 52 value CSV
+// Successful run: 189 explicit StateContext updates, 87 readbacks, 52 value CSV
 // rows, four status comparisons and eight compact crops (four states x two sizes).
 void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
@@ -100,7 +100,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     size_t updates = 0, readbacks = 0, csv_rows = 0, crops = 0, status_checks = 0;
     const auto tick = [&](float elapsed = 0.0f)
     {
-        require(updates < 180, "Percentage leaf probe exceeded its explicit update budget");
+        require(updates < 189, "Percentage leaf probe exceeded its explicit update budget");
         ++updates; app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto tap = [&](Key key)
@@ -167,7 +167,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const Presentation& snapshot, PercentageVariant variant, int first, int second, bool save_crop)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.controls_settings(); const auto& art = look.art;
-        const std::array<const wchar_t*, 11> control_labels{ L"Pad sticks", L"Keyboard Jump", L"Pad Buttons", L"Profiles", L"Music volume", L"SFX volume",
+        const std::array<const wchar_t*, 11> control_labels{ L"Pad sticks", L"Keyboard Keys", L"Pad Buttons", L"Profiles", L"Music volume", L"SFX volume",
             L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
         const std::array<const wchar_t*, 9> stick_labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
             L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
@@ -310,6 +310,13 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             require(token != std::wstring::npos && controls_help.find(L"{jump}", token + 6) == std::wstring::npos,
                 "Independent percentage help reference lost its single authored Jump token");
             controls_help.replace(token, 6, L"Space");
+            for (const auto& [name, words] : { std::pair{ std::wstring_view(L"{left}"), L"A" },
+                std::pair{ std::wstring_view(L"{right}"), L"D" }, std::pair{ std::wstring_view(L"{drop}"), L"S" },
+                std::pair{ std::wstring_view(L"{shoot}"), L"Left click" }, std::pair{ std::wstring_view(L"{pause}"), L"Esc" } })
+            {
+                const size_t at = controls_help.find(name);
+                if (at != std::wstring::npos) { controls_help.replace(at, name.size(), words); }
+            }
         }
         UiText context_text("reference-percentage-status-context", sticks ? help.pad_association : controls_help,
             look.help_font, help_position, app.render_resources(), look.art.ink);
@@ -464,7 +471,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     require(stack.depth() == 1 && saved_bytes() == applied_bytes,
         "Reopened percentage discard changed persisted preferences or stack ownership");
     check_preferences(active); check_reload(applied);
-    require(updates == 180 && readbacks == 87 && csv_rows == 52 && status_checks == 4 && crops == 8 && records.good(),
+    require(updates == 189 && readbacks == 87 && csv_rows == 52 && status_checks == 4 && crops == 8 && records.good(),
         "Percentage leaf probe drifted from its frozen update/readback/CSV/crop budgets");
     std::ofstream summary(output / "percentage-summary.json");
     summary << "{\n  \"outcome\": \"passed\",\n  \"updates\": " << updates << ",\n  \"readbacks\": " << readbacks <<

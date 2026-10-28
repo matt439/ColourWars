@@ -12,22 +12,14 @@ namespace
     horizontal_motion_contract::Spec contract_spec(const HorizontalMotionSpec& spec)
     {
         return { { spec.anchor.x, spec.anchor.y, spec.anchor.width, spec.anchor.height },
-            spec.travel_x, spec.period_seconds, spec.initial_phase };
+            spec.travel_x, spec.period_seconds, spec.initial_phase, spec.drive, spec.team_a_heading };
     }
 }
 
 void HorizontalMotion::validate_spec(const HorizontalMotionSpec& spec)
 {
+    // The drive rule is in the contract, which the level editor shares.
     horizontal_motion_contract::validate_spec(contract_spec(spec));
-    if (spec.drive == HorizontalDrive::cycle) { return; }
-    if (spec.drive != HorizontalDrive::paint)
-    { throw std::invalid_argument("Horizontal motion drive must be a cycle or paint."); }
-    // A paint drive keeps to the outgoing leg, where phase 0 is the left end
-    // and 0.5 the right, so phase alone still names its pose.
-    if (!(spec.initial_phase <= 0.5f))
-    { throw std::invalid_argument("A paint-driven mover starts at phase 0 (left end) to 0.5 (right end)."); }
-    if (spec.team_a_heading != 1 && spec.team_a_heading != -1)
-    { throw std::invalid_argument("A paint-driven mover needs team A heading right or left."); }
 }
 
 int HorizontalMotion::paint_heading(const HorizontalMotionSpec& spec, float team_a, float team_b)

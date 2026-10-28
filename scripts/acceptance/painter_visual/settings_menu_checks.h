@@ -27,8 +27,12 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
     Save preferences;
+    // Since ROAD#21, play_settings() is the effective view over the stored
+    // settings, so the silent seed goes through the stored path; the live view
+    // below only toggles what the page reads this run.
+    PlaySettings silent = preferences.play_settings(); silent.music_volume = silent.sfx_volume = 0;
+    require(preferences.set_play_settings_and_save(silent), "Could not seed isolated silent play settings");
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());
-    play.music_volume = play.sfx_volume = 0;
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         false, TeamColourPair::blue_yellow), "Could not seed isolated display settings");
     GameData data;
@@ -127,7 +131,10 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     for (const std::wstring& value : { std::wstring(L"3840x2160"), std::wstring(L"Off"),
         presentation.team_palette().fixed_pair(TeamColourPair::blue_orange).label,
         presentation.team_palette().fixed_pair(TeamColourPair::pink_green).label,
-        presentation.team_palette().fixed_pair(TeamColourPair::blue_yellow).label, std::wstring(L"Random") })
+        presentation.team_palette().fixed_pair(TeamColourPair::blue_yellow).label,
+        presentation.team_palette().fixed_pair(TeamColourPair::purple_gold).label,
+        presentation.team_palette().fixed_pair(TeamColourPair::red_azure).label,
+        presentation.team_palette().fixed_pair(TeamColourPair::magenta_forest).label, std::wstring(L"Random") })
     {
         const size_t index = value.find(L'x') != std::wstring::npos ? 0 : value == L"Off" ? 1 : 2;
         require(row_label(index).right() + options_art.focus_padding.x < look.options_value_x &&
@@ -401,7 +408,10 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     require(preferences.team_palette() == TeamColourPair::blue_yellow,
         "Confirming a value row unexpectedly applied settings");
     tap(Key::down); tap(Key::down);
-    for (const TeamColourPair palette : { TeamColourPair::random, TeamColourPair::blue_orange,
+    // Right from the seeded Blue/Yellow walks ROAD#8's three pairs, wraps
+    // through Random and the first two pairs, and lands back on Blue/Yellow.
+    for (const TeamColourPair palette : { TeamColourPair::purple_gold, TeamColourPair::red_azure,
+        TeamColourPair::magenta_forest, TeamColourPair::random, TeamColourPair::blue_orange,
         TeamColourPair::pink_green, TeamColourPair::blue_yellow })
     {
         tap(Key::right);
@@ -442,7 +452,10 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
 
     // Apply through the real page, then load a fresh Save to check persistence.
     open(std::make_unique<MainMenuOptions>(&context));
-    tap(Key::left); tap(Key::down); tap(Key::down); tap(Key::right);
+    // Four Rights pass Blue/Yellow's three ROAD#8 successors to reach Random,
+    // so the saved preference is still the one that is not a fixed pair.
+    tap(Key::left); tap(Key::down); tap(Key::down);
+    for (int step = 0; step < 4; ++step) { tap(Key::right); }
     for (size_t row = 2; row < apply_row; ++row) { tap(Key::down); }
     apply(true);
     resize_page({ 1280, 720 });

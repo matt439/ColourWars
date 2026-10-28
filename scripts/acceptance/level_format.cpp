@@ -4,6 +4,8 @@
 #include "game/objects/level_object_builder.h"
 #include "game/objects/translating_structure_paintable.h"
 #include "game/objects/fixed_slab_paintable.h"
+#include "game/objects/team_gate_structure_paintable.h"
+#include "game/content_validation.h"
 #include "game/simulation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/assets/sound_bank_loader.h"
@@ -372,6 +374,123 @@ namespace
         runtime_rejects(chromatic, "not a grey", builder, render, audio);
     }
 
+    // A team gate (ROAD#15): "gate": "paint" on a solid static paintable.
+    void check_gate_fixtures(const rapidjson::SchemaDocument& schema,
+        const rapidjson::Document& source, const std::filesystem::path& scratch,
+        const LevelObjectBuilder& builder, RenderResources& render, const AudioResources& audio,
+        const GameTuning& tuning)
+    {
+        auto baseline = copy_document(source);
+        auto& allocator = baseline.GetAllocator();
+        rapidjson::Value gate;
+        gate.CopyFrom(baseline["collision_objects"][3], allocator);
+        gate["rectangle"]["x"].SetInt(1460);
+        gate["rectangle"]["y"].SetInt(960);
+        gate["rectangle"]["width"].SetInt(80);
+        gate["rectangle"]["height"].SetInt(240);
+        gate["material"].SetString("eraser");
+        gate["paintable_faces"]["left"].SetBool(true);
+        gate["paintable_faces"]["right"].SetBool(true);
+        gate.AddMember("gate", "paint", allocator);
+        baseline["collision_objects"].PushBack(gate, allocator);
+        const rapidjson::SizeType at = baseline["collision_objects"].Size() - 1;
+
+        const auto check = [&](const char* name, bool schema_accepts, bool runtime_accepts, auto edit)
+        {
+            auto document = copy_document(baseline);
+            edit(document);
+            schema_is(schema, document, schema_accepts, name);
+            const auto path = scratch / (std::string(name) + ".json");
+            write_document(path, document);
+            if (!runtime_accepts)
+            {
+                runtime_rejects(path, "gate", builder, render, audio);
+                return;
+            }
+            const LevelLoadedInfo info(path.string().c_str());
+            info.validate();
+            validate_stage_objects(tuning, builder, render, audio, info);
+            const auto objects = builder.build_collision_objects(info.collision_objects_json(), TeamColour{});
+            const auto* built = dynamic_cast<const TeamGateStructurePaintable*>(objects[at].get());
+            require(built != nullptr, "An authored gate was silently built as a plain paintable");
+            require(built->bounds() == RectangleF(1460.0f, 960.0f, 80.0f, 240.0f) &&
+                built->open_for() == PlayerTeam::none && built->paint_leader() == PlayerTeam::none &&
+                built->paint_total().total > 0.0f, "A gate's rectangle, closed start or paintable area changed");
+        };
+        check("gate-solid", true, true, [](rapidjson::Document&) {});
+        check("gate-metadata", true, true, [&](rapidjson::Document& d)
+        { d["collision_objects"][at].AddMember("_comment", "retained metadata", d.GetAllocator()); });
+        check("gate-one-face", true, true, [&](rapidjson::Document& d)
+        {
+            auto& faces = d["collision_objects"][at]["paintable_faces"];
+            faces["left"].SetBool(false); faces["right"].SetBool(false);
+        });
+        check("gate-unknown", false, false, [&](rapidjson::Document& d)
+        { d["collision_objects"][at]["gate"].SetString("wind"); });
+        check("gate-number", false, false, [&](rapidjson::Document& d)
+        { d["collision_objects"][at]["gate"].SetInt(1); });
+        check("gate-one-way", false, false, [&](rapidjson::Document& d)
+        {
+            d["collision_objects"][at]["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
+            d["collision_objects"][at]["material"].SetString("ruler");
+        });
+        check("gate-plain-structure", false, false, [&](rapidjson::Document& d)
+        {
+            auto& object = d["collision_objects"][at];
+            object["type"].SetString("Structure");
+            object["collision_type"].SetString("STRUCTURE");
+            object["material"].SetString("ground");
+            object.RemoveMember("paintable_faces");
+        });
+        check("gate-no-face", true, false, [&](rapidjson::Document& d)
+        {
+            for (const char* face : { "left", "top", "right", "bottom" })
+            { d["collision_objects"][at]["paintable_faces"][face].SetBool(false); }
+        });
+        check("gate-moving", false, false, [&](rapidjson::Document& d)
+        {
+            rapidjson::Value motion(rapidjson::kObjectType);
+            motion.AddMember("type", "horizontal", d.GetAllocator());
+            motion.AddMember("travel_x", 40, d.GetAllocator());
+            motion.AddMember("period", 4, d.GetAllocator());
+            motion.AddMember("phase", 0, d.GetAllocator());
+            d["collision_objects"][at].AddMember("motion", motion, d.GetAllocator());
+        });
+        check("gate-on-visual", false, false, [&](rapidjson::Document& d)
+        {
+            rapidjson::Value visual(rapidjson::kObjectType);
+            visual.CopyFrom(d["non_collision_objects"][0], d.GetAllocator());
+            visual.AddMember("gate", "paint", d.GetAllocator());
+            d["non_collision_objects"].PushBack(visual, d.GetAllocator());
+        });
+
+        // The startup check: no spawn body may overlap a gate.
+        auto spawned = copy_document(baseline);
+        spawned["collision_objects"][at]["rectangle"]["x"].SetInt(120);
+        spawned["collision_objects"][at]["rectangle"]["y"].SetInt(1000);
+        spawned["collision_objects"][at]["rectangle"]["height"].SetInt(200);
+        schema_is(schema, spawned, true, "gate-over-spawn");
+        const auto spawn_path = scratch / "gate-over-spawn.json";
+        write_document(spawn_path, spawned);
+        bool refused = false;
+        try
+        {
+            const LevelLoadedInfo info(spawn_path.string().c_str());
+            info.validate();
+            info.validate_content(builder, render, audio);
+            validate_stage_objects(tuning, builder, render, audio, info);
+        }
+        catch (const std::runtime_error& error)
+        {
+            const std::string message = error.what();
+            refused = message.find("gate-over-spawn.json") != std::string::npos &&
+                message.find("a gate must not overlap a spawn body") != std::string::npos;
+        }
+        require(refused, "A gate over a spawn body passed startup validation");
+        std::cout << "PASS team gate format: solid static paintable gates load closed; malformed, one-way, plain, "
+            "unpainted, moving, decorative and spawn-covering gates are refused with their file named\n";
+    }
+
     void check_motion_fixtures(const rapidjson::SchemaDocument& schema,
         const rapidjson::Document& source, const std::filesystem::path& scratch,
         const LevelObjectBuilder& builder, const RenderResources& render, const AudioResources& audio)
@@ -609,7 +728,7 @@ int main(int argc, char** argv)
         const auto staged_levels = manifest_levels(content);
         const auto source_levels = manifest_levels(repo / "game/content");
         require(staged_levels == source_levels, "Source and staged manifests differ in level inventory or order");
-        require(staged_levels.size() == 10, "Current format acceptance needs all ten registered stages");
+        require(staged_levels.size() == 11, "Current format acceptance needs all eleven registered stages");
         for (const auto& file : staged_levels)
         {
             check_compatible(content / file);
@@ -625,6 +744,7 @@ int main(int argc, char** argv)
         check_versions(scratch);
         check_schema_fixtures(schema, source, scratch, builder, render, audio);
         check_motion_fixtures(schema, source, scratch, builder, render, audio);
+        check_gate_fixtures(schema, source, scratch, builder, render, audio, tuning);
         check_editor_catalog(content);
         std::cout << "PASS level format 1: " << checked << " staged/source/template files, legacy object/paint parity, "
             "early version rejection, schema fixtures and runtime resource/geometry authority.\n";

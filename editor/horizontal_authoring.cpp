@@ -5,6 +5,7 @@
 #include <array>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <string>
 
 namespace colourwars_editor
@@ -71,8 +72,19 @@ namespace colourwars_editor
         {
             if (fields.HasMember(field)) { fail(std::string("Unsupported motion field: ") + field); }
         }
-        const motion::Spec spec{ motion_rectangle(object), static_cast<float>(number(fields, "travel_x")),
+        motion::Spec spec{ motion_rectangle(object), static_cast<float>(number(fields, "travel_x")),
             static_cast<float>(number(fields, "period")), static_cast<float>(number(fields, "phase")) };
+        // The drive is read by the game's own rule, so the editor refuses
+        // exactly the drives the game would refuse at load.
+        const auto text = [&fields](const char* key)
+        { return fields.HasMember(key) ? std::optional<std::string>(string(fields, key)) : std::nullopt; };
+        try
+        {
+            const auto drive = motion::decode_drive(text("drive"), text("team_a_heads"));
+            spec.drive = drive.drive;
+            spec.team_a_heading = drive.team_a_heading;
+        }
+        catch (const std::invalid_argument& error) { fail(std::string("motion: ") + error.what()); }
         try { motion::validate_spec(spec); }
         catch (const std::invalid_argument& error) { fail(std::string("motion: ") + error.what()); }
         return spec;

@@ -398,7 +398,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         MenuInput end_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext end_context(&data, &end_input, &series);
         StateContext end_stack;
-        end_stack.push(std::make_unique<EndMenuInitial>(&end_context, expected_session));
+        end_stack.push(std::make_unique<EndMenuInitial>(&end_context, expected_session, true));
         app.renderer()->begin_frame(); end_stack.draw(*app.renderer());
         const Frame expected_end = read(*app.renderer());
         const auto& end = presentation.end_menu();
@@ -417,8 +417,10 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         else
         {
-            // Exit sits under Change Weapons and Change Level between rounds.
-            game_tick(0.0f); game_tap(Key::down); game_tap(Key::down); game_tap(Key::down); game_tap(Key::enter);
+            // Exit sits under Watch Replay (ROAD#19; this round's tape is
+            // unspoiled), Change Weapons and Change Level between rounds.
+            game_tick(0.0f); game_tap(Key::down); game_tap(Key::down); game_tap(Key::down); game_tap(Key::down);
+            game_tap(Key::enter);
             require(left_series && stack.depth() == 1, "Actual series Exit did not leave its match");
         }
     }

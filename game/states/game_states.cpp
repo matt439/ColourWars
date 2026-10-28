@@ -1,9 +1,12 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
 #include "game/last_match_setup.h"
+#include "game/series_stage_rule.h"
+#include "game/stage_loading.h"
 using namespace labrador;
 
-GameMenu::GameMenu(GameData* game_data) : game_data_(game_data)
+GameMenu::GameMenu(GameData* game_data, UserStageFolder* user_stages) :
+	game_data_(game_data), user_stages_(user_stages)
 {
 
 }
@@ -29,6 +32,12 @@ void GameMenu::init()
 	{
 		if (this->music_) { this->music_->suspend(); }
 	});
+	// Only this frame lends the rescan: a match's frame never sets it, so the
+	// stage list holds still under a running match or series.
+	if (this->user_stages_ != nullptr)
+	{
+		this->menu_context_->set_stage_rescan([folder = this->user_stages_] { folder->rescan(); });
+	}
 
 	this->open_menu(MainMenuScreen::title);
 }
@@ -132,6 +141,7 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 		this->open_menu(MainMenuScreen::home);
 		break;
 	case EndMenuAction::restart:
+	case EndMenuAction::play_chosen_stage:
 		// GameLevel normally handles restart without leaving the match.
 		this->start_match(MatchStart::developer);
 		break;
@@ -675,8 +685,11 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 		this->start_replay();
 		return;
 	}
-	if (action == EndMenuAction::restart)
+	if (action == EndMenuAction::restart || action == EndMenuAction::play_chosen_stage)
 	{
+		// Decided on the finished round, before the ledger moves on.
+		this->settings_.set_stage(series_next_stage(this->settings_, *this->data()->stages(),
+			this->session_, action == EndMenuAction::play_chosen_stage));
 		if (this->session_.complete())
 		{
 			this->session_ = Session(this->settings_.player_count() == 1 ?

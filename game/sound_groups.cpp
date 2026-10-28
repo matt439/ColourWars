@@ -27,20 +27,16 @@ namespace
 	}
 }
 
-void sound_groups::assign(AudioResources& audio, const GameTuning& tuning,
-	const Presentation& presentation, const Registry<LevelLoadedInfo>& level_infos,
-	const StageList& stages)
+namespace
 {
-	std::vector<SoundReference> sounds = tuning.sound_references();
-	const std::vector<SoundReference> menu = presentation.sound_references();
-	sounds.insert(sounds.end(), menu.begin(), menu.end());
-	for (const Stage& stage : stages)
+	void append_stage_sounds(std::vector<SoundReference>& sounds, const GameTuning& tuning,
+		const LevelLoadedInfo& info, const Stage& stage)
 	{
-		const LevelLoadedInfo& info = *level_infos.get(stage.name);
 		const std::string bank = info.sound_bank_name();
 		const std::vector<SoundReference> match = tuning.match_sound_references(bank);
 		sounds.insert(sounds.end(), match.begin(), match.end());
-		const std::string where = "levels/" + stage.name + ".json: sound.";
+		const std::string where = (stage.user ? "user stage " : "levels/") +
+			stage.name + ".json: sound.";
 		if (info.has_music())
 		{
 			sounds.push_back({ where + "music_name", bank, info.music_name(), true,
@@ -53,21 +49,56 @@ void sound_groups::assign(AudioResources& audio, const GameTuning& tuning,
 		}
 	}
 
+	std::vector<SoundReference> content_sounds(const GameTuning& tuning,
+		const Presentation& presentation, const Registry<LevelLoadedInfo>& level_infos,
+		const StageList& stages)
+	{
+		std::vector<SoundReference> sounds = tuning.sound_references();
+		const std::vector<SoundReference> menu = presentation.sound_references();
+		sounds.insert(sounds.end(), menu.begin(), menu.end());
+		for (const Stage& stage : stages)
+		{
+			append_stage_sounds(sounds, tuning, *level_infos.get(stage.name), stage);
+		}
+		return sounds;
+	}
+
 	// Membership is per wave or effect, not per play, so one sound cannot be
 	// music in one place and an effect in another - and the volume preview
 	// stays outside the SFX group only while nothing else names its wave.
-	std::map<std::tuple<std::string, std::string, bool>, const SoundReference*> seen;
-	for (const SoundReference& sound : sounds)
+	void check_one_group_each(const std::vector<SoundReference>& sounds)
 	{
-		const auto [at, added] = seen.try_emplace(
-			std::make_tuple(sound.bank, sound.name, sound.effect), &sound);
-		if (!added && at->second->group != sound.group)
+		std::map<std::tuple<std::string, std::string, bool>, const SoundReference*> seen;
+		for (const SoundReference& sound : sounds)
 		{
-			throw std::runtime_error(sound.key + " and " + at->second->key + " both name " +
-				(sound.effect ? "effect '" : "wave '") + sound.name +
-				"', but play it under different volume settings; give one its own sound.");
+			const auto [at, added] = seen.try_emplace(
+				std::make_tuple(sound.bank, sound.name, sound.effect), &sound);
+			if (!added && at->second->group != sound.group)
+			{
+				throw std::runtime_error(sound.key + " and " + at->second->key + " both name " +
+					(sound.effect ? "effect '" : "wave '") + sound.name +
+					"', but play it under different volume settings; give one its own sound.");
+			}
 		}
 	}
+}
+
+void sound_groups::check_candidate(const GameTuning& tuning, const Presentation& presentation,
+	const Registry<LevelLoadedInfo>& level_infos, const StageList& stages,
+	const LevelLoadedInfo& candidate, const Stage& stage)
+{
+	std::vector<SoundReference> sounds = content_sounds(tuning, presentation, level_infos, stages);
+	append_stage_sounds(sounds, tuning, candidate, stage);
+	check_one_group_each(sounds);
+}
+
+void sound_groups::assign(AudioResources& audio, const GameTuning& tuning,
+	const Presentation& presentation, const Registry<LevelLoadedInfo>& level_infos,
+	const StageList& stages)
+{
+	const std::vector<SoundReference> sounds =
+		content_sounds(tuning, presentation, level_infos, stages);
+	check_one_group_each(sounds);
 
 	const SoundGroupHandle music = group(audio, music_group);
 	const SoundGroupHandle sfx = group(audio, sfx_group);

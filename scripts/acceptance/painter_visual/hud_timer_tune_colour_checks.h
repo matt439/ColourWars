@@ -1,5 +1,6 @@
 // Paths 46/47/48: independently selected normal foreground, shadow and opaque closing text. Font metrics and the
-// fixed pure-paper ROI are hypotheses until the native qualification runs.
+// fixed pure-paper ROI are hypotheses until the native qualification runs. Re-pinned to the OFL Lato Black
+// atlas (lato_black_48, whole-pixel line spacing 77) after 95c1da3b replaced Gill Sans MT Bold.
 enum class HudTimerSubject { foreground, shadow, closing_text };
 enum class HudTimerReference { correct, straight, squared, reversed_order, wrong_opaque, added_normal_shadow };
 Colour& hud_timer_selected(HudPresentation& look, HudTimerSubject subject)
@@ -12,6 +13,7 @@ const Colour& hud_timer_selected(const HudPresentation& look, HudTimerSubject su
     if (subject == HudTimerSubject::foreground) { return look.timer_colour; }
     return subject == HudTimerSubject::shadow ? look.timer_shadow_colour : look.closing_clock.text;
 }
+constexpr float hud_timer_line_spacing = 77.0f;
 struct HudTimerCase
 {
     const char* name;
@@ -23,14 +25,14 @@ struct HudTimerCase
 const std::array<HudTimerCase, 8>& hud_timer_cases()
 {
     static const std::array<HudTimerCase, 8> cases{ {
-        { "normal", 123.25f, L"2:04", 130.0f, true, false, true },
-        { "above-ten", 10.01f, L"0:11", 120.0f, true, false, true },
-        { "exact-ten", 10.0f, L"0:10", 130.0f, true, false, false },
-        { "fractional-closing", 9.25f, L"0:10", 130.0f, true, false, false },
-        { "zero", 0.0f, L"0:00", 130.0f, true, false, true },
-        { "stopped-short", 4.25f, L"0:05", 128.0f, false, false, true },
-        { "reduced-normal", 123.25f, L"2:04", 130.0f, true, true, true },
-        { "reduced-closing", 10.0f, L"0:10", 130.0f, true, true, false },
+        { "normal", 123.25f, L"2:04", 137.0f, true, false, true },
+        { "above-ten", 10.01f, L"0:11", 135.0f, true, false, true },
+        { "exact-ten", 10.0f, L"0:10", 137.0f, true, false, false },
+        { "fractional-closing", 9.25f, L"0:10", 137.0f, true, false, false },
+        { "zero", 0.0f, L"0:00", 137.0f, true, false, true },
+        { "stopped-short", 4.25f, L"0:05", 135.0f, false, false, true },
+        { "reduced-normal", 123.25f, L"2:04", 137.0f, true, true, true },
+        { "reduced-closing", 10.0f, L"0:10", 137.0f, true, true, false },
     } };
     return cases;
 }
@@ -70,7 +72,7 @@ public:
             look_.player_identity_padding == Vector2F(16, 10) && look_.paper.keyline_width == 2 &&
             look_.paper.paper == Colour(255, 245, 223) && look_.sprite_sheet == "sprite_sheet_1" &&
             look_.fill_frame == "pixel" && pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) &&
-            pixel_.origin() == Vector2F::ZERO && font_->line_spacing() == 74.21875f,
+            pixel_.origin() == Vector2F::ZERO && font_->line_spacing() == hud_timer_line_spacing,
             "Timer fixture requires authored normal-clock geometry, paper, shadow and font");
         if (subject_ == HudTimerSubject::closing_text)
         {
@@ -108,7 +110,7 @@ public:
             require(fonts_[i] == resources->resolve_sprite_font(font_names[i]) &&
                 font_pointers_[i] == resources->font(fonts_[i]), "Timer edit replaced a captured font handle/resource");
         }
-        require(timer_font_ == fonts_[1] && font_ == font_pointers_[1] && font_->line_spacing() == 74.21875f,
+        require(timer_font_ == fonts_[1] && font_ == font_pointers_[1] && font_->line_spacing() == hud_timer_line_spacing,
             "Timer font pointer or source line spacing changed");
         if (subject_ == HudTimerSubject::closing_text)
         {
@@ -117,9 +119,9 @@ public:
         }
         struct GlyphPin { char32_t character; RectangleI rectangle; float x, y, advance; };
         const std::array<GlyphPin, 6> glyphs{ {
-            { U'0', { 311, 57, 31, 47 }, 12, 21, -8 }, { U'1', { 140, 112, 11, 45 }, 22, 22, 2 },
-            { U'2', { 262, 109, 30, 46 }, 13, 21, -8 }, { U'4', { 223, 204, 31, 45 }, 12, 22, -8 },
-            { U'5', { 32, 112, 27, 46 }, 14, 22, -6 }, { U':', { 322, 154, 12, 33 }, 13, 35, -8 },
+            { U'0', { 428, 152, 35, 48 }, 11, 15, -9 }, { U'1', { 330, 202, 31, 48 }, 13, 15, -7 },
+            { U'2', { 219, 157, 33, 48 }, 12, 15, -8 }, { U'4', { 352, 152, 36, 48 }, 10, 15, -9 },
+            { U'5', { 71, 165, 32, 48 }, 12, 15, -7 }, { U':', { 119, 115, 11, 33 }, 13, 30, -7 },
         } };
         for (const auto& pin : glyphs)
         {
@@ -130,7 +132,7 @@ public:
         }
         for (const auto& item : hud_timer_cases())
         {
-            require(resources->measure_text(timer_font_, item.text) == Vector2F(item.width, 74.21875f),
+            require(resources->measure_text(timer_font_, item.text) == Vector2F(item.width, hud_timer_line_spacing),
                 "Timer literal clock text measurement changed");
             const Vector2F position((1920.0f - item.width) / 2.0f, 54.0f);
             float pen_x = 0;
@@ -140,8 +142,9 @@ public:
                 require(glyph != nullptr, "Timer literal text requires an exact glyph, not a fallback");
                 pen_x = std::max(0.0f, pen_x + glyph->x_offset);
                 const float x = position.x + pen_x, y = position.y + glyph->y_offset;
-                require(x - 1 >= 906 && y - 1 >= 74 && x + static_cast<float>(glyph->subrect.width) + 3 <= 1028 &&
-                    y + static_cast<float>(glyph->subrect.height) + 3 <= 125,
+                require(x - 1 >= static_cast<float>(roi().x) && y - 1 >= static_cast<float>(roi().y) &&
+                    x + static_cast<float>(glyph->subrect.width) + 3 <= static_cast<float>(roi().right()) &&
+                    y + static_cast<float>(glyph->subrect.height) + 3 <= static_cast<float>(roi().bottom()),
                     "Timer glyph and two-pixel shadow quads escaped the declared one-pixel-expanded ROI");
                 pen_x += static_cast<float>(glyph->subrect.width) + glyph->x_advance;
             }
@@ -153,20 +156,20 @@ public:
                 if (!item.normal)
                 {
                     // Independently audited CLOSING panel: max((16,10),3*2)
-                    // padding, own pen2/shade4, text0:10 at (895,54). Detached
-                    // ticks are x863..877 / x1049..1063, outside this ROI.
+                    // padding, own pen2/shade4, text0:10 at (891.5,54). Detached
+                    // ticks are x859..872 / x1052..1065, outside this ROI.
                     const float pen = look_.closing_clock.keyline_width;
                     const Vector2F padding(std::max(look_.player_identity_padding.x, pen * 3),
                         std::max(look_.player_identity_padding.y, pen * 3));
-                    const RectangleF face(position - padding, Vector2F(item.width, 74.21875f) + padding * 2);
+                    const RectangleF face(position - padding, Vector2F(item.width, hud_timer_line_spacing) + padding * 2);
                     const RectangleF inside(face.x + pen, face.y + pen, face.width - 2 * pen, face.height - 2 * pen);
-                    require(item.width == 130 && position == Vector2F(895, 54) &&
+                    require(item.width == 137 && position == Vector2F(891.5f, 54) &&
                         look_.closing_clock.paper == Colour(255, 245, 223) &&
                         look_.closing_clock.keyline_width == 2 && look_.closing_clock.shadow_offset == 4 &&
-                        padding == Vector2F(16, 10) && inside.right() - 3 * pen == 1033 &&
-                        inside.bottom() - 3 * pen == 130.21875f && 906 >= inside.x + 2 * pen &&
-                        74 >= inside.y + 2 * pen && 1028 <= inside.right() - 3 * pen &&
-                        125 <= inside.bottom() - 3 * pen,
+                        padding == Vector2F(16, 10) && inside.right() - 3 * pen == 1036.5f &&
+                        inside.bottom() - 3 * pen == 133 && static_cast<float>(roi().x) >= inside.x + 2 * pen &&
+                        static_cast<float>(roi().y) >= inside.y + 2 * pen && static_cast<float>(roi().right()) <= inside.right() - 3 * pen &&
+                        static_cast<float>(roi().bottom()) <= inside.bottom() - 3 * pen,
                         "Closing text ROI no longer has its own unshaded opaque paper backdrop");
                 }
             }
@@ -174,9 +177,10 @@ public:
             {
                 const float inside_left = position.x - 14, inside_top = 46;
                 const float right_shade = position.x + item.width + 8;
-                const float bottom_shade = 54 + 74.21875f + 2;
-                require(906 >= inside_left + 4 && 74 >= inside_top + 4 && 1028 <= right_shade &&
-                    125 <= bottom_shade, "Timer ROI no longer stays entirely on unshaded opaque paper");
+                const float bottom_shade = 54 + hud_timer_line_spacing + 2;
+                require(static_cast<float>(roi().x) >= inside_left + 4 && static_cast<float>(roi().y) >= inside_top + 4 &&
+                    static_cast<float>(roi().right()) <= right_shade && static_cast<float>(roi().bottom()) <= bottom_shade,
+                    "Timer ROI no longer stays entirely on unshaded opaque paper");
             }
         }
     }
@@ -291,11 +295,12 @@ public:
             const size_t differences = check_control(normal_reference_, wrong);
             if (mode == HudTimerReference::reversed_order)
             {
-                // Source BC2 audit: at world (919,79), the foreground glyph 2
-                // and its shifted shadow each have opaque WHITE 3x3 samples.
+                // Lato atlas audit: at world (911,79), the foreground glyph 2
+                // and its (2,2)-shifted shadow are each fully opaque (the
+                // authored frame is exact 141414 at (911,79) and (909,77)).
                 // Authored opaque foreground hides the correct under-shadow;
                 // drawing selected nonblack shadow last must change this site.
-                const size_t at = offset(919, 79);
+                const size_t at = offset(911, 79);
                 require(normal_reference_.pixels[at] == 20 && normal_reference_.pixels[at + 1] == 20 &&
                     normal_reference_.pixels[at + 2] == 20 && normal_reference_.pixels[at + 3] == 255 &&
                     !same_pixel(normal_reference_, wrong, at),
@@ -303,9 +308,10 @@ public:
             }
             if (mode == HudTimerReference::added_normal_shadow)
             {
-                // Source glyph1 shifted by (2,2) covers (980,79), while NO
-                // unshifted glyph quad covers it. Correct closing is paper.
-                const size_t at = offset(980, 79);
+                // Glyph1 shifted by (2,2) covers (970,117) from its fully
+                // opaque base row (968,115), while NO unshifted glyph quad
+                // reaches row 117. Correct closing is paper.
+                const size_t at = offset(970, 117);
                 require(subject_ == HudTimerSubject::closing_text && normal_reference_.pixels[at] == 255 &&
                     normal_reference_.pixels[at + 1] == 245 && normal_reference_.pixels[at + 2] == 223 &&
                     normal_reference_.pixels[at + 3] == 255 && !same_pixel(normal_reference_, wrong, at),
@@ -318,13 +324,13 @@ public:
     static void check_roi(const Frame& actual_frame, const Frame& raw_frame)
     {
         size_t checked = 0;
-        for (int y = 74; y < 125; ++y) { for (int x = 906; x < 1028; ++x)
+        for (int y = roi().y; y < roi().bottom(); ++y) { for (int x = roi().x; x < roi().right(); ++x)
         {
             const size_t at = offset(x, y);
             require(same_pixel(actual_frame, raw_frame, at) && actual_frame.pixels[at + 3] == 255,
                 "Timer raw glyph/shadow/paper RGBA reference differs"); ++checked;
         } }
-        require(checked == 6222, "Timer independent ROI pixel count differs");
+        require(checked == 6812, "Timer independent ROI pixel count differs");
     }
     static size_t check_control(const Frame& correct, const Frame& wrong)
     {
@@ -332,11 +338,11 @@ public:
         for (int y = 0; y < 1080; ++y) { for (int x = 0; x < 1920; ++x)
         {
             const bool equal = same_pixel(correct, wrong, offset(x, y));
-            if (x < 906 || x >= 1028 || y < 74 || y >= 125)
+            if (x < roi().x || x >= roi().right() || y < roi().y || y >= roi().bottom())
             { require(equal, "Timer wrong tint changed the raw reference outside the declared glyph ROI"); }
             else if (!equal) { ++changed; }
         } }
-        require(changed > 0 && changed <= 6222, "Timer negative reference failed to discriminate");
+        require(changed > 0 && changed <= 6812, "Timer negative reference failed to discriminate");
         return changed;
     }
     static void locality(const Frame& current, const Frame& baseline, bool changed)
@@ -345,13 +351,13 @@ public:
         for (int y = 0; y < 1080; ++y) { for (int x = 0; x < 1920; ++x)
         {
             const bool equal = same_pixel(current, baseline, offset(x, y));
-            if (x < 906 || x >= 1028 || y < 74 || y >= 125)
+            if (x < roi().x || x >= roi().right() || y < roi().y || y >= roi().bottom())
             { require(equal, "Timer selected tint changed paper/shadow or another HUD component outside the glyph ROI"); }
             else if (!equal) { ++differences; }
         } }
         require(changed ? differences > 0 : differences == 0, "Timer selected normal glyph response differs");
     }
-    static RectangleI roi() { return { 906, 74, 122, 51 }; }
+    static RectangleI roi() { return { 901, 68, 131, 52 }; }
     static Frame compact(const Frame& frame) { return foreground_crop(frame, roi(), 0); }
     size_t readbacks() const { return readbacks_; }
     void preserve_failure(size_t context, const char* scope, const Frame& actual_frame, const Frame& reference) const
@@ -377,7 +383,7 @@ private:
         rgba(actual_frame, "-actual.rgba"); rgba(reference, "-reference.rgba");
         std::ofstream record(output_ / (stem + ".json"));
         record << "{\"scope\":\"" << scope << "\",\"context\":\"" << hud_timer_cases().at(context).name
-            << "\",\"frame_width\":1920,\"frame_height\":1080,\"roi_x\":906,\"roi_y\":74,\"roi_width\":122,\"roi_height\":51,"
+            << "\",\"frame_width\":1920,\"frame_height\":1080,\"roi_x\":901,\"roi_y\":68,\"roi_width\":131,\"roi_height\":52,"
             "\"readbacks\":" << readbacks_ << ",\"diagnostic\":\"source-hypothesis-failure; no pixel fitting or tolerance\"}\n";
         require(record.good(), "Cannot preserve timer failure receipt");
     }
@@ -497,18 +503,18 @@ void hud_timer_colour_consumer_checks(Application& app, const Presentation& pres
         require(branch[state][2].pixels != branch[state][7].pixels,
             "Closing beat counterexample failed to distinguish its optional tick accents");
     }
-    require(branches.good() && probe.readbacks() == expected_reads && rows == 18 && crops == 4 && controls == expected_controls && control_pixels > 0 && control_pixels <= expected_controls * 6222,
+    require(branches.good() && probe.readbacks() == expected_reads && rows == 18 && crops == 4 && controls == expected_controls && control_pixels > 0 && control_pixels <= expected_controls * 6812,
         "Timer shared exact readback/row/crop/control budget differs");
     std::ofstream summary(output / (std::string(prefix) + "-colour-consumer-summary.json"));
     summary << "{\"scope\":\"" << summary_scope << "\",\"readbacks\":" << expected_reads << ",\"csv_rows\":18,\"main_rows\":4,\"branch_rows\":14,"
-        "\"crops\":4,\"crop_width\":122,\"crop_height\":51,\"crop_pixels\":24888,\"ppm_bytes\":74720,\"roi_pixels\":6222,"
-        "\"independent_roi_observations\":12,\"roi_pixel_checks\":74664,\"repeat_checks\":18,\"copied_adoption_checks\":4,"
+        "\"crops\":4,\"crop_width\":131,\"crop_height\":52,\"crop_pixels\":27248,\"ppm_bytes\":81800,\"roi_pixels\":6812,"
+        "\"independent_roi_observations\":12,\"roi_pixel_checks\":81744,\"repeat_checks\":18,\"copied_adoption_checks\":4,"
         "\"closing_colour_invariance_checks\":3,\"reduce_effects_checks\":6,\"controls\":" << expected_controls << ",\"control_discriminating_pixels\":" << control_pixels << ',' <<
         "\"calibration_pixel_checks\":" << expected_reads * 32 << ",\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,"
         "\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain timer shared summary");
-    if (shadow) { std::cout << "PASS normal HUD timer shadow: 56 readbacks, 18 rows, 4 native 122 by 51 crops; ordered glyph/shadow RGBA, 4 tint/order controls and unchanged closing/foreground.\n"; }
-    else { std::cout << "PASS normal HUD timer: 55 readbacks, 18 rows, 4 native 122 by 51 crops; independent font/paper/shadow RGBA, "
+    if (shadow) { std::cout << "PASS normal HUD timer shadow: 56 readbacks, 18 rows, 4 native 131 by 52 crops; ordered glyph/shadow RGBA, 4 tint/order controls and unchanged closing/foreground.\n"; }
+    else { std::cout << "PASS normal HUD timer: 55 readbacks, 18 rows, 4 native 131 by 52 crops; independent font/paper/shadow RGBA, "
         "3 discriminating tint controls and exact closing/Reduce Effects counterexamples. No updates or input polls.\n"; }
 }
 
@@ -628,7 +634,7 @@ void hud_timer_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
     std::ofstream summary(output / (prefix + "-tune-summary.json"));
     summary << "{\"scope\":\"" << summary_scope << "\",\"commands\":8,\"states\":8,\"readbacks\":34,\"csv_rows\":10,"
         "\"normal_rows\":8,\"branch_rows\":2,\"crops\":0,\"saved_tokens\":1,\"presentation_save_commands\":1,\"private_game_saves\":0,"
-        "\"roi_pixel_checks\":49776,\"repeat_checks\":8,\"copied_adoption_checks\":8,\"closing_colour_invariance_checks\":1,\"calibration_pixel_checks\":1088,"
+        "\"roi_pixel_checks\":54496,\"repeat_checks\":8,\"copied_adoption_checks\":8,\"closing_colour_invariance_checks\":1,\"calibration_pixel_checks\":1088,"
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,"
         "\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain timer Debug summary");

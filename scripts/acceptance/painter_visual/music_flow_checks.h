@@ -445,7 +445,10 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
                 // End resets navigation when it is created. Observe a neutral
                 // sample before the first direction so the new page arms it.
                 tick(0.0f);
-                const int moves = count == 2 ? 1 : 4;
+                // Watch Replay (ROAD#19) is row 1 after any timed round with an
+                // unspoiled tape, which each of these is; the rest sit below it.
+                constexpr int replay_rows = 1;
+                const int moves = replay_rows + (count == 2 ? 1 : 4);
                 for (int move = 0; move < moves; ++move) { tap(Key::down); }
                 choose_end(round);
                 require(ended && stack.depth() == 1 && bank->effect_state(music) == SoundState::stopped,

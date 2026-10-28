@@ -471,6 +471,31 @@ namespace colourwars_editor
                 else if (property.path == "motion/travel_x") { property.label = "motion/travel_x (world units)"; }
                 else if (property.path == "motion/period") { property.label = "motion/period (round-trip seconds)"; }
                 else if (property.path == "motion/phase") { property.label = "motion/phase (cycles [0,1))"; }
+                else if (property.path == "motion/drive") { property.label = "motion/drive (cycle or paint)"; }
+                else if (property.path == "motion/team_a_heads")
+                { property.label = "motion/team_a_heads (right or left)"; }
+            }
+            const Json& motion = value["motion"];
+            const bool paint = motion.IsObject() && motion.HasMember("drive") && motion["drive"].IsString() &&
+                string(motion, "drive") == "paint";
+            if (paint)
+            {
+                for (Property& property : result)
+                {
+                    if (property.path == "motion/phase")
+                    { property.label = "motion/phase (paint: 0 left end to 0.5 right end)"; }
+                }
+            }
+            // An absent drive is the runtime's cycle; show it so the drive can
+            // be switched without hand-editing the file.
+            if (motion.IsObject() && !motion.HasMember("drive"))
+            { result.push_back({ "motion/drive", "motion/drive (cycle or paint)", "cycle", false, false }); }
+        }
+        if (entry.kind == EntryKind::collision && value.HasMember("gate"))
+        {
+            for (Property& property : result)
+            {
+                if (property.path == "gate") { property.label = "gate (paint: open to the team holding more of it)"; }
             }
         }
         if (entry.kind == EntryKind::collision && value.HasMember("collision_type") &&
@@ -509,6 +534,12 @@ namespace colourwars_editor
                 object.AddMember("include_in_random", value == "true", document.GetAllocator());
                 return;
             }
+            if (pointer_text == "/gate" && entry.kind == EntryKind::collision && value.empty())
+            {
+                // Clearing the gate leaves an ordinary paintable block.
+                object.RemoveMember("gate");
+                return;
+            }
             if (pointer_text == "/material" && entry.kind == EntryKind::collision)
             {
                 // Clearing the material returns the object to the legacy draw.
@@ -519,6 +550,41 @@ namespace colourwars_editor
                         document.GetAllocator());
                     return;
                 }
+            }
+            if (entry.kind == EntryKind::collision && object.HasMember("motion") && object["motion"].IsObject() &&
+                (pointer_text == "/motion/drive" || pointer_text == "/motion/team_a_heads"))
+            {
+                // A drive switch carries its heading with it: paint gains team A
+                // heading right unless it already has one, and cycle (or a
+                // cleared drive, which is the cycle default) sheds it. Anything
+                // else is written as typed and the shared drive rule refuses it.
+                Json& motion = object["motion"];
+                Allocator& allocator = document.GetAllocator();
+                const auto put = [&](const char* key, const std::string& text)
+                {
+                    if (motion.HasMember(key)) { motion.RemoveMember(key); }
+                    motion.AddMember(Json(key, allocator), Json(text.c_str(), allocator), allocator);
+                };
+                if (pointer_text == "/motion/team_a_heads")
+                {
+                    if (value.empty()) { motion.RemoveMember("team_a_heads"); }
+                    else if (target != nullptr && target->IsString())
+                    { target->SetString(value.data(), static_cast<rapidjson::SizeType>(value.size()), allocator); }
+                    else { put("team_a_heads", value); }
+                    return;
+                }
+                if (value.empty() || (value == "cycle" && target == nullptr))
+                {
+                    motion.RemoveMember("drive");
+                    motion.RemoveMember("team_a_heads");
+                    return;
+                }
+                if (target != nullptr && target->IsString())
+                { target->SetString(value.data(), static_cast<rapidjson::SizeType>(value.size()), allocator); }
+                else { put("drive", value); }
+                if (value == "cycle") { motion.RemoveMember("team_a_heads"); }
+                if (value == "paint" && !motion.HasMember("team_a_heads")) { put("team_a_heads", "right"); }
+                return;
             }
             if (target == nullptr) { fail("The selected property no longer exists."); }
             if (target->IsString())
@@ -582,7 +648,8 @@ namespace colourwars_editor
                 const bool ramp_right = type == "StructureRampRight";
                 const bool ramp_left = type == "StructureRampLeft";
                 const bool moving = type == "MovingPaintable" || type == "MovingJumpThrough";
-                const bool paintable = type == "StructurePaintable" || moving;
+                const bool gate = type == "TeamGate";
+                const bool paintable = type == "StructurePaintable" || moving || gate;
                 const bool jump = type == "StructureJumpThrough" || type == "MovingJumpThrough";
                 if (!visual && !ramp_right && !ramp_left && !paintable && !jump && type != "Structure")
                 {
@@ -618,7 +685,7 @@ namespace colourwars_editor
                     value.AddMember("collision_type", Json(collision, allocator), allocator);
                     // Each kind starts drawn as its usual terrain-atlas material.
                     const char* material = ramp_left || ramp_right ? "set_square" :
-                        (jump ? "ruler" : (paintable ? "pencil" : "ground"));
+                        (jump ? "ruler" : (gate ? "eraser" : (paintable ? "pencil" : "ground")));
                     value.AddMember("material", Json(material, allocator), allocator);
                 }
                 if (paintable)
@@ -626,10 +693,11 @@ namespace colourwars_editor
                     Json faces(rapidjson::kObjectType);
                     for (const char* face : { "left", "top", "right", "bottom" })
                     {
-                        faces.AddMember(Json(face, allocator), Json(true), allocator);
+                        faces.AddMember(Json(face, allocator), Json(!gate || std::string(face) != "bottom"), allocator);
                     }
                     value.AddMember("paintable_faces", faces, allocator);
                 }
+                if (gate) { value.AddMember("gate", "paint", allocator); }
                 if (moving)
                 {
                     Json motion(rapidjson::kObjectType);

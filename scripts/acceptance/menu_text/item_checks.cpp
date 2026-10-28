@@ -10,7 +10,7 @@ namespace menu_text_acceptance
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
             "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no",
             "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults", "keep", "revert",
-            "watch_replay" })
+            "watch_replay", "series_stage" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
@@ -199,17 +199,20 @@ namespace menu_text_acceptance
                 }, &world);
             }
         }
+        // An 80-wide label ends at 81.5 with its shadow, two columns of 40.75.
+        // (The practice hint in that column needs only 55.5 beside "Fit".)
         const auto column_edge = [&](rapidjson::Document& d)
         {
             exact_setup(d);
-            d["main_menu"]["mode_select_spacing"]["x"].SetFloat(12.75f);
+            d["menu_text"]["items"]["match_length"].SetString("FitFitFitF");
+            d["main_menu"]["mode_select_spacing"]["x"].SetFloat(40.75f);
         };
         const auto fits_column = variants.load(column_edge);
         fits_column.validate_resources(world.render, world.audio);
         variants.rejects("items.match_length", [&](rapidjson::Document& d)
         {
             column_edge(d);
-            d["main_menu"]["mode_select_spacing"]["x"].SetFloat(std::nextafter(12.75f, 0.0f));
+            d["main_menu"]["mode_select_spacing"]["x"].SetFloat(std::nextafter(40.75f, 0.0f));
         }, &world);
         for (const double invalid : { 0.0, -1.0, 1e100 })
         {
@@ -220,22 +223,22 @@ namespace menu_text_acceptance
             }, &world);
         }
 
+        // The hint follows Single Match's card on its row (ROAD#20), one card
+        // padding after it: x + 1528 + 1.5 + 28 + 2 + 28, then "Fit" and its
+        // shadow, 25.5, end at the 1770 right margin (1920 - brand x) when the
+        // shared origin x is 157.
         const auto hint_edge = [&](rapidjson::Document& d)
         {
             exact_setup(d);
-            // Keep unrelated complete Team/Weapon rows inside their paper while
-            // this fixture moves the shared origin to the Mode hint edge.
-            d["main_menu"]["fonts"]["weapon_description"].SetString("menu_text_exact");
-            d["main_menu"]["team_select"]["spacing"]["y"].SetFloat(110.0f);
-            d["menu_style"]["layout"]["position"]["y"].SetFloat(204.5f);
-            d["main_menu"]["mode_select_spacing"]["y"].SetInt(100);
+            d["menu_text"]["items"]["single_match"].SetString(std::string(191, 'F').c_str(), d.GetAllocator());
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(157.0f);
         };
         const auto fits_hint = variants.load(hint_edge);
         fits_hint.validate_resources(world.render, world.audio);
         variants.rejects("solo_practice_hint", [&](rapidjson::Document& d)
         {
             hint_edge(d);
-            d["menu_style"]["layout"]["position"]["y"].SetFloat(204.75f);
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(157.25f);
         }, &world);
 
         const auto left_edge = [&](rapidjson::Document& d)

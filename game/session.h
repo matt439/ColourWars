@@ -17,6 +17,8 @@ public:
 	bool is_series() const;
 	bool complete() const;
 	int round() const;
+	// The finished round's winner; none after a draw and before it finishes.
+	PlayerTeam round_winner() const;
 	int team_a_wins() const;
 	int team_b_wins() const;
 	std::wstring score_string(const MenuResultsText& text) const;

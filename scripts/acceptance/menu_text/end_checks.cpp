@@ -391,8 +391,8 @@ namespace menu_text_acceptance
         };
         add_font("menu_continue_right", 722, 16);
         add_font("menu_continue_right_overflow", 722, 16, 0.25f);
-        add_font("menu_continue_height", 8, 82);
-        add_font("menu_continue_height_overflow", 8, 82, 0.0f, 0.25f);
+        add_font("menu_continue_height", 8, 81);
+        add_font("menu_continue_height_overflow", 8, 81, 0.0f, 0.25f);
         add_font("menu_continue_zero_width", 0, 20);
         add_font("menu_continue_zero_height", 8, 0, 0.0f, 0.0f, 0.0f);
         add_font("menu_continue_infinite_width", 8, 20, std::numeric_limits<float>::infinity());
@@ -415,10 +415,10 @@ namespace menu_text_acceptance
                 UiText value("continuation", L"~", edge.menu().item_font, end.layout.position, &world.render, end.art.ink);
                 const mattmath::RectangleF paper(470.0f, 90.0f, 980.0f, 900.0f);
                 require(value.bounds() == mattmath::RectangleF(700.0f, 300.0f,
-                    height_edge ? 8.0f : 722.0f, height_edge ? 82.0f : 20.0f) &&
+                    height_edge ? 8.0f : 722.0f, height_edge ? 81.0f : 20.0f) &&
                     value.bounds().size() == measured, "Continuation edge fixture changed the actual plain unscaled UiText bounds");
                 auto padded = value.bounds(); padded.inflate(end.art.focus_padding);
-                require(paper.contains(padded) && (height_edge ? padded.height == 118.0f : padded.right() == 1450.0f),
+                require(paper.contains(padded) && (height_edge ? padded.height == 117.0f : padded.right() == 1450.0f),
                     "Continuation edge fixture lost exact inclusive text-plus-focus-padding contact");
                 require(height_edge ? padded.height + end.art.shadow_offset > end.layout.spacing.y :
                     padded.right() + end.art.shadow_offset > paper.right(),

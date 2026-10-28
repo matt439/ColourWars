@@ -81,7 +81,10 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     const auto frame = [&] { return main_menu_frame(app); };
     const auto seed = [&](bool fullscreen = false)
     {
-        stack.clear(); const_cast<PlaySettings&>(preferences.play_settings()) = expected;
+        // Seed the durable play preferences, not only Save's effective view:
+        // since ROAD#21 play_settings() is derived from them plus worn
+        // profiles, and every later save serializes the durable copy.
+        stack.clear(); require(preferences.set_play_settings_and_save(expected), "Cannot seed Options defaults play preferences");
         require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720, fullscreen, TeamColourPair::blue_yellow), "Cannot seed Options defaults preferences");
         saved_fullscreen = fullscreen; before_bytes = bytes(); staged = false; status = 0;
     };
@@ -212,7 +215,8 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         else { painter_scripted_pads::states[3].connected = false; tick(); painter_scripted_pads::states[3].connected = true; tick(); tick(); }
         hold(GamepadButton::a, false); tick(); tick(); tick(settled); unchanged(size); compare("interrupted-restore");
         restore(); compare("fresh-restore", true); go(3); const Frame parent = compare("before-controls"); tap(GamepadButton::a); tick(); require(stack.depth() == 3, "Defaults Controls row did not push child");
-        for (int move = 0; move < 3; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
+        // Five down is SFX (Controls rows listed below): stage an edit the child then discards.
+        for (int move = 0; move < 5; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
         tap(GamepadButton::b); tick(); require(parent.pixels == frame().pixels && stack.depth() == 2, "Controls return lost pending defaults or parent focus"); unchanged(size); compare("after-controls");
         go(6); tap(GamepadButton::a); require(stack.depth() == 2 && frame().pixels == home_destination.pixels, "Defaults Back did not return actual Home Options focus"); unchanged(size); staged = false; open(); compare("back-discard");
         restore(); tap(GamepadButton::b); require(stack.depth() == 2 && frame().pixels == home_destination.pixels, "Defaults Escape did not return actual Home Options focus"); unchanged(size); staged = false; open(); compare("escape-discard");
@@ -223,11 +227,11 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     }
     // A real Controls Apply may update shared preferences while display defaults
     // remain pending. Parent Apply must preserve that independently saved edit.
-    // Controls rows: Pad sticks, Keyboard Jump, Music, SFX, View shake, Aim
-    // marker, Reduce effects, Apply, Back - so View shake is four down and
-    // Apply three more.
+    // Controls rows: Pad sticks, Keyboard Jump, Pad buttons, Profiles, Music,
+    // SFX, View shake, Aim marker, Reduce effects, Apply, Back - so View shake
+    // is six down and Apply three more.
     device = keyboard; seed(); open(); restore(); go(3); tap(GamepadButton::a); tick();
-    for (int move = 0; move < 4; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
+    for (int move = 0; move < 6; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
     for (int move = 0; move < 3; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::a); expected.view_shake = true; preserved(preferences.play_settings());
     tap(GamepadButton::b); tick(); compare("controls-saved-parent-pending"); apply(size, true); reload(true); compare("controls-merge-applied");
     require(records.good(), "Options defaults evidence write failed");

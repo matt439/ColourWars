@@ -6,10 +6,12 @@ struct ClosingShadePatch { const char* name; RectangleI box; size_t layers; };
 const std::array<ClosingShadePatch, 8>& closing_shade_patches()
 {
     static const std::array<ClosingShadePatch, 8> patches{ {
-        { "base-first", { 900, 139, 8, 2 }, 1 }, { "base-second", { 1042, 80, 2, 8 }, 1 },
-        { "bottom-one", { 900, 130, 8, 2 }, 1 }, { "bottom-two", { 900, 132, 8, 2 }, 2 },
-        { "bottom-three", { 900, 134, 8, 2 }, 3 }, { "right-one", { 1033, 80, 2, 8 }, 1 },
-        { "right-two", { 1035, 80, 2, 8 }, 2 }, { "right-three", { 1037, 80, 2, 8 }, 3 },
+        // Lato 0:10 face (875.5,44,169,97): base shade rows 141..144 / columns
+        // 1044..1047; inside (877.5,46,165,93) bands rows 133..138 / columns 1036..1041.
+        { "base-first", { 900, 142, 8, 2 }, 1 }, { "base-second", { 1045, 80, 2, 8 }, 1 },
+        { "bottom-one", { 900, 133, 8, 2 }, 1 }, { "bottom-two", { 900, 135, 8, 2 }, 2 },
+        { "bottom-three", { 900, 137, 8, 2 }, 3 }, { "right-one", { 1036, 80, 2, 8 }, 1 },
+        { "right-two", { 1038, 80, 2, 8 }, 2 }, { "right-three", { 1040, 80, 2, 8 }, 3 },
     } }; return patches;
 }
 const std::array<Colour, 4>& closing_shade_values()
@@ -66,9 +68,9 @@ public:
         const std::array<std::string, 3> names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };
         for (size_t i = 0; i < names.size(); ++i)
         { require(fonts_[i] == resources->resolve_sprite_font(names[i]) && font_pointers_[i] == resources->font(fonts_[i]), "Closing shade font resource changed"); }
-        require(font_pointers_[1]->line_spacing() == 74.21875f, "Closing shade timer font line spacing changed");
+        require(font_pointers_[1]->line_spacing() == hud_timer_line_spacing, "Closing shade timer font line spacing changed");
         for (const auto& item : hud_timer_cases())
-        { require(resources->measure_text(fonts_[1], item.text) == Vector2F(item.width, 74.21875f), "Closing shade literal timer context metrics changed"); }
+        { require(resources->measure_text(fonts_[1], item.text) == Vector2F(item.width, hud_timer_line_spacing), "Closing shade literal timer context metrics changed"); }
     }
     Frame actual(size_t context, size_t background, bool copied = false)
     {
@@ -178,7 +180,7 @@ public:
         catch (...) { failure("negative-control", 2, reference, wrong); throw; }
         return changed;
     }
-    static RectangleI envelope() { return { 862, 43, 202, 100 }; }
+    static RectangleI envelope() { return { 858, 43, 209, 103 }; }
     static Frame compact(const Frame& frame) { return foreground_crop(frame, envelope(), 0); }
     size_t readbacks() const { return readbacks_; }
     void failure(const char* stage, size_t context, const Frame& frame, const Frame& reference) const
@@ -188,7 +190,7 @@ public:
         for (const auto& item : { std::pair<const Frame*, const char*>(&frame, "-actual.rgba"), { &reference, "-reference.rgba" } })
         { std::ofstream file(output_ / (stem + item.second), std::ios::binary); file.write(reinterpret_cast<const char*>(item.first->pixels.data()), static_cast<std::streamsize>(item.first->pixels.size())); require(file.good(), "Cannot preserve closing shade failure RGBA"); }
         std::ofstream record(output_ / (stem + ".json"));
-        record << "{\"scope\":\"" << stage << "\",\"context\":\"" << hud_timer_cases().at(context).name << "\",\"frame_width\":1920,\"frame_height\":1080,\"crop_x\":862,\"crop_y\":43,\"crop_width\":202,\"crop_height\":100,\"readbacks\":" << readbacks_ << ",\"diagnostic\":\"source-hypothesis-failure; no fitting or tolerance\"}\n";
+        record << "{\"scope\":\"" << stage << "\",\"context\":\"" << hud_timer_cases().at(context).name << "\",\"frame_width\":1920,\"frame_height\":1080,\"crop_x\":858,\"crop_y\":43,\"crop_width\":209,\"crop_height\":103,\"readbacks\":" << readbacks_ << ",\"diagnostic\":\"source-hypothesis-failure; no fitting or tolerance\"}\n";
         require(record.good(), "Cannot retain closing shade failure record");
     }
 private:
@@ -293,7 +295,7 @@ ClosingShadeFrames hud_closing_shade_consumer_checks(HudClosingShadeProbe& probe
     require(csv.good() && branches.good() && controls.good() && probe.readbacks() == 68 && rows == 30 && crops == 12 &&
         control_pixels > 0 && control_pixels <= 768, "Closing shade shared frozen counters differ");
     std::ofstream summary(output / "closing-shade-consumer-summary.json");
-    summary << "{\"scope\":\"closing-shade-material-patches-and-applicability\",\"main_observations\":8,\"main_reads\":32,\"branch_observations\":14,\"branch_reads\":28,\"raw_references\":8,\"controls\":8,\"control_reads\":8,\"control_site_discriminations\":48,\"control_pixel_upper_bound\":768,\"readbacks\":68,\"main_rows\":8,\"branch_rows\":14,\"control_rows\":8,\"csv_rows\":30,\"repeat_checks\":22,\"copied_adoption_checks\":8,\"independent_patch_observations\":12,\"patch_pixel_checks\":1536,\"normal_invariance_checks\":5,\"normal_reduced_relations\":2,\"settled_reduced_relations\":2,\"beat_counterexamples\":2,\"crops\":12,\"calibration_pixel_checks\":2176,\"band_canvas_invariance_checks\":4,\"band_canvas_pixel_checks\":384,\"base_canvas_site_relations\":8,\"base_canvas_relation_pixels\":128,\"patches\":8,\"patch_pixels\":128,\"crop_width\":202,\"crop_height\":100,\"crop_pixels\":242400,\"ppm_bytes\":727380,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0,\"control_discriminating_pixels\":" << control_pixels << "}\n";
+    summary << "{\"scope\":\"closing-shade-material-patches-and-applicability\",\"main_observations\":8,\"main_reads\":32,\"branch_observations\":14,\"branch_reads\":28,\"raw_references\":8,\"controls\":8,\"control_reads\":8,\"control_site_discriminations\":48,\"control_pixel_upper_bound\":768,\"readbacks\":68,\"main_rows\":8,\"branch_rows\":14,\"control_rows\":8,\"csv_rows\":30,\"repeat_checks\":22,\"copied_adoption_checks\":8,\"independent_patch_observations\":12,\"patch_pixel_checks\":1536,\"normal_invariance_checks\":5,\"normal_reduced_relations\":2,\"settled_reduced_relations\":2,\"beat_counterexamples\":2,\"crops\":12,\"calibration_pixel_checks\":2176,\"band_canvas_invariance_checks\":4,\"band_canvas_pixel_checks\":384,\"base_canvas_site_relations\":8,\"base_canvas_relation_pixels\":128,\"patches\":8,\"patch_pixels\":128,\"crop_width\":209,\"crop_height\":103,\"crop_pixels\":258324,\"ppm_bytes\":775152,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0,\"control_discriminating_pixels\":" << control_pixels << "}\n";
     require(summary.good(), "Cannot retain closing shade shared summary");
     look.closing_clock.shade = closing_shade_values()[0];
     std::cout << "PASS closing shade: 68 reads, 30 rows, 12 native crops; 128 literal RGBA patch pixels, 48 per-site negative discriminations and normal/settled/reduced applicability.\n";

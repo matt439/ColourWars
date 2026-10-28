@@ -4,6 +4,7 @@
 #include "game/input_bindings.h"
 #include "game/input_slots.h"
 #include "engine/input/gamepad_reader.h"
+#include "engine/input/mouse.h"
 #include <algorithm>
 #include <array>
 #include <cstdio>
@@ -442,6 +443,121 @@ namespace
     }
 }
 
+namespace
+{
+    // GAP#4.2 keyboard actions: the gesture targets one action against the
+    // pending choices, and only Shoot's gesture reads the mouse.
+    struct DesktopHarness
+    {
+        Keyboard keyboard;
+        Mouse mouse;
+        KeyboardJumpCapture capture;
+
+        DesktopHarness(const InputBindings& pending, KeyboardAction action)
+        {
+            this->keyboard.set_focused(true); this->mouse.set_focused(true);
+            this->keyboard.poll(); this->keyboard.poll(); this->mouse.poll(); this->mouse.poll();
+            this->capture.reset(pending, action);
+            require(this->capture.action() == action && this->capture.phase() == Phase::waiting_neutral,
+                "Targeted capture skipped its neutral gate or lost its action");
+            this->frame();
+            require(this->capture.phase() == Phase::ready, "Targeted capture did not arm on neutral input");
+        }
+
+        void frame(bool cancel = false)
+        {
+            this->keyboard.poll(); this->mouse.poll();
+            this->capture.update(this->keyboard.state(), this->keyboard.previous_state(),
+                this->mouse.state(), this->mouse.previous_state(), cancel);
+        }
+        void key(Key value) { this->keyboard.on_key_down(value); this->frame(); this->keyboard.on_key_up(value); this->frame(); }
+        void click(MouseButton button) { this->mouse.on_button_down(button); this->frame(); this->mouse.on_button_up(button); this->frame(); }
+    };
+
+    void targeted_actions()
+    {
+        InputBindings pending;
+        pending.keyboard_move_left = Key::j; // A is free, J is taken.
+        size_t accepted = 0, refused = 0;
+        for (const KeyboardAction action : { KeyboardAction::move_left, KeyboardAction::move_right, KeyboardAction::jump,
+            KeyboardAction::drop, KeyboardAction::shoot, KeyboardAction::pause })
+        {
+            for (const Key key : binding_keys)
+            {
+                DesktopHarness h(pending, action);
+                h.key(key);
+                const auto owner = keyboard_control_conflict(pending, action, { key, MouseButton::none });
+                if (owner)
+                {
+                    require(h.capture.phase() == Phase::ready && h.capture.rejection() == Rejection::conflict && !h.capture.result(),
+                        "A key another pending action uses was not refused for this action");
+                    ++refused;
+                    continue;
+                }
+                require(h.capture.phase() == Phase::complete && h.capture.result() == key &&
+                    h.capture.control_result() == DesktopControl{ key, MouseButton::none },
+                    "A free key did not complete this action's gesture");
+                ++accepted;
+            }
+        }
+        // J, D, Space and S are in use: an action owning one of them is refused
+        // the other three, Shoot (a click) and Pause (none) all four.
+        require(accepted == 6 * 27 - 20 && refused == 20,
+            "Targeted capture accepted or refused the wrong number of pending keys");
+
+        // Shoot reads every mouse button; the others ignore the mouse entirely.
+        for (const MouseButton button : shoot_mouse_buttons())
+        {
+            DesktopHarness shoot(pending, KeyboardAction::shoot);
+            require(shoot.capture.accepts_mouse(), "Shoot capture does not accept the mouse");
+            shoot.mouse.on_button_down(button); shoot.frame();
+            require(shoot.capture.phase() == Phase::holding &&
+                shoot.capture.candidate_control() == DesktopControl{ Key::none, button } && shoot.capture.candidate() == Key::none,
+                "A mouse press did not begin Shoot's gesture");
+            shoot.mouse.on_button_up(button); shoot.frame();
+            require(shoot.capture.phase() == Phase::complete && !shoot.capture.result() &&
+                shoot.capture.control_result() == DesktopControl{ Key::none, button },
+                "A mouse release did not complete Shoot with that button");
+            DesktopHarness jump(pending, KeyboardAction::jump);
+            require(!jump.capture.accepts_mouse(), "Jump capture accepts the mouse");
+            jump.click(button);
+            require(jump.capture.phase() == Phase::ready && jump.capture.rejection() == Rejection::none,
+                "A click changed a non-Shoot gesture");
+        }
+        // A key plus a click is a chord; another action ignores Shoot's click.
+        {
+            DesktopHarness h(pending, KeyboardAction::shoot);
+            h.mouse.on_button_down(MouseButton::left); h.frame();
+            h.keyboard.on_key_down(Key::f); h.frame();
+            require(h.capture.rejection() == Rejection::ambiguous && h.capture.phase() == Phase::waiting_neutral,
+                "A key held with a click was accepted for Shoot");
+            h.keyboard.on_key_up(Key::f); h.mouse.on_button_up(MouseButton::left); h.frame();
+            require(h.capture.phase() == Phase::ready, "All-up did not rearm Shoot after a chord");
+            pending.keyboard_shoot = { Key::none, MouseButton::right };
+            DesktopHarness held(pending, KeyboardAction::move_right);
+            held.click(MouseButton::right);
+            require(held.capture.phase() == Phase::ready, "A click used by Shoot affected Move right's gesture");
+            pending.keyboard_shoot = { Key::f, MouseButton::none };
+            DesktopHarness taken(pending, KeyboardAction::pause);
+            taken.key(Key::f);
+            require(taken.capture.rejection() == Rejection::conflict, "Pause took Shoot's pending F");
+        }
+        // Escape still cancels, and focus loss drops a held click.
+        {
+            DesktopHarness h(pending, KeyboardAction::shoot);
+            h.mouse.on_button_down(MouseButton::middle); h.frame();
+            h.keyboard.set_focused(false); h.frame();
+            require(h.capture.focus_cancelled() && !h.capture.control_result(), "Focus loss kept a held click");
+            h.keyboard.set_focused(true); h.mouse.on_button_up(MouseButton::middle); h.frame(); h.frame();
+            h.key(Key::escape);
+            require(h.capture.phase() == Phase::cancelled && !h.capture.control_result(), "Escape did not cancel Shoot's gesture");
+        }
+        std::cout << "PASS keyboard capture targets: six actions x 27 keys against pending choices (" << accepted <<
+            " accepted, " << refused << " refused), five Shoot clicks, clicks ignored elsewhere, key+click chords, "
+            "conflict with a pending key Shoot, focus and Escape cancellation\n";
+    }
+}
+
 int main(int argc, char** argv)
 {
     try
@@ -452,8 +568,9 @@ int main(int argc, char** argv)
         blocked_and_focus();
         cancellations();
         menu_ownership(argv[1]);
+        targeted_actions();
         std::cout.flush();
-        std::fputs("PASS keyboard Jump capture: all five check groups completed\n", stdout);
+        std::fputs("PASS keyboard Jump capture: all six check groups completed\n", stdout);
         require(std::fflush(stdout) == 0, "Could not flush the completed capture acceptance receipt");
         return EXIT_SUCCESS;
     }

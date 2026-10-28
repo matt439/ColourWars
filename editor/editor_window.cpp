@@ -1,5 +1,6 @@
 #include "editor/editor.h"
 #include "editor/win32_text.h"
+#include "editor/user_stage_save.h"
 
 #include <windows.h>
 #include <commctrl.h>
@@ -12,6 +13,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 
 namespace colourwars_editor
 {
@@ -34,6 +36,7 @@ namespace colourwars_editor
         AppendMenuW(file, MF_STRING, file_open, L"&Open...\tCtrl+O");
         AppendMenuW(file, MF_STRING, file_save, L"&Save\tCtrl+S");
         AppendMenuW(file, MF_STRING, file_save_as, L"Save &as...\tCtrl+Shift+S");
+        AppendMenuW(file, MF_STRING, file_save_user_stage, L"Save to &My Stages...\tCtrl+M");
         AppendMenuW(file, MF_SEPARATOR, 0, nullptr);
         AppendMenuW(file, MF_STRING, file_exit, L"E&xit");
         AppendMenuW(menu_, MF_POPUP, reinterpret_cast<UINT_PTR>(file), L"&File");
@@ -56,6 +59,7 @@ namespace colourwars_editor
             {FVIRTKEY | FCONTROL, 'N', file_new}, {FVIRTKEY | FCONTROL, 'O', file_open},
             {FVIRTKEY | FCONTROL, 'S', file_save},
             {FVIRTKEY | FCONTROL | FSHIFT, 'S', file_save_as},
+            {FVIRTKEY | FCONTROL, 'M', file_save_user_stage},
             {FVIRTKEY | FCONTROL, 'Z', edit_undo}, {FVIRTKEY | FCONTROL, 'Y', edit_redo},
             {FVIRTKEY | FCONTROL, 'D', edit_duplicate}
         };
@@ -75,7 +79,8 @@ namespace colourwars_editor
         palette_ = control(WC_COMBOBOXW, L"Object to add", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, palette);
         const wchar_t* names[] = {L"Paintable block", L"Solid block", L"Jump-through platform",
             L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn",
-            L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left"};
+            L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left",
+            L"Team gate"};
         for (const wchar_t* name : names) SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
         SendMessageW(palette_, CB_SETCURSEL, 0, 0);
         toolbar_.push_back(control(L"BUTTON", L"+ Add", WS_TABSTOP, add_object));
@@ -346,6 +351,79 @@ namespace colourwars_editor
         return true;
     }
 
+    std::optional<std::filesystem::path> Editor::choose_user_stage(const std::filesystem::path& folder)
+    {
+        std::array<wchar_t, 32768> buffer{};
+        const std::wstring filename = wide(suggested_user_stage_name(document_, content_catalog_.stages)) + L".json";
+        wcscpy_s(buffer.data(), buffer.size(), filename.c_str());
+        const std::wstring directory = folder.wstring();
+        OPENFILENAMEW dialog{};
+        dialog.lStructSize = sizeof(dialog); dialog.hwndOwner = window_;
+        dialog.lpstrFilter = L"ColourWars level (*.json)\0*.json\0";
+        dialog.lpstrFile = buffer.data(); dialog.nMaxFile = static_cast<DWORD>(buffer.size());
+        dialog.lpstrInitialDir = directory.c_str(); dialog.lpstrDefExt = L"json";
+        dialog.lpstrTitle = L"Save to My Stages";
+        // The overwrite question is asked below, in the game's own terms.
+        dialog.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST;
+        if (!GetSaveFileNameW(&dialog))
+        {
+            if (CommDlgExtendedError()) throw std::runtime_error("The file dialog could not be opened.");
+            return std::nullopt;
+        }
+        return std::filesystem::path(buffer.data());
+    }
+
+    bool Editor::save_user_stage()
+    {
+        if (!apply_pending()) return false;
+        if (!content_catalog_.manifest_read)
+            throw std::runtime_error("The shipped stage names could not be read from game/content/manifest.json, "
+                "so the editor cannot check that this name is free. Use Save As instead.");
+        if (!confirm_unresolved()) return false;
+        const std::filesystem::path folder = user_stage_folder();
+        // The folder appears only on this explicit save. The dialog needs it to
+        // open there, so a cancelled or refused save takes an empty one away again.
+        std::error_code error;
+        // The game folder too may be new (the game has never run here); take
+        // away only what this command made, and only while it is empty.
+        const bool parent_existed = std::filesystem::exists(folder.parent_path(), error);
+        const bool created = std::filesystem::create_directories(folder, error);
+        if (error) throw std::runtime_error("Cannot create " + narrow(folder.wstring()) + ": " + error.message());
+        const auto tidy = [&folder, parent_existed]
+        {
+            std::error_code ignored;
+            if (std::filesystem::remove(folder, ignored) && !parent_existed)
+                std::filesystem::remove(folder.parent_path(), ignored);
+        };
+        bool saved = false;
+        try
+        {
+            const std::optional<std::filesystem::path> chosen = choose_user_stage(folder);
+            if (chosen)
+            {
+                const UserStageTarget target = check_user_stage_target(folder, *chosen, content_catalog_.stages);
+                const std::wstring question = L"Replace your stage '" + wide(target.name) + L"' in My Stages?\n\n"
+                    L"The game plays the new version the next time Stage Select opens from the main menu.";
+                if (!target.replaces || MessageBoxW(window_, question.c_str(), L"Save to My Stages",
+                    MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) == IDYES)
+                {
+                    colourwars_editor::save_user_stage(document_, folder, target);
+                    saved = true;
+                    refresh(true);
+                    set_status(L"Saved to My Stages as '" + wide(target.name) + L"'  |  " + target.file.wstring() +
+                        L"  |  Open Stage Select from the game's main menu to play it; no rebuild needed.");
+                }
+            }
+        }
+        catch (...)
+        {
+            if (created && !saved) tidy();
+            throw;
+        }
+        if (created && !saved) tidy();
+        return saved;
+    }
+
     bool Editor::confirm_discard()
     {
         const bool changed = document_.dirty() && (document_.can_undo() || !document_.path().empty());
@@ -373,6 +451,7 @@ namespace colourwars_editor
             selection_.reset(); refresh(); command(view_match); return;
         }
         if (id == file_save || id == file_save_as) { save(id == file_save_as); return; }
+        if (id == file_save_user_stage) { save_user_stage(); return; }
         if (id == revert_property) { select_property(property_index_); return; }
         if (id == help_controls)
         {
@@ -391,7 +470,9 @@ namespace colourwars_editor
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
                 L"and its relative path in cmake/runtime_assets.cmake. The opt-in ColourWarsRegisterStage helper previews both entries; --apply registers them. "
-                L"Existing registered levels need no registration. "
+                L"Existing registered levels need no registration.\n\n"
+                L"To play a level without rebuilding, use File > Save to My Stages (Ctrl+M). It saves into %LOCALAPPDATA%\\ColourWars\\stages, "
+                L"which the game reads at startup and whenever Stage Select opens from its main menu. The name must not be a shipped stage's. "
                 L"Asset names must match your content: the status line names any the game would refuse, and Save asks first. See docs/level-editor.md.",
                 L"Using the level editor", MB_OK | MB_ICONINFORMATION);
             return;
@@ -434,7 +515,8 @@ namespace colourwars_editor
         case add_object:
         {
             const char* types[] = {"StructurePaintable", "Structure", "StructureJumpThrough", "StructureRampRight",
-                "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft"};
+                "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft",
+                "TeamGate"};
             const LRESULT index = SendMessageW(palette_, CB_GETCURSEL, 0, 0);
             if (index < 0 || index >= static_cast<LRESULT>(std::size(types))) break;
             RECT client{}; GetClientRect(canvas_, &client);

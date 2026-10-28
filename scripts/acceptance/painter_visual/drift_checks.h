@@ -250,28 +250,34 @@ void drift_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Can
             const auto compose_sky = [&]()
             {
                 if (count != 4) { return; }
-                // Deliberately place the real roster above the platforms so
-                // normal player-camera following shows Close Quarters cloud_3
-                // at native 4P size. Repeat after advancing time to retain
-                // the composition. This is an art fixture, not a route or
+                // Deliberately place the real roster above the platforms, to
+                // the right of Close Quarters cloud_4, so normal player-camera
+                // following shows that cloud at native 4P size clear of the
+                // roster. Repeat after advancing time to retain the
+                // composition. This is an art fixture, not a route or
                 // jump-reachability claim; no camera is replaced or edited.
+                // The 4P minimum world width (presentation camera, da041c60)
+                // shows 720 world units of height per 1080p pane, so with the
+                // camera_bounds top at y 4300 no sky cloud can project lower
+                // than (y - 4300) * 0.75; cloud_1/3/5 always sit within the top
+                // 120 px. cloud_4 (y 4551) is the framable big cloud.
                 for (int view = 0; view < count; ++view)
                 {
                     require(level->place_player(view, Vector2F(
-                        2500.0f + 120.0f * static_cast<float>(view), 4470.0f)),
+                        3840.0f + 120.0f * static_cast<float>(view), 4470.0f)),
                         "could not place the four-player sky composition fixture");
                 }
-                // Independent authored cloud_3 rectangle, widened by its
-                // complete 48-unit drift, must remain fully inside pane 1
+                // Independent authored cloud_4 rectangle, widened by its
+                // complete 32-unit drift, must remain fully inside pane 1
                 // and below its HUD rather than merely intersecting a view.
-                const RectangleF cloud_span(2123, 4414, 352, 96);
+                const RectangleF cloud_span(3461, 4551, 320, 96);
                 const Viewport pane = app.viewport_manager()->player_viewport(0);
                 const Camera camera = level->view_camera(0);
                 require(camera.visible_rectangle(pane).contains(cloud_span),
-                    "four-player sky composition did not fully frame cloud_3's drift");
+                    "four-player sky composition did not fully frame cloud_4's drift");
                 const RectangleF projected = camera.calculate_view_rectangle(cloud_span);
                 require(projected.y >= 120.0f && projected.bottom() <= pane.height - 100.0f,
-                    "four-player cloud composition placed cloud_3 behind HUD or pane edges");
+                    "four-player cloud composition placed cloud_4 behind HUD or pane edges");
             };
             const std::string stem = "drift-arena-" + std::string(stage) + '-' + std::to_string(count) +
                 "p" + (count == 4 ? "-sky-composition" : "");

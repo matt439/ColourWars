@@ -11,19 +11,19 @@ function Read-HudClosingTextEvidence {
     if (@(Get-ChildItem -LiteralPath $captures -Filter "$prefix-failure-*").Count) { throw 'Closing-text native failure artifacts remain' }
     $summary=Get-Content -LiteralPath $summaryPath -Raw|ConvertFrom-Json
     $main=@(Import-Csv -LiteralPath $mainPath); $branches=@(Import-Csv -LiteralPath $branchPath)
-    $counts=[ordered]@{readbacks=50;csv_rows=18;main_rows=4;branch_rows=14;crops=4;crop_width=122;crop_height=51;crop_pixels=24888;ppm_bytes=74720;roi_pixels=6222;independent_roi_observations=8;roi_pixel_checks=49776;repeat_checks=18;copied_adoption_checks=4;normal_colour_invariance_checks=5;reduce_effects_checks=6;controls=2;calibration_pixel_checks=1600;private_game_saves=0}
+    $counts=[ordered]@{readbacks=50;csv_rows=18;main_rows=4;branch_rows=14;crops=4;crop_width=131;crop_height=52;crop_pixels=27248;ppm_bytes=81800;roi_pixels=6812;independent_roi_observations=8;roi_pixel_checks=54496;repeat_checks=18;copied_adoption_checks=4;normal_colour_invariance_checks=5;reduce_effects_checks=6;controls=2;calibration_pixel_checks=1600;private_game_saves=0}
     Assert-TimerKeys $summary (@($counts.Keys)+$timerUpdates+@('scope','main_context','control_discriminating_pixels')) 'closing shared'
     foreach ($key in $counts.Keys) { Assert-TimerInteger $summary $key $counts[$key] }
     foreach ($key in $timerUpdates) { Assert-TimerInteger $summary $key 0 }
     $controlPixels=$summary.control_discriminating_pixels
-    if (($controlPixels -isnot [int] -and $controlPixels -isnot [long]) -or $controlPixels -le 0 -or $controlPixels -gt 12444 -or $summary.scope -cne 'opaque-closing-text-glyph-roi-and-normal-invariance' -or $summary.main_context -cne 'running-exact-ten') { throw 'Closing-text opaque scope, actual main context or control support differs' }
+    if (($controlPixels -isnot [int] -and $controlPixels -isnot [long]) -or $controlPixels -le 0 -or $controlPixels -gt 13624 -or $summary.scope -cne 'opaque-closing-text-glyph-roi-and-normal-invariance' -or $summary.main_context -cne 'running-exact-ten') { throw 'Closing-text opaque scope, actual main context or control support differs' }
     Assert-TimerCsvColumns $main @('state','raw_rgba_match','adoption_match','repeat_match','locality_match','opaque_selected','controls','discriminating_pixels','frozen_style_resources_rng','scope') 4 'closing main'
     if (($main.state-join'|') -cne ($states-join'|')) { throw 'Closing-text opaque palette order differs' }
     $sumPixels=0L
     foreach ($row in $main) {
         Assert-TimerFlags $row @('raw_rgba_match','adoption_match','repeat_match','locality_match','opaque_selected','frozen_style_resources_rng')
         $controls=if ($row.state -ceq 'default') {2} else {0}; $pixels=Get-TimerCsvInteger $row 'discriminating_pixels'
-        if ((Get-TimerCsvInteger $row 'controls') -ne $controls -or $pixels -gt $controls*6222 -or ($controls -gt 0 -and $pixels -le 0) -or $row.scope -cne 'opaque-closing-text-glyph-roi') { throw 'Closing-text opaque tint/added-shadow accounting differs' }
+        if ((Get-TimerCsvInteger $row 'controls') -ne $controls -or $pixels -gt $controls*6812 -or ($controls -gt 0 -and $pixels -le 0) -or $row.scope -cne 'opaque-closing-text-glyph-roi') { throw 'Closing-text opaque tint/added-shadow accounting differs' }
         $sumPixels += $pixels
     }
     if ($sumPixels -ne $controlPixels) { throw 'Closing-text control pixels do not sum to summary' }
@@ -41,15 +41,15 @@ function Read-HudClosingTextEvidence {
     $expectedNames=@($states|ForEach-Object{"$prefix-colour-$_.ppm"})
     $ppms=@(Get-ChildItem -LiteralPath $captures -Filter "$prefix-colour-*.ppm" -File)
     if ($ppms.Count-ne4 -or (($ppms.Name|Sort-Object)-join'|')-cne(($expectedNames|Sort-Object)-join'|')) { throw 'Closing-text exact PPM inventory differs' }
-    $header=[Text.Encoding]::ASCII.GetBytes("P6`n122 51`n255`n")
+    $header=[Text.Encoding]::ASCII.GetBytes("P6`n131 52`n255`n")
     $ppmEvidence=@(foreach ($name in $expectedNames) {
         $path=Join-Path $captures $name; $bytes=[IO.File]::ReadAllBytes($path)
-        if ($bytes.Length-ne18680) { throw 'Closing-text canonical native P6 length differs' }
+        if ($bytes.Length-ne20450) { throw 'Closing-text canonical native P6 length differs' }
         for ($i=0;$i-lt14;++$i) { if ($bytes[$i]-ne$header[$i]) { throw 'Closing-text canonical P6 header differs' } }
-        $rgb=[byte[]]::new(18666); [Array]::Copy($bytes,14,$rgb,0,18666); $inputs.Add($path)
-        [ordered]@{name=$name;bytes=18680;sha256=(Get-TimerSha $bytes);rgb_payload_sha256=(Get-TimerSha $rgb)}
+        $rgb=[byte[]]::new(20436); [Array]::Copy($bytes,14,$rgb,0,20436); $inputs.Add($path)
+        [ordered]@{name=$name;bytes=20450;sha256=(Get-TimerSha $bytes);rgb_payload_sha256=(Get-TimerSha $rgb)}
     })
-    $observed=[ordered]@{consumer=$summary;opacity_policy='opaque-only; partial and zero are refusals';readbacks=50;csv_rows=18;crops=4;crop_pixels=24888;ppm_bytes=74720;controls=2;control_discriminating_pixels=$controlPixels;calibration_pixel_checks=1600;private_game_saves=0;reference_scope='closing paper plus opaque glyph only; normal shadow omitted; copied HUD adoption only';png_count=0;png_crops=@();png_complete=$false}
+    $observed=[ordered]@{consumer=$summary;opacity_policy='opaque-only; partial and zero are refusals';readbacks=50;csv_rows=18;crops=4;crop_pixels=27248;ppm_bytes=81800;controls=2;control_discriminating_pixels=$controlPixels;calibration_pixel_checks=1600;private_game_saves=0;reference_scope='closing paper plus opaque glyph only; normal shadow omitted; copied HUD adoption only';png_count=0;png_crops=@();png_complete=$false}
     if ($debug) {
         $tunePath=Join-Path $captures "$prefix-tune-summary.json"; $tuneCsv=Join-Path $captures "$prefix-tune.csv"
         $refusalsPath=Join-Path $captures "$prefix-tune-refusals.csv"; $normalPath=Join-Path $captures "$prefix-tune-normal.csv"

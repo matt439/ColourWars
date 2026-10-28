@@ -525,14 +525,17 @@ void Presentation::validate_resources(const RenderResources& render,
 		}
 		return card;
 	};
+	// Mode rows 2-7; Match length and Series stage carry a value column.
 	const MenuItem mode_items[]{ MenuItem::single_match, MenuItem::best_of_three, MenuItem::best_of_five,
-		MenuItem::match_length, MenuItem::back };
-	float mode_back_bottom = 0.0f;
+		MenuItem::match_length, MenuItem::series_stage, MenuItem::back };
+	float single_match_right = 0.0f;
+	std::vector<RectangleF> mode_cards;
 	for (size_t index = 0; index < std::size(mode_items); ++index)
 	{
 		const RectangleF card = check_setup_item(mode_items[index], main.mode_select_spacing, static_cast<int>(index) + 2,
-			mode_items[index] == MenuItem::match_length);
-		if (mode_items[index] == MenuItem::back) { mode_back_bottom = card.bottom(); }
+			mode_items[index] == MenuItem::match_length || mode_items[index] == MenuItem::series_stage);
+		if (mode_items[index] == MenuItem::single_match) { single_match_right = card.right(); }
+		else { mode_cards.push_back(card); }
 	}
 	const MenuItem player_items[]{ MenuItem::one_player_practice, MenuItem::two_players,
 		MenuItem::three_players, MenuItem::four_players, MenuItem::back };
@@ -542,17 +545,21 @@ void Presentation::validate_resources(const RenderResources& render,
 	}
 	// The nonfocusable hint retains the detail font and the item-shadow offset
 	// that its existing widget uses; it has no action-row fit or focus padding.
+	// Beside Single Match on row 2, one card padding after its complete card.
+	const Vector2F hint_position(single_match_right + main.setup_focus_padding.x,
+		this->menu_.layout.position.y + main.mode_select_spacing.y * 2.0f);
 	check_menu_line("menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
-		this->menu_.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 7.0f),
-		this->menu_.footer_y, this->menu_.item_shadow_offset);
+		hint_position, this->menu_.footer_y, this->menu_.item_shadow_offset);
 	const RectangleF practice_hint = check_setup_paper(
 		"menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
-		this->menu_.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 7.0f),
-		this->menu_.item_shadow_offset, false, 0.0f);
-	if (practice_hint.y < mode_back_bottom)
+		hint_position, this->menu_.item_shadow_offset, false, 0.0f);
+	// Beside Single Match it must still keep clear of every lower row's card,
+	// as it once had to follow Back's.
+	if (std::any_of(mode_cards.begin(), mode_cards.end(),
+		[&practice_hint](const RectangleF& card) { return card.intersects(practice_hint); }))
 	{
 		throw std::runtime_error(this->source_path_ +
-			": menu_text.solo_practice_hint must follow the complete Back focus card and shade.");
+			": menu_text.solo_practice_hint must stay clear of the Mode rows' complete focus cards and shade.");
 	}
 	const auto fixed_menu_size = [&](const std::string& key, const std::wstring& text, const std::string& font)
 	{
@@ -876,6 +883,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	check_stage_hint("locked_hint", this->menu_text_.stage.locked_hint);
 	check_stage_hint("browse_hint", this->menu_text_.stage.browse_hint);
+	check_stage_hint("user_hint", this->menu_text_.stage.user_hint);
 	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
 		options_art.shadow_offset - options_art.focus_padding.x - main.options_value_x,
 		main.options_spacing.y - options_art.focus_padding.y * 2.0f);
@@ -973,12 +981,35 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	RectangleF controls_help;
 	bool first_help = true;
-	for (const Key key : controls_text::jump_keys())
+	const auto controls_variant = [&](const std::wstring& words)
 	{
-		const RectangleF fitted = check_help_fit("menu_text.help.controls",
-			controls_text::controls_help(this->menu_text_.help.controls, key), controls.controls_position, controls.controls_size);
+		const RectangleF fitted = check_help_fit("menu_text.help.controls", words,
+			controls.controls_position, controls.controls_size);
 		controls_help = first_help ? fitted : RectangleF::union_of(controls_help, fitted);
 		first_help = false;
+	};
+	for (const Key key : controls_text::jump_keys())
+	{
+		controls_variant(controls_text::controls_help(this->menu_text_.help.controls, key));
+	}
+	// Each keyboard action's every label, the others at their defaults where
+	// valid, so every glyph the Controls help can show is measured.
+	for (size_t index = 0; index < keyboard_action_count; ++index)
+	{
+		const KeyboardAction action = static_cast<KeyboardAction>(index);
+		const std::array<MouseButton, 5> buttons = shoot_mouse_buttons();
+		std::vector<DesktopControl> choices;
+		if (action == KeyboardAction::pause) { choices.push_back({}); }
+		for (const Key key : controls_text::jump_keys()) { choices.push_back({ key, MouseButton::none }); }
+		if (action == KeyboardAction::shoot) { for (const MouseButton button : buttons) { choices.push_back({ Key::none, button }); } }
+		for (const DesktopControl& choice : choices)
+		{
+			InputBindings bindings;
+			set_keyboard_control(bindings, action, choice);
+			try { bindings.validate_keyboard(); }
+			catch (const std::invalid_argument&) { continue; }
+			controls_variant(controls_text::controls_help(this->menu_text_.help.controls, bindings));
+		}
 	}
 	const KeyboardJumpMenuText& jump = this->menu_text_.keyboard_jump;
 	const auto jump_text = [&](const char* key, const std::wstring& words, const std::string& font, const Vector2F& position, bool row)
@@ -1004,26 +1035,31 @@ void Presentation::validate_resources(const RenderResources& render,
 	const RectangleF jump_heading = jump_text("heading", jump.heading, this->menu_.heading_font, controls.heading_position, false);
 	if (jump_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
 	{ throw std::runtime_error(this->source_path_ + ": menu_text.keyboard_jump.heading must end before its first focus card."); }
-	jump_text("capture", jump.capture, controls.item_font, controls.layout.position, true);
-	jump_text("reset", jump.reset, controls.item_font, controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y), true);
+	// Rows: six capture rows (an OptionRow label and its control value), then
+	// Reset, Apply and Back.
+	const char* keyboard_rows[]{ "move_left", "move_right", "jump", "drop", "shoot", "pause" };
+	for (size_t index = 0; index < keyboard_action_count; ++index)
+	{
+		const Vector2F position = controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(index));
+		Vector2F label = fixed_menu_size(std::string("menu_text.keyboard_jump.") + keyboard_rows[index], jump.row(index), controls.item_font);
+		const Vector2F label_available(controls.layout.spacing.x - controls.art.focus_padding.x,
+			controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
+		label *= std::min({ 1.0f, label_available.x / label.x, label_available.y / label.y });
+		check_fixed_paper(std::string("menu_text.keyboard_jump.") + keyboard_rows[index], RectangleF(position, label),
+			controls.box_size, controls.art.focus_padding);
+		for (const std::wstring& value : controls_text::keyboard_control_labels(static_cast<KeyboardAction>(index)))
+		{
+			jump_text(keyboard_rows[index], value, controls.item_font, position + Vector2F(controls.layout.spacing.x, 0.0f), true);
+		}
+	}
+	jump_text("reset", jump.reset, controls.item_font,
+		controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(keyboard_action_count)), true);
 	std::ignore = fixed_menu_size("menu_text.keyboard_jump.help", jump.help, controls.help_font);
 	std::ignore = fixed_menu_size("menu_text.keyboard_jump.debug_collision", jump.debug_collision, controls.help_font);
-	for (const Key current : controls_text::jump_keys())
+	for (const bool collision : { false, true })
 	{
-		std::ignore = fixed_menu_size("menu_text.keyboard_jump.current", jump.current_key(input_key_label(current)), controls.help_font);
-		std::ignore = fixed_menu_size("menu_text.keyboard_jump.pending", jump.pending_key(input_key_label(current)), controls.help_font);
-	}
-	for (const Key current : controls_text::jump_keys())
-	{
-		for (const Key pending : controls_text::jump_keys())
-		{
-			const std::wstring block = jump.help_block(input_key_label(current), input_key_label(pending));
-			for (const bool collision : { false, true })
-			{
-				std::ignore = check_help_fit("menu_text.keyboard_jump.help", collision ? block + L'\n' + jump.debug_collision : block,
-					controls.controls_position, controls.controls_size);
-			}
-		}
+		std::ignore = check_help_fit("menu_text.keyboard_jump.help", collision ? jump.help + L'\n' + jump.debug_collision : jump.help,
+			controls.controls_position, controls.controls_size);
 	}
 	const PadButtonsMenuText& pad_buttons = this->menu_text_.pad_buttons;
 	const auto pad_buttons_text = [&](const char* key, const std::wstring& words, const std::string& font,
@@ -1205,17 +1241,18 @@ void Presentation::validate_resources(const RenderResources& render,
 		check_status(message, controls.help_font, controls.status_position, controls.box_size,
 			controls.art, { controls_back, controls_help });
 	}
-	const RectangleF jump_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 3.0f),
-		controls.item_font, controls.art);
+	const RectangleF jump_back = padded_back(controls.layout.position + Vector2F(0.0f,
+		controls.layout.spacing.y * static_cast<float>(keyboard_action_count + 2)), controls.item_font, controls.art);
 	const StatusMessage jump_statuses[]{ { "keyboard_jump.pending_status", jump.pending_status }, { "keyboard_jump.saved_status", jump.saved_status },
 		{ "keyboard_jump.capture_wait_neutral", jump.capture_wait_neutral }, { "keyboard_jump.capture_ready", jump.capture_ready },
+		{ "keyboard_jump.capture_ready_mouse", jump.capture_ready_mouse },
 		{ "keyboard_jump.capture_rejected", jump.capture_rejected }, { "keyboard_jump.capture_conflict", jump.capture_conflict },
 		{ "keyboard_jump.capture_cancelled", jump.capture_cancelled }, { "keyboard_jump.debug_collision", jump.debug_collision } };
 	for (const StatusMessage& message : jump_statuses)
 	{ check_status(message, controls.help_font, controls.status_position, controls.box_size, controls.art, { jump_back, help_area }); }
-	for (const Key key : controls_text::jump_keys())
+	for (const std::wstring& label : controls_text::keyboard_control_labels(KeyboardAction::shoot))
 	{
-		const std::wstring words = jump.release_key(std::wstring(input_key_label(key)));
+		const std::wstring words = jump.release_key(label);
 		check_status({ "keyboard_jump.capture_release", words }, controls.help_font, controls.status_position,
 			controls.box_size, controls.art, { jump_back, help_area });
 	}
@@ -1420,18 +1457,27 @@ void Presentation::validate_resources(const RenderResources& render,
 		main.stage_box_size);
 	const RectangleF stage_inside(stage_paper.position() + Vector2F(setup_edge),
 		stage_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
-	const Vector2F stage_heading_size = render.measure_text(render.resolve_sprite_font(this->menu_.heading_font),
-		this->menu_text_.heading(MenuHeading::arena));
-	const RectangleF stage_heading = RectangleF::union_of(
-		RectangleF(this->menu_.layout.position, stage_heading_size),
-		RectangleF(this->menu_.layout.position + this->menu_.heading_shadow_offset, stage_heading_size));
-	if (!std::isfinite(stage_heading.x) || !std::isfinite(stage_heading.y) ||
-		!std::isfinite(stage_heading.width) || !std::isfinite(stage_heading.height) ||
-		stage_heading.width <= 0.0f || stage_heading.height <= 0.0f || !stage_inside.contains(stage_heading))
+	const std::wstring& stage_heading_words = this->menu_text_.heading(MenuHeading::arena);
+	// Loser's pick (ROAD#20) puts the picking team's heading in its place.
+	const auto check_stage_heading = [&](const std::string& key, const std::wstring& words)
 	{
-		throw std::runtime_error(this->source_path_ +
-			": menu_text.headings.arena must fit main_menu.stage_box_size including its retained shadow bounds.");
-	}
+		drawable_text::check_font_can_draw(&render, this->menu_.heading_font, words, this->source_path_ + ": " + key);
+		const Vector2F stage_heading_size = render.measure_text(render.resolve_sprite_font(this->menu_.heading_font),
+			words);
+		const RectangleF stage_heading = RectangleF::union_of(
+			RectangleF(this->menu_.layout.position, stage_heading_size),
+			RectangleF(this->menu_.layout.position + this->menu_.heading_shadow_offset, stage_heading_size));
+		if (!std::isfinite(stage_heading.x) || !std::isfinite(stage_heading.y) ||
+			!std::isfinite(stage_heading.width) || !std::isfinite(stage_heading.height) ||
+			stage_heading.width <= 0.0f || stage_heading.height <= 0.0f || !stage_inside.contains(stage_heading))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit main_menu.stage_box_size including its retained shadow bounds.");
+		}
+	};
+	check_stage_heading("menu_text.headings.arena", stage_heading_words);
+	check_stage_heading("menu_text.stage.team_a_picks", this->menu_text_.stage.team_a_picks);
+	check_stage_heading("menu_text.stage.team_b_picks", this->menu_text_.stage.team_b_picks);
 	// Home's Exit confirmation reuses Pause paper/layout, with the existing
 	// Exit label rendered once more in the actual heading font.
 	const Vector2F exit_heading_size = fixed_menu_size("menu_text.items.exit",

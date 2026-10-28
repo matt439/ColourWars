@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include "game/player_control.h"
+#include "game/series_stage_rule.h"
 
 enum class MenuHeading
 {
@@ -31,7 +32,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, count
 };
 
 struct MenuTitleText
@@ -49,15 +50,17 @@ struct MenuHelpText
 	std::wstring aim_cutoff;
 };
 
+// The Keyboard Keys page (formerly Keyboard Jump): one capture row per
+// KeyboardAction, then Reset, Apply and Back. Control labels are the game's
+// (input_bindings.h); capture_ready_mouse is the Shoot row's prompt.
 struct KeyboardJumpMenuText
 {
-	std::wstring heading, capture, reset, current, pending, help;
-	std::wstring pending_status, saved_status, capture_wait_neutral, capture_ready, capture_release;
-	std::wstring capture_rejected, capture_conflict, capture_cancelled, debug_collision;
-	std::wstring current_key(std::wstring_view label) const;
-	std::wstring pending_key(std::wstring_view label) const;
+	std::wstring heading, move_left, move_right, jump, drop, shoot, pause, reset, help;
+	std::wstring pending_status, saved_status, capture_wait_neutral, capture_ready, capture_ready_mouse;
+	std::wstring capture_release, capture_rejected, capture_conflict, capture_cancelled, debug_collision;
 	std::wstring release_key(std::wstring_view label) const;
-	std::wstring help_block(std::wstring_view current_label, std::wstring_view pending_label) const;
+	// Index by KeyboardAction: move_left, move_right, jump, drop, shoot, pause.
+	const std::wstring& row(size_t index) const;
 };
 
 // The Pad Buttons page: one row per action entry, in PadAction order with the
@@ -104,6 +107,10 @@ struct MenuValueText
 	std::wstring duration_default;
 	std::wstring resolution;
 	std::wstring shared;
+	// The Mode page's Series stage values, one per SeriesStageRule.
+	std::wstring series_stage_same;
+	std::wstring series_stage_rotate;
+	std::wstring series_stage_losers_pick;
 };
 
 struct MenuConfirmationText
@@ -175,6 +182,8 @@ struct MenuStageText
 	std::wstring random_navigation;
 	std::wstring locked_hint;
 	std::wstring browse_hint;
+	// Unconfirmed user stage (ROAD#16), in browse_hint's place.
+	std::wstring user_hint;
 	std::wstring solo_mode;
 	std::wstring single_match_mode;
 	std::wstring best_of_mode;
@@ -182,6 +191,9 @@ struct MenuStageText
 	std::wstring versus_roster;
 	std::wstring numbered_navigation;
 	std::wstring random_hint;
+	// Stage Select's heading when a losing team picks the next round's stage.
+	std::wstring team_a_picks;
+	std::wstring team_b_picks;
 };
 
 // Labels for the per-stage records. The numbers and the joins between the
@@ -282,6 +294,7 @@ struct MenuText
 	std::wstring setting_duration(float seconds, bool use_default) const;
 	// Window presets and live fullscreen sizes share the positive int domain.
 	std::wstring setting_resolution(int width, int height) const;
+	const std::wstring& series_stage_value(SeriesStageRule rule) const;
 	// Stage summary domains follow the existing choices: best-of 3/5, and
 	// one solo player or two through four versus players.
 	std::wstring stage_best_of_mode(int best_of) const;

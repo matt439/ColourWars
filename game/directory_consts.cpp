@@ -2,14 +2,16 @@
 #include "game/directory_consts.h"
 #include "engine/app/content_root.h"
 #include "engine/core/file_path.h"
+#include "game/user_stage_contract.h"
 
 #include <cstdlib>
 #include <memory>
 
 namespace
 {
-	// Keep this directory name stable so existing per-user saves remain reachable.
-	constexpr char GAME_FOLDER_NAME[] = "ColourWars";
+	// Keep this directory name stable so existing per-user saves remain
+	// reachable. The level editor's Save to My Stages shares it.
+	constexpr const char* GAME_FOLDER_NAME = user_stage_contract::game_folder_name;
 
 	constexpr char SAVE_FILE_NAME[] = "save_data.json";
 
@@ -81,6 +83,17 @@ namespace directory_consts
 				std::string("./save/") + DEBUG_FOLDER_NAME);
 		}
 		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / DEBUG_FOLDER_NAME);
+	}
+
+	std::string user_stage_directory()
+	{
+		const std::filesystem::path root = local_app_data();
+		if (root.empty())
+		{
+			return labrador::resolved_under(labrador::executable_directory(),
+				std::string("./save/") + user_stage_contract::stage_folder_name);
+		}
+		return labrador::path_to_utf8(user_stage_contract::folder_under(root));
 	}
 
 	std::string legacy_save_file_path()

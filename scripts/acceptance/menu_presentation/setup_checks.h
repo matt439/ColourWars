@@ -157,16 +157,18 @@ namespace
         check_edge("menu_text.headings", "mode", [](rapidjson::Document& d)
             { d["menu_style"]["layout"]["position"]["y"].SetFloat(32.0f); },
             [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["y"].SetFloat(31.75f); });
+        // Single Match's card starts at 150 + 2*96 - 7 = 335.
         check_edge("menu_text.items", "single_match", [](rapidjson::Document& d)
-            { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(173.0f); },
-            [](rapidjson::Document& d) { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(173.25f); });
+            { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(165.0f); },
+            [](rapidjson::Document& d) { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(165.25f); });
         check_edge("menu_text", "solo_practice_hint", [](rapidjson::Document& d)
         {
-            // Preserve the hint's exact 926 bottom while keeping the other
-            // pages at a valid shared origin: 169.5 + 7*105 + 20 + 1.5.
-            d["menu_style"]["layout"]["position"]["y"].SetFloat(169.5f);
-            d["main_menu"]["mode_select_spacing"]["y"].SetFloat(105.0f);
-        }, [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["y"].SetFloat(169.75f); });
+            // The hint follows Single Match's card by one card padding
+            // (ROAD#20): x + 1528 + 1.5 + 28 + 2 + 28 + 25.5 = 1770, the
+            // right margin, when the shared origin x is 157.
+            d["menu_text"]["items"]["single_match"].SetString(std::string(191, 'F').c_str(), d.GetAllocator());
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(157.0f);
+        }, [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["x"].SetFloat(157.25f); });
         // Join shares Count's spacing and adds a status at row seven. Its
         // complete 20-high text plus one-unit shadow reaches the inset bottom
         // at 65 + 7*120 + 21 = 926. A Count Back card at that bottom would

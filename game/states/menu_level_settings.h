@@ -8,6 +8,7 @@
 #include "game/states/menu_player_settings.h"
 #include "engine/render/screen_layout.h"
 #include "game/input_slots.h"
+#include "game/series_stage_rule.h"
 
 struct MenuText;
 
@@ -24,6 +25,9 @@ public:
 	std::optional<float> duration() const;
 	// No override uses match.duration from tuning, including live Debug tuning.
 	void set_duration(std::optional<float> seconds);
+	// Which stage a series' later rounds play; Same unless chosen (ROAD#20).
+	SeriesStageRule series_stage_rule() const;
+	void set_series_stage_rule(SeriesStageRule rule);
 	const std::vector<MenuPlayerSettings>& player_settings() const;
 	// Preserves retained seats and defaults newly added seats to unclaimed.
 	// Rejects counts outside 1-4 without changing the roster or its count.
@@ -89,6 +93,7 @@ private:
 	std::array<int, input_slots::pad_count> devices_ = { -1, -1, -1, -1 };
 	int best_of_ = 1;
 	std::optional<float> duration_;
+	SeriesStageRule series_stage_rule_ = SeriesStageRule::same;
 	std::string stage_;
 	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;
 };
