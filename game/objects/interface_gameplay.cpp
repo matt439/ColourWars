@@ -124,7 +124,7 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	this->draw_paper_panel(draw_list, identity_panel, scale);
 	const float stripe_width = look.box_fill_border *
 		look.player_identity_reference_width * scale;
-	const float pen = look.paper.keyline_width * scale;
+	const float pen = this->paper_pen(scale);
 	sprite_sheet->draw(draw_list, this->fill_frame_,
 		RectangleF(identity_panel.position() + Vector2F(pen, pen * 3.0f),
 			Vector2F(stripe_width, identity_panel.height - pen * 6.0f)), team_colour);
@@ -166,12 +166,20 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	draw_list.set_filter(TextureFilter::point);
 }
 
+float InterfaceGameplay::paper_pen(float scale) const
+{
+	// A quarter-size pane (four-player 720x1280 portrait: scale 0.1875) would
+	// put the 2-reference-pixel keyline at 0.375 px, which the rasterizer drops
+	// on most edges. The floor is a raster rule, like the cursor marker's.
+	return std::max(1.0f, this->look_->paper.keyline_width * scale);
+}
+
 void InterfaceGameplay::draw_paper_panel(DrawList& draw_list,
 	const RectangleF& face, float scale) const
 {
 	const HudPaperPresentation& art = this->look_->paper;
 	const SpriteSheet* sheet = this->render_resources()->sprite_sheet(this->sheet_);
-	const float pen = art.keyline_width * scale;
+	const float pen = this->paper_pen(scale);
 	const float step = pen * 2.0f;
 	const float shadow = art.shadow_offset * scale;
 	const auto fill = [&](const RectangleF& box, const Colour& colour)
@@ -217,7 +225,7 @@ void InterfaceGameplay::draw_meter(DrawList& draw_list,
 	const SpriteSheet* sprite_sheet = this->render_resources()->
 		sprite_sheet(this->sheet_);
 	draw_list.set_filter(TextureFilter::point);
-	const float pen = look.paper.keyline_width * scale;
+	const float pen = this->paper_pen(scale);
 	sprite_sheet->draw(draw_list, this->fill_frame_,
 		RectangleF(position - Vector2F(pen), size + Vector2F(pen * 2.0f)), look.paper.ink);
 	sprite_sheet->draw(draw_list, this->fill_frame_,

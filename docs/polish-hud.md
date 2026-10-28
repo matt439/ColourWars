@@ -60,6 +60,38 @@ Validation on 2026-10-15:
   assets byte for byte, the unchanged bank and provenance, and no authoring
   assets or developer-console RTTI.
 
+### One-pixel keyline floor (2026-10-28)
+
+`-HudOnly` had started failing in both presets with "HUD meter lost its
+exterior dark keyline" on the four-player 720x1280 portrait case. The probe was
+right. Each pane there is 360x640, so the HUD scale is
+`min(360 / 1920, 640 / 1080) = 0.1875` and the 2-reference-pixel paper keyline
+came out at 0.375 px. Whether a rectangle that thin covers any pixel centre
+depends on its sub-pixel phase. In the current raster the meter's ink frame
+landed on a pixel centre only along its bottom edge, and that row falls inside
+the track the probe models. The meter therefore lost its keyline on all four
+sides. The 2026-10-15 run above passed only because the phase was luckier then.
+The arithmetic has been sub-pixel since this artwork landed (`dd6d0fa8`).
+
+`InterfaceGameplay::paper_pen` now returns `hud.paper.keyline_width * scale`
+with a floor of one device pixel. The meters, paper panels and identity stripe
+inset all use it. The floor is a raster rule, like the cursor marker's
+`std::max(1.0f, ...)` in `level_draw.cpp`, and not a new art value. It changes
+only panes whose scaled pen was below one pixel: two/three/four-player 720p,
+`2p-1024x768` and four-player portrait. The closing clock keeps its own
+`closing_clock.keyline_width`, which this change does not touch. The probe is
+unchanged. With the fix, `-HudOnly`, `-IdentityOnly`, `-SupplyOnly`,
+`-MonitorOnly` and `-ClosingOnly` pass. Three switches fail with the same
+message on the unmodified base, so they are older, separate problems:
+
+- `-CountdownOnly`: "Stage entry retained stale fitting after an aspect-ratio
+  round-trip".
+- `-HudClosingMaterialsOnly`: "Closing timer font source line spacing changed".
+- `-HudPaperTuneColoursOnly`: "HUD paper ordinal glyph source metadata changed".
+
+`-HudTrackTuneColourOnly` passes its probe and then fails in the script, which
+calls `SHA256.HashData`. That method is missing in Windows PowerShell 5.1.
+
 The [native meter detail](images/polish-hud/meters-720p.png) and
 [four-player match](images/polish-hud/four-player-720p.png) were inspected at
 720p without enlargement. These establish this drawing and placement;
