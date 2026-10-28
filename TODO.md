@@ -49,7 +49,8 @@ when they don't compete with it.
 **Independent implementation (2026-10-28).** The scoped hygiene, replay,
 diagnostics and editor slices are qualified. Select further bounded work from
 the [ranked maintenance shortlist](docs/code-hygiene.md#follow-up-shortlist-2026-10-28)
-while attended reviews wait; acceptance probe runtime deadlines are also qualified.
+while attended reviews wait. Acceptance probe runtime deadlines and local
+validation build caps are qualified.
 This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.
@@ -269,7 +270,7 @@ A new row for one of these gets its section back.
 | Startup content validation | gap audit 8.1, `game/content_validation.cpp` | a content kind added without validation |
 | Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
 | Code TODO/FIXME markers | `game/`, `editor/`, `scripts/`, `cmake/` | a new marker, which should be a row here instead |
-| Code hygiene and maintenance | [code-hygiene.md](docs/code-hygiene.md) | a scoped source, maintenance or tooling improvement beyond completed `HYG#1`-`HYG#11` |
+| Code hygiene and maintenance | [code-hygiene.md](docs/code-hygiene.md) | a scoped source, maintenance or tooling improvement beyond completed `HYG#1`-`HYG#12` |
 | Movement Course icon (`ED#6`, retired) | [level-editor.md](docs/level-editor.md#movement-course-icon-ed6-retired) | an accepted screen actually displays stage icons; current Stage Select uses a live preview |
 
 ---

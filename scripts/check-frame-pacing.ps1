@@ -127,7 +127,7 @@ try {
     }
     if (-not $SkipBuild) {
         Invoke-Logged 'cmake' @('--preset', $Preset) (Join-Path $run 'configure.log')
-        Invoke-Logged 'cmake' @('--build', '--preset', $Preset) (Join-Path $run 'build.log')
+        Invoke-Logged 'cmake' @('--build', '--preset', $Preset, '--parallel', '1') (Join-Path $run 'build.log')
     }
     $cachePath = Join-Path $build 'CMakeCache.txt'
     if (-not (Test-Path -LiteralPath $cachePath -PathType Leaf)) { throw "No configured build: $build" }

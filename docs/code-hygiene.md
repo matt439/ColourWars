@@ -17,6 +17,28 @@ its evidence describes the code before the associated fixes:
 | 2 | Bounded painter builds: `scripts/check-painter.ps1` invokes `cmake --build` without a job count; the acceptance/editor runners already cap build concurrency. | Directly supports five projects sharing the PC. One argument change; low risk and independent of the active editor investigation. Selected as `HYG#9`. |
 | 3 | Acceptance process timeouts: `scripts/run-acceptance.ps1` has no per-case compiler/probe deadline. | Useful for unattended loops, but needs generous limits for slow Debug cases and cleanup restricted to owned children. Medium scope/risk; retain for later scoping. |
 
+After `HYG#11`, a fresh source scan found five other local check wrappers
+without a CMake build limit. The next ranked shortlist is:
+
+| rank | candidate and evidence | value, scope and risk |
+|---|---|---|
+| 1 | Complete build caps: display-awake, failure-reporting, frame-pacing, movement-feedback and paint-fx wrappers still have uncapped `cmake --build` calls. | Selected as `HYG#12`: five argument-only changes, low risk, directly useful on the shared PC. |
+| 2 | Acceptance subset CLI: `Cases` treats `ammo,text_wrap` as one unknown case under `pwsh -File`, while `ExcludeCases` explicitly handles comma lists. | Small usability fix; scope selection normalization and preflight validation before implementation. |
+
+### Remaining local build caps (`HYG#12`)
+
+**Done (2026-10-28).** Each of the five wrappers above now passes
+`--parallel 1`, matching the existing acceptance, painter and editor wrappers.
+The argument-only changes preserve
+targets, configure arguments, `SkipBuild` branches and probe execution. The
+stage-registration wrapper already has an explicit two-job limit; hosted CI
+keeps its separately chosen concurrency.
+
+Independent review and parsing of all five scripts pass in PowerShell 5.1 and
+pwsh. A scan of all script `--build` calls finds no remaining uncapped local
+wrapper. No new test repeats the literal flag, and this source change provides
+no new gameplay, hardware, rendering or performance acceptance.
+
 ### Bounded painter builds (`HYG#9`)
 
 **Done (2026-10-28).** The painter wrapper now uses `--parallel 1`, matching

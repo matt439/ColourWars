@@ -37,7 +37,7 @@ try {
     $result.base_revision=(git -C $repo rev-parse HEAD).Trim()
     Push-Location -LiteralPath $repo
     try {
-        if(!$SkipBuild){Invoke-NativeLogged 'cmake' @('--preset',$Preset) (Join-Path $run 'configure.log');Invoke-NativeLogged 'cmake' @('--build','--preset',$Preset) (Join-Path $run 'build.log')}
+        if(!$SkipBuild){Invoke-NativeLogged 'cmake' @('--preset',$Preset) (Join-Path $run 'configure.log');Invoke-NativeLogged 'cmake' @('--build','--preset',$Preset,'--parallel','1') (Join-Path $run 'build.log')}
         $build=Join-Path $repo "out/build/$Preset";$cache=@{}
         foreach($line in Get-Content -LiteralPath (Join-Path $build 'CMakeCache.txt')){if($line -match '^([^/#][^:]*):[^=]*=(.*)$'){$cache[$Matches[1]]=$Matches[2]}}
         $debug=$Preset -eq 'x64-debug';$configuration=if($debug){'Debug'}else{'Release'}

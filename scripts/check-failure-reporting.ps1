@@ -355,7 +355,7 @@ try {
             throw 'Run from an x64 Visual Studio Developer shell.'
         }
         Invoke-Logged -Command 'cmake' -Arguments @('--preset', $Preset) -LogPath (Join-Path $run 'configure.log')
-        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--target', 'ColourWars') `
+        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--target', 'ColourWars', '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
     $cachePath = Join-Path $build 'CMakeCache.txt'
