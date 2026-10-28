@@ -5,6 +5,29 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order.
 
+## Follow-up shortlist (2026-10-28)
+
+The author authorized autonomous selection once ready work is exhausted or
+blocked. While the remaining editor slices are in qualification, these are
+the ranked independent candidates:
+
+| rank | candidate and evidence | value, scope and risk |
+|---|---|---|
+| 1 | Unicode folder matching: `editor/user_stage_save.cpp` folds paths with locale-sensitive `towlower`, while the save guard uses Windows ordinal comparison. | Check non-ASCII case aliases, including a not-yet-created My Stages folder. Small scope; coordinate after the editor changes land. |
+| 2 | Bounded painter builds: `scripts/check-painter.ps1` invokes `cmake --build` without a job count; the acceptance/editor runners already cap build concurrency. | Directly supports five projects sharing the PC. One argument change; low risk and independent of the active editor investigation. Selected as `HYG#9`. |
+| 3 | Acceptance process timeouts: `scripts/run-acceptance.ps1` has no per-case compiler/probe deadline. | Useful for unattended loops, but needs generous limits for slow Debug cases and cleanup restricted to owned children. Medium scope/risk; retain for later scoping. |
+
+### Bounded painter builds (`HYG#9`)
+
+**Done (2026-10-28).** The painter wrapper now uses `--parallel 1`, matching
+`run-acceptance.ps1` and `check-level-editor.ps1`. This bounds CMake/Ninja
+build fan-out when five projects share the PC. Configure, visual-probe
+execution, scope switches and `-SkipBuild` behavior are unchanged.
+
+PowerShell parsing and scoped whitespace checks pass. Review confirmed the
+only command change is the explicit job limit; no new test repeats that
+literal argument, and no game/runtime behavior changed.
+
 ## Scope and working rules
 
 File length identifies candidates to inspect, not a maximum or a reason to cut

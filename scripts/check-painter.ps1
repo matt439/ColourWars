@@ -207,7 +207,7 @@ try {
         Write-Host "Configure and build $Preset; logs: $run"
         Invoke-Logged -Command 'cmake' -Arguments @('--preset', $Preset) `
             -LogPath (Join-Path $run 'configure.log')
-        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset) `
+        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
     $cachePath = Join-Path $build 'CMakeCache.txt'

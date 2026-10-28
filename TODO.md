@@ -266,7 +266,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
-| Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new concrete source/comment seam; all eight scoped maintenance slices are complete |
+| Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new concrete source/tooling seam; all nine scoped maintenance slices are complete |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Closed engine reports (1–22) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
