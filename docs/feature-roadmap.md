@@ -2100,7 +2100,7 @@ both; a gate held open while its team is inside, rather than pushing them out;
 the eraser material; and the trial's single central floor gate.
 
 **Remaining work, split into independent scopes (2026-10-28):** the functional
-gate cue (`ROAD#26`) is implemented below; the ferry cue remains `ROAD#27`. Vertical lifts (`ROAD#28`)
+gate and ferry cues (`ROAD#26`, `ROAD#27`) are implemented below. Vertical lifts (`ROAD#28`)
 and growing sponges (`ROAD#29`) need their own contracts. Attended trial play
 is `ROAD#30`. Deliberate gate routing (`ROAD#15`) is complete below; each
 remaining scope keeps its own row.
@@ -2196,25 +2196,38 @@ inspection states; attended clarity and preference remain `ROAD#30`.
 
 ### Ferry direction and stop cue (`ROAD#27`)
 
-**OPEN, M (2026-10-28).** `TranslatingStructurePaintable` exposes
-`drive_heading()` and `motion_state()`, but its drawing only translates its
-ordinary material. A stopped ferry can mean a paint tie or that ownership is
-pushing it against an end stop; those are different actions for a rider.
+**Done (2026-10-28).** Paint-driven movers carry a small paper/ink plaque
+below their body. Fixed A/B letters and opposed arrows show each team's
+authored direction even when unpainted; the current paint leader is inverted.
+A separate lower shape describes the last positive committed step: initial
+dots before any step, pause bars for a tie/unpainted hold, a moving chevron,
+or a chevron against the reached end-stop bar. Cyclic movers have no plaque.
+The optional `ferry_direction` presentation record owns its size, gap, keyline
+and paper/ink colours; existing files without it retain valid defaults.
 
-Add a functional direction cue for paint-driven movers, using existing
-primitives and presentation values. Distinguish left/right ownership demand,
-tie/unpainted hold and ownership demand against a reached end stop; show that
-painting for the other team will reverse the demand. Do not imply that a
-cyclic mover is paint-driven or predict future motion before paint has landed.
-`drive_heading()` reads current paint while the committed motion used pre-step
-paint; publish a read-only cue snapshot that distinguishes ownership demand from the last
-actual movement/end-stop state, rather than conflating those two times.
+`cue_state()` keeps current paint demand separate from committed heading,
+actual world movement and end-stop state. New paint cannot rewrite a previous
+step's explanation, and zero updates retain that explanation. A local offset
+advance that rounds to no world movement does not claim movement. The cue
+translates/culls with its mover and draws in both gameplay and StagePreview.
+No motion rate, displacement, collision, scoring area, paint credit or RNG
+policy changed.
 
-Acceptance: both authored team-A headings, ties, repaint reversal and both
-endpoints have correct draw states. Check miniature and native 1/2/4-player
-composition, reduced effects and monochrome shape differences. Preserve ferry
-speed, displacement, paint credit and replay. Final trial preference remains
-`ROAD#30`; decorative material art stays in the later polish pass.
+**Qualification (Debug and Release, 2026-10-28).** `paint_ferry` checks both
+authored team-A headings, current versus pre-step ownership, repaint reversal,
+ties at either endpoint, zero updates, world-coordinate rounding, contained
+culling and bit-exact uncued motion/paint/credit controls. Existing
+`moving_structure`, `instant_replay` and presentation checks pass in both
+presets, as does hidden startup with the accepted audio bank.
+
+The focused native `FerryDirectionOnly` matrix passes in each preset: six
+Level builds, 3,138 updates, 424 readbacks, 43 full frames, 169 unscaled crops
+and 84 state rows. It covers native 1/2/4-player and miniature scales, both
+headings and seven controlled states, reduced-effects parity, monochrome
+shape differences, bounded draw output and the actual StagePreview widget.
+Contact sheets and representative full compositions were inspected. These
+are controlled inspection states; attended clarity/preference remains
+`ROAD#30`, and decorative production art remains a later pass.
 
 ### Unscoped paint-object contracts (`ROAD#28`, `ROAD#29`)
 
@@ -2241,8 +2254,8 @@ arena while `POL#21` remains a geometry decision.
 from both sides at 1-4P. Judge whether ownership-driven travel and selective
 passage create useful painting/route choices, whether the gate's held-open
 rule is understandable, and whether the open share and ferry headings feel
-fair. Record keep/change/cut decisions and any value changes. The gate cue
-(`ROAD#26`) is ready for review; the ferry cue follows with `ROAD#27`. Current
+fair. Record keep/change/cut decisions and any value changes. The gate and
+ferry cues (`ROAD#26`, `ROAD#27`) are ready for review. Current
 trial play is already available. Neither automated matches nor this review opts a trial into Random
 or selects Turbulence's geometry (`POL#21`).
 

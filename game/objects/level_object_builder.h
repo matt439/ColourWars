@@ -11,6 +11,7 @@
 #include "engine/render/viewport_manager.h"
 
 struct GatePermissionPresentation;
+struct FerryDirectionPresentation;
 
 class LevelObjectBuilder
 {
@@ -20,7 +21,8 @@ public:
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const PaintTuning* paint,
-		const GatePermissionPresentation* gate_cue = nullptr);
+		const GatePermissionPresentation* gate_cue = nullptr,
+		const FerryDirectionPresentation* ferry_cue = nullptr);
 
 	std::vector<std::unique_ptr<labrador::CollisionObject>>
 		build_collision_objects(const labrador::JsonValue& json,
@@ -52,6 +54,7 @@ public:
 private:
 	const PaintTuning* paint_ = nullptr;
 	const GatePermissionPresentation* gate_cue_ = nullptr;
+	const FerryDirectionPresentation* ferry_cue_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
 	const labrador::AudioResources* audio_resources_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;

@@ -101,6 +101,19 @@ elseif ($PressTowerOnly) {
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.checks = 'Exactly four native720p full frames and sixteen unscaled640x360 player-pane crops/CSV rows inspect stair landings and hoist exits in clean and controlled-heavy paint. Two actual Level builds and eight frozen readbacks use at most1404 neutral updates. Staged rectangles, current player size and camera/pane policy independently reconstruct station, target and viewport receipts; every crop RGB row equals its full-frame pane. Repeated drawing preserves pixels, public/paint state, RNG and Debug replay fingerprint. This is controlled native inspection only: no attended readability, spawn pressure, route feasibility, physical-pad, listening, performance, competitive balance or arena acceptance.'
 }
+elseif ($FerryDirectionOnly) {
+    $result.scope = 'ferry-direction-only'
+    $result.stage = 'turbulence_ferry_trial'
+    $result.player_counts = @(1, 2, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('unpainted', 'a-moving', 'late-b', 'b-moving', 'b-stop', 'tie', 'a-stop', 'actual-stage-preview')
+    $result.input_slots = @(3, 1, 2, 0)
+    $result.inputs = 'Six manual production Scene/Level fixtures use public object/player builders and actual trial geometry. A-left fixtures change only authored drive headings in an isolated stage copy, with exact restore parity. Controlled projectile contacts and neutral sparse-slot inputs establish seven states. Native isolated views retain actual camera scale and hold a common sign station; miniature views retain the actual Stage Select fit scale and subtract ferry translation for independent shape comparisons. Full contexts use ordinary Level drawing.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Both team-A headings cover unpainted/tied holds, committed movement in either direction, a fresh repaint whose current ownership demand differs from the last committed movement, and both reached endpoints. Native1/2/4P and actual menu-fit miniature paths retain monochrome shape distinctions, same-state base differentials confined to cue bounds, reduced-effects parity, repeated pixels and unchanged public/paint/credit/motion/cue/RNG/Debug fingerprint. Actual StagePreview has an independent nonempty unstepped-sign witness. Exactly43 full contexts,169 unscaled native/monochrome crops,84 CSV rows and424 readbacks; at most5000 Level updates. This is controlled software/raster qualification; attended trial play and human readability remain ROAD#30. No physical-pad, listening, performance, competitive-balance or arena acceptance.'
+}
 elseif ($GatePermissionOnly) {
     $result.scope = 'gate-permission-only'
     $result.stage = 'turbulence_gate_trial'

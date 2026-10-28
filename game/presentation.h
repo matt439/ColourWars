@@ -74,6 +74,17 @@ struct GatePermissionPresentation
 	float keyline_width = 0.0f;
 };
 
+// ROAD#27: a steady sign below a paint ferry. The upper row shows paint's
+// current demand; the lower row reports the last committed motion step.
+struct FerryDirectionPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	mattmath::Vector2F size;
+	float gap = 0.0f;
+	float keyline_width = 0.0f;
+};
+
 // World-camera accent sizes in world units, and their timing in seconds.
 struct ViewShakePresentation
 {
@@ -656,6 +667,7 @@ public:
 	const PlayerIdentityPresentation& player_identity() const;
 	const MatchPresentation& match() const;
 	const GatePermissionPresentation& gate_permission() const;
+	const FerryDirectionPresentation& ferry_direction() const;
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const CombatFeedbackPresentation& combat_feedback() const;
@@ -689,6 +701,7 @@ private:
 	PlayerIdentityPresentation player_identity_;
 	MatchPresentation match_;
 	GatePermissionPresentation gate_permission_;
+	FerryDirectionPresentation ferry_direction_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
 	CombatFeedbackPresentation combat_feedback_;
