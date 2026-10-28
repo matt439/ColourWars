@@ -470,6 +470,40 @@ namespace colourwars_editor
         });
     }
 
+    void LevelDocument::align_origin(const Entry& entry, int grid)
+    {
+        if (grid <= 0) { fail("Grid spacing must be positive."); }
+        if (entry.kind == EntryKind::level) { fail("Select geometry before aligning its origin."); }
+        const Json& value = entry_json(impl_->document, entry);
+        const bool fixed_slab = entry.kind == EntryKind::collision && string(value, "type") == "FixedSlabPaintable";
+        Rect aligned;
+        if (fixed_slab)
+        {
+            const Json& origin = member(value, "slab");
+            aligned.x = number(origin, "x"); aligned.y = number(origin, "y");
+        }
+        else { aligned = rectangle(entry); }
+        const double x = std::round(aligned.x / grid) * grid;
+        const double y = std::round(aligned.y / grid) * grid;
+        if (x == aligned.x && y == aligned.y) { return; }
+        aligned.x = x; aligned.y = y;
+        impl_->mutate([&](Document& document)
+        {
+            Json& object = entry_json(document, entry);
+            if (fixed_slab)
+            {
+                Json& origin = member(object, "slab");
+                set_number(origin, "x", x); set_number(origin, "y", y);
+            }
+            else if (entry.kind == EntryKind::bounds) { write_rectangle(object, aligned); }
+            else if (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b)
+            {
+                set_number(object, "x", x); set_number(object, "y", y);
+            }
+            else { move_shape(object, aligned); }
+        });
+    }
+
     std::optional<MotionGuide> LevelDocument::motion_guide(const Entry& entry,
         const std::optional<Rect>& preview) const
     {

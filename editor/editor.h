@@ -22,7 +22,7 @@ namespace colourwars_editor
         edit_undo, edit_redo, edit_duplicate, edit_delete,
         view_fit, view_selection, view_match, view_bounds, view_blockout, help_controls,
         add_object, apply_property, revert_property, objects_list,
-        properties_list, property_value, palette, grid_size
+        properties_list, property_value, palette, grid_size, edit_align_origin
     };
 
     inline bool same_entry(const Entry& a, const Entry& b)

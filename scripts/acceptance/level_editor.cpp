@@ -17,6 +17,7 @@ int wmain(int argc, wchar_t* argv[])
         const fs::path scratch = fs::absolute(argv[2]);
         require(fs::is_directory(scratch), "Acceptance scratch directory must already exist");
         check_empty_property_keys(scratch);
+        check_alignment(repo, scratch);
         check_shipped_levels(repo, scratch);
         check_format_versions(scratch);
         check_ending_audio(repo);

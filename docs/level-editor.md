@@ -124,48 +124,74 @@ and `out/acceptance/x64-release/level-editor/716a3770d7034f6a990da6b6b8cf5489`.
 
 #### Align authored origins to the grid (`ED#19`)
 
-**OPEN (2026-10-28).** Add **Edit > Align origin to grid**. Imported geometry
-can start off-grid; relative dragging and nudging retain that offset. Align
-both coordinates to the current 1/10/25/50/100-unit grid with one undo step.
+**Done (2026-10-28).** **Edit > Align origin to grid** aligns authored origins.
+Imported geometry can start off-grid; relative dragging and nudging retain
+that offset. The command aligns both coordinates to the current
+1/10/25/50/100-unit grid with one undo step.
 This explicit command uses `std::round` (half steps away from zero) regardless
 of Shift, while existing drag/nudge controls keep their behavior.
 
-**Qualification in progress.** The prepared implementation remains uncommitted
-while complete Debug checks pass. Release builds and all model checks pass, but the original DPI fixture
-stopped at `DPI transition retained its replaced owned font`, before Release
+**Qualification.** Initial Debug checks passed. Release builds and model checks passed, but its
+DPI fixture stopped at `DPI transition retained its replaced owned font` before
 gesture and hidden-launch checks. The failed run is retained under
 `out/validation/implementation-loop-20261028/ed19-candidate/1cf1306d7d2544c3b610c62f5af65630`
-(Release checker `436b5efa01ad4901a70ecba01b9b6a5b`). Diagnose the actual
-font-deletion result without weakening that gate before closing this item.
+(Release checker `436b5efa01ad4901a70ecba01b9b6a5b`). A separate original
+Release input process also failed its old-font type assertion after the eight
+alignment contexts passed (`ed19-release-input/2999ef9cea9e40028a0e84fc0ea55162`).
 
-Use `LevelDocument::align_origin(const Entry&, int grid)` as the atomic model
-operation. Reject nonpositive grids and level metadata. For rectangular/TLBR
-objects, ramps, bounds and moving anchors, align the geometric left/top. For
-spawns align their stored point; for fixed slabs align the authored `slab/x,y`
-endpoint, not the reconstructed rotated bounding box. Preserve the existing
-size, direction, motion and metadata through the current geometry writers.
+A bounded private lifecycle experiment captured the invalid assumption:
+an unused, unselected font returned successful deletion and retained no GDI
+objects, yet `GetObjectType` returned `OBJ_FONT` while `GetObjectW` returned
+zero bytes. The first capture stopped the experiment; the other five cells
+were skipped (`ed19-font-matrix-run/f2d206d26b364289a2cad8890ea020bf`).
+No cache mechanism or exact cause of the earlier editor samples is claimed.
+
+The two retirement assertions now query the actual logical font record with
+[`GetObjectW`](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobjectw),
+whose documented failure result is zero. Input transitions also positively
+check the live replacement record, DPI height and handle identity. Default
+transitions retain their existing live-record/control checks, all 28 DPI
+transitions, exact GDI-count equality and complete pending/history invariants.
+Production font handling is unchanged. All three editor targets and complete
+checks now pass in both presets, including default GDI `21 -> 21`.
+Input-activated aggregate GDI lifetime and attended `ED#5` acceptance remain
+separate gates.
+
+`LevelDocument::align_origin(const Entry&, int grid)` is the atomic model
+operation. It rejects nonpositive grids and level metadata. For rectangular/TLBR
+objects, ramps, bounds and moving anchors, it aligns the geometric left/top.
+Spawns use their stored point; fixed slabs use the authored `slab/x,y`
+endpoint. Existing size, direction, motion and metadata are preserved through
+the current geometry writers.
 An already aligned origin returns before mutation, preserving number types,
 the saved point and redo history. Other changes use one `Impl::mutate` and its
 existing validation, so refused geometry leaves the entire model unchanged.
 
-Add one Edit menu item with its command identifier appended after existing
-IDs. Enable it for selected geometry, including bounds/spawns/slabs and
-already aligned entries; disable it for no selection or level metadata.
-Use the current command gesture barrier and pending-property guard, then
-refresh the inspector. Help explains grid/Shift behavior and slab origins;
-no new toolbar or accelerator is needed.
+The Edit menu command has its identifier appended after existing IDs. It is
+enabled for selected geometry, including bounds/spawns/slabs and already
+aligned entries, and disabled for no selection or level metadata. The command
+uses the current gesture barrier and pending-property guard, then refreshes
+the inspector. Help explains grid/Shift behavior and slab origins.
 
-Establish the old-source native baseline on literal off-grid coordinates
-before implementing the operation. Then qualify every supported grid,
+The old-source native baseline failed on literal off-grid coordinates before
+implementation. Model checks qualify every supported grid,
 positive/negative half steps, rectangle/TLBR/ramp/bounds/spawn/mover/slab
 origins, no-op types/redo, exact one-step history and private save/reload.
 Refusal controls include the team-spawn midpoint, blocked mover corridors and
-slab endpoint limits. Native commands qualify menu enablement, valid pending
+slab endpoint limits. Eight native contexts qualify menu enablement, valid pending
 edits, gesture cancellation/late releases, view/source/history and caller
 restoration. Direct controller calls may catch geometry errors before the
 window's modal handler; invalid pending-property dialogs remain unqualified.
-Use the separate gesture process and complete both-preset editor checks,
-preserving the original DPI/font fixture and attended `ED#5` gate.
+The separate gesture process also retains prior overlap selection, button
+handoffs and all 219 ramp-hit queries. Independent source/test review and
+twelve-file source-immutability checks pass. Four hidden launches and complete
+destination/save guidance pass in each preset.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`ed19-baseline/436742cf1bc148d2a313cc3e36d6f921`, final both-preset batch
+`ed19-corrected/2cfde2a15b334278afafb8411425fd12`. Full checker leaves are
+`out/acceptance/x64-debug/level-editor/4497dc8e8bc94ad98e566acc3a63cf64`
+and `out/acceptance/x64-release/level-editor/779b68cf562d437cb6a54df051b962de`.
 
 #### Empty-key property targets (`ED#16`)
 

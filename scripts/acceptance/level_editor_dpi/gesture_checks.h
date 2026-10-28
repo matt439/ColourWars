@@ -230,6 +230,7 @@ namespace colourwars_editor
         Editor editor(GetModuleHandleW(nullptr));
         editor.create_window(SW_HIDE, stage);
         require(!IsWindowVisible(editor.window_), "Canvas gesture probe unexpectedly showed its editor");
+        check_align_origin(editor, scratch);
         check_overlap_selection(editor, scratch);
         check_button_chords(editor, scratch);
         check_empty_key_properties(editor, scratch);

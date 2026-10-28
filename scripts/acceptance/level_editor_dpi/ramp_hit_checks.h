@@ -32,7 +32,17 @@ namespace colourwars_editor
             const RECT suggested = initial_editor_rectangle(dpi, work);
             SendMessageW(editor.window_, WM_DPICHANGED, MAKEWPARAM(dpi, dpi), reinterpret_cast<LPARAM>(&suggested));
             if (previous_dpi != dpi)
-            { require(GetObjectType(previous_font) == 0, "Input-activated DPI transition retained its replaced owned font"); }
+            {
+                LOGFONTW retired{};
+                require(GetObjectW(previous_font, static_cast<int>(sizeof(retired)), &retired) == 0,
+                    "Input-activated DPI transition retained its replaced owned font");
+            }
+            LOGFONTW current{};
+            require(GetObjectW(editor.font_, static_cast<int>(sizeof(current)), &current) == static_cast<int>(sizeof(current)) &&
+                current.lfHeight == -MulDiv(16, static_cast<int>(dpi), 96) &&
+                ((dpi == previous_dpi && editor.font_ == previous_font) ||
+                    (dpi != previous_dpi && editor.font_ != previous_font)),
+                "Input-activated DPI transition lost its live replacement font or DPI height");
             require(editor.dpi_ == dpi && !IsWindowVisible(editor.window_),
                 "Ramp selection fixture failed its hidden native DPI transition");
         };

@@ -86,6 +86,7 @@ namespace colourwars_editor
         static void check_gestures(Editor& editor, const std::filesystem::path& scratch);
         static void check_button_chords(Editor& editor, const std::filesystem::path& scratch);
         static void check_overlap_selection(Editor& editor, const std::filesystem::path& scratch);
+        static void check_align_origin(Editor& editor, const std::filesystem::path& scratch);
         static void check_ramp_hits(Editor& editor, const std::filesystem::path& scratch);
         static void run_gestures(const std::filesystem::path& scratch);
 
@@ -200,7 +201,13 @@ namespace colourwars_editor
                 const RECT suggested = initial_editor_rectangle(dpi, work);
                 SendMessageW(editor.window_, WM_DPICHANGED, MAKEWPARAM(dpi, dpi), reinterpret_cast<LPARAM>(&suggested));
                 if (previous_dpi != dpi)
-                { require(GetObjectType(previous) == 0, "DPI transition retained its replaced owned font"); }
+                {
+                    // GetObjectType can still report OBJ_FONT after successful
+                    // deletion; query the logical font record itself instead.
+                    LOGFONTW retired{};
+                    require(GetObjectW(previous, static_cast<int>(sizeof(retired)), &retired) == 0,
+                        "DPI transition retained its replaced owned font");
+                }
                 RECT actual{}; GetWindowRect(editor.window_, &actual);
                 require(editor.dpi_ == dpi && same_rectangle(actual, suggested) && !IsWindowVisible(editor.window_),
                     "WM_DPICHANGED failed to adopt its rectangle/DPI or showed the hidden editor");
@@ -242,6 +249,7 @@ namespace colourwars_editor
 #include "scripts/acceptance/level_editor_dpi/empty_key_checks.h"
 #include "scripts/acceptance/level_editor_dpi/metadata_checks.h"
 #include "scripts/acceptance/level_editor_dpi/gesture_checks.h"
+#include "scripts/acceptance/level_editor_dpi/align_origin_checks.h"
 #include "scripts/acceptance/level_editor_dpi/overlap_selection_checks.h"
 #include "scripts/acceptance/level_editor_dpi/button_chord_checks.h"
 #include "scripts/acceptance/level_editor_dpi/ramp_hit_checks.h"

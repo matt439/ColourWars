@@ -143,6 +143,7 @@ namespace colourwars_editor
         AppendMenuW(edit, MF_STRING, edit_redo, L"&Redo\tCtrl+Y");
         AppendMenuW(edit, MF_STRING, edit_duplicate, L"&Duplicate\tCtrl+D");
         AppendMenuW(edit, MF_STRING, edit_delete, L"&Delete\tDel");
+        AppendMenuW(edit, MF_STRING, edit_align_origin, L"&Align origin to grid");
         AppendMenuW(menu_, MF_POPUP, reinterpret_cast<UINT_PTR>(edit), L"&Edit");
         HMENU view = CreatePopupMenu();
         AppendMenuW(view, MF_STRING, view_fit, L"Fit &arena\tHome");
@@ -336,6 +337,8 @@ namespace colourwars_editor
         SetWindowTextW(window_, (name + (changed ? L" *" : L"") + L" - ColourWars Level Editor").c_str());
         EnableMenuItem(menu_, edit_undo, MF_BYCOMMAND | (document_.can_undo() ? MF_ENABLED : MF_GRAYED));
         EnableMenuItem(menu_, edit_redo, MF_BYCOMMAND | (document_.can_redo() ? MF_ENABLED : MF_GRAYED));
+        EnableMenuItem(menu_, edit_align_origin, MF_BYCOMMAND |
+            (selection_ && selection_->kind != EntryKind::level ? MF_ENABLED : MF_GRAYED));
         EnableWindow(toolbar_[3], document_.can_undo()); EnableWindow(toolbar_[4], document_.can_redo());
         const std::vector<std::string> errors = document_.validate();
         const std::wstring ready = L"Ready  |  " + std::to_wstring(draw_items_.size()) + L" items  |  ";
@@ -585,6 +588,8 @@ namespace colourwars_editor
                 L"Select a property, edit its value and click Apply (or press Enter). Changes apply before selection/save; Escape or Revert discards an uncommitted value.\n\n"
                 L"Wheel zooms around the pointer. Middle drag pans. F frames selection; Home fits the arena. "
                 L"Arrows nudge by the snap amount; Shift bypasses snap. Ctrl+D duplicates, Delete removes, Ctrl+Z/Y undo/redo. "
+                L"Edit > Align origin to grid rounds both origin coordinates to the current grid, regardless of Shift. "
+                L"For scored slabs it aligns the starting endpoint. "
                 L"New objects appear in the centre of the current view.\n\n"
                 L"Moving paintables use the rectangle as their left anchor. Drag/resize edits that anchor; travel stays in world units. "
                 L"Blue shows full travel, gold the source-tuned standing corridor, and the filled body its initial phase. "
@@ -601,12 +606,14 @@ namespace colourwars_editor
                 L"Using the level editor", MB_OK | MB_ICONINFORMATION);
             return;
         }
+        if (id == edit_align_origin && (!selection_ || selection_->kind == EntryKind::level)) return;
         if (!apply_pending()) return;
         switch (id)
         {
         case edit_undo: document_.undo(); refresh(true); break;
         case edit_redo: document_.redo(); refresh(true); break;
         case apply_property: break;
+        case edit_align_origin: document_.align_origin(*selection_, snap_); refresh(true); break;
         case edit_duplicate:
             if (selection_) { selection_ = document_.duplicate(*selection_); refresh(); } break;
         case edit_delete:
