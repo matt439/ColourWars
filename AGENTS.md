@@ -137,8 +137,9 @@ It uses private scratch files and starts no compiler, native probe or GPU.
 Explicit `OutputDirectory` paths on the painter/acceptance runners and their
 selection checkers, and painter `TrialPath`, use the caller's PowerShell
 filesystem location when relative. The movement-feedback, paint-fx,
-display-awake, frame-pacing, acceptance-process, stage-registration and
-debug-console checkers follow the same `OutputDirectory` rule.
+display-awake, frame-pacing, acceptance-process, stage-registration,
+debug-console, startup and failure-reporting checkers follow the same
+`OutputDirectory` rule.
 The selection checks cover separate
 PowerShell/process directories, trial hashes and caller-state restoration.
 If worktree-status collection is unavailable, painter's explicit

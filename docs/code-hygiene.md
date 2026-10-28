@@ -5,6 +5,40 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order.
 
+## Startup-check evidence paths (`HYG#21`)
+
+**Done (2026-10-28).** `check-startup.ps1` and
+`check-failure-reporting.ps1` now resolve explicit output paths from the
+caller's PowerShell filesystem location. These finish the thirteen checkers
+identified in the output-path audit. Default roots, run hierarchies and each
+checker's initialization order remain unchanged.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Both startup-related checkers still call `Path.GetFullPath(OutputDirectory)`. | Selected as `HYG#21`: finish the established caller-relative contract with two imports and two substitutions. Private preflight copies can qualify paths without starting a game. |
+| 2 | The pending editor alignment feature has an unresolved Release font-retirement assertion. | Continue diagnosis separately; diagnostic passes do not clear its original qualification gate. |
+
+Exact private copies reproduced both old scripts placing relative output
+under the process directory. Startup used an inert executable and a synthetic
+`Add-Type` failure after output creation, before its native helper loaded.
+Failure-reporting really compiled/loaded its existing C# helper, then stopped
+at an absent private build cache before any helper method or game launch.
+That helper has no static constructor or field initializer. Receipts record
+the real compilation and its private temporary files explicitly.
+
+Fresh PS5 and pwsh candidate hosts each pass eight cases: relative
+Unicode/space paths, absolute/default controls and non-filesystem refusal.
+Receipt/file boundaries, three source hashes, private input bytes and caller
+environment/location/stack are preserved. No CMake, C++ compiler, Git/CIM query
+or game/native probe ran. Independent review confirms exactly two imports
+and two output-expression substitutions, with all remaining script text
+unchanged. `run-balance` keeps its existing repository-relative policy.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`hyg21-baseline/fd0ff88b0be949c38f882adc07956bec`, candidate PS5
+`hyg21-candidate/c27cf4be40c04ee3be3143a8cddf6fa6` and pwsh
+`hyg21-candidate/d9f5140ccb814165b85ac840fd0b8f9b`.
+
 ## Tool-runner evidence paths (`HYG#20`)
 
 **Done (2026-10-28).** Continued the established caller-relative path contract

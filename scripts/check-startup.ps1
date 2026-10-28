@@ -19,6 +19,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
 if (-not $OutputDirectory) {
@@ -42,7 +43,7 @@ if ($RequireNoAudio -and (Test-Path -LiteralPath (
     throw 'The startup check requires an absent optional wave bank.'
 }
 
-$outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
+$outputRoot = Resolve-CheckFileSystemPath $OutputDirectory
 $runDirectory = Join-Path $outputRoot ([Guid]::NewGuid().ToString('N'))
 $workingDirectory = Join-Path $runDirectory 'working-directory'
 $profileDirectory = Join-Path $runDirectory 'profile'
