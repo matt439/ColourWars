@@ -100,6 +100,7 @@ add_executable(ColourWars WIN32
     objects/fixed_slab_shadow.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
+    objects/level_horizontal_motion.cpp
     objects/level_audio.cpp
     objects/level_dev_tools.cpp
     objects/level_draw.cpp

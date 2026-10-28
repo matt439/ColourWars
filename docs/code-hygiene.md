@@ -43,7 +43,7 @@ gate. The earlier figure/animation and other source splits already exist.
 | [input_bindings.cpp](../scripts/acceptance/input_bindings.cpp) | 1,433 | Topic-based acceptance split, `HYG#5` |
 | [evidence-record.ps1](../scripts/check-painter/evidence-record.ps1) | 1,403 | Evidence-metadata groups, `HYG#6` |
 | [painter_visual.cpp](../scripts/acceptance/painter_visual.cpp) | 1,347 | Retain the explicit include/setup/dispatch entry; no registry redesign selected |
-| [level.cpp](../game/objects/level.cpp) | 1,316 | Horizontal-motion subsystem, `HYG#2` |
+| [level.cpp](../game/objects/level.cpp) | 966 | Horizontal-motion subsystem extracted (380 lines), `HYG#2` complete |
 | [tune_colour_document_checks.h](../scripts/acceptance/debug_console/tune_colour_document_checks.h) | 1,044 | Independent fixture families, `HYG#7` |
 | [tuning.cpp](../game/tuning.cpp) | 907 | Retain cohesive key-by-key parsing and validation |
 | [level_document.cpp](../editor/level_document.cpp) | 899 | Retain the shared document transaction; save protection remains `ED#7` |
@@ -75,18 +75,20 @@ refresh this split's baseline if that correction lands first.
 
 ## Level horizontal motion (`HYG#2`)
 
-**OPEN, M.** Move the `horizontal_*` admission helpers and Level's horizontal
-motion query, budget/admission, prepare, commit, zero-step and state methods
-together into `game/objects/level_horizontal_motion.cpp`. Their private
-geometry/budget arithmetic belongs with this subsystem rather than the main
-match implementation.
+**Done (2026-10-28).** Moved the horizontal admission helpers and all eight
+motion query, admission/budget, prepare, commit, zero-step and snapshot methods
+together into `game/objects/level_horizontal_motion.cpp` (380 lines). The
+current `level.cpp` is 966 lines; its update coordinator and call order stay
+in place. Public signatures, member layout, diagnostics and pre-step paint
+ownership timing are unchanged.
 
-Leave `update_level_logic` and its call order in place. Preserve the existing
-Level API, member layout, admission diagnostics and pre-step ownership timing.
-Keep the helper bodies and float/double arithmetic unchanged. Acceptance:
-Debug/Release builds and existing `moving_structure`, `paint_ferry`,
-`fixed_slab`, movement and replay checks. Review that the change only moves
-definitions and adjusts includes/source registration.
+Independent source comparison confirmed that the helper block and all moved
+method bodies are identical, including their float/double arithmetic. The
+remaining implementation differs only by the move and includes. Debug and
+Release builds and the existing `moving_structure`, `paint_ferry`,
+`fixed_slab`, `movement` and `instant_replay` checks pass. Debug retains the
+manual/public-loader checkpoint, paint-credit and terminal-RNG replay checks;
+the shipping seven-arena replay passes in both configurations.
 
 ## Projectile contacts and sweeps (`HYG#3`)
 
