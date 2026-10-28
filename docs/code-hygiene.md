@@ -40,7 +40,7 @@ gate. The earlier figure/animation and other source splits already exist.
 |---|---:|---|
 | [presentation_validation.cpp](../game/presentation_validation.cpp) | 2,502 | Ordered helper extraction, `HYG#1`; one large function prevents a simple method move |
 | [player.cpp](../game/objects/player.cpp) | 1,848 | Retain the coupled movement/contact/carrier core; figure code is already separate |
-| [input_bindings.cpp](../scripts/acceptance/input_bindings.cpp) | 1,433 | Topic-based acceptance split, `HYG#5` |
+| [input_bindings.cpp](../scripts/acceptance/input_bindings.cpp) | 56 | Four topic sources and shared fixtures; `HYG#5` complete |
 | [evidence-record.ps1](../scripts/check-painter/evidence-record.ps1) | 1,403 | Evidence-metadata groups, `HYG#6` |
 | [painter_visual.cpp](../scripts/acceptance/painter_visual.cpp) | 1,347 | Retain the explicit include/setup/dispatch entry; no registry redesign selected |
 | [level.cpp](../game/objects/level.cpp) | 966 | Horizontal-motion subsystem extracted (380 lines), `HYG#2` complete |
@@ -123,18 +123,21 @@ isolated real write/replacement failures, active-setting recovery and reloads.
 
 ## Input-binding acceptance topics (`HYG#5`)
 
-**OPEN, M.** Split the long `input_bindings` acceptance case into domain and
-independent oracle checks, actual reader/resume checks, save/schema checks and
-keyboard-action checks under `scripts/acceptance/input_bindings/`. Keep `main`
-and the single fake `GamepadReader` implementation in the entry file, with only
-the required fixtures/declarations shared across topics.
+**Done (2026-10-28).** The 56-line `input_bindings` entry retains `main` and
+the single fake `GamepadReader`/state seam. Four topic sources hold independent
+domain/oracle checks, actual reader/resume checks, save/schema/relaunch checks
+and keyboard actions. `fixtures.h` shares only the required fixtures, literal
+oracle tables and declarations; the acceptance runner discovers the sources.
 
-Preserve every literal oracle, assertion and invocation order. Keep each
-scratch `LOCALAPPDATA` lifetime and retained-profile relaunch path unchanged;
-the split must not accidentally substitute production helpers for independent
-expectations. The runner already discovers the topic `.cpp` files.
-Acceptance: the existing `input_bindings` case in both presets, including the
-same retained-profile child/relaunch invocations, with identical outcomes.
+Exact source-group comparisons preserve all assertion/oracle literals,
+function bodies, invocation order and isolated profile lifetimes. Shared names
+now use `input_bindings_acceptance`; defaults live on declarations and shared
+constant tables have inline linkage. No production helper replaces an oracle.
+
+The existing `input_bindings` case passes in Debug and Release. In each
+configuration, separate `relaunch-write` and `relaunch-read` processes also pass
+against the same retained private profile, preserving the real persisted-J
+reader and unchanged-save checks. No player data or hardware is used.
 
 ## Painter evidence metadata (`HYG#6`)
 

@@ -46,7 +46,7 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Eleven remaining `OPEN` slices have
+**Ready local work (backlog audit, 2026-10-28).** Ten remaining `OPEN` slices have
 concrete implementation and acceptance scopes in their owners. They can proceed
 while attended reviews wait, without changing the arena/tuning order above:
 
@@ -57,8 +57,8 @@ while attended reviews wait, without changing the arena/tuning order above:
 - **Editor workflow:** external-change save protection (`ED#7`), per-monitor DPI
   (`ED#8`), paint-mechanism canvas guides (`ED#9`) and destination-aware save
   guidance (`ED#10`).
-- **Code hygiene:** ordered presentation validation (`HYG#1`) and acceptance/evidence-script
-  splits (`HYG#5`-`HYG#6`). [Scopes and keep-whole decisions](docs/code-hygiene.md).
+- **Code hygiene:** ordered presentation validation (`HYG#1`) and painter evidence
+  metadata (`HYG#6`). [Scopes and keep-whole decisions](docs/code-hygiene.md).
 
 These replace the 2026-10-26 exhaustion snapshot. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
@@ -271,7 +271,6 @@ These slices preserve behavior and the game's OOP design.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `HYG#1` | OPEN | LOW | L | Extract ordered presentation-validation helpers without changing diagnostic precedence or calculations. [Scope](docs/code-hygiene.md#ordered-presentation-validation-hyg1). |
-| `HYG#5` | OPEN | LOW | M | Split input-binding acceptance by topic, preserving independent oracles, profile lifetimes and relaunch paths. [Scope](docs/code-hygiene.md#input-binding-acceptance-topics-hyg5). |
 | `HYG#6` | OPEN | LOW | M | Split painter evidence metadata by topic while retaining scope precedence, ordered output and dot-sourced behavior. [Scope](docs/code-hygiene.md#painter-evidence-metadata-hyg6). |
 
 ## Tooling, CI and docs
