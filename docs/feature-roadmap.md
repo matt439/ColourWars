@@ -2280,7 +2280,7 @@ executable (one with a non-ASCII name): a missing, empty and non-folder path;
 two valid stages, one asking for Random; and broken JSON, a level without
 spawns, a missing sprite frame, a music/effect conflict, a case-only collision
 with Crossfeed, two bad file names, an undrawable name, a text file and a
-`.json` folder. It requires the valid two in order after the shipped ten,
+`.json` folder. It requires the valid two in order after the shipped stages,
 marked and outside Random, each bad file refused in one line naming the
 cause, the shipped Crossfeed untouched, and the whole list then passing
 `validate_game_content` and `sound_groups::assign`. A second scan checks a
@@ -2343,7 +2343,7 @@ probe's) does nothing. A startup scan loads one stage. A rescan adds a new
 stage that sorts first, rereads an edited one (both the list and the registry
 show the new name), and refuses a broken file. A rescan with no change gives
 the same list. A rescan after one file is deleted and the other broken
-returns to the shipped ten, leaving Crossfeed untouched and the whole list
+returns to the shipped stages, leaving Crossfeed untouched and the whole list
 passing `validate_game_content`. The editor's document checks
 (`check-level-editor.ps1`) cover Save to My Stages under a scratch
 `LOCALAPPDATA` ([Acceptance checks](level-editor.md#acceptance-checks)).

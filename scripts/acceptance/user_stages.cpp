@@ -337,7 +337,7 @@ namespace
 		const std::filesystem::path& scratch)
 	{
 		// What Stage Select does as it opens from the main menu: reread the
-		// folder in place of the user stages, leaving the shipped ten alone.
+		// folder in place of the user stages, leaving the shipped stages alone.
 		const std::filesystem::path folder = fresh(scratch / "rescan");
 		const rapidjson::Document base = read_document(content / "levels" / "close_quarters.json");
 		Shipped shipped;
@@ -354,7 +354,7 @@ namespace
 		{
 			set_string(d, d, "display_name", "B Arena");
 		});
-		require(session.scan().accepted == std::vector<std::string>{ "b_arena" } && shipped.stages.size() == 11,
+		require(session.scan().accepted == std::vector<std::string>{ "b_arena" } && shipped.stages.size() == manifest.size() + 1,
 			"The startup scan must load the folder's one stage");
 
 		// Saved while the game runs: a new stage that sorts first, an edit and
@@ -377,9 +377,9 @@ namespace
 		expected.push_back("b_arena");
 		require(names(shipped.stages) == expected,
 			"After a rescan the shipped stages stay first and user stages follow in file-name order");
-		require(shipped.stages[11].display_name == "B Arena Edited" &&
-			shipped.levels.get("b_arena")->display_name() == "B Arena Edited" && shipped.stages[11].user &&
-			!shipped.stages[11].include_in_random, "An edited user stage must play its new definition");
+		require(shipped.stages[manifest.size() + 1].display_name == "B Arena Edited" &&
+			shipped.levels.get("b_arena")->display_name() == "B Arena Edited" && shipped.stages[manifest.size() + 1].user &&
+			!shipped.stages[manifest.size() + 1].include_in_random, "An edited user stage must play its new definition");
 
 		// Nothing changed: the same list, and the same refusal.
 		const UserStageScan same = session.rescan();
@@ -395,14 +395,14 @@ namespace
 		const UserStageScan third = session.rescan();
 		require(third.accepted.empty() && third.refused.size() == 2 &&
 			refused(third, "b_arena.json", "spawn_locations") && names(shipped.stages) == manifest,
-			"A vanished or now-broken user stage must leave the list, keeping the shipped ten");
+			"A vanished or now-broken user stage must leave the list, keeping the shipped stages");
 		require(shipped.levels.get("crossfeed")->display_name() == "Crossfeed",
 			"A rescan must not touch a shipped definition");
 		// The whole list still passes what startup checks.
 		validate_game_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
 			&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);
 		std::cout << "PASS a rescan adds a new user stage, rereads an edited one and drops a deleted or broken one, "
-			"keeping the shipped ten first\n";
+			"keeping the shipped stages first\n";
 	}
 
 	void check_hint(const Presentation& presentation)
