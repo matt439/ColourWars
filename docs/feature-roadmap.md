@@ -2084,6 +2084,9 @@ box for 15 seconds. In Debug on MattPC the gate was open for 6311, 6673 and
 into it 13 to 17 times; no bot held still for more than 271 steps. Passing is
 a measurement, not a requirement. `instant_replay` replays a round on the Gate
 Trial bit for bit, and `level_format` and the editor checks cover the record.
+Release measured the same three matches. With the eleventh stage, the
+stage-select painter checks (`-StagePaperOnly`, `-StageCountsOnly`,
+`-StageSummaryOnly`) passed on MattPC in Debug and Release (2026-10-28).
 
 **Provisional defaults**, open to the author: the 0.25 open share; the paint
 on the wall deciding it, rather than a separate bulb; a tie shutting it to
