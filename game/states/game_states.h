@@ -106,9 +106,9 @@ private:
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
 
 	// The end-of-round instant replay (ROAD#19, game_level_replay.cpp). Each
-	// round is taped as it is played; Watch Replay on the End menu builds the
-	// level again from the tape, runs it silently to its last seconds, plays
-	// those and returns to the End menu.
+	// timed round is taped as it is played; Watch Replay on the End menu
+	// builds the level again from the tape, runs it silently to its last
+	// seconds, plays those and returns to the End menu.
 	RoundTape tape_;
 	RoundTapeRecorder tape_recorder_{ &this->tape_ };
 	enum class ReplayPhase { none, preparing, playing };

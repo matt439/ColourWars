@@ -70,6 +70,7 @@ param(
     [switch] $SupplyOnly,
     [switch] $HudOnly,
     [switch] $ResumeOnly,
+    [switch] $PracticeReplayOnly,
     [switch] $EndMenuOnly,
     [switch] $PauseMenuOnly,
     [switch] $ResultsMenuOnly,
@@ -134,7 +135,7 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$RumbleOnly.IsPresent + [int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$PressTowerOnly.IsPresent + [int]$TurbulenceBlockoutOnly.IsPresent + [int]$TurbulenceMoverOnly.IsPresent + [int]$TurbulenceShoulderOnly.IsPresent + [int]$TurbulenceSlabOnly.IsPresent + [int]$SurfaceFinishOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$CursorTuneColoursOnly.IsPresent + [int]$SilhouetteTuneColoursOnly.IsPresent + [int]$RevealTuneColoursOnly.IsPresent + [int]$CursorMaterialTuneColoursOnly.IsPresent + [int]$DesktopTuneColourOnly.IsPresent + [int]$PowerLightTuneColourOnly.IsPresent + [int]$ProgramTuneColourOnly.IsPresent + [int]$ProgramLevelVisibilityOnly.IsPresent + [int]$ActingTuneColoursOnly.IsPresent + [int]$GlassTuneColourOnly.IsPresent + [int]$SilhouetteBodyTuneColourOnly.IsPresent + [int]$ScribbleTuneColourOnly.IsPresent + [int]$HudHealthTuneColourOnly.IsPresent + [int]$HudTrackTuneColourOnly.IsPresent + [int]$HudTimerTuneColourOnly.IsPresent + [int]$HudClosingMaterialsOnly.IsPresent + [int]$HudClosingShadeOnly.IsPresent + [int]$HudPaperTuneColoursOnly.IsPresent + [int]$HudLabelTuneColoursOnly.IsPresent + [int]$StagePreviewBackgroundTuneColourOnly.IsPresent + [int]$CrackTuneColourOnly.IsPresent + [int]$LimbTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$BotPlayersOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
+if (([int]$PracticeReplayOnly.IsPresent + [int]$RumbleOnly.IsPresent + [int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$PressTowerOnly.IsPresent + [int]$TurbulenceBlockoutOnly.IsPresent + [int]$TurbulenceMoverOnly.IsPresent + [int]$TurbulenceShoulderOnly.IsPresent + [int]$TurbulenceSlabOnly.IsPresent + [int]$SurfaceFinishOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$CursorTuneColoursOnly.IsPresent + [int]$SilhouetteTuneColoursOnly.IsPresent + [int]$RevealTuneColoursOnly.IsPresent + [int]$CursorMaterialTuneColoursOnly.IsPresent + [int]$DesktopTuneColourOnly.IsPresent + [int]$PowerLightTuneColourOnly.IsPresent + [int]$ProgramTuneColourOnly.IsPresent + [int]$ProgramLevelVisibilityOnly.IsPresent + [int]$ActingTuneColoursOnly.IsPresent + [int]$GlassTuneColourOnly.IsPresent + [int]$SilhouetteBodyTuneColourOnly.IsPresent + [int]$ScribbleTuneColourOnly.IsPresent + [int]$HudHealthTuneColourOnly.IsPresent + [int]$HudTrackTuneColourOnly.IsPresent + [int]$HudTimerTuneColourOnly.IsPresent + [int]$HudClosingMaterialsOnly.IsPresent + [int]$HudClosingShadeOnly.IsPresent + [int]$HudPaperTuneColoursOnly.IsPresent + [int]$HudLabelTuneColoursOnly.IsPresent + [int]$StagePreviewBackgroundTuneColourOnly.IsPresent + [int]$CrackTuneColourOnly.IsPresent + [int]$LimbTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$BotPlayersOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -370,6 +371,7 @@ try {
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
     elseif ($SupplyOnly) { $probeArguments += 'supply' }
     elseif ($HudOnly) { $probeArguments += 'hud' }
+    elseif ($PracticeReplayOnly) { $probeArguments += 'practice-replay' }
     elseif ($ResumeOnly) { $probeArguments += 'resume' }
     elseif ($EndMenuOnly) { $probeArguments += 'end-menu' }
     elseif ($PauseMenuOnly) { $probeArguments += 'pause-menu' }
@@ -423,6 +425,37 @@ try {
     if ($process.ExitCode -ne 0) {
         Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
         throw "Visual probe exited with $($process.ExitCode)."
+    }
+    if ($PracticeReplayOnly) {
+        $practice = Get-Content -LiteralPath (Join-Path $captures 'practice-replay-summary.json') -Raw | ConvertFrom-Json
+        $practiceRows = @(Import-Csv -LiteralPath (Join-Path $captures 'practice-replay.csv'))
+        $expectedPracticeSteps = if ($debug) { 4920 } else { 4800 }
+        $expectedPracticeCases = @('sustained-practice-60-seconds', 'practice-pause-focus-resume', 'practice-restart',
+            'timed-menu-solo', 'timed-developer-course', 'timed-multiplayer', 'timed-to-practice-clears-old-tape')
+        if ($debug) { $expectedPracticeCases += 'independent-debug-recorder' }
+        if ($practice.outcome -cne 'passed' -or $practice.scope -cne 'actual-GameLevel-practice-replay' -or
+            $practice.practice_steps -ne $expectedPracticeSteps -or $practice.timed_cases -ne 3 -or
+            $practice.reproduced_steps -lt 500 -or $practice.state_updates -le 4800 -or
+            $practice.practice_steps_retained -ne 0 -or $practice.practice_gaps_retained -ne 0 -or
+            $practice.GPU_draws -ne 0 -or $practice.GPU_reads -ne 0 -or $practice.physical_pad_claim -ne $false -or
+            $practice.debug_recorder -ne $debug -or $practiceRows.Count -ne $expectedPracticeCases.Count -or
+            @($practiceRows.case | Sort-Object -Unique).Count -ne $expectedPracticeCases.Count -or
+            @(Compare-Object -ReferenceObject $expectedPracticeCases -DifferenceObject @($practiceRows.case)).Count -ne 0) {
+            throw 'Actual GameLevel practice/replay receipts differ from the bounded complete cases.'
+        }
+        foreach ($row in $practiceRows) {
+            if ($row.practice -eq '1' -and ($row.tape_steps -cne '0' -or $row.gaps -cne '0')) {
+                throw 'Actual practice retained shipping tape inputs or gaps.'
+            }
+            if ($row.case -like 'timed-*' -and $row.case -ne 'timed-to-practice-clears-old-tape' -and
+                ([int]$row.tape_steps -lt 170 -or [int]$row.gaps -lt 2 -or $row.reproduced_steps -cne $row.tape_steps)) {
+                throw 'A timed actual GameLevel control lost steps, gaps or its replay.'
+            }
+        }
+        if (@(Get-ChildItem -LiteralPath $captures -File | Where-Object { $_.Extension -in @('.ppm', '.png', '.rgba') }).Count) {
+            throw 'The zero-raster practice replay scope emitted a raster artifact.'
+        }
+        $result.practice_replay_receipt = $practice
     }
     if ($RememberedSetupOnly) {
         # A new OS process reloads the writer's nested private save. The outer
@@ -608,7 +641,7 @@ try {
     if ($CrackTuneColourOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-crack-tune-colour.ps1') }
     if ($LimbTuneColoursOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-limb-tune-colours.ps1') }
     if ($PercentageTextOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-percentage-text.ps1') }
-    Write-ContactSheet -CaptureDirectory $captures
+    if (-not $PracticeReplayOnly) { Write-ContactSheet -CaptureDirectory $captures }
     if ($HudTimerTuneColourOnly) { Complete-HudTimerColourEvidence -Directory $captures }
     if ($HudClosingMaterialsOnly) { Complete-HudClosingMaterialsEvidence -Directory $captures }
     if ($HudClosingShadeOnly) { Complete-HudClosingShadeEvidence -Directory $captures }

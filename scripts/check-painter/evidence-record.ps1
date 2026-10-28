@@ -1401,3 +1401,17 @@ if ($result.Contains('countdown_checks')) {
     $result.stages = @('movement_course', 'close_quarters', 'king_of_the_hill', 'turbulence')
     $result.player_counts = @(1, 2, 3, 4)
 }
+if ($PracticeReplayOnly) {
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.scope = 'practice-replay-only'
+    $result.Remove('stage')
+    $result.stages = @('movement_course', 'crossfeed')
+    $result.player_counts = @(1, 2)
+    $result.palettes = @('saved-default')
+    $result.weapons = @('sprayer')
+    $result.actions = @('sustained-practice', 'pause-resume-focus', 'restart', 'timed-to-practice', 'timed-solo', 'timed-developer-course', 'timed-multiplayer', 'Watch Replay')
+    $result.input_slots = @(4)
+    $result.inputs = 'Normal reader with synthetic keyboard/mouse input to the claimed host; multiplayer adds one shipping bot. Actual GameLevel build/update/pause/restart/replay methods on a hidden native shell. Private-state inspection is confined to explicit template instantiations in the probe.'
+    $result.checks = 'Untimed practice retains no shipping tape steps or gaps through sustained play, pause/resume, focus changes, Restart and a timed-to-practice rebuild. Three timed controls offer Watch Replay through the actual End page and reproduce public player gameplay bits, projectile counts and hashes of every paint tile at each recorded step. Zero rendering/readbacks; no physical-pad, listening, performance, human-readability or attended acceptance claim.'
+    if ($Preset -eq 'x64-debug') { $result.checks += ' Debug additionally forwards a real ReplayRecorder and its inner driver through the actual GameLevel shipping filter while practice capture is disabled.' }
+}

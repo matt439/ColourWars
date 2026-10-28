@@ -46,14 +46,13 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Ready local work (backlog audit, 2026-10-28).** Eighteen remaining `OPEN` slices have
+**Ready local work (backlog audit, 2026-10-28).** Seventeen remaining `OPEN` slices have
 concrete implementation and acceptance scopes in their owners. They can proceed
 while attended reviews wait, without changing the arena/tuning order above:
 
 - **Stage mechanisms:** actual gate permission (`ROAD#26`) and ferry
   direction/stop cues (`ROAD#27`).
-- **Gameplay and diagnostics:** stop unused replay growth in untimed practice
-  (`ROAD#31`), show user-stage refusals in game (`ROAD#32`), validate menu cards
+- **Gameplay and diagnostics:** show user-stage refusals in game (`ROAD#32`), validate menu cards
   against the paper face (`ROAD#25`), and detect changed stages in Debug replay
   (`DBG#8`).
 - **Editor workflow:** external-change save protection (`ED#7`), per-monitor DPI
@@ -196,7 +195,6 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#5` | DECISION | LOW | S | Per-seat Boost (Off/+1/+2: less damage taken, faster paint refill) is built on Weapon Select (mechanic chosen 2026-10-27); judge the provisional values in attended play against bots. [Scope](docs/feature-roadmap.md#handicaps). |
 | `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
 | `ROAD#10` | DECISION | HIGH | M | Compare Easy/Normal/Hard usefulness in attended play and check physical pads. Mover painting and pane-clamped labels are implemented; difficulty values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
-| `ROAD#31` | OPEN | MED | M | Stop shipping replay-tape growth in untimed practice while retaining timed replays and independent Debug recording. [Scope](docs/feature-roadmap.md#no-shipping-replay-tape-in-untimed-practice-road31). |
 | `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |

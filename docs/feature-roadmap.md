@@ -2246,8 +2246,9 @@ it is built, and `RoundTape` (`game/round_tape.h`) keeps that seed, a copy of
 the setup (a re-pick page can change the match's own and then be backed out
 of), every participant's final input on every logic step, and where the round was
 suspended (which clears jump buffers) or resumed (which re-reads held jumps).
-`GameLevel` records through `RoundTapeRecorder`, the seat filter every live
-update passes through, behind the Debug filter when there is one. Watch Replay
+`GameLevel` records timed rounds through `RoundTapeRecorder`, the seat filter
+every live update passes through, behind the Debug filter when there is one.
+Untimed practice keeps the filter but starts no shipping tape (`ROAD#31`). Watch Replay
 destroys the finished level and builds it again from the seed, with no intro
 and the countdown skipped. It runs the steps before the replay's window with
 the sound groups at zero, up to 12 ms of steps a frame, which draws the round
@@ -2310,24 +2311,42 @@ keep the renderer's paper geometry and intended page layout unchanged.
 
 ### No shipping replay tape in untimed practice (`ROAD#31`)
 
-**OPEN, MED, M (2026-10-28).** `GameLevel::build_and_enter_level` unconditionally
-starts `RoundTape`; `RoundTapeRecorder` appends input and timing every logic
-step. The menu's lesson practice is untimed and never offers Watch Replay,
-so its unused tape grows for as long as the player stays.
+**Done (2026-10-28).** The menu's untimed lesson practice previously
+kept every logic step's inputs and timing in an unused shipping replay tape.
+`GameLevel::build_and_enter_level` now clears the previous tape, builds the
+level, and starts capture only when the built level is timed. An unstarted
+`RoundTape` ignores both input steps and suspend/resume gaps.
 
-Start or retain shipping replay capture only for a timed round. Use the built
-level's `practice()` result, rather than assuming that every solo or Movement
-Course launch is untimed: Debug can start the timed course. Clear an old tape
-when rebuilding into practice and prevent suspend/resume gaps accumulating
-there. Keep the independent Debug record/play filter working.
+The decision uses `Level::practice()`: ordinary solo arenas, multiplayer and
+developer-started timed Movement Course still capture. Seed generation is
+unchanged, and timed capture starts before the Debug post-build hook applies
+cheats or placements. The shipping filter remains installed in practice, so
+independent Debug input, recording and playback still pass through it.
 
-Acceptance: a sustained untimed practice run, pause/resume and restart retain
-no shipping tape steps or gaps; an ordinary timed solo round and a timed
-multiplayer round still offer and reproduce their replay. The shipping filter
-must still forward Debug input/recording when tape capture is disabled.
-Use the actual `GameLevel` path and existing `instant_replay` qualification in
-both presets. No practice wording or keep/cut decision (`POL#19`) is needed
-to fix this resource use.
+**Qualification (Debug and Release, 2026-10-28).** The focused native
+`scripts/check-painter.ps1 -PracticeReplayOnly -Preset <preset>` checks the
+actual `GameLevel` on a hidden shell. It retains no shipping steps or gaps
+through 4,800 simulated practice steps (60 seconds, then 10 seconds after
+Restart and 10 seconds after a timed-to-practice rebuild), actual Pause/Resume
+and focus count-ins. The rebuild first has a nonempty timed tape and gaps to
+clear. Debug additionally forwards 120 steps through the real `ReplayRecorder`
+and its inner input driver while the shipping tape remains empty.
+
+Ordinary menu solo, developer-started timed Movement Course and multiplayer
+with a shipping bot each offer Watch Replay through the actual End page.
+Their 543 combined recorded steps reproduce public player gameplay bits,
+projectile counts and hashes of every scoring tile. These checks initialize
+native devices but perform no raster drawing or readback and make no
+physical-pad or performance claim.
+
+Both builds, the CPU `instant_replay` and `practice_workshop` cases, and
+hidden startup with the accepted audio bank pass. The retained seven-arena
+replay case still reproduces 1,201 steps per arena; its new disabled-capture
+check forwards 10,000 downstream input steps and bot-replacement decisions.
+Receipts are under `out/validation/road31-practice-replay/` (`acceptance/`,
+`painter/` and `startup/`). This is focused qualification, not the full suite.
+
+The workshop wording and its attended keep/cut decision remain `POL#19`.
 
 ### Player profiles (`ROAD#21`)
 

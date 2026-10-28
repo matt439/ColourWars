@@ -11,7 +11,11 @@
         $identityDiagnostic += ' Background tuning adds a separate40 readbacks,eight rows and ten real command attempts(seven accepted,three semantic refusals):translucent/zero-alpha/ink-matching candidates are refused atomically, one private background token is saved/rebased, and reset returns to that saved baseline. Actual content and unrelated private play/Jump preferences remain unchanged.'
     }
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($ResultPercentageOnly) {
+    if ($PracticeReplayOnly) {
+        $result.diagnostic = 'Actual GameLevel practice retained zero shipping input/timing/gap entries through sustained play, pause/resume/focus, Restart and timed-to-practice rebuild. Ordinary menu solo, developer timed Movement Course and multiplayer with a shipping bot offered Watch Replay through the End page and reproduced every taped step of public player gameplay bits, projectile count and exact paint-tile hash. Hidden native initialization only: zero raster draws/readbacks and no physical-pad, listening, performance or human acceptance claim.'
+        if ($debug) { $result.diagnostic += ' Debug independently forwarded the real Debug recorder and inner input driver.' }
+    }
+    elseif ($ResultPercentageOnly) {
         $result.diagnostic = 'Result percentage text passed independent solo coverage and A/B percentage labels on actual Results pages and inner cards on three seeded public LevelBuilder monitor fixtures. Captured templates/fonts, retained pages, reopening/reversal, reveal/proceed transitions and zero-update resize passed. Drawing and resize preserved Session/Level state and RNG; private preferences and bytes remained unchanged. The three monitor fixtures intentionally advanced eighty Level updates each. Exactly 60 StateContext updates plus a separate 240 Level updates, 120 readbacks, 105 target CSV rows (81 Results and 24 monitor), eight Results openings and proceed pops, six font role controls from three wrong-font frames, eight compact crops (681072 pixels) and one successful private seed Save. Both presets ran the same shared consumer scope without developer targets or commands. Monitor evidence covers the inner cards. No broad monitor-story or menu matrix, foreground/global input, physical-device, listening, human readability or performance acceptance.'
     }
     elseif ($ContributionTeamOnly) {

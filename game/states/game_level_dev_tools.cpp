@@ -43,7 +43,8 @@ void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, f
 {
 	this->data()->debug().sync_background_audio(this->context()->active());
 	this->sync_rumble();
-	// The tape sees each step's final input, after the Debug filter's.
+	// The recorder always forwards the Debug filter; timed rounds also tape
+	// each step's final input. Untimed practice keeps no shipping tape.
 	this->tape_recorder_.prepare(seats, dt);
 	this->level_->update(inputs, dt, &this->tape_recorder_);
 	if (!this->context()->active()) { this->level_->pause_audio(); }
