@@ -154,15 +154,20 @@ std::vector<std::string> split_statements(std::string_view line)
 	return statements;
 }
 
-std::string quote_word(const std::string& word)
+std::string quote_word(const std::string& word, bool force_quote)
 {
-	if (!word.empty() && word.find_first_of(" \t\";") == std::string::npos)
+	if (!force_quote && !word.empty() && word.find_first_of(" \t\";") == std::string::npos)
 	{
 		return word;
 	}
+	// A terminal backslash would consume the generated closing quote. Keep
+	// that run bare: adjacent quoted and bare segments already form one word.
+	std::size_t quoted_end = word.size();
+	while (quoted_end > 0 && word[quoted_end - 1] == '\\') { --quoted_end; }
 	std::string quoted = "\"";
-	for (const char c : word)
+	for (std::size_t index = 0; index < quoted_end; ++index)
 	{
+		const char c = word[index];
 		if (c == '"')
 		{
 			quoted += '\\';
@@ -170,6 +175,7 @@ std::string quote_word(const std::string& word)
 		quoted += c;
 	}
 	quoted += '"';
+	quoted.append(word, quoted_end, word.size() - quoted_end);
 	return quoted;
 }
 

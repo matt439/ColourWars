@@ -145,6 +145,7 @@ int main(int argc, char** argv)
 		Presentation presentation((game_directory / "presentation.json").string().c_str());
 
 #if COLOURWARS_DEV_TOOLS
+		if (!background_only) { check_bind_word_round_trips(tuning, presentation); }
 		// The focused path keeps the existing clock, hooks, scripts and replay
 		// regressions that background updates can affect. With no flag, every
 		// check below still runs in its original order, plus the new policy case.

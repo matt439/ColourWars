@@ -1275,24 +1275,36 @@ collision query are inert in Release; keyboard rebinding is available there.
 
 ## Bind word round trips (`DBG#9`)
 
-**OPEN (2026-10-28).** The author approved autonomous bounded follow-ups.
-The next ranked source finding is a persistence defect: a valid
+**Done (2026-10-28).** The author approved autonomous bounded follow-ups.
+The third ranked authoring finding was a persistence defect: a valid
 `bind f12 echo C:\temp\` stores its command, but serializing that spaced line
 places a closing quote after the terminal backslash. The current tokenizer
 reads that pair as a literal quote; a fresh session then rejects the generated
 binds file and falls back to defaults.
 
-Preserve the existing printable-ASCII grammar. Encode a quoted word's terminal
-backslash run outside its closing quote, using the already-supported adjacent
-quoted/bare word segments. Use the same encoder for the forced quoting that
-protects `//` in saved binds; preserve dollar doubling, statement splitting,
-comments and malformed/non-ASCII refusals. No shell escape rules are needed.
+The encoder now places a quoted word's terminal backslash run outside its
+closing quote, using the existing adjacent quoted/bare word segments. Saved
+binds use the same encoder for forced `//` quoting. Printable-ASCII admission,
+interior backslashes, literal-quote escaping, dollar doubling, statement
+splitting, comments and malformed-input refusals are unchanged.
 
-First reproduce actual private bind save/reload losing the table. Qualify
-empty/spaced/quoted/semicolon words and trailing backslash runs, launch argument
-reconstruction, saved binds with `$`/`//`/multiple statements, sibling bindings
-and the absence of a spurious `.bad` file. Use isolated test directors and
-scratch profiles; never change the player's binds.
+The native Debug baseline reproduced a complete table falling back to defaults
+and a generated `.bad` file for the accepted bind. After the fix, seven actual
+private save/reload tables preserve sibling bindings, explicit removals and
+saved bytes, with no `.bad` file. Forty decoded word/statement round trips
+cover empty, spaced, quoted and semicolon words with trailing slash runs;
+wide launch arguments and a following statement preserve exact echo output.
+Dollar/comment/quoted/multiple-statement binds and the existing refusals pass.
+
+Both game builds and the full console acceptance case pass. Debug runs the
+new cases and all existing console/script/replay/tuning checks; Release
+retains inert hooks, shared layout and absence of developer RTTI. Independent
+review passes. No player's binds or save were read or changed.
+
+Evidence under `out/validation/implementation-loop-20261028/`: failing baseline
+`dbg9-baseline/d470bf52074041208722c6c8b5d20354`, final both-preset batch
+`dbg9-candidate/3bfe705104f949cf8914753e5d1aa395`. The final receipt verifies
+all six source/test files remained unchanged during qualification.
 
 ## History
 

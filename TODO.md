@@ -49,8 +49,8 @@ when they don't compete with it.
 **Independent implementation (2026-10-28).** Select bounded work from the
 [maintenance](docs/code-hygiene.md#follow-up-shortlist-2026-10-28) and
 [authoring](docs/level-editor.md#authoring-follow-up-shortlist-2026-10-28)
-shortlists while attended reviews wait. Next is preserving valid debug binds
-and launch words through quoting and save/reload (`DBG#9`).
+shortlists while attended reviews wait. Recheck current source for the next
+bounded, independent slice rather than reopening an attended decision.
 This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.
@@ -242,7 +242,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#9` | OPEN | MED | S | Preserve valid bind commands and launch words ending in backslashes through quoting and save/reload. [Scope](docs/debug-console.md#bind-word-round-trips-dbg9). |
 | `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |

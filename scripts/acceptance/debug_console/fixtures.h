@@ -406,6 +406,9 @@ namespace debug_console_acceptance
 		"presentation.opening.glass_colour", "presentation.opening.silhouette", "presentation.opening.scribble", "presentation.hud.health_colour", "presentation.hud.meter_track_colour", "presentation.opening.crack", "presentation.figure.arm_colour", "presentation.figure.hand_colour", "presentation.figure.quiet.face_colour", "presentation.hud.timer.colour", "presentation.hud.timer.shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.player_identity.colour", "presentation.hud.player_identity.shadow_colour", "presentation.hud.player_identity.background_colour", "presentation.hud.closing_clock.ink", "presentation.hud.closing_clock.paper", "presentation.hud.closing_clock.accent", "presentation.hud.closing_clock.shade", "presentation.hud.paper.ink", "presentation.hud.paper.paper", "presentation.hud.paper.shade" };
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
 
+	// word_round_trip_checks.cpp
+	void check_bind_word_round_trips(GameTuning& tuning, Presentation& presentation);
+
 	// console_checks.cpp
 	void check_tokenizer();
 	void check_launch_arguments();
