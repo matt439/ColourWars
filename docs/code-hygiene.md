@@ -44,7 +44,7 @@ gate. The earlier figure/animation and other source splits already exist.
 | [evidence-record.ps1](../scripts/check-painter/evidence-record.ps1) | 1,403 | Evidence-metadata groups, `HYG#6` |
 | [painter_visual.cpp](../scripts/acceptance/painter_visual.cpp) | 1,347 | Retain the explicit include/setup/dispatch entry; no registry redesign selected |
 | [level.cpp](../game/objects/level.cpp) | 966 | Horizontal-motion subsystem extracted (380 lines), `HYG#2` complete |
-| [tune_colour_document_checks.h](../scripts/acceptance/debug_console/tune_colour_document_checks.h) | 1,044 | Independent fixture families, `HYG#7` |
+| [tune_colour_document_checks.h](../scripts/acceptance/debug_console/tune_colour_document_checks.h) | 17 | Ordered topic coordinator; `HYG#7` complete |
 | [tuning.cpp](../game/tuning.cpp) | 907 | Retain cohesive key-by-key parsing and validation |
 | [level_document.cpp](../editor/level_document.cpp) | 899 | Retain the shared document transaction; save protection remains `ED#7` |
 | [projectile.cpp](../game/objects/projectile.cpp) | 287 | Contacts/sweeps extracted (587 lines), `HYG#3` complete |
@@ -157,19 +157,19 @@ timeout is not a substitute for preserving it.
 
 ## Colour-document fixture families (`HYG#7`)
 
-**OPEN, M.** `check_colour_document()` is almost an entire 1,044-line header.
-Its already scoped blocks divide into generic splice/alias behavior,
-selectors/feedback, opening/story colours and HUD/figure/identity colours.
-Extract these families into topic helpers and keep the existing function as an
-ordered coordinator.
+**Done (2026-10-28).** The 17-line `check_colour_document` entry coordinates
+six topic helpers in four headers: splice/alias behavior, selectors/feedback,
+opening artwork, and HUD/figure/identity colours. The interleaved additions
+retain their original order: generic, feedback, opening art, HUD,
+crack/acting, then limbs/identity. All headers keep the original anonymous
+namespace and `last_key` inclusion context.
 
-Preserve literal JSON bytes, source-span assertions, cases and invocation
-order. The header is included inside an anonymous namespace by
-`tune_document_checks.cpp`; retain that context or explicitly supply topic
-translation units through the existing `debug_console` case folder. Avoid
-runtime registration or new production accessors. Acceptance: the existing
-`debug_console` case in Debug and Release, retaining Release exclusion checks
-and all byte-preservation/conflict/reset fixtures.
+Reconstructing the original function body from those ordered helper bodies
+reproduces all 1,038 lines unchanged after physical newline normalization.
+Literal JSON, source-span assertions, conflict/reset checks and byte-preserving
+fixtures are unchanged; no production accessors or registration were added.
+Independent review and the existing `debug_console` case pass in Debug and
+Release, including Release's executable exclusion checks.
 
 ## Source-comment contract audit (`HYG#8`)
 
