@@ -82,10 +82,11 @@ function Quote-ResponsePath {
     return '"' + [System.IO.Path]::GetFullPath($Path) + '"'
 }
 
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 $repo = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
 $evidence = if ($OutputDirectory) {
-    [System.IO.Path]::GetFullPath((Join-Path $OutputDirectory $Preset))
+    Join-Path (Resolve-CheckFileSystemPath $OutputDirectory) $Preset
 } else {
     Join-Path $repo "out/acceptance/$Preset"
 }

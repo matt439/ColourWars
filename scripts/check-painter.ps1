@@ -9,6 +9,7 @@ param(
     [ValidateSet('x64-debug', 'x64-release')]
     [string] $Preset = 'x64-debug',
     [switch] $SkipBuild,
+    [switch] $OmitWorktreeStatus,
     [switch] $IdentityOnly,
     [switch] $QuietOnly,
     [switch] $DriftOnly,
@@ -118,6 +119,7 @@ Set-StrictMode -Version Latest
 # A caller may pass another PowerShell edition's modules through PSModulePath.
 # Load this host's standard file-hashing command from its own installation.
 Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 $trialResolved = $null
 $trialHashBefore = $null
 $trialHashAfterAttempted = $false
@@ -128,7 +130,7 @@ if ($PSBoundParameters.ContainsKey('TrialPath') -and -not $trialMode) {
 if ($trialMode) {
     $trialModeName = if ($TurbulenceSlabOnly) { 'TurbulenceSlabOnly' } elseif ($TurbulenceShoulderOnly) { 'TurbulenceShoulderOnly' } else { 'TurbulenceMoverOnly' }
     if ([string]::IsNullOrWhiteSpace($TrialPath)) { throw "$trialModeName requires an explicit TrialPath." }
-    $trialResolved = [IO.Path]::GetFullPath($TrialPath)
+    $trialResolved = Resolve-CheckFileSystemPath $TrialPath
     if (-not (Test-Path -LiteralPath $trialResolved -PathType Leaf)) { throw "TrialPath is not a readable existing file: $trialResolved" }
     $trialHashBefore = (Get-FileHash -LiteralPath $trialResolved -Algorithm SHA256).Hash
 }
@@ -287,7 +289,7 @@ if ($focusedSelectors.Count -eq 1 -and $probeArguments.Count -eq 0) {
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
-$outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
+$outputRoot = Resolve-CheckFileSystemPath $OutputDirectory
 $run = Join-Path (Join-Path $outputRoot $Preset) ([Guid]::NewGuid().ToString('N'))
 $captures = Join-Path $run 'captures'
 $working = Join-Path $run 'working-directory'

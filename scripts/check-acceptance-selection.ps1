@@ -3,10 +3,11 @@ param([string] $OutputDirectory)
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $runner = Join-Path $PSScriptRoot 'run-acceptance.ps1'
-$outputRoot = if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory) } else {
+$outputRoot = if ($OutputDirectory) { Resolve-CheckFileSystemPath $OutputDirectory } else {
     Join-Path $repo 'out/validation/acceptance-selection'
 }
 $run = [IO.Path]::GetFullPath((Join-Path $outputRoot ([Guid]::NewGuid().ToString('N'))))
@@ -25,7 +26,9 @@ $checks = [Collections.Generic.List[object]]::new()
 $failures = [Collections.Generic.List[string]]::new()
 $observations = @{}
 $initialPath = $env:PATH
+$initialProfile = $env:LOCALAPPDATA
 $initialLocation = (Get-Location).Path
+$initialProcessDirectory = [Environment]::CurrentDirectory
 $missingCmake = 'Run this script from an x64 Visual Studio Developer shell (cmake is missing).'
 $result = [ordered]@{
     schema_version = 1
@@ -72,23 +75,34 @@ function Helper-Loaded {
     return $null -ne ('ColourWars.Acceptance.OwnedCommand' -as [type])
 }
 
-function Invoke-Selection([string] $Name, [hashtable] $Options) {
+function Invoke-Selection([string] $Name, [hashtable] $Options,
+    [string] $OutputArgument = '', [string] $ExpectedOutput = '') {
     # Dot-sourcing inside this local function exposes the actual selectedCases
     # while containing the runner's variables, functions and strict-mode scope.
     $selectedCases = $null
+    $evidence = $null
     $caught = $null
     $beforePath = $env:PATH
+    $beforeProfile = $env:LOCALAPPDATA
     $beforeLocation = (Get-Location).Path
-    $privateOutput = Join-Path $run ('runner-' + $Name)
-    $Options.OutputDirectory = $privateOutput
+    $beforeProcessDirectory = [Environment]::CurrentDirectory
+    $privateOutput = if ($ExpectedOutput) { $ExpectedOutput } else { Join-Path $run ('runner-' + $Name) }
+    $Options.OutputDirectory = if ($OutputArgument) { $OutputArgument } else { $privateOutput }
     $Options.SkipBuild = $true
     try {
         $env:PATH = ''
+        foreach ($tool in @('cmake', 'cl')) {
+            Require (-not (Get-Command $tool -ErrorAction SilentlyContinue)) `
+                "Run qualification in a fresh -NoProfile host without a preexisting $tool command."
+        }
         try { . $runner @Options } catch { $caught = $_ }
         Require ($null -ne $caught) 'The actual runner did not stop during selection/tool preflight.'
         Require (-not (Helper-Loaded)) 'Selection preflight loaded the native-process helper.'
-        $files = @(if ([IO.Directory]::Exists($privateOutput)) {
-            Get-ChildItem -LiteralPath $privateOutput -Recurse -File
+        $actualOutput = if ($null -ne $evidence) { [string]$evidence } else { $privateOutput }
+        Require ($actualOutput.StartsWith($run + [IO.Path]::DirectorySeparatorChar,
+            [StringComparison]::OrdinalIgnoreCase)) 'Acceptance preflight output escaped its private checker scratch.'
+        $files = @(if ([IO.Directory]::Exists($actualOutput)) {
+            Get-ChildItem -LiteralPath $actualOutput -Recurse -File
         })
         Require ($files.Count -eq 0) 'Selection preflight created build, response, executable or log files.'
         return [pscustomobject]@{
@@ -96,12 +110,16 @@ function Invoke-Selection([string] $Name, [hashtable] $Options) {
             diagnostic = $caught.Exception.Message
             output_directory = $privateOutput
             output_created = [IO.Directory]::Exists($privateOutput)
+            actual_evidence_directory = $evidence
+            actual_output_created = [IO.Directory]::Exists($actualOutput)
             artifact_files = $files.Count
             helper_loaded = $false
         }
     } finally {
         $env:PATH = $beforePath
+        $env:LOCALAPPDATA = $beforeProfile
         Set-Location -LiteralPath $beforeLocation
+        [Environment]::CurrentDirectory = $beforeProcessDirectory
     }
 }
 
@@ -126,6 +144,64 @@ function Check-Selection([string] $Name, [hashtable] $Options, [string] $Diagnos
     } finally { Save-Result }
 }
 
+function Check-SelectionPaths([string] $Name, [bool] $AbsoluteOutput) {
+    $pathRecord = [ordered]@{ name = $Name; outcome = 'running' }
+    $checks.Add($pathRecord)
+    $pathBeforeLocation = (Get-Location).Path
+    $pathBeforeProcessDirectory = [Environment]::CurrentDirectory
+    $pathBeforeEnvironment = $env:PATH
+    $pathBeforeProfile = $env:LOCALAPPDATA
+    try {
+        $caseRoot = Join-Path $run $Name
+        $providerDirectory = Join-Path $caseRoot ('provider space ' + [char]0x03A9)
+        $processDirectory = Join-Path $caseRoot ('process space ' + [char]0x03A9)
+        foreach ($directory in @($providerDirectory, $processDirectory)) {
+            [IO.Directory]::CreateDirectory($directory) | Out-Null
+        }
+        $outputLeaf = 'evidence space ' + [char]0x03A9
+        $expectedOutput = if ($AbsoluteOutput) { Join-Path $caseRoot $outputLeaf } else { Join-Path $providerDirectory $outputLeaf }
+        $expectedEvidence = Join-Path $expectedOutput 'x64-debug'
+        $wrongOutput = Join-Path $processDirectory $outputLeaf
+        $outputArgument = if ($AbsoluteOutput) { $expectedOutput } else { $outputLeaf }
+        Set-Location -LiteralPath $providerDirectory
+        [Environment]::CurrentDirectory = $processDirectory
+        $pathRecord.provider_directory = $providerDirectory
+        $pathRecord.process_directory = $processDirectory
+        $pathRecord.output_argument = $outputArgument
+        $pathRecord.expected_evidence = $expectedEvidence
+        $pathRecord.process_relative_output = $wrongOutput
+        $observed = Invoke-Selection $Name @{ Cases = [string[]]@('ammo'); Preset = 'x64-debug' } `
+            -OutputArgument $outputArgument -ExpectedOutput $expectedOutput
+        $pathRecord.observed = $observed
+        $pathRecord.process_relative_output_created = [IO.Directory]::Exists($wrongOutput)
+        Require ($observed.diagnostic -ceq $missingCmake) `
+            "Path preflight did not reach missing CMake: $($observed.diagnostic)"
+        Require ($observed.actual_evidence_directory -ceq $expectedEvidence -and
+            $observed.output_created -and -not $pathRecord.process_relative_output_created) `
+            'HYG17 acceptance OutputDirectory resolved against process cwd instead of caller PowerShell location.'
+        Require ($observed.artifact_files -eq 0 -and -not $observed.helper_loaded) `
+            'Acceptance path preflight created build artifacts or loaded the native-process helper.'
+        Require-Names $observed.selected @('ammo')
+        Require ((Get-Location).Path -ceq $providerDirectory -and
+            [Environment]::CurrentDirectory -ceq $processDirectory -and
+            [string]::Equals($env:PATH, $pathBeforeEnvironment, [StringComparison]::Ordinal) -and
+            [string]::Equals($env:LOCALAPPDATA, $pathBeforeProfile, [StringComparison]::Ordinal)) `
+            'Acceptance path preflight changed caller environment or either current directory.'
+        $pathRecord.outcome = 'passed'
+        Write-Host "PASS acceptance selection: $Name"
+    } catch {
+        $pathRecord.outcome = 'failed'
+        $pathRecord.diagnostic = $_.Exception.Message
+        $failures.Add("${Name}: $($_.Exception.Message)")
+    } finally {
+        $env:PATH = $pathBeforeEnvironment
+        $env:LOCALAPPDATA = $pathBeforeProfile
+        Set-Location -LiteralPath $pathBeforeLocation
+        [Environment]::CurrentDirectory = $pathBeforeProcessDirectory
+        Save-Result
+    }
+}
+
 function Quote-ChildArgument([string] $Value) {
     # These generated CLI arguments have no embedded quotes. Explicit trailing
     # slash escaping keeps ordinary Windows paths intact under both hosts.
@@ -139,7 +215,10 @@ Save-Result
 Write-Host "Acceptance-selection evidence: $run"
 try {
     Require (-not (Helper-Loaded)) 'Run selection qualification in a fresh -NoProfile host without the native helper loaded.'
-    $result.source_hashes = @(foreach ($path in @($PSCommandPath, $runner)) {
+    $sourcePaths = @($PSCommandPath, $runner)
+    $pathHelper = Join-Path $PSScriptRoot 'check-path.ps1'
+    if (Test-Path -LiteralPath $pathHelper -PathType Leaf) { $sourcePaths += $pathHelper }
+    $result.source_hashes = @(foreach ($path in $sourcePaths) {
         [ordered]@{ path = $path; sha256 = File-SHA256 $path }
     })
     Set-Location -LiteralPath $working
@@ -260,6 +339,8 @@ try {
         Save-Result
     }
 
+    Check-SelectionPaths 'relative-output-provider-location' $false
+    Check-SelectionPaths 'absolute-output-independent-location' $true
     Require ($failures.Count -eq 0) ("Acceptance selection failed:`n  " + ($failures -join "`n  "))
     $result.outcome = 'passed'
 } catch {
@@ -268,9 +349,13 @@ try {
     throw
 } finally {
     $env:PATH = $initialPath
+    $env:LOCALAPPDATA = $initialProfile
     Set-Location -LiteralPath $initialLocation
+    [Environment]::CurrentDirectory = $initialProcessDirectory
     $result.caller_path_restored = [string]::Equals($env:PATH, $initialPath, [StringComparison]::Ordinal)
+    $result.caller_profile_restored = [string]::Equals($env:LOCALAPPDATA, $initialProfile, [StringComparison]::Ordinal)
     $result.caller_location_restored = (Get-Location).Path -ceq $initialLocation
+    $result.caller_process_directory_restored = [Environment]::CurrentDirectory -ceq $initialProcessDirectory
     $result.completed_utc = [DateTime]::UtcNow.ToString('o')
     Save-Result
     Write-Host "Acceptance-selection evidence: $run"

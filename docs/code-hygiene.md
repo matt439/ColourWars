@@ -5,6 +5,63 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order.
 
+## Caller-relative validation paths (`HYG#17`)
+
+**Done (2026-10-28).** Fresh source review found that explicit relative
+`OutputDirectory` values used `Path.GetFullPath`, whose base could differ from
+PowerShell's location after `Set-Location`. Painter `TrialPath` had the same
+issue. Existing selection checks aligned the two locations or passed absolute
+paths, hiding the discrepancy.
+
+This bounded shortlist was recorded before implementation:
+
+| rank | candidate and evidence | value, scope and risk |
+|---|---|---|
+| 1 | Painter and acceptance input/evidence paths can resolve beneath the process directory instead of the caller's PowerShell location. | Selected as `HYG#17`: define caller-relative filesystem paths for these entry points and their selection checkers. Private preflight can prove location, quoting and hashes without a compiler or native probe. |
+| 2 | Starting a left drag during a middle-button pan leaves both gestures active; releasing the middle button cancels the left drag. | A bounded editor usability candidate, recorded in the authoring shortlist; establish button ownership and native controls before implementation. |
+
+One small shared path resolver now serves `check-painter.ps1`,
+`run-acceptance.ps1`, `check-painter-selection.ps1` and
+`check-acceptance-selection.ps1`. Explicit relative paths use the caller's
+PowerShell filesystem location; absolute paths and default roots retain their
+meaning. It resolves literal, potentially not-yet-existing filesystem paths through
+the provider-aware
+[PowerShell path API](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.pathintrinsics.getunresolvedproviderpathfrompspath),
+then retains native full-path normalization and rejects other providers before
+filesystem access. Selection/trial diagnostic order, preset/GUID suffixes,
+quoting and global process-directory state are preserved. `run-balance` has an
+explicit repository-relative contract and keeps it.
+
+The actual private baseline reproduced misplaced output in both runners and
+a wrong painter trial hash from different same-named process-directory bytes.
+The existing selection checks now cover separate provider/process locations,
+relative paths with spaces and Unicode, absolute controls, all three trial
+selectors' bytes/hash/quoted arguments and restored caller state. Fresh
+PowerShell 5.1 and pwsh hosts each pass 145 painter and 24 acceptance cases,
+including the checkers' own relative evidence roots. Six resolver/API cases
+and all six changed scripts' syntax pass in both hosts. No compiler, native
+process helper or GPU runs during this CPU qualification.
+
+The first native attempt stopped before compilation when Git worktree-status
+collection hit a denied global ignore file. That query remains stopped: an
+explicit painter `-OmitWorktreeStatus` option skips it and records a null status
+plus an omission flag. HEAD/source hashes remain available. No Git settings
+were changed and no clean status was manufactured. The Release native preview
+leaf passes with this option: 68 readbacks, 26 rows and 16 crops under the
+relative caller-selected root, with caller state restored and the omission
+verified in its receipt. Default metadata behavior remains unchanged.
+
+Independent review and six-file source-immutability checks pass. Evidence under
+`out/validation/implementation-loop-20261028/`: failing private baseline
+`hyg17-baseline/85f23b68914e44108d3f6e396f6451cb`, final four-host CPU batch
+`hyg17-qualification/967a47bcf11643eba088bbe5a8c5f3aa`, native batch
+`hyg17-native/1f97aa8d62eb480787300d0710db3bf8` (leaf
+`e067d5a5840546299ce439f626526c7d`). Other wrappers remain candidates for a
+later bounded scope. A separate observed cleanup issue also remains: an
+evidence-initialization error happens before painter's `try` and can leave
+the caller's PowerShell location changed. Scope that failure path with a
+synthetic private helper, without retrying the denied metadata query.
+
 ## Follow-up shortlist (2026-10-28)
 
 The author authorized autonomous selection once ready work is exhausted or

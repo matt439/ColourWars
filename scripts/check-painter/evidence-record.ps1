@@ -3,13 +3,17 @@
 # selection and post-chain fixups. Topic bodies stay in dot-sourced helpers.
 # Runs before the try, so an override error still skips the result.json write.
 
+$worktreeStatus = $null
+if (-not $OmitWorktreeStatus) { $worktreeStatus = @(& git status --short) }
+
 $result = [ordered]@{
     outcome = 'failed'
     scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($WeaponCatalogOnly) { 'weapon-catalog-only' } elseif ($MenuTextOnly) { 'menu-text-only' } elseif ($MenuMotionOnly) { 'menu-motion-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } elseif ($ControlsMenuOnly) { 'controls-menu-only' } elseif ($StickSettingsOnly) { 'stick-settings-only' } elseif ($TeamSetupOnly) { 'team-setup-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
-    worktree_status = @(& git status --short)
+    worktree_status = $worktreeStatus
+    worktree_status_omitted = [bool]$OmitWorktreeStatus
     stage = 'movement_course'
     player_counts = @(1, 4)
     palettes = @('blue_orange', 'pink_green', 'blue_yellow')

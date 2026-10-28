@@ -134,6 +134,13 @@ checks these rules without starting CMake, a compiler or the native helper.
 false/conflicting switches and trial-path preflight in PowerShell 5.1 and pwsh.
 It uses private scratch files and starts no compiler, native probe or GPU.
 
+Explicit `OutputDirectory` paths on the painter/acceptance runners and their
+selection checkers, and painter `TrialPath`, use the caller's PowerShell
+filesystem location when relative. The selection checks cover separate
+PowerShell/process directories, trial hashes and caller-state restoration.
+If worktree-status collection is unavailable, painter's explicit
+`-OmitWorktreeStatus` skips that query and records its omission in the receipt.
+
 Each acceptance executable has a runtime deadline of 3,600 seconds, adjustable
 with `-RunTimeoutSeconds`. Its merged output is retained while it runs in a
 `*-run.log.raw` sidecar and decoded into the usual UTF-8 log on completion.

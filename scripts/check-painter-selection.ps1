@@ -4,9 +4,10 @@ param([string] $OutputDirectory)
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 $painterRepo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $painterRunner = Join-Path $PSScriptRoot 'check-painter.ps1'
-$selectionOutput = if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory) } else {
+$selectionOutput = if ($OutputDirectory) { Resolve-CheckFileSystemPath $OutputDirectory } else {
     Join-Path $painterRepo 'out/validation/painter-selection'
 }
 $selectionRun = [IO.Path]::GetFullPath((Join-Path $selectionOutput ([Guid]::NewGuid().ToString('N'))))
@@ -62,7 +63,8 @@ function Get-OnlySwitches($Ast) {
         $_.StaticType -eq [Management.Automation.SwitchParameter] -and $_.Name.VariablePath.UserPath -like '*Only'
     } | ForEach-Object { $_.Name.VariablePath.UserPath })
 }
-function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [string] $RunnerPath) {
+function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [string] $RunnerPath,
+    [string] $OutputArgument='', [string] $ExpectedOutput='') {
     # Dot-source in this private function scope. Initialize observations so the
     # unmodified baseline fails with the intended diagnostic, even in StrictMode.
     $focusedSelectors=@()
@@ -70,15 +72,18 @@ function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [stri
     $trialResolved=$null
     $trialHashBefore=$null
     $trialHashAfterAttempted=$false
+    $outputRoot=$null
     $selectionCaught=$null
     $selectionBeforePath=$env:PATH
     $selectionBeforeProfile=$env:LOCALAPPDATA
     $selectionBeforeLocation=(Get-Location).Path
     $selectionBeforeProcessDirectory=[Environment]::CurrentDirectory
-    $selectionPrivateOutput=Join-Path $selectionRun ('runner-' + $CaseName)
+    $selectionPrivateOutput=if ($ExpectedOutput) { $ExpectedOutput } else {
+        Join-Path $selectionRun ('runner-' + $CaseName)
+    }
     $selectionOptions=@{}
     foreach ($selectionKey in $Options.Keys) { $selectionOptions[$selectionKey]=$Options[$selectionKey] }
-    $selectionOptions.OutputDirectory=$selectionPrivateOutput
+    $selectionOptions.OutputDirectory=if ($OutputArgument) { $OutputArgument } else { $selectionPrivateOutput }
     $selectionOptions.SkipBuild=$true
     try {
         $env:PATH=''
@@ -88,8 +93,12 @@ function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [stri
         }
         try { . $RunnerPath @selectionOptions } catch { $selectionCaught=$_ }
         Require-Selection ($null -ne $selectionCaught) 'The actual painter runner did not stop during preflight.'
-        $selectionFiles=@(if ([IO.Directory]::Exists($selectionPrivateOutput)) {
-            Get-ChildItem -LiteralPath $selectionPrivateOutput -File -Recurse
+        $selectionActualOutput=if ($null -ne $outputRoot) { [string]$outputRoot } else { $selectionPrivateOutput }
+        $selectionScratchPrefix=$selectionRun + [IO.Path]::DirectorySeparatorChar
+        Require-Selection ($selectionActualOutput.StartsWith($selectionScratchPrefix,
+            [StringComparison]::OrdinalIgnoreCase)) 'Painter preflight output escaped its private checker scratch.'
+        $selectionFiles=@(if ([IO.Directory]::Exists($selectionActualOutput)) {
+            Get-ChildItem -LiteralPath $selectionActualOutput -File -Recurse
         })
         # Valid routing reaches tool preflight after only the existing private
         # preference fixture is created. No probe/build evidence is allowed.
@@ -111,6 +120,8 @@ function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [stri
             trial_after_attempted=$trialHashAfterAttempted
             output_directory=$selectionPrivateOutput
             output_created=[IO.Directory]::Exists($selectionPrivateOutput)
+            actual_output_directory=$outputRoot
+            actual_output_created=[IO.Directory]::Exists($selectionActualOutput)
             artifact_files=$selectionFiles.Count
         }
     } finally {
@@ -151,12 +162,102 @@ function Check-PainterSelection([string] $CaseName, [hashtable] $Options, [strin
     } finally { Save-SelectionResult }
 }
 
+function Check-PainterPaths([string] $CaseName, [bool] $AbsoluteOutput, [string] $TrialSelector='') {
+    $pathRecord=[ordered]@{name=$CaseName;outcome='running'}
+    $selectionChecks.Add($pathRecord)
+    $pathBeforeLocation=(Get-Location).Path
+    $pathBeforeProcessDirectory=[Environment]::CurrentDirectory
+    $pathBeforeEnvironment=$env:PATH
+    $pathBeforeProfile=$env:LOCALAPPDATA
+    try {
+        # Keep the private process directory below Windows' current-directory
+        # length limit even when the caller's evidence root is already nested.
+        $caseRoot=Join-Path $selectionRun ('path-' + $selectionChecks.Count)
+        $providerDirectory=Join-Path $caseRoot ('provider space ' + [char]0x03A9)
+        $processDirectory=Join-Path $caseRoot ('process space ' + [char]0x03A9)
+        foreach ($directory in @($providerDirectory,$processDirectory)) {
+            [IO.Directory]::CreateDirectory($directory) | Out-Null
+        }
+        $outputLeaf='evidence space ' + [char]0x03A9
+        $expectedOutput=if ($AbsoluteOutput) { Join-Path $caseRoot $outputLeaf } else { Join-Path $providerDirectory $outputLeaf }
+        $wrongOutput=Join-Path $processDirectory $outputLeaf
+        $outputArgument=if ($AbsoluteOutput) { $expectedOutput } else { $outputLeaf }
+        $pathOptions=@{IdentityOnly=$true}
+        $providerTrial=$null
+        $processTrial=$null
+        $providerDigest=$null
+        $processDigest=$null
+        if ($TrialSelector) {
+            $trialLeaf='private trial ' + [char]0x03A9 + '.json'
+            $providerTrial=Join-Path $providerDirectory $trialLeaf
+            $processTrial=Join-Path $processDirectory $trialLeaf
+            [IO.File]::WriteAllText($providerTrial,'{"qualification":"provider trial"}',$selectionUtf8)
+            [IO.File]::WriteAllText($processTrial,'{"qualification":"process decoy"}',$selectionUtf8)
+            $providerDigest=(Get-FileHash -LiteralPath $providerTrial -Algorithm SHA256).Hash
+            $processDigest=(Get-FileHash -LiteralPath $processTrial -Algorithm SHA256).Hash
+            $pathOptions=@{TrialPath=$trialLeaf}
+            $pathOptions[$TrialSelector]=$true
+        }
+        Set-Location -LiteralPath $providerDirectory
+        [Environment]::CurrentDirectory=$processDirectory
+        $pathRecord.provider_directory=$providerDirectory
+        $pathRecord.process_directory=$processDirectory
+        $pathRecord.output_argument=$outputArgument
+        $pathRecord.expected_output=$expectedOutput
+        $pathRecord.process_relative_output=$wrongOutput
+        $pathObservation=Invoke-PainterSelection $CaseName $pathOptions $painterRunner `
+            -OutputArgument $outputArgument -ExpectedOutput $expectedOutput
+        $pathRecord.observed=$pathObservation
+        $pathRecord.process_relative_output_created=[IO.Directory]::Exists($wrongOutput)
+        $pathRecord.expected_trial=$providerTrial
+        $pathRecord.expected_trial_sha256=$providerDigest
+        $pathRecord.process_trial_sha256=$processDigest
+        Require-Selection ($pathObservation.diagnostic -ceq $missingCmake) `
+            "Path preflight did not reach missing CMake: $($pathObservation.diagnostic)"
+        Require-Selection ($pathObservation.actual_output_directory -ceq $expectedOutput -and
+            $pathObservation.output_created -and -not $pathRecord.process_relative_output_created) `
+            'HYG17 painter OutputDirectory resolved against process cwd instead of caller PowerShell location.'
+        Require-Selection ($pathObservation.artifact_files -eq 1) 'Painter path preflight lost its single private save fixture.'
+        if ($TrialSelector) {
+            Require-Selection ($providerDigest -cne $processDigest -and
+                $pathObservation.trial_resolved -ceq $providerTrial -and
+                $pathObservation.trial_sha256 -ceq $providerDigest -and
+                $pathObservation.arguments.Count -eq 2 -and
+                $pathObservation.arguments[1] -ceq ('"' + $providerTrial + '"') -and
+                -not $pathObservation.trial_after_attempted) `
+                'HYG17 painter relative TrialPath did not retain the provider file, initial hash and quoted native argument.'
+            Require-Selection ((Get-FileHash -LiteralPath $providerTrial -Algorithm SHA256).Hash -ceq $providerDigest -and
+                (Get-FileHash -LiteralPath $processTrial -Algorithm SHA256).Hash -ceq $processDigest) `
+                'Painter path preflight changed private provider/decoy trial bytes.'
+        }
+        Require-Selection ((Get-Location).Path -ceq $providerDirectory -and
+            [Environment]::CurrentDirectory -ceq $processDirectory -and
+            [string]::Equals($env:PATH,$pathBeforeEnvironment,[StringComparison]::Ordinal) -and
+            [string]::Equals($env:LOCALAPPDATA,$pathBeforeProfile,[StringComparison]::Ordinal)) `
+            'Painter path preflight changed caller environment or either current directory.'
+        $pathRecord.outcome='passed'
+        Write-Host "PASS painter selection: $CaseName"
+    } catch {
+        $pathRecord.outcome='failed'
+        $pathRecord.diagnostic=$_.Exception.Message
+        $selectionFailures.Add(('{0}: {1}' -f $CaseName,$_.Exception.Message))
+    } finally {
+        $env:PATH=$pathBeforeEnvironment
+        $env:LOCALAPPDATA=$pathBeforeProfile
+        Set-Location -LiteralPath $pathBeforeLocation
+        [Environment]::CurrentDirectory=$pathBeforeProcessDirectory
+        Save-SelectionResult
+    }
+}
+
 Save-SelectionResult
 Write-Host "Painter-selection evidence: $selectionRun"
 try {
     $sourcePaths=@($PSCommandPath,$painterRunner,
         (Join-Path $PSScriptRoot 'check-painter/hash.ps1'),
         (Join-Path $PSScriptRoot 'check-painter/contact-sheet.ps1'))
+    $pathHelper=Join-Path $PSScriptRoot 'check-path.ps1'
+    if (Test-Path -LiteralPath $pathHelper -PathType Leaf) { $sourcePaths += $pathHelper }
     $selectionResult.source_hashes=@(foreach ($sourcePath in $sourcePaths) {
         [ordered]@{path=$sourcePath;sha256=(Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash}
     })
@@ -189,6 +290,9 @@ try {
     [IO.File]::WriteAllText($faultRunner,$faultText,[Text.UTF8Encoding]::new($sourceHasBom))
     foreach ($helper in @('hash.ps1','contact-sheet.ps1')) {
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot ('check-painter/' + $helper)) -Destination (Join-Path $mirrorHelpers $helper)
+    }
+    if (Test-Path -LiteralPath $pathHelper -PathType Leaf) {
+        Copy-Item -LiteralPath $pathHelper -Destination (Join-Path $mirrorScripts 'check-path.ps1')
     }
     $faultAst=Read-PainterAst $faultRunner
     $faultSwitches=@(Get-OnlySwitches $faultAst)
@@ -336,6 +440,13 @@ try {
                 'Trial validation/hash no longer precedes the Release developer-tool refusal.'
         }
     Require-Selection ((Get-FileHash -LiteralPath $trialPath -Algorithm SHA256).Hash -ceq $trialDigest) 'Qualification changed private trial bytes.'
+    Check-PainterSelection 'omit-worktree-status-true' @{IdentityOnly=$true;OmitWorktreeStatus=$true} $missingCmake $false
+    Check-PainterSelection 'omit-worktree-status-false' @{IdentityOnly=$true;OmitWorktreeStatus=$false} $missingCmake $false
+    Check-PainterPaths 'relative-output-provider-location' $false
+    Check-PainterPaths 'absolute-output-independent-location' $true
+    foreach ($trialSelector in $trialSelectors) {
+        Check-PainterPaths ($trialSelector + '-relative-path-provider-location') $true $trialSelector
+    }
     Require-Selection ($selectionFailures.Count -eq 0) ("Painter selection failed:" + [Environment]::NewLine + ($selectionFailures -join [Environment]::NewLine))
     $selectionResult.outcome='passed'
 } catch {
