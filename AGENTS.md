@@ -130,6 +130,10 @@ empty names, unknown names and duplicate selections are refused. `-ExcludeCases`
 removes cases from the chosen/default list. `scripts/check-acceptance-selection.ps1`
 checks these rules without starting CMake, a compiler or the native helper.
 
+`scripts/check-painter-selection.ps1` checks every focused painter selector,
+false/conflicting switches and trial-path preflight in PowerShell 5.1 and pwsh.
+It uses private scratch files and starts no compiler, native probe or GPU.
+
 Each acceptance executable has a runtime deadline of 3,600 seconds, adjustable
 with `-RunTimeoutSeconds`. Its merged output is retained while it runs in a
 `*-run.log.raw` sidecar and decoded into the usual UTF-8 log on completion.

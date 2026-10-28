@@ -25,6 +25,49 @@ without a CMake build limit. The next ranked shortlist is:
 | 1 | Complete build caps: display-awake, failure-reporting, frame-pacing, movement-feedback and paint-fx wrappers still have uncapped `cmake --build` calls. | Selected as `HYG#12`: five argument-only changes, low risk, directly useful on the shared PC. |
 | 2 | Acceptance subset CLI: `Cases` treats `ammo,text_wrap` as one unknown case under `pwsh -File`, while `ExcludeCases` explicitly handles comma lists. | Small usability fix; scope selection normalization and preflight validation before implementation. |
 
+### Focused painter preflight (`HYG#16`)
+
+**Done (2026-10-28).** Selected the second candidate from `HYG#15` after
+compatibility qualification. All 100 current focused switches had native
+mappings, but the separate manual count and late argument chain allowed a
+future added switch to fall through to the full matrix. A scratch copy adding
+only `FutureUnmappedOnly` reproduced that fallthrough at missing-CMake
+preflight before the fix; no compiler or native probe started.
+
+The count now derives from actual bound `*Only` switch values that are
+present; explicit false values remain inactive. TrialPath and Debug-only
+checks retain their diagnostic order. The existing selector chain follows
+`Quote-Path`, with unchanged branches/operands and an initially empty
+selector-only argument array. An active selector with no native argument
+fails before output/tool setup. The original quoted content/capture paths
+are prepended once at the existing launch point. Independent source review
+confirms all 100 ordered clauses, parameters and trial/Debug rules are
+preserved. Reader, capacity and native dispatch policies remain unchanged.
+
+The actual-runner preflight checker passes 138 checks in both PowerShell 5.1
+and pwsh: all 100 discovered selectors, default/false/conflict cases, three
+trial paths and Debug-only refusals. The synthetic unmapped selector now fails
+before output/tool creation, while false preserves ordinary routing. Private
+relative-path fixtures align both provider and process directories and restore
+both; receipts confirm unchanged source and caller environment.
+Final receipts under `hyg16-selection/` are
+`final-ps5/b73e0742b7bf4beb883ef2ceadff432d` and
+`final-ps7/f576d6cc5d8a4adfbb48904dd63bb7ee`.
+
+The native Release stage-preview-background leaf also passes under 5.1:
+68 readbacks, 26 rows and 16 native 64 by 32 crops, including real menu reopen
+transitions. It verifies the final quoted launch prefix and caller restoration;
+it does not run all 100 native matrices or establish visual/hardware acceptance.
+Evidence is `hyg16-native/x64-release/6ea8af81f7d34ba69aee5400892f150c`
+under `out/validation/implementation-loop-20261028/`.
+
+That launch also exposed an inherited `PSModulePath` selecting PowerShell 7's
+Utility module in host 5.1, leaving `Get-FileHash` absent despite `#Requires`.
+Runner and checker now import their host's own standard Utility manifest
+without reload, installation or environment changes. The same failing host
+environment then passes native compilation/execution. CI runs both preflight
+hosts and retains receipts; hosted CI has not been run locally.
+
 ### Painter PowerShell compatibility (`HYG#15`)
 
 **Done (2026-10-28).** A fresh painter review recorded these findings before
@@ -66,8 +109,10 @@ Native evidence under `hyg15-native/<preset>/` has IDs
 `91f743e4b16641e59b75b3a43d1de942` (Debug).
 
 The initial native preflight also found this session had not loaded the
-standard `Get-FileHash` function. The runner now explicitly requires the
-existing Utility module; it does not install a module or supply a hash shim.
+standard `Get-FileHash` function. An explicit Utility requirement initially
+addressed that preflight; `HYG#16` subsequently pinned module loading to the
+host's own manifest after finding a cross-edition inherited module path.
+Neither change installs a module or supplies a hash shim.
 Fresh direct-runner preflight in both hosts passes fixture hashing before the
 expected missing-tool refusal, with no compilation. All thirteen touched
 scripts parse in both hosts and independent review passes. These checks do

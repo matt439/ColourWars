@@ -1,10 +1,9 @@
-#Requires -Modules Microsoft.PowerShell.Utility
 # Painter visual probe runner. Helpers live beside it in check-painter/ and are
-# dot-sourced into this script's scope. A focused leaf has seven integration points:
-# the param list, the one-leaf guard below, check-painter/evidence-record.ps1,
-# the probe-argument chain, a check-painter/verify-<leaf>.ps1 with its guarded
-# dot-source line (if it has post-run evidence), check-painter/diagnostics.ps1,
-# and the check-painter/contact-sheet.ps1 selector for any new capture family.
+# dot-sourced into this script's scope. A focused leaf registers its param,
+# native argument below, check-painter/evidence-record.ps1 entry, guarded
+# check-painter/verify-<leaf>.ps1 dot-source (if it has post-run evidence),
+# check-painter/diagnostics.ps1 entry and contact-sheet selector for any new
+# capture family. The one-leaf guard discovers bound *Only switches automatically.
 [CmdletBinding()]
 param(
     [ValidateSet('x64-debug', 'x64-release')]
@@ -116,6 +115,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+# A caller may pass another PowerShell edition's modules through PSModulePath.
+# Load this host's standard file-hashing command from its own installation.
+Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
 $trialResolved = $null
 $trialHashBefore = $null
 $trialHashAfterAttempted = $false
@@ -139,7 +141,14 @@ if ($TeamTuneColoursOnly -and $Preset -ne 'x64-debug') {
 if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'WeaponTuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$PracticeReplayOnly.IsPresent + [int]$RumbleOnly.IsPresent + [int]$KeyboardJumpOnly.IsPresent + [int]$RouteWarningOnly.IsPresent + [int]$CrossfeedOnly.IsPresent + [int]$PressTowerOnly.IsPresent + [int]$TurbulenceBlockoutOnly.IsPresent + [int]$TurbulenceMoverOnly.IsPresent + [int]$TurbulenceShoulderOnly.IsPresent + [int]$TurbulenceSlabOnly.IsPresent + [int]$GatePermissionOnly.IsPresent + [int]$FerryDirectionOnly.IsPresent + [int]$SurfaceFinishOnly.IsPresent + [int]$CqBlockoutOnly.IsPresent + [int]$ResultPercentageOnly.IsPresent + [int]$ContributionTeamOnly.IsPresent + [int]$CompetitiveWinnerOnly.IsPresent + [int]$RoundHeadingOnly.IsPresent + [int]$SeriesScoreOnly.IsPresent + [int]$SessionResultOnly.IsPresent + [int]$ResultsTextOnly.IsPresent + [int]$EndContinuationOnly.IsPresent + [int]$ResolutionTextOnly.IsPresent + [int]$DurationTextOnly.IsPresent + [int]$ExposedColourAlphaOnly.IsPresent + [int]$FeedbackTuneColoursOnly.IsPresent + [int]$CombatTuneColoursOnly.IsPresent + [int]$BlockedShotTuneColoursOnly.IsPresent + [int]$IdleDripTuneColoursOnly.IsPresent + [int]$RespawnPenTuneColoursOnly.IsPresent + [int]$CursorTuneColoursOnly.IsPresent + [int]$SilhouetteTuneColoursOnly.IsPresent + [int]$RevealTuneColoursOnly.IsPresent + [int]$CursorMaterialTuneColoursOnly.IsPresent + [int]$DesktopTuneColourOnly.IsPresent + [int]$PowerLightTuneColourOnly.IsPresent + [int]$ProgramTuneColourOnly.IsPresent + [int]$ProgramLevelVisibilityOnly.IsPresent + [int]$ActingTuneColoursOnly.IsPresent + [int]$GlassTuneColourOnly.IsPresent + [int]$SilhouetteBodyTuneColourOnly.IsPresent + [int]$ScribbleTuneColourOnly.IsPresent + [int]$HudHealthTuneColourOnly.IsPresent + [int]$HudTrackTuneColourOnly.IsPresent + [int]$HudTimerTuneColourOnly.IsPresent + [int]$HudClosingMaterialsOnly.IsPresent + [int]$HudClosingShadeOnly.IsPresent + [int]$HudPaperTuneColoursOnly.IsPresent + [int]$HudLabelTuneColoursOnly.IsPresent + [int]$StagePreviewBackgroundTuneColourOnly.IsPresent + [int]$CrackTuneColourOnly.IsPresent + [int]$LimbTuneColoursOnly.IsPresent + [int]$PercentageTextOnly.IsPresent + [int]$ParallaxOnly.IsPresent + [int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$LandmarkOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$BotPlayersOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent + [int]$StickReadoutsOnly.IsPresent + [int]$TeamFocusOnly.IsPresent + [int]$TeamTuneColoursOnly.IsPresent + [int]$WeaponTuneColoursOnly.IsPresent + [int]$MenuLabelsOnly.IsPresent + [int]$StageSummaryOnly.IsPresent + [int]$StageCountsOnly.IsPresent + [int]$StageScanOnly.IsPresent) -gt 1) {
+$focusedSelectors = @(
+    $PSBoundParameters.GetEnumerator() | Where-Object {
+        $_.Key.EndsWith('Only', [StringComparison]::OrdinalIgnoreCase) -and
+        $_.Value -is [System.Management.Automation.SwitchParameter] -and
+        $_.Value.IsPresent
+    } | ForEach-Object { $_.Key }
+)
+if ($focusedSelectors.Count -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -166,6 +175,111 @@ function Quote-Path {
         throw 'A path contains an unsupported quote or newline.'
     }
     return '"' + [IO.Path]::GetFullPath($Path) + '"'
+}
+
+$probeArguments = @()
+if ($IdentityOnly) { $probeArguments += 'identity' }
+elseif ($QuietOnly) { $probeArguments += 'quiet' }
+elseif ($DriftOnly) { $probeArguments += 'drift' }
+elseif ($MiniatureTerrainOnly) { $probeArguments += 'miniature-terrain' }
+elseif ($CqBlockoutOnly) { $probeArguments += 'cq-blockout' }
+elseif ($CrossfeedOnly) { $probeArguments += 'crossfeed' }
+elseif ($PressTowerOnly) { $probeArguments += 'press-tower' }
+elseif ($TurbulenceBlockoutOnly) { $probeArguments += 'turbulence-blockout' }
+elseif ($TurbulenceMoverOnly) { $probeArguments += @('turbulence-mover', (Quote-Path $trialResolved)) }
+elseif ($TurbulenceShoulderOnly) { $probeArguments += @('turbulence-shoulder', (Quote-Path $trialResolved)) }
+elseif ($TurbulenceSlabOnly) { $probeArguments += @('turbulence-slab', (Quote-Path $trialResolved)) }
+elseif ($GatePermissionOnly) { $probeArguments += 'gate-permission' }
+elseif ($FerryDirectionOnly) { $probeArguments += 'ferry-direction' }
+elseif ($SurfaceFinishOnly) { $probeArguments += 'surface-finish' }
+elseif ($RouteWarningOnly) { $probeArguments += 'route-warning' }
+elseif ($LandmarkOnly) { $probeArguments += 'landmark' }
+elseif ($ParallaxOnly) { $probeArguments += 'parallax' }
+elseif ($TuneColoursOnly) { $probeArguments += 'tune-colours' }
+elseif ($FeedbackTuneColoursOnly) { $probeArguments += 'feedback-tune-colours' }
+elseif ($CombatTuneColoursOnly) { $probeArguments += 'combat-tune-colours' }
+elseif ($BlockedShotTuneColoursOnly) { $probeArguments += 'blocked-shot-tune-colours' }
+elseif ($IdleDripTuneColoursOnly) { $probeArguments += 'idle-drip-tune-colours' }
+elseif ($RespawnPenTuneColoursOnly) { $probeArguments += 'respawn-pen-tune-colours' }
+elseif ($CursorTuneColoursOnly) { $probeArguments += 'cursor-tune-colours' }
+elseif ($SilhouetteTuneColoursOnly) { $probeArguments += 'silhouette-tune-colours' }
+elseif ($RevealTuneColoursOnly) { $probeArguments += 'reveal-tune-colours' }
+elseif ($CursorMaterialTuneColoursOnly) { $probeArguments += 'cursor-material-tune-colours' }
+elseif ($DesktopTuneColourOnly) { $probeArguments += 'desktop-tune-colour' }
+elseif ($PowerLightTuneColourOnly) { $probeArguments += 'power-light-tune-colour' }
+elseif ($ProgramTuneColourOnly) { $probeArguments += 'program-tune-colour' }
+elseif ($ProgramLevelVisibilityOnly) { $probeArguments += 'program-level-visibility' }
+elseif ($ActingTuneColoursOnly) { $probeArguments += 'acting-tune-colours' }
+elseif ($GlassTuneColourOnly) { $probeArguments += 'glass-tune-colour' }
+elseif ($SilhouetteBodyTuneColourOnly) { $probeArguments += 'silhouette-body-tune-colour' }
+elseif ($ScribbleTuneColourOnly) { $probeArguments += 'scribble-tune-colour' }
+elseif ($HudHealthTuneColourOnly) { $probeArguments += 'hud-health-tune-colour' }
+elseif ($HudTrackTuneColourOnly) { $probeArguments += 'hud-track-tune-colour' }
+elseif ($HudTimerTuneColourOnly) { $probeArguments += 'hud-timer-tune-colour' }
+elseif ($HudClosingMaterialsOnly) { $probeArguments += 'hud-closing-materials' }
+elseif ($HudClosingShadeOnly) { $probeArguments += 'hud-closing-shade' }
+elseif ($HudPaperTuneColoursOnly) { $probeArguments += 'hud-paper-tune-colours' }
+elseif ($HudLabelTuneColoursOnly) { $probeArguments += 'hud-label-tune-colours' }
+elseif ($StagePreviewBackgroundTuneColourOnly) { $probeArguments += 'stage-preview-background-tune-colour' }
+elseif ($CrackTuneColourOnly) { $probeArguments += 'crack-tune-colour' }
+elseif ($LimbTuneColoursOnly) { $probeArguments += 'limb-tune-colours' }
+elseif ($ExposedColourAlphaOnly) { $probeArguments += 'exposed-colour-alpha' }
+elseif ($DurationTextOnly) { $probeArguments += 'duration-text' }
+elseif ($ResolutionTextOnly) { $probeArguments += 'resolution-text' }
+elseif ($EndContinuationOnly) { $probeArguments += 'end-continuation' }
+elseif ($ResultsTextOnly) { $probeArguments += 'results-text' }
+elseif ($SessionResultOnly) { $probeArguments += 'session-result' }
+elseif ($SeriesScoreOnly) { $probeArguments += 'series-score' }
+elseif ($RoundHeadingOnly) { $probeArguments += 'round-heading' }
+elseif ($CompetitiveWinnerOnly) { $probeArguments += 'competitive-winner' }
+elseif ($ContributionTeamOnly) { $probeArguments += 'contribution-team' }
+elseif ($ResultPercentageOnly) { $probeArguments += 'result-percentage' }
+elseif ($MonitorOnly) { $probeArguments += 'monitor' }
+elseif ($CountdownOnly) { $probeArguments += 'countdown' }
+elseif ($ClosingOnly) { $probeArguments += 'closing' }
+elseif ($SupplyOnly) { $probeArguments += 'supply' }
+elseif ($HudOnly) { $probeArguments += 'hud' }
+elseif ($PracticeReplayOnly) { $probeArguments += 'practice-replay' }
+elseif ($ResumeOnly) { $probeArguments += 'resume' }
+elseif ($EndMenuOnly) { $probeArguments += 'end-menu' }
+elseif ($PauseMenuOnly) { $probeArguments += 'pause-menu' }
+elseif ($ResultsMenuOnly) { $probeArguments += 'results-menu' }
+elseif ($MainMenuOnly) { $probeArguments += 'main-menu' }
+elseif ($WeaponCatalogOnly) { $probeArguments += 'weapon-catalog' }
+elseif ($MenuTextOnly) { $probeArguments += 'menu-text' }
+elseif ($MenuMotionOnly) { $probeArguments += 'menu-motion' }
+elseif ($SetupMotionOnly) { $probeArguments += 'setup-motion' }
+elseif ($JoinStageMotionOnly) { $probeArguments += 'join-stage-motion' }
+elseif ($SetupPaperOnly) { $probeArguments += 'setup-paper' }
+elseif ($JoinPaperOnly) { $probeArguments += 'join-paper' }
+elseif ($TeamPaperOnly) { $probeArguments += 'team-paper' }
+elseif ($WeaponPaperOnly) { $probeArguments += 'weapon-paper' }
+elseif ($StagePaperOnly) { $probeArguments += 'stage-paper' }
+elseif ($HomeReturnFocusOnly) { $probeArguments += 'home-return-focus' }
+elseif ($HomeExitOnly) { $probeArguments += 'home-exit' }
+elseif ($OptionsDefaultsOnly) { $probeArguments += 'options-defaults' }
+elseif ($DisplayTrialOnly) { $probeArguments += 'display-trial' }
+elseif ($PausedOptionsOnly) { $probeArguments += 'paused-options' }
+elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
+elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
+elseif ($RumbleOnly) { $probeArguments += 'rumble' }
+elseif ($KeyboardJumpOnly) { $probeArguments += 'keyboard-jump' }
+elseif ($PercentageTextOnly) { $probeArguments += 'percentage-text' }
+elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
+elseif ($TeamSetupOnly) { $probeArguments += 'team-setup' }
+elseif ($RememberedSetupOnly) { $probeArguments += 'remembered-setup' }
+elseif ($BotPlayersOnly) { $probeArguments += 'bot-players' }
+elseif ($ConnectionTextOnly) { $probeArguments += 'connection-text' }
+elseif ($StickReadoutsOnly) { $probeArguments += 'stick-readouts' }
+elseif ($TeamFocusOnly) { $probeArguments += 'team-focus' }
+elseif ($WeaponTuneColoursOnly) { $probeArguments += 'weapon-tune-colours' }
+elseif ($TeamTuneColoursOnly) { $probeArguments += 'team-tune-colours' }
+elseif ($MenuLabelsOnly) { $probeArguments += 'menu-labels' }
+elseif ($StageSummaryOnly) { $probeArguments += 'stage-summary' }
+elseif ($StageCountsOnly) { $probeArguments += 'stage-counts' }
+elseif ($StageScanOnly) { $probeArguments += 'stage-scan' }
+if ($focusedSelectors.Count -eq 1 -and $probeArguments.Count -eq 0) {
+    throw "Focused painter selector '$($focusedSelectors[0])' has no native scope argument."
 }
 
 . (Join-Path $PSScriptRoot 'check-painter/hash.ps1')
@@ -316,107 +430,7 @@ try {
     )
     $env:PATH = "$gameDirectory;$previousPath"
     $env:LOCALAPPDATA = $profile
-    $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures))
-    if ($IdentityOnly) { $probeArguments += 'identity' }
-    elseif ($QuietOnly) { $probeArguments += 'quiet' }
-    elseif ($DriftOnly) { $probeArguments += 'drift' }
-    elseif ($MiniatureTerrainOnly) { $probeArguments += 'miniature-terrain' }
-    elseif ($CqBlockoutOnly) { $probeArguments += 'cq-blockout' }
-    elseif ($CrossfeedOnly) { $probeArguments += 'crossfeed' }
-    elseif ($PressTowerOnly) { $probeArguments += 'press-tower' }
-    elseif ($TurbulenceBlockoutOnly) { $probeArguments += 'turbulence-blockout' }
-    elseif ($TurbulenceMoverOnly) { $probeArguments += @('turbulence-mover', (Quote-Path $trialResolved)) }
-    elseif ($TurbulenceShoulderOnly) { $probeArguments += @('turbulence-shoulder', (Quote-Path $trialResolved)) }
-    elseif ($TurbulenceSlabOnly) { $probeArguments += @('turbulence-slab', (Quote-Path $trialResolved)) }
-    elseif ($GatePermissionOnly) { $probeArguments += 'gate-permission' }
-    elseif ($FerryDirectionOnly) { $probeArguments += 'ferry-direction' }
-    elseif ($SurfaceFinishOnly) { $probeArguments += 'surface-finish' }
-    elseif ($RouteWarningOnly) { $probeArguments += 'route-warning' }
-    elseif ($LandmarkOnly) { $probeArguments += 'landmark' }
-    elseif ($ParallaxOnly) { $probeArguments += 'parallax' }
-    elseif ($TuneColoursOnly) { $probeArguments += 'tune-colours' }
-    elseif ($FeedbackTuneColoursOnly) { $probeArguments += 'feedback-tune-colours' }
-    elseif ($CombatTuneColoursOnly) { $probeArguments += 'combat-tune-colours' }
-    elseif ($BlockedShotTuneColoursOnly) { $probeArguments += 'blocked-shot-tune-colours' }
-    elseif ($IdleDripTuneColoursOnly) { $probeArguments += 'idle-drip-tune-colours' }
-    elseif ($RespawnPenTuneColoursOnly) { $probeArguments += 'respawn-pen-tune-colours' }
-    elseif ($CursorTuneColoursOnly) { $probeArguments += 'cursor-tune-colours' }
-    elseif ($SilhouetteTuneColoursOnly) { $probeArguments += 'silhouette-tune-colours' }
-    elseif ($RevealTuneColoursOnly) { $probeArguments += 'reveal-tune-colours' }
-    elseif ($CursorMaterialTuneColoursOnly) { $probeArguments += 'cursor-material-tune-colours' }
-    elseif ($DesktopTuneColourOnly) { $probeArguments += 'desktop-tune-colour' }
-    elseif ($PowerLightTuneColourOnly) { $probeArguments += 'power-light-tune-colour' }
-    elseif ($ProgramTuneColourOnly) { $probeArguments += 'program-tune-colour' }
-    elseif ($ProgramLevelVisibilityOnly) { $probeArguments += 'program-level-visibility' }
-    elseif ($ActingTuneColoursOnly) { $probeArguments += 'acting-tune-colours' }
-    elseif ($GlassTuneColourOnly) { $probeArguments += 'glass-tune-colour' }
-    elseif ($SilhouetteBodyTuneColourOnly) { $probeArguments += 'silhouette-body-tune-colour' }
-    elseif ($ScribbleTuneColourOnly) { $probeArguments += 'scribble-tune-colour' }
-    elseif ($HudHealthTuneColourOnly) { $probeArguments += 'hud-health-tune-colour' }
-    elseif ($HudTrackTuneColourOnly) { $probeArguments += 'hud-track-tune-colour' }
-    elseif ($HudTimerTuneColourOnly) { $probeArguments += 'hud-timer-tune-colour' }
-    elseif ($HudClosingMaterialsOnly) { $probeArguments += 'hud-closing-materials' }
-    elseif ($HudClosingShadeOnly) { $probeArguments += 'hud-closing-shade' }
-    elseif ($HudPaperTuneColoursOnly) { $probeArguments += 'hud-paper-tune-colours' }
-    elseif ($HudLabelTuneColoursOnly) { $probeArguments += 'hud-label-tune-colours' }
-    elseif ($StagePreviewBackgroundTuneColourOnly) { $probeArguments += 'stage-preview-background-tune-colour' }
-    elseif ($CrackTuneColourOnly) { $probeArguments += 'crack-tune-colour' }
-    elseif ($LimbTuneColoursOnly) { $probeArguments += 'limb-tune-colours' }
-    elseif ($ExposedColourAlphaOnly) { $probeArguments += 'exposed-colour-alpha' }
-    elseif ($DurationTextOnly) { $probeArguments += 'duration-text' }
-    elseif ($ResolutionTextOnly) { $probeArguments += 'resolution-text' }
-    elseif ($EndContinuationOnly) { $probeArguments += 'end-continuation' }
-    elseif ($ResultsTextOnly) { $probeArguments += 'results-text' }
-    elseif ($SessionResultOnly) { $probeArguments += 'session-result' }
-    elseif ($SeriesScoreOnly) { $probeArguments += 'series-score' }
-    elseif ($RoundHeadingOnly) { $probeArguments += 'round-heading' }
-    elseif ($CompetitiveWinnerOnly) { $probeArguments += 'competitive-winner' }
-    elseif ($ContributionTeamOnly) { $probeArguments += 'contribution-team' }
-    elseif ($ResultPercentageOnly) { $probeArguments += 'result-percentage' }
-    elseif ($MonitorOnly) { $probeArguments += 'monitor' }
-    elseif ($CountdownOnly) { $probeArguments += 'countdown' }
-    elseif ($ClosingOnly) { $probeArguments += 'closing' }
-    elseif ($SupplyOnly) { $probeArguments += 'supply' }
-    elseif ($HudOnly) { $probeArguments += 'hud' }
-    elseif ($PracticeReplayOnly) { $probeArguments += 'practice-replay' }
-    elseif ($ResumeOnly) { $probeArguments += 'resume' }
-    elseif ($EndMenuOnly) { $probeArguments += 'end-menu' }
-    elseif ($PauseMenuOnly) { $probeArguments += 'pause-menu' }
-    elseif ($ResultsMenuOnly) { $probeArguments += 'results-menu' }
-    elseif ($MainMenuOnly) { $probeArguments += 'main-menu' }
-    elseif ($WeaponCatalogOnly) { $probeArguments += 'weapon-catalog' }
-    elseif ($MenuTextOnly) { $probeArguments += 'menu-text' }
-    elseif ($MenuMotionOnly) { $probeArguments += 'menu-motion' }
-    elseif ($SetupMotionOnly) { $probeArguments += 'setup-motion' }
-    elseif ($JoinStageMotionOnly) { $probeArguments += 'join-stage-motion' }
-    elseif ($SetupPaperOnly) { $probeArguments += 'setup-paper' }
-    elseif ($JoinPaperOnly) { $probeArguments += 'join-paper' }
-    elseif ($TeamPaperOnly) { $probeArguments += 'team-paper' }
-    elseif ($WeaponPaperOnly) { $probeArguments += 'weapon-paper' }
-    elseif ($StagePaperOnly) { $probeArguments += 'stage-paper' }
-    elseif ($HomeReturnFocusOnly) { $probeArguments += 'home-return-focus' }
-    elseif ($HomeExitOnly) { $probeArguments += 'home-exit' }
-    elseif ($OptionsDefaultsOnly) { $probeArguments += 'options-defaults' }
-    elseif ($DisplayTrialOnly) { $probeArguments += 'display-trial' }
-    elseif ($PausedOptionsOnly) { $probeArguments += 'paused-options' }
-    elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
-    elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
-    elseif ($RumbleOnly) { $probeArguments += 'rumble' }
-    elseif ($KeyboardJumpOnly) { $probeArguments += 'keyboard-jump' }
-    elseif ($PercentageTextOnly) { $probeArguments += 'percentage-text' }
-    elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
-    elseif ($TeamSetupOnly) { $probeArguments += 'team-setup' }
-    elseif ($RememberedSetupOnly) { $probeArguments += 'remembered-setup' }
-    elseif ($BotPlayersOnly) { $probeArguments += 'bot-players' }
-    elseif ($ConnectionTextOnly) { $probeArguments += 'connection-text' }
-    elseif ($StickReadoutsOnly) { $probeArguments += 'stick-readouts' }
-    elseif ($TeamFocusOnly) { $probeArguments += 'team-focus' }
-    elseif ($WeaponTuneColoursOnly) { $probeArguments += 'weapon-tune-colours' }
-    elseif ($TeamTuneColoursOnly) { $probeArguments += 'team-tune-colours' }
-    elseif ($MenuLabelsOnly) { $probeArguments += 'menu-labels' }
-    elseif ($StageSummaryOnly) { $probeArguments += 'stage-summary' }
-    elseif ($StageCountsOnly) { $probeArguments += 'stage-counts' }
-    elseif ($StageScanOnly) { $probeArguments += 'stage-scan' }
+    $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures)) + $probeArguments
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `

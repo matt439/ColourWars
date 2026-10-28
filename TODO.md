@@ -53,7 +53,8 @@ while attended reviews wait. NUL-bearing editor metadata preservation,
 raw-NUL JSON refusal, acceptance subset selection, probe runtime deadlines
 and local build caps are qualified. The editor checker now preserves the
 build-phase dependency cache while isolating runtime checks. Focused painter
-checks now support PowerShell 5.1.
+checks now support PowerShell 5.1 and reject unmapped focused requests before
+tool setup. Next is the canvas gesture/nudge fix (`ED#13`).
 This does not change the arena/tuning order above. Vertical lifts and growing
 sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.
@@ -141,6 +142,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
+| `ED#13` | OPEN | MED | S | Prevent a stale canvas drag from overwriting an arrow nudge on mouse release. [Scope](docs/level-editor.md#arrow-edits-during-canvas-gestures-ed13). |
 
 ## Audio replacement
 
@@ -264,6 +266,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Code hygiene and maintenance | [code-hygiene.md](docs/code-hygiene.md) | a concrete bounded maintenance defect; the current splits, compatibility and preflight slices are qualified |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Closed engine reports (1–22) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
@@ -273,7 +276,6 @@ A new row for one of these gets its section back.
 | Startup content validation | gap audit 8.1, `game/content_validation.cpp` | a content kind added without validation |
 | Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
 | Code TODO/FIXME markers | `game/`, `editor/`, `scripts/`, `cmake/` | a new marker, which should be a row here instead |
-| Code hygiene and maintenance | [code-hygiene.md](docs/code-hygiene.md) | a scoped source, maintenance or tooling improvement beyond completed `HYG#1`-`HYG#15` |
 | Movement Course icon (`ED#6`, retired) | [level-editor.md](docs/level-editor.md#movement-course-icon-ed6-retired) | an accepted screen actually displays stage icons; current Stage Select uses a live preview |
 
 ---

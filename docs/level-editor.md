@@ -45,6 +45,26 @@ See [the level format reference](level-format.md) for the file contract.
 
 ## Editing
 
+### Authoring follow-up shortlist (2026-10-28)
+
+The author authorized autonomous bounded improvements while attended gates
+wait. A fresh source review ranked these independent authoring defects:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | `Editor::nudge` changes the document during an active drag without cancelling its old preview; button release can overwrite the arrow edit. | Selected as `ED#13`: adopt the existing command gesture barrier. Small change with a native message/history regression; preserve pending-property admission and snap rules. |
+| 2 | Ramp drawing is triangular, but `Editor::hit` accepts the entire rectangle, including its empty half. | Improve selection of overlapping geometry; define edge tolerance and preserve selection priority before implementation. |
+| 3 | Debug `quote_word` does not protect a quoted word's trailing backslash, which the tokenizer consumes with the closing quote. | Useful for paths and saved binds; needs grammar and persistence qualification. Larger scope than the canvas fix. |
+
+#### Arrow edits during canvas gestures (`ED#13`)
+
+**OPEN.** Reproduce a move/resize preview followed by an arrow and late mouse
+release. Cancel the transient gesture before committing the nudge, matching
+other editor commands. Check actual hidden-window messages, geometry, capture,
+selection and undo/redo; a late release must add no edit. Preserve ordinary
+drag/resize and arrow behavior, including snap and Shift fine movement. This
+does not establish the attended editor/play acceptance in `ED#5`.
+
 Select an object in the list or click it on the canvas. Drag its body to move
 it, or drag the handle at the bottom-right corner to resize it. Ramp editing
 moves or scales all three vertices together. Spawn markers can be moved;
