@@ -3,7 +3,7 @@
 
 ResumeAudio::ResumeAudio(const labrador::AudioResources* resources,
 	const Presentation& presentation) :
-	SoundBankObject(presentation.menu().sound_bank, resources),
+	colourwars::SoundBankObject(presentation.menu().sound_bank, resources),
 	sound_(presentation.pause_menu().resume_sound)
 {
 	this->effect_ = this->resolve_effect(this->sound_.name);

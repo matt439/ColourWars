@@ -21,11 +21,11 @@
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
-#include "engine/render/animation_object.h"
+#include "game/carried/animation_object.h"
 #include "engine/collision/collision_object.h"
 #include "engine/collision/contacts.h"
 #include "game/objects/collision_object_type.h"
-#include "engine/core/moving_object.h"
+#include "game/carried/moving_object.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/colour.h"
@@ -101,9 +101,9 @@ struct FigurePose
     bool whole = false;
 };
 
-class Player final : public labrador::MovingObject,
+class Player final : public colourwars::MovingObject,
                      public labrador::CollisionObject,
-                     public labrador::AnimationObject, public labrador::TextureObject
+                     public colourwars::AnimationObject, public labrador::TextureObject
 {
 public:
     // Borrowed tuning and presentation must outlive the player. The builder supplies the spawn

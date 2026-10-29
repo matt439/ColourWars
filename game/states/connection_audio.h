@@ -1,13 +1,13 @@
 #pragma once
 
-#include "engine/audio/sound_bank_object.h"
+#include "game/carried/sound_bank_object.h"
 #include "game/input_slots.h"
 #include "game/presentation.h"
 #include <array>
 
 // Shared by the match and all of its menu pages, so replacing a page cannot
 // repeat a lost-pad warning or forget a pad still waiting to return.
-class ConnectionAudio : public labrador::SoundBankObject
+class ConnectionAudio : public colourwars::SoundBankObject
 {
 public:
 	using Pads = std::array<bool, input_slots::pad_count>;

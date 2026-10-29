@@ -147,7 +147,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             }
             text = std::move(value);
         }
-        else { text = std::make_unique<UiTextDropShadow>("independent-menu-label", literal, font, position, app.render_resources(), ink, Colour{}, shadow); }
+        else { text = std::make_unique<colourwars::UiTextDropShadow>("independent-menu-label", literal, font, position, app.render_resources(), ink, Colour{}, shadow); }
         const RectangleF text_bounds = text->bounds();
         require(panel.contains(text_bounds) && text_bounds.width > 0.0f && text_bounds.height > 0.0f,
             "Composed menu label escapes its actual paper");

@@ -145,11 +145,11 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
             { "roster", fixture.roster, style.brand_font, 2.0f, 3.0f, built.art.ink },
             { "goal", words.goal, style.brand_font, 3.0f, 4.0f, built.art.focus_ink },
             { "objective", words.*fixture.objective, style.brand_font, 4.0f, 6.0f, built.art.ink } } };
-        std::array<std::unique_ptr<UiTextDropShadow>, 5> expected{};
+        std::array<std::unique_ptr<colourwars::UiTextDropShadow>, 5> expected{};
         for (size_t index = 0; index < rows.size(); ++index)
         {
             const auto& reference = rows[index];
-            expected[index] = std::make_unique<UiTextDropShadow>("reference-briefing", reference.text, reference.font,
+            expected[index] = std::make_unique<colourwars::UiTextDropShadow>("reference-briefing", reference.text, reference.font,
                 info + row * reference.row, app.render_resources(), reference.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f),
                 style.detail_shadow_offset);
             const RectangleF bounds = expected[index]->bounds();

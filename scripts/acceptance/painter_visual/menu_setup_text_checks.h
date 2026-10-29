@@ -78,13 +78,13 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             return style.layout.position + Vector2F(spacing.x * static_cast<float>(column),
                 spacing.y * static_cast<float>(row));
         };
-        std::vector<std::unique_ptr<UiTextDropShadow>> widgets;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> widgets;
         const auto add = [&](const std::wstring& text, const std::string& font,
             const Vector2F& where, const Colour& colour, const Vector2F& shadow)
         {
-            auto widget = std::make_unique<UiTextDropShadow>("reference-setup-text", text, font, where,
+            auto widget = std::make_unique<colourwars::UiTextDropShadow>("reference-setup-text", text, font, where,
                 app.render_resources(), colour, Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
-            UiTextDropShadow* result = widget.get(); widgets.push_back(std::move(widget)); return result;
+            colourwars::UiTextDropShadow* result = widget.get(); widgets.push_back(std::move(widget)); return result;
         };
         add(snapshot.menu_text().heading(count ? MenuHeading::players : MenuHeading::mode),
             style.heading_font, position(0, 0), art.ink, style.heading_shadow_offset);
@@ -131,7 +131,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         actions.push_back(back->bounds());
         if (focus == back_focus) { focused = back->bounds(); }
         const auto& footer = snapshot.prompt_bar();
-        const UiTextDropShadow prompt("reference-setup-prompt", snapshot.menu_text().prompt(
+        const colourwars::UiTextDropShadow prompt("reference-setup-prompt", snapshot.menu_text().prompt(
             count ? MenuPrompt::select_back : MenuPrompt::mode), footer.font, footer.position,
             app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);

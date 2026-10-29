@@ -282,7 +282,7 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 						// Audition the pending value even when the saved setting is mute.
 						// The preview wave is in no sound group, because the SFX group
 						// still carries the applied value.
-						SoundBankObject::play_wave(this->volume_preview_sound_,
+						colourwars::SoundBankObject::play_wave(this->volume_preview_sound_,
 							this->presentation().controls_settings().volume_preview_sound.volume *
 							this->selection_.sfx_gain());
 					}

@@ -56,8 +56,8 @@ Player::Player(const RectangleF& rectangle,
     int sound_index,
     const FigurePresentation* figure,
     const ViewShakePresentation* view_shake) :
-    MovingObject(velocity),
-    AnimationObject(tuning->player().idle.sheet,
+    colourwars::MovingObject(velocity),
+    colourwars::AnimationObject(tuning->player().idle.sheet,
                     tuning->player().idle.strip,
                     render_resources, player_tint, rotation, origin, flip, layer_depth),
     TextureObject(tuning->player().idle.sheet,
@@ -118,7 +118,7 @@ Player::Player(const RectangleF& rectangle,
     }
     if (player.idle.frame_time.has_value())
     {
-        AnimationObject::set_frame_time(*player.idle.frame_time);
+        colourwars::AnimationObject::set_frame_time(*player.idle.frame_time);
     }
 
     this->health_ = player.starting_health;
@@ -729,8 +729,8 @@ void Player::on_structure_contact(const CollisionObject& other,
         {
             const bool rises_right = this->fixed_slab_support_->end.y < this->fixed_slab_support_->start.y;
             this->rectangle_ = this->prev_rectangle_;
-            MovingObject::set_velocity_x(0.0f);
-            MovingObject::set_velocity_y(0.0f);
+            colourwars::MovingObject::set_velocity_x(0.0f);
+            colourwars::MovingObject::set_velocity_y(0.0f);
             this->support_position_ = *support;
             this->supported_this_tick_ = true;
             this->hit_ceiling_this_tick_ = true;
@@ -753,8 +753,8 @@ void Player::on_structure_contact(const CollisionObject& other,
             support && feet_at(this->prev_rectangle_, support->y))
         {
             this->rectangle_ = this->prev_rectangle_;
-            MovingObject::set_velocity_x(0.0f);
-            MovingObject::set_velocity_y(0.0f);
+            colourwars::MovingObject::set_velocity_x(0.0f);
+            colourwars::MovingObject::set_velocity_y(0.0f);
             this->support_position_ = *support;
             this->supported_this_tick_ = true;
             this->hit_ceiling_this_tick_ = true;
@@ -778,7 +778,7 @@ void Player::on_structure_contact(const CollisionObject& other,
                 std::min(this->rectangle_.right(), surface.right())) / 2.0f,
                 this->rectangle_.bottom() };
         }
-        MovingObject::set_velocity_y(0.0f);
+        colourwars::MovingObject::set_velocity_y(0.0f);
         if (normal.y > 0.0f)
         {
             this->supported_this_tick_ = true;
@@ -833,7 +833,7 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
     this->support_position_ = { std::clamp(support_x, surface.left(), surface.right()),
         this->rectangle_.bottom() };
 
-    MovingObject::set_velocity_y(0.0f);
+    colourwars::MovingObject::set_velocity_y(0.0f);
 }
 
 void Player::remember_fixed_slab_support(const FixedSlabPaintable& slab)
@@ -873,7 +873,7 @@ void Player::on_fixed_slab_contact(const FixedSlabPaintable& slab,
     {
         this->support_position_ = *point;
     }
-    MovingObject::set_velocity_y(0.0f);
+    colourwars::MovingObject::set_velocity_y(0.0f);
 }
 
 std::optional<Vector2F> Player::fixed_slab_support_at(const RectangleF& body) const
@@ -916,7 +916,7 @@ void Player::on_jump_through_contact(const CollisionObject& other)
     {
         this->support_impact_speed_ = std::max(this->support_impact_speed_,
             this->velocity().y);
-        MovingObject::set_velocity_y(0.0f);
+        colourwars::MovingObject::set_velocity_y(0.0f);
         this->rectangle_.set_position_y_from_bottom(other_rect.top());
         this->support_position_ = { (std::max(this->rectangle_.left(), other_rect.left()) +
             std::min(this->rectangle_.right(), other_rect.right())) / 2.0f, other_rect.top() };
@@ -1054,7 +1054,7 @@ void Player::update(float dt)
         }
         else
         {
-            AnimationObject::update(dt);
+            colourwars::AnimationObject::update(dt);
             this->clothing_.advance(dt);
         }
 
@@ -1128,7 +1128,7 @@ std::vector<std::unique_ptr<Projectile>>
     auto projectiles = this->primary_->update_and_get_projectiles(
         this->input(),
         this->center(),
-        MovingObject::velocity(),
+        colourwars::MovingObject::velocity(),
         this->facing_right(),
         dt, this->ammo_regen_multiplier());
     // A paid shot is still a shot when its muzzle immediately contacts cover.
@@ -1208,76 +1208,76 @@ void Player::update_movement(float dt)
     const bool jump_pressed = this->input_.jump_pressed &&
         !this->jump_waiting_for_release_;
 
-    if (are_equal(MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
+    if (are_equal(colourwars::MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
     {
-        MovingObject::set_velocity_x(initial * x_input);
+        colourwars::MovingObject::set_velocity_x(initial * x_input);
     }
-    else if (MovingObject::velocity_x() > 0.0f && x_input > 0.0f)
+    else if (colourwars::MovingObject::velocity_x() > 0.0f && x_input > 0.0f)
     {
-        MovingObject::alter_velocity_x(acceleration * dt * x_input);
-        if (MovingObject::velocity_x() > cap)
+        colourwars::MovingObject::alter_velocity_x(acceleration * dt * x_input);
+        if (colourwars::MovingObject::velocity_x() > cap)
         {
-            MovingObject::set_velocity_x(cap);
+            colourwars::MovingObject::set_velocity_x(cap);
         }
     }
-    else if (MovingObject::velocity_x() < 0.0f && x_input < 0.0f)
+    else if (colourwars::MovingObject::velocity_x() < 0.0f && x_input < 0.0f)
     {
-        MovingObject::alter_velocity_x(acceleration * dt * x_input);
-        if (MovingObject::velocity_x() < -cap)
+        colourwars::MovingObject::alter_velocity_x(acceleration * dt * x_input);
+        if (colourwars::MovingObject::velocity_x() < -cap)
         {
-            MovingObject::set_velocity_x(-cap);
+            colourwars::MovingObject::set_velocity_x(-cap);
         }
     }
-    else if ((MovingObject::velocity_x() > 0.0f && x_input < 0.0f) ||
-        (MovingObject::velocity_x() < 0.0f && x_input > 0.0f))
+    else if ((colourwars::MovingObject::velocity_x() > 0.0f && x_input < 0.0f) ||
+        (colourwars::MovingObject::velocity_x() < 0.0f && x_input > 0.0f))
     {
         // Opposing input always includes release braking. Small corrections
         // must not make stopping weaker than letting go of the stick.
 
         const float braking = braking_rate +
             acceleration * std::fabs(x_input);
-        const float time_to_stop = std::fabs(MovingObject::velocity_x()) / braking;
+        const float time_to_stop = std::fabs(colourwars::MovingObject::velocity_x()) / braking;
         if (dt <= time_to_stop)
         {
-            MovingObject::alter_velocity_x(std::copysign(braking * dt, x_input));
+            colourwars::MovingObject::alter_velocity_x(std::copysign(braking * dt, x_input));
         }
         else
         {
             // Spend only the remainder accelerating in the new direction;
             // braking itself cannot propel the player past zero.
-            MovingObject::set_velocity_x(std::clamp(
+            colourwars::MovingObject::set_velocity_x(std::clamp(
                 acceleration * x_input * (dt - time_to_stop),
                 -cap, cap));
         }
     }
-    else if (MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
+    else if (colourwars::MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
     {
-        MovingObject::alter_velocity_x(-braking_rate * dt);
-        if (MovingObject::velocity_x() < 0.0f)
+        colourwars::MovingObject::alter_velocity_x(-braking_rate * dt);
+        if (colourwars::MovingObject::velocity_x() < 0.0f)
         {
-            MovingObject::set_velocity_x(0.0f);
+            colourwars::MovingObject::set_velocity_x(0.0f);
         }
     }
-    else if (MovingObject::velocity_x() < 0.0f && are_equal(x_input, 0.0f))
+    else if (colourwars::MovingObject::velocity_x() < 0.0f && are_equal(x_input, 0.0f))
     {
-        MovingObject::alter_velocity_x(braking_rate * dt);
-        if (MovingObject::velocity_x() > 0.0f)
+        colourwars::MovingObject::alter_velocity_x(braking_rate * dt);
+        if (colourwars::MovingObject::velocity_x() > 0.0f)
         {
-            MovingObject::set_velocity_x(0.0f);
+            colourwars::MovingObject::set_velocity_x(0.0f);
         }
     }
     if (this->is_on_ramp())
     {
 		// increase gravity on ramp
-		MovingObject::alter_velocity_y(this->player_tuning().gravity * this->player_tuning().ramp_gravity_multiplier * dt);
+		colourwars::MovingObject::alter_velocity_y(this->player_tuning().gravity * this->player_tuning().ramp_gravity_multiplier * dt);
 	}
 	else
 	{
-		MovingObject::alter_velocity_y(this->player_tuning().gravity * dt);
+		colourwars::MovingObject::alter_velocity_y(this->player_tuning().gravity * dt);
     }
-    if (MovingObject::velocity_y() > this->player_tuning().max_velocity.y)
+    if (colourwars::MovingObject::velocity_y() > this->player_tuning().max_velocity.y)
     {
-        MovingObject::set_velocity_y(this->player_tuning().max_velocity.y);
+        colourwars::MovingObject::set_velocity_y(this->player_tuning().max_velocity.y);
     }
 
     // dropping_down lasts for one update.
@@ -1290,7 +1290,7 @@ void Player::update_movement(float dt)
         !jump_pressed)
     {
         this->reset_jump_input();
-        MovingObject::alter_velocity_y(this->player_tuning().drop_down_velocity);
+        colourwars::MovingObject::alter_velocity_y(this->player_tuning().drop_down_velocity);
         this->set_move_state(PlayerMoveState::dropping_down);
     }
 	else
@@ -1301,7 +1301,7 @@ void Player::update_movement(float dt)
     // Accepted jump/drop has already released support. A rider receives the
     // platform's world displacement before its own unchanged integration.
     this->apply_carrier(dt);
-    const Vector2F displacement = MovingObject::velocity() * dt;
+    const Vector2F displacement = colourwars::MovingObject::velocity() * dt;
     this->movement_requested_x_ = displacement.x;
     this->rectangle_.offset(displacement.x, displacement.y);
 
@@ -1317,7 +1317,7 @@ void Player::update_movement(float dt)
         if (const auto support = this->ramp_support_at(this->rectangle_))
         {
             this->rectangle_.set_position_y_from_bottom(support->y);
-            MovingObject::set_velocity_y(0.0f);
+            colourwars::MovingObject::set_velocity_y(0.0f);
             this->projected_ramp_support_ = true;
         }
     }
@@ -1326,7 +1326,7 @@ void Player::update_movement(float dt)
         if (const auto support = this->fixed_slab_support_at(this->rectangle_))
         {
             this->rectangle_.set_position_y_from_bottom(support->y);
-            MovingObject::set_velocity_y(0.0f);
+            colourwars::MovingObject::set_velocity_y(0.0f);
             this->projected_fixed_slab_support_ = true;
         }
     }
@@ -1364,7 +1364,7 @@ void Player::do_jump(float dt)
 		{
 			if (this->air_time() <= this->player_tuning().jump_max_time)
 			{
-				MovingObject::alter_velocity_y(this->player_tuning().jump_acceleration * dt);
+				colourwars::MovingObject::alter_velocity_y(this->player_tuning().jump_acceleration * dt);
 			}
 			else
 			{
@@ -1403,7 +1403,7 @@ void Player::start_jump()
     this->had_ground_support_ = false;
     this->jump_buffer_remaining_ = 0.0f;
     this->ledge_grace_remaining_ = 0.0f;
-    MovingObject::set_velocity_y(std::max(this->player_tuning().jump_launch_velocity,
+    colourwars::MovingObject::set_velocity_y(std::max(this->player_tuning().jump_launch_velocity,
         -this->player_tuning().max_velocity.y));
     this->set_air_time(0.0f);
     this->set_move_state(PlayerMoveState::jumping);
@@ -1466,7 +1466,7 @@ Vector2F Player::center() const
 }
 const Vector2F& Player::velocity() const
 {
-    return MovingObject::velocity();
+    return colourwars::MovingObject::velocity();
 }
 const Camera& Player::camera() const
 {
@@ -1540,8 +1540,8 @@ void Player::place_at(const Vector2F& top_left)
     this->set_air_time(0.0f);
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
-    MovingObject::set_rotation(0.0f);
-    MovingObject::set_velocity(Vector2F::ZERO);
+    colourwars::MovingObject::set_rotation(0.0f);
+    colourwars::MovingObject::set_velocity(Vector2F::ZERO);
 }
 
 RumbleEvents Player::take_rumble_events() noexcept

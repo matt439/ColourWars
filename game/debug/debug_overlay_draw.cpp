@@ -4,7 +4,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/debug_overlay_draw.h"
 #include "engine/math/shape.h"
-#include "engine/render/camera_tools.h"
+#include "game/carried/camera_tools.h"
 #include "game/objects/collision_object_type.h"
 #include "game/objects/player.h"
 
@@ -132,7 +132,7 @@ void debug_overlay::draw_pane(DrawList& list, const LevelOverlays& overlays,
 		// The dead zone PlayerCamera::follow keeps the player inside, from the
 		// same world-unit size it passes to CameraTools.
 		const Vector2F world = visible.size();
-		const BorderThickness border = CameraTools::calculate_camera_scroll_border(world);
+		const BorderThickness border = colourwars::CameraTools::calculate_camera_scroll_border(world);
 		const Vector2F origin = view.camera.translation;
 		pen.box(RectangleF(origin.x + border.left, origin.y + border.top,
 			world.x - border.left - border.right, world.y - border.top - border.bottom),

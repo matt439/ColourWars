@@ -180,10 +180,10 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         const std::string& detail_font = wrong_font ? original.menu().detail_font : style.detail_font;
         const std::array<bool, 3> visible{ details && !revealed, details && fixture.info.team_a_played,
             details && fixture.info.team_b_played };
-        std::array<std::unique_ptr<UiTextDropShadow>, 3> labels;
+        std::array<std::unique_ptr<colourwars::UiTextDropShadow>, 3> labels;
         for (size_t role = 0; role < labels.size(); ++role)
         {
-            labels[role] = std::make_unique<UiTextDropShadow>("independent-result-percentage", words[role],
+            labels[role] = std::make_unique<colourwars::UiTextDropShadow>("independent-result-percentage", words[role],
                 role == 0 ? item_font : detail_font, Vector2F::ZERO, app.render_resources(), look.art.ink,
                 Colour(), Vector2F::ZERO, !visible[role]);
             const Vector2F raw = labels[role]->bounds().size();
@@ -191,24 +191,24 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
                 Vector2F(role == 1 ? 620.0f : 1300.0f - raw.x, 500.0f);
             labels[role]->set_position(at); result_metrics[role] = { raw, at, 1.0f };
         }
-        UiTextDropShadow heading("independent-result-percentage-title", fixture.heading, style.heading_font,
+        colourwars::UiTextDropShadow heading("independent-result-percentage-title", fixture.heading, style.heading_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
         heading.set_position({ (1920.0f - heading.bounds().width) / 2.0f, 125.0f });
         // The fixed A mark extends into this complete plate band even before
         // the percentages appear. Include both literal marks at their original
         // centers, with the same absent-team and already-revealed gates.
-        UiTextDropShadow mark_a("independent-result-percentage-mark-a", L"A", item_font,
+        colourwars::UiTextDropShadow mark_a("independent-result-percentage-mark-a", L"A", item_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO,
             revealed || !fixture.info.team_a_played);
-        UiTextDropShadow mark_b("independent-result-percentage-mark-b", L"B", item_font,
+        colourwars::UiTextDropShadow mark_b("independent-result-percentage-mark-b", L"B", item_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO,
             revealed || !fixture.info.team_b_played);
         mark_a.set_position(Vector2F(562.0f, 550.0f) - mark_a.bounds().center());
         mark_b.set_position(Vector2F(1358.0f, 550.0f) - mark_b.bounds().center());
-        UiTextDropShadow score("independent-result-percentage-score", fixture.score, style.detail_font,
+        colourwars::UiTextDropShadow score("independent-result-percentage-score", fixture.score, style.detail_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details || !fixture.session.is_series());
         score.set_position({ (1920.0f - score.bounds().width) / 2.0f, 340.0f });
-        UiTextDropShadow outcome("independent-result-percentage-outcome", fixture.outcome, style.detail_font,
+        colourwars::UiTextDropShadow outcome("independent-result-percentage-outcome", fixture.outcome, style.detail_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details || !fixture.session.is_series());
         outcome.set_position({ (1920.0f - outcome.bounds().width) / 2.0f, 405.0f });
         const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);

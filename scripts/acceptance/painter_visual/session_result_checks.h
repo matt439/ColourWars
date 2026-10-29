@@ -150,14 +150,14 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         bool details_visible, bool wrong_font = false)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.results_menu();
-        UiTextDropShadow result("independent-session-result", literal,
+        colourwars::UiTextDropShadow result("independent-session-result", literal,
             wrong_font ? original.menu().detail_font : style.detail_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
         result.set_position({ (menu_consts::DESIGN_RESOLUTION.x - result.bounds().width) / 2.0f, look.session_result_y });
-        UiTextDropShadow score("independent-session-score", fixture.score, style.detail_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow score("independent-session-score", fixture.score, style.detail_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
         score.set_position({ (menu_consts::DESIGN_RESOLUTION.x - score.bounds().width) / 2.0f, look.session_score_y });
-        UiTextDropShadow heading("independent-session-round", fixture.heading, style.heading_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow heading("independent-session-round", fixture.heading, style.heading_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
         heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
         const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);

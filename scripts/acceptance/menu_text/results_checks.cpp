@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 // Results: plain roles, session outcomes, competitive winners and
 // contribution teams.
@@ -56,7 +57,7 @@ namespace menu_text_acceptance
             const auto measured = world.render.measure_text(world.render.resolve_sprite_font(font), L"{copy} % again");
             const mattmath::Vector2F position = contribution ? look.contribution_position :
                 mattmath::Vector2F((1920.0f - measured.x) / 2.0f, heading ? look.heading_y : look.proceed_y);
-            UiTextDropShadow widget(entry.key, source, font, position, &world.render,
+            colourwars::UiTextDropShadow widget(entry.key, source, font, position, &world.render,
                 look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             source = L"Changed after construction";
             require(widget.text() == L"{copy} % again" && widget.bounds() == mattmath::RectangleF(position, measured) &&
@@ -117,7 +118,7 @@ namespace menu_text_acceptance
             edge.validate_resources(world.render, world.audio);
             const float y = heading ? 125.0f : 880.0f;
             const std::string font = heading ? edge.menu().heading_font : edge.menu().detail_font;
-            UiTextDropShadow widget("results-edge", L"~", font, { 310.0f, y }, &world.render,
+            colourwars::UiTextDropShadow widget("results-edge", L"~", font, { 310.0f, y }, &world.render,
                 edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO);
             require(widget.bounds() == mattmath::RectangleF(310.0f, y, 1300.0f, 20.0f),
                 "Centered Results edge lost its unscaled zero-offset shadow bounds");
@@ -217,7 +218,7 @@ namespace menu_text_acceptance
             const auto& look = plain.results_menu(); const auto& style = plain.menu();
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(style.detail_font), L"{outcome} 100%");
             const mattmath::Vector2F position((1920.0f - size.x) / 2.0f, look.session_result_y);
-            UiTextDropShadow widget(entry.key, source, style.detail_font, position, &world.render,
+            colourwars::UiTextDropShadow widget(entry.key, source, style.detail_font, position, &world.render,
                 look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             source = L"Changed after construction";
             require(widget.text() == L"{outcome} 100%" && widget.bounds() == mattmath::RectangleF(position, size) &&
@@ -275,7 +276,7 @@ namespace menu_text_acceptance
             edge.validate_resources(world.render, world.audio);
             require(edge.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) &&
                 edge.results_menu().session_result_y == 405.0f, "Session result boundary fixture changed the shipped paper/row");
-            UiTextDropShadow widget("session-result-edge", L"~", edge.menu().detail_font, { 310.0f, 405.0f },
+            colourwars::UiTextDropShadow widget("session-result-edge", L"~", edge.menu().detail_font, { 310.0f, 405.0f },
                 &world.render, edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             require(widget.bounds() == mattmath::RectangleF(310.0f, 405.0f, 1300.0f, 20.0f),
                 "Session result width must meet both paper edges at its actual unscaled row with no shadow");
@@ -285,7 +286,7 @@ namespace menu_text_acceptance
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(bottom.menu().detail_font), L"~");
             require(size == mattmath::Vector2F(8.0f, 565.0f) && 405.0f + size.y == 970.0f,
                 "Session result bottom edge must use the full-height paper without an extra collision/row-fit policy");
-            UiTextDropShadow tall("session-result-bottom", L"~", bottom.menu().detail_font, { 956.0f, 405.0f },
+            colourwars::UiTextDropShadow tall("session-result-bottom", L"~", bottom.menu().detail_font, { 956.0f, 405.0f },
                 &world.render, bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             require(tall.bounds() == mattmath::RectangleF(956.0f, 405.0f, 8.0f, 565.0f),
                 "Session result height boundary was fitted or measured with a shadow");
@@ -347,7 +348,7 @@ namespace menu_text_acceptance
             const auto& look = plain.results_menu();
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(plain.menu().item_font), L"{team} 100%!");
             const mattmath::Vector2F position((1920.0f - size.x) / 2.0f, look.winner_y);
-            UiTextDropShadow widget(entry.key, source, plain.menu().item_font, position, &world.render,
+            colourwars::UiTextDropShadow widget(entry.key, source, plain.menu().item_font, position, &world.render,
                 look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             source.clear();
             require(widget.text() == L"{team} 100%!" && widget.bounds() == mattmath::RectangleF(position, size) &&
@@ -481,7 +482,7 @@ namespace menu_text_acceptance
             edge.validate_resources(world.render, world.audio);
             require(edge.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) && edge.results_menu().winner_y == 255.0f,
                 "Competitive winner boundary fixture changed the actual paper or row");
-            UiTextDropShadow widget("competitive-edge", L"~", edge.menu().item_font, { 310.0f, 255.0f }, &world.render,
+            colourwars::UiTextDropShadow widget("competitive-edge", L"~", edge.menu().item_font, { 310.0f, 255.0f }, &world.render,
                 edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             require(widget.bounds() == mattmath::RectangleF(310.0f, 255.0f, 1300.0f, 20.0f),
                 "Competitive winner must meet both full-paper horizontal edges without fitting or an ornament inset");
@@ -550,7 +551,7 @@ namespace menu_text_acceptance
             const auto& look = plain.results_menu();
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(look.contribution_font), L"P1 - Pad 1  {side} %  12.5%");
             const auto position = look.contribution_position + mattmath::Vector2F(0.0f, look.contribution_spacing);
-            UiTextDropShadow widget(entry.key, source, look.contribution_font, position, &world.render,
+            colourwars::UiTextDropShadow widget(entry.key, source, look.contribution_font, position, &world.render,
                 look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             source.clear();
             require(widget.text() == L"P1 - Pad 1  {side} %  12.5%" && widget.bounds() == mattmath::RectangleF(position, size) &&
@@ -596,7 +597,7 @@ namespace menu_text_acceptance
             const auto& look = defaults.results_menu();
             const auto position = look.contribution_position + mattmath::Vector2F(0.0f, look.contribution_spacing * static_cast<float>(index + 1));
             std::wstring source = compose(index, custom);
-            UiTextDropShadow widget("sparse-contribution", source, look.contribution_font, position, &world.render,
+            colourwars::UiTextDropShadow widget("sparse-contribution", source, look.contribution_font, position, &world.render,
                 look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             source.clear();
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(look.contribution_font), authored[index]);
@@ -674,7 +675,7 @@ namespace menu_text_acceptance
             require(edge.player_identity().ui_size == mattmath::Vector2F(54.0f, 42.0f) && edge.player_identity().ui_gap == 12.0f,
                 "Contribution badge boundary fixture changed the shipped badge size/gap");
             const float y = 635.0f + 46.0f * static_cast<float>(attained_player[team]);
-            UiTextDropShadow row("authored-contribution-edge", attained[team], edge.results_menu().contribution_font,
+            colourwars::UiTextDropShadow row("authored-contribution-edge", attained[team], edge.results_menu().contribution_font,
                 { x, y }, &world.render, Colour::black, Colour{}, mattmath::Vector2F::ZERO, true);
             const auto badge = UiPlayerBadge::before(row.bounds(), edge.player_identity());
             const auto full_row = mattmath::RectangleF::union_of(row.bounds(), badge);

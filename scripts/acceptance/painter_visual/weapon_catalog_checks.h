@@ -133,7 +133,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             style.icon_padding.y + style.rule_height);
         WeaponSelectArtworkPresentation expected_catalog;
         expected_catalog.sheet = sheet; expected_catalog.fill_frame = fill;
-        const UiTextDropShadow name("expected-weapon-name", expected.name, look.weapon_description_font,
+        const colourwars::UiTextDropShadow name("expected-weapon-name", expected.name, look.weapon_description_font,
             name_position, app.render_resources(), look.art.ink,
             Colour{}, style.detail_shadow_offset);
         const UiTexture background("expected-weapon-background", style.sprite_sheet, style.fill_frame,

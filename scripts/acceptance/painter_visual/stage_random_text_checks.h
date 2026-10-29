@@ -13,7 +13,7 @@ RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resour
     const Vector2F info = authored.position() + geometry.briefing_padding;
     const Vector2F row = geometry.briefing.spacing;
     const float inset = art.keyline_width * 3.0f + art.shadow_offset;
-    const auto include = [&](const UiTextDropShadow& text)
+    const auto include = [&](const colourwars::UiTextDropShadow& text)
     {
         RectangleF bounds = text.bounds(); bounds.inflate(inset);
         card = RectangleF::union_of(card, bounds);
@@ -31,7 +31,7 @@ RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resour
         { locked ? words.locked_status : words.browse_status, style.detail_font, 6.0f } } };
     for (const auto& reference : fixed)
     {
-        const UiTextDropShadow text("independent-stage-paper-bound", reference.text, reference.font,
+        const colourwars::UiTextDropShadow text("independent-stage-paper-bound", reference.text, reference.font,
             info + row * reference.line, &resources, art.ink, clear_shadow, style.detail_shadow_offset);
         include(text);
     }
@@ -39,7 +39,7 @@ RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resour
         L"Random: " + std::to_wstring(eligible_count) + L" available arenas.\nConfirm to lock your choice." :
         words.browse_hint;
     const Vector2F shadow = fitted.menu().detail_shadow_offset;
-    UiTextDropShadow hint_text("independent-stage-paper-hint", hint, style.brand_font,
+    colourwars::UiTextDropShadow hint_text("independent-stage-paper-hint", hint, style.brand_font,
         info + row * 7.0f, &resources, art.ink, clear_shadow, shadow);
     const RectangleF raw = RectangleF::union_of(hint_text.text_bounds_at(Vector2F::ZERO, 1.0f),
         hint_text.text_bounds_at(shadow, 1.0f));
@@ -144,7 +144,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         const auto& style = snapshot.menu(); const auto& built = snapshot.main_menu();
         const auto& geometry = built.stage_select; const auto& live = presentation.main_menu().stage_select;
         const Vector2F shadow = presentation.menu().item_shadow_offset;
-        UiTextDropShadow expected("reference-stage-name", text, style.item_font, geometry.name_position,
+        colourwars::UiTextDropShadow expected("reference-stage-name", text, style.item_font, geometry.name_position,
             app.render_resources(), locked ? live.selected_ink : live.unselected,
             Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
         const RectangleF raw = RectangleF::union_of(expected.text_bounds_at(Vector2F::ZERO, 1.0f),
@@ -183,7 +183,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         stage_preview.draw(list);
         // The preceding heading reaches into the top of the complete name
         // crop. Render it too, rather than shortening the name/shadow bounds.
-        UiTextDropShadow heading("reference-stage-heading", snapshot.menu_text().heading(MenuHeading::arena),
+        colourwars::UiTextDropShadow heading("reference-stage-heading", snapshot.menu_text().heading(MenuHeading::arena),
             style.heading_font, style.layout.position, app.render_resources(), built.art.ink,
             Colour(0.0f, 0.0f, 0.0f, 0.0f), style.heading_shadow_offset);
         list.set_filter(TextureFilter::linear); heading.draw(list); expected.draw(list);
@@ -222,7 +222,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         const Vector2F info = geometry.briefing.position + geometry.briefing_padding;
         const Vector2F position = info + geometry.briefing.spacing * 6.0f;
         const Vector2F shadow = style.detail_shadow_offset;
-        UiTextDropShadow expected("reference-stage-status", text, style.detail_font, position, app.render_resources(),
+        colourwars::UiTextDropShadow expected("reference-stage-status", text, style.detail_font, position, app.render_resources(),
             locked ? presentation.main_menu().stage_select.selected_ink :
                 presentation.main_menu().stage_select.unselected, Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
         const RectangleF bounds = expected.bounds();

@@ -101,10 +101,10 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(
             look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
         const SpriteSheet* atlas = app.render_resources()->sprite_sheet(look.team_select_sheet);
-        std::vector<RectangleF> rows, strips; std::vector<std::unique_ptr<UiTextDropShadow>> labels;
+        std::vector<RectangleF> rows, strips; std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels;
         for (size_t seat = 0; seat < teams.size(); ++seat)
         {
-            labels.push_back(std::make_unique<UiTextDropShadow>("independent-team-focus-label", L"P" + std::to_wstring(seat + 1) + L" - " + devices[seat],
+            labels.push_back(std::make_unique<colourwars::UiTextDropShadow>("independent-team-focus-label", L"P" + std::to_wstring(seat + 1) + L" - " + devices[seat],
                 style.detail_font, position(0, static_cast<int>(seat) + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset));
             const RectangleF text = labels.back()->bounds(); const auto& identity = captured.player_identity();
             const RectangleF badge(text.x - identity.ui_size.x - identity.ui_gap,
@@ -145,9 +145,9 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
                     box, app.render_resources(), tint); icon.draw(list);
             }
         }
-        const UiTextDropShadow title("independent-team-focus-title", expected_title, style.heading_font,
+        const colourwars::UiTextDropShadow title("independent-team-focus-title", expected_title, style.heading_font,
             position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
-        const UiTextDropShadow message("independent-team-focus-warning", L"Both teams need a player", style.detail_font,
+        const colourwars::UiTextDropShadow message("independent-team-focus-warning", L"Both teams need a player", style.detail_font,
             look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
         list.set_filter(TextureFilter::linear); title.draw(list);
         for (const auto& label : labels) { label->draw(list); }
@@ -414,7 +414,7 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         const std::array<std::wstring, 2> labels{ L"P1 - Pad 4", L"P2 - Keyboard/mouse" };
         for (int seat = 0; seat < 2; ++seat)
         {
-            const UiTextDropShadow label("independent-team-tune-label", labels[static_cast<size_t>(seat)], style.detail_font,
+            const colourwars::UiTextDropShadow label("independent-team-tune-label", labels[static_cast<size_t>(seat)], style.detail_font,
                 position(0, seat + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset);
             const RectangleF text = label.bounds(); const auto& identity = original.player_identity();
             const RectangleF badge(text.x - identity.ui_size.x - identity.ui_gap,

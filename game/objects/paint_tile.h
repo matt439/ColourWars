@@ -4,7 +4,7 @@
 #include "engine/render/texture_object.h"
 #include "game/objects/team_colour.h"
 #include "engine/core/game_object.h"
-#include "engine/render/animation_object.h"
+#include "game/carried/animation_object.h"
 #include "engine/render/colour.h"
 #include "engine/render/render_resources.h"
 #include "game/tuning.h"
@@ -26,7 +26,7 @@ struct PaintSplashClips
 		const labrador::RenderResources& render_resources);
 };
 
-class PaintTileSplash final : public labrador::AnimationObject, public labrador::GameObject
+class PaintTileSplash final : public colourwars::AnimationObject, public labrador::GameObject
 {
 public:
 	PaintTileSplash() = delete;

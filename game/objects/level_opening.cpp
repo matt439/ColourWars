@@ -59,16 +59,16 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	this->countdown_art_ = std::make_unique<CountdownArt>(
 		&this->presentation_->match(), &this->presentation_->opening(), render_resources);
 	const MenuStyle& menu = this->presentation_->menu();
-	this->countdown_heading_ = std::make_unique<TextDropShadow>(
+	this->countdown_heading_ = std::make_unique<colourwars::TextDropShadow>(
 		L"GET READY", menu.detail_font, Vector2F::ZERO,
 		render_resources, this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper,
 		menu.detail_shadow_offset);
-	this->resume_heading_ = std::make_unique<TextDropShadow>(
+	this->resume_heading_ = std::make_unique<colourwars::TextDropShadow>(
 		L"RESUMING", menu.detail_font, Vector2F::ZERO, render_resources,
 		this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
-	this->replay_heading_ = std::make_unique<TextDropShadow>(
+	this->replay_heading_ = std::make_unique<colourwars::TextDropShadow>(
 		L"REPLAY", menu.detail_font, Vector2F::ZERO, render_resources,
 		this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
@@ -95,10 +95,10 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		const std::wstring& heading, const std::wstring& text)
 	{
 		ControlsReminder reminder;
-		reminder.heading = std::make_unique<TextDropShadow>(
+		reminder.heading = std::make_unique<colourwars::TextDropShadow>(
 			heading, menu.detail_font, Vector2F::ZERO, render_resources,
 			menu.highlight, menu.shadow_colour, menu.detail_shadow_offset);
-		reminder.text = std::make_unique<TextDropShadow>(
+		reminder.text = std::make_unique<colourwars::TextDropShadow>(
 			text, match.controls_font, Vector2F::ZERO, render_resources,
 			match.controls_colour, match.controls_shadow_colour,
 			match.controls_shadow_offset);

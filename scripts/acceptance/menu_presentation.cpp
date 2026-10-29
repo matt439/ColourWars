@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/presentation.h"
 #include "game/states/menu_panel.h"
+#include "game/carried/ui_text_drop_shadow.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"

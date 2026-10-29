@@ -6,6 +6,7 @@
 #include "engine/render/colour.h"
 #include "game/states/menu_page.h"
 #include "game/states/ui_player_badge.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 
 class ResultsMenuPage : public MenuPage
@@ -50,24 +51,24 @@ private:
 	Session session_;
 	bool revealed_ = false;
 	RecordOutcome record_;
-	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> details_;
+	std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> details_;
 	std::vector<std::unique_ptr<UiPlayerBadge>> player_badges_;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> fill_box_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> fill_track_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> team_a_fill_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> team_b_fill_ = nullptr;
 
 	// A/B marks identify the bars without relying on colour.
-	std::unique_ptr<labrador::UiTextDropShadow> team_a_mark_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> team_b_mark_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> team_a_mark_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> team_b_mark_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> team_a_percentage_panel_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> team_b_percentage_panel_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> team_a_percentage_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> team_b_percentage_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> winner_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> proceed_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> team_a_percentage_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> team_b_percentage_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> winner_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> proceed_ = nullptr;
 	bool winner_sound_played_ = false;
 	float delay_timer_ = 0.0f;
 	float fill_timer_ = 0.0f;

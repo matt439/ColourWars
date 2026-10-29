@@ -5,8 +5,8 @@
 #include "game/objects/blocked_shot_contact.h"
 #include "game/objects/horizontal_motion.h"
 #include "game/tuning.h"
-#include "engine/render/animation_object.h"
-#include "engine/core/moving_object.h"
+#include "game/carried/animation_object.h"
+#include "game/carried/moving_object.h"
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
@@ -22,8 +22,8 @@ labrador::RenderResources::SheetStrip resolve_projectile_strip(
 
 // Abstract paint projectile: shared lifetime, team filtering and swept contacts;
 // concrete subclasses supply their shape, movement update and drawing.
-class Projectile : public labrador::MovingObject,
-	public labrador::AnimationObject, public labrador::CollisionObject
+class Projectile : public colourwars::MovingObject,
+	public colourwars::AnimationObject, public labrador::CollisionObject
 {
 public:
 	// Borrowed tuning must outlive the projectile. main() owns the immutable

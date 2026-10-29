@@ -2017,7 +2017,62 @@ what compiles is the bump's work.
 
 ## Carry the seven removed engine types into the client (`HYG#25`)
 
-**Open, not started; `HYG#24` is done.** Its trial found the `v0.2.0` copies compile on master once the namespace alias and constant table are applied. `730dd99` (2026-10-27, *Remove engine
+**Done 2026-10-29.** The seven types now live in
+[game/carried/](../../game/carried/), copied from the pinned engine
+(`v0.2.0`, the last release that has them) into `namespace colourwars`. The
+namespace keeps them from ever being ambiguous with an engine type: at the
+pin, where the engine still declares its own copies, and at any later engine
+type of the same name. Each copy keeps the original shape: the same bases,
+virtuals, members, defaults and access. A diff against the engine sources
+differs only in the namespace, `labrador::` qualifiers on engine names in the
+headers (comments left as written), a file-scope `using namespace labrador` in
+the sources that need it, and a provenance note. `UiTextDropShadow`, which was
+part of `engine/ui/widget.h`, is its own header. Every use in `game/` and
+`scripts/` names `colourwars::X` and includes `game/carried/*.h`. No file
+includes one of the removed engine headers, and the editor uses none of the
+types.
+
+Hierarchy rungs that moved from the engine into the client, at the same depth:
+
+- `MovingObject` under `Player` and `Projectile`, so the
+  `ProjectileMist -> DiffusingProjectile -> Projectile -> MovingObject`
+  chain AGENTS.md describes is unchanged.
+- `AnimationObject` under `Player`, `Projectile`, `FigureClothing` and
+  `PaintTileSplash`.
+- `SoundBankObject` under `MenuPage` (so every main-menu and pause page),
+  `ScreenMusic`, `ConnectionAudio` and `ResumeAudio`.
+- `UiTextDropShadow`, itself on `labrador::UiWidget` and the carried
+  `TextDropShadow`, under `PromptBar` and `WrappedTextDropShadow`.
+- `CameraTools` and `RotationOrigin` are used rather than derived from, in
+  `player_camera.h`, `debug_overlay_draw.cpp`, `weapon.h`, `weapon.cpp`,
+  `projectile_details.h` and `tuning.cpp`.
+
+`docs/oop-guide.md` names none of the seven, so it needs no change.
+
+Verification at the pin:
+
+- Default acceptance passes: x64-debug with CI's pull-request exclusions,
+  and all 73 cases in x64-release.
+- `menu_presentation` first failed on an include. Its `paper_checks.h` is a
+  fragment with no includes of its own, and the old name had arrived through
+  the engine's `widget.h`. `menu_presentation.cpp` now includes the carried
+  header, and the case passes in both presets.
+- `check-painter.ps1 -IdentityOnly` (Release) compiles the painter probe,
+  whose 31 `painter_visual` fragments reach the carried header through
+  `main_menu.h` and `results_menu.h`, and passes.
+- A read-only review workflow (shape fidelity, coverage and master readiness,
+  each finding put to a skeptic) confirmed only that `menu_presentation`
+  include.
+
+Against master, the `HYG#24` scratch trial was rebuilt at `b96bad6` with this
+change applied. It used the namespace alias, the constant table and the
+removed-member stand-ins, but no type shims. The game built and linked, and
+`check-startup.ps1 -RequireAudio` passed. So at the bump the carried copies
+need only the same namespace and constant renames as the rest of `game/`.
+
+The scope as filed:
+
+`730dd99` (2026-10-27, *Remove engine
 types nothing uses*) deletes `MovingObject`, `RotationOrigin`,
 `SoundBankObject`, `AnimationObject`, `CameraTools`, `TextDropShadow` and
 `UiTextDropShadow`. Its `CHANGES.md` entry gives no replacement: "A game that

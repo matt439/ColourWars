@@ -82,13 +82,13 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
         const float edge = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(edge), paper.size() - Vector2F(edge * 2.0f + art.shadow_offset));
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
-        const UiTextDropShadow title("independent-team-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
-        const UiTextDropShadow message("independent-team-warning", L"Both teams need a player", style.detail_font, look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
-        std::vector<std::unique_ptr<UiTextDropShadow>> labels; std::vector<RectangleF> rows, badges;
+        const colourwars::UiTextDropShadow title("independent-team-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
+        const colourwars::UiTextDropShadow message("independent-team-warning", L"Both teams need a player", style.detail_font, look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels; std::vector<RectangleF> rows, badges;
         const std::array<std::wstring, 4> devices{ L"Keyboard/mouse", L"Pad 4", L"Pad 1", L"Pad 3" };
         for (size_t i = 0; i < teams.size(); ++i)
         {
-            auto text = std::make_unique<UiTextDropShadow>("independent-team-label", L"P" + std::to_wstring(i + 1) + L" - " + devices[i], style.detail_font, position(0, static_cast<int>(i) + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset);
+            auto text = std::make_unique<colourwars::UiTextDropShadow>("independent-team-label", L"P" + std::to_wstring(i + 1) + L" - " + devices[i], style.detail_font, position(0, static_cast<int>(i) + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset);
             const RectangleF bounds = text->bounds(); const auto& identity = snapshot.player_identity();
             const RectangleF badge(bounds.x - identity.ui_size.x - identity.ui_gap, bounds.y + (bounds.height - identity.ui_size.y) / 2.0f, identity.ui_size.x, identity.ui_size.y);
             RectangleF row = RectangleF::union_of(bounds, badge); row = RectangleF::union_of(row,
@@ -125,7 +125,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         list.set_filter(TextureFilter::linear); title.draw(list); if (warning) { message.draw(list); } for (const auto& label : labels) { label->draw(list); }
         const auto& footer = snapshot.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : teams.size() < 2 ?
             L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" : L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams";
-        const UiTextDropShadow legend("independent-team-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
+        const colourwars::UiTextDropShadow legend("independent-team-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
         const Frame expected = read(renderer); const std::string stem = "team-paper-" + name + '-' + std::to_string(teams.size()) + "p-" + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected, output / (stem + "-failure-expected.ppm")); const RectangleI delta = foreground_delta_bounds(actual, expected); std::cerr << "TEAM PAPER " << name << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(actual.pixels == expected.pixels, "Actual Team paper differs from independent paper/card/text/icon/badge fixture");

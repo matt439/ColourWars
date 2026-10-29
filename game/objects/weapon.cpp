@@ -163,15 +163,15 @@ bool Weapon::shooting_this_update() const
 {
     return this->shooting_this_update_;
 }
-Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, RotationOrigin origin)
+Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, colourwars::RotationOrigin origin)
 {
     switch (origin)
     {
-    case RotationOrigin::center:
+    case colourwars::RotationOrigin::center:
         return Vector2F(size) / 2.0f;
-    case RotationOrigin::left_center:
+    case colourwars::RotationOrigin::left_center:
         return {0.0f, size.y / 2.0f};
-    case RotationOrigin::top_left:
+    case colourwars::RotationOrigin::top_left:
         return Vector2F::ZERO;
     default:
         return Vector2F::ZERO;

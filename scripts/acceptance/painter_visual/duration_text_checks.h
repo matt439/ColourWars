@@ -106,9 +106,9 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
         const auto& style = snapshot.menu(); const auto& main = snapshot.main_menu();
         auto art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
         const Vector2F position = style.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 5.0f);
-        const UiTextDropShadow label("independent-duration-label", L"Match length", font, position,
+        const colourwars::UiTextDropShadow label("independent-duration-label", L"Match length", font, position,
             app.render_resources(), art.focus_ink, Colour{}, style.item_shadow_offset);
-        const UiTextDropShadow number("independent-duration-value", value, font,
+        const colourwars::UiTextDropShadow number("independent-duration-value", value, font,
             position + Vector2F(main.mode_select_spacing.x * 2.0f, 0.0f), app.render_resources(),
             art.ink, Colour{}, style.item_shadow_offset);
         const auto font_handle = app.render_resources()->resolve_sprite_font(font);

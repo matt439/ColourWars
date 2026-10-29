@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/objects/crude_drawing.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -70,7 +71,7 @@ void MainMenuPlayerCount::init()
 		this->render_resources(),
 		CrudeDrawing::premultiplied(look.home_background_colour));
 
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"heading",
 		this->text().heading(MenuHeading::players),
 		this->menu_style().heading_font,
@@ -80,7 +81,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().heading_shadow_offset);
 
-	this->_1_player = std::make_unique<UiTextDropShadow>(
+	this->_1_player = std::make_unique<colourwars::UiTextDropShadow>(
 		"1_player",
 		this->text().item(MenuItem::one_player_practice),
 		this->menu_style().item_font,
@@ -90,7 +91,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_2_players = std::make_unique<UiTextDropShadow>(
+	this->_2_players = std::make_unique<colourwars::UiTextDropShadow>(
 		"2_players",
 		this->text().item(MenuItem::two_players),
 		this->menu_style().item_font,
@@ -100,7 +101,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_3_players = std::make_unique<UiTextDropShadow>(
+	this->_3_players = std::make_unique<colourwars::UiTextDropShadow>(
 		"3_players",
 		this->text().item(MenuItem::three_players),
 		this->menu_style().item_font,
@@ -110,7 +111,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_4_players = std::make_unique<UiTextDropShadow>(
+	this->_4_players = std::make_unique<colourwars::UiTextDropShadow>(
 		"4_players",
 		this->text().item(MenuItem::four_players),
 		this->menu_style().item_font,
@@ -120,7 +121,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->back_ = std::make_unique<UiTextDropShadow>(
+	this->back_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"back",
 		this->text().item(MenuItem::back),
 		this->menu_style().item_font,
@@ -239,7 +240,7 @@ void MainMenuJoin::init()
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->paper_.get());
 	this->text_container_ = std::make_unique<UiContainer>("text_container");
-	this->heading_ = std::make_unique<UiTextDropShadow>("heading", this->text().heading(MenuHeading::join_players),
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>("heading", this->text().heading(MenuHeading::join_players),
 		style.heading_font, this->calculate_widget_position(0, 0),
 		this->render_resources(), this->setup_art_.ink, clear_shadow,
 		style.heading_shadow_offset);
@@ -247,7 +248,7 @@ void MainMenuJoin::init()
 	std::ignore = this->check_paper_bounds(*this->heading_, "heading");
 	for (int player = 0; player < this->player_count(); ++player)
 	{
-		this->players_.push_back(std::make_unique<UiTextDropShadow>(
+		this->players_.push_back(std::make_unique<colourwars::UiTextDropShadow>(
 			"player_" + std::to_string(player), this->level_settings()->player_label(player, this->text()), style.item_font,
 			this->calculate_widget_position(0, player + 2), this->render_resources(),
 			this->setup_art_.ink, clear_shadow, style.item_shadow_offset));
@@ -265,7 +266,7 @@ void MainMenuJoin::init()
 		this->texture_container_->add_child(motion->accent.get());
 		this->join_motion_.push_back(std::move(motion));
 	}
-	this->status_ = std::make_unique<UiTextDropShadow>("status", L"",
+	this->status_ = std::make_unique<colourwars::UiTextDropShadow>("status", L"",
 		style.detail_font, this->calculate_widget_position(0, 7),
 		this->render_resources(), this->setup_art_.ink, clear_shadow,
 		style.detail_shadow_offset);

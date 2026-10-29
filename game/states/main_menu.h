@@ -16,6 +16,7 @@
 #include "engine/render/colour.h"
 
 #include <optional>
+#include "game/carried/ui_text_drop_shadow.h"
 
 enum class DisplayTrialResult;
 
@@ -269,12 +270,12 @@ private:
 	float duration_row_spacing_ = 0.0f;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> standard_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> best_of_three_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> best_of_five_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> practice_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> standard_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> best_of_three_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> best_of_five_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> practice_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> back_ = nullptr;
 };
 
 class MainMenuPlayerCount final : public MainMenuPage
@@ -290,12 +291,12 @@ private:
 	MenuPaperArtPresentation setup_art_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> _1_player = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> _2_players = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> _3_players = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> _4_players = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> _1_player = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> _2_players = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> _3_players = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> _4_players = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> back_ = nullptr;
 
 	int activating_slot_ = -1;
 
@@ -326,9 +327,9 @@ private:
 		const char* role, const labrador::UiWidget* accent = nullptr) const;
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_;
-	std::unique_ptr<labrador::UiTextDropShadow> status_;
-	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> players_;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_;
+	std::unique_ptr<colourwars::UiTextDropShadow> status_;
+	std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> players_;
 	std::vector<std::unique_ptr<JoinMotionRow>> join_motion_;
 	int host_row_ = 1;
 	std::unique_ptr<labrador::UiTexture> host_cursor_;
@@ -352,7 +353,7 @@ private:
 		explicit PlayerWidgets(const MenuFocusMotionPresentation& look) : motion(look) {}
 		MenuFocusMotion motion;
 		std::unique_ptr<MenuPaperArtwork> paper;
-		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<colourwars::UiTextDropShadow> player = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuChoiceIcon> player_a = nullptr;
 		std::unique_ptr<MenuChoiceIcon> player_center = nullptr;
@@ -360,10 +361,10 @@ private:
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 
 	// Shown when completing a multiplayer roster would leave a team empty.
-	std::unique_ptr<labrador::UiTextDropShadow> both_teams_needed_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> both_teams_needed_ = nullptr;
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	// Roster seats are cursor slots, independent of each seat's input device.
@@ -424,17 +425,17 @@ private:
 	{
 		explicit Widgets(const MenuFocusMotionPresentation& look) : motion(look) {}
 		MenuFocusMotion motion;
-		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<colourwars::UiTextDropShadow> player = nullptr;
 		// The row's handicap, under its label.
-		std::unique_ptr<labrador::UiTextDropShadow> handicap = nullptr;
+		std::unique_ptr<colourwars::UiTextDropShadow> handicap = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuIcon> weapon_icon = nullptr;
-		std::unique_ptr<labrador::UiTextDropShadow> weapon_name = nullptr;
+		std::unique_ptr<colourwars::UiTextDropShadow> weapon_name = nullptr;
 		std::unique_ptr<WrappedTextDropShadow> weapon_description = nullptr;
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 	std::vector<std::unique_ptr<Widgets>> player_widgets_;
 	std::vector<SelectState> select_states_;
 	// Keep names, frames and descriptions paired with the atlas captured on entry.
@@ -487,21 +488,21 @@ private:
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<StagePreview> stage_preview_;
 	std::unique_ptr<labrador::UiTexture> preview_edge_;
 	std::unique_ptr<labrador::UiTexture> preview_background_;
 	std::unique_ptr<MenuPaperArtwork> briefing_background_;
 	std::unique_ptr<labrador::UiTexture> briefing_accent_;
-	std::unique_ptr<labrador::UiTextDropShadow> stage_name_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> navigation_;
+	std::unique_ptr<colourwars::UiTextDropShadow> stage_name_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> navigation_;
 	// The shown stage's saved record; hidden for Random and unplayed stages.
-	std::unique_ptr<labrador::UiTextDropShadow> stage_record_;
-	std::unique_ptr<labrador::UiTextDropShadow> selection_status_;
-	std::unique_ptr<labrador::UiTextDropShadow> selection_hint_;
+	std::unique_ptr<colourwars::UiTextDropShadow> stage_record_;
+	std::unique_ptr<colourwars::UiTextDropShadow> selection_status_;
+	std::unique_ptr<colourwars::UiTextDropShadow> selection_hint_;
 	std::unique_ptr<labrador::UiText> stage_scan_status_;
-	std::unique_ptr<labrador::UiTextDropShadow> random_mark_;
-	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> briefing_text_;
+	std::unique_ptr<colourwars::UiTextDropShadow> random_mark_;
+	std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> briefing_text_;
 	SelectState select_state_ = SelectState();
 	int displayed_slot_ = -1;
 	ConfirmationState displayed_state_ = ConfirmationState::unconfirmed;

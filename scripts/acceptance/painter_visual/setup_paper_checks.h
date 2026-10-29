@@ -83,7 +83,7 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         const Vector2F spacing = count ? look.player_count_spacing : look.mode_select_spacing;
         const Vector2F position = style.layout.position +
             Vector2F(spacing.x * static_cast<float>(column), spacing.y * static_cast<float>(index));
-        const UiTextDropShadow text("independent-paper-row", presentation.menu_text().item(item), style.item_font,
+        const colourwars::UiTextDropShadow text("independent-paper-row", presentation.menu_text().item(item), style.item_font,
             position, app.render_resources(), art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
         return text.bounds();
     };
@@ -204,7 +204,7 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         std::wostringstream value; value << *settings.duration() / 60.0f << L" min";
         const Vector2F label_position = style.layout.position + Vector2F(0.0f, look.mode_select_spacing.y * 5.0f);
         const Vector2F value_position = label_position + Vector2F(look.mode_select_spacing.x * 2.0f, 0.0f);
-        const UiTextDropShadow value_bounds("independent-duration-value", value.str(), style.item_font, value_position,
+        const colourwars::UiTextDropShadow value_bounds("independent-duration-value", value.str(), style.item_font, value_position,
             app.render_resources(), art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
         RectangleF duration = RectangleF::union_of(row(false, MenuItem::match_length, 5), value_bounds.bounds());
         duration.inflate(art.focus_padding + Vector2F(2.0f));

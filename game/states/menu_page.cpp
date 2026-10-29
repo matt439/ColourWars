@@ -8,7 +8,7 @@ using namespace labrador;
 // Read through the constructor argument: context_ is not initialized
 // until after the SoundBankObject base.
 MenuPage::MenuPage(MenuContext* context) :
-	SoundBankObject(context->data()->presentation()->menu().sound_bank,
+	colourwars::SoundBankObject(context->data()->presentation()->menu().sound_bank,
 		context->data()->audio_resources()),
 	focus_motion_(context->data()->presentation()->menu().motion),
 	context_(context)

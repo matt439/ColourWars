@@ -96,10 +96,10 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         RectangleF edge = preview; edge.inflate(style.rule_height);
         const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.stage_box_size) / 2.0f, look.stage_box_size);
         const float border = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(border), paper.size() - Vector2F(border * 2.0f + art.shadow_offset));
-        std::vector<std::unique_ptr<UiTextDropShadow>> labels;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels;
         const auto label = [&](const std::wstring& value, const std::string& font, const Vector2F& position, const Colour& ink, const Vector2F& shadow)
         {
-            auto result = std::make_unique<UiTextDropShadow>("independent-stage-text", value, font, position, app.render_resources(), ink, Colour{}, shadow); auto* raw = result.get(); labels.push_back(std::move(result)); return raw;
+            auto result = std::make_unique<colourwars::UiTextDropShadow>("independent-stage-text", value, font, position, app.render_resources(), ink, Colour{}, shadow); auto* raw = result.get(); labels.push_back(std::move(result)); return raw;
         };
         const auto* heading = label(text.heading(MenuHeading::arena), style.heading_font, style.layout.position, art.ink, style.heading_shadow_offset);
         const auto& display = stages[static_cast<size_t>(random ? 0 : slot)].display_name;
@@ -108,7 +108,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const RectangleF raw_name = RectangleF::union_of(arena_name->text_bounds_at(Vector2F::ZERO, 1.0f), arena_name->text_bounds_at(refreshed.menu().item_shadow_offset, 1.0f));
         const float name_scale = std::min(1.0f, live.preview_size.x / raw_name.width); arena_name->set_scale(name_scale); arena_name->set_shadow_scale(name_scale); arena_name->set_shadow_offset(refreshed.menu().item_shadow_offset * name_scale);
         label(random ? text.stage.random_navigation : L"<   ARENA " + std::to_wstring(slot + 1) + L" / " + std::to_wstring(stages.size()) + L"   >", style.detail_font, geometry.navigation_position, art.ink, style.detail_shadow_offset);
-        UiTextDropShadow question("independent-stage-question", L"?", look.announcement_font, Vector2F::ZERO, app.render_resources(), style.highlight, style.shadow_colour, style.title_shadow_offset);
+        colourwars::UiTextDropShadow question("independent-stage-question", L"?", look.announcement_font, Vector2F::ZERO, app.render_resources(), style.highlight, style.shadow_colour, style.title_shadow_offset);
         question.set_position(preview.center() - question.bounds().center());
         const Vector2F info = geometry.briefing.position + geometry.briefing_padding, row = geometry.briefing.spacing;
         const bool solo = settings.player_count() == 1; const int best_of = settings.best_of();
@@ -151,7 +151,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         list.set_filter(TextureFilter::linear);
         for (size_t i = 0; i < labels.size(); ++i) { labels[i]->draw(list); if (i == 2 && random) { question.draw(list); } }
         const auto& footer = captured.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : locked ? L"A/Enter Start match    B/Esc Unlock arena" : L"Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back";
-        const UiTextDropShadow legend("independent-stage-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
+        const colourwars::UiTextDropShadow legend("independent-stage-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
         const Frame expected = read(renderer); const std::string stem = "stage-paper-" + name + '-' + std::to_string(settings.player_count()) + "p-best" + std::to_string(best_of) + "-slot" + std::to_string(slot) + '-' + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected, output / (stem + "-failure-expected.ppm")); const RectangleI delta = foreground_delta_bounds(actual, expected); std::cerr << "STAGE PAPER " << name << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(actual.pixels == expected.pixels, "Actual Stage paper differs from independent paper/briefing/text and actual miniature StagePreview raster");

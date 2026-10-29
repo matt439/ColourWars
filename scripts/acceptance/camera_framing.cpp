@@ -83,7 +83,7 @@ namespace
 					// options must preserve its arithmetic even while moving.
 					Camera scaled = previous;
 					scaled.scale = 1080.0f / framing.reference_height;
-					const Camera original = CameraTools{}.calculate_camera(route[step],
+					const Camera original = colourwars::CameraTools{}.calculate_camera(route[step],
 						scaled.visible_rectangle(panes.player_viewport(view)).size(), scaled, bounds);
 					const Camera moving = follow.follow(route[step], panes.player_viewport(view),
 						1080.0f, framing, previous, bounds, step % 2 == 0 ? 800.0f : -800.0f);
@@ -231,7 +231,7 @@ namespace
 						scale = std::min(scale, pane.width / framing.minimum_world_width);
 					}
 					const Vector2F world = pane.size() / scale;
-					const BorderThickness border = CameraTools::calculate_camera_scroll_border(world);
+					const BorderThickness border = colourwars::CameraTools::calculate_camera_scroll_border(world);
 					const float lead = std::min({ 800.0f * framing.horizontal_lead_seconds,
 						framing.horizontal_lead_max_distance, world.x / 4.0f });
 					for (const float direction : { -1.0f, 1.0f })

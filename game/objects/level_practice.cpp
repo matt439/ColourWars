@@ -56,11 +56,11 @@ void Level::build_lesson_cards(RenderResources* render_resources)
 	{
 		const std::string where = "the lesson at station '" + lesson.station + "'";
 		LessonCard card;
-		card.title = std::make_unique<TextDropShadow>(
+		card.title = std::make_unique<colourwars::TextDropShadow>(
 			drawable_text::widen_drawable(lesson.title, where + ": title"),
 			menu.detail_font, Vector2F::ZERO, render_resources,
 			menu.highlight, menu.shadow_colour, menu.detail_shadow_offset);
-		card.text = std::make_unique<TextDropShadow>(
+		card.text = std::make_unique<colourwars::TextDropShadow>(
 			drawable_text::widen_drawable(lesson.text, where + ": text"),
 			match.controls_font, Vector2F::ZERO, render_resources,
 			match.controls_colour, match.controls_shadow_colour, match.controls_shadow_offset);

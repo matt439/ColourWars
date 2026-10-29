@@ -37,11 +37,11 @@ void ProjectileBall::update(float dt)
 
 	this->rectangle_.offset(displacement.x, displacement.y);
 
-	AnimationObject::update(dt);
+	colourwars::AnimationObject::update(dt);
 }
 void ProjectileBall::draw(DrawList& draw_list) const
 {
-	this->AnimationObject::draw(draw_list, this->rectangle_);
+	this->colourwars::AnimationObject::draw(draw_list, this->rectangle_);
 }
 RectangleF ProjectileBall::bounds() const
 {

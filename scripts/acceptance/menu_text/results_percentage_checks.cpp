@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 // Results: percentage wrappers, FLOAT numbers and paper bounds.
 namespace menu_text_acceptance
@@ -201,7 +202,7 @@ namespace menu_text_acceptance
             const mattmath::Vector2F position = solo ? mattmath::Vector2F(310.0f, 255.0f) :
                 right ? mattmath::Vector2F(338.0f, 500.0f) : mattmath::Vector2F(620.0f, 500.0f);
             std::wstring source = (edge.menu_text().results.*entry.line)(L"88.8%");
-            UiTextDropShadow widget(entry.key, source, font_name, position, &world.render, look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            colourwars::UiTextDropShadow widget(entry.key, source, font_name, position, &world.render, look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
             source.clear();
             require(widget.text() == L"~88.8%" && widget.bounds() == mattmath::RectangleF(position, { width, 20.0f }) &&
                 widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},

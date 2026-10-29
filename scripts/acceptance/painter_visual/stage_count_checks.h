@@ -1,21 +1,21 @@
 // The paper reference accepts the already-independent expected hint. The older
 // Stage leaf hardcodes Random's default count and cannot bound custom copy.
 RectangleF stage_count_surface_reference(DrawList& list, RenderResources& resources,
-    const Presentation& captured, const UiTextDropShadow& hint, const UiTextDropShadow& status)
+    const Presentation& captured, const colourwars::UiTextDropShadow& hint, const colourwars::UiTextDropShadow& status)
 {
     const auto& style = captured.menu(); const auto& main = captured.main_menu(); const auto& geometry = main.stage_select;
     const auto& words = captured.menu_text().stage; const Colour clear(0.0f, 0.0f, 0.0f, 0.0f);
     auto art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
     const RectangleF authored(geometry.briefing.position, geometry.briefing.size); RectangleF card = authored;
     const Vector2F info = authored.position() + geometry.briefing_padding;
-    const auto include = [&](const UiTextDropShadow& text)
+    const auto include = [&](const colourwars::UiTextDropShadow& text)
     { RectangleF box = text.bounds(); box.inflate(art.keyline_width * 3.0f + art.shadow_offset); card = RectangleF::union_of(card, box); };
     struct Row { std::wstring text; std::string font; float line; };
     const std::array<Row, 5> rows{{ { words.briefing_label, style.brand_font, 0.0f },
         { words.solo_mode, style.detail_font, 1.0f }, { L"1 PLAYER", style.brand_font, 2.0f },
         { words.goal, style.brand_font, 3.0f }, { words.solo_objective, style.brand_font, 4.0f } }};
     for (const auto& row : rows)
-    { const UiTextDropShadow text("count-paper-fixed-bound", row.text, row.font, info + geometry.briefing.spacing * row.line,
+    { const colourwars::UiTextDropShadow text("count-paper-fixed-bound", row.text, row.font, info + geometry.briefing.spacing * row.line,
         &resources, art.ink, clear, style.detail_shadow_offset); include(text); }
     include(status); include(hint);
     const RectangleF outer((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f, main.stage_box_size);
@@ -129,9 +129,9 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     {
         unchanged(); const auto& style = captured.menu(); const auto& main = captured.main_menu(); const auto& geometry = main.stage_select; const auto& live = fitted.main_menu().stage_select;
         const Vector2F info = geometry.briefing.position + geometry.briefing_padding, shadow = fitted.menu().detail_shadow_offset; const Colour clear(0.0f, 0.0f, 0.0f, 0.0f);
-        UiTextDropShadow nav("independent-count-navigation", navigation, style.detail_font, geometry.navigation_position, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset);
-        UiTextDropShadow hint("independent-count-hint", hint_words, style.brand_font, info + geometry.briefing.spacing * 7.0f, app.render_resources(), main.art.ink, clear, shadow);
-        UiTextDropShadow status("independent-count-status", locked ? L"ARENA LOCKED" : L"FIND YOUR ARENA", style.detail_font, info + geometry.briefing.spacing * 6.0f,
+        colourwars::UiTextDropShadow nav("independent-count-navigation", navigation, style.detail_font, geometry.navigation_position, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset);
+        colourwars::UiTextDropShadow hint("independent-count-hint", hint_words, style.brand_font, info + geometry.briefing.spacing * 7.0f, app.render_resources(), main.art.ink, clear, shadow);
+        colourwars::UiTextDropShadow status("independent-count-status", locked ? L"ARENA LOCKED" : L"FIND YOUR ARENA", style.detail_font, info + geometry.briefing.spacing * 6.0f,
             app.render_resources(), locked ? presentation.main_menu().stage_select.selected_ink : presentation.main_menu().stage_select.unselected, clear, style.detail_shadow_offset);
         const RectangleF raw_hint = RectangleF::union_of(hint.text_bounds_at(Vector2F::ZERO, 1.0f), hint.text_bounds_at(shadow, 1.0f));
         const float budget = live.briefing.size.x - live.briefing_padding.x * 2.0f, scale = std::min(1.0f, budget / raw_hint.width);
@@ -139,7 +139,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
             "Count hint did not exercise its independent width-only fit or no-upscale reset"); hint.set_scale(scale); hint.set_shadow_scale(scale); hint.set_shadow_offset(shadow * scale);
         const float preview_right = live.preview_position.x + live.preview_size.x, room = preview_right - nav.bounds().right() - fitted.menu().focus_padding.x;
         require(std::isfinite(room) && room > 0.0f, "Independent numbered/Random navigation left no finite positive record room");
-        UiTextDropShadow record("independent-count-record", L"BEST COVER 62.5% / 2147483647 PLAYED", geometry.record_font, Vector2F::ZERO, app.render_resources(), main.art.ink, clear, shadow);
+        colourwars::UiTextDropShadow record("independent-count-record", L"BEST COVER 62.5% / 2147483647 PLAYED", geometry.record_font, Vector2F::ZERO, app.render_resources(), main.art.ink, clear, shadow);
         const RectangleF raw_record = RectangleF::union_of(record.text_bounds_at(Vector2F::ZERO, 1.0f), record.text_bounds_at(shadow, 1.0f));
         require(std::isfinite(raw_record.width) && raw_record.width > 0.0f, "Independent count record has no finite positive measured width");
         const float record_scale = std::min(1.0f, room / raw_record.width); require(std::isfinite(record_scale) && record_scale > 0.0f, "Independent count record fit is not finite and positive");
@@ -157,7 +157,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         require(card.contains(hint.bounds()) && hint.bounds().width <= budget + 0.01f && hint.bounds().bottom() <= style.footer_y,
             "Independent composed count hint escapes its expanded paper, width budget or footer");
         list.set_filter(TextureFilter::linear); nav.draw(list); hint.draw(list); status.draw(list); if (!random) { record.draw(list); } const Frame reference = read(renderer);
-        const std::array<const UiTextDropShadow*, 4> texts{ &nav, &hint, &status, &record };
+        const std::array<const colourwars::UiTextDropShadow*, 4> texts{ &nav, &hint, &status, &record };
         const std::array<const char*, 4> roles{ "navigation", "hint", "status", "record" };
         for (size_t role = 0; role < texts.size(); ++role)
         {

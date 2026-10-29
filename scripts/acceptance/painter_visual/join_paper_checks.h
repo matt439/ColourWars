@@ -65,7 +65,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     const auto text_bounds = [&](const Presentation& snapshot, int player)
     {
         const auto& style = snapshot.menu();
-        const UiTextDropShadow text("independent-join-seed", label(player), style.item_font,
+        const colourwars::UiTextDropShadow text("independent-join-seed", label(player), style.item_font,
             position(snapshot, player + 2), app.render_resources(), snapshot.main_menu().art.ink,
             Colour{}, style.item_shadow_offset);
         return text.bounds();
@@ -114,10 +114,10 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     {
         const Frame actual = frame(); const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu();
         auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
-        std::vector<std::unique_ptr<UiTextDropShadow>> text;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> text;
         const auto add = [&](const std::wstring& words, const std::string& font, int row, const Colour& ink, Vector2F shadow)
         {
-            auto widget = std::make_unique<UiTextDropShadow>("independent-join-text", words, font,
+            auto widget = std::make_unique<colourwars::UiTextDropShadow>("independent-join-text", words, font,
                 position(snapshot, row), app.render_resources(), ink, Colour{}, shadow);
             text.push_back(std::move(widget));
         };
@@ -186,7 +186,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); for (const auto& widget : text) { widget->draw(list); }
         const auto& footer = snapshot.prompt_bar();
-        const UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
+        const colourwars::UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
             footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         prompt.draw(list); const Frame expected = read(renderer);
         const std::string stem = "join-paper-" + name + '-' + std::to_string(settings.player_count()) + "p-" +

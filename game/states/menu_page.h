@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/audio/sound_bank_object.h"
+#include "game/carried/sound_bank_object.h"
 #include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_context.h"
@@ -31,7 +31,7 @@ struct MenuSound
 // Shared menu layout, focus, prompts, and sound-bank access.
 // DebugPageTarget is how the developer tools reach the page on top; its
 // defaults say no, and the pages with a way out of a match say how.
-class MenuPage : public labrador::State, public labrador::SoundBankObject,
+class MenuPage : public labrador::State, public colourwars::SoundBankObject,
 	protected DebugPageTarget
 {
 public:
@@ -136,7 +136,7 @@ protected:
 
 	// Menu and results sounds play at their authored volumes; the user's SFX
 	// and Music volumes are their sound groups' (game/sound_groups.h).
-	using labrador::SoundBankObject::play_wave;
+	using colourwars::SoundBankObject::play_wave;
 	void play_wave(const MenuSound& sound) const;
 
 	// Optional control legend, drawn after page widgets. Set only actions

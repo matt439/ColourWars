@@ -6,6 +6,7 @@
 #include "engine/core/state_context.h"
 #include "engine/render/text_encoding.h"
 #include "game/debug/debug_director_impl.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -54,7 +55,7 @@ void DebugMenuPage::init()
 	this->set_prompts({ { L"Up/Down", L"Move" }, { L"Left/Right", L"Change" },
 		{ L"A", L"Select" }, { L"B", L"Back" }, { L"F10/Back+Start", L"Close" } });
 
-	this->title_ = std::make_unique<UiTextDropShadow>("debug_title", L"DEBUG",
+	this->title_ = std::make_unique<colourwars::UiTextDropShadow>("debug_title", L"DEBUG",
 		style.heading_font, Vector2F(left, title_y), this->render_resources(),
 		style.heading_colour, style.shadow_colour, style.heading_shadow_offset);
 	// Measured, so no heading font runs into the queued line or the rows.
@@ -68,12 +69,12 @@ void DebugMenuPage::init()
 	this->first_row_y_ = title_y + heading.y + rows_gap;
 	this->row_pitch_ = std::min(max_row_pitch, (footer_y - 10.0f - this->first_row_y_) /
 		static_cast<float>(DebugMenuModel::max_rows));
-	this->queued_ = std::make_unique<UiTextDropShadow>("debug_queued", L"",
+	this->queued_ = std::make_unique<colourwars::UiTextDropShadow>("debug_queued", L"",
 		small_font, queued_at, resources,
 		style.warning, style.shadow_colour, style.detail_shadow_offset);
 	for (std::size_t i = 0; i < this->footer_.size(); ++i)
 	{
-		this->footer_[i] = std::make_unique<UiTextDropShadow>(
+		this->footer_[i] = std::make_unique<colourwars::UiTextDropShadow>(
 			"debug_footer_" + std::to_string(i), L"", small_font,
 			Vector2F(left, footer_y + footer_pitch * static_cast<float>(i)),
 			this->render_resources(), style.unhighlight, style.shadow_colour,
@@ -151,7 +152,7 @@ void DebugMenuPage::rebuild(const std::vector<DebugMenuRow>& rows, std::size_t f
 		this->text_container_->add_child(row.get());
 		this->focus_.add(row.get());
 	}
-	for (const std::unique_ptr<UiTextDropShadow>& line : this->footer_)
+	for (const std::unique_ptr<colourwars::UiTextDropShadow>& line : this->footer_)
 	{
 		this->text_container_->add_child(line.get());
 	}

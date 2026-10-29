@@ -168,17 +168,17 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.results_menu();
         const bool rows_visible = fixture.session.is_series() && details_visible;
-        UiTextDropShadow heading("independent-winner-heading", fixture.heading, style.heading_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow heading("independent-winner-heading", fixture.heading, style.heading_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
         heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
-        UiTextDropShadow winner("independent-competitive-winner", literal,
+        colourwars::UiTextDropShadow winner("independent-competitive-winner", literal,
             wrong_font ? original.menu().item_font : style.item_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !winner_visible);
         winner.set_position({ (menu_consts::DESIGN_RESOLUTION.x - winner.bounds().width) / 2.0f, look.winner_y });
-        UiTextDropShadow score("independent-winner-score", fixture.score, style.detail_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow score("independent-winner-score", fixture.score, style.detail_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !rows_visible);
         score.set_position({ (menu_consts::DESIGN_RESOLUTION.x - score.bounds().width) / 2.0f, look.session_score_y });
-        UiTextDropShadow outcome("independent-winner-outcome", fixture.outcome, style.detail_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow outcome("independent-winner-outcome", fixture.outcome, style.detail_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !rows_visible);
         outcome.set_position({ (menu_consts::DESIGN_RESOLUTION.x - outcome.bounds().width) / 2.0f, look.session_result_y });
         const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);

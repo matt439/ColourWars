@@ -90,10 +90,10 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         const auto& geometry = built.stage_select; const auto& live = fitted.main_menu().stage_select;
         const Vector2F hint_position = geometry.briefing.position + geometry.briefing_padding +
             geometry.briefing.spacing * 7.0f;
-        UiTextDropShadow expected_navigation("reference-stage-navigation", navigation, style.detail_font,
+        colourwars::UiTextDropShadow expected_navigation("reference-stage-navigation", navigation, style.detail_font,
             geometry.navigation_position, app.render_resources(), built.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f),
             style.detail_shadow_offset);
-        UiTextDropShadow expected_hint("reference-stage-hint", hint, style.brand_font, hint_position,
+        colourwars::UiTextDropShadow expected_hint("reference-stage-hint", hint, style.brand_font, hint_position,
             app.render_resources(), built.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), fitted.menu().detail_shadow_offset);
         const Vector2F shadow = fitted.menu().detail_shadow_offset;
         const RectangleF raw = RectangleF::union_of(expected_hint.text_bounds_at(Vector2F::ZERO, 1.0f),
@@ -123,7 +123,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
             navigation == snapshot.menu_text().stage.random_navigation, hint == snapshot.menu_text().stage.locked_hint);
         list.set_filter(TextureFilter::linear); expected_navigation.draw(list); expected_hint.draw(list);
         const Frame reference = read(renderer);
-        const std::array<const UiTextDropShadow*, 2> texts{ &expected_navigation, &expected_hint };
+        const std::array<const colourwars::UiTextDropShadow*, 2> texts{ &expected_navigation, &expected_hint };
         const std::array<const char*, 2> roles{ "navigation", "hint" };
         for (size_t index = 0; index < texts.size(); ++index)
         {

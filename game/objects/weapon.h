@@ -218,7 +218,7 @@ protected:
 		const mattmath::Vector2F& player_velocity) const;
 
 	static mattmath::Vector2F calculate_sprite_origin(
-		const mattmath::Vector2F& size, labrador::RotationOrigin origin);
+		const mattmath::Vector2F& size, colourwars::RotationOrigin origin);
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
 		const mattmath::Vector2F& player_center,

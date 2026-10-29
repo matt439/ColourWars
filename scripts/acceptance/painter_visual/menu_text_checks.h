@@ -48,7 +48,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
             this->texture_container_ = std::make_unique<UiContainer>("textures");
             this->text_container_ = std::make_unique<UiContainer>("text");
             const MenuStyle& style = this->menu_style();
-            this->heading_text_ = std::make_unique<UiTextDropShadow>("heading",
+            this->heading_text_ = std::make_unique<colourwars::UiTextDropShadow>("heading",
                 this->text().heading(this->heading_), style.heading_font, style.layout.position,
                 this->render_resources(), style.heading_colour, style.shadow_colour,
                 style.heading_shadow_offset);
@@ -59,7 +59,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         void rebuild(MenuPrompt prompt) { this->set_prompts(prompt); }
     private:
         MenuHeading heading_;
-        std::unique_ptr<UiTextDropShadow> heading_text_;
+        std::unique_ptr<colourwars::UiTextDropShadow> heading_text_;
     };
 
     const Presentation original = presentation;
@@ -126,11 +126,11 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
         const UiText brand_text("reference-brand", expected_brand, style.brand_font, style.brand_position,
             app.render_resources(), style.unhighlight);
-        const UiTextDropShadow heading_text("reference-heading", heading, style.heading_font,
+        const colourwars::UiTextDropShadow heading_text("reference-heading", heading, style.heading_font,
             style.layout.position, app.render_resources(), stage ? snapshot.main_menu().art.ink : style.heading_colour,
             stage ? Colour(0.0f, 0.0f, 0.0f, 0.0f) : style.shadow_colour,
             style.heading_shadow_offset);
-        const UiTextDropShadow prompt_text("reference-prompt", prompt, footer.font, footer.position,
+        const colourwars::UiTextDropShadow prompt_text("reference-prompt", prompt, footer.font, footer.position,
             app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(viewport);
@@ -158,7 +158,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
             // The measured heading box reaches into the next row. Its crop
             // includes the beginning of the real stage name, drawn after it.
             const auto& look = snapshot.main_menu().stage_select;
-            UiTextDropShadow stage_name("reference-stage-name", L"Movement Course", style.item_font,
+            colourwars::UiTextDropShadow stage_name("reference-stage-name", L"Movement Course", style.item_font,
                 look.name_position, app.render_resources(), locked ? presentation.main_menu().stage_select.selected_ink :
                     presentation.main_menu().stage_select.unselected,
                 Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);

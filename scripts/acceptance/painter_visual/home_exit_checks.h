@@ -110,7 +110,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); heading.draw(list); question.draw(list); accept.draw(list); cancel.draw(list);
         const auto& footer = original.prompt_bar();
-        const UiTextDropShadow prompt("independent-exit-prompt", L"A/Enter Select    B/Esc Back", footer.font,
+        const colourwars::UiTextDropShadow prompt("independent-exit-prompt", L"A/Enter Select    B/Esc Back", footer.font,
             footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         prompt.draw(list); return read(renderer);
     };

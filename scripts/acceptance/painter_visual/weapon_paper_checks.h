@@ -88,20 +88,20 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.weapon_box_size) / 2.0f, look.weapon_box_size);
         const float edge = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(edge), paper.size() - Vector2F(edge * 2.0f + art.shadow_offset));
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(look.weapon_select.spacing.x * static_cast<float>(column), look.weapon_select.spacing.y * static_cast<float>(row)); };
-        const UiTextDropShadow title("independent-weapon-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
-        std::vector<std::unique_ptr<UiTextDropShadow>> labels, handicaps, names, details; std::vector<RectangleF> rows, badges, boxes;
+        const colourwars::UiTextDropShadow title("independent-weapon-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels, handicaps, names, details; std::vector<RectangleF> rows, badges, boxes;
         const std::array<std::wstring, 4> devices{ L"Keyboard/mouse", L"Pad 4", L"Pad 1", L"Pad 3" };
         for (size_t i = 0; i < choices.size(); ++i)
         {
             const auto& choice = look.weapon_select_art.choices[static_cast<size_t>(choices[i])];
-            auto label = std::make_unique<UiTextDropShadow>("independent-weapon-label", L"P" + std::to_wstring(i + 1) + L" - " + devices[i], style.detail_font, position(0, static_cast<int>(i) + 2), app.render_resources(), art.ink, Colour{}, Vector2F(2.0f));
+            auto label = std::make_unique<colourwars::UiTextDropShadow>("independent-weapon-label", L"P" + std::to_wstring(i + 1) + L" - " + devices[i], style.detail_font, position(0, static_cast<int>(i) + 2), app.render_resources(), art.ink, Colour{}, Vector2F(2.0f));
             const RectangleF box(position(2, static_cast<int>(i) + 2), look.weapon_select.size); boxes.push_back(box);
-            auto tool_name = std::make_unique<UiTextDropShadow>("independent-weapon-name", choice.name, look.weapon_description_font,
+            auto tool_name = std::make_unique<colourwars::UiTextDropShadow>("independent-weapon-name", choice.name, look.weapon_description_font,
                 box.position() + Vector2F(0.0f, box.height + style.icon_padding.y + style.rule_height), app.render_resources(), ready[i] ? art.focus_ink : art.ink, Colour{}, style.detail_shadow_offset);
-            auto detail = std::make_unique<UiTextDropShadow>("independent-weapon-description", look.weapon_descriptions[static_cast<size_t>(choices[i])], look.weapon_description_font,
+            auto detail = std::make_unique<colourwars::UiTextDropShadow>("independent-weapon-description", look.weapon_descriptions[static_cast<size_t>(choices[i])], look.weapon_description_font,
                 box.position() + Vector2F(look.weapon_description_x_offset, 0.0f), app.render_resources(), look.weapon_description_colour, Colour{}, look.weapon_description_shadow_offset);
             const RectangleF bounds = label->bounds(); const auto& identity = snapshot.player_identity();
-            auto handicap = std::make_unique<UiTextDropShadow>("independent-weapon-handicap", snapshot.menu_text().handicap_label(settings.player_handicap(static_cast<int>(i))), look.weapon_description_font, Vector2F(position(0, static_cast<int>(i) + 2).x, bounds.bottom()), app.render_resources(), art.ink, Colour{}, Vector2F(2.0f));
+            auto handicap = std::make_unique<colourwars::UiTextDropShadow>("independent-weapon-handicap", snapshot.menu_text().handicap_label(settings.player_handicap(static_cast<int>(i))), look.weapon_description_font, Vector2F(position(0, static_cast<int>(i) + 2).x, bounds.bottom()), app.render_resources(), art.ink, Colour{}, Vector2F(2.0f));
             const RectangleF badge(bounds.x - identity.ui_size.x - identity.ui_gap, bounds.y + (bounds.height - identity.ui_size.y) / 2.0f, identity.ui_size.x, identity.ui_size.y);
             RectangleF tile = box; tile.inflate(style.icon_padding + Vector2F(style.rule_height));
             RectangleF row = RectangleF::union_of(RectangleF::union_of(RectangleF::union_of(bounds, handicap->bounds()), badge), RectangleF::union_of(tile, RectangleF::union_of(tool_name->bounds(), detail->bounds())));
@@ -129,7 +129,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         fill_sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y, menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); title.draw(list); for (size_t i = 0; i < choices.size(); ++i) { names[i]->draw(list); labels[i]->draw(list); handicaps[i]->draw(list); details[i]->draw(list); }
         const auto& footer = snapshot.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : L"Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel";
-        const UiTextDropShadow legend("independent-weapon-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
+        const colourwars::UiTextDropShadow legend("independent-weapon-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
         const Frame expected = read(renderer); const std::string stem = "weapon-paper-" + name + '-' + std::to_string(choices.size()) + "p-" + TeamColourTools::palette_key(opened_palette) + '-' + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected, output / (stem + "-failure-expected.ppm")); const RectangleI delta = foreground_delta_bounds(actual, expected); std::cerr << "WEAPON PAPER " << name << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(actual.pixels == expected.pixels, "Actual Weapon paper differs from independent paper/text/tool/mask/badge fixture");

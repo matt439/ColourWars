@@ -6,6 +6,7 @@
 #include "game/build_info.h"
 #include "game/objects/crude_drawing.h"
 #include "game/drawable_text.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -621,7 +622,7 @@ void MainMenuModeSelect::init()
 
 	// Invisible shadows retain the existing font extents and navigation
 	// geometry while the paper's lettering uses plain, readable ink.
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"heading",
 		this->text().heading(MenuHeading::mode),
 		style.heading_font,
@@ -631,7 +632,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.heading_shadow_offset);
 
-	this->standard_ = std::make_unique<UiTextDropShadow>(
+	this->standard_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"standard",
 		this->text().item(MenuItem::single_match),
 		style.item_font,
@@ -641,7 +642,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->best_of_three_ = std::make_unique<UiTextDropShadow>(
+	this->best_of_three_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"best_of_three",
 		this->text().item(MenuItem::best_of_three),
 		style.item_font,
@@ -651,7 +652,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->best_of_five_ = std::make_unique<UiTextDropShadow>(
+	this->best_of_five_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"best_of_five",
 		this->text().item(MenuItem::best_of_five),
 		style.item_font,
@@ -661,7 +662,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->practice_ = std::make_unique<UiTextDropShadow>(
+	this->practice_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"practice",
 		this->text().solo_practice_hint,
 		style.detail_font,
@@ -671,7 +672,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->back_ = std::make_unique<UiTextDropShadow>(
+	this->back_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"back",
 		this->text().item(MenuItem::back),
 		style.item_font,

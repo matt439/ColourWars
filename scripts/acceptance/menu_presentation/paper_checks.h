@@ -266,7 +266,7 @@ namespace
             d["menu_text"]["headings"]["arena"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
         };
         const auto width = variants.load(width_edge);
-        UiTextDropShadow heading("legacy_stage_heading", std::wstring(130, L'F'), "setup_exact",
+        colourwars::UiTextDropShadow heading("legacy_stage_heading", std::wstring(130, L'F'), "setup_exact",
             width.menu().layout.position, &world.render, Colour::black, width.menu().shadow_colour,
             width.menu().heading_shadow_offset);
         require(heading.bounds().right() == 1546.0f &&

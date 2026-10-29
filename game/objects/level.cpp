@@ -101,7 +101,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, bot_seed); }
 	const MenuStyle& menu = presentation->menu();
 	const CountdownArtPresentation& paper = presentation->match().countdown_art;
-	this->stage_entry_ = std::make_unique<TextDropShadow>(stage_name,
+	this->stage_entry_ = std::make_unique<colourwars::TextDropShadow>(stage_name,
 		menu.heading_font, Vector2F::ZERO, render_resources,
 		paper.ink, paper.paper, menu.heading_shadow_offset);
 	this->player_badge_ = std::make_unique<PlayerBadge>(

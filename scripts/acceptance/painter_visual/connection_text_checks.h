@@ -136,7 +136,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         if (shadowed)
         {
             const Vector2F offset = std::string(role) == "join-row" ? style.item_shadow_offset : style.detail_shadow_offset;
-            text_reference = std::make_unique<UiTextDropShadow>("literal-connection-copy", copy, font, position,
+            text_reference = std::make_unique<colourwars::UiTextDropShadow>("literal-connection-copy", copy, font, position,
                 app.render_resources(), ink, Colour{}, offset, !visible);
         }
         else { text_reference = std::make_unique<UiText>("literal-connection-copy", copy, font, position,

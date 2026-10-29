@@ -58,13 +58,13 @@ public:
         for (size_t i = 0; i < font_names_.size(); ++i)
         { fonts_[i] = app.render_resources()->resolve_sprite_font(font_names_[i]); font_pointers_[i] = app.render_resources()->font(fonts_[i]); }
         const RectangleF preview(150, 330, 1010, 500), sample(180, 350, 64, 32);
-        UiTextDropShadow question("source-preview-question-bound", L"?", font_names_[4], Vector2F::ZERO,
+        colourwars::UiTextDropShadow question("source-preview-question-bound", L"?", font_names_[4], Vector2F::ZERO,
             app.render_resources(), menu.highlight, menu.shadow_colour, menu.title_shadow_offset);
         question.set_position(preview.center() - question.bounds().center());
         require(preview.contains(sample) && !sample.intersects(question.bounds()), "Source backing ROI intersects the Random question");
         for (const wchar_t* text : { L"Crossfeed", L"Random" })
         {
-            const UiTextDropShadow name("source-preview-name-bound", text, menu.item_font, geometry.name_position,
+            const colourwars::UiTextDropShadow name("source-preview-name-bound", text, menu.item_font, geometry.name_position,
                 app.render_resources(), Colour::white, Colour::black, menu.item_shadow_offset);
             require(!sample.intersects(name.bounds()), "Source backing ROI intersects a stage name");
         }

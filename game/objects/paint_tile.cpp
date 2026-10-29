@@ -236,7 +236,7 @@ PaintTileSplash::PaintTileSplash(
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
-	AnimationObject(clip, render_resources,
+	colourwars::AnimationObject(clip, render_resources,
 		color, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {
@@ -280,7 +280,7 @@ bool PaintTileSplash::active() const
 }
 void PaintTileSplash::set_colour(const Colour& colour)
 {
-	this->AnimationObject::set_colour(colour);
+	this->colourwars::AnimationObject::set_colour(colour);
 }
 void PaintTileSplash::update(float dt)
 {
@@ -299,14 +299,14 @@ void PaintTileSplash::update(float dt)
 void PaintTileSplash::draw(DrawList& draw_list) const
 {
 	if (!this->active_) { return; }
-	this->AnimationObject::draw(draw_list,
+	this->colourwars::AnimationObject::draw(draw_list,
 		RectangleF(this->rectangle_.center(), this->rectangle_.size()));
 }
 void PaintTileSplash::draw_with_colour(DrawList& draw_list,
 	const Colour& colour) const
 {
 	if (!this->active_) { return; }
-	this->AnimationObject::draw_with(draw_list,
+	this->colourwars::AnimationObject::draw_with(draw_list,
 		RectangleF(this->rectangle_.center(), this->rectangle_.size()),
 		colour, this->flip());
 }

@@ -93,7 +93,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto setup_bounds = [&](Vector2F spacing, int row, const std::wstring& words)
     {
         const Vector2F origin = style.layout.position + Vector2F(0.0f, spacing.y * static_cast<float>(row));
-        const UiTextDropShadow text("independent-setup-motion-text", words, style.item_font, origin,
+        const colourwars::UiTextDropShadow text("independent-setup-motion-text", words, style.item_font, origin,
             app.render_resources(), look.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
         return text.bounds();
     };
@@ -109,7 +109,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const Vector2F spacing = look.mode_select_spacing;
         std::wostringstream words; words << settings.duration().value_or(tuning.match().duration) / 60.0f << L" min";
         const std::wstring value = settings.duration() ? words.str() : L"Default (" + words.str() + L")";
-        const UiTextDropShadow text("independent-setup-motion-value", value, style.item_font,
+        const colourwars::UiTextDropShadow text("independent-setup-motion-value", value, style.item_font,
             style.layout.position + Vector2F(spacing.x * 2.0f, spacing.y * 5.0f), app.render_resources(),
             look.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
         RectangleF bounds = RectangleF::union_of(setup_bounds(spacing, 5,

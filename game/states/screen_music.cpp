@@ -4,7 +4,7 @@
 ScreenMusic::ScreenMusic(const std::string& bank, const labrador::AudioResources* resources,
 	const PlaySettings* preferences, const PresentationSound& music,
 	const MusicMixPresentation& mix, bool loop) :
-	SoundBankObject(bank, resources), preferences_(preferences), music_(music), mix_(mix)
+	colourwars::SoundBankObject(bank, resources), preferences_(preferences), music_(music), mix_(mix)
 {
 	this->effect_ = this->resolve_effect(this->music_.name);
 	this->play_effect(this->effect_, loop, 0.0f);

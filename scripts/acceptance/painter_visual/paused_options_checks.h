@@ -122,7 +122,7 @@ Frame paused_options_reference(Application& app, const Canvas& canvas,
     list.set_filter(TextureFilter::linear);
     for (const auto& widget : text) { widget->draw(list); }
     const auto& footer = captured.prompt_bar();
-    const UiTextDropShadow prompt("independent-paused-options-prompt",
+    const colourwars::UiTextDropShadow prompt("independent-paused-options-prompt",
         L"Left/Right Change    A/Enter Select    B/Esc Back", footer.font, footer.position,
         app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
     prompt.draw(list);

@@ -25,8 +25,8 @@ Projectile::Projectile(const Vector2F& velocity,
     const Vector2F& origin,
     SpriteFlip flip,
     float layer_depth) :
-    MovingObject(velocity, rotation),
-    AnimationObject(strip, render_resources, color, rotation, origin, flip, layer_depth),
+    colourwars::MovingObject(velocity, rotation),
+    colourwars::AnimationObject(strip, render_resources, color, rotation, origin, flip, layer_depth),
     tuning_(tuning),
     player_num_(player_num),
     team_colour_(team_colour),
@@ -211,41 +211,41 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
 
     const Vector2F& max_velocity = this->max_velocity();
 
-    MovingObject::alter_velocity_y(gravity * dt);
-    if (MovingObject::velocity_y() > max_velocity.y)
+    colourwars::MovingObject::alter_velocity_y(gravity * dt);
+    if (colourwars::MovingObject::velocity_y() > max_velocity.y)
 	{
-        MovingObject::set_velocity_y(max_velocity.y);
+        colourwars::MovingObject::set_velocity_y(max_velocity.y);
 	}
-	else if (MovingObject::velocity_y() < -max_velocity.y)
+	else if (colourwars::MovingObject::velocity_y() < -max_velocity.y)
 	{
-        MovingObject::set_velocity_y(-max_velocity.y);
+        colourwars::MovingObject::set_velocity_y(-max_velocity.y);
 	}
 
-    if (std::fabs(MovingObject::velocity_x()) > wind_resistance * this->tuning().wind_stop_factor)
+    if (std::fabs(colourwars::MovingObject::velocity_x()) > wind_resistance * this->tuning().wind_stop_factor)
     {
-        if (MovingObject::velocity_x() > 0.0f)
+        if (colourwars::MovingObject::velocity_x() > 0.0f)
         {
-            MovingObject::alter_velocity_x(-wind_resistance * dt);
+            colourwars::MovingObject::alter_velocity_x(-wind_resistance * dt);
         }
         else
         {
-            MovingObject::alter_velocity_x(wind_resistance * dt);
+            colourwars::MovingObject::alter_velocity_x(wind_resistance * dt);
         }
     }
 	else
 	{
-        MovingObject::set_velocity_x(0.0f);
+        colourwars::MovingObject::set_velocity_x(0.0f);
 	}
-    if (MovingObject::velocity_x() > max_velocity.x)
+    if (colourwars::MovingObject::velocity_x() > max_velocity.x)
     {
-        MovingObject::set_velocity_x(max_velocity.x);
+        colourwars::MovingObject::set_velocity_x(max_velocity.x);
     }
-    else if (MovingObject::velocity_x() < -max_velocity.x)
+    else if (colourwars::MovingObject::velocity_x() < -max_velocity.x)
     {
-        MovingObject::set_velocity_x(-max_velocity.x);
+        colourwars::MovingObject::set_velocity_x(-max_velocity.x);
     }
 
-    const Vector2F displacement = MovingObject::velocity() * dt;
+    const Vector2F displacement = colourwars::MovingObject::velocity() * dt;
 
     // Advance age before testing the lifetime.
     this->alter_timer(dt);

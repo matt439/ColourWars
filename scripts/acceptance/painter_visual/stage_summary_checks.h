@@ -117,16 +117,16 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         unchanged(); const auto& style = snapshot.menu(); const auto& main = snapshot.main_menu(); const auto& geometry = main.stage_select;
         const Vector2F info = geometry.briefing.position + geometry.briefing_padding; const RectangleF authored(geometry.briefing.position, geometry.briefing.size);
         const Colour clear(0.0f, 0.0f, 0.0f, 0.0f);
-        const std::array<UiTextDropShadow, 2> texts{{
-            UiTextDropShadow("independent-summary-mode", mode, style.detail_font, info + geometry.briefing.spacing, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset),
-            UiTextDropShadow("independent-summary-roster", roster, style.brand_font, info + geometry.briefing.spacing * 2.0f, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset)
+        const std::array<colourwars::UiTextDropShadow, 2> texts{{
+            colourwars::UiTextDropShadow("independent-summary-mode", mode, style.detail_font, info + geometry.briefing.spacing, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset),
+            colourwars::UiTextDropShadow("independent-summary-roster", roster, style.brand_font, info + geometry.briefing.spacing * 2.0f, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset)
         }};
         // Delivery alone cannot prove a refresh: these two literal rasters
         // distinguish the actual slot and confirmation state after each tap.
-        const std::array<UiTextDropShadow, 2> state_texts{{
-            UiTextDropShadow("independent-summary-navigation", random ? L"<   SURPRISE ME   >" : L"<   ARENA 2 / 2   >",
+        const std::array<colourwars::UiTextDropShadow, 2> state_texts{{
+            colourwars::UiTextDropShadow("independent-summary-navigation", random ? L"<   SURPRISE ME   >" : L"<   ARENA 2 / 2   >",
                 style.detail_font, geometry.navigation_position, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset),
-            UiTextDropShadow("independent-summary-status", locked ? L"ARENA LOCKED" : L"FIND YOUR ARENA",
+            colourwars::UiTextDropShadow("independent-summary-status", locked ? L"ARENA LOCKED" : L"FIND YOUR ARENA",
                 style.detail_font, info + geometry.briefing.spacing * 6.0f, app.render_resources(),
                 locked ? presentation.main_menu().stage_select.selected_ink : presentation.main_menu().stage_select.unselected,
                 clear, style.detail_shadow_offset)

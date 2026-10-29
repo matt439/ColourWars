@@ -1,11 +1,11 @@
 #pragma once
 
-#include "engine/audio/sound_bank_object.h"
+#include "game/carried/sound_bank_object.h"
 #include "game/presentation.h"
 
 // One owned voice for the shared pause/reconnect count-in. Its owner cancels
 // it when the count-in is interrupted, so a later resume starts a fresh beat.
-class ResumeAudio : public labrador::SoundBankObject
+class ResumeAudio : public colourwars::SoundBankObject
 {
 public:
 	ResumeAudio(const labrador::AudioResources* resources, const Presentation& presentation);

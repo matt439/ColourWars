@@ -32,15 +32,15 @@ namespace
 			"mist, ball.");
 	}
 
-	RotationOrigin read_rotation_origin(const JsonValue& parent,
+	colourwars::RotationOrigin read_rotation_origin(const JsonValue& parent,
 		const char* key)
 	{
 		const std::string name = parent.string(key);
 
-		if (name == "no_rotation") { return RotationOrigin::no_rotation; }
-		if (name == "center") { return RotationOrigin::center; }
-		if (name == "top_left") { return RotationOrigin::top_left; }
-		if (name == "left_center") { return RotationOrigin::left_center; }
+		if (name == "no_rotation") { return colourwars::RotationOrigin::no_rotation; }
+		if (name == "center") { return colourwars::RotationOrigin::center; }
+		if (name == "top_left") { return colourwars::RotationOrigin::top_left; }
+		if (name == "left_center") { return colourwars::RotationOrigin::left_center; }
 
 		throw std::runtime_error(parent.where() + ": '" + name +
 			"' is not a rotation origin. Expected one of no_rotation, center, "

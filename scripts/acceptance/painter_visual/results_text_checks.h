@@ -135,15 +135,15 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
             std::array<std::string, 3>{ original.menu().heading_font, original.results_menu().contribution_font,
                 original.menu().detail_font } :
             std::array<std::string, 3>{ style.heading_font, look.contribution_font, style.detail_font };
-        UiTextDropShadow heading("independent-results-heading", words[0], fonts[0], Vector2F::ZERO,
+        colourwars::UiTextDropShadow heading("independent-results-heading", words[0], fonts[0], Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
         heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
-        UiTextDropShadow contribution("independent-results-contribution", words[1], fonts[1], look.contribution_position,
+        colourwars::UiTextDropShadow contribution("independent-results-contribution", words[1], fonts[1], look.contribution_position,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
-        UiTextDropShadow prompt("independent-results-proceed", words[2], fonts[2], Vector2F::ZERO,
+        colourwars::UiTextDropShadow prompt("independent-results-proceed", words[2], fonts[2], Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !proceed_visible);
         prompt.set_position({ (menu_consts::DESIGN_RESOLUTION.x - prompt.bounds().width) / 2.0f, look.proceed_y });
-        UiTextDropShadow record_line("independent-results-record", L"NEW BEST 68.4%", fonts[1], Vector2F::ZERO,
+        colourwars::UiTextDropShadow record_line("independent-results-record", L"NEW BEST 68.4%", fonts[1], Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
         const float fill_right = (menu_consts::DESIGN_RESOLUTION.x + look.fill_box_size.x) / 2.0f;
         record_line.set_position({ fill_right - record_line.bounds().width, look.record_y });

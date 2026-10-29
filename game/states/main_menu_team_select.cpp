@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/objects/crude_drawing.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -362,7 +363,7 @@ void MainMenuTeamSelect::init()
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->paper_.get());
 
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"heading",
 		this->text().heading(MenuHeading::teams),
 		this->menu_style().heading_font,
@@ -375,7 +376,7 @@ void MainMenuTeamSelect::init()
 	this->text_container_->add_child(this->heading_.get());
 
 	// Keep the warning below the four player cards and inside the paper.
-	this->both_teams_needed_ = std::make_unique<UiTextDropShadow>(
+	this->both_teams_needed_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"both_teams_needed",
 		this->text().connection.teams_required,
 		this->menu_style().detail_font,
@@ -398,7 +399,7 @@ void MainMenuTeamSelect::init()
 		std::string name = "player_" + std::to_string(i + 1);
 		std::wstring label_text = this->level_settings()->player_label(i, this->text());
 
-		widgets->player = std::make_unique<UiTextDropShadow>(
+		widgets->player = std::make_unique<colourwars::UiTextDropShadow>(
 			name,
 			label_text,
 			this->menu_style().detail_font,

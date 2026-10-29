@@ -10,6 +10,12 @@ add_executable(ColourWars WIN32
     ai/match_bot_driver.cpp
     ai/match_bot_navigation.cpp
     ai/match_bot_ramp.cpp
+    carried/animation_object.cpp
+    carried/camera_tools.cpp
+    carried/moving_object.cpp
+    carried/sound_bank_object.cpp
+    carried/text_drop_shadow.cpp
+    carried/ui_text_drop_shadow.cpp
     action_bindings.cpp
     input_bindings.cpp
     player_profiles.cpp

@@ -15,7 +15,7 @@
 #include "game/objects/player_camera.h"
 #include "game/objects/interface_gameplay.h"
 #include "game/objects/level_end_info.h"
-#include "engine/render/text_drop_shadow.h"
+#include "game/carried/text_drop_shadow.h"
 #include "engine/audio/sound_bank.h"
 #include "game/objects/paintable_object.h"
 #include "engine/render/render_resources.h"
@@ -356,20 +356,20 @@ private:
 	std::unique_ptr<CountdownArt> countdown_art_;
 	std::wstring countdown_label_;
 	mattmath::RectangleF countdown_number_box_;
-	std::unique_ptr<labrador::TextDropShadow> countdown_heading_ = nullptr;
-	std::unique_ptr<labrador::TextDropShadow> resume_heading_;
-	std::unique_ptr<labrador::TextDropShadow> replay_heading_;
+	std::unique_ptr<colourwars::TextDropShadow> countdown_heading_ = nullptr;
+	std::unique_ptr<colourwars::TextDropShadow> resume_heading_;
+	std::unique_ptr<colourwars::TextDropShadow> replay_heading_;
 	mattmath::RectangleF replay_card_;
 	mattmath::RectangleF countdown_card_;
-	std::unique_ptr<labrador::TextDropShadow> stage_entry_;
+	std::unique_ptr<colourwars::TextDropShadow> stage_entry_;
 	mattmath::RectangleF stage_entry_card_;
 	mattmath::RectangleF stage_entry_text_bounds_;
 
 	// One shared reminder per input device type present in the match.
 	struct ControlsReminder
 	{
-		std::unique_ptr<labrador::TextDropShadow> heading;
-		std::unique_ptr<labrador::TextDropShadow> text;
+		std::unique_ptr<colourwars::TextDropShadow> heading;
+		std::unique_ptr<colourwars::TextDropShadow> text;
 		mattmath::RectangleF card;
 		mattmath::RectangleF text_bounds;
 	};
@@ -377,9 +377,9 @@ private:
 	// Save owns the effective binding; a paused draw refreshes only its cached
 	// words and fitting, retaining the text widget's original font and copy.
 	const InputBindings* input_bindings_ = nullptr;
-	labrador::TextDropShadow* keyboard_controls_ = nullptr;
+	colourwars::TextDropShadow* keyboard_controls_ = nullptr;
 	std::wstring keyboard_controls_words_;
-	labrador::TextDropShadow* gamepad_controls_ = nullptr;
+	colourwars::TextDropShadow* gamepad_controls_ = nullptr;
 	std::vector<int> gamepad_slots_;
 	std::array<PadProfile, input_slots::pad_count> gamepad_pads_{};
 	struct ControlsReminderLook
@@ -421,8 +421,8 @@ private:
 	// chooses among them. Laid out in window pixels by centre_lesson_cards.
 	struct LessonCard
 	{
-		std::unique_ptr<labrador::TextDropShadow> title;
-		std::unique_ptr<labrador::TextDropShadow> text;
+		std::unique_ptr<colourwars::TextDropShadow> title;
+		std::unique_ptr<colourwars::TextDropShadow> text;
 		mattmath::RectangleF card;
 	};
 	std::vector<LevelLesson> lessons_;

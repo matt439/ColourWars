@@ -169,7 +169,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         sheet->draw(list, pixel, RectangleF(0.0f, style.footer_y, 1920.0f, 1080.0f - style.footer_y), style.scrim_colour);
         sheet->draw(list, pixel, RectangleF(style.brand_position.x, style.footer_y, 1920.0f - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); heading.draw(list); question.draw(list); accept.draw(list); cancel.draw(list); countdown.draw(list);
-        const auto& footer = original.prompt_bar(); const UiTextDropShadow prompt("independent-display-prompt", L"A/Enter Select    B/Esc Back", footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); prompt.draw(list);
+        const auto& footer = original.prompt_bar(); const colourwars::UiTextDropShadow prompt("independent-display-prompt", L"A/Enter Select    B/Esc Back", footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); prompt.draw(list);
         return read(renderer);
     };
     std::ofstream records(output / "display-trial.csv"); records << "case,width,height,input_slot,keep,seconds,full_frame_matches\n";

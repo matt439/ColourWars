@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "game/carried/ui_text_drop_shadow.h"
 
 class DebugDirectorImpl;
 
@@ -42,9 +43,9 @@ private:
 	std::vector<std::string> shown_labels_;
 	int shown_level_ = -1;
 	std::unique_ptr<labrador::UiTexture> panel_;
-	std::unique_ptr<labrador::UiTextDropShadow> title_;
-	std::unique_ptr<labrador::UiTextDropShadow> queued_;
-	std::array<std::unique_ptr<labrador::UiTextDropShadow>, 3> footer_;
+	std::unique_ptr<colourwars::UiTextDropShadow> title_;
+	std::unique_ptr<colourwars::UiTextDropShadow> queued_;
+	std::array<std::unique_ptr<colourwars::UiTextDropShadow>, 3> footer_;
 	bool closing_ = false;
 	// Laid out in init from the heading font's measured size.
 	float first_row_y_ = 0.0f;
