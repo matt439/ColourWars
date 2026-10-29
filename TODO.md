@@ -137,7 +137,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
-| `POL#42` | OPEN | MED | M | Shipping-bot route case on turbulence_blockout and natural-spawn team trials on the blockout and mover trial, so the variants compare like for like. Evidence for `POL#21`/`POL#27`, not a selection; the slab trial waits on `ROAD#38`. [Bot evidence](docs/polish-turbulence.md#shipping-bot-routes-and-team-trials-pol42) |
+| `POL#42` | OPEN | MED | M | Shipping-bot route case on turbulence_blockout and natural-spawn team trials on the blockout and mover trial, so the variants compare like for like. Evidence for `POL#21`/`POL#27`, not a selection; slab-trial bot counts are in `ROAD#38`'s record. [Bot evidence](docs/polish-turbulence.md#shipping-bot-routes-and-team-trials-pol42) |
 
 ## Audio replacement
 
@@ -184,7 +184,6 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | DEFERRED | LOW | S | Inspection and 59.951 Hz `overlay.perf` receipt recorded; no present-interval option at the pin or master. Resume when the author wants a decoupled rate or `POL#25` reproduces the once-a-second long interval: engine report first. [Slice](docs/feature-roadmap.md#presentation-rate-inspection-slice-gapl9) |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
-| `ROAD#38` | OPEN | MED | L | Bots treat fixed scored slabs as solid boxes. Measure first: a `bot_slab_routes` case on `turbulence_slab_trial` counts slab-grounded steps, slab-top paint and crossover arrivals against the mover trial; add a slab-aware standing segment only if the counts are near zero. [Scope](docs/feature-roadmap.md#fixed-scored-slabs-for-bots-road38) |
 
 ## Comparable-game gaps
 

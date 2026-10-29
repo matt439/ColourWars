@@ -1142,7 +1142,8 @@ partition only to Crossfeed and Press Tower (`bot_team_trials.cpp:120`); let the
 its existing `balance_regions` bands and keep geographic thirds for the mover
 trial until `TOOL#3` supplies its own. Report completion, takeoffs, arrival updates and
 held paint per team so the two stages compare like for like. The slab trial
-waits on `ROAD#38`, since bots currently treat its fixed slabs as solid boxes.
+is optional here: `bot_slab_routes` ([`ROAD#38`](feature-roadmap.md#fixed-scored-slabs-for-bots-road38))
+measured bots walking its slabs, with fewer crossover arrivals than the mover trial.
 Region bands for the four trials and the five-tool matrix are `TOOL#3` in
 [gameplay tuning](gameplay-tuning.md).
 

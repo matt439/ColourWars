@@ -1246,28 +1246,49 @@ remain provisional and `ROAD#10` is `DECISION`.
 
 #### Fixed scored slabs for bots (`ROAD#38`)
 
-**Open, not started (filed 2026-10-29).** Bots treat the fixed scored slabs as
-solid boxes. `Level::bot_supports` leaves out `structure_fixed_slab`
-(`game/objects/level.cpp:797-798`), `Level::bot_ramps` takes only ramps
-(`:810-822`), and the traversal sweeps keep slab bounds as conservative
-barriers (`game/ai/match_bot_navigation.cpp:47`, `match_bot_ramp.cpp:48`). The
-records above leave slabs unqualified. Only the explicit-only
-`turbulence_slab_trial` has fixed slabs; its route cases drive the public player
-(`turbulence_slab_routes`), and no bot case runs there, while the mover, gate
-and Turbulence arenas each have one.
+**Measured; no segment landed (2026-10-30).** When filed, bots treated the fixed
+scored slabs as solid boxes: `Level::bot_supports` leaves out
+`structure_fixed_slab`, `Level::bot_ramps` takes only ramps, and the traversal
+sweeps keep slab bounds as conservative barriers
+(`game/ai/match_bot_navigation.cpp`, `match_bot_ramp.cpp`). That is unchanged.
+Only the explicit-only `turbulence_slab_trial` has fixed slabs; it is the mover
+trial plus one slab per side bridging the upper approach (top 880) to the
+crossover (top 800).
 
-Measure first. A `bot_slab_routes` case on `turbulence_slab_trial`, built like
-`bot_mover_routes`, counts slab-grounded steps, slab-top paint and crossover
-arrivals per tool and difficulty, against the same counts on
-`turbulence_mover_trial`. Only if the slab counts are near zero, add a
-slab-aware standing segment in `game/ai`, as `clear_ramp_path` already treats a
-ramp's known hypotenuse.
+The opt-in case `bot_slab_routes`, built like `bot_mover_routes`, runs the
+actual driver for 2400 steps per trial on both stages: an approach start (placed
+on the upper approach, as the mover case's reach route) and an ordinary spawn
+start, both teams, five tools and three difficulties, 120 trials. It counts
+steps grounded on a slab's top line (a ramp state with the uphill corner on the
+line, as `Player` supports it), owned slab-top paint, and the first arrival on
+the bot's own crossover, noting whether a slab step came first. On the mover
+trial the same slab windows must read zero; nothing else is gated.
 
-Acceptance: the case passes in both presets with its counts recorded under
-`out/validation/road38/`. If the segment lands, slab counts rise and the
-existing bot route cases and bot trial CSVs stay byte-identical, since no other
-stage has a fixed slab. This does not put slabs into Turbulence (`POL#21`),
-change difficulty values or close the attended `ROAD#10` gate.
+| Stage, start | Trials on a slab | Slab steps | Slab top painted | Crossover arrivals | Via a slab |
+|---|---|---|---|---|---|
+| slab trial, approach | 21/30 | 525 | 19/30 | 20/30 | 11/30 |
+| slab trial, spawn | 17/30 | 342 | 18/30 | 11/30 | 8/30 |
+| mover trial, approach | 0/30 | 0 | 0/30 | 30/30 | 0/30 |
+| mover trial, spawn | 0/30 | 0 | 0/30 | 21/30 | 0/30 |
+
+Identical in Debug and Release. The counts are not near zero: ordinary walking
+carries bots onto and up the slabs (38/60 trials), they paint the slab tops
+(37/60), and 19 of 31 crossover arrivals came over a slab. By the rule this
+item was scoped with, no slab-aware segment was added, and bot code is
+unchanged. The cost the slabs do show is fewer crossover arrivals than the
+mover trial's empty gap: 31/60 against 51/60.
+
+An unlanded experiment, recorded for whoever revisits it: offering each slab's
+top line to `choose_ramp` as a `MatchBotRamp` (bounds spanning the top line,
+with the slab's own AABB as the one obstacle its path may disregard) raised
+slab-trial crossover arrivals to 30/30 (approach) and 25/30 (spawn), 55/60.
+It was reverted because the scope did not call for it. If `POL#21` keeps the
+slabs, that is the measured starting point.
+
+Evidence: `out/validation/road38/` (per-trial `MEASURE` lines in each preset's
+`bot_slab_routes-run.log`). This does not put slabs into Turbulence (`POL#21`),
+change difficulty values or close the attended `ROAD#10` gate. The slab trial
+can now join `POL#42`'s comparisons.
 
 ### Balanced random teams
 
