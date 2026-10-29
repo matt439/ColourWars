@@ -10,6 +10,7 @@
 #include "game/states/main_menu.h"
 #include "game/states/end_menu.h"
 #include "game/objects/player_input.h"
+#include "game/objects/seat_input_filter.h"
 #include "game/input_slots.h"
 #include "game/debug/debug_targets.h"
 #include "game/states/resume_countdown.h"
@@ -64,7 +65,8 @@ private:
 };
 
 // A match or series, with a fresh Level for each round. The developer tools
-// reach it only through DebugMatchTarget, from hooks at the top of update().
+// reach it only through DebugMatchTarget, from hooks at the top of update()
+// and around each match step.
 class GameLevel final : public labrador::State, private DebugMatchTarget
 {
 public:
@@ -127,6 +129,14 @@ private:
 	// Every suspend of the live round, so the tape has it.
 	void suspend_level();
 
+	// One step of the live round: one Level::update on `inputs`, through the
+	// shipping tape recorder, with rumble and background audio kept in step.
+	// update() runs it once a frame; in Debug, the director's clock may run it
+	// 0..4 times and hand it a developer seat filter (bots, record, play),
+	// which the recorder forwards. `seats` is always null in Release.
+	void step_match(const std::vector<PlayerInputData>& inputs, float dt,
+		SeatInputFilter* seats);
+
 	bool covered_ = false;
 	bool pause_menu_open_ = false;
 	bool focus_interrupted_ = false;
@@ -160,31 +170,32 @@ private:
 	void sync_rumble();
 	void drain_rumble(float dt);
 
-	// DebugMatchTarget adapters. debug_update_level also carries ordinary Release
-	// updates through DebugDirector's forwarding hook and the shipping recorder.
+	// DebugMatchTarget adapters, for the developer tools only
+	// (game_level_dev_tools.cpp): DebugMatchView, DebugMatchControl and
+	// DebugMatchEdits, in that order.
 	const MatchSetup& debug_settings() const override;
-	void debug_rebuild(const MatchSetup& plan, bool reset_session) override;
-	void debug_adopt(const MatchSetup& plan, bool reset_session) override;
-	void debug_leave() override;
-	void debug_update_level(const std::vector<PlayerInputData>& inputs,
-		float dt, SeatInputFilter* seats) override;
 	bool debug_level_finished() const override;
 	const Level* debug_level() const override;
-	void debug_sync_audio() override;
-	void debug_background_changed() override;
 	std::vector<std::string> debug_status() const override;
-	void debug_set_overlays(const LevelOverlays& overlays) override;
-	void debug_set_player_text(bool showing) override;
-	void debug_set_cheats(bool damage_immune, bool infinite_ammo) override;
 	std::vector<LevelStation> debug_stations() const override;
-	bool debug_place(int seat, const mattmath::Vector2F& top_left) override;
-	bool debug_respawn(int seat) override;
-	bool debug_kill(int seat) override;
 	MatchPaint debug_paint() const override;
 	bool debug_countdown_over() const override;
 	bool debug_perf_ready() const override;
-	void debug_set_seat_labels(const std::vector<std::wstring>& labels) override;
 	std::vector<mattmath::RectangleF> debug_screen_obstacles() const override;
+
+	void debug_rebuild(const MatchSetup& plan, bool reset_session) override;
+	void debug_adopt(const MatchSetup& plan, bool reset_session) override;
+	void debug_leave() override;
+	void debug_sync_audio() override;
+	void debug_background_changed() override;
+
+	void debug_set_overlays(const LevelOverlays& overlays) override;
+	void debug_set_player_text(bool showing) override;
+	void debug_set_cheats(bool damage_immune, bool infinite_ammo) override;
+	bool debug_place(int seat, const mattmath::Vector2F& top_left) override;
+	bool debug_respawn(int seat) override;
+	bool debug_kill(int seat) override;
+	void debug_set_seat_labels(const std::vector<std::wstring>& labels) override;
 
 	void open_pause_menu(int player_num);
 	void on_pause_menu_closed(const PauseMenuAction& action);

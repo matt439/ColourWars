@@ -291,7 +291,7 @@ std::string DebugDirectorImpl::bot_for_seat(int seat, int slot, bool shipping_bo
 	return slot < 0 && !shipping_bot ? this->dummy_bot_ : std::string();
 }
 
-void DebugDirectorImpl::rebuild_bots(const DebugMatchTarget& match)
+void DebugDirectorImpl::rebuild_bots(const DebugMatchView& match)
 {
 	this->bot_driver_.reset();
 	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();

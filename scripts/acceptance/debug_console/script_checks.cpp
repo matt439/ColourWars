@@ -276,7 +276,7 @@ namespace debug_console_acceptance
 		director.attach_match(match);
 		const auto hook = [&] { director.before_match_update(match, dt); };
 		const std::vector<PlayerInputData> none(input_slots::count);
-		const auto update = [&] { director.update_match(match, none, dt); };
+		const auto update = [&] { update_match(director, match, none, dt); };
 
 		require(impl.execute("exec waits a").ok, "exec typed at the console is accepted");
 		require(!impl.execute("exec hello").ok && any_line(log, "exec: waits.cfg is running ('exec.stop' first)"),

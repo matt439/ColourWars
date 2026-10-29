@@ -199,7 +199,7 @@ std::uint64_t DebugDirectorImpl::content_hash(std::string_view file)
 	return document != nullptr ? document->current_hash() : 0;
 }
 
-ReplayFile DebugDirectorImpl::replay_header(const DebugMatchTarget& match)
+ReplayFile DebugDirectorImpl::replay_header(const DebugMatchView& match)
 {
 	ReplayFile file;
 	file.build = narrow_build_label();

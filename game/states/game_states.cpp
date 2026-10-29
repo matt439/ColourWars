@@ -488,8 +488,31 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	// One Level::update, or the debug clock's 0..4 fixed-dt updates.
-	this->data()->debug().update_match(*this, player_inputs, dt);
+	// One match step, or the debug clock's 0..4 fixed-dt steps with any
+	// developer seat filter. Release runs exactly one, with none.
+	DebugDirector& debug = this->data()->debug();
+	const int steps = debug.match_steps(player_inputs, dt);
+	for (int run = 0; run < steps; ++run)
+	{
+		MatchStep step{ &player_inputs, nullptr };
+		if (!debug.before_match_step(*this, run, step)) { break; }
+		this->step_match(*step.inputs, dt, step.seats);
+		if (!debug.after_match_step(*this)) { break; }
+	}
+	debug.end_match_steps(*this, steps);
+}
+
+void GameLevel::step_match(const std::vector<PlayerInputData>& inputs, float dt,
+	SeatInputFilter* seats)
+{
+	this->data()->debug().sync_background_audio(this->context()->active());
+	this->sync_rumble();
+	// The recorder always forwards the Debug filter; timed rounds also tape
+	// each step's final input. Untimed practice keeps no shipping tape.
+	this->tape_recorder_.prepare(seats, dt);
+	this->level_->update(inputs, dt, &this->tape_recorder_);
+	if (!this->context()->active()) { this->level_->pause_audio(); }
+	this->drain_rumble(dt);
 }
 
 void GameLevel::draw(Renderer& renderer) const

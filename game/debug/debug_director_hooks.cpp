@@ -300,7 +300,7 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 	}
 }
 
-std::vector<std::wstring> DebugDirectorImpl::seat_labels(const DebugMatchTarget& match) const
+std::vector<std::wstring> DebugDirectorImpl::seat_labels(const DebugMatchView& match) const
 {
 	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();
 	std::vector<std::wstring> labels(seats.size());
@@ -549,44 +549,60 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt, b
 	return true;
 }
 
-void DebugDirectorImpl::update_match(DebugMatchTarget& match,
-	const std::vector<PlayerInputData>& inputs, float dt)
+int DebugDirectorImpl::match_steps(const std::vector<PlayerInputData>& inputs, float dt)
 {
 	this->last_dt_bits_ = std::bit_cast<std::uint32_t>(dt);
+	this->step_dt_ = dt;
 	const int runs = this->clock_.updates_this_step();
-	const std::vector<PlayerInputData> latched = this->clock_.latch(inputs, runs);
-	for (int run = 0; run < runs; ++run)
+	this->latched_ = this->clock_.latch(inputs, runs);
+	return runs;
+}
+
+bool DebugDirectorImpl::before_match_step(DebugMatchTarget& match, int run, MatchStep& step)
+{
+	// A round that ends mid fast-forward stops there; GameLevel opens
+	// results on its next update, as it would at normal speed.
+	if (match.debug_level_finished())
 	{
-		// A round that ends mid fast-forward stops there; GameLevel opens
-		// results on its next update, as it would at normal speed.
-		if (match.debug_level_finished())
-		{
-			break;
-		}
-		const bool replay_was_running = this->player_ != nullptr && !this->player_->finished;
-		this->before_level_update(match, dt);
-		// The perf overlay times the game's own Level::update, seat filter
-		// (bots, record, play) included.
-		const double start = perf_now_ms();
-		match.debug_update_level(run == 0 ? latched : DebugClock::without_edges(latched), dt,
-			this->seat_filter());
-		this->perf_.add_update(perf_now_ms() - start);
-		++this->level_updates_;
-		++this->total_updates_;
-		this->after_level_update(match);
-		// A replay that just reached its last update holds that frame, even
-		// mid fast-forward.
-		if (replay_was_running && this->player_ != nullptr && this->player_->finished)
-		{
-			break;
-		}
-		// A script waiting for this update (or the end of the countdown)
-		// runs before the next one, even at timescale 4.
-		if (this->scripts_.should_stop(this->wait_context()))
-		{
-			break;
-		}
+		return false;
 	}
+	this->replay_was_running_ = this->player_ != nullptr && !this->player_->finished;
+	this->before_level_update(match, this->step_dt_);
+	if (run == 0)
+	{
+		step.inputs = &this->latched_;
+	}
+	else
+	{
+		this->later_step_ = DebugClock::without_edges(this->latched_);
+		step.inputs = &this->later_step_;
+	}
+	// The perf overlay times the game's own step, seat filter (bots, record,
+	// play) included, from here to after_match_step.
+	this->step_began_ms_ = perf_now_ms();
+	step.seats = this->seat_filter();
+	return true;
+}
+
+bool DebugDirectorImpl::after_match_step(DebugMatchTarget& match)
+{
+	this->perf_.add_update(perf_now_ms() - this->step_began_ms_);
+	++this->level_updates_;
+	++this->total_updates_;
+	this->after_level_update(match);
+	// A replay that just reached its last update holds that frame, even
+	// mid fast-forward.
+	if (this->replay_was_running_ && this->player_ != nullptr && this->player_->finished)
+	{
+		return false;
+	}
+	// A script waiting for this update (or the end of the countdown)
+	// runs before the next one, even at timescale 4.
+	return !this->scripts_.should_stop(this->wait_context());
+}
+
+void DebugDirectorImpl::end_match_steps(DebugMatchTarget& match, int runs)
+{
 	if (runs > 0 && this->clock_.paused())
 	{
 		// A stepped update can start the music or a weapon voice.

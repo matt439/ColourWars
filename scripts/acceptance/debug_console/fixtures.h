@@ -135,8 +135,9 @@ namespace debug_console_acceptance
 			paint.seats.resize(static_cast<std::size_t>(this->settings.player_count()));
 			return paint;
 		}
-		void debug_update_level(const std::vector<PlayerInputData>& inputs, float,
-			SeatInputFilter* seats) override
+		// GameLevel::step_match's place: one step of the match.
+		void step(const std::vector<PlayerInputData>& inputs, float,
+			SeatInputFilter* seats)
 		{
 			++this->updates;
 			this->jumps.push_back(
@@ -188,6 +189,24 @@ namespace debug_console_acceptance
 	private:
 		DebugDirector& director_;
 	};
+
+	// GameLevel::update's step loop (game_states.cpp), with the match's own
+	// step in place of GameLevel::step_match: the director's hooks decide how
+	// many steps run and with which developer filter, and the match takes each.
+	template <class Match>
+	void update_match(DebugDirector& director, Match& match,
+		const std::vector<PlayerInputData>& inputs, float dt)
+	{
+		const int steps = director.match_steps(inputs, dt);
+		for (int run = 0; run < steps; ++run)
+		{
+			MatchStep step{ &inputs, nullptr };
+			if (!director.before_match_step(match, run, step)) { break; }
+			match.step(*step.inputs, dt, step.seats);
+			if (!director.after_match_step(match)) { break; }
+		}
+		director.end_match_steps(match, steps);
+	}
 
 	// A page as the director sees it: records what it was asked to do.
 	class FakePage final : public DebugPageTarget

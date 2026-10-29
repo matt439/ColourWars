@@ -3,6 +3,8 @@
 #include "game/debug/dev_tools.h"
 #include "game/debug/debug_targets.h"
 #include "game/objects/opening_mode.h"
+#include "game/objects/player_input_data.h"
+#include "game/objects/seat_input_filter.h"
 #include "engine/input/keyboard.h"
 #include <memory>
 #include <string>
@@ -13,6 +15,15 @@ class GameTuning;
 class Presentation;
 class DebugDirectorImpl;
 
+// One step of GameLevel's match: what that step's Level::update reads, and the
+// developer seat filter (bots, record, play) that sees and may replace each
+// seat's input, null when nothing drives a seat (always, in Release).
+struct MatchStep
+{
+	const std::vector<PlayerInputData>* inputs = nullptr;
+	SeatInputFilter* seats = nullptr;
+};
+
 namespace labrador
 {
 	class Application;
@@ -22,13 +33,13 @@ namespace labrador
 // The developer debug service: console, debug menu, launch arguments, F-key
 // binds, the debug clock, overlays, cheats, screenshots, queued match
 // requests, live tuning, bots, seeded record and play, scripts, the live
-// console and the perf overlay. The states call its hooks; Release keeps ordinary
-// match-update forwarding and the launch-argument warning, without developer tools.
+// console and the perf overlay. The states call its hooks; Release keeps only
+// the launch-argument warning.
 //
 // Its layout is the same in every configuration (one pointer). In Debug the
 // pointer owns a DebugDirectorImpl; in Release it is always null and the hooks
-// below are inline no-ops or ordinary-update forwarding, so no registry,
-// console or command text is built.
+// below are inline no-ops or pass-throughs (one match step a frame, with no
+// developer filter), so no registry, console or command text is built.
 class DebugDirector
 {
 public:
@@ -79,10 +90,23 @@ public:
 	// (rebuild, leave). True: the match has done its work for this step.
 	bool before_match_update(DebugMatchTarget& match, float dt, bool active = true);
 
-	// Debug uses the clock's 0..4 fixed-dt updates; Release forwards one update
-	// through DebugMatchTarget, including GameLevel's shipping tape recorder.
-	void update_match(DebugMatchTarget& match,
-		const std::vector<PlayerInputData>& inputs, float dt);
+	// GameLevel::update runs its own match step, in a loop these four hooks
+	// bound; they decide only how many steps and with which developer filter.
+	//
+	// How many steps this frame runs, latching `inputs` for them: the debug
+	// clock's 0..4 fixed-dt updates in Debug, one in Release.
+	int match_steps(const std::vector<PlayerInputData>& inputs, float dt);
+	// Before step `run`. False: the frame runs no more steps (a round that ends
+	// mid fast-forward stops there). Otherwise sets what the step reads: the
+	// latched inputs, their press edges on the first step only, and the seat
+	// filter. Release leaves `step.inputs` as GameLevel set it.
+	bool before_match_step(DebugMatchTarget& match, int run, MatchStep& step);
+	// After the step. False: the frame runs no more steps (a replay reached its
+	// last update, or a script waits for this one).
+	bool after_match_step(DebugMatchTarget& match);
+	// Once the frame's steps are done: a stepped update on the paused clock can
+	// start the music or a weapon voice, so the audio is synced again.
+	void end_match_steps(DebugMatchTarget& match, int runs);
 
 	// Whether the debug clock is paused, so the match's voices stay paused.
 	bool match_audio_paused() const;
@@ -150,11 +174,14 @@ inline void DebugDirector::before_level_build(DebugMatchTarget&) {}
 inline void DebugDirector::after_level_build(DebugMatchTarget&) {}
 inline void DebugDirector::filter_match_inputs(std::vector<PlayerInputData>&) const {}
 inline bool DebugDirector::before_match_update(DebugMatchTarget&, float, bool) { return false; }
-inline void DebugDirector::update_match(DebugMatchTarget& match,
-	const std::vector<PlayerInputData>& inputs, float dt)
+inline int DebugDirector::match_steps(const std::vector<PlayerInputData>&, float) { return 1; }
+inline bool DebugDirector::before_match_step(DebugMatchTarget&, int, MatchStep& step)
 {
-	match.debug_update_level(inputs, dt, nullptr);
+	step.seats = nullptr;
+	return true;
 }
+inline bool DebugDirector::after_match_step(DebugMatchTarget&) { return true; }
+inline void DebugDirector::end_match_steps(DebugMatchTarget&, int) {}
 inline bool DebugDirector::match_audio_paused() const { return false; }
 inline bool DebugDirector::background_scripts() const { return false; }
 inline bool DebugDirector::background_updates_allowed() const { return false; }

@@ -181,11 +181,40 @@ pre-`HYG#32` tree already did; that is not this row's.
 
 ### The shipping match step out of debug code (`HYG#33`)
 
-Make the per-frame step a plain private `GameLevel` member in a shipping source
-file, called directly from `GameLevel::update`; the director decides only how
-many steps and with which developer filter. Then split `DebugMatchTarget` by
-client (control, read-only view, edits) and correct the Release paragraph of
-`docs/debug-console.md`.
+**Done 2026-10-30.** The match step is now the private `GameLevel::step_match`
+in [game_states.cpp](../game/states/game_states.cpp), the old
+`debug_update_level` body unchanged (background audio, rumble, the shipping
+tape recorder around `Level::update`). `GameLevel::update` runs it in its own
+loop bounded by four director hooks in
+[debug_director.h](../game/debug/debug_director.h): `match_steps` (how many:
+the clock's 0..4, one in Release), `before_match_step` (stops at a finished
+round, else the step's latched or edge-free inputs and seat filter in a
+`MatchStep`), `after_match_step` (perf time, update counts, recording
+checkpoints, stops where a replay ended or a script waits) and
+`end_match_steps` (audio sync on the paused clock), which split the old
+`update_match` loop in the same order. In Release all four are inline and say
+one step with no filter, so the step is called once a frame directly; no
+director hook forwards it any more. `DebugMatchTarget` is now three interfaces
+by client in [debug_targets.h](../game/debug/debug_targets.h):
+`DebugMatchView` (read-only), `DebugMatchControl` (rebuild, adopt, leave,
+audio, background) and `DebugMatchEdits` (overlays, cheats, place, respawn,
+kill, seat labels), which it inherits; `seat_labels`, `rebuild_bots` and
+`replay_header` take a `DebugMatchView`. The `debug_console` fakes take the
+same loop through a fixture `update_match(director, match, ...)`, and
+`painter_visual`'s practice replay reaches `step_match`. The Release paragraph
+and hooks list of [the debug console](debug-console.md#release-behaviour) and
+[the architecture overview](architecture.md) now describe this.
+`director_checks.cpp` gained the `<objbase.h>` it needs for `CoInitializeEx`:
+after `HYG#32` trimmed the precompiled header it no longer compiled in Debug
+(the only build that compiles it), which `HYG#32`'s Debug run, made without
+the slow cases, did not reach.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74) and in Debug without the four slow cases (71); `debug_console`,
+`menu_text`, `instant_replay` and `practice_workshop` passed in Debug.
+`check-painter.ps1 -PracticeReplayOnly` passed in both presets,
+`check-display-awake.ps1` and `check-startup.ps1` on the Debug executable, and
+`check_doc_links.py` passes.
 
 ### One bot ballistics and RNG module (`HYG#34`)
 

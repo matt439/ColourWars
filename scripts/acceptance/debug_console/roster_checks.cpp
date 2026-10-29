@@ -61,7 +61,7 @@ namespace debug_console_acceptance
 		{
 			if (!director.before_match_update(match, roster_step))
 			{
-				director.update_match(match, keyboard_step(director.impl()->level_updates()), roster_step);
+				update_match(director, match, keyboard_step(director.impl()->level_updates()), roster_step);
 			}
 		}
 	}

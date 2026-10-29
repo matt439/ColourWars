@@ -93,14 +93,14 @@ namespace debug_console_acceptance
 		require(director.drives_slot(input_slots::keyboard_and_mouse) && !director.drives_slot(0),
 			"A bot on the keyboard seat drives its slot");
 		std::vector<PlayerInputData> inputs(input_slots::count);
-		director.update_match(match, inputs, 1.0f / 60.0f);
+		update_match(director, match, inputs, 1.0f / 60.0f);
 		require(match.last_filter != nullptr, "With bots, the update gets a seat filter");
 		require(impl.execute("bot 1 off").ok && impl.status_strip().find("BOTS 3x paint") != std::string::npos,
 			"bot all paint drives only the three idle dummies: " + impl.status_strip());
 		require(!director.drives_slot(input_slots::keyboard_and_mouse), "bot 1 off hands the seat back");
 		require(impl.execute("bot off").ok && impl.status_strip().find("BOTS") == std::string::npos,
 			"bot off clears every bot");
-		director.update_match(match, inputs, 1.0f / 60.0f);
+		update_match(director, match, inputs, 1.0f / 60.0f);
 		require(match.last_filter == nullptr, "Without bots the update gets no seat filter");
 		require(!impl.execute("bot 1 dance").ok && !impl.execute("bot 9 walk").ok && !impl.execute("bot 2").ok,
 			"bot checks its seat and behaviour");

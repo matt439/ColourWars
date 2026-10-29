@@ -8,6 +8,7 @@
 #include "game/debug/debug_background.h"
 #include "game/debug/debug_chord.h"
 #include "game/debug/debug_clock.h"
+#include "game/debug/debug_director.h"
 #include "game/debug/debug_log.h"
 #include "game/debug/debug_perf.h"
 #include "game/debug/debug_registry.h"
@@ -89,8 +90,10 @@ public:
 	void after_level_build(DebugMatchTarget& match);
 	void filter_match_inputs(std::vector<PlayerInputData>& inputs) const;
 	bool before_match_update(DebugMatchTarget& match, float dt, bool active = true);
-	void update_match(DebugMatchTarget& match,
-		const std::vector<PlayerInputData>& inputs, float dt);
+	int match_steps(const std::vector<PlayerInputData>& inputs, float dt);
+	bool before_match_step(DebugMatchTarget& match, int run, MatchStep& step);
+	bool after_match_step(DebugMatchTarget& match);
+	void end_match_steps(DebugMatchTarget& match, int runs);
 	bool before_page_update(DebugPageTarget& page, float dt, bool active = true);
 	void begin_keyboard_capture();
 	void capture_input_frame(DebugPageTarget& page);
@@ -218,7 +221,7 @@ public:
 
 	// What each seat's HUD says instead of its device: "Replay" while a
 	// replay drives the match, "Bot: <behaviour>" for a bot's seat, else "".
-	std::vector<std::wstring> seat_labels(const DebugMatchTarget& match) const;
+	std::vector<std::wstring> seat_labels(const DebugMatchView& match) const;
 
 	// DebugDirector::begin_match_draw and draw_status.
 	void begin_match_draw();
@@ -339,12 +342,20 @@ private:
 	std::map<int, std::string> seat_bots_;
 	std::string dummy_bot_;
 	std::unique_ptr<BotDriver> bot_driver_;
-	void rebuild_bots(const DebugMatchTarget& match);
+	void rebuild_bots(const DebugMatchView& match);
 	std::string bot_summary() const;
 
 	// Record and play. Recording starts at a fresh build; so does playing.
 	int level_updates_ = 0;
 	std::uint32_t last_dt_bits_ = 0;
+	// The frame's steps, from match_steps to end_match_steps: their dt, the
+	// latched inputs, a later step's copy without their press edges, whether a
+	// replay was running into the current step, and when that step began.
+	float step_dt_ = 0.0f;
+	std::vector<PlayerInputData> latched_;
+	std::vector<PlayerInputData> later_step_;
+	bool replay_was_running_ = false;
+	double step_began_ms_ = 0.0;
 	struct RecordRequest
 	{
 		std::string name;
@@ -369,7 +380,7 @@ private:
 	// The clock was paused by a replay holding its last frame (not by the
 	// user): the next replay to start resumes it.
 	bool replay_hold_ = false;
-	ReplayFile replay_header(const DebugMatchTarget& match);
+	ReplayFile replay_header(const DebugMatchView& match);
 	// FNV-1a of a content file's text as live tuning holds it (0 unreadable).
 	std::uint64_t content_hash(std::string_view file);
 

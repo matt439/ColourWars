@@ -26,7 +26,7 @@ namespace practice_replay_acceptance
     template struct Access<EndMenuTag, &GameLevel::open_end_menu>;
     template struct Access<StepReplayTag, &GameLevel::step_replay>;
     template struct Access<EndReplayTag, &GameLevel::end_replay>;
-    template struct Access<UpdateTag, &GameLevel::debug_update_level>;
+    template struct Access<UpdateTag, &GameLevel::step_match>;
 
     struct GapsTag { friend size_t gaps(GapsTag, const RoundTape&); };
     template<auto Member> struct GapsAccess
@@ -172,7 +172,7 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
 
 #if COLOURWARS_DEV_TOOLS
     // The actual Debug recorder sits downstream of the shipping filter, as in
-    // DebugDirector::update_match. This deliberately keeps the existing practice
+    // GameLevel::update's step loop. This deliberately keeps the existing practice
     // Level: the user-facing record command rebuilds a developer/timed course.
     const std::vector<PlayerInputData> neutral = neutral_inputs();
     const Vector2F before_debug = game->level().player(0).rectangle().position();

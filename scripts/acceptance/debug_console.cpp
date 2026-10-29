@@ -307,7 +307,7 @@ int main(int argc, char** argv)
 		director.before_level_build(match);
 		director.after_level_build(match);
 		require(!director.before_match_update(match, 1.0f / 60.0f), "Release never takes an update");
-		director.update_match(match, inputs, 1.0f / 60.0f);
+		update_match(director, match, inputs, 1.0f / 60.0f);
 		director.detach_match(match);
 		require(match.overlay_sets == 0 && match.player_text_sets == 0 && match.cheat_sets == 0 &&
 			match.rebuilds == 0 && match.adopts == 0 && match.placed.empty() &&

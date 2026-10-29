@@ -116,8 +116,9 @@ namespace debug_console_acceptance
 		}
 		void debug_adopt(const MatchSetup& plan, bool) override { this->settings = plan; }
 		void debug_leave() override {}
-		void debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
-			SeatInputFilter* seats) override
+		// GameLevel::step_match's place, without its recorder and rumble.
+		void step(const std::vector<PlayerInputData>& inputs, float dt,
+			SeatInputFilter* seats)
 		{
 			this->level->update(inputs, dt, seats);
 		}

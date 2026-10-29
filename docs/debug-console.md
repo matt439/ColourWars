@@ -1470,15 +1470,20 @@ as the game. In Release:
 - `+` arguments are ignored; if any are present, one line goes to stderr:
   `developer arguments ignored: Release build`. Without them nothing is printed.
 - The grave key, F2-F9, F11 and the pad chord do nothing (pad Back still
-  toggles F1, Start still pauses); the clock always runs one update a frame. No
-  script, bind, history or autoexec file is read or written.
+  toggles F1, Start still pauses). There is no debug clock: `GameLevel::update`
+  runs its own `step_match` (one `Level::update` through the shipping
+  instant-replay recorder) once a frame, because the director's step hooks are
+  inline and answer one step with no developer seat filter. No script, bind,
+  history or autoexec file is read or written.
   F10 does nothing either; like a lone Alt, it no longer enters the system
   menu loop, because the engine treats both as plain keys
   ([engine report 11](review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--accepted-narrowed-0f3b283)).
 - What does ship, by design, so no class layout depends on `_DEBUG`: the
-  `DebugMatchTarget` and `DebugPageTarget` interfaces (their RTTI names and
-  vtables), `GameLevel`'s small `debug_*` adapters and the pages'
-  `debug_start_match`/`debug_dismiss`/`debug_reset_input`, all unreachable;
+  `DebugPageTarget` interface and `DebugMatchTarget` with its three bases,
+  `DebugMatchView`, `DebugMatchControl` and `DebugMatchEdits` (their RTTI names
+  and vtables), `GameLevel`'s small `debug_*` adapters and the pages'
+  `debug_start_match`/`debug_dismiss`/`debug_reset_input`, all unreachable
+  (the match step is not among them);
   `Level`'s overlay member and its developer setters, `Player`'s two cheat flags
   and `place_at`/`force_respawn`, never called; `LevelLoadedInfo::stations()`
   and its validation, which are level data and correct in both;
@@ -1487,15 +1492,16 @@ as the game. In Release:
   `set_seat_labels`, `opening_cards`, `projectile_count` and
   `collision_object_count`, `InterfaceGameplay`'s label overload (the slot
   overload forwards to it), `MenuPage::shows_brand` (true for every Release
-  page), `DebugMatchTarget`'s `debug_countdown_over`, `debug_set_seat_labels`
-  and `debug_screen_obstacles` with their `GameLevel` adapters, and
+  page), `debug_countdown_over`, `debug_set_seat_labels` and
+  `debug_screen_obstacles` with their `GameLevel` adapters, and
   `DebugDirector::begin_match_draw`, an inline no-op; the
   `SeatInputFilter` interface, also used by the shipping `MatchBotDriver`, and
   the developer `seats` parameter of `Level::update`, always null in Release
-  (shipping bots are owned by Level); `DebugMatchTarget::debug_level`;
+  (shipping bots are owned by Level); `DebugMatchView::debug_level`;
   `pad_seat_missing`, whose "driven by a bot or replay" half is always false;
   `DebugDirector` itself, one null pointer with inline no-op hooks
-  (`match_suspended`, `drives_slot` among them); and the one stderr line above.
+  (`match_suspended`, `drives_slot` among them) and four inline step hooks
+  that say one step, no filter; and the one stderr line above.
 - `scripts/acceptance/debug_console.cpp` checks both ways: the Debug executable
   must contain the RTTI names `.?AVDebugConsoleState@@`, `.?AVDebugRegistry@@`,
   `.?AVLambdaCommand@@`, `.?AVDebugMenuPage@@`, `.?AVNumberVariable@@`,
@@ -1552,8 +1558,12 @@ as the game. In Release:
     console key, pending screenshot, the live console or the binds, a script
     tick, queued requests), then `filter_match_inputs` on the inputs it read
     (the chord's pad edges; the keyboard seat while the live console is open
-    and on the frame it closes), then `update_match` (which stops a step's
-    fast-forward where a waiting script asked, and times each update).
+    and on the frame it closes), then runs its match steps: `match_steps`
+    says how many (the clock's 0..4), `before_match_step` hands each step its
+    inputs and seat filter, or stops a fast-forward at a finished round,
+    `GameLevel::step_match` runs it, and `after_match_step` times it and stops
+    the fast-forward where a replay ended or a waiting script asked;
+    `end_match_steps` syncs the audio after a step on the paused clock.
   - `GameLevel::draw` calls `begin_match_draw` first and `draw_status` last
     (the paint, perf and strip panels, placed clear of
     `debug_screen_obstacles()`, and the live console).
@@ -1569,9 +1579,16 @@ as the game. In Release:
     first and bypasses ordinary developer work. The page is a `DebugPageTarget`,
     which is how the director starts a match, dismisses a page or resets its input. It also ticks
     scripts there (not under the debug menu) and closes a live console.
-  - `update_match` passes `Level::update` the seat filter in force (a replay,
-    else a recorder wrapping the bots, else the bots, else none) and counts
-    Level updates since the build.
+  - `before_match_step` hands the step the seat filter in force (a replay,
+    else a recorder wrapping the bots, else the bots, else none), which the
+    shipping tape recorder forwards to `Level::update`, and `after_match_step`
+    counts Level updates since the build.
+  - The director holds the match as a `DebugMatchTarget`, which is three
+    interfaces by client: `DebugMatchView` (read-only: settings, the level,
+    status, stations, paint, countdown and panel obstacles), `DebugMatchControl`
+    (rebuild, adopt, leave, audio sync, background changes) and
+    `DebugMatchEdits` (overlays, player text, cheats, place, respawn, kill,
+    seat labels). Helpers that only read take a `DebugMatchView`.
   - `GameLevel` calls `match_suspended` after each of its `Level::suspend`
     calls (covered, deactivated, and an audio sync while covered or inactive);
     an audio sync for the paused debug clock alone calls `Level::pause_audio`,

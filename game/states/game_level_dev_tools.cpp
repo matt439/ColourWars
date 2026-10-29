@@ -3,9 +3,8 @@
 
 using namespace labrador;
 
-// GameLevel's DebugMatchTarget adapters. DebugDirector also forwards ordinary
-// Release updates through debug_update_level, which wraps any Debug filter in
-// the shipping recorder. The other adapters serve the developer tools.
+// GameLevel's DebugMatchTarget adapters, which serve only the developer
+// tools. The match step they wrap is GameLevel::step_match (game_states.cpp).
 
 const MatchSetup& GameLevel::debug_settings() const
 {
@@ -36,19 +35,6 @@ void GameLevel::debug_adopt(const MatchSetup& plan, bool reset_session)
 void GameLevel::debug_leave()
 {
 	this->leave_match(EndMenuAction::exit);
-}
-
-void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
-	SeatInputFilter* seats)
-{
-	this->data()->debug().sync_background_audio(this->context()->active());
-	this->sync_rumble();
-	// The recorder always forwards the Debug filter; timed rounds also tape
-	// each step's final input. Untimed practice keeps no shipping tape.
-	this->tape_recorder_.prepare(seats, dt);
-	this->level_->update(inputs, dt, &this->tape_recorder_);
-	if (!this->context()->active()) { this->level_->pause_audio(); }
-	this->drain_rumble(dt);
 }
 
 const Level* GameLevel::debug_level() const

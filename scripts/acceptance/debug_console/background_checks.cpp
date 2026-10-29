@@ -115,19 +115,19 @@ namespace debug_console_acceptance
 			const DetachMatch detach{ test.director, match };
 			const float dt = 1.0f / 60.0f;
 			const std::vector<PlayerInputData> slots(input_slots::count);
-			test.director.update_match(match, slots, dt);
+			update_match(test.director, match, slots, dt);
 			require(match.last_filter == nullptr, "Default-off active input must retain its original filter path");
 			test.impl.set_background_probe([] { return DebugBackgroundState{ true, false, false }; });
 			require(test.impl.execute("script.background 1").ok &&
 				!test.director.before_match_update(match, dt, false), "The physical-input fixture opens its inactive gate");
-			test.director.update_match(match, slots, dt);
+			update_match(test.director, match, slots, dt);
 			auto* delivered = dynamic_cast<DebugBackgroundInput*>(match.last_filter);
 			require(delivered != nullptr, "The actual inactive director update did not deliver the background wrapper");
 			auto seats = adversarial;
 			delivered->filter_seats(seats, *level);
 			require_neutral_seats(seats);
 			require(!test.director.before_match_update(match, dt, true), "The foreground input hook must resume normally");
-			test.director.update_match(match, slots, dt);
+			update_match(test.director, match, slots, dt);
 			require(match.last_filter == nullptr, "Opted-in foreground input must retain the original unwrapped path");
 
 			DebugBackgroundInput wrapper;
@@ -174,12 +174,12 @@ namespace debug_console_acceptance
 			};
 
 			clock.set_timescale(0.25f);
-			director.update_match(match, tap, dt);
+			update_match(director, match, tap, dt);
 			require(match.updates == 0, "The foreground tap must be latched on an actual zero-run step");
 			for (int step = 0; step < 3; ++step)
 			{
 				require(!director.before_match_update(match, dt, false), "An open inactive hook should permit neutral work");
-				director.update_match(match, neutral, dt);
+				update_match(director, match, neutral, dt);
 				require(match.updates == (step == 2 ? 1 : 0),
 					"Discarding foreground edges reset or consumed the quarter-speed accumulator");
 			}
@@ -189,20 +189,20 @@ namespace debug_console_acceptance
 			match.reset_counts();
 			clock.reset_accumulator();
 			clock.set_timescale(0.5f);
-			director.update_match(match, tap, dt);
+			update_match(director, match, tap, dt);
 			clock.request_steps(2);
 			require(!director.before_match_update(match, dt, false) && clock.paused() &&
 				clock.pending_steps() == 2 && clock.timescale() == 0.5f && match.updates == 0,
 				"Discarding input edges changed pause, pending steps or timescale");
 			for (int step = 0; step < 3; ++step)
 			{
-				director.update_match(match, neutral, dt);
+				update_match(director, match, neutral, dt);
 				require(match.updates == std::min(step + 1, 2), "Inactive input reset lost or invented a queued step");
 				require(!director.before_match_update(match, dt, false), "A paused open gate still permits the hook");
 			}
 			require(clock.paused() && clock.pending_steps() == 0, "Stepping must leave the clock paused");
 			clock.set_paused(false);
-			director.update_match(match, neutral, dt);
+			update_match(director, match, neutral, dt);
 			require(match.updates == 3, "Input-edge discard lost the half-step accumulated before pausing");
 			no_edges();
 		}

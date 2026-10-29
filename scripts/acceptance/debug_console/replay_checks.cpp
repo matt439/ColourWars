@@ -248,7 +248,7 @@ namespace debug_console_acceptance
 				match.suspend();
 				suspended = true;
 			}
-			director.update_match(match, keyboard_step(impl.level_updates()), dt);
+			update_match(director, match, keyboard_step(impl.level_updates()), dt);
 		}
 		return step;
 	}
@@ -586,7 +586,7 @@ namespace debug_console_acceptance
 		{
 			// What `step 1` (F7) does, without a log line per update.
 			impl.clock().request_steps(1);
-			director.update_match(match, keyboard_step(step), dt);
+			update_match(director, match, keyboard_step(step), dt);
 		}
 		require(count_of_lines(log, "replay cpu: MATCH") == matched + 1 &&
 			!log_contains(log, "which the recording was not", DebugSeverity::warning),
@@ -700,7 +700,7 @@ namespace debug_console_acceptance
 			"play with the wrong dt: " + log.lines().back().text);
 
 
-		director.update_match(match, keyboard_step(0), 0.0166666f);
+		update_match(director, match, keyboard_step(0), 0.0166666f);
 		require(!impl.playing() && log_contains(log, "refused: recorded at dt", DebugSeverity::error),
 			"A replay at another dt (the executable's StepTimer gives 0.0166666) is refused");
 		require(match.god && impl.status_strip().find("BOTS 3x paint") != std::string::npos,
@@ -713,7 +713,7 @@ namespace debug_console_acceptance
 		require(impl.execute("god off").ok && !match.god, "god off");
 		require(!impl.execute("play cpu").ok && log_contains(log, "a replay never matches across step sizes",
 			DebugSeverity::error), "and play itself refuses once the step is known");
-		director.update_match(match, keyboard_step(0), dt);
+		update_match(director, match, keyboard_step(0), dt);
 
 		// A replay armed and then left behind does not take over the next match.
 		require(impl.execute("play cpu").ok && impl.execute("menu").ok &&
