@@ -48,7 +48,7 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: the
-[Architecture review](#architecture-review) rows (`HYG#34`-`HYG#51`, `CI#6`) and the
+[Architecture review](#architecture-review) rows (`HYG#35`-`HYG#51`, `CI#6`) and the
 owed reports `ENG#27`-`ENG#32` are `OPEN`, in the order listed there. Before them,
 the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
@@ -114,7 +114,6 @@ comparison and physical-pad check; values remain provisional.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#34` | OPEN | MED | M | One bot ballistics and RNG module for the shipping and Debug drivers; `SIMULATION_HZ` instead of `60`. [Scope](docs/code-hygiene.md#one-bot-ballistics-and-rng-module-hyg34). |
 | `HYG#35` | OPEN | MED | L | Make `RoundTape` the one capture model and the Debug replay file its serialisation. [Scope](docs/code-hygiene.md#one-record-and-replay-model-hyg35). |
 | `HYG#36` | OPEN | LOW | S | One name table for `WeaponType` and `ProjectileType` instead of eight hand-written mappings. [Scope](docs/code-hygiene.md#one-owner-for-weapon-and-projectile-names-hyg36). |
 | `HYG#37` | OPEN | MED | L | Compute menu page geometry in one module that the reader, the validator and the pages share. [Scope](docs/code-hygiene.md#menu-page-geometry-in-one-place-hyg37). |

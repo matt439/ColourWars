@@ -218,11 +218,30 @@ Release (74) and in Debug without the four slow cases (71); `debug_console`,
 
 ### One bot ballistics and RNG module (`HYG#34`)
 
-Have the Debug bot driver call `match_bot_ballistics` instead of its copy, share
-one seeded RNG type and seed/seat mix in `game/ai/`, define `horizontal_reach`
-in `match_bot_ballistics.cpp`, and replace the hard-coded `60` with
-`SIMULATION_HZ`/`SECONDS_PER_STEP`. The Debug driver's engagement changes to the
-shipping cap; say so in the commit.
+**Done 2026-10-30.** `BotRandom` (splitmix64) and its seed/seat mix,
+`BotRandom::seat_seed`, moved out of `debug/bot.h` into
+[bot_random.h](../game/ai/bot_random.h); `MatchBot` keeps a `BotRandom` instead
+of its own copy of the generator, and `MatchBotDriver` and `Bot::make` both seed
+from `seat_seed`, so every bot draws the same sequence as before.
+`match_bot_ballistics::horizontal_reach` is now defined in
+[match_bot_ballistics.cpp](../game/ai/match_bot_ballistics.cpp) beside
+`aim_direction`, and the Debug `BotDriver`'s engagement distance calls it
+instead of its own uncapped copy. That is the one behavioural change: a
+skirmish developer bot with a gravity tool now engages at the shipping
+same-height ballistic cap, not from a full second of horizontal travel (said in
+the commit and in [the debug console](debug-console.md#skirmish-measurement-bot)).
+The bots' hard-coded `60` (step length, one-second loops, seconds-to-steps
+budgets, the one-step velocity look-ahead) now read `SIMULATION_HZ` or
+`SECONDS_PER_STEP` from [simulation.h](../game/simulation.h), each spelled to
+give the same value bit for bit; the Debug behaviours' step counts stay as
+written.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74) and in Debug without the four slow cases (71, `balance_runner`
+included); `debug_console` passed in Debug, and the opt-in `bot_trials`,
+`bot_combat_trials`, `bot_scan_cost` and `bot_team_trials` passed in Release.
+`check-startup.ps1` passed on the Debug executable and `check_doc_links.py`
+passes.
 
 ### One record and replay model (`HYG#35`)
 

@@ -957,8 +957,8 @@ device (or the neutral input of an idle dummy):
 - A bot's input replaces the seat's after the device and the mouse aim are
   resolved, through a seat filter `Level::update` takes as a parameter
   (`game/objects/seat_input_filter.h`).
-- Bots draw on their own random numbers (splitmix64 from the seed and the seat),
-  never `rand()`: with `seed` set, the same match plays out the same way every
+- Bots draw on their own random numbers (splitmix64 from the seed and the seat,
+  the shipping bots' `BotRandom` in `game/ai/bot_random.h`), never `rand()`: with `seed` set, the same match plays out the same way every
   time.
 - A seat a bot drives never opens the disconnected-pad pause, the pause page's
   "Controller lost" or the restart fallback - not even a pad seat whose pad is
@@ -997,10 +997,14 @@ It then conserves that refill while returning to its saved X; saved Y is only
 a jump hint. A nearby enemy can interrupt the return. Death discards the old
 life's refill/return goal and releases a held jump.
 
-Reach uses current tool/projectile tuning for a stationary horizontal launch
-over at most 60 fixed updates (about one second), plus muzzle/body/collision
-extent. It is an engagement heuristic, not a hit-range guarantee: gravity,
-inherited velocity, diffusion, target motion and terrain are not solved.
+Reach is the shipping bots' own estimate (`match_bot_ballistics::horizontal_reach`
+in `game/ai/`): current tool/projectile tuning for a stationary horizontal
+launch over at most one second of fixed updates, capped for a falling shot at
+the ideal same-height range, plus muzzle/body/collision extent. Before
+2026-10-30 (`HYG#34`) the Debug driver kept its own copy without that cap, so
+skirmish engaged gravity tools from farther away. It is an engagement
+heuristic, not a hit-range guarantee: inherited velocity, diffusion, target
+motion and terrain are not solved.
 There is no line-of-sight test, route planner or ballistic intercept solver;
 the bot can fire into a wall or fail a route. Seeded developer measurements
 do not establish human comfort, arena acceptance or tool balance.

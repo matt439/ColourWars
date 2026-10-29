@@ -31,8 +31,9 @@ struct BotSeatView
 	// Only populated by BotDriver's opt-in skirmish observation. This is the
 	// actual full-shot affordability state, including a positive but low tank.
 	bool shot_empty = false;
-	// Developer engagement heuristic: a stationary horizontal launch for at
-	// most 60 fixed steps, plus muzzle/body/volume extent. Not a hit or LOS test.
+	// Developer engagement heuristic: the shipping driver's
+	// match_bot_ballistics::horizontal_reach plus muzzle/body/volume extent.
+	// Not a hit or LOS test.
 	float engage_distance = 0.0f;
 	Seat self;
 	std::vector<Seat> others; // every other seat, in view order
