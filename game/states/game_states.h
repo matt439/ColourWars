@@ -20,13 +20,14 @@
 #include "game/rumble_sink.h"
 #include "game/round_tape.h"
 
-// Stack shapes during a session:
+// Stack shapes during a session (docs/architecture.md lists every overlay):
 //
 //     [GameMenu, MainMenu*Page]
-//     [GameMenu, MainMenuOptions, ControlsSettingsMenu]
+//     [GameMenu, MainMenuOptions, ControlsSettingsMenu, <a controls page>]
 //     [GameMenu, GameLevel]
 //     [GameMenu, GameLevel, PauseMenu*Page | ResultsMenuInitial | EndMenuInitial]
-//     [GameMenu, GameLevel, PauseMenuInitial, ControlsSettingsMenu]
+//     [GameMenu, GameLevel, MainMenuWeaponSelect | MainMenuStageSelect]   (between rounds)
+//     [GameMenu, GameLevel, PauseMenuInitial, MainMenuOptions, ControlsSettingsMenu]
 //
 // GameMenu is alone only during transitions. Its context and settings survive
 // matches; menu pages are rebuilt when returning from a match.

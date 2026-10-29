@@ -48,7 +48,7 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: the
-[Architecture review](#architecture-review) rows (`HYG#31`-`HYG#51`, `CI#6`) and the
+[Architecture review](#architecture-review) rows (`HYG#32`-`HYG#51`, `CI#6`) and the
 owed reports `ENG#27`-`ENG#32` are `OPEN`, in the order listed there. Before them,
 the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
@@ -114,7 +114,6 @@ comparison and physical-pad check; values remain provisional.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#31` | OPEN | MED | L | Move the architecture overview out of AGENTS.md into `docs/architecture.md`, correct its `GameData`, state-stack and chain claims, and index `docs/` and `scripts/`. [Scope](docs/code-hygiene.md#a-human-architecture-overview-and-accurate-docs-hyg31). |
 | `HYG#32` | OPEN | MED | S | Drop D3D11 and DirectXTK from `pch.h`, the link and 32 dead `using namespace DirectX` lines. [Scope](docs/code-hygiene.md#the-precompiled-header-stops-claiming-a-backend-hyg32). |
 | `HYG#33` | OPEN | MED | M | Make the shipping match step a plain `GameLevel` member instead of `debug_update_level`, then split `DebugMatchTarget` by client. [Scope](docs/code-hygiene.md#the-shipping-match-step-out-of-debug-code-hyg33). |
 | `HYG#34` | OPEN | MED | M | One bot ballistics and RNG module for the shipping and Debug drivers; `SIMULATION_HZ` instead of `60`. [Scope](docs/code-hygiene.md#one-bot-ballistics-and-rng-module-hyg34). |
@@ -281,7 +280,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
+| `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console-record.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
@@ -292,7 +291,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
+| `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
 ## Design process
 

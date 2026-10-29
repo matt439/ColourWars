@@ -5,7 +5,7 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
 `CI#5`; `CI#1`, the foreground debug-console check, stays with
-[the debug console](debug-console.md#foreground-checks-ci1).
+[the debug console](debug-console-record.md#foreground-checks-ci1).
 
 ## Architecture review (2026-10-30)
 
@@ -133,15 +133,28 @@ passed under Windows PowerShell 5.1; pwsh is not installed here.
 
 ### A human architecture overview and accurate docs (`HYG#31`)
 
-Move `AGENTS.md`'s Architecture section into `docs/architecture.md` with a
-directory map and the intended dependency direction, linked from the README and
-the OOP guide; leave AGENTS.md a pointer plus agent-only rules. Correct the
-`GameData` claim (states, pages and debug hold it; builders unpack it), the
-state-stack shapes (and `game_states.h:28`), the inheritance chains and the
-`game/carried` and engine-free contract layers. Document `Player`'s two
-`DrawObject` subobjects in the guide. Add `docs/README.md` and
-`scripts/README.md` indexes, and split the reference half of
-`docs/debug-console.md` from its work record.
+**Done 2026-10-30.** [architecture.md](architecture.md) is the human overview:
+a directory map, the concerns mixed in the `game/` root, the intended
+dependency direction with what holds and what does not at `272ecb75` (measured
+from the include graph: `objects`/`ai` include each other, the root includes
+`objects` and `states`, nothing enforces the contracts), the nine engine-free
+contract headers, `game/carried`, `GameData`, every state-stack shape, `Level`
+and `Scene`, the builder chain, the four startup files and the class chains
+with every base. AGENTS.md's Architecture section is now a pointer and eight
+agent rules; its claim that `GameData` reaches every object is corrected (the
+shell's states, pages, `MenuContext`, `StagePreview` and `game/debug` hold it;
+`GameLevel` unpacks it into `LevelBuilder`), and its OOP chains gained their
+missing bases. The comment atop `game_states.h` now shows Options pushed over
+the pause menu and the between-round pages. The OOP guide documents `Player`'s
+two `DrawObject` subobjects and links the overview, as does the README (whose
+line counts were refreshed). [docs/README.md](README.md) and
+[scripts/README.md](../scripts/README.md) index both folders. The work record
+of `docs/debug-console.md` (`DBG#1`, `#6` and `#8` to `#18`, and `CI#1`) moved
+unchanged to [debug-console-record.md](debug-console-record.md), leaving a
+1,724-line reference that gained short `script.background` and `stage_hash`
+entries; inbound links were repointed. Both presets build under `/W4 /WX`;
+`display_awake`, `remembered_setup` and `ammo` passed in each, and
+`check_doc_links.py` passes.
 
 ### The precompiled header stops claiming a backend (`HYG#32`)
 

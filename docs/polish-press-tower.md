@@ -484,6 +484,6 @@ Rerun: `scripts/run-acceptance.ps1 -Cases bot_arena_routes,bot_team_trials`
 - Support art for the brief, above.
 - Review frames: `ColourWars.exe +exec review_press_tower +quit` writes the
   seeded 1-4P clean and heavy frames and every station
-  ([`DBG#18`](debug-console.md#arena-review-screenshot-pack-dbg18)).
+  ([`DBG#18`](debug-console-record.md#arena-review-screenshot-pack-dbg18)).
 - Spawn margins depend on the gantry ending at X 1000; shortening it to 940
   opens a standing summit line to X 405. Any geometry edit re-runs the checks.

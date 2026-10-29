@@ -130,7 +130,7 @@ The integration contract for the next slices is:
   attended comparison establishes distinct, useful difficulties. In a Debug
   build that comparison starts from a launch line, for example
   `+stage crossfeed +players 2 +seat 2 bot hard`
-  ([`DBG#17`](debug-console.md#roster-statements-for-bots-teams-and-boost-dbg17)).
+  ([`DBG#17`](debug-console-record.md#roster-statements-for-bots-teams-and-boost-dbg17)).
 
 #### Saved identity and replay metadata (2026-10-27)
 
@@ -1379,7 +1379,7 @@ two-way levels; the values remain provisional until that play. A Debug
 build can start that session without the menus:
 `ColourWars.exe +exec review_bots_boost` plans a seeded Crossfeed with Easy +2,
 Normal +1 and Hard bots, and `seat <n> bot|boost|team` sets any other roster
-([`DBG#17`](debug-console.md#roster-statements-for-bots-teams-and-boost-dbg17)).
+([`DBG#17`](debug-console-record.md#roster-statements-for-bots-teams-and-boost-dbg17)).
 
 #### Boost on paint underfoot (`ROAD#39`)
 

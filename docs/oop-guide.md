@@ -8,6 +8,8 @@ preference for a different style inside the engine does not govern this client.
 Start with `Session` and `PaintTile` for small objects, then follow `Player`,
 `Weapon` and `Projectile`, and finally the menu state stack. This guide describes
 the current code; the documents under `review/` remain historical records.
+[The architecture overview](architecture.md) covers the layout, the dependency
+direction, the services and the state stack these classes sit in.
 
 ## Where the concepts live
 
@@ -16,7 +18,7 @@ the current code; the documents under `review/` remain historical records.
 | Encapsulation and invariants | [Session](../game/session.h), [implementation](../game/session.cpp) | The win ledger is private. `finish_round` and `next_round` express allowed operations; repeating `finish_round` cannot award another win. |
 | Abstraction | [PaintableObject](../game/objects/paintable_object.h), [Projectile](../game/objects/projectile.h) | A consumer asks for paint totals or projectile behavior without knowing the concrete representation. Pure virtual functions make required behavior explicit. |
 | Single and multilevel inheritance | [WeaponBucket](../game/objects/weapon_bucket.h), [Weapon](../game/objects/weapon.h), [ProjectileMist](../game/objects/projectile_mist.h) | Bucket specializes `RelativeVelocityWeapon`, which specializes `Weapon`; mist specializes `DiffusingProjectile`, which specializes `Projectile`. Each intermediate class shares meaningful behavior. |
-| Multiple inheritance | [StructurePaintable](../game/objects/structure_paintable.h), [FixedSlabPaintable](../game/objects/fixed_slab_paintable.h), [Player](../game/objects/player.h) | A painted structure has both structure behavior and the scoring interface. `FixedSlabPaintable` takes the same two bases directly rather than deriving from `StructurePaintable`: its sloping face keeps paint in its own rigid frame, so it implements `paint_total` and `append_paint_surfaces` over its own tiles instead of inheriting the axis-aligned ones. A player combines movement, collision, animation and texture roles. |
+| Multiple inheritance | [StructurePaintable](../game/objects/structure_paintable.h), [FixedSlabPaintable](../game/objects/fixed_slab_paintable.h), [Player](../game/objects/player.h) | A painted structure has both structure behavior and the scoring interface. `FixedSlabPaintable` takes the same two bases directly rather than deriving from `StructurePaintable`: its sloping face keeps paint in its own rigid frame, so it implements `paint_total` and `append_paint_surfaces` over its own tiles instead of inheriting the axis-aligned ones. A player combines movement, collision, animation and texture roles; its two drawing bases share an engine base, [explained below](#players-two-drawing-bases). |
 | Specializing a concrete class | [TeamGateStructurePaintable](../game/objects/team_gate_structure_paintable.h), [TranslatingStructurePaintable](../game/objects/translating_structure_paintable.h) | `StructurePaintable` is concrete and built directly for ordinary painted walls; these two are `final` subclasses. The gate adds a team permission settled from its own held paint and overrides `mask`; the translating structure adds horizontal motion and overrides its geometry, contact and paint-surface functions. Both keep the base's tiles and scoring. |
 | Implementation inheritance | [CrudeDrawing](../game/objects/crude_drawing.h), [PlayerBadge](../game/objects/player_badge.h), [Monitor](../game/objects/monitor.h) | A base over the engine's `TextureObject` whose constructor and drawing helpers (`fill`, `blob`, `ring`, `line`, ...) are protected. Nine `final` leaves reuse those helpers: `CountdownArt`, `FigureActing`, `FigureAttachments`, `Monitor`, `PlayerBadge`, `RevealArt`, `ScreenCursor`, `Silhouette` and `TeammateMarker`. They share how to draw, not an interface: owners hold and call each leaf by its own type. |
 | Runtime polymorphism | [Player::update_weapon_and_get_projectiles](../game/objects/player.cpp), [WeaponBuilder](../game/objects/weapon_builder.cpp) | Player owns a `unique_ptr<Weapon>`; the factory chooses its concrete type and virtual calls select the behavior. Player does not switch on weapon classes. |
@@ -102,6 +104,35 @@ Gameplay builders pass the narrower dependencies individual objects need.
 Tuning describes balance and presentation describes layout; C++ implements
 behavior. A numeric change normally belongs in data. A new behavioral rule may
 belong in a subclass.
+
+## Player's two drawing bases
+
+`Player` derives from `colourwars::AnimationObject` and `labrador::TextureObject`,
+and both derive, non-virtually, from the engine's `SpriteSheetObject` and
+through it `DrawObject`. A player therefore holds two complete `DrawObject`
+subobjects, each with its own sheet, frame, colour, rotation, origin, flip and
+layer depth. The two are used for different parts of one figure:
+
+- The `AnimationObject` subobject is built with the player's tint and plays the
+  body strip of the current animation state; `draw_figure` draws it with
+  `draw_with`.
+- The `TextureObject` subobject is built with the team colour and is given each
+  state's uniform frame with `set_frame`. `Player::draw` never draws it as a
+  texture: its colour is the team colour that the clothing, sleeves, idle paint
+  and resting arms are drawn in, replaced by the opening's grey until the
+  figure is coloured.
+
+Because the two bases are separate, an unqualified call to a `DrawObject`
+member such as `colour()` or `render_resources()` would be ambiguous, and the
+compiler refuses it. [player_figure.cpp](../game/objects/player_figure.cpp)
+and [player.cpp](../game/objects/player.cpp) name the base every time:
+`colourwars::AnimationObject::colour()` for the body and
+`TextureObject::colour()` for the uniform, `TextureObject::set_frame` when the
+animation state changes. A `Player*` also cannot convert to a single
+`DrawObject*`; nothing in the game needs it to, because Scene holds players as
+`CollisionObject`s and calls the one `GameObject::draw` that `Player`
+overrides. Virtual inheritance would merge the two into one subobject with one
+colour and one frame, so it is not used here.
 
 ## Follow one shot from input to score
 

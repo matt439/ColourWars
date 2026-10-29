@@ -1344,7 +1344,7 @@ These are questions for the attended `POL#27` review, not a tuning signal.
 
 `ColourWars.exe +exec review_crossfeed +quit` writes seed-7 paint-bot clean
 and heavy frames at 1-4P and every station
-([pack](debug-console.md#arena-review-screenshot-pack-dbg18)), for the
+([pack](debug-console-record.md#arena-review-screenshot-pack-dbg18)), for the
 `POL#24` readability look; it accepts nothing.
 
 ### Selected C2 framing and identity ink (2026-10-20)

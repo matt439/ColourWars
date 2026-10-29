@@ -172,13 +172,14 @@ no client is a library of guesses, and ColourWars is what keeps saying "this
 API is awkward" loudly enough to be worth fixing.
 
 ```
-game/                 ~69k lines     the game: states, objects, content, and
+game/                 ~71k lines     the game: states, objects, content, and
                                      ~16k of Debug-only tools in game/debug/
-editor/               ~5.5k lines    the desktop level editor
+editor/               ~6k lines      the desktop level editor
 scripts/                             acceptance checks, startup, capture and
                                      art-build scripts, developer-console scripts
+                                     (indexed in scripts/README.md)
 docs/                                the backstory, polish plan, roadmap,
-                                     guides and reviews
+                                     guides and reviews (indexed in docs/README.md)
 external/labrador/                   the engine, as a submodule
 external/rapidjson/                  vendored, for the save and level files
 cmake/                               the wave-bank recipe, release packaging
@@ -421,9 +422,12 @@ continues; the normal Release package requires the validated audible bank.
 
 ColourWars is a working example of object-oriented game code: abstract
 interfaces, deep and multiple inheritance, virtual behavior, composition and
-explicit ownership. The [OOP reading guide](docs/oop-guide.md) maps those
-concepts to the implementation, follows a shot from input to score, and explains
-how to extend the game. It is Labrador's real client; the engine's `samples/`
+explicit ownership. [The architecture overview](docs/architecture.md) maps the
+directories, the dependency direction, the services and the state stack. The
+[OOP reading guide](docs/oop-guide.md) maps those concepts to the
+implementation, follows a shot from input to score, and explains how to extend
+the game. [docs/README.md](docs/README.md) indexes the rest of the docs and
+[scripts/README.md](scripts/README.md) the scripts. It is Labrador's real client; the engine's `samples/`
 provide its starter template.
 
 The project began here on 2022-12-30 as ColourWars, became ChromaClash, then

@@ -270,85 +270,44 @@ are historical, not current.
 
 ## Architecture
 
-### Service bag, not globals
+The overview is [docs/architecture.md](docs/architecture.md): the directory map,
+the intended dependency direction, `GameData`, the state stack, `Level` and
+`Scene`, the builders, the four startup JSON files and the main class chains.
+[docs/oop-guide.md](docs/oop-guide.md) walks the hierarchies;
+[docs/README.md](docs/README.md) and [scripts/README.md](scripts/README.md)
+index the docs and the scripts. Keep those pages true when a change moves what
+they describe. The rules that follow from that structure:
 
-[game/game_data.h](game/game_data.h) — `GameData` is handed to every state,
-object and drawable at construction. It holds exactly seven borrowed pointers: the
-engine `Application`, this game's `Save`, the level registry, the stage list, the
-tuning, the presentation and the developer `DebugDirector` (inert in Release, and
-`DebugDirector::inert()` when unset). Everything else that looks like a service
-(`ThreadPool`, `Gamepads`, `RenderResources`, …) is a forward to the shell. All
-seven are owned by `wWinMain` in [game/main.cpp](game/main.cpp) and declared above
-the `Application`, so they outlive every state that borrows them.
-
-### State stack
-
-[game/states/game_states.h](game/states/game_states.h) — two game states over the
-engine's state stack:
-
-```
-[GameMenu]                                  bottom for the whole session; owns
-[GameMenu, MainMenu*Page]                   what the main-menu pages share
-[GameMenu, GameLevel]
-[GameMenu, GameLevel, PauseMenu*Page | ResultsMenu | EndMenu]
-```
-
-A match is pushed *above* the menu, never in place of it, so returning from a
-match returns to a screen that still exists. `GameLevel` restores the screen
-layout it took in its destructor. Menu pages derive from `MenuPage` and share a
-`MenuContext` (services + pad reader + the `MatchSetup` being assembled),
-owned by whichever state owns the screen.
-
-### Level vs Scene
-
-[game/objects/level.h](game/objects/level.h) — `Level` is one paint match: the
-countdown, the clock, the HUDs, the cameras, the music. The generic parts —
-object lists, the tick, the collision sweep, out-of-bounds retirement, per-view
-render fan-out — are `labrador::Scene` in the engine. `Level` holds non-owning
-`Player*` back into the scene that owns them; the index into `players_` is the
-stable roster participant, **not** the player's pad slot (`player_num()`) or
-human pane. Bots have no device or pane. `participant_for_view` and
-`view_for_participant` map between human panes and roster seats; a bot in P2
-does not rename P3 when P3 owns the second pane.
-
-Construction goes through builders — `LevelBuilder` → `PlayerBuilder`,
-`LevelObjectBuilder`, `WeaponBuilder`, `ProjectileBuilder` — which read the level
-definition and the tuning and hand finished objects to the scene.
-
-### Everything numeric is data
-
-Four JSON files are read at startup, before anything else:
-
-| File | What |
-|---|---|
-| `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
-| `tuning.json` | every number a match is *balanced* on ([game/tuning.h](game/tuning.h)) |
-| `presentation.json` | every font, colour, offset and box size the shell is *laid out* from ([game/presentation.h](game/presentation.h), with its menu-page layout records in [game/presentation_menu.h](game/presentation_menu.h) and its menu text in [game/presentation_menu_text.h](game/presentation_menu_text.h)) |
-| `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records; versioned `SaveSection`s ([game/save_section.h](game/save_section.h)) |
-
-Tuning and presentation are deliberately two files with two audiences (a balance
-pass and an art pass) and are deliberately *not* manifest entries — they are read
-before every asset and are what those assets are used *by*.
-
-The save is in that list because of *when* it is read, and is otherwise the odd
-one out: the first three are content, staged beside the exe by the build and only
-ever read; the save is written by the player and created by nothing but the game.
-It used to sit with them at `./save/save_data.json` inside the staged mirror,
-where a clean rebuild deleted it and two Windows accounts shared one file. That
-path is still read once, if nothing is at the real one, to carry an older save
-across — see [game/directory_consts.h](game/directory_consts.h). Nothing seeds a
-save; `Save` writes its own defaults on first run.
-
-The rule these follow: **C++ says *how*; data says *which* and *how much*.** A
-jump's shape is code, its three numbers are tuning. Anything whose value would
-change the code — animation states the code switches on, member defaults a
-builder overwrites — stays in C++. Moving a number into JSON so it can be a
-scripting layer is the failure mode to avoid.
-
-`main.cpp` teaches the engine's resource loader what a `"level"` kind is
-(`register_kind`), because a level definition means nothing to the engine. Levels
-are never optional; a stage the manifest names and the disk lacks is a content
-bug that must fail at startup, not three screens later.
+- **`GameData` is the shell's, not the objects'.** States, menu pages,
+  `MenuContext`, `StagePreview` and `game/debug/` hold it; nothing in
+  `game/objects`, `game/ai` or `game/carried` names it. A state unpacks it into
+  a builder's constructor, and each object is constructed with only what it
+  uses. Keep it that way: it is what lets the probes build a real `Level`
+  against fakes.
+- **Nothing in `game/objects` or `game/ai` includes a `states/` header**, and
+  code outside `game/debug/` reaches the developer tools only through
+  `debug_director.h`, `debug_targets.h` and `debug_overlay_draw.h`.
+- **The engine-free contract headers** (`level_format.h`, `simulation.h`, the
+  `*_contract.h` and `*paint*_geometry.h` headers at the `game/` root) include
+  only the standard library and each other, because the editor compiles them
+  without the engine's include path.
+- **A match is pushed above `GameMenu`, never in place of it.** When a page or
+  state is added, add its stack shape to docs/architecture.md and to the
+  comment at the top of `game/states/game_states.h`.
+- **`Level::players_` is indexed by roster participant**, not by device slot
+  (`player_num()`) or human pane; use `participant_for_view` and
+  `view_for_participant` to cross between them.
+- **C++ says *how*; data says *which* and *how much*.** A jump's shape is code,
+  its three numbers are tuning. Anything whose value would change the code -
+  animation states the code switches on, member defaults a builder overwrites -
+  stays in C++. Moving a number into JSON so it can be a scripting layer is the
+  failure mode to avoid. Tuning and presentation stay two files, and neither
+  becomes a manifest entry.
+- **Levels are never optional.** A stage the manifest names and the disk lacks
+  is a content bug that must fail at startup, not three screens later.
+- **Nothing seeds a save.** `Save` writes its own defaults on first run; the old
+  `./save/save_data.json` path is only read once to carry an older save across
+  ([game/directory_consts.h](game/directory_consts.h)).
 
 ## Conventions
 
@@ -377,10 +336,14 @@ this code, written while the two repositories were one.
 
 This code is full inheritance and virtual dispatch, several levels deep and
 multiple where it suits: `ProjectileMist → DiffusingProjectile → Projectile →
-MovingObject + CollisionObject`, `WeaponBucket → RelativeVelocityWeapon →
-Weapon`, `MainMenuStageSelect → MainMenuPage → MenuPage + SoundBankObject`,
-`StructurePaintable → Structure + PaintableObject`. **That is the design, not
-drift.**
+MovingObject + AnimationObject + CollisionObject`, `WeaponBucket →
+RelativeVelocityWeapon → Weapon → TextureObject`, `MainMenuStageSelect →
+MainMenuPage → MenuPage → State + SoundBankObject + DebugPageTarget`,
+`StructurePaintable → Structure + PaintableObject` (and `Structure →
+TextureObject + CollisionObject`). `Player` even holds two `DrawObject`
+subobjects, one through `AnimationObject` and one through `TextureObject`
+([the guide](docs/oop-guide.md#players-two-drawing-bases)). **That is the
+design, not drift.**
 
 The engine says the opposite about itself and says so loudly, which is exactly
 why this is worth stating. Labrador's **T11** makes inheritance and virtual

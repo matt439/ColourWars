@@ -1119,7 +1119,7 @@ and physical-pad acceptance remain open.
 `ColourWars.exe +exec review_turbulence_blockout +quit` (and
 `review_turbulence`, `_mover_trial`, `_slab_trial`, `_ferry_trial`,
 `_gate_trial`) writes seed-7 paint-bot clean and heavy frames at 1-4 panes
-([pack](debug-console.md#arena-review-screenshot-pack-dbg18)). They are
+([pack](debug-console-record.md#arena-review-screenshot-pack-dbg18)). They are
 now followed by every station on the one-player heavy frame (`POL#40`), and are
 evidence for `POL#21`, not acceptance.
 
