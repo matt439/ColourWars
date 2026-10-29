@@ -108,6 +108,21 @@ function Invoke-EditorPendingProbe {
     if ([IO.File]::Exists($LogPath)) {
         Get-Content -LiteralPath $LogPath -Encoding utf8 | ForEach-Object { Write-Host $_ }
     }
+    if ($null -ne $pendingFailure -or $pendingDisposalErrors.Count -ne 0 -or
+        $null -eq $pendingResult -or $pendingResult.Outcome -cne 'exited' -or
+        $null -eq $pendingResult.ExitCode -or $pendingResult.ExitCode -ne 0 -or -not $pendingResult.CleanupCompleted) {
+        # CI retains its console even when private acceptance files are not uploaded.
+        foreach ($name in @('', 'pending-properties.csv', 'pending-dialogs.csv',
+            'pending-driver-cleanup.csv', 'pending-environment.csv')) {
+            try {
+                $pendingPath = if ($name) { Join-Path $NativeArguments[0] $name } else { $LogPath + '.process.json' }
+                Write-Host "Pending-property failure evidence: $pendingPath"
+                if ([IO.File]::Exists($pendingPath)) {
+                    Get-Content -LiteralPath $pendingPath -Encoding utf8 | ForEach-Object { Write-Host $_ }
+                } else { Write-Host '(not written)' }
+            } catch { Write-Host "Could not read pending-property failure evidence: $($_.Exception.Message)" }
+        }
+    }
     if ($null -ne $pendingFailure) { throw $pendingFailure }
     if ($pendingDisposalErrors.Count -ne 0) {
         throw "Pending-property probe disposal failed. See $LogPath.process.json"
