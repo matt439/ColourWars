@@ -195,7 +195,7 @@ and `out/acceptance/x64-release/level-editor/779b68cf562d437cb6a54df051b962de`.
 
 #### Warmed input resource lifetime (`ED#20`)
 
-**Open (2026-10-28).** The separate `--gestures` process drives real hidden
+**Done (2026-10-29).** The separate `--gestures` process drives real hidden
 canvas input and DPI changes, but its aggregate GDI lifetime remains
 unqualified. The original unactivated 28-transition fixture has a separate
 exact GDI-count gate and stays unchanged.
@@ -280,6 +280,42 @@ the replacement's stated bounded contract;
 creation/destruction lifetime, invalid-property dialogs and attended `ED#5`
 acceptance remain separate. No game graphics/audio device or player data is
 needed.
+
+**Ownership receipt (2026-10-29).** The source step above is complete for the
+only GDI objects the input fixture explicitly owns. `MechanismBitmap` keeps a
+ledger of the bitmaps it created and still holds. It also counts failed cleanup
+calls: restoring the original selection, `DeleteObject` and `DeleteDC`.
+Its constructor refuses a failed bitmap selection. `run_gestures` keeps the
+six helpers in their unchanged order on one hidden editor. After each helper it
+writes a `bitmap-ownership.csv` row, including an `aborted` row if the helper
+throws, and then asserts. No fixture bitmap may outlive its helper, and no
+cleanup call may fail. `empty_key_properties` and `ramp_hits` are the only
+helpers that draw, and each must record at least one bitmap.
+
+Both presets pass the full editor checker with 19 fixture bitmaps. The earlier
+DPI and paint-failure count gates are unchanged. Two temporary negative
+controls each failed at the intended assertion in `empty_key_properties`, and
+the sources were restored byte for byte afterwards. One control leaked a bitmap;
+the other called `DeleteDC` before the checked cleanup. Evidence is
+`out/acceptance/x64-debug/level-editor/7b798d8d6dd743c98390a35707ce58d5`,
+`out/acceptance/x64-release/level-editor/5df1d18b3af3445d97f35acae5a2099f` and
+the `ed20-*` logs under `out/validation/road35/`.
+
+Two consecutive full Debug checker runs on the final source failed before any
+receipt assertion. The failure was the existing `overlap_selection` check that
+the probe thread's 256-byte keyboard state survives `MK_CONTROL` messages.
+Their receipts recorded that helper as `aborted` with no bitmaps. An earlier
+Debug run, a run with a temporary per-key diagnostic and the final run passed.
+The diagnostic build then passed 12 standalone `--gestures` runs with no
+differing key. The cause is unexplained; nothing shows that the
+receipt causes it, or that it is an editor defect.
+
+This qualifies fixture-owned bitmap and DC cleanup only. Pens, brushes and fonts
+that production drawing selects into a fixture DC are not counted. Neither are
+native-control resources or process-wide GDI stability. The archived aggregate
+candidates and traces above stay unqualified, and no aggregate gate is
+proposed. Editor creation/destruction lifetime remains separate, as does
+attended `ED#5`.
 
 #### Paint exception cleanup (`ED#21`)
 
