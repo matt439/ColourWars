@@ -3838,7 +3838,8 @@ unchanged.
 
 ## Presentation rate (`GAP#L9`)
 
-**UNSCOPED.** `SIMULATION_HZ` deliberately fixes gameplay at 60 Hz; changing
+**DEFERRED (inspected 2026-10-29; [slice](#presentation-rate-inspection-slice-gapl9)).**
+`SIMULATION_HZ` deliberately fixes gameplay at 60 Hz; changing
 `ApplicationOptions::target_fps` changes that step, not just presentation. The
 pinned D3D11 backend presents with sync interval 1 and exposes no client vsync
 switch. A presentation-rate setting must first identify its engine seam and
@@ -3850,27 +3851,48 @@ rates before implementation; this row does not supply a ready engine change.
 
 ### Presentation-rate inspection slice (`GAP#L9`)
 
-**Open, not started (filed 2026-10-29).** The inspection the boundary above
-asks for, recorded against the pin (v0.2.0) and Labrador master (`b96bad6`)
-before any setting or report:
+**Recorded and deferred (2026-10-29).** The inspection the boundary above
+asks for, against the pin (v0.2.0, `1e60fb2`) and Labrador master (filed at
+`b96bad6`, re-checked at `8e91aab`; none of the 22 commits between them touch
+the cited lines):
 
-- D3D11 calls `Present(1, 0)` (`engine/render/d3d11/device_resources.cpp:395`)
-  and reports `requested_swap_interval = 1` (`d3d11/renderer.cpp:70` at the
-  pin, `:50` on master). D3D12 is the same
-  (`d3d12/device_resources.cpp:511`). Vulkan sets
+- D3D11 calls `Present(1, 0)` (`engine/render/d3d11/device_resources.cpp:395`
+  on both) and reports `requested_swap_interval = 1` (`d3d11/renderer.cpp:70` at
+  the pin, `:50` on master). D3D12 is the same
+  (`d3d12/device_resources.cpp:511` on both). Vulkan sets
   `VK_PRESENT_MODE_FIFO_KHR` only (`vulkan/device_resources.cpp:1157` at the
   pin, `:1178` on master).
 - `ApplicationOptions` has `target_fps` (`engine/app/application.h:66` at the
   pin, `:69` on master) and no vsync or present-interval option on either.
 - The game sets `target_fps = SIMULATION_HZ` (`game/main.cpp:52`), and nothing
   in `game/` or `scripts/` calls `Application::step_position()`
-  (`application.h:295` at the pin), so the client does no interpolation.
+  (`application.h:295` at the pin, `:291` on master), so the client does no
+  interpolation.
 
-Then add one Debug `overlay.perf` receipt (`game/debug/view_commands.cpp:55`)
-on this machine's display, which reports 59 Hz, so the 60 Hz step against a
-59 Hz present is measured rather than assumed. With both recorded, set the row
-`DEFERRED` with its condition, or split an engine report from a client setting.
+**Receipt.** One Debug `overlay.perf` run (`game/debug/view_commands.cpp:55`)
+on MattPC: visible 1920×1080 window, D3D11, host load not controlled,
+`+seed 7 +stage movement_course +players 4 +bot all paint`, then `perf` and a
+600-interval `perf.capture`. Windows reports the display as 59 Hz, which is
+an integer truncation: `QueryDisplayConfig` gives 59951/1000 Hz on three paths
+and 60/1 on one. The capture is complete and every row is engine-paired:
 
-Acceptance: each cited line resolves at the stated revision, and the receipt
-and its frame/update times are under `out/validation/gapl9/`. No code changes.
-This chooses no refresh-rate policy, setting or persistence.
+| Draws/s | p50 ms | p95 ms | p99 ms | Max ms | Updates | x2 frames |
+|---:|---:|---:|---:|---:|---:|---:|
+| 59.236 | 16.665 | 16.887 | 33.500 | 33.788 | 613 | 10 |
+
+The ten ~33.5 ms intervals fall every 59 rendered frames (rows 61 to 592),
+each carrying two updates, while their `end` phase (9–11 ms) matches normal
+frames, so the extra time is outside the measured Present-wait phase. A
+59.951 Hz/60 Hz beat alone would drop a frame about every 20 s, not every
+second; this run does not diagnose the cause. Row 0 (five updates) and row 2
+(none) follow the capture start. The receipt, CSV/JSON, log and overlay
+screenshot are under `out/validation/gapl9/`. CPU wall time, uncontrolled
+load: it qualifies no visible pacing, which stays with
+[`POL#25`](polish-frame-pacing.md#remaining-acceptance).
+
+**Deferred until** the author wants presentation decoupled from the 60 Hz step
+(a high-refresh, uncapped or vsync-off mode), or `POL#25`'s attended visible
+captures show the once-a-second long interval on an uncontended run. Either
+way, the next step is an engine report for a present-interval option and,
+for a decoupled rate, a client `step_position()` consumer; no client setting
+precedes it. This chooses no refresh-rate policy, setting or persistence.
