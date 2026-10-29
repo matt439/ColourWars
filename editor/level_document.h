@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 #include "game/paint_polygon_geometry.h"
 
@@ -100,6 +101,17 @@ namespace colourwars_editor
         // the other team's, and a trailing _a/_b name swaps. Paint ferries,
         // stations, level settings and bounds are refused.
         Entry mirror_copy(const Entry& entry);
+        // ED#27, Edit > Copy and Paste between documents. copy_text is one
+        // object, spawn or station as JSON text, {"colourwars_level_object":
+        // 1, "list": <its list>, "object": <its record as written>}; level
+        // settings and bounds are refused. paste_text appends that record to
+        // the same list here, unchanged and at the same position, as one
+        // validated undo step: malformed text, any other shape and an object
+        // this level would refuse all leave the document untouched. A
+        // station whose name is taken here is renamed <name>_copy (then
+        // _copy_2, ...) and drops its lesson, as Duplicate does.
+        std::string copy_text(const Entry& entry) const;
+        Entry paste_text(std::string_view text);
         // Mirror partners under the mirror_copy rule, ignoring names: an
         // object partners one other object in its list (or itself, when it is
         // its own reflection) and a spawn one of the other team's. Paint

@@ -1127,6 +1127,81 @@ namespace colourwars_editor
         }
     }
 
+    namespace
+    {
+        // ED#27: the clipboard names the list an object came from, so a paste
+        // lands in the same list of another document.
+        constexpr std::array<std::pair<EntryKind, const char*>, 5> clipboard_lists = { {
+            { EntryKind::collision, "collision_objects" }, { EntryKind::decoration, "non_collision_objects" },
+            { EntryKind::spawn_a, "team_a" }, { EntryKind::spawn_b, "team_b" }, { EntryKind::station, "stations" } } };
+        constexpr const char* clipboard_marker = "colourwars_level_object";
+    }
+
+    std::string LevelDocument::copy_text(const Entry& entry) const
+    {
+        const auto list = std::find_if(clipboard_lists.begin(), clipboard_lists.end(),
+            [&](const auto& candidate) { return candidate.first == entry.kind; });
+        if (list == clipboard_lists.end())
+        { fail("Select an object, spawn or station to copy; level settings and bounds are not copied."); }
+        // entry_json needs a mutable document; copy rather than cast away const.
+        Document work;
+        work.CopyFrom(impl_->document, work.GetAllocator());
+        Document clip(rapidjson::kObjectType);
+        clip.AddMember(rapidjson::StringRef(clipboard_marker), 1, clip.GetAllocator());
+        clip.AddMember("list", rapidjson::StringRef(list->second), clip.GetAllocator());
+        Json copied;
+        copied.CopyFrom(entry_json(work, entry), clip.GetAllocator());
+        clip.AddMember("object", copied, clip.GetAllocator());
+        return json_text(clip);
+    }
+
+    Entry LevelDocument::paste_text(std::string_view text)
+    {
+        Document clip;
+        try { clip = parse(text); }
+        catch (const std::exception& error)
+        { fail(std::string("The clipboard does not hold a copied level object. ") + error.what()); }
+        if (!clip.IsObject() || !clip.HasMember(clipboard_marker) || !clip[clipboard_marker].IsInt() ||
+            clip[clipboard_marker].GetInt() != 1 || !clip.HasMember("list") || !clip["list"].IsString() ||
+            !clip.HasMember("object") || !clip["object"].IsObject())
+        {
+            fail("The clipboard does not hold a level object copied by this editor "
+                "(it needs colourwars_level_object 1, a list and an object).");
+        }
+        const std::string list(clip["list"].GetString(), clip["list"].GetStringLength());
+        const auto found = std::find_if(clipboard_lists.begin(), clipboard_lists.end(),
+            [&](const auto& candidate) { return list == candidate.second; });
+        if (found == clipboard_lists.end()) { fail("The clipboard names an unknown level list '" + list + "'."); }
+        Entry added{ found->first, 0, {} };
+        impl_->mutate([&](Document& document)
+        {
+            Allocator& allocator = document.GetAllocator();
+            Json value;
+            value.CopyFrom(clip["object"], allocator);
+            if (added.kind == EntryKind::station && value.HasMember("name") && value["name"].IsString())
+            {
+                // A pasted station keeps its name and lesson unless that name
+                // is taken here; then it is renamed as a duplicate would be
+                // and its lesson stays with the station already named so.
+                const std::string name = string(value, "name");
+                if (unused_station_name(document, name, false) != name)
+                {
+                    const std::string renamed = unused_station_name(document, name + "_copy", false);
+                    value["name"].SetString(renamed.data(), static_cast<rapidjson::SizeType>(renamed.size()), allocator);
+                    value.RemoveMember("lesson");
+                }
+            }
+            Json& objects = entry_array(document, added.kind);
+            added.index = objects.Size();
+            objects.PushBack(value, allocator);
+        });
+        for (const Entry& candidate : entries())
+        {
+            if (candidate.kind == added.kind && candidate.index == added.index) { return candidate; }
+        }
+        return added;
+    }
+
     LevelDocument::SymmetryReport LevelDocument::symmetry() const
     {
         // Work on a copy, so the reflection helpers can edit freely.

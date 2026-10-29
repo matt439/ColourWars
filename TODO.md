@@ -139,7 +139,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 | `POL#42` | OPEN | MED | M | Shipping-bot route case on turbulence_blockout and natural-spawn team trials on the blockout and mover trial, so the variants compare like for like. Evidence for `POL#21`/`POL#27`, not a selection; the slab trial waits on `ROAD#38`. [Bot evidence](docs/polish-turbulence.md#shipping-bot-routes-and-team-trials-pol42) |
-| `ED#27` | OPEN | LOW | M | Add Edit > Copy and Paste of one object between documents through `CF_UNICODETEXT` JSON, appended as one undo step with full validation; the inspector field keeps its own Ctrl+C/V. No multi-selection. [Copy and paste](docs/level-editor.md#copy-and-paste-between-documents-ed27). |
 
 ## Audio replacement
 

@@ -688,6 +688,7 @@ them.
 | Temporarily bypass grid snapping | Hold Shift while dragging |
 | Duplicate selection | Ctrl+D |
 | Mirror copy across the arena centre ([rules](#mirror-copy-across-the-arena-centre-ed24)) | Ctrl+Shift+D |
+| Copy / paste one object, including into another level ([rules](#copy-and-paste-between-documents-ed27)) | Ctrl+C / Ctrl+V |
 | Delete selection | Delete |
 | Undo / redo | Ctrl+Z / Ctrl+Y |
 | New / open / save | Ctrl+N / Ctrl+O / Ctrl+S |
@@ -1246,19 +1247,53 @@ the attended pass (`ED#5`).
 
 ### Copy and paste between documents (`ED#27`)
 
-**Open, not started.** Neither [editor.h](../editor/editor.h) (lines 20-26) nor
-the accelerator table in [editor_window.cpp](../editor/editor_window.cpp)
-(lines 158-166) has Copy or Paste; `duplicate` copies only within one
-document.
+**Done 2026-10-30.** **Edit > Copy** (Ctrl+C) puts the selected object, spawn
+or station on the clipboard as `CF_UNICODETEXT` JSON, and **Edit > Paste**
+(Ctrl+V) appends it to the open level, so one object can move between two
+editor windows or two levels opened in turn. The text is
+`LevelDocument::copy_text` ([level_document.cpp](../editor/level_document.cpp)):
 
-Scope: **Edit > Copy** puts one selected object on the clipboard as
-`CF_UNICODETEXT` JSON, and **Edit > Paste** appends it to the open document as
-one undo step through full validation, refusing anything that does not
-validate. The inspector's edit field keeps its own Ctrl+C and Ctrl+V. First
-step: a document-level paste of a copied object into a second stage, including
-refusal of malformed text and of an object that would break validation.
-Acceptance: those checks and a hidden-window clipboard round trip pass in both
-builds. It does not add multi-selection.
+```json
+{ "colourwars_level_object": 1, "list": "collision_objects", "object": { ... } }
+```
+
+`list` is `collision_objects`, `non_collision_objects`, `team_a`, `team_b` or
+`stations`, and `object` is the record exactly as written, unknown fields
+included. Level settings and bounds are not copied (the menu item is greyed).
+
+`LevelDocument::paste_text` appends the record to the same list, unchanged and
+at the same position, through the same validated edit as Duplicate: one undo
+step, and the copy is selected. Text that is not JSON, JSON without the marker,
+a `list` or `object` of any other shape, and a record the receiving level would
+refuse (a spawn on the wrong half, an unknown material, a decoration named into
+`collision_objects`, an untypeable station name) are all refused with the
+document and history unchanged. A station keeps its name and lesson where the
+name is free; where it is taken it is renamed `<name>_copy` and drops its
+lesson, as Duplicate does. Pasting into the same level puts the copy on top of
+the original; Duplicate is the in-level copy with an offset.
+
+The inspector's edit field keeps its own Ctrl+C and Ctrl+V for text: the
+message loop (`Editor::dispatch`) passes those keys to the field before the
+accelerators, as it already did for Ctrl+Z/Y. It does not add multi-selection.
+
+Acceptance, in `check-level-editor`:
+`scripts/acceptance/level_editor/clipboard_checks.cpp` copies a Close Quarters
+wall and decoration, a spawn and a Movement Course station (with its lesson)
+into a second stage, each appended last with the identical record in exactly
+one undo step, and reopens the saved result; refuses copying level settings
+and bounds, ten malformed texts and the four invalid records above without
+change; and renames the station pasted back over its own name.
+`scripts/acceptance/level_editor_dpi/clipboard_checks.h` drives the hidden
+shell through the real clipboard: Edit > Copy and the Ctrl+C accelerator put
+the JSON on the clipboard, Edit > Paste and Ctrl+V append it to a second stage
+in one undo step, non-JSON, empty and wrong-half clipboards are refused
+without change, Copy is greyed for level settings, and Ctrl+C/V with the
+property field focused copy and paste its text without touching the document.
+The probe puts back any text the clipboard held before it. Debug and Release
+passed on 2026-10-30 (evidence `21da0d880ebb4abd9d147aec1826b19e` and
+`84b210fe08db431ab25e3e2332962872` under
+`out/acceptance/<preset>/level-editor/`). Using it between two visible editor
+windows belongs to the attended pass (`ED#5`).
 
 ## Acceptance checks
 

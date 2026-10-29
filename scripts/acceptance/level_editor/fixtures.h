@@ -64,6 +64,7 @@ namespace level_editor_acceptance
     void check_stations(const fs::path& repo, const fs::path& scratch);
     void check_station_editing(const fs::path& repo, const fs::path& scratch);
     void check_mirror_copy(const fs::path& repo, const fs::path& scratch);
+    void check_clipboard(const fs::path& repo, const fs::path& scratch);
     void check_symmetry_report(const fs::path& repo, const fs::path& scratch);
     void check_fixed_slabs(const fs::path& repo, const fs::path& scratch);
     void check_palette_and_ramps(const fs::path& scratch);
