@@ -142,6 +142,7 @@ namespace colourwars_editor
         AppendMenuW(edit, MF_STRING, edit_undo, L"&Undo\tCtrl+Z");
         AppendMenuW(edit, MF_STRING, edit_redo, L"&Redo\tCtrl+Y");
         AppendMenuW(edit, MF_STRING, edit_duplicate, L"&Duplicate\tCtrl+D");
+        AppendMenuW(edit, MF_STRING, edit_mirror, L"&Mirror copy\tCtrl+Shift+D");
         AppendMenuW(edit, MF_STRING, edit_delete, L"&Delete\tDel");
         AppendMenuW(edit, MF_STRING, edit_align_origin, L"&Align origin to grid");
         AppendMenuW(menu_, MF_POPUP, reinterpret_cast<UINT_PTR>(edit), L"&Edit");
@@ -160,7 +161,8 @@ namespace colourwars_editor
             {FVIRTKEY | FCONTROL | FSHIFT, 'S', file_save_as},
             {FVIRTKEY | FCONTROL, 'M', file_save_user_stage},
             {FVIRTKEY | FCONTROL, 'Z', edit_undo}, {FVIRTKEY | FCONTROL, 'Y', edit_redo},
-            {FVIRTKEY | FCONTROL, 'D', edit_duplicate}
+            {FVIRTKEY | FCONTROL, 'D', edit_duplicate},
+            {FVIRTKEY | FCONTROL | FSHIFT, 'D', edit_mirror}
         };
         accelerators_ = CreateAcceleratorTableW(const_cast<ACCEL*>(keys), static_cast<int>(std::size(keys)));
     }
@@ -339,6 +341,8 @@ namespace colourwars_editor
         EnableMenuItem(menu_, edit_redo, MF_BYCOMMAND | (document_.can_redo() ? MF_ENABLED : MF_GRAYED));
         EnableMenuItem(menu_, edit_align_origin, MF_BYCOMMAND |
             (selection_ && selection_->kind != EntryKind::level ? MF_ENABLED : MF_GRAYED));
+        EnableMenuItem(menu_, edit_mirror, MF_BYCOMMAND | (selection_ && selection_->kind != EntryKind::level &&
+            selection_->kind != EntryKind::bounds ? MF_ENABLED : MF_GRAYED));
         EnableWindow(toolbar_[3], document_.can_undo()); EnableWindow(toolbar_[4], document_.can_redo());
         const std::vector<std::string> errors = document_.validate();
         const std::wstring ready = L"Ready  |  " + std::to_wstring(draw_items_.size()) + L" items  |  ";
@@ -587,7 +591,7 @@ namespace colourwars_editor
                 L"Ctrl+click cycles through overlapping objects without moving them. "
                 L"Select a property, edit its value and click Apply (or press Enter). Changes apply before selection/save; Escape or Revert discards an uncommitted value.\n\n"
                 L"Wheel zooms around the pointer. Middle drag pans. F frames selection; Home fits the arena. "
-                L"Arrows nudge by the snap amount; Shift bypasses snap. Ctrl+D duplicates, Delete removes, Ctrl+Z/Y undo/redo. "
+                L"Arrows nudge by the snap amount; Shift bypasses snap. Ctrl+D duplicates, Ctrl+Shift+D mirror-copies across the out_of_bounds centre, Delete removes, Ctrl+Z/Y undo/redo. "
                 L"Edit > Align origin to grid rounds both origin coordinates to the current grid, regardless of Shift. "
                 L"For scored slabs it aligns the starting endpoint. "
                 L"New objects appear in the centre of the current view.\n\n"
@@ -616,6 +620,8 @@ namespace colourwars_editor
         case edit_align_origin: document_.align_origin(*selection_, snap_); refresh(true); break;
         case edit_duplicate:
             if (selection_) { selection_ = document_.duplicate(*selection_); refresh(); } break;
+        case edit_mirror:
+            if (selection_) { selection_ = document_.mirror_copy(*selection_); refresh(); } break;
         case edit_delete:
             if (selection_) { document_.erase(*selection_); selection_.reset(); refresh(); } break;
         case view_fit: fit(document_.rectangle(Entry{EntryKind::bounds, 0, ""})); break;

@@ -686,6 +686,7 @@ them.
 | Grid spacing | Choose 1, 10, 25, 50 or 100 |
 | Temporarily bypass grid snapping | Hold Shift while dragging |
 | Duplicate selection | Ctrl+D |
+| Mirror copy across the arena centre ([rules](#mirror-copy-across-the-arena-centre-ed24)) | Ctrl+Shift+D |
 | Delete selection | Delete |
 | Undo / redo | Ctrl+Z / Ctrl+Y |
 | New / open / save | Ctrl+N / Ctrl+O / Ctrl+S |
@@ -1057,8 +1058,8 @@ vendored RapidJSON source changed. The attended `ED#5` gate remains open.
 
 A verified source brainstorm on 2026-10-29 found these editor gaps. None needs
 a pad or the author, and none settles a layout, route or attended result: those
-stay with `ED#5` and the stage's own `DECISION` rows. `ED#25` follows `ED#24`
-and `ED#26` builds on `ED#23`, now done.
+stay with `ED#5` and the stage's own `DECISION` rows. `ED#25` builds on `ED#24`
+and `ED#26` on `ED#23`, both now done.
 
 ### Station validation in the editor (`ED#23`)
 
@@ -1086,28 +1087,55 @@ Station editing in the canvas remains `ED#26`.
 
 ### Mirror copy across the arena centre (`ED#24`)
 
-**Open, not started.** The command list in [editor.h](../editor/editor.h)
-(lines 20-26) has no mirror command, and `LevelDocument::duplicate`
-([level_document.cpp](../editor/level_document.cpp), lines 808-865) only
-offsets the copy. Mirrored arenas are checked after the fact by three copies of
-the same `mirror()` helper in acceptance (`press_tower/fixtures.cpp` lines
-51-55, `crossfeed/` and `cq_blockout/fixtures.h` line 42).
+**Done 2026-10-29.** **Edit > Mirror copy** (Ctrl+Shift+D) is
+`LevelDocument::mirror_copy` ([level_document.cpp](../editor/level_document.cpp)):
+it appends one copy reflected across the `out_of_bounds` centre through the
+same validated, single-undo-step edit as Duplicate, and selects it. With
+`sum` = `out_of_bounds` left + right:
 
-Scope: **Edit > Mirror copy** (Ctrl+Shift+D, currently unassigned) adds one
-validated, undoable copy reflected across the `out_of_bounds` centre: X becomes
-left + right - x - width, ramp handedness and left/right paint faces swap, slab
-rise flips, cycle movers reflect their whole path and add 0.5 to phase, spawn A
-maps to spawn B, and a trailing `_a` name becomes `_b`. Paint ferries are
-refused in this slice. On the Mover Trial (left + right = 4000) the rule maps
-`mover_a` at x 600 with travel 320 and width 320 to x 2760, phase 0.5, which is
-the shipped `mover_b`. First step: document checks that mirror each object kind
-from a shipped stage and compare with its authored partner. Acceptance: those
-checks and a refused-ferry check pass in both builds, with one undo step per
-copy. It does not decide whether any stage should be symmetric.
+- a rectangle's x becomes `sum - x - width`, in either rectangle encoding;
+- a ramp's triangle x values become `sum - x`, and its collision type swaps
+  `STRUCTURE_RAMP_RIGHT` and `STRUCTURE_RAMP_LEFT`;
+- a fixed slab's stored left endpoint becomes the old right one
+  (`sum - x - 160`, y moved by the 80-unit rise) and `slab.rise` flips;
+- a cycle mover reflects its whole path (`sum - x - width - travel_x`) and its
+  phase moves half a cycle (+0.5, wrapping, rounded to 12 places so a decimal
+  stays a short decimal); a drifting `Visual` shifts its drift phase the same
+  way, since its sine offset half a cycle on is its reflection;
+- paintable `left` and `right` faces swap;
+- a Team A spawn becomes a Team B spawn and back, reflecting the whole body at
+  source `player.size` width (the editor's 52-unit box when no tuning is
+  given);
+- a trailing `_a` name becomes `_b` and `_b` becomes `_a`; any other name gains
+  ` mirror`, as Duplicate adds ` copy`.
+
+Paint ferries (`"drive": "paint"`) are refused with a message saying their
+heading and outgoing-leg phase need their own rule; level settings and bounds
+have no mirror. A copy the game would refuse, such as a spawn that lands on
+the wrong side of the centre, is refused by ordinary validation with the
+document unchanged. Other fields, including unknown metadata, are copied as
+they are. It does not decide whether any stage should be symmetric.
+
+Acceptance (`scripts/acceptance/level_editor/mirror_checks.cpp`, in
+`check-level-editor`): every shipped `_a` object with a `_b` partner in the
+same list, 62 in all across Crossfeed, Press Tower and the Turbulence
+blockout and trials, is mirrored after its partner is removed and must equal
+that partner exactly, in one undo step that undo and redo cross unchanged. The
+pairs cover plain and jump-through paintables, ramps of both hands, the fixed
+slab, the Mover Trial's `mover_a` (x 600 becomes 2760, phase 0.5) and visuals;
+Crossfeed's two clouds are authored different sizes and are skipped. Every
+spawn in three stages mirrors onto its other-team partner. A one-sided face,
+an unsuffixed name and a Close Quarters drift phase (0.51 to 0.01) reflect;
+the Ferry Trial's `ferry_a`, level settings, bounds and a spawn 10 units left
+of Press Tower's centre are refused without change. Debug and Release passed
+on 2026-10-29: evidence `0dc49c15b2fc42dda5eae3b4ee727168` and
+`c5f0d8b71a9a4108ba57c9b808ed4748` under `out/acceptance/<preset>/level-editor/`.
+The menu item and accelerator have no hidden-window probe of their own; using
+them belongs to the attended pass (`ED#5`).
 
 ### Symmetry report in the blockout aids (`ED#25`)
 
-**Open, not started; after `ED#24`.** The [blockout aids](#blockout-aids)
+**Open, not started; `ED#24` is done.** The [blockout aids](#blockout-aids)
 summary reports total and selected scoring area
 ([editor_canvas.cpp](../editor/editor_canvas.cpp), lines 331-332, using
 `scoring_area` from [blockout_aids.h](../editor/blockout_aids.h), lines 37-42)

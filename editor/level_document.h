@@ -87,6 +87,13 @@ namespace colourwars_editor
         // and its bottom face unpainted, as it stands on the floor.
         Entry add_object(const std::string& type, const Rect& rectangle);
         Entry duplicate(const Entry& entry);
+        // One validated copy reflected across the out_of_bounds centre: x
+        // becomes left + right - x - width, ramps and fixed slabs change hand,
+        // left/right paint faces swap, cycle movers reflect their whole path
+        // with phase + 0.5 (drifting visuals likewise), a team spawn becomes
+        // the other team's, and a trailing _a/_b name swaps. Paint ferries,
+        // level settings and bounds are refused.
+        Entry mirror_copy(const Entry& entry);
         void erase(const Entry& entry);
 
         bool undo();

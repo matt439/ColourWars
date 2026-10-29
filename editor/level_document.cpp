@@ -864,6 +864,124 @@ namespace colourwars_editor
         return added;
     }
 
+    namespace
+    {
+        void set_text(Json& object, const char* name, const std::string& text, Allocator& allocator)
+        {
+            member(object, name).SetString(text.data(), static_cast<rapidjson::SizeType>(text.size()), allocator);
+        }
+
+        // A cycle (mover or drift) half a period on is its own reflection.
+        // Rounding to twelve places keeps an authored decimal such as 0.51
+        // a short decimal (0.01), so the saved text reparses to the same value.
+        void advance_half_cycle(Json& fields)
+        {
+            double phase = number(fields, "phase") + 0.5;
+            if (phase >= 1.0) { phase -= 1.0; }
+            set_number(fields, "phase", std::round(phase * 1e12) / 1e12);
+        }
+
+        // Reflect one object record across x = sum / 2, where sum is the
+        // out_of_bounds left + right. The game reads hand from the ramp's
+        // collision type and the slab's rise, so those change with the shape.
+        void mirror_object(Json& object, double sum, Allocator& allocator)
+        {
+            const std::string type = string(object, "type");
+            if (type == "FixedSlabPaintable")
+            {
+                Json& slab = member(object, "slab");
+                const std::string rise = string(slab, "rise");
+                if (rise != "left" && rise != "right") { fail("slab.rise must be left or right."); }
+                // The stored endpoint is the left one; the far end becomes it.
+                set_number(slab, "x", sum - number(slab, "x") - 160.0);
+                set_number(slab, "y", number(slab, "y") + (rise == "right" ? -80.0 : 80.0));
+                set_text(slab, "rise", rise == "right" ? "left" : "right", allocator);
+            }
+            else if (type == "StructureRamp")
+            {
+                Json& triangle = member(object, "triangle");
+                for (const char* x : { "x1", "x2", "x3" }) { set_number(triangle, x, sum - number(triangle, x)); }
+                const std::string collision = string(object, "collision_type");
+                if (collision == "STRUCTURE_RAMP_RIGHT") { set_text(object, "collision_type", "STRUCTURE_RAMP_LEFT", allocator); }
+                else if (collision == "STRUCTURE_RAMP_LEFT") { set_text(object, "collision_type", "STRUCTURE_RAMP_RIGHT", allocator); }
+            }
+            else
+            {
+                Rect rectangle = object_rectangle(object);
+                double reach = rectangle.width;
+                if (object.HasMember("motion"))
+                {
+                    Json& motion = member(object, "motion");
+                    if (motion.IsObject() && motion.HasMember("drive") && motion["drive"].IsString() &&
+                        string(motion, "drive") == "paint")
+                    {
+                        fail("Mirror copy does not copy paint ferries yet: their heading and paint-drive phase "
+                            "need their own rule. Duplicate it and set the copy by hand.");
+                    }
+                    // The rectangle is the leftmost anchor, so reflect the whole path.
+                    reach += number(motion, "travel_x");
+                    advance_half_cycle(motion);
+                }
+                if (object.HasMember("drift") && object["drift"].IsObject()) { advance_half_cycle(object["drift"]); }
+                rectangle.x = sum - rectangle.x - reach;
+                move_shape(object, rectangle);
+            }
+            if (object.HasMember("paintable_faces") && object["paintable_faces"].IsObject())
+            {
+                Json& faces = object["paintable_faces"];
+                const bool left = faces.HasMember("left"), right = faces.HasMember("right");
+                if (left && right) { faces["left"].Swap(faces["right"]); }
+                else if (left || right)
+                {
+                    Json value; value.CopyFrom(faces[left ? "left" : "right"], allocator);
+                    faces.RemoveMember(left ? "left" : "right");
+                    faces.AddMember(Json(left ? "right" : "left", allocator), value, allocator);
+                }
+            }
+            if (object.HasMember("name") && object["name"].IsString())
+            {
+                std::string name = string(object, "name");
+                if (name.ends_with("_a")) { name.back() = 'b'; }
+                else if (name.ends_with("_b")) { name.back() = 'a'; }
+                else { name += " mirror"; }
+                set_text(object, "name", name, allocator);
+            }
+        }
+    }
+
+    Entry LevelDocument::mirror_copy(const Entry& entry)
+    {
+        if (entry.kind == EntryKind::level || entry.kind == EntryKind::bounds)
+        { fail("Select an object or spawn to mirror; level settings and bounds have no mirror copy."); }
+        Entry added = entry;
+        impl_->mutate([&](Document& document)
+        {
+            Allocator& allocator = document.GetAllocator();
+            const Rect world = plain_rectangle(member(member(document, "level_bounds"), "out_of_bounds"));
+            const double sum = world.x + (world.x + world.width);
+            Json value;
+            value.CopyFrom(entry_json(document, entry), allocator);
+            if (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b)
+            {
+                // A spawn point is the body's top-left, so reflect the whole
+                // character from source tuning (the editor's 52-unit box without it).
+                const double width = impl_->motion_tuning.empty() ? this->rectangle(entry).width :
+                    static_cast<double>(load_motion_player_size(impl_->motion_tuning).width);
+                set_number(value, "x", sum - number(value, "x") - width);
+                added.kind = entry.kind == EntryKind::spawn_a ? EntryKind::spawn_b : EntryKind::spawn_a;
+            }
+            else { mirror_object(value, sum, allocator); }
+            Json& objects = entry_array(document, added.kind);
+            added.index = objects.Size();
+            objects.PushBack(value, allocator);
+        });
+        for (const Entry& candidate : entries())
+        {
+            if (candidate.kind == added.kind && candidate.index == added.index) { return candidate; }
+        }
+        return added;
+    }
+
     void LevelDocument::erase(const Entry& entry)
     {
         impl_->mutate([&](Document& document)
