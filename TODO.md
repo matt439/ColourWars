@@ -124,7 +124,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#19` | DECISION | LOW | S | Built: menu solo practice on the Movement Course is untimed, with station lessons and a pause Tool row. Watch a fresh player use it, then keep or cut it and settle the lesson wording. [Workshop](docs/polish-movement-course.md#practice-workshop). |
 | `POL#38` | DECISION | MED | S | Implemented: HUD tag, figure tank and a once-per-descent cue before exhaustion. Listen to the provisional `tool.drip` cue in the 1/2/4P mix (with `POL#23`) and check tag/tank readability muted at 4P. [Record](docs/polish-weapon-feedback.md#low-paint-advance-warning-pol38). |
 | `POL#39` | DECISION | MED | S | A hollow marquee now marks the mouse pointer in matches. Judge it in play over pale, dark and painted scenes at 1/2/4P, including its one-frame trail. [Record](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
-| `POL#43` | OPEN | LOW | M | Finish-review detail A/B: `review_finish_details.cfg` takes seeded 4P Crossfeed frames with every detail on, then once per presentation `enabled` flag off (ten flags, restart where the scope needs it), and ends with `tune.reset presentation`. Equal checksums across variants are checked, not assumed. Prepares `POL#24` and accepts nothing. [Finish-review A/B](docs/polish-plan.md#finish-review-detail-ab-script-pol43) |
 
 ## Levels and the editor
 

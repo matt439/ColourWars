@@ -1509,7 +1509,9 @@ Use a repeatable finish review for each major pass:
    jump, land, fire, stop, exhaust paint and recover. Review the transitions too.
 2. Repeat the same sequence with individual details disabled. Retain and refine
    details that contribute clear material, weight, state or personality; adjust
-   those that draw attention without helping the experience.
+   those that draw attention without helping the experience. Seeded still
+   frames of each detail off come from
+   [`review_finish_details`](#finish-review-detail-ab-script-pol43).
 3. Review at normal speed and actual display size, with audio on and muted. Use
    slow motion only to diagnose contact, attachment and timing problems.
 4. Repeat in four-player combat and through pause, death, respawn and rematch.
@@ -1580,35 +1582,57 @@ enough to review, validate and commit independently.
 
 ### Finish-review detail A/B script (`POL#43`)
 
-**Open, not started (filed 2026-10-29).** Step 2 of the finish review above
-("individual details disabled") has no repeatable form. `presentation.json` has
-ten `enabled` flags: `hud.cursor_marker`, `hud.teammate_marker`,
-`player_identity`, `combat_feedback`, `blocked_shot`, `idle_drip`,
-`weapon_feedback`, `movement_feedback`, `tool_motion` and `figure.quiet`. Only
-`hud.*` and `movement_feedback` are live under `tune`; the rest take a rebuild
-([debug-console.md, live tuning scopes](debug-console.md#live-tuning)).
-`scripts/debug/review_feedback_ab.cfg` already does the same thing for one
-detail at one stage.
+**Done (2026-10-30).** Step 2 of the finish review above ("individual details
+disabled") now has a repeatable form. `presentation.json` has ten `enabled`
+flags: `hud.cursor_marker`, `hud.teammate_marker`, `player_identity`,
+`combat_feedback`, `blocked_shot`, `idle_drip`, `weapon_feedback`,
+`movement_feedback`, `tool_motion` and `figure.quiet`.
 
-Scope: `scripts/debug/review_finish_details.cfg` (plus any pass/shot helpers)
-takes seeded four-player Crossfeed frames at fixed update counts with every
-detail on, then repeats those frames once per flag with that flag off, using
-`tune ... off restart` wherever the scope needs it, and ends with
-`tune.reset presentation` and the seed, bots and screenshot folder put back as
-`review_feedback_ab` does. First step: copy the `review_feedback_ab` structure,
-switch it to `stage crossfeed` with four paint bots, and choose frames where
-drips, feedback and markers are visible.
+[`review_finish_details.cfg`](../scripts/debug/review_finish_details.cfg), with
+the helpers `finish_details_flag` and `finish_details_pass`, follows the
+`review_feedback_ab` structure on Crossfeed with seed 7 and four seats: seat 1
+(the keyboard seat) and seats 2-3 are paint bots, and seat 4 stands still
+(`bot 4 idle`) with a sprayer, because a drip and the figure's quiet motion
+appear only on a settled painter. It photographs three paused frames counted
+from GO, `t07s`, `t17s` and `t54s`, once with every detail on (`all_on`) and once
+per flag with that flag off (`no_<detail>`): 33 PNGs in
+`screens\review-finish-details-<time>\`. Every variant uses
+`tune <flag> off restart`, live-scoped flags included, so all eleven replay the
+same seeded match from a fresh build; the flag is turned back on after its pass.
+The script ends with `tune.reset presentation` and `tune.diff presentation`,
+then puts back the strip, folder, bots, seed and timescale. It leaves seat 4's
+sprayer and the Crossfeed match.
 
-Acceptance: `ColourWars.exe +exec review_finish_details +quit` on a Debug build
-writes one all-on PNG set and one set per flag; the log's `checksum` line
-for each frame is identical across every variant, so the comparison is shown
-to differ only in presentation, not assumed to. Afterwards `tune.diff
-presentation` is empty. A check in `scripts/check-debug-console.ps1`, or one
-like it, runs the script and compares those checksums.
+The frames were chosen from one-second sweeps over the first 60 match seconds:
+`t07s` and `t17s` have seat 4's drip, `t17s` a blocked shot, `t54s` a hit
+(combat feedback), and all three have teammate markers, quiet figures, tool
+motion and weapon and movement feedback. The cursor marker is drawn at the real
+mouse pointer while it is inside the window. A Debug bot on the keyboard seat
+does not hide it, so its frames depend on where the pointer is.
 
-It does not decide which details stay, are refined or cut. That judgement is
-the attended finish review (`POL#24`), and this script only prepares its
-material.
+[`scripts/check-finish-details.ps1`](../scripts/check-finish-details.ps1) is the
+opt-in local runner, like `check-debug-console.ps1`, whose driver it reuses. It
+needs Windows PowerShell 5.1 because the driver does not compile under pwsh 7.
+It launches `+exec review_finish_details +quit` on an isolated profile and
+parks the pointer at 56%/25% of the client area, in the second pane's sky. It
+requires a clean exit, no error or stopped script, 33 named PNGs, three
+checksums per variant, the frames' hash, update and paint equal across all
+eleven variants, and `tune.diff: no edits` after the last checksum. `bursts` is
+reported but not compared, because it counts movement feedback. It writes
+`finish-details-report.txt` listing, per variant, which frames differ from
+`all_on` by bytes. That list is evidence for a person, not a pass condition.
+
+Validation on 2026-10-30, Debug on MattPC, about 165 seconds per run:
+`check-finish-details.ps1` passed twice. The checksums were `afa5d0f51a8185fa`
+at update 601, `57ef68e8b67e8415` at 1201 and `5d0bd18ca9725af4` at 3421, equal
+in every variant. All 33 PNGs were byte-identical between the two launches.
+Every flag changed at least one frame: `combat_feedback` only `t54s`,
+`blocked_shot` only `t17s`, and the other eight all three. The
+`debug_console` acceptance case follows and lints the three new scripts (35
+shipped files). Evidence is under `out/validation/finish-details/`.
+
+This decides nothing about which details stay, are refined or cut. That is the
+attended finish review (`POL#24`); these frames are its material.
 
 ## 8. Further improvements to prototype
 

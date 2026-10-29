@@ -1195,6 +1195,8 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the ten stations, into `screens\station-tour-<time>\` |
 | `bots_4p` | four paint bots on Close Quarters, seed 7, 20 match seconds at x4, then a paused screenshot with the paint overlay and the checksum, into `screens\bots-4p-<time>\` |
 | `feedback_ab_pass`, `feedback_ab_shot` | helpers of `review_feedback_ab` |
+| `review_finish_details` | the [finish-review detail A/B](polish-plan.md#finish-review-detail-ab-script-pol43): seed 7, four seats on Crossfeed (seat 4 idle with a sprayer), frames `t07s`, `t17s` and `t54s` with every presentation detail on, then once per `enabled` flag off (`tune ... off restart`), each with its checksum, into `screens\review-finish-details-<time>\`; ends with `tune.reset presentation`. `scripts/check-finish-details.ps1` runs it and requires equal checksums across the eleven variants |
+| `finish_details_flag`, `finish_details_pass` | helpers of `review_finish_details` |
 | `jump_baseline` | live-tunes the 2026-10-08 historical jump on the Movement Course (held 207 high, 1.02 s airborne, tap 95) |
 | `jump_low`, `jump_mid`, `jump_snappy` | live-tune the three `POL#3` jump candidates on the Movement Course; each header gives its height, airtime and tap |
 | `crossfeed_baseline` | Crossfeed comparison P0: the 2026-10-08 movement and original tool supply and lifetime |

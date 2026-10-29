@@ -141,7 +141,7 @@ Explicit `OutputDirectory` paths on the painter/acceptance runners and their
 selection checkers, and painter `TrialPath`, use the caller's PowerShell
 filesystem location when relative. The movement-feedback, paint-fx,
 display-awake, frame-pacing, acceptance-process, stage-registration,
-debug-console, startup and failure-reporting checkers follow the same
+debug-console, finish-details, startup and failure-reporting checkers follow the same
 `OutputDirectory` rule.
 The selection checks cover separate
 PowerShell/process directories, trial hashes and caller-state restoration.
