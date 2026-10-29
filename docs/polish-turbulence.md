@@ -1145,8 +1145,9 @@ trial until `TOOL#3` supplies its own. Report completion, takeoffs, arrival upda
 held paint per team so the two stages compare like for like. The slab trial
 is optional here: `bot_slab_routes` ([`ROAD#38`](feature-roadmap.md#fixed-scored-slabs-for-bots-road38))
 measured bots walking its slabs, with fewer crossover arrivals than the mover trial.
-Region bands for the four trials and the five-tool matrix are `TOOL#3` in
-[gameplay tuning](gameplay-tuning.md).
+`TOOL#3` has since given the four trials the blockout's bands in
+`balance_regions` and run the [Hard five-tool matrix](#hard-five-tool-matrix-tool3-2026-10-30);
+`bot_team_trials` still uses its own geographic thirds for the trials.
 
 First step: run the existing team matrix with the two stages added and record
 whether the bots complete any crossing before writing the new route case.
@@ -1224,3 +1225,68 @@ Receipts: `out/validation/pol42/team/` (Release; `bot_team_trials-run.log` and
 `bot_team_trials_turbulence.csv`) and `out/validation/pol42/routes/` (Release
 and Debug `bot_blockout_routes-run.log`). The team trials also pass in Debug,
 with all six CSVs byte-identical to Release.
+
+## Hard five-tool matrix (`TOOL#3`, 2026-10-30)
+
+625 matches of the 875-match `TOOL#3` rerun: the blockout and the four trials,
+each with all 25 ordered five-tool pairs at seeds 0, 1, 17, 42, 2026, 2P A/B,
+60 seconds, Hard shipping bots on both sides. No gameplay value changed. The
+four trials now use the blockout's five `x_band` bands (they share its bounds),
+so all five stages compare band for band; the 6200-wide `turbulence` candidate
+was not run. Bands are **final held area** at time-up, not route use, visits, time held,
+spawn pressure. A moving scored tile is credited to the band its
+final position falls in, so the ferry trial's band denominators vary by match. The policy is the shipping `MatchBotDriver` at Hard on both
+seats, 2P only: it has a route planner and ballistic aim, unlike `TOOL#1`'s
+Skirmish, but it is one bot at one difficulty, and ordered swaps combine side,
+seat RNG, tool and conditional bot behaviour. Five chosen seeds are not population
+samples; ranges are observed minima/maxima. Method, receipts and limits:
+[gameplay tuning](gameplay-tuning.md#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29).
+
+| Stage | A share of painted, median [min, max] % | Painted / paintable, median % | Credited eliminations (matches with one) |
+|---|---|---|---|
+| blockout | 49.2 [4.9, 94.2] | 53.1 | 243 (115/125) |
+| mover trial | 51.2 [6.2, 90.3] | 51.1 | 160 (98/125) |
+| gate trial | 49.9 [5.5, 93.6] | 51.4 | 126 (81/125) |
+| ferry trial | 47.9 [4.0, 94.0] | 52.0 | 185 (103/125) |
+| slab trial | 52.3 [8.6, 94.4] | 47.8 | 93 (63/125) |
+
+Per band, all 125 matches per stage: coverage (both teams' held paint over the
+band's paintable area) / A's part of the painted band, median %:
+
+| Band | Blockout | Mover | Gate | Ferry | Slab |
+|---|---|---|---|---|---|
+| home_a | 48.1 / 100.0 | 47.6 / 98.2 | 42.1 / 100.0 | 49.0 / 100.0 | 41.4 / 100.0 |
+| approach_a | 52.4 / 74.4 | 51.1 / 71.2 | 55.2 / 99.3 | 48.5 / 75.5 | 51.4 / 79.5 |
+| contest | 57.5 / 48.0 | 53.4 / 53.1 | 54.0 / 48.3 | 55.0 / 50.2 | 42.0 / 49.1 |
+| approach_b | 52.0 / 15.4 | 45.1 / 23.1 | 53.1 / 7.7 | 48.1 / 15.0 | 58.5 / 40.3 |
+| home_b | 51.2 / 0.0 | 44.3 / 0.0 | 45.5 / 0.0 | 45.0 / 0.0 | 55.5 / 15.3 |
+
+Paintable area per band: homes 20160 on every stage; approaches 20880 (blockout,
+gate) or 29040 (mover, slab; ferry 25440-29040 by final ferry position);
+contest 66720 (blockout, mover), 72480 (gate), 74950.5 (slab) and 66720-73920
+(ferry). Every band held paint in at least 124 of 125 matches on every stage.
+
+What stands out, as questions rather than findings:
+
+- **Gate trial approaches stay their own team's.** A held 99.3% of painted
+  `approach_a` and B 92.3% of `approach_b` at the median; on the other stages
+  A held 71-80% of its approach. Whether that reflects the centre gate or how
+  the bot routes around it is not separable here.
+- **Slab trial is the one asymmetric stage.** Its contest band is the least
+  covered (42.0%), and A reaches into B's side (40.3% of `approach_b`, 15.3% of
+  `home_b`) while B holds 20.5% of `approach_a`. `POL#42` also saw slab-trial
+  team b hold the least far-half paint; both runs share bots and seeds, so this
+  is not yet a geometry finding.
+- **Hard bots fight most on the blockout** (115 of 125 matches with a credited
+  elimination) and least on the slab trial (63).
+- **By tool** (own share of painted against every opponent, both seats), Mister
+  holds the most on all five stages (59.2-63.1%), Roller 46.0-51.8% (55.7-57.0%
+  on Crossfeed and Press Tower) and the Hard Sniper bot 12.0-14.9%. The Sniper
+  mirror covers 9.8-12.7% of each stage.
+
+These answer none of the attended `POL#21` questions (crossing comfort, pressure,
+regional value, geometry choice) and change no value; they are the paint half
+of "reconcile paint and sampled five-tool pressure with side/loadout swaps" from
+the [static qualification](#static-qualification-and-next-slice), for bots only.
+Per-band coverage for every equal-tool control on each stage is in the receipt's
+`summary.md`.

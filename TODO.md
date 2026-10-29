@@ -254,7 +254,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
-| `TOOL#3` | OPEN | MED | M | Give the four Turbulence trials the blockout's region bands, then rerun the 25-pair x 5-seed five-tool matrix at Hard on Crossfeed, Press Tower and the Turbulence family, and file per-band held paint as descriptive evidence for `POL#21`/`POL#27`. [Turbulence bands and rerun](docs/gameplay-tuning.md#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29) |
 
 ## Design process
 

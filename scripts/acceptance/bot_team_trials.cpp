@@ -118,7 +118,8 @@ namespace
     {
         const RectangleF arena = world.levels.get(stage)->camera_bounds_rectangle();
         // The Turbulence Yard blockout has authored geographic bands (POL#42);
-        // its mover and slab trials keep thirds until TOOL#3 supplies theirs.
+        // its mover and slab trials keep the thirds POL#42 recorded, although
+        // balance_regions now gives them the blockout's bands (TOOL#3).
         if (std::string_view(stage) == "crossfeed" || std::string_view(stage) == "press_tower" ||
             std::string_view(stage) == "turbulence_blockout")
         { return balance_regions::stage_partition(stage, arena); }

@@ -247,6 +247,48 @@ attended review rather than retuning automatically from these bot observations.
 summit value and whether the halves feel fiddly. Support art and the explicit-only
 stage policy remain unchanged.
 
+## Hard five-tool matrix (`TOOL#3`, 2026-10-30)
+
+125 matches of the 875-match `TOOL#3` rerun: all 25 ordered five-tool pairs at
+seeds 0, 1, 17, 42, 2026, 2P A/B, 60 seconds, Hard shipping bots on both sides.
+No gameplay value changed. Bands are **final held area** at time-up, not route use, visits, time held,
+spawn pressure or hill control; `crown` is the full-height X band 1640-1960, not the summit. The policy is the shipping `MatchBotDriver` at Hard on both
+seats, 2P only: it has a route planner and ballistic aim, unlike `TOOL#1`'s
+Skirmish, but it is one bot at one difficulty, and ordered swaps combine side,
+seat RNG, tool and conditional bot behaviour. Five chosen seeds are not population
+samples; ranges are observed minima/maxima. Method, receipts and limits:
+[gameplay tuning](gameplay-tuning.md#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29).
+
+Team A's share of painted was 51.4 [6.5, 94.5]% over all 125 matches; 99 had a
+credited elimination (214 in all). Equal-tool controls, A share of painted (%):
+
+| Same tool on A and B | Five seeds | Median [min, max] | Painted / paintable, median |
+|---|---|---|---|
+| Sprayer | 50.9, 53.1, 57.3, 49.0, 49.9 | 50.9 [49.0, 57.3] | 62.7 |
+| Sniper | 50.7, 51.5, 47.7, 47.4, 55.4 | 50.7 [47.4, 55.4] | 14.3 |
+| Roller | 40.2, 58.5, 36.7, 47.8, 43.0 | 43.0 [36.7, 58.5] | 61.7 |
+| Mister | 55.1, 53.2, 46.4, 46.0, 51.4 | 51.4 [46.0, 55.1] | 60.4 |
+| Bucket | 45.7, 51.9, 53.1, 46.8, 57.1 | 51.9 [45.7, 57.1] | 44.1 |
+
+Per band, all 125 matches (coverage is both teams' held paint over the band's
+paintable area; A's part is A held over painted in the band; median [min, max] %):
+
+| Band | Paintable area | Coverage | A's part of painted |
+|---|---|---|---|
+| home_a | 18720 | 50.5 [0.3, 92.6] | 98.3 [0.0, 100.0] |
+| approach_a | 38280 | 52.9 [6.3, 84.3] | 78.3 [0.0, 100.0] |
+| hoist_a | 5760 | 75.0 [0.8, 100.0] | 64.9 [0.0, 100.0] |
+| crown | 14880 | 60.0 [9.7, 92.3] | 49.4 [3.8, 100.0] |
+| hoist_b | 5760 | 74.2 [5.0, 100.0] | 44.0 [0.0, 100.0] |
+| approach_b | 38280 | 55.7 [6.9, 81.8] | 18.2 [0.0, 98.8] |
+| home_b | 18720 | 53.6 [5.1, 97.4] | 6.1 [0.0, 98.4] |
+
+The two hoist bands are the most covered and the crown splits evenly at the
+median. Of the equal-tool controls, the Bucket mirror leaves the hoists least
+covered (43% and 62% median, against 78-98% for Sprayer, Roller and Mister).
+Whether the crown is worth contesting, and whether the hoists feel fiddly, stay
+attended `POL#31` questions.
+
 ## Evidence
 
 [scripts/acceptance/press_tower.cpp](../scripts/acceptance/press_tower.cpp) and
