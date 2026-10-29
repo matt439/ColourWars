@@ -19,7 +19,7 @@ labrador::ScreenLayout MatchPlanner::layout_for(int players)
 bool MatchRequest::empty() const
 {
 	return !this->stage && !this->players && this->weapons.empty() &&
-		!this->restart && !this->exact;
+		this->seats.empty() && !this->restart && !this->exact;
 }
 
 std::string MatchRequest::describe() const
@@ -41,6 +41,12 @@ std::string MatchRequest::describe() const
 	{
 		add("weapon " + (choice.seat < 0 ? std::string("all") :
 			std::to_string(choice.seat + 1)) + " " + choice.weapon);
+	}
+	for (const SeatChoice& choice : this->seats)
+	{
+		add("seat " + std::to_string(choice.seat + 1) + " " +
+			MatchPlanner::seat_field_name(choice.field) +
+			(choice.value.empty() ? std::string() : " " + choice.value));
 	}
 	if (this->restart) { add("restart"); }
 	return text.empty() ? "nothing" : text;
@@ -108,10 +114,86 @@ const char* MatchPlanner::weapon_name(WeaponType weapon)
 	}
 }
 
+std::vector<std::string> MatchPlanner::seat_fields()
+{
+	return { "team", "bot", "human", "boost" };
+}
+
+std::vector<std::string> MatchPlanner::seat_values()
+{
+	return { "a", "b", "easy", "normal", "hard", "0", "1", "2" };
+}
+
+const char* MatchPlanner::seat_field_name(MatchRequest::SeatChoice::Field field)
+{
+	switch (field)
+	{
+	case MatchRequest::SeatChoice::Field::team: return "team";
+	case MatchRequest::SeatChoice::Field::bot: return "bot";
+	case MatchRequest::SeatChoice::Field::human: return "human";
+	case MatchRequest::SeatChoice::Field::boost: return "boost";
+	default: return "other";
+	}
+}
+
+std::string MatchPlanner::parse_seat_choice(const std::string& field, const std::string& value,
+	MatchRequest::SeatChoice& choice)
+{
+	using Field = MatchRequest::SeatChoice::Field;
+	if (field == "team")
+	{
+		choice.field = Field::team;
+		if (value != "a" && value != "b")
+		{
+			return "team must be a or b, got '" + value + "'";
+		}
+	}
+	else if (field == "bot")
+	{
+		choice.field = Field::bot;
+		if (value != "easy" && value != "normal" && value != "hard")
+		{
+			return "bot difficulty must be easy, normal or hard, got '" + value + "'";
+		}
+	}
+	else if (field == "human")
+	{
+		choice.field = Field::human;
+		if (!value.empty())
+		{
+			return "human takes no value, got '" + value + "'";
+		}
+	}
+	else if (field == "boost")
+	{
+		choice.field = Field::boost;
+		if (value.size() != 1 || value[0] < '0' || !handicaps::valid(value[0] - '0'))
+		{
+			return "boost must be 0, 1 or 2, got '" + value + "'";
+		}
+	}
+	else
+	{
+		return "unknown field '" + field + "'; one of team, bot, human, boost";
+	}
+	choice.value = value;
+	return {};
+}
+
 void MatchPlanner::assign_devices(MenuLevelSettings& settings, int players,
 	const ConnectedPads& pads)
 {
 	settings.set_player_count(players);
+	claim_devices(settings, pads);
+	for (int seat = 0; seat < players; ++seat)
+	{
+		settings.set_player_team(seat, players == 1 || seat % 2 == 0 ?
+			PlayerTeam::a : PlayerTeam::b);
+	}
+}
+
+void MatchPlanner::claim_devices(MenuLevelSettings& settings, const ConnectedPads& pads)
+{
 	std::vector<int> devices;
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
@@ -128,12 +210,8 @@ void MatchPlanner::assign_devices(MenuLevelSettings& settings, int players,
 		settings.claim_input_slot(devices[device]);
 	}
 
-	settings.set_screen_layout(layout_for(players));
-	for (int seat = 0; seat < players; ++seat)
-	{
-		settings.set_player_team(seat, players == 1 || seat % 2 == 0 ?
-			PlayerTeam::a : PlayerTeam::b);
-	}
+	// Bots have no pane; with none, this is layout_for(players).
+	settings.set_screen_layout(layout_for(settings.human_count()));
 }
 
 MatchPlan MatchPlanner::resolve(const MenuLevelSettings* current,
@@ -215,8 +293,11 @@ MatchPlan MatchPlanner::resolve(const MenuLevelSettings* current,
 	}
 	settings.set_stage(stage);
 
-	// Roster: devices are claimed now, from the pads connected at apply time.
-	if (request.players || fresh)
+	// Roster: devices are claimed now, from the pads connected at apply time,
+	// after any seat has become a bot so that no bot takes a device.
+	using Field = MatchRequest::SeatChoice::Field;
+	const bool roster = request.players || fresh;
+	if (roster)
 	{
 		const int players = request.players.value_or(1);
 		if (players < 1 || players > input_slots::pad_count)
@@ -224,8 +305,79 @@ MatchPlan MatchPlanner::resolve(const MenuLevelSettings* current,
 			plan.error = "players must be 1-4";
 			return plan;
 		}
-		assign_devices(settings, players, pads);
+		settings.set_player_count(players);
+	}
+	bool controllers = false;
+	for (const MatchRequest::SeatChoice& choice : request.seats)
+	{
+		MatchRequest::SeatChoice parsed;
+		const std::string invalid = parse_seat_choice(seat_field_name(choice.field),
+			choice.value, parsed);
+		if (!invalid.empty())
+		{
+			plan.error = "seat " + std::to_string(choice.seat + 1) + ": " + invalid;
+			return plan;
+		}
+		if (choice.seat < 0 || choice.seat >= settings.player_count())
+		{
+			plan.error = "seat: seat " + std::to_string(choice.seat + 1) +
+				" is not in a " + std::to_string(settings.player_count()) + "-player match";
+			return plan;
+		}
+		if (choice.field == Field::bot)
+		{
+			if (choice.seat == 0)
+			{
+				plan.error = "seat 1 stays human: it is the setup host";
+				return plan;
+			}
+			settings.set_player_bot(choice.seat, choice.value == "easy" ? BotDifficulty::easy :
+				choice.value == "hard" ? BotDifficulty::hard : BotDifficulty::normal);
+			controllers = true;
+		}
+		else if (choice.field == Field::human)
+		{
+			settings.set_player_human(choice.seat);
+			controllers = true;
+		}
+	}
+	if (roster)
+	{
+		assign_devices(settings, settings.player_count(), pads);
 		plan.reset_session = true;
+	}
+	else if (controllers)
+	{
+		// Teams stay as they were; only the devices follow the new humans.
+		claim_devices(settings, pads);
+	}
+
+	// Teams and Boost, in request order, after the roster's own defaults.
+	for (const MatchRequest::SeatChoice& choice : request.seats)
+	{
+		if (choice.field == Field::team)
+		{
+			settings.set_player_team(choice.seat, choice.value == "a" ? PlayerTeam::a : PlayerTeam::b);
+		}
+		else if (choice.field == Field::boost)
+		{
+			settings.set_player_handicap(choice.seat, choice.value[0] - '0');
+		}
+	}
+	if (!request.seats.empty())
+	{
+		plan.reset_session = true;
+	}
+	// The rules a format-4 replay enforces, so a planned match always records.
+	const std::vector<MenuPlayerSettings>& seats = settings.player_settings();
+	for (std::size_t seat = 0; seat < seats.size(); ++seat)
+	{
+		if (seats[seat].controller == PlayerController::bot && (seat == 0 || seats[seat].num != -1))
+		{
+			plan.error = seat == 0 ? "seat 1 stays human: it is the setup host" :
+				"seat " + std::to_string(seat + 1) + " is a bot and cannot have a device";
+			return plan;
+		}
 	}
 
 	// Weapons, in request order.

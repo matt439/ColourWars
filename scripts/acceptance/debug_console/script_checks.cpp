@@ -413,6 +413,7 @@ namespace debug_console_acceptance
 				return found->second;
 			};
 		std::string stage = "movement_course";
+		int players = 1;
 
 		std::vector<std::string> names;
 		for (const auto& entry : std::filesystem::directory_iterator(folder))
@@ -464,6 +465,21 @@ namespace debug_console_acceptance
 					{
 						require(Bot::is_behaviour(word(2)), statement.where() + ": no bot " + word(2));
 					}
+					if (w[0] == "players")
+					{
+						require(DebugArgs::parse_int(word(1), players) && players >= 1 && players <= 4,
+							statement.where() + ": players " + word(1));
+					}
+					else if (w[0] == "seat")
+					{
+						int seat = 0;
+						MatchRequest::SeatChoice choice;
+						const std::string invalid = MatchPlanner::parse_seat_choice(word(2), word(3), choice);
+						require(DebugArgs::parse_int(word(1), seat) && seat >= 1 && seat <= players &&
+							invalid.empty() && (seat != 1 || choice.field != MatchRequest::SeatChoice::Field::bot),
+							statement.where() + ": seat " + word(1) + " in a " + std::to_string(players) +
+							"-player script: " + invalid);
+					}
 				}
 			};
 		for (const std::string& name : names)
@@ -473,6 +489,7 @@ namespace debug_console_acceptance
 			if (text.find('$') == std::string::npos)
 			{
 				stage = "movement_course";
+				players = 1;
 				lint(name, {}, 0);
 			}
 		}

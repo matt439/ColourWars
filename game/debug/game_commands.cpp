@@ -178,6 +178,41 @@ void DebugDirectorImpl::register_commands()
 				applies);
 		}, traits("match", Form::pick, true, 1, "all"));
 
+	// Console only: three words per seat do not fit one picker.
+	add("seat", "set a seat's team, shipping bot or Boost: seat <1-4> team a|b, "
+		"seat <2-4> bot easy|normal|hard, seat <2-4> human, seat <1-4> boost 0|1|2 "
+		"(bot <seat> <behaviour> only drives a seat's input)",
+		{ { "1-4", false, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } },
+			{ "team|bot|human|boost", false, [] { return MatchPlanner::seat_fields(); } },
+			{ "value", true, [] { return MatchPlanner::seat_values(); } } },
+		[this](Args args, DebugLog&)
+		{
+			MatchRequest::SeatChoice choice;
+			if (!DebugArgs::parse_int(args.text(0), choice.seat) || choice.seat < 1 || choice.seat > 4)
+			{
+				return DebugStatus::failure("seat: seat must be 1-4, got '" + args.text(0) + "'");
+			}
+			const std::string error = MatchPlanner::parse_seat_choice(args.text(1),
+				args.has(2) ? args.text(2) : std::string(), choice);
+			if (!error.empty())
+			{
+				return DebugStatus::failure("seat: " + error);
+			}
+			if (choice.seat == 1 && choice.field == MatchRequest::SeatChoice::Field::bot)
+			{
+				return DebugStatus::failure("seat: seat 1 stays human: it is the setup host");
+			}
+			--choice.seat;
+			this->request_.seats.push_back(choice);
+			const std::string line = "seat " + args.text(0) + " " + args.text(1) +
+				(choice.value.empty() ? std::string() : " " + choice.value);
+			const bool applies = this->match_ != nullptr || this->request_.stage.has_value();
+			return DebugStatus::success(line +
+				(this->match_ != nullptr ? this->rebuild_note() :
+					applies ? "" : ": stored for 'stage <name>'; a match started from the menus drops it"),
+				applies);
+		}, traits("match", Form::hidden, true));
+
 	registry.add(std::make_unique<ChoiceVariable>("intro",
 		"how the next match begins: auto (the game's choice), full, quick (from the "
 		"preview) or off (straight to the split countdown); record and play use off",

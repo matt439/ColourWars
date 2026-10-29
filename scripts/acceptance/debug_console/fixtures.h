@@ -417,6 +417,8 @@ namespace debug_console_acceptance
 	void check_registry();
 	void check_clock();
 	void check_planner();
+	void check_roster_planner();
+	void check_roster_statements(GameTuning& tuning, Presentation& presentation);
 	void check_text_field();
 
 	// director_checks.cpp
@@ -456,6 +458,7 @@ namespace debug_console_acceptance
 	// replay_checks.cpp
 	void check_replay_codec();
 	std::string check_replay_cpu_match(const std::filesystem::path& game_directory);
+	void check_roster_replay(const std::filesystem::path& game_directory);
 
 	// level_checks.cpp
 	void check_opening(const std::filesystem::path& game_directory);

@@ -57,11 +57,14 @@ ColourWars.exe +stage movement_course +players 4 +bot all paint
 # The same match every time (seeded bots and palette), ready to record
 ColourWars.exe +seed 7 +stage movement_course +players 4 +bot all paint
 
+# You and a Hard shipping bot against an Easy bot on Boost +2 and a Normal bot
+ColourWars.exe +stage crossfeed +players 4 +seat 2 bot easy +seat 2 boost 2 +seat 3 bot normal +seat 3 team b +seat 4 bot hard +seat 4 team a
+
 # A shipped review, start to finish, then exit (see Scripts)
 ColourWars.exe +exec station_tour +quit
 ```
 
-`players` and `bot` need `stage` beside them: on their own they are stored for a
+`players`, `seat` and `bot` need `stage` beside them: on their own they are stored for a
 `stage` that never comes, and a match started by walking the menus drops them.
 
 A bad statement prints an error and the others still run; a bad `+stage` is an
@@ -142,6 +145,7 @@ running.
 | `stage <name\|next\|prev\|random>` | start that stage (from a menu) or rebuild the match on it |
 | `players <1-4> [bot]` | seats: connected pads in slot order, then keyboard/mouse, then idle dummies. With no pad, seat 1 is keyboard/mouse. A second word is `bot all <bot>` as well (`players 4 paint`). In a menu it is stored for `stage`; a match started from the menus instead drops it (logged), as does a match ending with it still queued |
 | `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|random>` | a seat's weapon (seats are 1-4) |
+| `seat <1-4> team <a\|b>`, `seat <2-4> bot <easy\|normal\|hard>`, `seat <2-4> human`, `seat <1-4> boost <0\|1\|2>` | what the shipping setup chooses per seat: the team, a [shipping bot](#roster-statements-for-bots-teams-and-boost-dbg17) at a difficulty (the seat's controller, with no device or pane), a bot handed back to a human, and Boost. Queued like `weapon`, applied after `players` in typed order; seat 1 stays human. Console only, not in the debug menu |
 | `intro <auto\|full\|quick\|off>` | how the next match begins: `auto` is the game's choice (the whole intro on a match's first build, the quick one from the colour preview on a rematch), `off` starts at the split-screen countdown. `record` and `play`, and any one-player match, always build without one (variable) |
 | `feedback <on\|off\|toggle>` | movement feedback (variable; `1`/`0` too). Immediate |
 | `overlay [player\|collision\|camera\|paint\|stations\|perf\|all\|none]` | toggle one [overlay](#overlays), or all on/off (`all` leaves `perf` alone, `none` clears it); alone, list them |
@@ -942,6 +946,10 @@ device (or the neutral input of an idle dummy):
   too); `bot 2 off`, `bot all off`, `bot off` hand seats back. `bot` alone lists
   the assignments. `players 4 paint` is `players 4` plus `bot all paint`. In a
   match the change applies at once; assignments survive restarts and rebuilds.
+- These are Debug behaviours, which only drive a seat's input. A **shipping
+  bot** (Easy/Normal/Hard, as the menus' bot seats) is the seat's controller and
+  is set with `seat <n> bot <difficulty>`; it is never an idle dummy, so
+  `bot all` leaves it alone, while `bot <n>` on its seat overrides its input.
 - A bot's input replaces the seat's after the device and the mouse aim are
   resolved, through a seat filter `Level::update` takes as a parameter
   (`game/objects/seat_input_filter.h`).
@@ -1192,10 +1200,11 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | `crossfeed_baseline` | Crossfeed comparison P0: the 2026-10-08 movement and original tool supply and lifetime |
 | `crossfeed_movement`, `crossfeed_lower` | Crossfeed P1 and P2: an experimental lower jump with the original (P1) or coupled (P2) tool supply and lifetime; neither clears existing 200-unit climbs |
 | `crossfeed_coupled` | Crossfeed P3: the provisional global compatibility movement and coupled tools |
-| `review_arena <stage>` | the [arena review pack](#arena-review-screenshot-pack-dbg18): seed 7, paint bots on every seat, a clean frame at GO and a heavy one after 20 match seconds at 4, 3, 2 and 1 players, each with its checksum, into `screenseview-<stage>-<time>` |
+| `review_arena <stage>` | the [arena review pack](#arena-review-screenshot-pack-dbg18): seed 7, paint bots on every seat, a clean frame at GO and a heavy one after 20 match seconds at 4, 3, 2 and 1 players, each with its checksum, into `screens\review-<stage>-<time>\` |
 | `review_press_tower`, `review_close_quarters`, `review_crossfeed` | `review_arena` for that stage, then every station photographed on the one-player heavy frame with the station labels on |
 | `review_king_of_the_hill`, `review_turbulence`, `review_turbulence_blockout`, `review_turbulence_mover_trial`, `review_turbulence_slab_trial`, `review_turbulence_ferry_trial`, `review_turbulence_gate_trial` | `review_arena` for that stage |
 | `review_arena_frames`, `review_arena_pass`, `review_arena_end` | helpers of `review_arena` and the wrappers |
+| `review_bots_boost` | seed 7, four seats on Crossfeed: P1 (a paint bot drives it; drop `bot 1 paint` to play) with a Hard shipping bot against an Easy bot on Boost +2 and a Normal bot on Boost +1; `status` lists the roster, then 30 match seconds at x4, the checksum and a paused screenshot, into `screens\review-bots-boost-<time>\` |
 
 The jump and Crossfeed scripts change tuning live and globally, and do not put
 it back: `tune.reset tuning` restores the loaded defaults, and `tune.save
@@ -1921,48 +1930,64 @@ none.
   (a recording stops at the end of the round) (`DBG#2`).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side (`DBG#7`).
-- **Roster statements** for a seat's team, shipping-bot difficulty and Boost
-  ([`DBG#17`](#roster-statements-for-bots-teams-and-boost-dbg17)).
 
 ## Roster statements for bots, teams and Boost (`DBG#17`)
 
-**Open, not started (filed 2026-10-29).** A developer start can choose the
-stage, the seat count, weapons and the Debug behaviour bots, but not three
-things the shipping setup already has: a seat's team, a shipping bot at
-Easy/Normal/Hard, and per-seat Boost 0/1/2. `MatchRequest`
-(`game/debug/match_plan.h:14-35`) has no controller, difficulty or team field;
-the planner assigns teams by seat parity
-(`game/debug/match_plan.cpp:132-136`); and `bot` accepts only the six Debug
-behaviours (`game/debug/bot.cpp:60-64`). Within `game/debug/`,
-`set_player_bot` and `set_player_handicap` are reached only when a version-4
-replay is read back (`replay.cpp:690`, `:754`), so every attended bot or Boost
-session (`ROAD#10`, `ROAD#5`) starts by walking the menus.
+**Done 2026-10-29.** A developer start can now choose everything the shipping
+setup chooses per seat, so an attended bot or Boost session (`ROAD#10`,
+`ROAD#5`) starts from a launch line instead of the menus:
 
-**Scope.** Launch and console statements that set, per seat, the team side, a
-shipping bot with its difficulty, and Boost, applied by `MatchPlanner` through
-the existing `MenuLevelSettings` setters. The spelling must not clash with
-`bot <seat> <behaviour>`, which keeps its meaning: a Debug behaviour bot drives
-a seat's input, a shipping bot is the seat's controller. The rules the replay
-codec already enforces hold here too: P1 stays human, a bot seat has no device,
-and a human seat's difficulty is Normal. A match planned this way records and
-plays back through format 4 unchanged. Ship `review_bots_boost.cfg`, a seeded
-four-seat match with mixed difficulties and Boost, in the
-[shipped scripts](#scripts) table.
+```
+seat <1-4> team <a|b>
+seat <2-4> bot <easy|normal|hard>
+seat <2-4> human
+seat <1-4> boost <0|1|2>
+```
 
-**First step.** Choose the spelling (for example a `seat`-scoped statement or
-separate `team`/`boost` commands; neither name is a command today) and add the
-fields to `MatchRequest`, with planner checks for the refusals above.
+- **Spelling.** One `seat` command, with the field as its second word, so
+  nothing clashes with `bot <seat> <behaviour>`, which keeps its meaning: a
+  Debug behaviour drives a seat's input, a shipping bot is the seat's
+  controller. `bot all` drives only idle dummies and never a shipping bot.
+- **Planning.** `MatchRequest::seats` holds the statements;
+  `MatchPlanner::resolve` applies them through the existing `MenuLevelSettings`
+  setters after `players`: controllers first, then devices are claimed (the
+  claims skip bots, so with every pad connected the humans still take pads in
+  slot order), then teams and Boost in typed order, so a later statement wins.
+  The layout follows the human count, since bots have no pane; with no shipping
+  bot it is `layout_for(players)` as before. On a running match, a controller
+  change re-claims devices and keeps the teams. Any seat statement starts a new
+  session.
+- **Refusals**, when typed and again when planned: a bot P1, a seat outside
+  1-4, a team other than a or b, an unknown difficulty, a Boost outside 0-2 and
+  a value after `human`. A seat outside the roster is refused only when
+  planned, since `players` may come after it: `+stage crossfeed +seat 2 bot easy`
+  without `+players` is a one-player plan, and that match does not start
+  (`cannot start ...` is logged). The plan is also checked for a device on a bot
+  seat before it is handed out; the claims cannot produce one, so the check is
+  a guard, not a reachable error.
+- **Replays.** A planned roster records and plays back through format 4
+  unchanged. A human's difficulty is stored as Normal, as the codec requires;
+  `seat <n> human` leaves the seat's old difficulty in memory, which nothing
+  reads for a human.
+- `status` shows `boost <n>` beside a seat with Boost.
+- `review_bots_boost.cfg` ships in the [scripts](#scripts) table.
 
-**Acceptance.** The `debug_console` case resolves plans that set each field,
-refuses a bot P1, a device on a bot seat and an out-of-range Boost, and keeps
-existing `players`/`bot` plans byte-identical. A seeded match planned with every
-field records, replays with matching checksums and reads back the same roster.
-`exec.list` and the shipped-script walk accept the new script. Release still
-carries none of the console's RTTI names. No pad or attended play is needed.
+**Acceptance (CPU, `debug_console`).** `scripts/acceptance/debug_console/roster_checks.cpp`:
+plans with no seat statement keep the devices, teams, layout and human seats
+they had before, for 1-4 players with no pad and with every pad; a plan setting every field with every pad connected; later
+statements, human hand-back and a recount on a running match; each refusal,
+typed and planned; every bot mask leaves bot seats deviceless with the human
+layout; and a seeded four-seat match on Close Quarters planned by the director
+from the typed statements (two shipping bots, Boost on three seats, a mixed
+team and a Debug dummy) records 240 updates, reads back the same roster and
+replays with matching checksums. The shipped-script walk checks every `seat`
+line's field and value and that its seat is in the script's `players` count,
+and Release still carries none of the console's RTTI names. No pad or attended
+play is needed.
 
 **Not decided here.** This is preparation only. Whether Easy/Normal/Hard are
 useful (`ROAD#10`) and whether Boost +1/+2 are fair (`ROAD#5`) stay DECISION;
-no difficulty, Boost or team default changes.
+no difficulty, Boost or team default changed.
 
 ## Arena review screenshot pack (`DBG#18`)
 

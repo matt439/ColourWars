@@ -155,6 +155,8 @@ int main(int argc, char** argv)
 		check_registry();
 		check_clock();
 		check_planner();
+		check_roster_planner();
+		check_roster_statements(tuning, presentation);
 		if (!background_only) { check_text_field(); }
 		check_director(tuning, presentation);
 		check_match_hooks(tuning, presentation);
@@ -222,6 +224,7 @@ int main(int argc, char** argv)
 			check_seeded_planner(tuning, presentation);
 			check_replay_codec();
 			replay_case = check_replay_cpu_match(game_directory);
+			check_roster_replay(game_directory);
 			if (!background_only)
 			{
 				check_opening(game_directory);

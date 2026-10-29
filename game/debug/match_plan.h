@@ -19,9 +19,21 @@ struct MatchRequest
 		std::string weapon; // a weapon name or "random"
 	};
 
+	// `seat <n> team|bot|human|boost [value]`: what the shipping setup
+	// chooses per seat. A shipping bot is the seat's controller, unlike a
+	// Debug behaviour (`bot`), which only drives a seat's input.
+	struct SeatChoice
+	{
+		enum class Field { team, bot, human, boost };
+		int seat = 0; // 0-based
+		Field field = Field::team;
+		std::string value; // a, b; easy, normal, hard; 0-2; empty for human
+	};
+
 	std::optional<std::string> stage; // a stage key, or random/next/prev
 	std::optional<int> players;
 	std::vector<WeaponChoice> weapons;
+	std::vector<SeatChoice> seats;
 	bool restart = false;
 
 	// Settings to build verbatim (`play`): the planner claims no device and
@@ -61,11 +73,16 @@ public:
 	MatchPlan resolve(const MenuLevelSettings* current, const MatchRequest& request,
 		const ConnectedPads& pads, const Random& random) const;
 
-	// Seats take connected pads in slot order, then keyboard/mouse; seats
-	// left over are idle dummies (-1), which get neutral input and are never
-	// reported as a disconnected pad. With no pad, seat 0 is keyboard/mouse.
+	// Human seats take connected pads in slot order, then keyboard/mouse;
+	// humans left over are idle dummies (-1), which get neutral input and are
+	// never reported as a disconnected pad. With no pad, seat 0 is
+	// keyboard/mouse. Shipping bots keep their seats and take no device, and
+	// the layout gives a pane to each human. Teams alternate a, b by seat.
 	static void assign_devices(MenuLevelSettings& settings, int players,
 		const ConnectedPads& pads);
+	// assign_devices without the count or the teams: claims devices for the
+	// roster's humans and sets the layout.
+	static void claim_devices(MenuLevelSettings& settings, const ConnectedPads& pads);
 
 	// The split-screen layout a plan gives `players` (1-4) seats.
 	static labrador::ScreenLayout layout_for(int players);
@@ -74,6 +91,14 @@ public:
 	static std::vector<std::string> weapon_names();
 	static bool weapon_from_name(const std::string& name, WeaponType& weapon);
 	static const char* weapon_name(WeaponType weapon);
+
+	// Words accepted by "seat": the fields, then every field's values.
+	static std::vector<std::string> seat_fields();
+	static std::vector<std::string> seat_values();
+	// Parses `field [value]` as typed; an empty error means it is valid.
+	static std::string parse_seat_choice(const std::string& field, const std::string& value,
+		MatchRequest::SeatChoice& choice);
+	static const char* seat_field_name(MatchRequest::SeatChoice::Field field);
 
 	// Validates a stage word now, so a typo fails when typed.
 	bool is_stage_word(const std::string& word) const;

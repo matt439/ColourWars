@@ -66,11 +66,13 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 		for (std::size_t i = 0; i < players.size(); ++i)
 		{
 			const std::string bot = this->player_ != nullptr ? std::string("replay") :
-				this->bot_driver_ != nullptr ? this->bot_for_seat(static_cast<int>(i), players[i].num) :
+				this->bot_driver_ != nullptr ? this->bot_for_seat(static_cast<int>(i), players[i].num,
+					players[i].controller == PlayerController::bot) :
 				std::string();
 			lines.push_back("  P" + std::to_string(i + 1) + " " + controller_label(players[i]) +
 				" team " + (players[i].team == PlayerTeam::a ? "a" : "b") + " " +
 				MatchPlanner::weapon_name(players[i].weapon) +
+				(players[i].handicap != 0 ? " boost " + std::to_string(players[i].handicap) : std::string()) +
 				(bot.empty() ? std::string() : " bot " + bot) +
 				(i < views.size() ? "  " + views[i] : std::string()));
 		}

@@ -48,9 +48,9 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-29).** The 2026-10-28 shortlists are
 complete. Pick OPEN rows while attended reviews wait, in this order:
-`DBG#17` (roster statements every attended session uses), `POL#40` with `ED#23`
-(Turbulence stations, validated by the editor), `TOOL#2` (shipping bots in the
-headless runner), `POL#41` (Press Tower bot routes); then the rest by section,
+`POL#40` with `ED#23` (Turbulence stations, validated by the editor),
+`TOOL#2` (shipping bots in the headless runner), `POL#41` (Press Tower bot
+routes); then the rest by section,
 the next-bump preparation (`HYG#23`-`HYG#25`) before any Labrador minor tag.
 After each slice, record the next concrete gap in its owner.
 This does not change the arena/tuning order above. `ROAD#28`'s OPEN step is a
@@ -262,7 +262,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
-| `DBG#17` | OPEN | MED | M | Add launch and console roster statements for a seat's team, a shipping bot at Easy/Normal/Hard and Boost 0/1/2, spelled so they don't clash with `bot <seat> <behaviour>`. Keep P1 human and bot seats deviceless, round-trip through replay format 4, ship `review_bots_boost.cfg`. Preparation only; `ROAD#10` and `ROAD#5` stay DECISION. [Scope](docs/debug-console.md#roster-statements-for-bots-teams-and-boost-dbg17) |
 
 ## Tooling, CI and docs
 

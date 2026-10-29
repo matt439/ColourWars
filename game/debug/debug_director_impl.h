@@ -175,8 +175,8 @@ public:
 
 	// The bot behaviour driving a seat (0-based) of the running or next
 	// match, or empty: an explicit `bot <seat>` first, then `bot all` for an
-	// idle dummy.
-	std::string bot_for_seat(int seat, int slot) const;
+	// idle dummy. A shipping bot is never an idle dummy.
+	std::string bot_for_seat(int seat, int slot, bool shipping_bot = false) const;
 
 	// The running match's fingerprint, or nullopt with no match.
 	std::optional<MatchFingerprint> fingerprint() const;

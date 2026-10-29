@@ -281,14 +281,14 @@ DebugStatus DebugDirectorImpl::apply_goto(DebugMatchTarget& match,
 
 // Bots ------------------------------------------------------------------------
 
-std::string DebugDirectorImpl::bot_for_seat(int seat, int slot) const
+std::string DebugDirectorImpl::bot_for_seat(int seat, int slot, bool shipping_bot) const
 {
 	const auto explicit_bot = this->seat_bots_.find(seat);
 	if (explicit_bot != this->seat_bots_.end())
 	{
 		return explicit_bot->second;
 	}
-	return slot < 0 ? this->dummy_bot_ : std::string();
+	return slot < 0 && !shipping_bot ? this->dummy_bot_ : std::string();
 }
 
 void DebugDirectorImpl::rebuild_bots(const DebugMatchTarget& match)
@@ -302,7 +302,8 @@ void DebugDirectorImpl::rebuild_bots(const DebugMatchTarget& match)
 	auto driver = std::make_unique<BotDriver>(this->tuning_, seed);
 	for (std::size_t i = 0; i < seats.size(); ++i)
 	{
-		const std::string behaviour = this->bot_for_seat(static_cast<int>(i), seats[i].num);
+		const std::string behaviour = this->bot_for_seat(static_cast<int>(i), seats[i].num,
+			seats[i].controller == PlayerController::bot);
 		if (!behaviour.empty())
 		{
 			driver->assign(static_cast<int>(i), behaviour);
