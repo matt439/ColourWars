@@ -270,7 +270,7 @@ namespace colourwars_editor
             return text;
         };
         std::string text = "Symmetry: left " + area(sides.left) + " / right " + area(sides.right) + "  |  ";
-        text += report.unmatched.empty() ? std::string("every object has a mirror partner")
+        text += report.unmatched.empty() ? std::string("every play object has a mirror partner")
             : std::to_string(report.unmatched.size()) + " without a mirror partner: " + names(report.unmatched);
         if (!report.unmatched_art.empty())
             text += "  |  Art without partner: " + names(report.unmatched_art);

@@ -75,8 +75,8 @@ namespace level_editor_acceptance
             require(reading.total > 0.0 && close(reading.sides.left, reading.sides.right),
                 "Press Tower's left and right scoring areas differ: " + std::to_string(reading.sides.left) +
                 " / " + std::to_string(reading.sides.right));
-            require(reading.line.find("every object has a mirror partner") != std::string::npos,
-                "Press Tower's symmetry line does not say every object is partnered: " + reading.line);
+            require(reading.line.find("every play object has a mirror partner") != std::string::npos,
+                "Press Tower's symmetry line does not say every play object is partnered: " + reading.line);
             std::cout << "  press_tower: " << reading.line << '\n';
 
             // A deliberately unmatched copy: without stair_1_b, stair_1_a is

@@ -1146,7 +1146,7 @@ line, built by `symmetry_summary` in [blockout_aids.cpp](../editor/blockout_aids
 from `LevelDocument::symmetry` ([level_document.cpp](../editor/level_document.cpp)):
 
 ```
-Symmetry: left 70200.0 / right 70200.0  |  every object has a mirror partner  |  Art without partner: brush_pot
+Symmetry: left 70200.0 / right 70200.0  |  every play object has a mirror partner  |  Art without partner: brush_pot
 ```
 
 - **Left and right** are the scoring area either side of the `out_of_bounds`
@@ -1184,8 +1184,8 @@ nothing unmatched. Every other shipped stage is read and its line printed,
 judging nothing: the Turbulence blockout and trials and Close Quarters and
 Crossfeed have every play object partnered; King of the Hill, Turbulence and
 the Movement Course report unmatched spawns and objects. Debug and Release
-passed on 2026-10-30 (evidence `90f4f091e58b447d8a666cb9c1bbec53` and
-`7afea1e81ea1418eac60ffe9e999a1fa` under
+passed on 2026-10-30 (evidence `6a6b2cde3e5a47ba83703349a9ab9d9f` and
+`5eca9a3798fd465b86be4a861ea3be14` under
 `out/acceptance/<preset>/level-editor/`). The canvas line has no
 hidden-window probe of its own; reading it belongs to the attended pass
 (`ED#5`). It reports only: fairness and side-swap acceptance stay play review.
