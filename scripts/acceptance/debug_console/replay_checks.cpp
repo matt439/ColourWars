@@ -13,8 +13,11 @@
 #include "engine/core/file_path.h"
 #include <bit>
 #include <cstdint>
+#include <cstdlib>
+#include <map>
 #include <optional>
 #include <process.h>
+#include <tuple>
 
 // Replay: the codec and the file, and record and play on a real Level built
 // on the CPU without a device.
@@ -387,6 +390,150 @@ namespace debug_console_acceptance
 		require(file.inputs[0].size() == file.inputs[1].size() && file.inputs[1].size() > 300 &&
 			std::any_of(file.inputs[2].begin(), file.inputs[2].end(), [](const PlayerInputData& input)
 				{ return input.primary_shoot; }), "Every seat's input is recorded, the bots' included");
+
+		// Catalog tokens select private legacy tapes; this block never arms or updates a match.
+		{
+			const std::string recorded_bytes = read_text(saved);
+			const auto original_state = [&] { return std::make_tuple(impl.request().empty(),
+				impl.request().exact_label, impl.playing(), impl.recording(), impl.clock().paused(),
+				impl.clock().timescale(), impl.clock().pending_steps(), impl.level_updates(), impl.seed()); };
+			const auto state_before = original_state();
+			const auto print_before = impl.fingerprint();
+			require(impl.request().empty() && impl.request().exact_label.empty() && print_before,
+				"The catalog fixture starts without a queued request on the recorded CPU match");
+			const auto crt_environment = []() -> std::optional<std::wstring>
+			{
+				wchar_t* raw = nullptr;
+				size_t length = 0;
+				const errno_t result = _wdupenv_s(&raw, &length, L"LOCALAPPDATA");
+				const std::unique_ptr<wchar_t, decltype(&std::free)> value(raw, &std::free);
+				require(result == 0, "Capture the CRT LOCALAPPDATA without opening its path");
+				return value ? std::optional<std::wstring>(value.get()) : std::nullopt;
+			};
+			const auto windows_environment = []() -> std::optional<std::wstring>
+			{
+				SetLastError(ERROR_SUCCESS);
+				const DWORD size = GetEnvironmentVariableW(L"LOCALAPPDATA", nullptr, 0);
+				if (size == 0)
+				{
+					const DWORD error = GetLastError();
+					require(error == ERROR_ENVVAR_NOT_FOUND || error == ERROR_SUCCESS, "Capture Win32 LOCALAPPDATA");
+					return error == ERROR_ENVVAR_NOT_FOUND ? std::nullopt : std::optional<std::wstring>(L"");
+				}
+				std::vector<wchar_t> value(size);
+				const DWORD copied = GetEnvironmentVariableW(L"LOCALAPPDATA", value.data(), size);
+				require(copied > 0 && copied < size, "Read the complete Win32 LOCALAPPDATA value");
+				return std::wstring(value.data(), copied);
+			};
+			const auto old_crt = crt_environment();
+			const auto old_windows = windows_environment();
+			const auto old_directory = std::filesystem::current_path();
+			bool environment_restored = false;
+			{
+				const auto fresh = std::filesystem::temp_directory_path() /
+					(L"colourwars_dbg16_catalog_" + std::to_wstring(_getpid()));
+				require(fresh.is_absolute() && !std::filesystem::exists(fresh), "The catalog scratch root is new");
+				ScratchFolder catalog(L"dbg16_catalog");
+				require(catalog.root == fresh && catalog.root.parent_path() == fresh.parent_path(),
+					"The owned catalog root is the expected private Temp child");
+				struct RestoreEnvironment
+				{
+					std::optional<std::wstring> crt;
+					std::optional<std::wstring> windows;
+					bool& restored;
+					~RestoreEnvironment()
+					{
+						const errno_t crt_result = _wputenv_s(L"LOCALAPPDATA", crt ? crt->c_str() : L"");
+						const BOOL windows_result = SetEnvironmentVariableW(L"LOCALAPPDATA", windows ? windows->c_str() : nullptr);
+						restored = crt_result == 0 && windows_result != FALSE;
+					}
+				} restore{ old_crt, old_windows, environment_restored };
+				require(_wputenv_s(L"LOCALAPPDATA", catalog.root.c_str()) == 0, "Set the private CRT replay root");
+				require(SetEnvironmentVariableW(L"LOCALAPPDATA", catalog.root.c_str()) != FALSE, "Set the private Win32 replay root");
+				require(crt_environment() == catalog.root.wstring() && windows_environment() == catalog.root.wstring(),
+					"Both environment views select only the owned catalog root");
+				const auto replay_root = catalog.root / L"ColourWars" / L"replays";
+				require(std::filesystem::path(labrador::widen(directory_consts::replay_directory())) == replay_root,
+					"Public replay commands resolve beneath the private LOCALAPPDATA");
+				const std::vector<std::pair<std::string, std::string>> tapes{
+					{ "_json.json", "_json" }, { "plain.json", "plain" }, { "round.json", "round" },
+					{ "round_json.json", "round_json" }, { "round_json_json.json", "round_json_json" }, { "stop.json", "stop" } };
+				for (std::size_t i = 0; i < tapes.size(); ++i)
+				{
+					ReplayFile legacy = file;
+					legacy.stage_hash.reset();
+					legacy.settings.set_stage("dbg16_catalog_" + std::to_string(i));
+					legacy.write(replay_root / labrador::widen(tapes[i].first));
+				}
+				write_text(replay_root / L"ignored.JSON", "Wrong-case extension control");
+				std::filesystem::create_directories(replay_root / L"folder.json");
+				TestDirector catalog_director(tuning, presentation);
+				auto& catalog_impl = catalog_director.impl;
+				const bool catalog_paused = catalog_impl.clock().paused();
+				const auto snapshot = [&]
+				{
+					std::map<std::filesystem::path, std::pair<bool, std::string>> tree;
+					for (const auto& entry : std::filesystem::recursive_directory_iterator(catalog.root))
+					{
+						const bool directory = entry.is_directory();
+						require(directory || entry.is_regular_file(), "The owned catalog contains only ordinary files and directories");
+						tree.emplace(entry.path().lexically_relative(catalog.root),
+							std::make_pair(directory, directory ? std::string() : read_text(entry.path())));
+					}
+					return tree;
+				};
+				const auto bytes_before = snapshot();
+				const auto first = catalog_impl.registry().complete("play round_json.");
+				require(first.line == "play round_json.json " && first.candidates.empty(),
+					"DBG16: play completion returns the full stored filename before any catalog play probe");
+				const std::vector<std::string> choices{ "_json.json", "plain.json", "round.json",
+					"round_json.json", "round_json_json.json", "stop", "stop.json" };
+				const auto all = catalog_impl.registry().complete("play ");
+				require(all.line == "play " && all.candidates == choices,
+					"The sorted catalog supplies literal filenames alongside the builtin stop control");
+				catalog_impl.log().clear();
+				const DebugStatus listed = catalog_impl.execute("replays");
+				std::vector<std::string> expected_lines;
+				for (const auto& tape : tapes) { expected_lines.push_back("  " + tape.first); }
+				expected_lines.push_back("6 replay(s) in " + directory_consts::replay_directory());
+				std::vector<std::string> actual_lines;
+				for (const auto& line : catalog_impl.log().lines())
+				{
+					require(line.severity == DebugSeverity::info, "The fresh catalog listing contains only info rows");
+					actual_lines.push_back(line.text);
+				}
+				require(listed.ok && !listed.close_console && listed.message.empty() && actual_lines == expected_lines,
+					"replays logs exact sorted full filenames and its summary, excluding directories and .JSON");
+				const auto legacy_refusal = [&](const std::string& token, const std::string& stem, std::size_t marker)
+				{
+					const DebugStatus result = catalog_impl.execute("play " + token);
+					require(!result.ok && !result.close_console && result.message == "play: legacy recording '" + stem +
+						"' has no stage fingerprint for 'dbg16_catalog_" + std::to_string(marker) +
+						"'; record a new run with this build" && catalog_impl.request().empty() &&
+						!catalog_impl.playing() && !catalog_impl.recording() && catalog_impl.clock().paused() == catalog_paused,
+						"The public play token selects its exact private tape and refuses before arming: " + token);
+				};
+				for (std::size_t i = 0; i < tapes.size(); ++i)
+				{
+					const auto completion = catalog_impl.registry().complete("play " + tapes[i].first);
+					require(completion.line == "play " + tapes[i].first + " " && completion.candidates.empty(),
+						"Each full catalog filename is an exact unique completion");
+					legacy_refusal(tapes[i].first, tapes[i].second, i);
+				}
+				legacy_refusal("round_json", "round", 2);
+				const DebugStatus stopped = catalog_impl.execute("play stop");
+				require(!stopped.ok && !stopped.close_console && stopped.message == "play stop: no replay is running" &&
+					catalog_impl.request().empty(), "play stop retains its control meaning separately from stop.json");
+				require(snapshot() == bytes_before, "Catalog completion, listing and refused playback preserve the entire private tree byte for byte");
+			}
+			require(environment_restored && crt_environment() == old_crt && windows_environment() == old_windows &&
+				std::filesystem::current_path() == old_directory, "Catalog checks restore both caller environment views and preserve its directory");
+			require(read_text(saved) == recorded_bytes, "The original private cpu.json remains byte-identical after catalog checks");
+			const auto print_after = impl.fingerprint();
+			require(original_state() == state_before && print_after && print_after->hash == print_before->hash &&
+				MatchFingerprint::difference(*print_before, *print_after).empty(), "Catalog checks preserve the original CPU match and director state");
+			std::printf("DBG16: 6 private catalog tapes, 7 legacy lookup refusals; no playback armed\n");
+		}
 
 		// The same seeded bot match again, unrecorded, ends identically.
 		impl.execute("restart");

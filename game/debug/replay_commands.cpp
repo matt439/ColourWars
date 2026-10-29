@@ -67,8 +67,8 @@ namespace
 		{
 			if (entry.is_regular_file(error) && entry.path().extension() == L".json")
 			{
-				const std::string stem = labrador::path_to_utf8(entry.path().stem());
-				names.push_back(stem);
+				const std::string file_name = labrador::path_to_utf8(entry.path().filename());
+				names.push_back(file_name);
 			}
 		}
 		std::sort(names.begin(), names.end());

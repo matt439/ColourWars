@@ -1466,6 +1466,40 @@ New tests call `replay_name` only, with no reserved-name record/play command
 or device-path access. File format, recorded simulation, playback policy and
 existing files remain unchanged.
 
+## Replay catalog filenames (`DBG#16`)
+
+**Done (2026-10-29).** Replay listings and play completion now return full
+`.json` filenames. Previously, `round_json.json` was offered as `round_json`,
+which play normalized again to `round`; that could select `round.json` instead.
+The full filename reaches the intended recording, and `stop.json` remains
+distinct from the separate `play stop` control word.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Catalog stems ending in `_json` are normalized a second time by play. | Selected as `DBG#16`: list and complete full `.json` filenames. A small caller-side correction that preserves existing raw command aliases and stored files. |
+| 2 | Changing suffix stripping could make the normalizer itself idempotent. | Broader compatibility change: existing `_json` and punctuation aliases would resolve differently. Keep separate. |
+| 3 | Arbitrarily renamed files may not fit the command's normalization grammar. | Leave catalog admission and quoting policy unchanged; qualify canonical stems produced by the existing normalizer. |
+
+The catalog helper is used only by play completion and the `replays` listing;
+neither caller constructs a replay path from its returned strings. It preserves
+regular-file checks and lowercase `.json` admission, and sorts the filenames.
+`replay_name`, raw play/record aliases, codec, stored files and simulation are
+unchanged. Arbitrarily renamed files retain the existing admission policy.
+
+The retained Debug baseline fails at the first full-filename completion check.
+Both game builds and complete console CPU cases now pass. Six distinguishable
+private tapes cover `_json`, ordinary names, adjacent and repeated suffixes,
+and `stop.json`; seven actual play lookups reach their expected tape before
+the deliberate missing-fingerprint refusal. Literal listing/completion names,
+the builtin stop control, raw aliases, every private file, both environment
+views and the original CPU match/director state are preserved. These new
+lookups do not arm playback or advance a match; the existing real-Level replay
+checks also pass. Release retains its inert developer-tool and executable
+inspection checks. Evidence: `dbg16-baseline/d42bc77fe95f4ffabe851aabb70f47e5`
+and `dbg16-candidate/e16a6d4af2ce452aa9a160792d66a571` under
+`out/validation/implementation-loop-20261028/`, with all five source hashes
+unchanged during qualification.
+
 ## Quoted completion boundaries (`DBG#11`)
 
 **Done (2026-10-28).** Tab completion now recognizes statement and word
