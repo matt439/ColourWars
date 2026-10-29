@@ -343,13 +343,24 @@ namespace balance_runner
             { L"--tools", L"sprayer,random" }, { L"--bot", L"not_a_bot" },
             { L"--stage", L"crossfeed", L"--stage", L"crossfeed" },
             { L"--seed", L"0", L"--seed", L"0" },
-            { L"--players", L"2", L"--players", L"2" }, { L"--unknown", L"value" }, { L"--duration" }
+            { L"--players", L"2", L"--players", L"2" }, { L"--unknown", L"value" }, { L"--duration" },
+            { L"--difficulty", L"easy,hard" }, { L"--bot", L"match", L"--difficulty", L"easy" },
+            { L"--bot", L"match", L"--difficulty", L"easy,expert" },
+            { L"--bot", L"match", L"--difficulty", L"easy,hard,normal" },
+            { L"--bot", L"paint", L"--difficulty", L"easy,hard" }
         })
         {
             refuses([&] { (void)parsed(invalid); }, "Invalid CLI request was accepted");
         }
         refuses([&] { (void)parse_options(content, { L"--csv", (content / L"manifest.json").native() }); },
             "An existing output file was accepted");
+        const Options ladder = parsed({ L"--bot", L"match", L"--difficulty", L"easy,hard" });
+        require(ladder.bot == "match" && ladder.difficulties ==
+            std::vector<BotDifficulty>{ BotDifficulty::easy, BotDifficulty::hard } &&
+            policy_label(ladder) == "match:easy:hard", "The match policy lost its per-seat difficulties");
+        require(parsed({ L"--bot", L"match" }).difficulties ==
+            std::vector<BotDifficulty>{ BotDifficulty::normal, BotDifficulty::normal },
+            "The match policy does not default every seat to Normal");
         refuses([&] { (void)parse_options(content, { L"--seed", L"1" }); }, "A CLI run without a CSV path was accepted");
 
         Options short_match;
@@ -363,6 +374,28 @@ namespace balance_runner
         require(paint_csv_text(first) == paint_csv_text(repeated), "Fresh same-seed matches did not reproduce companion CSV bytes");
         paint_joins(first);
 
+
+        // TOOL#2: the shipping driver on every seat, P1 included, one row
+        // repeats byte for byte and each seat reads back its own difficulty.
+        Options shipped = short_match;
+        shipped.bot = "match";
+        shipped.difficulties = { BotDifficulty::easy, BotDifficulty::hard };
+        const std::vector<Result> shipped_first = run_sweep(shipped);
+        const std::vector<Result> shipped_again = run_sweep(shipped);
+        require(shipped_first.size() == 1 && csv_text(shipped_first) == csv_text(shipped_again) &&
+            paint_csv_text(shipped_first) == paint_csv_text(shipped_again),
+            "A seeded match-policy row did not repeat byte for byte");
+        const Result& shipped_row = shipped_first.front();
+        result_invariants(shipped_row);
+        require(shipped_row.bot == "match:easy:hard" && csv_row(shipped_row).find(",\"match:easy:hard\",") != std::string::npos,
+            "The match row does not name its difficulties in the bot field");
+        require(shipped_row.seats[0].difficulty == BotDifficulty::easy &&
+            shipped_row.seats[1].difficulty == BotDifficulty::hard,
+            "A seat's MatchBotDriver bot does not report the requested difficulty");
+        require(!first.front().seats[0].difficulty, "A Debug-behaviour seat reported a shipping difficulty");
+        Options swapped = shipped;
+        swapped.difficulties = { BotDifficulty::hard, BotDifficulty::easy };
+        require(csv_text(run_sweep(swapped)) != csv_text(shipped_first), "Swapping the difficulties changed nothing");
 
         Options sweep = zero;
         sweep.duration = 0.25f; sweep.seeds = { 0, std::numeric_limits<std::uint32_t>::max() };
@@ -389,7 +422,7 @@ namespace balance_runner
         require(!evidence.empty(), "Cannot allocate a fresh private CSV receipt directory");
         publication_checks(evidence, rows);
         resolved_alias_check(content);
-        std::cout << "PASS balance runner: 4 real CPU matches, nontrivial active state, whole-row seeded byte identity, "
+        std::cout << "PASS balance runner: 7 real CPU matches (3 under the shipping MatchBotDriver), nontrivial active state, whole-row seeded byte identity, "
             "2/4-player device-less owner mapping, 0/uint32-max seeds, bounded Crossfeed sweep, CLI refusals, "
             "exact Unicode paired-file publication, no-overwrite and actual partial-failure preservation. "
             "Metrics are held paint, pre-step full-shot empty readiness, sampled death edges and validated enemy credit; "

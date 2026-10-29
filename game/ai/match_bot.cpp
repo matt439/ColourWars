@@ -70,6 +70,11 @@ bool MatchBot::finishing() const
 	return this->finish_pending_ || this->finish_left_ > 0;
 }
 
+BotDifficulty MatchBot::difficulty() const
+{
+	return this->difficulty_;
+}
+
 bool MatchBot::riding() const
 {
 	return this->riding_;

@@ -43,20 +43,37 @@ namespace
 	}
 }
 
+namespace
+{
+	std::vector<std::optional<BotDifficulty>> roster_bots(const MenuLevelSettings& settings)
+	{
+		std::vector<std::optional<BotDifficulty>> seats;
+		for (const MenuPlayerSettings& player : settings.player_settings())
+		{
+			seats.push_back(player.controller == PlayerController::bot ?
+				std::optional<BotDifficulty>(player.difficulty) : std::nullopt);
+		}
+		return seats;
+	}
+}
+
 MatchBotDriver::MatchBotDriver(const GameTuning* tuning, const MenuLevelSettings& settings,
-	std::uint64_t seed) : tuning_(tuning)
+	std::uint64_t seed) : MatchBotDriver(tuning, roster_bots(settings), seed)
+{
+}
+
+MatchBotDriver::MatchBotDriver(const GameTuning* tuning,
+	const std::vector<std::optional<BotDifficulty>>& seats, std::uint64_t seed) : tuning_(tuning)
 {
 	if (tuning == nullptr) { throw std::invalid_argument("A match bot driver requires tuning"); }
-	const std::vector<MenuPlayerSettings>& players = settings.player_settings();
-	this->bots_.resize(players.size());
-	this->difficulties_.reserve(players.size());
-	for (size_t seat = 0; seat < players.size(); ++seat)
+	this->bots_.resize(seats.size());
+	this->difficulties_.reserve(seats.size());
+	for (size_t seat = 0; seat < seats.size(); ++seat)
 	{
-		const MenuPlayerSettings& player = players[seat];
-		this->difficulties_.push_back(player.difficulty);
-		if (player.controller == PlayerController::bot)
+		this->difficulties_.push_back(seats[seat].value_or(BotDifficulty::normal));
+		if (seats[seat])
 		{
-			this->bots_[seat] = std::make_unique<MatchBot>(tuning, player.difficulty,
+			this->bots_[seat] = std::make_unique<MatchBot>(tuning, *seats[seat],
 				seed * 0x9E3779B97F4A7C15ull + static_cast<std::uint64_t>(seat) + 1);
 		}
 	}

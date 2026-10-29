@@ -81,6 +81,8 @@ public:
 	// Grounded on a moving paintable support at the last step; the driver
 	// scans its top paint every step while the bot rides it.
 	bool riding() const;
+	// The difficulty it was built with. Read-only, for measurement.
+	BotDifficulty difficulty() const;
 	std::uint64_t random();
 
 private:

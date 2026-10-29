@@ -522,43 +522,56 @@ explicit switch-off comparison; no such mechanic was enabled in this baseline.
 
 ## Shipping bots in the headless runner (`TOOL#2`, 2026-10-29)
 
-**Open, not started.** The runner measures only Debug policies:
-`scripts/run-balance.ps1:9` accepts `idle`, `walk`, `jump`, `chase`, `paint` and
-`skirmish`, and nothing under `scripts/acceptance/balance_runner*` references
-`MatchBotDriver` (`game/ai/match_bot_driver.h:12`), the Release-capable driver
-the shipping Easy/Normal/Hard opponents use. The
-[ROAD#10 record](feature-roadmap.md#ai-bot-players-road10) says twice
-(around lines 701 and 776) that its trials are not evidence of relative
-difficulty strength, and `scripts/acceptance/bot_combat_trials.cpp:44-45` gives
-both opposed bots the same difficulty, so no measurement yet sets one difficulty
-against another over a whole match.
+**Done 2026-10-29.** The runner and `scripts/run-balance.ps1` take a `match`
+policy: the shipping `MatchBotDriver` on every seat, with one
+`-Difficulty easy|normal|hard` per seat (all Normal by default). A roster cannot
+make P1 a bot, and a one-on-one bot match needs one, so the driver gained a
+second constructor taking one optional difficulty per participant; the roster
+constructor now delegates to it with the same per-seat seeds, so shipping
+matches are unchanged (`bot_runtime`, `bot_driver`, `bot_roster`,
+`bot_gate_routes` and `debug_console` pass in both presets). `MatchBot` gained a
+read-only `difficulty()`. The main CSV stays schema 2: the `bot` field names the
+policy, `match:<p1>:<p2>`, so no column was added, and the Debug policies' rows,
+including the Paint and Skirmish controls, keep their bytes (`skirmish_bot`
+passes). The `balance_runner` self-check runs three Crossfeed matches under the
+driver: one seeded Easy-v-Hard row repeats byte for byte, each seat reads back
+its requested difficulty from `MatchBotDriver::bot(participant)`, and swapping
+the difficulties changes the row.
 
-Scope: add a `match` policy to the runner and launcher, driven by the real
-`MatchBotDriver` built from a `MenuLevelSettings` roster, with a per-seat
-`-Difficulty easy|normal|hard`. Existing policies, the schema-2 main CSV, the
-region/face companion and gameplay tuning stay unchanged; a new policy column, if
-needed, is an appended schema version as schema 2 was. Then record one
-descriptive ladder, Easy v Normal, Normal v Hard and Easy v Hard, each with
-sides swapped, on `crossfeed` and `press_tower` at the first report's seeds
-(0, 1, 17, 42, 2026), 2P, 60 seconds, one fixed tool pair.
+**Ladder, 2026-10-29 (Debug).** Easy v Normal, Normal v Hard and Easy v Hard,
+each in both seat orders, on Crossfeed and Press Tower at seeds 0, 1, 17, 42 and
+2026, 2P, 60 seconds, Sprayer v Sprayer: 60 matches. Each matchup pools both seat
+orders (ten matches per stage). "Share of painted" is the higher difficulty's
+held paint over both players' held paint at time-up; splats are credited enemy
+eliminations.
 
-First step: a `balance_runner` self-check that one seeded `match` row repeats
-byte for byte and that each seat's `MatchBotDriver::bot(participant)` reports the
-requested difficulty.
+| Matchup | Stage | Matches | Higher paints more | Higher share of painted, median (range) | Splats, median higher / lower |
+|---|---|---|---|---|---|
+| normal v easy | crossfeed | 10 | 7/10 | 0.527 (0.378-0.613) | 0 / 0 |
+| normal v easy | press_tower | 10 | 5/10 | 0.493 (0.352-0.574) | 0 / 0 |
+| hard v normal | crossfeed | 10 | 3/10 | 0.476 (0.362-0.541) | 0 / 0 |
+| hard v normal | press_tower | 10 | 4/10 | 0.482 (0.368-0.567) | 0 / 1 |
+| hard v easy | crossfeed | 10 | 2/10 | 0.421 (0.315-0.577) | 0 / 0 |
+| hard v easy | press_tower | 10 | 3/10 | 0.442 (0.360-0.543) | 0.5 / 0 |
 
-Acceptance: `run-acceptance.ps1 -Preset x64-debug -Cases balance_runner,skirmish_bot`
-passes; the earlier Paint and Skirmish golden controls keep their CSV bytes; the
-ladder's rows, medians and literal ranges are recorded here with receipts under
-`out/validation/`. No pad, device or author is needed.
+At this tool pair the shipping difficulties do not order by held paint: Normal
+edges Easy on Crossfeed and ties it on Press Tower, and Hard holds less than
+both Normal and Easy on both stages. Splats are nearly absent, so these matches
+measure painting, not fighting. One tool pair and five seeds are descriptive,
+not a strength ranking with confidence. Receipts, with each run's arguments,
+pins and both CSVs: `out/validation/tool2-ladder-20261029/<first>-v-<second>/`.
+
+Next concrete gap: why Hard paints less (its reaction, aim and territory values
+are in `tuning.json` `bots`), and whether other tool pairs agree, is evidence
+for the attended `ROAD#10` comparison; `TOOL#3` adds bands and the five-tool
+matrix at Hard.
 
 Not decided here: whether the difficulties are spaced well, whether any bot is
 fit to ship, and any tuning change. Those stay `ROAD#10` and `POL#27` attended
-decisions. A side-swapped ladder at five chosen seeds is descriptive, not a
-strength ranking with confidence.
-
+decisions.
 ## Turbulence bands and Hard five-tool rerun (`TOOL#3`, 2026-10-29)
 
-**Open, not started; after `TOOL#2`.** Region bands exist only for `crossfeed`,
+**Open, not started; `TOOL#2` is done.** Region bands exist only for `crossfeed`,
 `press_tower` and `turbulence_blockout`
 (`scripts/acceptance/balance_regions/metrics.cpp:209-238`); every other stage
 falls back to one `whole_arena` band. The first five-tool report covers the two

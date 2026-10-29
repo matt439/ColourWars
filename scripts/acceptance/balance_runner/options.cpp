@@ -78,6 +78,28 @@ namespace balance_runner
                 begin = end + 1;
             }
         }
+        BotDifficulty parse_difficulty(const std::string& value)
+        {
+            if (value == "easy") { return BotDifficulty::easy; }
+            if (value == "normal") { return BotDifficulty::normal; }
+            if (value == "hard") { return BotDifficulty::hard; }
+            throw std::invalid_argument("Unknown difficulty: " + value);
+        }
+
+        std::vector<BotDifficulty> parse_difficulties(const std::string& value)
+        {
+            std::vector<BotDifficulty> result;
+            std::size_t begin = 0;
+            for (;;)
+            {
+                const std::size_t end = value.find(',', begin);
+                result.push_back(parse_difficulty(value.substr(begin,
+                    end == std::string::npos ? end : end - begin)));
+                if (end == std::string::npos) { return result; }
+                begin = end + 1;
+            }
+        }
+
         std::string field(std::string_view value)
         {
             std::string result = "\"";
@@ -311,6 +333,25 @@ namespace balance_runner
         }
     }
 
+    std::string difficulty_name(BotDifficulty difficulty)
+    {
+        switch (difficulty)
+        {
+        case BotDifficulty::easy: return "easy";
+        case BotDifficulty::normal: return "normal";
+        case BotDifficulty::hard: return "hard";
+        default: throw std::invalid_argument("Runner needs a concrete bot difficulty");
+        }
+    }
+
+    std::string policy_label(const Options& options)
+    {
+        if (options.bot != "match") { return options.bot; }
+        std::string label = "match";
+        for (BotDifficulty difficulty : options.difficulties) { label += ':' + difficulty_name(difficulty); }
+        return label;
+    }
+
     void validate_options(const Options& options)
     {
         if (!std::filesystem::is_directory(options.content))
@@ -326,8 +367,12 @@ namespace balance_runner
             if (tool < WeaponType::sprayer || tool >= WeaponType::random_primary)
             { throw std::invalid_argument("Runner needs concrete primary tools only"); }
         }
-        if (!Bot::is_behaviour(options.bot))
+        if (!Bot::is_behaviour(options.bot) && options.bot != "match")
         { throw std::invalid_argument("Unknown bot behaviour: " + options.bot); }
+        if (options.bot == "match" ? options.difficulties.size() != static_cast<std::size_t>(options.players) :
+            !options.difficulties.empty())
+        { throw std::invalid_argument("Difficulties are one per player, and only for the match policy"); }
+        for (BotDifficulty difficulty : options.difficulties) { (void)difficulty_name(difficulty); }
         if (options.stages.empty() || options.stages.size() > 16 || options.seeds.empty() || options.seeds.size() > 64)
         { throw std::invalid_argument("A sweep needs 1..16 stages and 1..64 seeds"); }
         const std::set<std::string> stages(options.stages.begin(), options.stages.end());
@@ -350,7 +395,8 @@ namespace balance_runner
         {
             const std::string option = ascii(arguments[at]);
             if (option != "--stage" && option != "--seed" && option != "--players" &&
-                option != "--duration" && option != "--tools" && option != "--bot" && option != "--csv" && option != "--paint-csv")
+                option != "--duration" && option != "--tools" && option != "--bot" && option != "--difficulty" &&
+                option != "--csv" && option != "--paint-csv")
             { throw std::invalid_argument("Unknown option: " + option); }
             if (at + 1 >= arguments.size()) { throw std::invalid_argument("Missing value for " + option); }
             if (option != "--stage" && option != "--seed" && !seen.insert(option).second)
@@ -383,9 +429,12 @@ namespace balance_runner
             else if (option == "--duration") { options.duration = seconds(value); }
             else if (option == "--tools") { options.tools = parse_tools(value); }
             else if (option == "--bot") { options.bot = value; }
+            else if (option == "--difficulty") { options.difficulties = parse_difficulties(value); }
         }
         if (options.tools.empty())
         { options.tools.assign(static_cast<std::size_t>(options.players), WeaponType::sprayer); }
+        if (options.bot == "match" && !seen.contains("--difficulty"))
+        { options.difficulties.assign(static_cast<std::size_t>(options.players), BotDifficulty::normal); }
         validate_options(options);
         if (options.csv.empty() || options.csv.filename().empty())
         { throw std::invalid_argument("CLI runs require --csv with a new output file"); }
