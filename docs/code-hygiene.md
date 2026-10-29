@@ -147,34 +147,62 @@ keeps line counts at all.
 
 ### Compile gate for opt-in probes (`CI#2`)
 
-**Open, not started.** CI compiles only what it runs. The fourteen opt-in
-acceptance cases (`bot_trials` through `turbulence_slab_tools` in
-`$availableCases`, [run-acceptance.ps1](../scripts/run-acceptance.ps1) line 22)
-are outside the default list (line 33), and the CI step passes no `-Cases`
-([ci.yml](../.github/workflows/ci.yml) line 135); the workflow has no schedule
-(lines 6-10). `check-painter.ps1` and `check-frame-pacing.ps1` are not in CI
-at all. The painter has no `-CompileOnly` switch, while its compile already
-splits on `COLOURWARS_PAINTER_SCRIPTED_PADS`
-([check-painter.ps1](../scripts/check-painter.ps1) lines 392-407); frame
-pacing already has one (`check-frame-pacing.ps1` lines 6 and 194). Probes kept
-off CI drift: the 2026-10-28 painter run found stale fixtures nobody had
-noticed (the MattPC paragraph under
-[Player profiles](feature-roadmap.md#player-profiles-road21)). Those were runtime
-failures; this gate catches only the compile-breaking kind.
+**Done 2026-10-29.** CI used to compile only what it ran: the fourteen opt-in
+acceptance cases (`bot_trials` through `turbulence_slab_tools`, the entries of
+`$availableCases` in [run-acceptance.ps1](../scripts/run-acceptance.ps1) that
+are neither in the default list nor `balance_runner`), the painter and the
+frame-pacing harness were never built there, and probes kept off CI drift (the
+2026-10-28 painter run found stale fixtures nobody had noticed, the MattPC
+paragraph under [Player profiles](feature-roadmap.md#player-profiles-road21)).
+Those were runtime failures; this gate catches only the compile-breaking kind.
 
-Scope: a CI step, in both presets, after the existing build, that runs
-`run-acceptance.ps1 -SkipBuild -CompileOnly -Cases` over the fourteen opt-in
-cases, a new `check-painter.ps1 -CompileOnly` in both reader variants (normal
-and scripted pads), and `check-frame-pacing.ps1 -CompileOnly`. No probe
-executes and no GPU or window is used. `balance_runner` stays Debug-only.
+The `Compile gate for opt-in probes` step in
+[ci.yml](../.github/workflows/ci.yml) runs in both preset jobs straight after
+Build, and uploads `out/validation/compile-gate/` JSON and logs as
+`compile-gate-<preset>`, `if: always()`. It runs:
 
-First step: add `-CompileOnly` to `check-painter.ps1`, stopping after the
-compiler returns, and qualify it in the existing painter selection checker.
+- `run-acceptance.ps1 -SkipBuild -CompileOnly -Parallel 4 -Cases <the
+  fourteen>`, with its own `-OutputDirectory` so its `acceptance-summary.json`
+  never stands in for the real acceptance run's (`CI#4`). The case list is
+  written out in the step; a new opt-in case must be added there too, as its
+  comment says.
+- `check-painter.ps1 -SkipBuild -CompileOnly`, new here. It compiles
+  `painter_visual.cpp` twice, the normal and then the scripted
+  (`COLOURWARS_PAINTER_SCRIPTED_PADS`) gamepad reader, to
+  `painter_visual-normal-pads.exe` and `painter_visual-scripted-pads.exe`, then
+  returns through the runner's `finally`, writing `result.json` with scope
+  `compile-only`, outcome `compiled` and one `compiled_variants` entry per
+  reader. It launches nothing, so it makes no capture or GPU claim.
+  `CompileOnly` ends in `Only` but is not a focused matrix: the one-leaf guard
+  skips it, it refuses a focused selector before any output is created, and a
+  normal run compiles its one reader under its old file names.
+- `check-frame-pacing.ps1 -SkipBuild -CompileOnly` in the Debug job only. The
+  harness accepts only `x64-debug` (its `ValidateSet`, `/MDd` and Debug
+  libraries), like `balance_runner`, so the Release job compiles sixteen
+  targets and the Debug job seventeen (fourteen cases, two painter readers,
+  frame pacing).
 
-Acceptance: locally in both presets, the new step compiles all sixteen
-targets and fails when one opt-in source is broken in a scratch copy; the
-selection checkers pass in PowerShell 5.1 and pwsh. Hosted CI stays
-unconfirmed until the author authorizes a push.
+[check-painter-selection.ps1](../scripts/check-painter-selection.ps1) keeps
+`CompileOnly` out of its focused-switch inventory and qualifies it: both
+presets route to the two readers (normal first) with no selector or native
+flag, a normal-reader and a scripted-reader matrix each keep their one
+compile, an explicit `-CompileOnly:$false` leaves routing alone, and
+`CompileOnly` with a selector is refused without output (two selectors still
+give the focus conflict first).
+
+Verified on MattPC in a vcvars64 shell under pwsh 7, the step's commands
+in both presets after an up-to-date build: all fourteen cases `compiled`, both
+painter readers compiled, frame pacing `compiled` (Debug), with no probe
+started. Then, with `bot_trials.cpp` given a `static_assert(false)`,
+`painter_visual.cpp` an `#error` only under the scripted-pad define and
+`frame_pacing.cpp` a `static_assert(false)`, each command exited 1 in both
+presets with the compiler's error; the painter compiled its normal reader and
+failed on the scripted one, showing both are built. The faults were made in
+place in tracked files and restored from scratch copies, with their SHA-256
+checked afterwards, because the runners only accept the checkout their
+configured build came from. `check-painter-selection` and
+`check-acceptance-selection` pass in Windows PowerShell 5.1 and pwsh 7, and
+`scripts/ci` unit tests pass. A hosted run waits for an authorised push.
 
 Not decided here: running any opt-in case in CI, a scheduled workflow, or a
 GPU runner.

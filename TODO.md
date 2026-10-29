@@ -263,7 +263,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 |---|---|---|---|---|
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 | `TOOL#3` | OPEN | MED | M | Give the four Turbulence trials the blockout's region bands, then rerun the 25-pair x 5-seed five-tool matrix at Hard on Crossfeed, Press Tower and the Turbulence family, and file per-band held paint as descriptive evidence for `POL#21`/`POL#27`. [Turbulence bands and rerun](docs/gameplay-tuning.md#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29) |
-| `CI#2` | OPEN | MED | M | Add a CI compile gate in both presets: `run-acceptance -SkipBuild -CompileOnly` over the 14 opt-in cases, a new `check-painter -CompileOnly` (both pad readers) and `check-frame-pacing -CompileOnly`; no probe or GPU. Hosted run waits for an authorized push. [Owner](docs/code-hygiene.md#compile-gate-for-opt-in-probes-ci2) |
 | `CI#3` | OPEN | LOW | M | Time `check-stage-registration` and `check-failure-reporting` with `-SkipBuild` in both presets (duration, focus, dialogs), then add CI steps with evidence upload or record each exclusion in its owner doc. [Owner](docs/code-hygiene.md#registration-and-failure-reporting-checks-in-ci-ci3) |
 
 ## Design process

@@ -133,7 +133,8 @@ removes cases from the chosen/default list. `scripts/check-acceptance-selection.
 checks these rules without starting CMake, a compiler or the native helper.
 
 `scripts/check-painter-selection.ps1` checks every focused painter selector,
-false/conflicting switches and trial-path preflight in PowerShell 5.1 and pwsh.
+false/conflicting switches, `-CompileOnly` routing and trial-path preflight in
+PowerShell 5.1 and pwsh.
 It uses private scratch files and starts no compiler, native probe or GPU.
 
 Explicit `OutputDirectory` paths on the painter/acceptance runners and their
@@ -177,7 +178,10 @@ Deleting a packaged Markdown file still runs full CI, as do code, scripts, schem
 runtime assets and submodule changes. Manual runs always run full CI. Change
 detection and its regression checks live in `scripts/ci/`.
 
-Full CI builds both presets, runs consumer acceptance and checks startup.
+Full CI builds both presets, compiles without running the opt-in probes
+(the fourteen opt-in acceptance cases, `check-painter.ps1 -CompileOnly` with
+both pad readers and, in Debug, `check-frame-pacing.ps1 -CompileOnly`), runs
+consumer acceptance and checks startup.
 Acceptance runs four cases at a
 time (`-Parallel 4`); on pull requests the Debug job leaves out `crossfeed`,
 `press_tower`, `menu_text` and `debug_console` (`-ExcludeCases`), which take

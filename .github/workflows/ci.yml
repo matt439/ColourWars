@@ -97,6 +97,31 @@ jobs:
           call "%VCVARS%"
           cmake --build --preset ${{ matrix.preset }}
 
+      # CI#2: compile, but never run, the probes CI does not otherwise build:
+      # the fourteen opt-in acceptance cases (keep this list equal to the
+      # opt-ins in run-acceptance.ps1's $availableCases, minus the Debug-only
+      # balance_runner), the painter with both pad readers and, Debug-only
+      # like its harness, frame pacing. No probe, window or GPU is used.
+      - name: Compile gate for opt-in probes
+        run: |
+          call "%VCVARS%"
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -Parallel 4 -OutputDirectory out/validation/compile-gate/acceptance -Cases bot_trials,bot_combat_trials,bot_team_trials,bot_ascents,bot_arena_routes,bot_hill_routes,bot_turbulence_routes,bot_scan_cost,bot_mover_routes,turbulence_movers,turbulence_slopes,turbulence_slab_routes,turbulence_slab_stage,turbulence_slab_tools
+          if errorlevel 1 exit /b 1
+          pwsh -NoProfile -File scripts/check-painter.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/painter
+          if errorlevel 1 exit /b 1
+          if "${{ matrix.preset }}"=="x64-debug" pwsh -NoProfile -File scripts/check-frame-pacing.ps1 -Preset x64-debug -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/frame-pacing
+
+      - name: Upload compile gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compile-gate-${{ matrix.preset }}
+          path: |
+            out/validation/compile-gate/**/*.json
+            out/validation/compile-gate/**/*.log
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Acceptance tooling preflight, ownership and deadlines
         if: matrix.preset == 'x64-debug'
         run: |
