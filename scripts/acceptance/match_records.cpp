@@ -4,12 +4,15 @@
 #include "game/objects/level_end_info.h"
 #include "game/states/results_menu.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <io.h>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -60,6 +63,7 @@ namespace
 			std::error_code ignored;
 			std::filesystem::remove(this->save_path().wstring() + L".tmp", ignored);
 			std::filesystem::remove(this->save_path(), ignored);
+			for (int copy = 1; copy <= 9; ++copy) { std::filesystem::remove(this->side_copy(copy), ignored); }
 			std::filesystem::remove(this->root_ / L"ColourWars", ignored);
 			std::filesystem::remove(this->root_, ignored);
 		}
@@ -67,6 +71,12 @@ namespace
 		std::filesystem::path save_path() const
 		{
 			return this->root_ / L"ColourWars" / L"save_data.json";
+		}
+
+		// Where Save keeps its nth copy of an unreadable save.
+		std::filesystem::path side_copy(int copy) const
+		{
+			return this->root_ / L"ColourWars" / (L"save_data.unreadable-" + std::to_wstring(copy) + L".json");
 		}
 
 		void write(const std::string& json) const
@@ -359,6 +369,78 @@ namespace
 			percentage_tenths(*quarters->best_coverage_percentage) == 424,
 			"Recorded practice results did not reload");
 	}
+
+	std::string read_bytes(const std::filesystem::path& path)
+	{
+		std::ifstream stream(path, std::ios::binary);
+		require(stream.good(), "Could not read a save side copy");
+		return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
+	}
+
+	// What `body` writes to stderr (the C stream), with \r\n read back as \n.
+	template <typename Body>
+	std::string captured_stderr(const IsolatedSaveDirectory& directory, Body body)
+	{
+		const std::filesystem::path path = directory.save_path().parent_path() / L"stderr.txt";
+		std::fflush(stderr);
+		const int saved = _dup(_fileno(stderr));
+		require(saved != -1, "Could not duplicate stderr");
+		FILE* file = nullptr;
+		if (_wfopen_s(&file, path.c_str(), L"wb") != 0 || file == nullptr)
+		{
+			_close(saved);
+			throw std::runtime_error("Could not open the stderr capture file");
+		}
+		_dup2(_fileno(file), _fileno(stderr));
+		body();
+		std::fflush(stderr);
+		_dup2(saved, _fileno(stderr));
+		_close(saved);
+		std::fclose(file);
+		std::string text = read_bytes(path);
+		std::error_code ignored;
+		std::filesystem::remove(path, ignored);
+		std::erase(text, '\r');
+		return text;
+	}
+
+	// A save that fails as a whole keeps its defaults, as before, but is first
+	// copied aside under a name never reused, so the next write cannot lose it.
+	void check_unreadable_save(const IsolatedSaveDirectory& directory)
+	{
+		const std::string corrupt[] = {
+			"{\"save_version\":5," + flat_preferences.substr(0, flat_preferences.size() / 2),
+			"not a save {\"save_version\":5}" };
+		std::unique_ptr<Save> last;
+		for (int copy = 1; copy <= 2; ++copy)
+		{
+			const std::string& bytes = corrupt[copy - 1];
+			directory.write(bytes);
+			auto save = std::make_unique<Save>();
+			const std::string errors = captured_stderr(directory, [&] { save->load_save_file(); });
+			require(save->resolution() == SaveData{}.resolution &&
+				save->play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity &&
+				save->records().stages().empty(), "An unreadable save did not leave the defaults");
+			require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
+				errors.find("save_data.json") != std::string::npos &&
+				errors.find("save_data.unreadable-" + std::to_string(copy) + ".json") != std::string::npos,
+				"An unreadable save did not print one stderr line naming both paths");
+			require(std::filesystem::exists(directory.side_copy(copy)) && read_bytes(directory.side_copy(copy)) == bytes,
+				"An unreadable save was not copied aside byte for byte");
+			require(directory.contents() == bytes, "Loading an unreadable save changed it");
+			// The earlier copy survives the second corrupt load untouched.
+			require(read_bytes(directory.side_copy(1)) == corrupt[0], "A later corrupt load overwrote an earlier copy");
+			require(!std::filesystem::exists(directory.side_copy(copy + 1)), "An unreadable save was copied twice");
+			last = std::move(save);
+		}
+		require(last->save_to_file(), "A save after an unreadable load did not write");
+		Save restored;
+		const std::string errors = captured_stderr(directory, [&] { restored.load_save_file(); });
+		require(errors.empty() && directory.contents().find("\"save_version\":5") != std::string::npos,
+			"A save after an unreadable load did not write the real path");
+		require(read_bytes(directory.side_copy(1)) == corrupt[0] && read_bytes(directory.side_copy(2)) == corrupt[1] &&
+			!std::filesystem::exists(directory.side_copy(3)), "Writing the save disturbed its side copies");
+	}
 }
 
 int main()
@@ -372,9 +454,10 @@ int main()
 		check_versions(directory);
 		check_section_isolation(directory);
 		check_round_trip(directory);
+		check_unreadable_save(directory);
 		std::cout << "PASS match records: display-precision bests, side/draw/practice tallies, "
 			"results line, version 0/1/newer saves, per-section and per-entry recovery, "
-			"bounded values, retired-stage retention and exact round trip\n";
+			"bounded values, retired-stage retention, exact round trip and unreadable saves kept aside\n";
 		return 0;
 	}
 	catch (const std::exception& error)

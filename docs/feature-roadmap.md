@@ -3050,13 +3050,15 @@ save that holds it is built from sections and carries a version key.
 on its own, so a malformed section falls back to its defaults and leaves the
 others intact. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
-`"save_version": 3` is written first (version 1 introduced records, version 2
-remembered setup, and version 3 independent input bindings). A missing key is
-version 0, the same flat layout.
+`"save_version": 5` is written first (version 1 introduced records, version 2
+remembered setup, version 3 independent input bindings, version 4
+`"profiles"` and version 5 `"last_match.stage_rule"`; [save.h](../game/save.h)
+keeps the list). A missing key is version 0, the same flat layout.
 A higher version still loads every key this build knows and prints one
 stderr line; the next write drops what it does not know. That is accepted for a
 local save. New sections use nested keys: `"records"`, the last-match
-setup's `"last_match"` (`GAP#6.1`), and `"input_bindings"` (`GAP#4.2`).
+setup's `"last_match"` (`GAP#6.1`), `"input_bindings"` (`GAP#4.2`) and
+the player profiles' `"profiles"` (`ROAD#21`).
 
 **Records** (`game/match_records.h`) are an array of `{ "stage": ... }`
 objects, keyed by the manifest name, because the engine's JSON reader has no

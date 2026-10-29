@@ -279,7 +279,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 |---|---|---|---|---|
 | `HYG#24` | OPEN | MED | M | Trial-build against engine master in a scratch worktree (pin stays) and record each break class with error counts: mattmath namespace and MattMath.lib script paths, constant renames, removed members, the RectangleI include, removed types, /utf-8. [Next bump](docs/review/engine-reports.md#trial-build-against-engine-master-hyg24) |
 | `HYG#25` | OPEN | MED | L | After `HYG#24`: copy the seven types `730dd99` deletes (MovingObject, SoundBankObject, AnimationObject, CameraTools, RotationOrigin, TextDropShadow, UiTextDropShadow) into game/, shape unchanged; record the rungs that move. Never flatten. [Next bump](docs/review/engine-reports.md#carry-the-seven-removed-engine-types-into-the-client-hyg25) |
-| `HYG#22` | OPEN | MED | S | An existing save that fails to parse is silently replaced by defaults and overwritten at the next match start; copy it aside (never overwritten) with one stderr line, and correct the roadmap's save-layout record (version 5, `profiles` nested). [Owner](docs/code-hygiene.md#unreadable-save-preservation-hyg22) |
 | `HYG#26` | OPEN | LOW | S | Rename-only commit: `Level` parameters named `view` that index roster participants become `participant`; `view` stays only where a human pane is indexed. No behaviour change. [Owner](docs/code-hygiene.md#participant-parameter-names-in-level-hyg26) |
 
 ## The OOP showcase

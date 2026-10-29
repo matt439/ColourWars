@@ -17,7 +17,27 @@ attended-play judgment it touches stays a `DECISION` row.
 
 ### Unreadable save preservation (`HYG#22`)
 
-**Open, not started.** A save that exists but will not parse is silently
+**Done 2026-10-29.** `Save::load_save_data` now hands a save that fails as a
+whole to `keep_unreadable_save` ([save.cpp](../game/save.cpp)) before keeping
+the defaults. It copies the file beside itself as
+`save_data.unreadable-<n>.json`, taking the first free `n` (up to 999), through
+`std::filesystem::copy_file` with no overwrite, so an earlier copy is never
+replaced. It prints one stderr line naming the save, the reader's error and the
+copy; a failed copy prints its own line instead and changes nothing else. The
+missing-file and legacy paths are unchanged. `match_records`'
+`check_unreadable_save` loads a truncated and an invalid save in turn. It
+checks that each leaves the defaults and the file untouched, prints exactly one
+line naming both paths, and leaves a byte-identical copy; that the second does
+not touch the first copy; and that a later `save_to_file` writes the real path
+as version 5 and leaves both copies. The check failed against the old `Save`
+before the change. The roadmap's save-layout record now says version 5 and
+lists versions 4 and 5 and the nested `profiles` section. Both presets pass the
+default acceptance suite. Still not decided: an in-game notice for a reset save,
+and whether copies are ever pruned.
+
+The record as filed:
+
+A save that exists but will not parse is silently
 replaced. `Save::load_save_data` catches the whole-file failure and keeps
 `SaveData()` with no message ([save.cpp](../game/save.cpp) lines 433-441), and
 the next match start writes that default state over the file:
