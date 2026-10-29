@@ -181,8 +181,10 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | answered on untagged master in `42bc478` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the guards go at the first minor tag carrying it |
 | 25 | No public controller vibration output | [Isolated XInput adapter](../../game/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | answered, narrowed, on untagged master in `cadc962` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the native transport goes at the first minor tag carrying it |
 | 26 | `Registry` cannot forget a name | [`UserStageFolder::rescan`](../../game/stage_loading.cpp) leaves a vanished user stage's definition registered | drafted locally 2026-10-28 against pin `1e60fb2`; rechecked 2026-10-29 at master `b96bad6`, still unanswered; unfiled, awaiting separate authorization |
+| 27-32 | Six owed by the 2026-10-30 architecture review | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | found 2026-10-30; not yet drafted or rechecked against master |
 
-Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below and the
+Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below, the six
+[owed by the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -190,6 +192,23 @@ has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
 
 ---
+
+## Owed from the architecture review (2026-10-30)
+
+The [2026-10-30 architecture review](2026-10-30-architecture-review.md#engine-reports-owed)
+found six places where the engine's API forced the answer this repository has.
+Each is numbered here so TODO can point at it; none is drafted yet. Drafting
+means checking engine master first (the rule above), writing the exhibit and
+the ask in the shape of reports 23-26, and then waiting for authorization to file.
+
+| # | Report | Exhibit at `96c65373` |
+|---|---|---|
+| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp` and `painter_visual.cpp`; this replaces the "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which said no exhibit existed |
+| 28 | Public types removed without a deprecation release, after report 7's procedure | `game/carried/` and the `HYG#25` removed-member list |
+| 29 | `Scene` gives no typed access to short-lived objects and no retirement notice | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614` |
+| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:113`, `scripts/check-startup.ps1:225` and `:248` |
+| 31 | `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent | the optional `has()` reads in `game/tuning.cpp` (`:461`, `:477`, `:484` and others) |
+| 32 | Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false | `game/text_wrap.h` and its caller `WrappedTextDropShadow` |
 
 ## 23. Resizing a hidden window activates it — **draft with activation-guard exhibit**
 

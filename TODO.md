@@ -46,9 +46,11 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Independent implementation (2026-10-30).** The 2026-10-28 shortlists and the
-2026-10-29 OPEN rows are complete, and no `OPEN` row remains: every row now
-waits on the author, hardware, another row or a deferral condition. The next-bump
+**Independent implementation (2026-10-30).** The author asked for an architecture
+review on 2026-10-30 and for every finding to be worked through: the
+[Architecture review](#architecture-review) rows (`HYG#28`-`HYG#51`, `CI#6`) and the
+owed reports `ENG#27`-`ENG#32` are `OPEN`, in the order listed there. Before them,
+the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
 owner with a concrete local next step, as the rules below require.
 This does not change the arena/tuning order above. `ROAD#28`'s contract draft
@@ -104,6 +106,39 @@ comparison and physical-pad check; values remain provisional.
   authorization. `ENG#23` and `ENG#25` are answered on engine master and need no filing.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
+
+## Architecture review
+
+**Owner:** [docs/code-hygiene.md, Architecture review](docs/code-hygiene.md#architecture-review-2026-10-30); findings in the frozen
+[2026-10-30 review](docs/review/2026-10-30-architecture-review.md). Work the rows in the listed order.
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `HYG#28` | OPEN | MED | M | Rename `MenuLevelSettings`/`MenuPlayerSettings` to `MatchSetup`/`SeatSetup` and move them out of `states/`, so objects, AI and the round tape stop including the menu layer. [Scope](docs/code-hygiene.md#match-setup-out-of-the-menu-layer-hyg28). |
+| `HYG#29` | OPEN | MED | L | Split a `colourwars_game` library and adapter libraries from the executable; acceptance links them instead of globbing CMake's object folder. [Scope](docs/code-hygiene.md#a-game-library-for-the-executable-and-the-probes-hyg29). |
+| `HYG#30` | BLOCKED | LOW | M | Declare each acceptance case once for the runner and CI, and add a shared probe header. After `HYG#29`. [Scope](docs/code-hygiene.md#one-acceptance-case-list-and-a-shared-probe-header-hyg30). |
+| `HYG#31` | OPEN | MED | L | Move the architecture overview out of AGENTS.md into `docs/architecture.md`, correct its `GameData`, state-stack and chain claims, and index `docs/` and `scripts/`. [Scope](docs/code-hygiene.md#a-human-architecture-overview-and-accurate-docs-hyg31). |
+| `HYG#32` | OPEN | MED | S | Drop D3D11 and DirectXTK from `pch.h`, the link and 32 dead `using namespace DirectX` lines. [Scope](docs/code-hygiene.md#the-precompiled-header-stops-claiming-a-backend-hyg32). |
+| `HYG#33` | OPEN | MED | M | Make the shipping match step a plain `GameLevel` member instead of `debug_update_level`, then split `DebugMatchTarget` by client. [Scope](docs/code-hygiene.md#the-shipping-match-step-out-of-debug-code-hyg33). |
+| `HYG#34` | OPEN | MED | M | One bot ballistics and RNG module for the shipping and Debug drivers; `SIMULATION_HZ` instead of `60`. [Scope](docs/code-hygiene.md#one-bot-ballistics-and-rng-module-hyg34). |
+| `HYG#35` | OPEN | MED | L | Make `RoundTape` the one capture model and the Debug replay file its serialisation. [Scope](docs/code-hygiene.md#one-record-and-replay-model-hyg35). |
+| `HYG#36` | OPEN | LOW | S | One name table for `WeaponType` and `ProjectileType` instead of eight hand-written mappings. [Scope](docs/code-hygiene.md#one-owner-for-weapon-and-projectile-names-hyg36). |
+| `HYG#37` | OPEN | MED | L | Compute menu page geometry in one module that the reader, the validator and the pages share. [Scope](docs/code-hygiene.md#menu-page-geometry-in-one-place-hyg37). |
+| `HYG#38` | OPEN | LOW | S | Trim the include block copied into 13 presentation sources and keep menu records out of gameplay includes. [Scope](docs/code-hygiene.md#presentation-includes-and-the-content-layer-hyg38). |
+| `HYG#39` | OPEN | MED | M | Pass an explicit match random stream into the level build instead of seeding the global `rand()`. [Scope](docs/code-hygiene.md#an-explicit-match-random-stream-hyg39). |
+| `HYG#40` | OPEN | MED | XL | Compose `Level` from owned parts: grouped constructor inputs, extracted collaborators and a world-query interface for the bots. [Scope](docs/code-hygiene.md#level-composed-of-owned-parts-hyg40). |
+| `HYG#41` | OPEN | MED | M | Put `GameLevel`'s focus, pause and audio rules in one owned suspension object; pair its scopes with `init()`. [Scope](docs/code-hygiene.md#gamelevels-suspension-rules-in-one-object-hyg41). |
+| `HYG#42` | OPEN | MED | L | Give `Structure` the queries callers cast for, turn base tag tests into virtuals, and dispatch collisions without tag casts. [Scope](docs/code-hygiene.md#structure-queries-instead-of-casts-hyg42). |
+| `HYG#43` | OPEN | MED | L | Name menu page bases by role: a settings-panel base without `finish()`, a roster-setup base, no unused hooks. [Scope](docs/code-hygiene.md#menu-page-bases-named-by-role-hyg43). |
+| `HYG#44` | OPEN | LOW | M | A `MenuOwner` interface in place of `MenuContext`'s `std::function` slots, and main-menu navigation in one place. [Scope](docs/code-hygiene.md#menu-owner-and-navigation-hyg44). |
+| `HYG#45` | OPEN | MED | L | Build seat commands outside `Level`, split `PlayerInputData` into commands and shell signals, and derive input defaults from one source. [Scope](docs/code-hygiene.md#device-to-command-in-one-place-hyg45). |
+| `HYG#46` | OPEN | MED | L | One engine-free owner of the level format for the game loader and the editor. [Scope](docs/code-hygiene.md#one-owner-for-the-level-format-hyg46). |
+| `HYG#47` | OPEN | LOW | M | A `StageCatalog` owning the stage list and the level registry as their only writer. [Scope](docs/code-hygiene.md#one-stage-catalog-hyg47). |
+| `HYG#48` | OPEN | LOW | M | Move profile wearing out of `Save` into a session object, and report a malformed section before resetting it. [Scope](docs/code-hygiene.md#save-and-the-active-profile-hyg48). |
+| `HYG#49` | OPEN | LOW | M | Make state-changing contact and sound methods non-const so `const` means draw-safe. [Scope](docs/code-hygiene.md#const-means-draw-safe-hyg49). |
+| `HYG#50` | OPEN | LOW | L | One audio ownership idiom and one match-level owner for pause, resume and teardown. [Scope](docs/code-hygiene.md#one-audio-idiom-hyg50). |
+| `HYG#51` | OPEN | LOW | L | Last: give `game/` role folders, `game/debug` subsystem folders and the engine-free contracts an include check. [Scope](docs/code-hygiene.md#directories-by-role-hyg51). |
+| `CI#6` | OPEN | LOW | S | Move the Release ZIP inspection into a script CI calls, and set up MSVC once per job. [Scope](docs/code-hygiene.md#release-package-rules-runnable-locally-ci6). |
 
 ## Art direction, characters and the UI
 
@@ -239,6 +274,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#25` | BLOCKED | LOW | S | Answered, narrowed, on untagged master by `cadc962` (`Gamepads::vibrate`; not in v0.2.0); no filing needed. Waits on the next Labrador minor tag, then replace the native XInput transport and close the report. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit) |
 | `ENG#26` | DECISION | LOW | S | Rechecked 2026-10-29 at master `b96bad6`: `Registry` still cannot remove a name (`3a14f11` changed comments only). The ask narrows to forgetting the name, since `add(name, nullptr)` already empties a slot. Author authorization is needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit) |
 | `ENG#23` | BLOCKED | LOW | S | Answered on untagged engine master by `42bc478` (not in v0.2.0); filing no longer needed. Waits on the next Labrador minor tag, then delete `SettingsProbeActivationGuard` and its five uses and close the report. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit) |
+| `ENG#27`-`ENG#32` | OPEN | LOW | M | Six reports owed by the architecture review: headless pad backend, removal without deprecation, typed `Scene` access, typed startup failure, unread JSON keys, word wrap. Recheck master, then draft each. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
@@ -277,7 +313,6 @@ A new row for one of these gets its section back.
 | area | owner | a row returns with |
 |---|---|---|
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
-| Code hygiene (`HYG#1`–`HYG#27`) | [code-hygiene.md](docs/code-hygiene.md) and, for the next-bump preparation, the [engine-report ledger](docs/review/engine-reports.md) | a new source split, comment audit or maintenance slice the author approves |
 | Closed engine reports (1–22, 24) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |

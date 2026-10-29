@@ -7,6 +7,210 @@ arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
 `CI#5`; `CI#1`, the foreground debug-console check, stays with
 [the debug console](debug-console.md#foreground-checks-ci1).
 
+## Architecture review (2026-10-30)
+
+On 2026-10-30 the author asked for an architecture review, since the project is
+read as an example, and then asked for every finding to go into TODO and be
+worked through. The findings are recorded, frozen, in
+[the review](review/2026-10-30-architecture-review.md); this section owns their
+status. Engine-side findings are ledger drafts `ENG#27` to `ENG#32` in
+[engine-reports.md](review/engine-reports.md).
+
+These rows are allowed to do what the [working rules](#scope-and-working-rules)
+below forbid for a source split: rename a type, add an abstraction, move files
+between directories and change a class's bases. They still preserve behaviour,
+the game's inheritance-first style (no T11 findings), save and content formats,
+and evaluation and RNG order unless the row says otherwise. Each row builds Debug
+and Release and runs the acceptance cases its files touch; a row that moves files
+across the tree runs the full default acceptance list. Work them in the order
+listed. Refresh line numbers before starting; they are from `96c65373`.
+
+### Match setup out of the menu layer (`HYG#28`)
+
+Rename `MenuLevelSettings` to `MatchSetup` and `MenuPlayerSettings` to
+`SeatSetup`, and move them out of `game/states/` to `game/match_setup.h` and
+`game/seat_setup.h`. Keep `player_label(int, const MenuText&)` as a free
+function in `states/`. Move `MainMenuModeSelect::validate_durations` and
+`validate_stage_rules` so `content_validation.cpp` stops including
+`states/main_menu.h`. Done when `game/objects`, `game/ai`, `round_tape` and
+`content_validation.cpp` include no `states/` header and acceptance passes; the
+presentation files' copied `states/` includes are `HYG#38`.
+
+### A game library for the executable and the probes (`HYG#29`)
+
+Split `game/CMakeLists.txt` into a `colourwars_game` static library (every source
+except `main.cpp` and the platform adapters), adapter libraries for
+`rumble_xinput.cpp` and `display_awake.cpp`, and the thin `ColourWars`
+executable. Then point `run-acceptance.ps1` and the five `check-*.ps1` scripts at
+the library's output instead of globbing `CMakeFiles/ColourWars.dir`, so the
+filename filters go. Keep "no CTest by design" unless the rationale changes, and
+say in the docs why the game's own probes are not CTest tests.
+
+### One acceptance case list and a shared probe header (`HYG#30`)
+
+After `HYG#29`. Declare each case once (name, group, extra sources, arguments)
+and have the runner and CI read that list rather than pasted arrays. Correct the
+opt-in count. Add `scripts/acceptance/support/probe.h` with `require` and an
+exception-to-exit-code wrapper, and move probes onto it.
+
+### A human architecture overview and accurate docs (`HYG#31`)
+
+Move `AGENTS.md`'s Architecture section into `docs/architecture.md` with a
+directory map and the intended dependency direction, linked from the README and
+the OOP guide; leave AGENTS.md a pointer plus agent-only rules. Correct the
+`GameData` claim (states, pages and debug hold it; builders unpack it), the
+state-stack shapes (and `game_states.h:28`), the inheritance chains and the
+`game/carried` and engine-free contract layers. Document `Player`'s two
+`DrawObject` subobjects in the guide. Add `docs/README.md` and
+`scripts/README.md` indexes, and split the reference half of
+`docs/debug-console.md` from its work record.
+
+### The precompiled header stops claiming a backend (`HYG#32`)
+
+Drop the D3D11, DXGI, DirectXMath and DirectXTK includes from `game/pch.h`, the
+32 dead `using namespace DirectX` lines and the `Microsoft::DirectXTK` link,
+keeping WIC/WRL local to `debug_screenshot.cpp`. Fix any header that compiled
+only because the PCH carried its includes.
+
+### The shipping match step out of debug code (`HYG#33`)
+
+Make the per-frame step a plain private `GameLevel` member in a shipping source
+file, called directly from `GameLevel::update`; the director decides only how
+many steps and with which developer filter. Then split `DebugMatchTarget` by
+client (control, read-only view, edits) and correct the Release paragraph of
+`docs/debug-console.md`.
+
+### One bot ballistics and RNG module (`HYG#34`)
+
+Have the Debug bot driver call `match_bot_ballistics` instead of its copy, share
+one seeded RNG type and seed/seat mix in `game/ai/`, define `horizontal_reach`
+in `match_bot_ballistics.cpp`, and replace the hard-coded `60` with
+`SIMULATION_HZ`/`SECONDS_PER_STEP`. The Debug driver's engagement changes to the
+shipping cap; say so in the commit.
+
+### One record and replay model (`HYG#35`)
+
+Make `RoundTape` the in-memory capture and have the Debug `ReplayFile` serialise
+it plus its checkpoints, hashes and fingerprint, so `ReplayRecorder` and
+`ReplayPlayer` wrap the round-tape types. Existing `.replay` files may stop
+loading only if the format version says so.
+
+### One owner for weapon and projectile names (`HYG#36`)
+
+Give `WeaponType` (and `ProjectileType`) one constexpr name table with
+`to_string`/parse beside the enum, and make tuning, validation, presentation,
+`last_match_setup` and the Debug match plan use it.
+
+### Menu page geometry in one place (`HYG#37`)
+
+Make page geometry a pure function of the presentation records in one module
+that owns the design size, and have the reader, the validator and the pages call
+it; move `DESIGN_RESOLUTION` out of `states/menu_page.h`. Split presentation
+validation by page rather than by size where the shared geometry allows.
+
+### Presentation includes and the content layer (`HYG#38`)
+
+Trim the 24-line include block copied into 13 `presentation*.cpp` files to what
+each uses, so `build_info.h` and the `states/` badge header appear only where
+referenced. Move the badge geometry the roster validator needs beside
+`PlayerIdentityPresentation`, and stop `presentation.h` dragging the menu
+records into gameplay objects.
+
+### An explicit match random stream (`HYG#39`)
+
+Replace the global `srand`/`rand` seeding of a round with a `MatchRandom` value
+passed into `LevelBuilder::build_level`, with independent sub-streams for
+palette, bot seeds and the monitor persona; `RoundTape` stores the seed it
+hands in. Seeded team pairs and colours may change; record the new `+seed`
+mapping where the screenshot loop documents it.
+
+### `Level` composed of owned parts (`HYG#40`)
+
+Group the 28-parameter constructor into a few parameter records built by
+`LevelBuilder`; extract owned collaborators (the intro/opening presenter,
+horizontal motion, practice, the HUD/draw layer, match audio) with their own
+state; give `game/ai` a narrow world-query interface that `Level` implements,
+instead of `bot_*` members. Update the guide's description of `Level`.
+
+### `GameLevel`'s suspension rules in one object (`HYG#41`)
+
+Replace the four focus/pause booleans and their branches with one owned
+suspension object that answers whether audio may play and whether to count in,
+ask the director once per callback for its gate, and make the layout restore
+and Debug attachment scopes created in `init()`.
+
+### Structure queries instead of casts (`HYG#42`)
+
+Give `Structure` (or a role interface) the support and moving-surface queries
+`Player`, `Projectile` and `Level` cast for; turn the bases' tag tests
+(`WeaponType::roller`, projectile kinds) into virtuals with defaults; replace the
+collision tag switch-and-cast with game-side double dispatch. Update the guide's
+extension recipes. The engine half is `ENG#29`.
+
+### Menu page bases named by role (`HYG#43`)
+
+Introduce a role-named settings-panel base (no `finish()`) for the five settings
+pages, with the shared panel scaffolding; keep `PauseMenuPage::finish` for the
+two pause pages. Split `MainMenuPage` into a thin base and a roster-setup base;
+delete hooks no page uses (`shows_brand`'s default, `animates_focus_backing`).
+
+### Menu owner and navigation (`HYG#44`)
+
+Replace `MenuContext`'s five `std::function` slots with a small `MenuOwner`
+interface that `GameMenu` and `GameLevel` implement, and route main-menu
+transitions through one place so the setup flow reads as one graph.
+
+### Device-to-command in one place (`HYG#45`)
+
+Move slot-to-seat mapping and mouse aim out of `Level` into a seat-command
+builder owned by `GameLevel`, so `Level::update` takes one command per
+participant and loses its `Mouse*`. Split `PlayerInputData` into the simulation
+command and per-slot shell signals, and derive the input defaults from one source.
+
+### One owner for the level format (`HYG#46`)
+
+Give the level format one engine-free owner for key names, the material and
+collision table and the contracts, used by both the game loader and the editor;
+move `level.schema.json` beside it. Consider reading a level once into a typed
+record, as tuning and presentation are.
+
+### One stage catalog (`HYG#47`)
+
+Introduce a game-owned `StageCatalog` that owns the ordered stage list and the
+level registry and is their only writer, and put it in `GameData` in place of
+the two pointers. `ENG#26` then reduces to reclaiming memory.
+
+### Save and the active profile (`HYG#48`)
+
+Move profile wearing and the effective overlay out of `Save` into a session
+object that borrows it, print a section's key and error before resetting a
+malformed section, and say in `save_section.h` how versions are meant to migrate.
+
+### `const` means draw-safe (`HYG#49`)
+
+Make the contact and sound methods that change state non-const, keep `mutable`
+only for synchronised or draw-safe caches, and state the rule once in the guide.
+
+### One audio idiom (`HYG#50`)
+
+Choose one way for objects to own sounds (the small audio components, or
+`SoundBankObject`) and have one match-level owner register looping voices, so
+pause, resume and teardown happen in one place rather than a virtual fan-out.
+
+### Directories by role (`HYG#51`)
+
+Last, because it moves files every other row touches. Give the `game/` root role
+folders (match types, configuration with a presentation subfolder, persistence,
+input, the engine-free shared contracts with an include check like the engine's
+`check_engine_includes`), give `game/debug` subsystem folders, and decide what
+`game/carried` becomes. Update `game/CMakeLists.txt`, the editor and the docs.
+
+### Release package rules runnable locally (`CI#6`)
+
+Move the Release ZIP inspection out of `ci.yml` into
+`scripts/check-release-package.ps1`, which CI calls, and set up the MSVC
+environment once per job.
+
 ## Open shortlist (2026-10-29)
 
 The author approved adding every proposal from the 2026-10-29 verified
