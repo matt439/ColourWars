@@ -29,7 +29,8 @@ public:
     Save* save() const;
     labrador::Registry<LevelLoadedInfo>* level_infos() const;
 
-    // Stages in manifest order, for stage selection.
+    // Manifest stages in manifest order, then accepted user stages in file-name
+    // order. User-stage rescans occur only while no match holds a definition.
     const StageList* stages() const;
 
     // Gameplay tuning loaded at startup and shared by live matches.

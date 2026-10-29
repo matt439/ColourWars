@@ -6,6 +6,8 @@
 #include "game/states/connection_audio.h"
 #include <functional>
 
+struct UserStageScan;
+
 // Shared menu services, input, and level settings. Borrows all three.
 // Owned by GameMenu or GameLevel, and outlives the pages above that state.
 class MenuContext
@@ -31,6 +33,10 @@ public:
 	// and only as the main-menu Stage Select opens; otherwise nothing.
 	void set_stage_rescan(std::function<void()> rescan);
 	void rescan_stages();
+	// The main-menu owner's retained result; reading it never scans. Match
+	// contexts leave this unset, so no diagnostics page can rescan a series.
+	void set_stage_scan(std::function<const UserStageScan*()> scan);
+	const UserStageScan* stage_scan() const;
 	// Keep the outgoing page visible and ignore further input until its owner
 	// finishes the fade. Callbacks capture the state context, never the page.
 	void finish_with_music(std::function<void()> finish);
@@ -45,5 +51,6 @@ private:
 	std::function<void(float)> music_update_;
 	std::function<void()> music_suspend_;
 	std::function<void()> stage_rescan_;
+	std::function<const UserStageScan*()> stage_scan_;
 	std::function<void()> music_exit_;
 };

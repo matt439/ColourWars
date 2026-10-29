@@ -8,7 +8,9 @@ param(
     [string[]] $ExcludeCases,
     [ValidateRange(1, 64)]
     [int] $Parallel = 1,
-    [switch] $CompileOnly
+    [switch] $CompileOnly,
+    [ValidateRange(1, 86400)]
+    [int] $RunTimeoutSeconds = 3600
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,13 +18,16 @@ Set-StrictMode -Version Latest
 
 $acceptanceCases = @('display_awake', 'rumble', 'rumble_adapter', 'action_bindings', 'input_bindings', 'keyboard_jump_capture', 'ammo', 'settings', 'player_profiles', 'match_records', 'remembered_setup', 'bot_roster', 'stick_settings', 'paint', 'camera_framing', 'view_shake', 'movement', 'movement_contact', 'combat_feedback', 'tool_motion', 'weapon_feedback', 'low_paint', 'aim_marker', 'player_identity', 'blocked_shot', 'idle_drip', 'quiet_character', 'stage_selection', 'team_palette', 'team_selection', 'menu_navigation',
         'movement_course', 'cq_blockout', 'crossfeed', 'press_tower', 'turbulence_blockout', 'resume_countdown', 'debug_console', 'story_audio', 'level_format', 'fatal_report', 'gameplay_tuning', 'menu_presentation', 'weapon_catalog', 'menu_text', 'menu_focus_motion', 'display_trial', 'tunnelling', 'text_wrap', 'terrain', 'lethal_provenance', 'skirmish_bot', 'paint_surfaces', 'balance_regions', 'paint_underfoot', 'moving_structure', 'fixed_slab', 'practice_workshop', 'results_awards', 'paint_ferry', 'team_gate')
-$acceptanceCases += @('bot_driver', 'bot_runtime', 'bot_recovery', 'bot_ballistics', 'bot_navigation', 'bot_territory', 'handicap', 'instant_replay', 'user_stages', 'series_stage_rule', 'teammate_markers')
+$acceptanceCases += @('bot_driver', 'bot_runtime', 'bot_recovery', 'bot_ballistics', 'bot_navigation', 'bot_territory', 'bot_gate_routes', 'handicap', 'instant_replay', 'user_stages', 'series_stage_rule', 'teammate_markers')
 $availableCases = @($acceptanceCases) + @('balance_runner', 'bot_trials', 'bot_combat_trials', 'bot_team_trials', 'bot_ascents', 'bot_arena_routes', 'bot_hill_routes', 'bot_turbulence_routes', 'bot_scan_cost', 'bot_mover_routes', 'turbulence_movers', 'turbulence_slopes', 'turbulence_slab_routes', 'turbulence_slab_stage', 'turbulence_slab_tools')
 $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
     if (-not $Cases) { throw 'Cases must contain at least one case name.' }
     @($Cases | ForEach-Object {
-        if ([string]::IsNullOrWhiteSpace($_)) { throw 'Cases must contain nonempty names.' }
-        $_.ToLowerInvariant()
+        # '-File' binds comma lists as one string; arrays remain supported.
+        foreach ($name in ($_ -split ',')) {
+            if ([string]::IsNullOrWhiteSpace($name)) { throw 'Cases must contain nonempty names.' }
+            $name.Trim().ToLowerInvariant()
+        }
     })
 } else {
     @($acceptanceCases) + @(if ($Preset -eq 'x64-debug') { 'balance_runner' })
@@ -77,10 +82,11 @@ function Quote-ResponsePath {
     return '"' + [System.IO.Path]::GetFullPath($Path) + '"'
 }
 
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 $repo = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
 $evidence = if ($OutputDirectory) {
-    [System.IO.Path]::GetFullPath((Join-Path $OutputDirectory $Preset))
+    Join-Path (Resolve-CheckFileSystemPath $OutputDirectory) $Preset
 } else {
     Join-Path $repo "out/acceptance/$Preset"
 }
@@ -100,6 +106,8 @@ if ($env:VSCMD_ARG_TGT_ARCH -and $env:VSCMD_ARG_TGT_ARCH -ne 'x64') {
 
 Push-Location -LiteralPath $repo
 $previousPath = $env:PATH
+$probeControl = $null
+$caseCancellation = [Threading.CancellationTokenSource]::new()
 try {
     if (-not $SkipBuild) {
         Write-Host "Configure and build $Preset; logs: $evidence"
@@ -193,6 +201,11 @@ try {
     # DLL imports still resolve from the same staged folder as the game.
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
+    if (-not $CompileOnly) {
+        . (Join-Path $PSScriptRoot 'acceptance-process.ps1')
+        Initialize-AcceptanceProcess
+        $probeControl = [ColourWars.Acceptance.OwnedRunControl]::new()
+    }
     $specs = @()
     foreach ($case in $selectedCases) {
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
@@ -244,6 +257,10 @@ try {
             Executable = $executable
             Arguments = $caseArguments
             Evidence = $evidence
+            WorkingDirectory = $repo
+            RunTimeoutSeconds = $RunTimeoutSeconds
+            ProbeControl = $probeControl
+            CancellationToken = $caseCancellation.Token
             # The new console tool emits UTF-8 paths. Native decoding is
             # process-wide, so it runs on its own after any parallel batch.
             Utf8 = $case -eq 'balance_runner'
@@ -261,19 +278,46 @@ try {
         $lines = @()
         $failure = $null
         $log = Join-Path $Spec.Evidence "$($Spec.Case)-build.log"
-        $output = & $Spec.Compiler "@$($Spec.ResponseFile)" 2>&1
-        $code = $LASTEXITCODE
+        $compileSkipped = $Spec.CancellationToken.IsCancellationRequested -or
+            ($null -ne $Spec.ProbeControl -and $Spec.ProbeControl.IsCancellationRequested)
+        if ($compileSkipped) {
+            $output = @('Acceptance cancelled before compilation; no probe launched.')
+            $code = 1
+        } else {
+            # Compiler execution remains uncontained: shared compiler-service
+            # ownership has not been established by the probe-runtime wrapper.
+            $output = & $Spec.Compiler "@$($Spec.ResponseFile)" 2>&1
+            $code = $LASTEXITCODE
+        }
         $output | Out-File -LiteralPath $log -Encoding utf8
         if ($code -ne 0) {
             $lines = $output
-            $failure = "$($Spec.Compiler) exited with $code. See $log"
+            $failure = if ($compileSkipped) { "Compilation cancelled before launch. See $log" }
+                else { "$($Spec.Compiler) exited with $code. See $log" }
         } elseif (-not $CompileOnly) {
             $log = Join-Path $Spec.Evidence "$($Spec.Case)-run.log"
-            $output = & $Spec.Executable @($Spec.Arguments) 2>&1
-            $code = $LASTEXITCODE
-            $output | Out-File -LiteralPath $log -Encoding utf8
-            $lines = $output
-            if ($code -ne 0) { $failure = "$($Spec.Executable) exited with $code. See $log" }
+            $command = $null
+            try {
+                $command = [ColourWars.Acceptance.OwnedCommand]::Start(
+                    $Spec.Executable, [string[]]$Spec.Arguments, $Spec.WorkingDirectory,
+                    $log, [Console]::OutputEncoding.CodePage, $Spec.RunTimeoutSeconds, $Spec.ProbeControl)
+                while (-not $command.Poll(100)) { }
+                $native = $command.Result
+                $lines = @(Get-Content -LiteralPath $log -Encoding utf8 -ErrorAction Stop)
+                if ($native.Outcome -ne 'exited' -or -not $native.CleanupCompleted) {
+                    $failure = "$($Spec.Executable): $($native.Outcome): $($native.Message). See $log"
+                } elseif ($null -eq $native.ExitCode) {
+                    $failure = "$($Spec.Executable) has no confirmed exit code. See $log"
+                } elseif ($native.ExitCode -ne 0) {
+                    $failure = "$($Spec.Executable) exited with $($native.ExitCode). See $log"
+                }
+            } catch [System.Management.Automation.PipelineStoppedException] {
+                throw
+            } catch {
+                $failure = "$($Spec.Executable): probe runner failed: $_. See $log"
+            } finally {
+                if ($null -ne $command) { $command.Dispose() }
+            }
         }
         [pscustomobject]@{
             Case = $Spec.Case
@@ -329,6 +373,19 @@ try {
                 }
             }
         } finally {
+            if ($pending.Count -gt 0) {
+                $caseCancellation.Cancel()
+                if ($null -ne $probeControl) { $probeControl.Cancel() }
+                # Do not Stop compiling pipelines: compiler descendants may be
+                # shared. Queued work observes cancellation before compiling;
+                # active compilation finishes before its runspace is disposed.
+                foreach ($item in $pending) {
+                    while (-not $item.Handle.IsCompleted) { [Threading.Thread]::Sleep(100) }
+                    try { [void]$item.Shell.EndInvoke($item.Handle) }
+                    catch { }
+                    finally { $item.Shell.Dispose() }
+                }
+            }
             $pool.Dispose()
         }
     } else {
@@ -354,6 +411,12 @@ try {
     Write-Host "PASS $operation ($Preset). Evidence: $evidence"
 }
 finally {
-    $env:PATH = $previousPath
-    Pop-Location
+    try {
+        $caseCancellation.Cancel()
+        if ($null -ne $probeControl) { $probeControl.Dispose() }
+    } finally {
+        $caseCancellation.Dispose()
+        $env:PATH = $previousPath
+        Pop-Location
+    }
 }

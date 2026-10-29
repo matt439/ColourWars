@@ -17,7 +17,8 @@ namespace menu_text_acceptance
         }
         const auto original = variants.load([](rapidjson::Document&) {});
         const float row_height = 20.0f + original.main_menu().art.focus_padding.y * 2.0f;
-        const float paper_right = (1920.0f + original.main_menu().home_box_size.x) / 2.0f;
+        const float paper_right = (1920.0f + original.main_menu().home_box_size.x) / 2.0f -
+            original.main_menu().art.shadow_offset;
         const float right_position = paper_right - 24.0f - original.main_menu().art.focus_padding.x;
         const auto exact_items = [](rapidjson::Document& d)
         {
@@ -87,7 +88,7 @@ namespace menu_text_acceptance
             d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
             d["menu_text"]["items"]["restore_defaults"].SetString("Glyph~");
         }, &world);
-        for (const int width : { 1472, 1473 })
+        for (const int width : { 1470, 1471 })
         {
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
@@ -102,7 +103,7 @@ namespace menu_text_acceptance
                 d["menu_style"]["fonts"]["item"].SetString(name.c_str(), d.GetAllocator());
                 d["menu_text"]["items"]["restore_defaults"].SetString("~");
             };
-            if (width == 1473) { variants.rejects("items.restore_defaults", edit, &world); continue; }
+            if (width == 1471) { variants.rejects("items.restore_defaults", edit, &world); continue; }
             const auto edge = variants.load(edit);
             edge.validate_resources(world.render, world.audio);
             std::wstring source = edge.menu_text().item(MenuItem::restore_defaults);
@@ -110,12 +111,12 @@ namespace menu_text_acceptance
                 main.options_position + mattmath::Vector2F(0.0f, main.options_spacing.y * 4.0f), &world.render, art.ink);
             source = L"Changed after construction";
             auto card = text.bounds(); card.inflate(art.focus_padding);
-            require(text.text() == L"~" && text.bounds().width == 1472.0f && text.bounds().y == 620.0f &&
-                card.right() == (1920.0f + main.options_box_size.x) / 2.0f,
-                "Plain Restore defaults borrowed its copy, fitted its width or missed row4's inclusive card/shade edge");
+            require(text.text() == L"~" && text.bounds().width == 1470.0f && text.bounds().y == 620.0f &&
+                card.right() == (1920.0f + main.options_box_size.x) / 2.0f - art.shadow_offset,
+                "Plain Restore defaults borrowed its copy, fitted its width or missed row4's inclusive paper-face edge");
             text.set_hidden(true); DrawList no_device; text.draw(no_device);
         }
-        // Only row6 Back reaches the paper bottom; a stale six-row mapping
+        // Only row6 Back reaches the paper-face bottom; a stale six-row mapping
         // would accept the overflow variant below.
         const auto back_bottom = [](rapidjson::Document& d)
         {
@@ -123,14 +124,14 @@ namespace menu_text_acceptance
             d["prompt_bar"]["font"].SetString("menu_text_exact");
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
             for (const auto& entry : status_text) { d["menu_text"]["status"][entry.key].SetString("Fit"); }
-            d["main_menu"]["options_position"]["y"].SetFloat(313.0f);
+            d["main_menu"]["options_position"]["y"].SetFloat(311.0f);
             d["main_menu"]["options_status_position"]["y"].SetFloat(914.0f);
         };
         variants.load(back_bottom).validate_resources(world.render, world.audio);
         variants.rejects("items.back", [&](rapidjson::Document& d)
         {
             back_bottom(d);
-            d["main_menu"]["options_position"]["y"].SetFloat(313.25f);
+            d["main_menu"]["options_position"]["y"].SetFloat(311.25f);
         }, &world);
     }
 
@@ -314,7 +315,7 @@ namespace menu_text_acceptance
             d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(std::nextafter(options_height, 0.0f));
         }, &world);
         const auto top = (mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f;
-        const auto bottom = top + pause.box_size;
+        const auto bottom = top + pause.box_size - mattmath::Vector2F(pause.art.shadow_offset);
         const float left_position = top.x + pause.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - pause.art.focus_padding.x;
         const float bottom_position = bottom.y - 3.0f * pause.layout.spacing.y -
@@ -339,7 +340,7 @@ namespace menu_text_acceptance
         // A positive-height confirmation question must fit above the first
         // padded action, so that action cannot also touch the paper's top.
         // Exit heading paper-top and question/action contact are checked below.
-        // Quit's last row reaches the full-height Pause paper, below the menu footer.
+        // Quit's last row reaches the full-height Pause paper face, below the menu footer.
         paper_edge("y", bottom_position, "items.quit", bottom_position + 0.25f);
 
         const float row_height = 20.0f + 2.0f * pause.art.focus_padding.y;

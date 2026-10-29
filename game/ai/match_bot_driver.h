@@ -23,5 +23,6 @@ private:
 	const GameTuning* tuning_;
 	std::vector<std::unique_ptr<MatchBot>> bots_;
 	std::vector<BotDifficulty> difficulties_;
+	std::vector<PlayerTeam> gate_permissions_;
 	static float engagement_distance(const Player& player, const GameTuning& tuning);
 };

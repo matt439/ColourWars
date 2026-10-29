@@ -63,6 +63,9 @@ struct HorizontalPreparedStep
 {
     HorizontalMotionState after_state;
     HorizontalMotionStep collision;
+    // Paint demand sampled when this token was prepared; later contacts must
+    // not rewrite the committed step's cosmetic explanation.
+    int paint_heading = 0;
 };
 
 struct HorizontalCarryStep

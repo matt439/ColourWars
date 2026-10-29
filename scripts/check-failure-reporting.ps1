@@ -8,6 +8,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 if (-not $OutputDirectory) {
     $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/failure-reporting'
 }
@@ -329,7 +330,7 @@ function Test-FailureCase {
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
-$outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
+$outputRoot = Resolve-CheckFileSystemPath $OutputDirectory
 $run = Join-Path (Join-Path $outputRoot $Preset) ([Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $run -Force
 $cases = [Collections.Generic.List[object]]::new()
@@ -355,7 +356,7 @@ try {
             throw 'Run from an x64 Visual Studio Developer shell.'
         }
         Invoke-Logged -Command 'cmake' -Arguments @('--preset', $Preset) -LogPath (Join-Path $run 'configure.log')
-        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--target', 'ColourWars') `
+        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--target', 'ColourWars', '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
     $cachePath = Join-Path $build 'CMakeCache.txt'

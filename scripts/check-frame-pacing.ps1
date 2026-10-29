@@ -30,6 +30,7 @@ param(
 # The runner never changes native focus, priorities or unrelated processes.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/frame-pacing' }
 if ([string]::IsNullOrWhiteSpace($LoadNote)) {
     if (-not $CompileOnly) { throw 'Record the concurrent workload or quiet-run conditions explicitly with -LoadNote.' }
@@ -96,7 +97,7 @@ function Get-MachineMetadata {
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
-$run = Join-Path ([IO.Path]::GetFullPath($OutputDirectory)) ([Guid]::NewGuid().ToString('N'))
+$run = Join-Path (Resolve-CheckFileSystemPath $OutputDirectory) ([Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $run -Force
 $result = [ordered]@{
     outcome = 'failed'
@@ -127,7 +128,7 @@ try {
     }
     if (-not $SkipBuild) {
         Invoke-Logged 'cmake' @('--preset', $Preset) (Join-Path $run 'configure.log')
-        Invoke-Logged 'cmake' @('--build', '--preset', $Preset) (Join-Path $run 'build.log')
+        Invoke-Logged 'cmake' @('--build', '--preset', $Preset, '--parallel', '1') (Join-Path $run 'build.log')
     }
     $cachePath = Join-Path $build 'CMakeCache.txt'
     if (-not (Test-Path -LiteralPath $cachePath -PathType Leaf)) { throw "No configured build: $build" }

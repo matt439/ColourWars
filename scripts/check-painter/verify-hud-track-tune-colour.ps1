@@ -15,9 +15,9 @@ function Blend-HudTrackSource($Destination,$RGBA,[string]$Model){
     for($channel=0;$channel -lt 3;++$channel){
         $source=$RGBA[$channel]*$shaderAlpha
         if($Model.StartsWith('Q_',[StringComparison]::Ordinal)){$source=[Math]::Floor($source+0.5)}
-        $result[$channel]=[byte][Math]::Floor([Math]::Clamp($source+$Destination[$channel]*(1-$blendAlpha),0.0,255.0)+0.5)
+        $result[$channel]=[byte][Math]::Floor([Math]::Max(0.0,[Math]::Min(255.0,($source+$Destination[$channel]*(1-$blendAlpha))))+0.5)
     }
-    $result[3]=[byte][Math]::Floor([Math]::Clamp($blendAlpha*255.0+$Destination[3]*(1-$blendAlpha),0.0,255.0)+0.5)
+    $result[3]=[byte][Math]::Floor([Math]::Max(0.0,[Math]::Min(255.0,($blendAlpha*255.0+$Destination[3]*(1-$blendAlpha))))+0.5)
     return ,$result
 }
 function New-HudTrackExpectedRGBA([string]$Context,[string]$State,[string]$Model){
@@ -121,11 +121,11 @@ $hudTrackStackEvidence=@(foreach($stack in $hudTrackStacks){
     if($bytes.Length -ne 18446){throw 'HUD Track paired P6 byte length differs'}
     for($i=0;$i -lt $hudTrackHeader.Length;++$i){if($bytes[$i] -ne $hudTrackHeader[$i]){throw 'HUD Track canonical paired P6 header differs'}}
     $payload=[byte[]]::new(18432);[Array]::Copy($bytes,14,$payload,0,18432)
-    $actualPayloadHash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($payload))
+    $actualPayloadHash=Get-PainterSha256 $payload
     $modelNames=[Collections.Generic.List[string]]::new();$classes=[ordered]@{}
     foreach($modelName in $hudTrackModels){
         $rgba=New-HudTrackExpectedRGBA $context[0] $state $modelName;$expected=Get-HudTrackRGB $rgba
-        $digest=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($expected))
+        $digest=Get-PainterSha256 $expected
         if($digest -cnotmatch '^[0-9A-F]{64}$'){throw 'HUD Track empty/malformed source equivalence digest'}
         if(!$classes.Contains($digest)){$classes[$digest]=[Collections.Generic.List[string]]::new()}
         $classes[$digest].Add($modelName)

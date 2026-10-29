@@ -18,9 +18,16 @@
 #include "game/objects/terrain_material.h"
 #include "game/objects/fixed_slab_paintable.h"
 #include "game/objects/fixed_slab_shadow.h"
+#include "game/objects/team_gate_structure_paintable.h"
+#include "game/objects/translating_structure_paintable.h"
+#include "game/objects/translated_draw_scope.h"
 #include "game/objects/player_builder.h"
 #include "game/game_data.h"
 #include "game/states/stage_preview.h"
+#include "game/states/user_stage_refusals_menu.h"
+#include "game/states/match_start.h"
+#include "game/stage_loading.h"
+#include "game/stage_scan_diagnostics.h"
 #include "engine/math/triangle.h"
 #include "game/states/menu_panel.h"
 #include "game/states/game_states.h"
@@ -57,6 +64,8 @@
 #include <limits>
 #include <string_view>
 #include <thread>
+#include <cstdio>
+#include <io.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -117,6 +126,8 @@ namespace
 #include "scripts/acceptance/painter_visual/countdown_checks.h"
 #include "scripts/acceptance/painter_visual/cq_blockout_checks.h"
 #include "scripts/acceptance/painter_visual/crossfeed_checks.h"
+#include "scripts/acceptance/painter_visual/gate_permission_checks.h"
+#include "scripts/acceptance/painter_visual/ferry_direction_checks.h"
 #include "scripts/acceptance/painter_visual/turbulence_mover_checks.h"
 #include "scripts/acceptance/painter_visual/turbulence_shoulder_checks.h"
 #include "scripts/acceptance/painter_visual/turbulence_slabs_checks.h"
@@ -187,6 +198,7 @@ namespace
 #include "scripts/acceptance/painter_visual/stage_briefing_text_checks.h"
 #include "scripts/acceptance/painter_visual/stage_cue_text_checks.h"
 #include "scripts/acceptance/painter_visual/stage_count_checks.h"
+#include "scripts/acceptance/painter_visual/stage_scan_checks.h"
 #include "scripts/acceptance/painter_visual/save_status_checks.h"
 #include "scripts/acceptance/painter_visual/settings_value_checks.h"
 #include "scripts/acceptance/painter_visual/settings_menu_checks.h"
@@ -218,6 +230,7 @@ namespace
 #include "scripts/acceptance/painter_visual/contribution_team_checks.h"
 #include "scripts/acceptance/painter_visual/result_percentage_checks.h"
 #include "scripts/acceptance/painter_visual/series_repick_checks.h"
+#include "scripts/acceptance/painter_visual/practice_replay_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 #include "scripts/acceptance/painter_visual/team_setup_checks.h"
 #include "scripts/acceptance/painter_visual/remembered_setup_checks.h"
@@ -250,10 +263,10 @@ int wmain(int argc, wchar_t** argv)
     {
         require(argc == 3 || (argc == 5 && (std::wstring(argv[3]) == L"turbulence-mover" || std::wstring(argv[3]) == L"turbulence-shoulder" || std::wstring(argv[3]) == L"turbulence-slab") && !std::wstring(argv[4]).empty()) || (argc == 4 && (std::wstring(argv[3]) == L"hud-paper-tune-colours" || std::wstring(argv[3]) == L"hud-closing-shade" || std::wstring(argv[3]) == L"hud-closing-materials" || std::wstring(argv[3]) == L"stage-preview-background-tune-colour" || std::wstring(argv[3]) == L"hud-label-tune-colours" || std::wstring(argv[3]) == L"hud-timer-tune-colour" ||
             std::wstring(argv[3]) == L"identity" ||
-            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
+            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
             std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
-            std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
+            std::wstring(argv[3]) == L"practice-replay" || std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
@@ -264,11 +277,11 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"bot-players" || std::wstring(argv[3]) == L"remembered-setup" ||
             std::wstring(argv[3]) == L"remembered-setup-read" || std::wstring(argv[3]) == L"connection-text" ||
             std::wstring(argv[3]) == L"stick-readouts" || std::wstring(argv[3]) == L"team-focus" || std::wstring(argv[3]) == L"team-tune-colours" || std::wstring(argv[3]) == L"weapon-tune-colours" || std::wstring(argv[3]) == L"stage-summary" || std::wstring(argv[3]) == L"menu-labels" ||
-            std::wstring(argv[3]) == L"weapon-catalog" || std::wstring(argv[3]) == L"stage-counts" ||
+            std::wstring(argv[3]) == L"weapon-catalog" || std::wstring(argv[3]) == L"stage-counts" || std::wstring(argv[3]) == L"stage-scan" ||
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|press-tower|turbulence-blockout|surface-finish|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|cursor-material-tune-colours|desktop-tune-colour|power-light-tune-colour|program-tune-colour|program-level-visibility|acting-tune-colours|glass-tune-colour|silhouette-body-tune-colour|scribble-tune-colour|hud-health-tune-colour|hud-track-tune-colour|hud-timer-tune-colour|hud-label-tune-colours|crack-tune-colour|limb-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|rumble|stick-settings|percentage-text|team-setup|bot-players|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|stage-preview-background-tune-colour|hud-closing-materials|hud-closing-shade|hud-paper-tune-colours|home-return-focus|home-exit|options-defaults|display-trial|paused-options] | painter_visual <staged-content> <output> (turbulence-mover|turbulence-shoulder|turbulence-slab) <private-trial.json>");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|landmark|parallax|miniature-terrain|cq-blockout|crossfeed|press-tower|turbulence-blockout|gate-permission|ferry-direction|surface-finish|route-warning|tune-colours|feedback-tune-colours|combat-tune-colours|blocked-shot-tune-colours|idle-drip-tune-colours|respawn-pen-tune-colours|cursor-tune-colours|silhouette-tune-colours|reveal-tune-colours|cursor-material-tune-colours|desktop-tune-colour|power-light-tune-colour|program-tune-colour|program-level-visibility|acting-tune-colours|glass-tune-colour|silhouette-body-tune-colour|scribble-tune-colour|hud-health-tune-colour|hud-track-tune-colour|hud-timer-tune-colour|hud-label-tune-colours|crack-tune-colour|limb-tune-colours|exposed-colour-alpha|duration-text|resolution-text|end-continuation|results-text|session-result|series-score|round-heading|competitive-winner|contribution-team|result-percentage|monitor|countdown|closing|supply|hud|practice-replay|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|keyboard-jump|rumble|stick-settings|percentage-text|team-setup|bot-players|remembered-setup|remembered-setup-read|connection-text|stick-readouts|team-focus|team-tune-colours|weapon-tune-colours|stage-summary|stage-counts|stage-scan|menu-labels|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|stage-preview-background-tune-colour|hud-closing-materials|hud-closing-shade|hud-paper-tune-colours|home-return-focus|home-exit|options-defaults|display-trial|paused-options] | painter_visual <staged-content> <output> (turbulence-mover|turbulence-shoulder|turbulence-slab) <private-trial.json>");
         const bool turbulence_mover_only = argc == 5 && std::wstring(argv[3]) == L"turbulence-mover";
         const bool turbulence_shoulder_only = argc == 5 && std::wstring(argv[3]) == L"turbulence-shoulder";
         const bool turbulence_slab_only = argc == 5 && std::wstring(argv[3]) == L"turbulence-slab";
@@ -279,6 +292,7 @@ int wmain(int argc, wchar_t** argv)
         const bool closing_only = argc == 4 && std::wstring(argv[3]) == L"closing";
         const bool supply_only = argc == 4 && std::wstring(argv[3]) == L"supply";
         const bool hud_only = argc == 4 && std::wstring(argv[3]) == L"hud";
+        const bool practice_replay_only = argc == 4 && std::wstring(argv[3]) == L"practice-replay";
         const bool resume_only = argc == 4 && std::wstring(argv[3]) == L"resume";
         const bool end_menu_only = argc == 4 && std::wstring(argv[3]) == L"end-menu";
         const bool pause_menu_only = argc == 4 && std::wstring(argv[3]) == L"pause-menu";
@@ -335,6 +349,7 @@ int wmain(int argc, wchar_t** argv)
         const bool contribution_team_only = argc == 4 && std::wstring(argv[3]) == L"contribution-team";
         const bool result_percentage_only = argc == 4 && std::wstring(argv[3]) == L"result-percentage";
         const bool menu_labels_only = argc == 4 && std::wstring(argv[3]) == L"menu-labels";
+        const bool stage_scan_only = argc == 4 && std::wstring(argv[3]) == L"stage-scan";
         const bool stage_summary_only = argc == 4 && std::wstring(argv[3]) == L"stage-summary";
         const bool hud_closing_materials_only = argc == 4 && std::wstring(argv[3]) == L"hud-closing-materials";
         const bool hud_closing_shade_only = argc == 4 && std::wstring(argv[3]) == L"hud-closing-shade";
@@ -346,6 +361,7 @@ int wmain(int argc, wchar_t** argv)
         require(!weapon_tune_colours_only, "WeaponTuneColoursOnly requires a Debug build");
 #endif
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        require(!stage_scan_only, "StageScanOnly requires the normal gamepad reader");
         require(!result_percentage_only, "ResultPercentageOnly requires the normal gamepad reader");
         require(!contribution_team_only, "ContributionTeamOnly requires the normal gamepad reader");
         require(!competitive_winner_only, "CompetitiveWinnerOnly requires the normal gamepad reader");
@@ -417,8 +433,8 @@ int wmain(int argc, wchar_t** argv)
         options.resolution = (hud_paper_tune_colours_only || hud_closing_shade_only || hud_closing_materials_only || hud_timer_tune_colour_only || hud_label_tune_colours_only || stage_preview_background_tune_colour_only) ? ScreenResolution::s_1920_1080 : ScreenResolution::s_1280_720;
         options.fullscreen = false;
         options.max_threads = 4;
-        if (turbulence_mover_only || turbulence_shoulder_only || turbulence_slab_only || (argc == 4 && (std::wstring(argv[3]) == L"miniature-terrain" ||
-            std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || keyboard_jump_only))) { options.view_capacity = 5; }
+        if (stage_scan_only || turbulence_mover_only || turbulence_shoulder_only || turbulence_slab_only || (argc == 4 && (std::wstring(argv[3]) == L"miniature-terrain" ||
+            std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || keyboard_jump_only))) { options.view_capacity = 5; }
         options.visible = false;
         Application app(options);
         app.initialize();
@@ -810,6 +826,11 @@ int wmain(int argc, wchar_t** argv)
             parallax_matrix(app, levels, tuning, presentation, preferences, output);
             return 0;
         }
+        if (stage_scan_only)
+        {
+            stage_scan_matrix(app, canvas, tuning, presentation, content, output);
+            return 0;
+        }
         if (argc == 4 && std::wstring(argv[3]) == L"stage-counts")
         {
             stage_count_matrix(app, levels, canvas, tuning, presentation, output);
@@ -835,6 +856,16 @@ int wmain(int argc, wchar_t** argv)
         if (argc == 4 && std::wstring(argv[3]) == L"route-warning")
         {
             route_warning_matrix(app, levels, tuning, presentation, preferences, output);
+            return 0;
+        }
+        if (argc == 4 && std::wstring(argv[3]) == L"gate-permission")
+        {
+            gate_permission_matrix(app, builder, levels, canvas, tuning, presentation, preferences, output);
+            return 0;
+        }
+        if (argc == 4 && std::wstring(argv[3]) == L"ferry-direction")
+        {
+            ferry_direction_matrix(app, levels, canvas, tuning, presentation, preferences, content, output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"surface-finish")
@@ -1071,6 +1102,11 @@ int wmain(int argc, wchar_t** argv)
             end_menu_matrix(app, canvas, tuning, presentation, output);
             series_repick_checks(app, levels, canvas, tuning, presentation, output);
             std::cout << "PASS end-menu-only hardware check; other painter matrices were not run\n";
+            return 0;
+        }
+        if (practice_replay_only)
+        {
+            practice_replay_checks(app, levels, tuning, presentation, output);
             return 0;
         }
         if (resume_only)

@@ -96,6 +96,67 @@ namespace level_editor_acceptance
         const fs::path invalid = scratch / "invalid-random-setting.json";
         write(invalid, malformed);
         reject_without_change(reopened, [&] { reopened.load(invalid); }, "Non-boolean Random setting loaded");
+        // Numeric edits must consume all source bytes, including a raw NUL
+        // after an otherwise valid number. Keep both history branches live.
+        LevelDocument numeric_document;
+        const fs::path numeric_path = scratch / "raw-nul-numeric.json";
+        numeric_document.save(numeric_path);
+        const Entry numeric_level = entry(numeric_document, EntryKind::level);
+        const std::string numeric_saved = numeric_document.serialize();
+        const std::string numeric_source = contents(numeric_path);
+        numeric_document.set_property(numeric_level, "/display_name", "Numeric first");
+        const std::string numeric_first = numeric_document.serialize();
+        numeric_document.set_property(numeric_level, "/display_name", "Numeric second");
+        const std::string numeric_second = numeric_document.serialize();
+        require(numeric_document.undo() && numeric_document.serialize() == numeric_first &&
+            numeric_document.dirty() && numeric_document.can_undo() && numeric_document.can_redo(),
+            "Raw NUL numeric fixture needs both dirty history branches");
+        const auto check_numeric_history = [&]
+        {
+            require(numeric_document.redo() && numeric_document.serialize() == numeric_second &&
+                numeric_document.dirty() && !numeric_document.can_redo(),
+                "Rejected raw NUL numeric text changed the redo snapshot");
+            require(numeric_document.undo() && numeric_document.serialize() == numeric_first &&
+                numeric_document.dirty() && numeric_document.can_redo(),
+                "Rejected raw NUL numeric text changed the first edit snapshot");
+            require(numeric_document.undo() && numeric_document.serialize() == numeric_saved &&
+                !numeric_document.dirty() && !numeric_document.can_undo() && numeric_document.can_redo(),
+                "Rejected raw NUL numeric text changed the saved undo snapshot");
+            require(numeric_document.redo() && numeric_document.serialize() == numeric_first &&
+                numeric_document.dirty() && numeric_document.can_undo() && numeric_document.can_redo() &&
+                numeric_document.path() == numeric_path && contents(numeric_path) == numeric_source,
+                "Rejected raw NUL numeric text changed the source or restored history state");
+        };
+        const std::string raw_nul(1, '\0');
+        for (const auto& [name, value] : std::map<std::string, std::string>{
+            { "bare", "0.25" + raw_nul },
+            { "garbage", "0.25" + raw_nul + "garbage" },
+            { "second-number", "0.25 " + raw_nul + " 0.5" },
+            { "second-object", "0.25" + raw_nul + "{\"unexpected\":true}" },
+            { "whitespace", "0.25 \t\r\n" + raw_nul + " \t\r\n" } })
+        {
+            const std::string message = "Numeric text containing a raw NUL was accepted: " + name;
+            reject_without_change(numeric_document, [&]
+            {
+                numeric_document.set_property(numeric_level, "/sound/music_volume", value);
+            }, message.c_str());
+            require(contents(numeric_path) == numeric_source,
+                "Rejected raw NUL numeric text changed the saved source bytes");
+            check_numeric_history();
+        }
+        numeric_document.set_property(numeric_level, "/sound/music_volume", "0.25 \t\r\n");
+        const std::string numeric_whitespace = numeric_document.serialize();
+        require(parse(numeric_whitespace)["sound"]["music_volume"].GetDouble() == 0.25 &&
+            numeric_document.dirty() && !numeric_document.can_redo(),
+            "A numeric edit with ordinary trailing JSON whitespace was refused or changed its value");
+        require(numeric_document.undo() && numeric_document.serialize() == numeric_first &&
+            numeric_document.dirty() && numeric_document.can_redo(),
+            "Numeric trailing whitespace did not preserve the prior undo snapshot");
+        require(numeric_document.redo() && numeric_document.serialize() == numeric_whitespace &&
+            numeric_document.dirty() && numeric_document.path() == numeric_path &&
+            contents(numeric_path) == numeric_source,
+            "Numeric trailing whitespace did not preserve redo or the saved source");
+        std::cout << "PASS raw NUL numeric refusal, exact history/source preservation and trailing whitespace\n";
         std::cout << "PASS optional Random setting, validation, history and persistence\n";
     }
 

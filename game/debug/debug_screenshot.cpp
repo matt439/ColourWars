@@ -2,6 +2,7 @@
 #include "game/debug/dev_tools.h"
 
 #if COLOURWARS_DEV_TOOLS
+#include "game/debug/debug_file_name.h"
 #include "game/debug/debug_screenshot.h"
 #include "engine/app/application.h"
 #include "engine/render/renderer.h"
@@ -136,6 +137,10 @@ std::string screenshot_file_name(std::string_view requested,
 			local.tm_year + 1900, local.tm_mon + 1, local.tm_mday,
 			local.tm_hour, local.tm_min, local.tm_sec, static_cast<int>(milliseconds));
 		name = buffer;
+	}
+	if (debug_file_name::reserved_stem(name))
+	{
+		name.insert(name.begin(), '_');
 	}
 	return name + ".png";
 }

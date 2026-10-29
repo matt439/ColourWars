@@ -29,14 +29,26 @@ add_executable(ColourWars WIN32
     presentation_read_match.cpp
     presentation_read_menu.cpp
     presentation_validation.cpp
+    presentation_validation_assets.cpp
+    presentation_validation_catalog.cpp
+    presentation_validation_menu.cpp
+    presentation_validation_metrics.cpp
+    presentation_validation_results.cpp
+    presentation_validation_roster.cpp
+    presentation_validation_setup.cpp
+    presentation_validation_stage.cpp
+    presentation_validation_text.cpp
     round_tape.cpp
     rumble.cpp
     rumble_xinput.cpp
     save.cpp
+    save_profiles.cpp
     series_stage_rule.cpp
     session.cpp
     sound_groups.cpp
     stage_loading.cpp
+    stage_scan_diagnostics.cpp
+    presentation_validation_stage_scan.cpp
     text_wrap.cpp
     tuning.cpp
     tuning_validation.cpp
@@ -100,6 +112,7 @@ add_executable(ColourWars WIN32
     objects/fixed_slab_shadow.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
+    objects/level_horizontal_motion.cpp
     objects/level_audio.cpp
     objects/level_dev_tools.cpp
     objects/level_draw.cpp
@@ -124,6 +137,7 @@ add_executable(ColourWars WIN32
     objects/view_shake.cpp
     objects/player_input.cpp
     objects/projectile.cpp
+    objects/projectile_contacts.cpp
     objects/projectile_ball.cpp
     objects/projectile_builder.cpp
     objects/projectile_jet.cpp
@@ -180,6 +194,7 @@ add_executable(ColourWars WIN32
     states/main_menu_team_select.cpp
     states/main_menu_weapon_select.cpp
     states/menu_context.cpp
+    states/user_stage_refusals_menu.cpp
     states/menu_focus_motion.cpp
     states/menu_input.cpp
     states/menu_level_settings.cpp

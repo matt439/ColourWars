@@ -109,7 +109,7 @@ $hudHealthCropEvidence=@(foreach($crop in $hudHealthCrops){
     # The outer runner uses Depth5: crop metadata stays primitive/flat.
     # All four source representatives are identical for these twelve cases;
     # full expected payload equality therefore admits their single equivalence.
-    $payloadHash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($expected))
+    $payloadHash=Get-PainterSha256 $expected
     $pngPath=[IO.Path]::ChangeExtension($crop.FullName,'.png')
     if(Test-Path -LiteralPath $pngPath -PathType Leaf){
         $png=[IO.File]::ReadAllBytes($pngPath);$signature=@(137,80,78,71,13,10,26,10)

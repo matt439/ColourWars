@@ -1273,6 +1273,302 @@ recording/replay, binds and current settings. A consumed pad chord must release
 both buttons before it can start another session. The developer hooks and
 collision query are inert in Release; keyboard rebinding is available there.
 
+## Bind word round trips (`DBG#9`)
+
+**Done (2026-10-28).** The author approved autonomous bounded follow-ups.
+The third ranked authoring finding was a persistence defect: a valid
+`bind f12 echo C:\temp\` stores its command, but serializing that spaced line
+places a closing quote after the terminal backslash. The current tokenizer
+reads that pair as a literal quote; a fresh session then rejects the generated
+binds file and falls back to defaults.
+
+The encoder now places a quoted word's terminal backslash run outside its
+closing quote, using the existing adjacent quoted/bare word segments. Saved
+binds use the same encoder for forced `//` quoting. Printable-ASCII admission,
+interior backslashes, literal-quote escaping, dollar doubling, statement
+splitting, comments and malformed-input refusals are unchanged.
+
+The native Debug baseline reproduced a complete table falling back to defaults
+and a generated `.bad` file for the accepted bind. After the fix, seven actual
+private save/reload tables preserve sibling bindings, explicit removals and
+saved bytes, with no `.bad` file. Forty decoded word/statement round trips
+cover empty, spaced, quoted and semicolon words with trailing slash runs;
+wide launch arguments and a following statement preserve exact echo output.
+Dollar/comment/quoted/multiple-statement binds and the existing refusals pass.
+
+Both game builds and the full console acceptance case pass. Debug runs the
+new cases and all existing console/script/replay/tuning checks; Release
+retains inert hooks, shared layout and absence of developer RTTI. Independent
+review passes. No player's binds or save were read or changed.
+
+Evidence under `out/validation/implementation-loop-20261028/`: failing baseline
+`dbg9-baseline/d470bf52074041208722c6c8b5d20354`, final both-preset batch
+`dbg9-candidate/3bfe705104f949cf8914753e5d1aa395`. The final receipt verifies
+all six source/test files remained unchanged during qualification.
+
+## Executable script discovery (`DBG#12`)
+
+**Done (2026-10-28).** Script listing and Tab completion now recognize
+mixed-case `.cfg` extensions and require regular files. Previously,
+`exec upper` could run a physical `upper.CFG` on Windows while discovery
+omitted it; Tab also advertised directories named `*.cfg` that execution
+refused and listing omitted.
+
+With quoted completion complete, the ranked next slice is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | The shared script-name callback disagrees with execution about case and regular files. | Selected as `DBG#12`: make discovery reflect executable files while preserving search order and name grammar. Bounded callback change with private files/directories and native execution/list/completion controls. |
+| 2 | The editor font-retirement failure is intermittent even with identical executable bytes. | Continue the separately bounded lifecycle diagnosis; no new feature depends on clearing that gate. |
+| 3 | Reserved screenshot basenames need a defined naming policy. | Keep separate from discovery; no device-path experiment. |
+
+Discovery compares extensions using Windows' case-insensitive ordinal comparison
+([API](https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-comparestringordinal)).
+A separate per-entry regular-file error code preserves directory traversal.
+Stem spelling, name validation, exact deduplication, sorting, directory
+precedence, execution/list file resolution and explicit command-name suffix
+grammar remain unchanged.
+
+The native old-source baseline first executed a private uppercase-extension
+script successfully by stem, then reproduced its missing completion. Candidate
+checks retain eight literal discovered names and ordered summaries, uppercase/
+mixed/lowercase files in both folders, duplicate first-folder precedence and
+a later regular-file fallback behind a directory decoy. Wrong extensions,
+invalid names, directories and unchanged explicit suffix refusals are checked.
+All seventeen input files, the complete private tree and caller path/profile
+state remain unchanged.
+
+Both game builds and the complete console CPU case pass, including the existing
+Debug script/replay/tuning checks and Release's inert/layout/RTTI boundary.
+Independent review confirms only the discovery condition changed; both source
+hashes remained stable. No real profile, window, device or foreground input was
+used by the new checks.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`dbg12-baseline/61543302c85847c5bfa92f293b7b2dfd`, both-preset candidate
+`dbg12-candidate/1adfef9a2f72413f99310aa144cdc843`.
+
+## Screenshot folder names (`DBG#13`)
+
+**Done (2026-10-29).** `screenshot.dir NUL` formerly reported success, although
+the later capture could not create that Windows device-named directory. The
+setter now rejects reserved components and preserves its previous setting, so the
+command reports the problem while it can still be corrected.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Screenshot folder validation accepts reserved Windows components and defers failure until capture. | Selected as `DBG#13`: validate sanitized components with pure command tests, without opening those paths or requesting a capture. Small immediate-feedback fix. |
+| 2 | The input fixture's process-wide GDI count criterion remains unresolved. | Continue `ED#20` independently; its failed candidate and bounded diagnostics are retained. |
+| 3 | Screenshot file basenames have a separate sanitizer and naming policy. | Keep separate from the folder setter; scope a pure naming policy before changing filenames. |
+
+After the existing placeholder expansion, segmentation and sanitization, it rejects
+case-insensitive ASCII `CON`, `PRN`, `AUX`, `NUL`, `COM1` through `COM9` and
+`LPT1` through `LPT9` in any component. Windows applies its
+[reserved-name rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+to directories as well as files. The existing ASCII sanitizer already replaces
+extensions, non-ASCII bytes and punctuation with underscores; validate its
+result rather than introducing another filename grammar.
+
+It preserves `off`, query and empty-argument behavior, `{time}`, both separators,
+dot/empty components, ordinary sanitization, the three-folder limit and existing
+error precedence. Refusal leaves the previous folder and screenshot queue
+unchanged. A local ASCII-only predicate avoids importing the stage-name
+validator's unrelated length and leading-dash restrictions.
+
+The unchanged-production baseline reproduced the old setter accepting `CON`.
+The first test fixture had stopped earlier on its own success-message oracle;
+that fixture and receipt are retained separately. Corrected query assertions
+read one fresh console-log info row, matching execution's existing contract.
+The corrected baseline is `dbg13-baseline/802a7609d93a4f07baa55677c9b90d5e`.
+
+Both game builds and the full console CPU case pass in
+`dbg13-candidate/7796eb6475564c7abd1d73ef5b5d779d`: Debug took 89 seconds and
+Release 17 seconds. The new setter-only matrix checks 397 refusals across all
+22 ASCII device stems, three spellings, both separators and every component
+position, plus valid neighbors, long names, sanitization, `{time}`, `off`,
+empty arguments and combined traversal/depth precedence. No proposed path is
+opened and no screenshot is queued by these checks. Independent review and
+both source hashes pass; the Release inert/layout/RTTI boundary remains intact.
+
+## Screenshot file basenames (`DBG#14`)
+
+**Done (2026-10-29).** `screenshot_file_name("CON", now)` formerly returned
+`CON.png`. Windows reserves that stem even with an extension, so sanitizing
+punctuation alone did not produce a usable capture filename. The
+[Windows naming contract](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+also applies to the final screenshot basename.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Reserved screenshot stems survive normalization and `.png` appending. | Selected as `DBG#14`: prefix the final sanitized reserved stem with `_`, using pure string regression checks and the existing folder rule. Small capture reliability fix without a device-path experiment. |
+| 2 | Input-fixture cleanup needs an explicit resource measurement contract. | Continue the separate `ED#20` investigation; its failed count candidate remains retained. |
+
+After existing extension stripping, ASCII replacement and timestamp fallback,
+the sanitizer prefixes `_` only for an exact case-insensitive ASCII device stem. Thus `CON`
+becomes `_CON.png` and `lPt9.PNG` becomes `_lPt9.png`. Preserve valid names,
+stem spelling, default timestamps and existing `.png` handling, including the
+literal request `.png` becoming `_png.png`. Names such as `CON.` already
+normalize to `CON_.png` and stay unchanged.
+
+The two Debug callers share the existing folder predicate through a small
+standard-library-only header. Its body, the folder policy and the shipping
+stage-name contract are unchanged.
+
+The pure old-source baseline returned `CON.png` and failed before the existing
+PNG-writing checks, with all five source/absence guards intact. Evidence is
+`dbg14-baseline/1fd3035850a44e21a6b463997b15f69e` under
+`out/validation/implementation-loop-20261028/`.
+
+Both game builds and the full console CPU case pass in
+`dbg14-candidate/2c3ebacbedb84a328e0580a790888319` (Debug 88 seconds, Release
+18 seconds). Debug checks 199 reserved stem/case/suffix values, 24 valid
+neighbors and four sanitizer controls through `screenshot_file_name` itself.
+The earlier 397 folder refusals and original PNG/queue checks remain intact;
+Release confirms the inert/layout/RTTI boundary. All five source hashes and
+independent review pass. New checks use pure string values, with no capture
+request or reserved-path access.
+
+## Replay file basenames (`DBG#15`)
+
+**Done (2026-10-29).** `replay_name("CON")` formerly returned `CON`, which
+recording later appended `.json` to before opening an output stream. Play uses
+the same normalizer. That result still named a
+[reserved Windows stem](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+instead of the ordinary replay file the commands promise. The exact device
+I/O outcome has not been tested and must not be probed for this fix.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Replay normalization admits reserved device stems before both read and write paths. | Selected as `DBG#15`: reuse the Debug stem rule and prefix `_`, with pure helper checks before replay-file work. Small naming correction; no device-path access. |
+| 2 | Repeated normalization strips another `_json` from some otherwise valid stems. | Examine the compatibility and raw-suffix policy separately before changing that existing behavior. |
+| 3 | Script-name validation also accepts reserved stems, but execution first requires a regular file. | A weaker early-diagnostic follow-up; keep outside this replay slice. |
+
+After the existing ASCII replacement and one case-sensitive `_json` stripping
+step, the helper now prefixes `_` for an exact reserved stem before returning
+the nonempty name. Empty timestamp fallback and every other normalization rule remain.
+Thus `CON`, `CON.json` and `CON_json` become `_CON`, while `CON.JSON` remains
+`CON_JSON`. Do not change the separate suffix-ordering behavior in this slice.
+
+The existing shared predicate's body is unchanged. The old-source pure-helper
+baseline returned `CON` and failed at the new assertion in
+`dbg15-baseline/b81be67df1924737895429290533834b`, with all four source guards
+intact. The new block performs no I/O; earlier existing bot-metadata checks
+already perform their own private file checks.
+
+Both game builds and the complete console CPU case pass in
+`dbg15-candidate/c3adb92a3e8049a79faa692f1ed08137` under
+`out/validation/implementation-loop-20261028/` (Debug 104 seconds, Release
+18 seconds). Debug checks 199 reserved stem/case/suffix values, 24 valid
+neighbors and eight suffix/sanitizer controls. Existing codec, private file,
+real-Level record/play and screenshot checks pass; Release's inert/layout/RTTI
+boundary remains intact. Independent review and all four source hashes pass.
+New tests call `replay_name` only, with no reserved-name record/play command
+or device-path access. File format, recorded simulation, playback policy and
+existing files remain unchanged.
+
+## Replay catalog filenames (`DBG#16`)
+
+**Done (2026-10-29).** Replay listings and play completion now return full
+`.json` filenames. Previously, `round_json.json` was offered as `round_json`,
+which play normalized again to `round`; that could select `round.json` instead.
+The full filename reaches the intended recording, and `stop.json` remains
+distinct from the separate `play stop` control word.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Catalog stems ending in `_json` are normalized a second time by play. | Selected as `DBG#16`: list and complete full `.json` filenames. A small caller-side correction that preserves existing raw command aliases and stored files. |
+| 2 | Changing suffix stripping could make the normalizer itself idempotent. | Broader compatibility change: existing `_json` and punctuation aliases would resolve differently. Keep separate. |
+| 3 | Arbitrarily renamed files may not fit the command's normalization grammar. | Leave catalog admission and quoting policy unchanged; qualify canonical stems produced by the existing normalizer. |
+
+The catalog helper is used only by play completion and the `replays` listing;
+neither caller constructs a replay path from its returned strings. It preserves
+regular-file checks and lowercase `.json` admission, and sorts the filenames.
+`replay_name`, raw play/record aliases, codec, stored files and simulation are
+unchanged. Arbitrarily renamed files retain the existing admission policy.
+
+The retained Debug baseline fails at the first full-filename completion check.
+Both game builds and complete console CPU cases now pass. Six distinguishable
+private tapes cover `_json`, ordinary names, adjacent and repeated suffixes,
+and `stop.json`; seven actual play lookups reach their expected tape before
+the deliberate missing-fingerprint refusal. Literal listing/completion names,
+the builtin stop control, raw aliases, every private file, both environment
+views and the original CPU match/director state are preserved. These new
+lookups do not arm playback or advance a match; the existing real-Level replay
+checks also pass. Release retains its inert developer-tool and executable
+inspection checks. Evidence: `dbg16-baseline/d42bc77fe95f4ffabe851aabb70f47e5`
+and `dbg16-candidate/e16a6d4af2ce452aa9a160792d66a571` under
+`out/validation/implementation-loop-20261028/`, with all five source hashes
+unchanged during qualification.
+
+## Quoted completion boundaries (`DBG#11`)
+
+**Done (2026-10-28).** Tab completion now recognizes statement and word
+boundaries outside double quotes, matching command execution's grammar.
+Previously, completing `echo "text; stag` rewrote quoted argument data as a
+new command name. That unfinished argument now stays unchanged.
+
+The scoped independent shortlist was:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | `DebugRegistry::complete` treats semicolons inside double quotes as statement separators. | Selected as `DBG#11`: preserve quoted text and complete the actual final statement/argument. A bounded boundary scan and literal registry checks; no editor dependency. |
+| 2 | Script discovery accepts only exact lowercase `.cfg`, while Windows execution can open uppercase `.CFG`. | A later discovery-only slice with private execution/list/completion controls. |
+| 3 | Screenshot naming preserves Windows reserved basenames. | Scope a naming policy and pure string checks separately before any implementation; no device-path experiment. |
+
+The boundary scan follows the existing grammar:
+inside quotes, backslash followed immediately by a double quote escapes that
+quote; other backslashes and single quotes are literal. An unfinished
+quoted word stays unchanged with no candidates. Existing raw partial-word
+matching, completed-token parsing, command/variable/live choice pools, sorting,
+deduplication, common prefixes and path suffix behavior remain intact.
+
+The native old-source baseline reproduced the exact quoted-data corruption
+before the production change. Literal CPU cases cover incomplete/closed and
+escaped quotes, immediate backslash/quote pairs, single quotes, adjacent
+segments, real separators and whitespace. A local command observes exact
+previous arguments and the partial word; unfinished quoted text never invokes
+its completion callback. Sorted unique candidates, common prefixes, path
+suffixes and unchanged command/game/log state are also checked.
+
+Both game builds and the complete console acceptance case pass. Debug retains
+the existing scripts, replay, tuning and bind checks; Release retains inert
+hooks, shared layout and absence of developer RTTI. Independent source/test
+review passes, and both source hashes remain unchanged during qualification.
+This does not qualify foreground keyboard delivery or human review.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`dbg11-baseline/87c6620c4e244d4a910617c4e23254ab`, both-preset candidate
+`dbg11-candidate/7ca2e3f98999441b821056aef054525f`.
+
+## Bind reset persistence (`DBG#10`)
+
+**Done (2026-10-28).** This ranked authoring follow-up fixed an error-handling
+gap: `save_binds` ignored removal errors when the table returned to defaults.
+A blocked `binds.cfg` retained overrides for the next session while the reset
+reported current-session success. Ordinary failed writes already warned that
+a change holds only for this session.
+
+The defaults branch now checks the removal error and uses the same warning
+policy, naming the file. Current-session defaults and command success,
+successful/absent-file removal, the loading guard and the existing atomic
+writer are unchanged. This also covers reaching defaults through `unbind`,
+not just `binds.reset`.
+
+An owned read handle on a private saved override reproduced the missing
+warning, with reads/writes allowed and deletion withheld. The new checks cover
+reset and unbind, saved bytes, active defaults, warning severity/path and a
+fresh session retaining the saved override while locked. After handle release,
+retry removes the file without a warning and a fresh session loads defaults;
+an absent file also produces no warning. No ACL, security attribute or real
+player profile is changed.
+
+Both game builds and full console acceptance pass, including prior Debug
+script/replay/tuning/bind checks and the Release inert/layout/RTTI boundary.
+Independent review and four-file source-immutability checks pass. Evidence
+under `out/validation/implementation-loop-20261028/`: failing private baseline
+`dbg10-baseline/1e76223c74134073af356fddd48ede3a`, final both-preset batch
+`dbg10-candidate/53b37c8972294ef797f71362378d6d72`.
+
 ## History
 
 The console's history (Up / Down) is the last 64 non-blank lines, adjacent
@@ -1606,46 +1902,65 @@ as the game. In Release:
   implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
-- **Detecting a changed stage before playback**: recording stores its name,
-  not its loaded definition. See the bounded [stage fingerprint scope](#loaded-stage-replay-fingerprint-dbg8).
+- **Loaded-stage replay fingerprint qualification**: the guard is implemented;
+  the scoped [local replay checks](#loaded-stage-replay-fingerprint-dbg8) are pending.
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side.
 
 ## Loaded-stage replay fingerprint (`DBG#8`)
 
-**OPEN, scoped 2026-10-28.** A Debug recording names its stage but fingerprints
-only tuning and presentation. A user can edit that stage, rescan from Stage
-Select and then play the recording against different geometry without an early
-diagnostic; the [user-stage owner](feature-roadmap.md#user-stages-road16) records
-this limit. Add a fingerprint of the actual loaded semantic stage definition to
-the recording header, for shipped and user stages alike. Derive it from the
-loaded definition used to build the recorded match, preserving meaningful field
-and object order; rereading the file would describe newer disk contents rather
-than the definition the match used. Formatting-only JSON changes must not alter
-the fingerprint.
+**Done (2026-10-28).** Debug recordings now carry
+`stage_hash`, the loaded semantic stage definition for both shipped and user
+stages. `LevelLoadedInfo` reads one owned byte snapshot and supplies those same
+bytes to Labrador's checked parser and a private client-side semantic hash.
+The hash is cached on the definition; recording and playback never reopen its
+path. The cache has the same class layout in Debug and Release, and does not
+change the stage's game meaning or the shipping instant replay.
 
-Before `play` arms a recording or requests a match rebuild, compare its stage
-fingerprint with the currently loaded definition. A mismatch must leave the
-current match, pending request and playback state unchanged and report which
-stage differs, with an actionable instruction to restore the recorded definition
-or record a new run. A disk edit without a rescan still compares against the
-unchanged loaded definition. Recordings without a stage fingerprint are refused
-with an explicit legacy-format diagnostic asking for a new recording; the
-existing tuning `force` option does not bypass this guard.
+The versioned hash retains decoded values, authored member order and array/object
+order, including fields the current loader does not use. Whitespace and equivalent
+JSON escapes do not matter. Equal numeric spellings such as `1`, `1.0` and `1e0`
+share a representation; exact integers above 2^53 are never rounded through a
+double. A floating negative zero remains distinct from positive zero, as it does
+in the loaded numeric value; integer `-0` is already positive zero after parsing.
+This is a conservative identity for the loaded definition, not a stage snapshot
+or a portable replay format.
 
-This is a Debug-only input check, not a portable replay format or a stage
-snapshot. Preserve the same-build, same-machine, same-step and single-round
-restrictions of `DBG#2`, the existing tuning/presentation checks and the Release
-exclusion of recording code. Do not reload a stage, change Random membership,
-write a user file or change the shipping instant replay to make playback pass.
+`replay_header` captures the registry definition `LevelBuilder` used for the
+recorded match. User-stage rescans are forbidden while a match holds a definition,
+so that entry cannot be replaced underneath it. Before `play` can arm playback or
+request a rebuild, it requires a fingerprint, an exact current stage-catalog
+entry and a loaded registry definition, then compares their hashes. Catalog
+membership matters because a refused or removed user stage's old definition can
+remain registered. A disk edit without a rescan still compares with the unchanged
+loaded definition.
 
-Acceptance covers exact replay on an unchanged shipped stage and an unchanged
-user stage; an edit followed by rescan refused before any match or playback
-mutation; an edit without rescan still matching the loaded definition; semantic
-equality despite JSON formatting changes; and the actionable missing-fingerprint
-diagnostic for legacy recordings. Keep the existing checkpoint/final-state replay
-checks and Release exclusion checks passing. No runtime change or qualification
-is claimed by this scope.
+A mismatch identifies the stage and asks for the recorded definition to be
+restored or a new run to be recorded. It leaves the current match, pending request
+and active or pending playback unchanged. Legacy files remain readable by the
+version-3/4 codec, but `play` refuses a missing fingerprint with an explicit
+legacy-format instruction to record again. The tuning `force` option cannot
+bypass either stage guard. Existing tuning, presentation, checkpoint and final
+state checks remain in place.
+
+This is a Debug-only input check. The same-build, same-machine, same-step and
+single-round restrictions of `DBG#2` and Release's recording-code exclusion are
+unchanged. No reload, user-file mutation or Random-membership change is used to
+make playback pass. Attended runtime and hardware qualification are separate.
+
+**Local qualification (Debug and Release, 2026-10-28):** the existing
+`debug_console` case passes, retaining its checkpoint/final-state and Release
+executable exclusion checks. New isolated shipped and user-stage recordings
+each reproduce 240 steps, four checkpoints and final MATCH. Semantic controls
+cover formatting/escape/equal-number normalization, source/member order,
+unknown fields, exact large integers, embedded string bytes and signed zero.
+Actual rescans cover formatting-only replacement, geometry changes and removal;
+a disk edit without rescan keeps the loaded snapshot. Legacy/force, malformed
+hash, missing catalog/service and active/pending replay controls refuse before
+match, queued request, playback or warning side effects. Loader `level_format`,
+`user_stages` and hidden startup with one valid/one refused isolated stage and
+the accepted audio bank also pass in both presets. No hardware or attended-play
+gate is closed by these checks.
 
 ## Background script work (`DBG#6`)
 

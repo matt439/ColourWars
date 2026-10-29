@@ -1,4 +1,5 @@
 #include "editor/editor.h"
+#include "editor/paint_mechanism_guide.h"
 #include "editor/win32_text.h"
 
 #include <windows.h>
@@ -11,6 +12,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 namespace colourwars_editor
 {
@@ -21,6 +23,43 @@ namespace colourwars_editor
         return entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b;
     }
 
+    // Construct ownership before acquiring each resource: a later allocation or
+    // drawing exception still unwinds every completed acquisition.
+    struct CanvasPaint
+    {
+        explicit CanvasPaint(HWND canvas) noexcept : window(canvas) { target = BeginPaint(window, &info); }
+        ~CanvasPaint()
+        {
+            if (previous && previous != HGDI_ERROR) SelectObject(buffer, previous);
+            if (bitmap) DeleteObject(bitmap);
+            if (buffer) DeleteDC(buffer);
+            EndPaint(window, &info);
+        }
+        CanvasPaint(const CanvasPaint&) = delete;
+        CanvasPaint& operator=(const CanvasPaint&) = delete;
+        HWND window;
+        PAINTSTRUCT info{};
+        HDC target = nullptr, buffer = nullptr;
+        HBITMAP bitmap = nullptr;
+        HGDIOBJ previous = nullptr;
+    };
+
+    class FontSelection
+    {
+    public:
+        FontSelection(HDC dc, HFONT font) : dc_(dc), previous_(SelectObject(dc, font))
+        {
+            if (!previous_ || previous_ == HGDI_ERROR)
+                throw std::runtime_error("Could not select the editor canvas font.");
+        }
+        ~FontSelection() { SelectObject(dc_, previous_); }
+        FontSelection(const FontSelection&) = delete;
+        FontSelection& operator=(const FontSelection&) = delete;
+    private:
+        HDC dc_;
+        HGDIOBJ previous_;
+    };
+
     void fill(HDC dc, const RECT& rectangle, COLORREF colour)
     {
         HBRUSH brush = CreateSolidBrush(colour);
@@ -28,10 +67,14 @@ namespace colourwars_editor
         DeleteObject(brush);
     }
 
-    void line(HDC dc, int x1, int y1, int x2, int y2, COLORREF colour,
-        int width = 1, int style = PS_SOLID)
+    }
+
+    void Editor::line(HDC dc, int x1, int y1, int x2, int y2, COLORREF colour,
+        int width, int style) const
     {
-        HPEN pen = CreatePen(style, width, colour);
+        const LOGBRUSH brush{ BS_SOLID, colour, 0 };
+        HPEN pen = ExtCreatePen(PS_GEOMETRIC | PS_ENDCAP_FLAT | PS_JOIN_MITER | static_cast<DWORD>(style),
+            static_cast<DWORD>(pixels(width)), &brush, 0, nullptr);
         HGDIOBJ previous = SelectObject(dc, pen);
         MoveToEx(dc, x1, y1, nullptr);
         LineTo(dc, x2, y2);
@@ -39,21 +82,20 @@ namespace colourwars_editor
         DeleteObject(pen);
     }
 
-    void outline(HDC dc, const RECT& rectangle, COLORREF colour, int width = 1,
-        int style = PS_SOLID)
+    void Editor::outline(HDC dc, const RECT& rectangle, COLORREF colour, int width,
+        int style) const
     {
         line(dc, rectangle.left, rectangle.top, rectangle.right, rectangle.top, colour, width, style);
         line(dc, rectangle.right, rectangle.top, rectangle.right, rectangle.bottom, colour, width, style);
         line(dc, rectangle.right, rectangle.bottom, rectangle.left, rectangle.bottom, colour, width, style);
         line(dc, rectangle.left, rectangle.bottom, rectangle.left, rectangle.top, colour, width, style);
     }
-    }
 
     void Editor::fit(const Rect& rectangle)
     {
         RECT client{}; GetClientRect(canvas_, &client);
-        zoom_ = std::clamp(std::min((client.right - 80.0) / std::max(rectangle.width, 100.0),
-            (client.bottom - 80.0) / std::max(rectangle.height, 100.0)), 0.005, 10.0);
+        zoom_ = std::clamp(std::min((client.right - static_cast<double>(pixels(80))) / std::max(rectangle.width, 100.0),
+            (client.bottom - static_cast<double>(pixels(80))) / std::max(rectangle.height, 100.0)), 0.005, 10.0);
         view_x_ = rectangle.x + rectangle.width / 2.0 - client.right / (2.0 * zoom_);
         view_y_ = rectangle.y + rectangle.height / 2.0 - client.bottom / (2.0 * zoom_);
         InvalidateRect(canvas_, nullptr, FALSE);
@@ -109,7 +151,7 @@ namespace colourwars_editor
             outline(dc, screen, colours[item.entry.index % 4], 1, PS_DASH);
             SetTextColor(dc, colours[item.entry.index % 4]);
             const std::wstring label = wide(item.entry.label);
-            TextOutW(dc, screen.left + 5, screen.top + 4, label.c_str(), static_cast<int>(label.size()));
+            TextOutW(dc, screen.left + pixels(5), screen.top + pixels(4), label.c_str(), static_cast<int>(label.size()));
         }
         else if (is_spawn(item.entry))
         {
@@ -118,10 +160,10 @@ namespace colourwars_editor
                 blockout_tuning_ ? blockout_tuning_->player_height : 0.0});
             const COLORREF colour = item.entry.kind == EntryKind::spawn_a ? RGB(70, 163, 250) : RGB(255, 158, 75);
             outline(dc, screen, colour, 2);
-            line(dc, screen.left - 5, screen.top, screen.left + 5, screen.top, colour, 2);
-            line(dc, screen.left, screen.top - 5, screen.left, screen.top + 5, colour, 2);
+            line(dc, screen.left - pixels(5), screen.top, screen.left + pixels(5), screen.top, colour, 2);
+            line(dc, screen.left, screen.top - pixels(5), screen.left, screen.top + pixels(5), colour, 2);
             const std::wstring label = (item.entry.kind == EntryKind::spawn_a ? L"A" : L"B") + std::to_wstring(item.entry.index + 1);
-            SetTextColor(dc, colour); TextOutW(dc, screen.left + 3, screen.top - 21, label.c_str(), static_cast<int>(label.size()));
+            SetTextColor(dc, colour); TextOutW(dc, screen.left + pixels(3), screen.top - pixels(21), label.c_str(), static_cast<int>(label.size()));
         }
         else
         {
@@ -181,12 +223,49 @@ namespace colourwars_editor
                 }
             }
         }
+        if (item.entry.kind == EntryKind::collision)
+        {
+            if (const auto guide = paint_mechanism_guide(item.values))
+            {
+                // The screen rectangle already follows the mover's initial phase
+                // and selected drag preview. These marks never alter its envelope.
+                const double scale = static_cast<double>(dpi_) / 96.0;
+                TEXTMETRICW font_metrics{};
+                const double line_height = GetTextMetricsW(dc, &font_metrics) ?
+                    static_cast<double>(font_metrics.tmHeight) / scale : 24.0;
+                PaintMechanismDrawing drawing = paint_mechanism_drawing(*guide,
+                    { 0.0, 0.0, static_cast<double>(screen.right - screen.left) / scale,
+                        static_cast<double>(screen.bottom - screen.top) / scale },
+                    line_height);
+                drawing.panel = { screen.left + drawing.panel.x * scale, screen.top + drawing.panel.y * scale,
+                    drawing.panel.width * scale, drawing.panel.height * scale };
+                for (MechanismStroke& stroke : drawing.strokes)
+                {
+                    stroke = { screen.left + stroke.x1 * scale, screen.top + stroke.y1 * scale,
+                        screen.left + stroke.x2 * scale, screen.top + stroke.y2 * scale };
+                }
+                for (MechanismLabel& label : drawing.labels)
+                { label.x = screen.left + label.x * scale; label.y = screen.top + label.y * scale; }
+                const RECT panel{ static_cast<LONG>(drawing.panel.x), static_cast<LONG>(drawing.panel.y),
+                    static_cast<LONG>(drawing.panel.x + drawing.panel.width),
+                    static_cast<LONG>(drawing.panel.y + drawing.panel.height) };
+                fill(dc, panel, RGB(36, 45, 57));
+                outline(dc, panel, RGB(181, 197, 213));
+                for (const MechanismStroke& stroke : drawing.strokes)
+                    line(dc, static_cast<int>(stroke.x1), static_cast<int>(stroke.y1),
+                        static_cast<int>(stroke.x2), static_cast<int>(stroke.y2), RGB(240, 225, 190), 2);
+                SetTextColor(dc, RGB(240, 225, 190));
+                for (const MechanismLabel& label : drawing.labels)
+                    TextOutW(dc, static_cast<int>(label.x), static_cast<int>(label.y), label.text.c_str(),
+                        static_cast<int>(label.text.size()));
+            }
+        }
         if (selected)
         {
             if (motion) { screen = screen_rect(motion->anchor); }
             outline(dc, screen, RGB(255, 255, 255), 2);
             if (!is_spawn(item.entry) && !slab)
-                fill(dc, RECT{screen.right - 5, screen.bottom - 5, screen.right + 6, screen.bottom + 6}, RGB(255, 255, 255));
+                fill(dc, RECT{screen.right - pixels(5), screen.bottom - pixels(5), screen.right + pixels(6), screen.bottom + pixels(6)}, RGB(255, 255, 255));
         }
     }
 
@@ -196,7 +275,7 @@ namespace colourwars_editor
         {
             SetTextColor(dc, RGB(255, 190, 120));
             const std::wstring text = L"Blockout aids unavailable: " + blockout_error_;
-            TextOutW(dc, 16, 43, text.c_str(), static_cast<int>(text.size()));
+            TextOutW(dc, pixels(16), pixels(43), text.c_str(), static_cast<int>(text.size()));
             return;
         }
         for (const ScoringFace& face : scoring_faces_)
@@ -269,19 +348,19 @@ namespace colourwars_editor
                 : L"Spawn sizes and scoring area still follow current source tuning.",
             L"Guide boxes start at selection; no collision test or guaranteed route. Source tuning.json."};
         RECT client{}; GetClientRect(canvas_, &client);
-        fill(dc, RECT{8, 38, client.right - 8, 128}, RGB(28, 36, 46));
+        fill(dc, RECT{pixels(8), pixels(38), client.right - pixels(8), pixels(128)}, RGB(28, 36, 46));
         SetTextColor(dc, RGB(181, 197, 213));
         for (int index = 0; index < 4; ++index)
-            TextOutW(dc, 16, 43 + index * 21, lines[index].c_str(), static_cast<int>(lines[index].size()));
+            TextOutW(dc, pixels(16), pixels(43 + index * 21), lines[index].c_str(), static_cast<int>(lines[index].size()));
     }
 
     void Editor::paint(HDC dc, const RECT& client)
     {
         fill(dc, client, RGB(28, 36, 46));
         SetBkMode(dc, TRANSPARENT);
-        HGDIOBJ old_font = SelectObject(dc, font_);
+        const FontSelection font(dc, font_);
         double spacing = static_cast<double>(snap_);
-        while (spacing * zoom_ < 28.0) spacing *= 2.0;
+        while (spacing * zoom_ < pixels(28)) spacing *= 2.0;
         const double pixel_spacing = spacing * zoom_;
         const double first_x = -std::fmod(view_x_, spacing) * zoom_;
         const double first_y = -std::fmod(view_y_, spacing) * zoom_;
@@ -307,13 +386,13 @@ namespace colourwars_editor
         if (show_blockout_) draw_blockout(dc);
         const std::wstring legend = L"GEOMETRY VIEW    " + std::to_wstring(static_cast<int>(std::round(zoom_ * 100.0)))
             + L"%    |    Grid " + std::to_wstring(static_cast<int>(spacing));
-        fill(dc, RECT{8, 8, 370, 35}, RGB(28, 36, 46));
-        SetTextColor(dc, RGB(181, 197, 213)); TextOutW(dc, 16, 13, legend.c_str(), static_cast<int>(legend.size()));
-        SelectObject(dc, old_font);
+        fill(dc, RECT{pixels(8), pixels(8), pixels(370), pixels(35)}, RGB(28, 36, 46));
+        SetTextColor(dc, RGB(181, 197, 213)); TextOutW(dc, pixels(16), pixels(13), legend.c_str(), static_cast<int>(legend.size()));
     }
 
-    std::optional<Entry> Editor::hit(POINT point) const
+    std::vector<Entry> Editor::hits(POINT point) const
     {
+        std::vector<Entry> result;
         for (EntryKind kind : {EntryKind::spawn_b, EntryKind::spawn_a, EntryKind::collision, EntryKind::decoration})
         {
             for (std::vector<DrawItem>::const_reverse_iterator item = draw_items_.rbegin(); item != draw_items_.rend(); ++item)
@@ -330,29 +409,68 @@ namespace colourwars_editor
                         if ((b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x) < 0.0)
                         { inside = false; break; }
                     }
-                    if (inside) { return item->entry; }
+                    if (inside) { result.push_back(item->entry); }
                     continue;
                 }
                 RECT rectangle = screen_rect(item->rectangle);
+                const auto type = item->values.find("type");
+                if (kind == EntryKind::collision && type != item->values.end() && type->second == "StructureRamp")
+                {
+                    const auto collision = item->values.find("collision_type");
+                    const bool left = collision != item->values.end() && collision->second == "STRUCTURE_RAMP_LEFT";
+                    const POINT points[] = {{rectangle.left, rectangle.bottom}, {rectangle.right, rectangle.bottom},
+                        {left ? rectangle.left : rectangle.right, rectangle.top}};
+                    const auto cross = [](POINT a, POINT b, POINT c) {
+                        return (static_cast<double>(b.x) - a.x) * (static_cast<double>(c.y) - a.y)
+                            - (static_cast<double>(b.y) - a.y) * (static_cast<double>(c.x) - a.x);
+                    };
+                    const double area = cross(points[0], points[1], points[2]);
+                    const double sides[] = {cross(points[0], points[1], point), cross(points[1], points[2], point),
+                        cross(points[2], points[0], point)};
+                    if (area != 0.0 && ((sides[0] >= 0.0 && sides[1] >= 0.0 && sides[2] >= 0.0)
+                        || (sides[0] <= 0.0 && sides[1] <= 0.0 && sides[2] <= 0.0)))
+                    { result.push_back(item->entry); continue; }
+                    const double tolerance = static_cast<double>(pixels(3));
+                    for (int edge = 0; edge < 3; ++edge)
+                    {
+                        const POINT a = points[edge], b = points[(edge + 1) % 3];
+                        const double dx = static_cast<double>(b.x) - a.x, dy = static_cast<double>(b.y) - a.y;
+                        const double px = static_cast<double>(point.x) - a.x, py = static_cast<double>(point.y) - a.y;
+                        const double length_squared = dx * dx + dy * dy;
+                        // Collapsed triangles retain only their finite edges and endpoints.
+                        const double along = length_squared > 0.0
+                            ? std::clamp((px * dx + py * dy) / length_squared, 0.0, 1.0) : 0.0;
+                        const double distance_x = px - along * dx, distance_y = py - along * dy;
+                        if (distance_x * distance_x + distance_y * distance_y <= tolerance * tolerance)
+                        { result.push_back(item->entry); break; }
+                    }
+                    continue;
+                }
                 if (is_spawn(item->entry))
                 {
                     rectangle = screen_rect(Rect{item->rectangle.x, item->rectangle.y,
                         blockout_tuning_ ? blockout_tuning_->player_width : 0.0,
                         blockout_tuning_ ? blockout_tuning_->player_height : 0.0});
-                    rectangle.right = std::max(rectangle.right, rectangle.left + 18);
-                    rectangle.bottom = std::max(rectangle.bottom, rectangle.top + 24);
+                    rectangle.right = std::max(rectangle.right, rectangle.left + pixels(18));
+                    rectangle.bottom = std::max(rectangle.bottom, rectangle.top + pixels(24));
                 }
-                InflateRect(&rectangle, 3, 3);
-                if (PtInRect(&rectangle, point)) return item->entry;
+                InflateRect(&rectangle, pixels(3), pixels(3));
+                if (PtInRect(&rectangle, point)) { result.push_back(item->entry); continue; }
                 if (item->motion)
                 {
                     rectangle = screen_rect(item->motion->initial_pose);
-                    InflateRect(&rectangle, 3, 3);
-                    if (PtInRect(&rectangle, point)) return item->entry;
+                    InflateRect(&rectangle, pixels(3), pixels(3));
+                    if (PtInRect(&rectangle, point)) { result.push_back(item->entry); }
                 }
             }
         }
-        return std::nullopt;
+        return result;
+    }
+
+    std::optional<Entry> Editor::hit(POINT point) const
+    {
+        const auto candidates = hits(point);
+        return candidates.empty() ? std::nullopt : std::optional<Entry>{candidates.front()};
     }
 
     double Editor::snapped(double value) const
@@ -369,6 +487,7 @@ namespace colourwars_editor
 
     void Editor::nudge(int x, int y)
     {
+        if (dragging_ || panning_) cancel_drag();
         if (!selection_ || selection_->kind == EntryKind::level || !apply_pending()) return;
         Rect rectangle = document_.rectangle(*selection_);
         const double step = (GetKeyState(VK_SHIFT) & 0x8000) ? 1.0 : static_cast<double>(snap_);
@@ -384,25 +503,47 @@ namespace colourwars_editor
         case WM_ERASEBKGND: return 1;
         case WM_PAINT:
         {
-            PAINTSTRUCT info{}; HDC target = BeginPaint(canvas_, &info);
+            CanvasPaint painting(canvas_);
+            if (!painting.target) throw std::runtime_error("Could not begin editor canvas painting.");
             RECT client{}; GetClientRect(canvas_, &client);
-            HDC buffer = CreateCompatibleDC(target);
-            HBITMAP bitmap = CreateCompatibleBitmap(target, std::max(1L, client.right), std::max(1L, client.bottom));
-            HGDIOBJ old = SelectObject(buffer, bitmap);
-            paint(buffer, client);
-            BitBlt(target, 0, 0, client.right, client.bottom, buffer, 0, 0, SRCCOPY);
-            SelectObject(buffer, old); DeleteObject(bitmap); DeleteDC(buffer); EndPaint(canvas_, &info); return 0;
+            painting.buffer = CreateCompatibleDC(painting.target);
+            if (!painting.buffer) throw std::runtime_error("Could not create the editor canvas buffer DC.");
+            painting.bitmap = CreateCompatibleBitmap(painting.target,
+                std::max(1L, client.right), std::max(1L, client.bottom));
+            if (!painting.bitmap) throw std::runtime_error("Could not create the editor canvas buffer bitmap.");
+            painting.previous = SelectObject(painting.buffer, painting.bitmap);
+            if (!painting.previous || painting.previous == HGDI_ERROR)
+                throw std::runtime_error("Could not select the editor canvas buffer bitmap.");
+            paint(painting.buffer, client);
+            BitBlt(painting.target, 0, 0, client.right, client.bottom, painting.buffer, 0, 0, SRCCOPY);
+            return 0;
         }
         case WM_LBUTTONDOWN:
         {
             if (!apply_pending()) return 0;
             SetFocus(canvas_);
-            resizing_ = false;
+            cancel_drag();
+            if (wparam & MK_CONTROL)
+            {
+                const auto candidates = hits(point);
+                if (!candidates.empty())
+                {
+                    auto next = candidates.begin();
+                    if (selection_)
+                    {
+                        auto current = std::find_if(candidates.begin(), candidates.end(),
+                            [&](const Entry& entry) { return same_entry(entry, *selection_); });
+                        if (current != candidates.end() && ++current != candidates.end()) next = current;
+                    }
+                    select(*next);
+                }
+                return 0;
+            }
             if (selection_ && selection_->kind != EntryKind::level && !is_spawn(*selection_) &&
                 !document_.slab_guide(*selection_))
             {
                 const RECT rectangle = screen_rect(document_.rectangle(*selection_));
-                resizing_ = std::abs(point.x - rectangle.right) <= 9 && std::abs(point.y - rectangle.bottom) <= 9;
+                resizing_ = std::abs(point.x - rectangle.right) <= pixels(9) && std::abs(point.y - rectangle.bottom) <= pixels(9);
             }
             if (!resizing_)
             {
@@ -411,7 +552,8 @@ namespace colourwars_editor
                 if (selection_ && selection_->kind == EntryKind::bounds)
                 {
                     RECT rectangle = screen_rect(document_.rectangle(*selection_));
-                    RECT inner = rectangle; InflateRect(&rectangle, 5, 5); InflateRect(&inner, -5, -5);
+                    RECT inner = rectangle;
+                    InflateRect(&rectangle, pixels(5), pixels(5)); InflateRect(&inner, -pixels(5), -pixels(5));
                     on_bound = PtInRect(&rectangle, point) && !PtInRect(&inner, point);
                 }
                 if (!on_bound)
@@ -465,7 +607,7 @@ namespace colourwars_editor
                 { document_.set_rectangle(*selection_, result); refresh(true); }
             }
             return 0;
-        case WM_MBUTTONUP: cancel_drag(); return 0;
+        case WM_MBUTTONUP: if (panning_) cancel_drag(); return 0;
         case WM_CAPTURECHANGED: dragging_ = false; panning_ = false; InvalidateRect(canvas_, nullptr, FALSE); return 0;
         case WM_MOUSEWHEEL:
         {

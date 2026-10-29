@@ -69,18 +69,18 @@ function Blend-ScribbleRectangle([byte[]]$Buffer,$Box,$RGB,[double]$ShaderAlpha,
         # choices. Rounded blend alpha never replaces the shader alpha here.
         $source[$channel]=[double]$RGB[$channel]*$ShaderAlpha
         if($Model.StartsWith('Q_',[StringComparison]::Ordinal)){
-            $source[$channel]=[Math]::Floor([Math]::Clamp($source[$channel],0.0,255.0)+0.5)
+            $source[$channel]=[Math]::Floor([Math]::Max(0.0,[Math]::Min(255.0,($source[$channel])))+0.5)
         }
     }
     $blendAlpha=$ShaderAlpha
     if($Model.EndsWith('_AQ',[StringComparison]::Ordinal)){
-        $blendAlpha=[Math]::Floor([Math]::Clamp($ShaderAlpha*255.0,0.0,255.0)+0.5)/255.0
+        $blendAlpha=[Math]::Floor([Math]::Max(0.0,[Math]::Min(255.0,($ShaderAlpha*255.0)))+0.5)/255.0
     }
     for($y=$Box[1];$y -lt $Box[3];++$y){for($x=$Box[0];$x -lt $Box[2];++$x){
         if($x -lt 18 -or $x -ge 85 -or $y -lt 337 -or $y -ge 404){throw 'Scribble literal layer escaped ROI'}
         $offset=(($y-337)*67+$x-18)*3
         for($channel=0;$channel -lt 3;++$channel){
-            $value=[Math]::Clamp($source[$channel]+[double]$Buffer[$offset+$channel]*(1-$blendAlpha),0.0,255.0)
+            $value=[Math]::Max(0.0,[Math]::Min(255.0,($source[$channel]+[double]$Buffer[$offset+$channel]*(1-$blendAlpha))))
             $Buffer[$offset+$channel]=[byte][Math]::Floor($value+0.5)
         }
     }}
@@ -219,7 +219,7 @@ $scribbleCropEvidence=@(foreach($crop in $scribbleCrops){
         }
         if($equal){$matchingModels.Add($modelName)}
         else{$firstDifferences+=[ordered]@{model=$modelName;byte_offset=$differentOffset}}
-        $digest=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($expected))
+        $digest=Get-PainterSha256 $expected
         $modelEvidence+=[pscustomobject]@{model=$modelName;source_payload_sha256=$digest;whole_crop_match=$equal}
     }
     if($matchingModels.Count -eq 0){

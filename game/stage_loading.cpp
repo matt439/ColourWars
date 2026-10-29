@@ -169,6 +169,7 @@ void UserStageFolder::attach(std::filesystem::path directory, const UserStageChe
 	this->audio_ = audio;
 	this->level_infos_ = level_infos;
 	this->stages_ = stages;
+	this->latest_scan_ = {};
 }
 
 bool UserStageFolder::attached() const
@@ -206,6 +207,7 @@ UserStageScan UserStageFolder::scan()
 	}
 	UserStageScan result = this->read_into(*this->stages_);
 	this->report(result);
+	this->latest_scan_ = result;
 	return result;
 }
 
@@ -236,5 +238,11 @@ UserStageScan UserStageFolder::rescan()
 	}
 	*this->stages_ = std::move(next);
 	this->report(result);
+	this->latest_scan_ = result;
 	return result;
+}
+
+const UserStageScan& UserStageFolder::latest_scan() const
+{
+	return this->latest_scan_;
 }

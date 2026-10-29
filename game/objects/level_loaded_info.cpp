@@ -5,13 +5,152 @@
 #include "engine/math/intersects.h"
 #include "game/objects/level_object_builder.h"
 #include "game/drawable_text.h"
+#include "engine/core/file_path.h"
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
+#include <bit>
 #include <cmath>
+#include <fstream>
+#include <limits>
+#include <string_view>
 
 using namespace mattmath;
 using namespace labrador;
 
+namespace
+{
+	std::string read_stage_snapshot(const char* path)
+	{
+		if (path == nullptr) { throw std::invalid_argument("LevelLoadedInfo - null path"); }
+		std::ifstream file(path_from_utf8(path), std::ios::binary);
+		if (!file) { throw std::runtime_error(std::string("LevelLoadedInfo - cannot open '") + path + "'"); }
+		std::string text;
+		char chunk[64 * 1024];
+		while (file.read(chunk, sizeof(chunk)) || file.gcount() > 0)
+		{ text.append(chunk, static_cast<std::size_t>(file.gcount())); }
+		if (file.bad()) { throw std::runtime_error(std::string("LevelLoadedInfo - read error in '") + path + "'"); }
+		return text;
+	}
+
+	class StageSemanticHash
+	{
+	public:
+		std::uint64_t of(const rapidjson::Value& value)
+		{
+			this->text("colourwars-loaded-stage-1");
+			this->append(value);
+			return this->hash_;
+		}
+
+	private:
+		std::uint64_t hash_ = 0xcbf29ce484222325ull;
+
+		void byte(unsigned char value)
+		{
+			this->hash_ ^= value;
+			this->hash_ *= 0x100000001b3ull;
+		}
+
+		void integer(std::uint64_t value)
+		{
+			for (int index = 0; index < 8; ++index)
+			{
+				this->byte(static_cast<unsigned char>(value & 0xff));
+				value >>= 8;
+			}
+		}
+
+		void text(std::string_view value)
+		{
+			this->integer(value.size());
+			for (const char character : value) { this->byte(static_cast<unsigned char>(character)); }
+		}
+
+		void magnitude(std::int64_t value)
+		{
+			this->byte('-');
+			// Unsigned subtraction also represents INT64_MIN without overflow.
+			this->integer(std::uint64_t{0} - static_cast<std::uint64_t>(value));
+		}
+
+		void number(const rapidjson::Value& value)
+		{
+			if (value.IsInt64() && value.GetInt64() < 0)
+			{ this->magnitude(value.GetInt64()); return; }
+			if (value.IsUint64())
+			{ this->byte('+'); this->integer(value.GetUint64()); return; }
+
+			const double numeric = value.GetDouble();
+			// Equal numeric spellings share a representation, without rounding
+			// exact JSON integers above 2^53 through double. Floating -0 retains
+			// its sign, as the loaded number does; an integer -0 parses as +0.
+			if (!(numeric == 0.0 && std::signbit(numeric)) && std::trunc(numeric) == numeric)
+			{
+				if (numeric >= 0.0 && numeric < 18446744073709551616.0)
+				{ this->byte('+'); this->integer(static_cast<std::uint64_t>(numeric)); return; }
+				if (numeric < 0.0 && numeric >= static_cast<double>((std::numeric_limits<std::int64_t>::min)()))
+				{ this->magnitude(static_cast<std::int64_t>(numeric)); return; }
+			}
+			this->byte('d');
+			this->integer(std::bit_cast<std::uint64_t>(numeric));
+		}
+
+		void append(const rapidjson::Value& value)
+		{
+			switch (value.GetType())
+			{
+			case rapidjson::kNullType: this->byte('n'); break;
+			case rapidjson::kFalseType: this->byte('f'); break;
+			case rapidjson::kTrueType: this->byte('t'); break;
+			case rapidjson::kNumberType: this->number(value); break;
+			case rapidjson::kStringType:
+				this->byte('s'); this->text({ value.GetString(), value.GetStringLength() }); break;
+			case rapidjson::kArrayType:
+				this->byte('['); this->integer(value.Size());
+				for (const auto& item : value.GetArray()) { this->append(item); }
+				break;
+			case rapidjson::kObjectType:
+				this->byte('{'); this->integer(value.MemberCount());
+				// Every authored field is retained, including currently unknown
+				// metadata. Sorting or selecting known fields could hide a change.
+				for (const auto& member : value.GetObject())
+				{
+					this->text({ member.name.GetString(), member.name.GetStringLength() });
+					this->append(member.value);
+				}
+				break;
+			}
+		}
+	};
+
+	std::uint64_t hash_stage_snapshot(std::string_view snapshot, const char* source_path)
+	{
+		rapidjson::Document parsed;
+		parsed.Parse<rapidjson::kParseDefaultFlags | rapidjson::kParseValidateEncodingFlag>(snapshot.data(), snapshot.size());
+		if (parsed.HasParseError())
+		{
+			throw std::runtime_error(std::string("LevelLoadedInfo - '") + source_path +
+				"' is not valid JSON: " + rapidjson::GetParseError_En(parsed.GetParseError()) +
+				" (offset " + std::to_string(parsed.GetErrorOffset()) + ")");
+		}
+		// An explicit-length parse can still stop at raw NUL; inspect the entire snapshot.
+		const std::size_t nul = snapshot.find('\0');
+		if (nul != std::string_view::npos)
+		{
+			throw std::runtime_error(std::string("LevelLoadedInfo - '") + source_path +
+				"' is not valid JSON: Unescaped NUL byte. (offset " + std::to_string(nul) + ")");
+		}
+		return StageSemanticHash{}.of(parsed);
+	}
+}
+
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
-	json_doc_(read_json_file(json_path))
+	LevelLoadedInfo(json_path, read_stage_snapshot(json_path))
+{
+}
+
+LevelLoadedInfo::LevelLoadedInfo(const char* json_path, std::string snapshot) :
+	json_doc_(parse_json(snapshot, json_path))
 {
 	// An untagged legacy level has exactly the format-1 meaning. Reject a
 	// future or malformed tag before interpreting any of its content fields.
@@ -21,6 +160,7 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
 		throw std::runtime_error(root.where() + ": unsupported 'format'; expected " +
 			std::to_string(level_format::current) + " (or an untagged legacy level).");
 	}
+	this->semantic_hash_ = hash_stage_snapshot(snapshot, json_path);
 }
 
 void LevelLoadedInfo::validate() const
@@ -236,7 +376,8 @@ void LevelLoadedInfo::validate_content(const LevelObjectBuilder& builder,
 	const JsonValue root = this->json_doc_.root();
 	try
 	{
-		// Stage icons use the same sheet as the stage-select page.
+		// Legacy icon metadata still resolves against sprite_sheet_1; Stage Select
+		// now draws a live preview rather than this icon.
 		render_resources.sprite_sheet("sprite_sheet_1")->
 			resolve_sprite_frame(this->icon_frame());
 	}

@@ -86,13 +86,7 @@ namespace
 				escaped += '$';
 			}
 		}
-		std::string quoted = quote_word(escaped);
-		if (quoted.front() != '"' && escaped.find("//") != std::string::npos)
-		{
-			// quote_word left it bare, so it holds no '"' to escape.
-			quoted = '"' + escaped + '"';
-		}
-		return quoted;
+		return quote_word(escaped, escaped.find("//") != std::string::npos);
 	}
 }
 

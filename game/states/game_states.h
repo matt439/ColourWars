@@ -106,9 +106,9 @@ private:
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
 
 	// The end-of-round instant replay (ROAD#19, game_level_replay.cpp). Each
-	// round is taped as it is played; Watch Replay on the End menu builds the
-	// level again from the tape, runs it silently to its last seconds, plays
-	// those and returns to the End menu.
+	// timed round is taped as it is played; Watch Replay on the End menu
+	// builds the level again from the tape, runs it silently to its last
+	// seconds, plays those and returns to the End menu.
 	RoundTape tape_;
 	RoundTapeRecorder tape_recorder_{ &this->tape_ };
 	enum class ReplayPhase { none, preparing, playing };
@@ -159,7 +159,8 @@ private:
 	void sync_rumble();
 	void drain_rumble(float dt);
 
-	// DebugMatchTarget, for the developer tools only.
+	// DebugMatchTarget adapters. debug_update_level also carries ordinary Release
+	// updates through DebugDirector's forwarding hook and the shipping recorder.
 	const MenuLevelSettings& debug_settings() const override;
 	void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) override;
 	void debug_adopt(const MenuLevelSettings& plan, bool reset_session) override;

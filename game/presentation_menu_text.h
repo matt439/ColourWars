@@ -253,6 +253,19 @@ struct MenuStickReadoutsText
 	std::wstring aim_active;
 };
 
+struct StageScanMenuText
+{
+	std::wstring heading = L"User-stage scan";
+	std::wstring status = L"User-stage scan: {count} issue(s).";
+	std::wstring browse_prompt = L"Left/Right Arena   Down Scan details   A/Enter Lock   B/Esc Back";
+	std::wstring details_prompt = L"Left/Right Issue   Up/Down Page   A/Enter or B/Esc Back";
+	std::wstring counter = L"Issue {file} of {files}   Page {page} of {pages}";
+	std::wstring no_refusals = L"No user-stage issues were found.";
+	std::wstring unicode_hint = L"Other characters use \\uXXXX; invalid UTF-8 uses \\xXX.";
+	std::wstring summary(size_t count) const;
+	std::wstring progress(size_t file, size_t files, size_t page, size_t pages) const;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
@@ -274,6 +287,7 @@ struct MenuText
 	MenuEndText end;
 	MenuResultsText results;
 	MenuStageText stage;
+	StageScanMenuText stage_scan;
 	MenuRecordText records;
 	MenuLabelText labels;
 	MenuConnectionText connection;

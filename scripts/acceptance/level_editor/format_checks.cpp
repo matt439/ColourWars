@@ -5,11 +5,13 @@
 #include "game/level_format.h"
 #include <Windows.h>
 
+#include <array>
 #include <cmath>
 #include <exception>
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
 
 namespace level_editor_acceptance
 {
@@ -189,6 +191,106 @@ namespace level_editor_acceptance
         require(!document.dirty() && parse(document.serialize())["format"].GetInt() == level_format::current &&
             parse(document.serialize())["author_extension"] == legacy["author_extension"],
             "Legacy history save did not retain its upgraded version");
+
+        // A zero source byte is not JSON's escaped \u0000. A valid prefix must
+        // not make Load silently accept (and later save away) a file suffix.
+        LevelDocument raw_nul;
+        std::string escaped_source = raw_nul.serialize();
+        escaped_source.insert(escaped_source.find('{') + 1, R"("nul_positive":"keep\u0000tail",)");
+        const fs::path raw_baseline = scratch / "raw-nul-live.json";
+        write(raw_baseline, escaped_source);
+        raw_nul.load(raw_baseline);
+        const std::string initial_raw = raw_nul.serialize();
+        const Entry raw_level = entry(raw_nul, EntryKind::level);
+        bool escaped_offered = false;
+        for (const Property& property : raw_nul.properties(raw_level))
+            escaped_offered |= property.path == "nul_positive" &&
+                property.value == std::string("keep") + '\0' + "tail";
+        require(escaped_offered && initial_raw.find('\0') == std::string::npos,
+            "Escaped JSON NUL must remain valid metadata without a raw source zero");
+        raw_nul.set_property(raw_level, "/display_name", "Raw NUL first");
+        const std::string raw_first = raw_nul.serialize();
+        raw_nul.set_property(raw_level, "/display_name", "Raw NUL second");
+        const std::string raw_second = raw_nul.serialize();
+        require(raw_nul.undo() && raw_nul.can_undo() && raw_nul.can_redo() && raw_nul.dirty(),
+            "Raw-NUL refusal fixture needs a complete dirty undo/redo branch");
+        const auto full_raw_history = [&]
+        {
+            require(raw_nul.path() == raw_baseline && raw_nul.serialize() == raw_first && raw_nul.dirty() &&
+                raw_nul.can_undo() && raw_nul.can_redo() &&
+                raw_nul.undo() && raw_nul.serialize() == initial_raw && !raw_nul.dirty() &&
+                !raw_nul.can_undo() && raw_nul.can_redo() &&
+                raw_nul.redo() && raw_nul.serialize() == raw_first && raw_nul.dirty() &&
+                raw_nul.redo() && raw_nul.serialize() == raw_second && raw_nul.dirty() && !raw_nul.can_redo() &&
+                raw_nul.undo() && raw_nul.serialize() == raw_first && raw_nul.can_undo() && raw_nul.can_redo(),
+                "A refused raw-NUL load changed exact history snapshots, saved state or path");
+        };
+        const std::string zero(1, '\0');
+        const std::array<std::pair<const char*, std::string>, 5> suffixes{ {
+            { "garbage", zero + "discarded source bytes" },
+            { "bare", zero },
+            { "whitespace-before", std::string(" \t\r\n") + zero },
+            { "whitespace-after", zero + " \t\r\n" },
+            { "second-root", zero + R"({"author_note":"must not disappear"})" }
+        } };
+        for (bool bom : { false, true })
+        {
+            const std::string prefix = bom ? "\xEF\xBB\xBF" : "";
+            for (const auto& [name, suffix] : suffixes)
+            {
+                const fs::path invalid = scratch / (std::string(bom ? "raw-nul-bom-" : "raw-nul-") + name + ".json");
+                const std::string bytes = prefix + initial_raw + suffix;
+                write(invalid, bytes);
+                std::string diagnostic;
+                reject_without_change(raw_nul, [&]
+                {
+                    try { raw_nul.load(invalid); }
+                    catch (const std::exception& error) { diagnostic = error.what(); throw; }
+                }, "Load accepted a valid JSON prefix followed by raw NUL source bytes");
+                // Existing parser offsets exclude an optional UTF-8 BOM.
+                require(diagnostic.find(invalid.filename().string()) != std::string::npos &&
+                    diagnostic.find("Invalid JSON at byte " + std::to_string(bytes.find('\0') - prefix.size()) + ":") != std::string::npos,
+                    "Raw-NUL load refusal must identify its file and BOM-stripped zero-byte offset");
+                require(contents(invalid) == bytes && contents(raw_baseline) == escaped_source,
+                    "A refused raw-NUL load changed either the invalid source or the open saved file");
+                full_raw_history();
+            }
+            const fs::path malformed_nul = scratch /
+                (bom ? "raw-nul-bom-malformed-first.json" : "raw-nul-malformed-first.json");
+            const std::string malformed_bytes = prefix + "{broken" + zero + "later suffix";
+            write(malformed_nul, malformed_bytes);
+            std::string malformed_diagnostic;
+            reject_without_change(raw_nul, [&]
+            {
+                try { raw_nul.load(malformed_nul); }
+                catch (const std::exception& error) { malformed_diagnostic = error.what(); throw; }
+            }, "Malformed JSON with a later raw NUL was accepted");
+            require(malformed_diagnostic.find(malformed_nul.filename().string()) != std::string::npos &&
+                malformed_diagnostic.find("Invalid JSON at byte 1: Missing a name for object member.") != std::string::npos,
+                "A later raw NUL replaced the existing malformed-JSON first diagnostic");
+            require(contents(malformed_nul) == malformed_bytes && contents(raw_baseline) == escaped_source,
+                "Malformed-JSON refusal changed source bytes");
+            full_raw_history();
+        }
+        raw_nul.save(raw_baseline);
+        require(contents(raw_baseline) == raw_first && !raw_nul.dirty() &&
+            raw_nul.can_undo() && raw_nul.can_redo(),
+            "Refused raw-NUL loads damaged the original save baseline or retained history");
+        LevelDocument raw_reopened;
+        raw_reopened.load(raw_baseline);
+        require(raw_reopened.serialize() == raw_first,
+            "Saving after raw-NUL refusals lost escaped metadata or the live document");
+        const fs::path whitespace_path = scratch / "raw-nul-valid-whitespace.json";
+        const std::string whitespace_bytes = initial_raw + " \t\r\n";
+        write(whitespace_path, whitespace_bytes);
+        LevelDocument whitespace_document;
+        whitespace_document.load(whitespace_path);
+        require(whitespace_document.serialize() == initial_raw && !whitespace_document.dirty() &&
+            !whitespace_document.can_undo() && !whitespace_document.can_redo() &&
+            contents(whitespace_path) == whitespace_bytes,
+            "Ordinary trailing JSON whitespace or escaped NUL metadata was refused or changed");
+        std::cout << "PASS raw-NUL source refusal: complete suffix admission, byte offsets, first parser errors, "
+            "source bytes and full history; escaped NUL and ordinary trailing whitespace preserved\n";
         std::cout << "PASS shared current format, legacy save upgrade, unknown fields, strict version gate and transactional history\n";
     }
 
@@ -247,6 +349,135 @@ namespace level_editor_acceptance
             "rectangle_tlbr edit wrote wrong corners");
         require(rectangle["author_geometry"]["preserve"].GetBool(),
             "Editing geometry lost unknown nested fields");
+
+        // Unknown JSON keys are byte strings, including NUL and JSON Pointer's
+        // escaped '~' and '/'. Edit the actual inspector path, not its prefix.
+        auto nul_metadata = parse(reopened.serialize());
+        const std::string prefix_key = "note~/";
+        const std::string nul_key("note~/\0tail", 11);
+        const std::string original_value("original\0tail", 13);
+        const std::string changed_value("changed\0tail", 12);
+        const std::string nul_name("named\0tail", 10);
+        auto& extension = nul_metadata["author_extension"];
+        extension.AddMember(rapidjson::Value(prefix_key.data(),
+            static_cast<rapidjson::SizeType>(prefix_key.size()), nul_metadata.GetAllocator()),
+            rapidjson::Value("prefix sibling", nul_metadata.GetAllocator()), nul_metadata.GetAllocator());
+        extension.AddMember(rapidjson::Value(nul_key.data(),
+            static_cast<rapidjson::SizeType>(nul_key.size()), nul_metadata.GetAllocator()),
+            rapidjson::Value(original_value.data(), static_cast<rapidjson::SizeType>(original_value.size()),
+                nul_metadata.GetAllocator()), nul_metadata.GetAllocator());
+        nul_metadata["collision_objects"][static_cast<rapidjson::SizeType>(target.index)]["name"].SetString(
+            nul_name.data(), static_cast<rapidjson::SizeType>(nul_name.size()), nul_metadata.GetAllocator());
+        const fs::path nul_path = scratch / "unknown-nul-metadata.json";
+        const std::string nul_bytes = encode(nul_metadata);
+        write(nul_path, nul_bytes);
+        LevelDocument nul_document;
+        nul_document.load(nul_path);
+        const Entry nul_level = entry(nul_document, EntryKind::level);
+        std::string full_path = "author_extension/note~0~1";
+        full_path.append("\0tail", 5);
+        bool offered = false;
+        for (const Property& property : nul_document.properties(nul_level))
+        {
+            offered |= property.path == full_path && property.value == original_value;
+        }
+        require(offered, "Inspector lost the complete NUL-bearing unknown property path or value");
+        nul_document.set_property(nul_level, full_path, changed_value);
+        const auto changed_nul = parse(nul_document.serialize());
+        const auto& changed_extension = changed_nul["author_extension"];
+        const rapidjson::Value full_key(rapidjson::StringRef(nul_key.data(),
+            static_cast<rapidjson::SizeType>(nul_key.size())));
+        const auto full_member = changed_extension.FindMember(full_key);
+        require(full_member != changed_extension.MemberEnd() && full_member->value.IsString() &&
+            std::string(full_member->value.GetString(), full_member->value.GetStringLength()) == changed_value &&
+            changed_extension[prefix_key.c_str()].IsString() &&
+            std::string(changed_extension[prefix_key.c_str()].GetString(),
+                changed_extension[prefix_key.c_str()].GetStringLength()) == "prefix sibling",
+            "NUL-bearing property path edited its prefix sibling or failed to preserve the complete key/value");
+        const std::string changed_nul_bytes = nul_document.serialize();
+        const fs::path nul_roundtrip = scratch / "unknown-nul-roundtrip.json";
+        nul_document.save(nul_roundtrip);
+        LevelDocument nul_reopened;
+        nul_reopened.load(nul_roundtrip);
+        require(parse(nul_reopened.serialize()) == changed_nul && !nul_reopened.dirty() &&
+            contents(nul_path) == nul_bytes && nul_document.path() == nul_roundtrip &&
+            nul_document.undo() && parse(nul_document.serialize()) == nul_metadata &&
+            nul_document.redo() && nul_document.serialize() == changed_nul_bytes,
+            "NUL-bearing unknown keys/values lost bytes through save/reopen or undo/redo");
+
+        const Entry named_object = entry(nul_document, EntryKind::collision, target.index);
+        const std::string before_duplicate = nul_document.serialize();
+        const Entry copied = nul_document.duplicate(named_object);
+        const auto duplicated = parse(nul_document.serialize());
+        const auto& original_name = duplicated["collision_objects"]
+            [static_cast<rapidjson::SizeType>(named_object.index)]["name"];
+        const auto& copied_name = duplicated["collision_objects"]
+            [static_cast<rapidjson::SizeType>(copied.index)]["name"];
+        const std::string expected_copy = nul_name + " copy";
+        require(original_name.IsString() && copied_name.IsString() &&
+            std::string(original_name.GetString(), original_name.GetStringLength()) == nul_name &&
+            copied_name.GetStringLength() == expected_copy.size() &&
+            std::string(copied_name.GetString(), copied_name.GetStringLength()) == expected_copy &&
+            copied.label == expected_copy,
+            "Duplicating an object truncated its NUL-bearing name or the appended copy suffix");
+        const std::string after_duplicate = nul_document.serialize();
+        require(nul_document.undo() && nul_document.serialize() == before_duplicate &&
+            nul_document.redo() && nul_document.serialize() == after_duplicate &&
+            nul_document.path() == nul_roundtrip,
+            "NUL-bearing duplicate names did not survive exact undo/redo snapshots");
+
+        // These known enum paths insert missing strings. They must validate
+        // the complete input rather than accept a valid prefix before NUL.
+        LevelDocument missing_material;
+        const Entry paintable = missing_material.add_object("StructurePaintable", { 600, 200, 80, 40 });
+        missing_material.set_property(paintable, "/material", "");
+        missing_material.save(scratch / "nul-missing-material.json");
+        const Entry material_level = entry(missing_material, EntryKind::level);
+        missing_material.set_property(material_level, "/display_name", "Material first");
+        const std::string material_first = missing_material.serialize();
+        missing_material.set_property(material_level, "/display_name", "Material second");
+        const std::string material_second = missing_material.serialize();
+        require(missing_material.undo() && missing_material.can_undo() && missing_material.can_redo(),
+            "NUL-bearing material refusal fixture needs both undo and redo history");
+        require(!parse(missing_material.serialize())["collision_objects"]
+            [static_cast<rapidjson::SizeType>(paintable.index)].HasMember("material"),
+            "Material refusal fixture did not exercise missing-field insertion");
+        reject_without_change(missing_material, [&]
+        {
+            missing_material.set_property(paintable, "/material", std::string("pencil\0invalid", 14));
+        }, "Missing material accepted an invalid NUL-bearing enum suffix");
+        require(missing_material.redo() && missing_material.serialize() == material_second &&
+            missing_material.undo() && missing_material.serialize() == material_first,
+            "Refused NUL-bearing material changed undo/redo snapshots");
+
+        const fs::path nul_tuning = scratch / "nul-motion-tuning.json";
+        write(nul_tuning, R"({"player":{"size":{"x":62,"y":100}}})");
+        LevelDocument missing_drive(nul_tuning);
+        const Entry moving = missing_drive.add_object("MovingPaintable", { 600, 600, 320, 20 });
+        missing_drive.save(scratch / "nul-missing-drive.json");
+        const Entry drive_level = entry(missing_drive, EntryKind::level);
+        missing_drive.set_property(drive_level, "/display_name", "Drive first");
+        const std::string drive_first = missing_drive.serialize();
+        missing_drive.set_property(drive_level, "/display_name", "Drive second");
+        const std::string drive_second = missing_drive.serialize();
+        require(missing_drive.undo() && missing_drive.can_undo() && missing_drive.can_redo() &&
+            !parse(missing_drive.serialize())["collision_objects"]
+                [static_cast<rapidjson::SizeType>(moving.index)]["motion"].HasMember("drive"),
+            "NUL-bearing drive refusal fixture needs a missing drive and both history branches");
+        reject_without_change(missing_drive, [&]
+        {
+            missing_drive.set_property(moving, "/motion/drive", std::string("cycle\0invalid", 13));
+        }, "Missing motion drive accepted an invalid NUL-bearing enum suffix");
+        require(missing_drive.redo() && missing_drive.serialize() == drive_second &&
+            missing_drive.undo() && missing_drive.serialize() == drive_first,
+            "Refused NUL-bearing motion drive changed undo/redo snapshots");
+        missing_drive.set_property(moving, "/motion/drive", "paint");
+        reject_without_change(missing_drive, [&]
+        {
+            missing_drive.set_property(moving, "/motion/team_a_heads", std::string("right\0invalid", 13));
+        }, "Existing paint heading accepted an invalid NUL-bearing enum suffix");
+        std::cout << "PASS NUL-bearing unknown metadata edits, duplicate names and complete enum validation; "
+            "exact bytes, private paths and undo/redo preserved\n";
         std::cout << "PASS unknown fields, Unicode paths and both rectangle encodings\n";
     }
 }

@@ -288,8 +288,9 @@ namespace
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
-	const PaintTuning* paint) :
-	paint_(paint),
+	const PaintTuning* paint, const GatePermissionPresentation* gate_cue,
+	const FerryDirectionPresentation* ferry_cue) :
+	paint_(paint), gate_cue_(gate_cue), ferry_cue_(ferry_cue),
 	render_resources_(render_resources),
 	audio_resources_(audio_resources)
 {
@@ -390,7 +391,7 @@ std::unique_ptr<CollisionObject>
 				collision_type, team_colours, faces, colour_of(json), Vector2F::ZERO,
 				SpriteFlip::none, 0.0f,
 				material_of(json, collision_type, rectangle, {}, context.mirror_x,
-					this->render_resources_));
+					this->render_resources_), this->ferry_cue_);
 		}
 
 		if (gate)
@@ -402,7 +403,7 @@ std::unique_ptr<CollisionObject>
 					this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
 					team_colours, faces, context.flat, colour_of(json),
 					material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
-						this->render_resources_, context.slabs), context.slabs);
+						this->render_resources_, context.slabs), context.slabs, this->gate_cue_);
 			}
 			catch (const std::invalid_argument& error)
 			{

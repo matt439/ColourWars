@@ -59,6 +59,16 @@ void MenuContext::rescan_stages()
 	if (this->stage_rescan_) { this->stage_rescan_(); }
 }
 
+void MenuContext::set_stage_scan(std::function<const UserStageScan*()> scan)
+{
+	this->stage_scan_ = std::move(scan);
+}
+
+const UserStageScan* MenuContext::stage_scan() const
+{
+	return this->stage_scan_ ? this->stage_scan_() : nullptr;
+}
+
 void MenuContext::finish_with_music(std::function<void()> finish)
 {
 	if (this->music_exit_) { return; }

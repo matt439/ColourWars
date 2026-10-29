@@ -18,6 +18,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 
 if ($AllowSoftwareAdapter -and $Preset -eq 'x64-release') {
     throw '-AllowSoftwareAdapter is supported only by the x64-debug probe.'
@@ -50,7 +51,7 @@ function Quote-Path {
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
-$outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
+$outputRoot = Resolve-CheckFileSystemPath $OutputDirectory
 $run = Join-Path (Join-Path $outputRoot $Preset) ([Guid]::NewGuid().ToString('N'))
 $captures = Join-Path $run 'captures'
 $working = Join-Path $run 'working-directory'
@@ -105,7 +106,7 @@ try {
         Write-Host "Configure and build $Preset; logs: $run"
         Invoke-Logged -Command 'cmake' -Arguments @('--preset', $Preset) `
             -LogPath (Join-Path $run 'configure.log')
-        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset) `
+        Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
     $cachePath = Join-Path $build 'CMakeCache.txt'

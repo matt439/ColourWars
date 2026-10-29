@@ -211,6 +211,58 @@ namespace
             "A new round's tape kept the last round's steps, spoil or cheats");
         std::cout << "PASS tape rules: empty and spoiled tapes are not offered; cheats change only before play\n";
     }
+
+    void check_disabled_capture(World& world)
+    {
+        class InputReplacement final : public SeatInputFilter
+        {
+        public:
+            void filter_seats(std::vector<PlayerInputData>& seats, const Level&) override
+            {
+                for (auto& seat : seats) { seat = scripted(calls); }
+                ++calls;
+            }
+            bool replaces_bot_inputs() const override { return true; }
+            int calls = 0;
+        } next;
+
+        // The same recorder stays in the chain when capture is disabled. It
+        // must still supply downstream input and suppress the shipping bots.
+        RoundTape tape;
+        RoundTapeRecorder recorder(&tape);
+        const auto level = world.build(roster("crossfeed"), OpeningMode::off);
+        const auto same_input = [](const PlayerInputData& actual, const PlayerInputData& expected)
+        {
+            return actual.connected == expected.connected && actual.x_movement == expected.x_movement &&
+                actual.jump_pressed == expected.jump_pressed && actual.jump_held == expected.jump_held &&
+                actual.primary_shoot == expected.primary_shoot && actual.shoot_direction == expected.shoot_direction;
+        };
+        recorder.prepare(&next, 1.0f / 60.0f);
+        require(recorder.replaces_bot_inputs(), "Disabled capture lost downstream bot-input replacement");
+        for (int tick = 0; tick < 10000; ++tick)
+        {
+            std::vector<PlayerInputData> seats(4);
+            recorder.filter_seats(seats, *level);
+            require(same_input(seats.front(), scripted(tick)) && same_input(seats.back(), scripted(tick)),
+                "Disabled capture did not forward downstream final input");
+            tape.record_suspend(); tape.record_resume(seats);
+        }
+        require(next.calls == 10000 && tape.steps() == 0 && !tape.playable(),
+            "Disabled capture grew input steps or skipped the downstream filter");
+        // Capture may be enabled again for the next timed round.
+        tape.start(10, roster("crossfeed"));
+        tape.record_step(std::vector<PlayerInputData>(4), 1.0f / 60.0f);
+        require(tape.steps() == 1 && tape.playable(), "Capture did not restart after being disabled");
+        tape.clear();
+        recorder.prepare(nullptr, 1.0f / 60.0f);
+        require(!recorder.replaces_bot_inputs(), "Disabled capture replaced bots without a downstream filter");
+        std::vector<PlayerInputData> unchanged(4, scripted(37));
+        recorder.filter_seats(unchanged, *level);
+        require(same_input(unchanged.front(), scripted(37)) && tape.steps() == 0,
+            "Disabled recorder changed ordinary final input or captured after clear");
+        std::cout << "PASS disabled capture: 10000 steps forward downstream input and bot replacement; "
+            "capture can restart and clear\n";
+    }
 }
 
 int main(int argc, char** argv)
@@ -220,6 +272,7 @@ int main(int argc, char** argv)
         require(argc == 2, "usage: instant_replay <content>");
         World world(std::filesystem::absolute(argv[1]));
         check_tape_rules();
+        check_disabled_capture(world);
         unsigned int seed = 19019;
         // The ferry trial's movers and the gate trial's gate follow the paint,
         // so they replay only if it does.

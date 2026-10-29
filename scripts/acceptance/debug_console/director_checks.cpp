@@ -475,7 +475,148 @@ namespace debug_console_acceptance
 
 	void check_screenshot_file(GameTuning& tuning, Presentation& presentation)
 	{
+		// DBG13: setter-only validation on an application-free director. Never
+		// queue a screenshot or open a proposed folder, including device names.
+		{
+			TestDirector directory_test(tuning, presentation);
+			DebugDirectorImpl& directories = directory_test.impl;
+			require(!directories.user_directory().has_value() && !directories.pending_screenshot().has_value(),
+				"DBG13 setter-only director unexpectedly has a profile or queued capture");
+			const auto query = [&](const std::string& expected, bool prefix = false)
+			{
+				directories.log().clear();
+				const DebugStatus result = directories.execute("screenshot.dir");
+				const auto& lines = directories.log().lines();
+				require(result.ok && !result.close_console && lines.size() == 1 && lines.front().severity == DebugSeverity::info &&
+					(prefix ? lines.front().text.starts_with(expected) : lines.front().text == expected),
+					"DBG13 current-directory query did not emit its expected fresh info line");
+			};
+			const auto accept = [&](const std::string& folder, const std::string& expected)
+			{
+				const DebugStatus result = directories.execute("screenshot.dir \"" + folder + "\"");
+				require(result.ok && !result.close_console && directories.screenshot_dir() == expected &&
+					!directories.pending_screenshot().has_value(), "DBG13 valid folder changed: " + folder);
+				query("screenshot.dir = " + expected);
+			};
+			const auto refuse = [&](const std::string& folder, const std::string& message)
+			{
+				const std::string previous = directories.screenshot_dir();
+				const DebugStatus result = directories.execute("screenshot.dir \"" + folder + "\"");
+				require(!result.ok && !result.close_console && result.message == message &&
+					directories.screenshot_dir() == previous && !directories.pending_screenshot().has_value(),
+					"DBG13 screenshot.dir did not refuse '" + folder + "' immediately while retaining its prior folder: " + result.message);
+				query("screenshot.dir = " + previous);
+			};
+			accept("retained/session", "retained/session");
+			// First new assertion: the old setter succeeds, without accessing disk.
+			refuse("CON", "screenshot.dir: reserved Windows folder name: CON");
+			std::vector<std::string> reserved{ "CON", "PRN", "AUX", "NUL" };
+			for (int digit = 1; digit <= 9; ++digit)
+			{
+				reserved.push_back("COM" + std::to_string(digit));
+				reserved.push_back("LPT" + std::to_string(digit));
+			}
+			std::size_t refusals = 1;
+			for (const std::string& stem : reserved)
+				for (int spelling = 0; spelling < 3; ++spelling)
+				{
+					std::string name = stem;
+					for (std::size_t index = 0; index < name.size(); ++index)
+						if ((spelling == 1 || (spelling == 2 && index % 2 == 1)) && name[index] >= 'A' && name[index] <= 'Z')
+							name[index] = static_cast<char>(name[index] - 'A' + 'a');
+					for (char slash : { '/', '\\' })
+						for (int position = 0; position < 3; ++position)
+						{
+							const std::string separator(1, slash);
+							const std::string folder = position == 0 ? name + separator + "safe" + separator + "last"
+								: position == 1 ? "safe" + separator + name + separator + "last"
+								: "safe" + separator + "middle" + separator + name;
+							refuse(folder, "screenshot.dir: reserved Windows folder name: " + name);
+							++refusals;
+						}
+				}
+			require(refusals == 397, "DBG13 reserved-name matrix did not visit every spelling, separator and position");
+			for (const char* name : { "COM0", "COM10", "LPT0", "LPT10", "CON_", "NULx", "PRNx", "_AUX", "-review" })
+				accept(name, name);
+			const std::string long_name(96, 'q');
+			accept(long_name, long_name);
+			accept("safe/second/third", "safe/second/third");
+			accept("safe\\second\\third", "safe/second/third");
+			accept("/safe//./second/", "safe/second");
+			accept("two words/next?", "two_words/next_");
+			accept("CON.txt", "CON_txt");
+			accept("CON.", "CON_");
+			const DebugStatus timed = directories.execute("screenshot.dir review-{time}/frame");
+			require(timed.ok && !timed.close_console && !directories.pending_screenshot().has_value() &&
+				std::regex_match(directories.screenshot_dir(), std::regex("review-[0-9]{8}-[0-9]{6}/frame")),
+				"DBG13 screenshot directory lost its existing local-time expansion");
+			accept("retained/session", "retained/session");
+			refuse("a/../b", "screenshot.dir: '..' is not allowed");
+			refuse("a/b/c/d", "screenshot.dir: at most three folders");
+			refuse("a/../b/c/d/e", "screenshot.dir: at most three folders");
+			refuse("CON/../x", "screenshot.dir: '..' is not allowed");
+			refuse("../CON", "screenshot.dir: '..' is not allowed");
+			refuse("CON/a/b/c", "screenshot.dir: at most three folders");
+			refuse("a/b/CON/d", "screenshot.dir: at most three folders");
+			refuse("/./", "screenshot.dir: no folder name in '/./'");
+			for (const char* command : { "screenshot.dir off", "screenshot.dir \"\"" })
+			{
+				directories.log().clear();
+				const DebugStatus disabled = directories.execute(command);
+				const auto& lines = directories.log().lines();
+				require(disabled.ok && !disabled.close_console && directories.screenshot_dir().empty() &&
+					lines.size() == 1 && lines.front().severity == DebugSeverity::info &&
+					lines.front().text.starts_with("screenshot.dir off: ") && !directories.pending_screenshot().has_value(),
+					"DBG13 screenshot directory lost off/empty/query behavior");
+				query("screenshot.dir = off (", true);
+			}
+			require(!directories.user_directory().has_value(), "DBG13 setter-only validation selected a player profile");
+		}
+
 		const auto now = std::chrono::system_clock::now();
+		// DBG14: pure filename values only; never open a reserved device path.
+		{
+			const std::string first = screenshot_file_name("CON", now);
+			require(first == "_CON.png", "DBG14 reserved screenshot basename was not protected: " + first);
+			std::vector<std::string> reserved{ "CON", "PRN", "AUX", "NUL" };
+			for (int digit = 1; digit <= 9; ++digit)
+			{
+				reserved.push_back("COM" + std::to_string(digit));
+				reserved.push_back("LPT" + std::to_string(digit));
+			}
+			std::size_t protected_names = 1;
+			for (const std::string& stem : reserved)
+				for (int spelling = 0; spelling < 3; ++spelling)
+				{
+					std::string name = stem;
+					for (std::size_t index = 0; index < name.size(); ++index)
+						if ((spelling == 1 || (spelling == 2 && index % 2 == 1)) && name[index] >= 'A' && name[index] <= 'Z')
+							name[index] = static_cast<char>(name[index] - 'A' + 'a');
+					for (const char* suffix : { "", ".png", ".PnG" })
+					{
+						const std::string requested = name + suffix;
+						const std::string actual = screenshot_file_name(requested, now);
+						require(actual == "_" + name + ".png", "DBG14 reserved basename changed: " + requested + " -> " + actual);
+						++protected_names;
+					}
+				}
+			require(protected_names == 199, "DBG14 reserved matrix did not visit every spelling and suffix");
+			for (const char* neighbor : { "COM0", "COM10", "LPT0", "LPT10", "CON_", "_CON", "-CON", "CONSOLE" })
+				for (const char* suffix : { "", ".png", ".PnG" })
+				{
+					const std::string name(neighbor);
+					require(screenshot_file_name(name + suffix, now) == name + ".png",
+						"DBG14 valid neighboring basename changed: " + name + suffix);
+				}
+			require(screenshot_file_name("CON.", now) == "CON_.png" &&
+				screenshot_file_name("CON.txt", now) == "CON_txt.png" &&
+				screenshot_file_name("dir/CON", now) == "dir_CON.png" &&
+				screenshot_file_name(".png", now) == "_png.png",
+				"DBG14 filename protection changed existing suffix or punctuation sanitization");
+			std::printf("PASS DBG14 screenshot basenames: 199 reserved stem/case/suffix values, 24 valid neighbors, "
+				"sanitized punctuation/path controls; pure strings, no capture or reserved-path access\n");
+		}
+
 		require(screenshot_file_name("my shot!", now) == "my_shot_.png",
 			"A name keeps [A-Za-z0-9_-]");
 		require(screenshot_file_name("drive.png", now) == "drive.png",

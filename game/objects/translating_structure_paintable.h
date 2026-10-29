@@ -5,6 +5,20 @@
 
 class Level;
 class Projectile;
+struct FerryDirectionPresentation;
+
+enum class FerryMotionCue { unstepped, held, moving, left_stop, right_stop };
+
+struct FerryCueState
+{
+    bool paint_driven = false;
+    PlayerTeam demand_team = PlayerTeam::none;
+    int demand_heading = 0;
+    int committed_heading = 0;
+    // Sign of committed world-body displacement, after pose rounding.
+    int movement_heading = 0;
+    FerryMotionCue motion = FerryMotionCue::unstepped;
+};
 
 // Rigid horizontal translation of anchored scoring/material geometry. This
 // capability is fixed for a Level lifetime; it is not a lift or a rotating body.
@@ -27,7 +41,8 @@ public:
         const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
         labrador::SpriteFlip flip = labrador::SpriteFlip::none,
         float layer_depth = 0.0f,
-        std::unique_ptr<const TerrainMaterial> material = nullptr);
+        std::unique_ptr<const TerrainMaterial> material = nullptr,
+        const FerryDirectionPresentation* cue = nullptr);
 
     HorizontalMotionId motion_id() const;
     HorizontalMotionState motion_state() const;
@@ -35,6 +50,11 @@ public:
     mattmath::Vector2F translation() const;
     // +1 right, -1 left or 0 still, from the paint held now; 0 for a cycle.
     int drive_heading() const;
+    // Current paint demand and last positive committed step are separate
+    // clocks. Drawing and zero steps never turn new paint into claimed motion.
+    FerryCueState cue_state() const;
+    // World-space hanging plaque; empty for cycles and uncued objects.
+    mattmath::RectangleF cue_bounds() const;
     void append_anchor_paint_surfaces(std::vector<PaintSurfaceSample>& samples) const;
 
     void draw(labrador::DrawList& draw_list) const override;
@@ -69,4 +89,12 @@ private:
     mattmath::RectangleF world_rectangle_ = mattmath::RectangleF::ZERO;
     HorizontalMotionStep collision_step_;
     HorizontalMotionId motion_id_ = 0;
+    const FerryDirectionPresentation* cue_ = nullptr;
+    TeamColour team_colours_;
+    labrador::RenderResources::SheetFrame cue_frame_;
+    int committed_heading_ = 0;
+    int movement_heading_ = 0;
+    FerryMotionCue motion_cue_ = FerryMotionCue::unstepped;
+    mattmath::RectangleF anchor_cue_bounds() const;
+    void draw_direction(labrador::DrawList& draw_list) const;
 };

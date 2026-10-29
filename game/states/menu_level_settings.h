@@ -40,7 +40,7 @@ public:
 	void set_player_bot(int player_index, BotDifficulty difficulty);
 	// Replacing a bot leaves an unclaimed human. Existing human claims stay put.
 	void set_player_human(int player_index);
-	// Manifest key for the chosen level; empty until stage selection.
+	// Registry key for the chosen manifest or accepted user stage; empty until selection.
 	void set_stage(const std::string& stage);
 	const std::string& stage() const;
 	labrador::ScreenLayout screen_layout() const;
@@ -68,11 +68,12 @@ public:
 	bool input_roster_complete() const;
 	int player_index_for_slot(int slot) const;
 
-	// A seat's input slot (MenuPlayerSettings::num) is its identity for the
-	// match: paint, scores and preferences are keyed on it. The pad it reads
-	// is device_slot(num), the same slot unless a controller that came back
-	// in another slot reclaimed the seat (ROAD#4). Setup never moves one;
-	// every claim operation above puts each seat back on its own slot.
+	// A human's stable input slot (MenuPlayerSettings::num) keys its preferences
+	// and paint credit; bots have no slot and use participant-based paint credit.
+	// Roster order identifies participants and their results, independently of
+	// human panes. A pad reads device_slot(num), normally num unless a controller
+	// returned in another slot and reclaimed the seat (ROAD#4). Claim operations
+	// reset device mappings; move_to_device changes only the pad being read.
 	int device_slot(int slot) const;
 	// device_slot for every pad slot, for readers indexed by input slot.
 	std::array<int, input_slots::pad_count> pad_devices() const;

@@ -45,11 +45,543 @@ See [the level format reference](level-format.md) for the file contract.
 
 ## Editing
 
+### Authoring follow-up shortlist (2026-10-28)
+
+The author authorized autonomous bounded improvements while attended gates
+wait. A fresh source review ranked these independent authoring defects:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | `Editor::nudge` changes the document during an active drag without cancelling its old preview; button release can overwrite the arrow edit. | Selected as `ED#13`: adopt the existing command gesture barrier. Small change with a native message/history regression; preserve pending-property admission and snap rules. |
+| 2 | Ramp drawing is triangular, but `Editor::hit` accepts the entire rectangle, including its empty half. | Improve selection of overlapping geometry; define edge tolerance and preserve selection priority before implementation. |
+| 3 | Debug `quote_word` does not protect a quoted word's trailing backslash, which the tokenizer consumes with the closing quote. | Useful for paths and saved binds; needs grammar and persistence qualification. Larger scope than the canvas fix. |
+
+After those three fixes, the next source-based shortlist is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | The shared `user_stage_contract::usable_name` accepts `CON`, `NUL`, `COM1` and other Windows device stems, although Save to My Stages produces ordinary `.json` paths. | Selected as `ED#15`: reject unusable names before destination access, sharing the rule between editor and game. Small change with pure-name and private-target checks. |
+| 2 | The editor validates UTF-8, but the game's default-flag level/fingerprint parses do not validate unknown string bytes or raw-NUL suffixes. | A client-owned snapshot check may align admission without an engine update. Moderate diagnostic/precedence risk; scope separately. |
+| 3 | Debug `binds.reset` ignores failure to remove the saved overrides, even though ordinary writes already use atomic replacement. | A blocked private file can expose misleading success and old binds on restart. Small feedback/persistence fix; avoid rewriting the existing atomic writer. |
+
+After completing those slices, fresh source review ranked these independent
+follow-ups:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Empty first metadata keys produce generated paths such as `/display_name`, which the setter interprets as an absolute root field; preview maps also strip that slash and can shadow real object fields. | Selected as `ED#16`: give the empty first token an explicit JSON-pointer slash. Small generation change; qualify exact targets and native inspector/preview behavior while preserving setter aliases and escaping. |
+| 2 | Left-button drag can start during a middle-button pan without ending the pan; middle-button release then cancels the still-held drag. | Bounded input usability work, but define gesture ownership and qualify both button orders before changing it. |
+| 3 | Several check scripts resolve relative evidence directories with `Path.GetFullPath`, which can differ from PowerShell's current location. | Concrete tooling usability candidate; reproduce with separate private provider/process locations before selecting a shared resolution policy. |
+
+After those fixes and tooling slices, source review found no further small
+defect in the inspected gesture/property/save paths. The next additive
+authoring shortlist is:
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Canvas hit testing returns the first object in category/reverse-document order. A buried collider or decoration needs the Level Contents list even when its geometry is under the pointer. | Selected as `ED#18`: Ctrl+click cycles the existing eligible hits, with selection only. Preserve plain click and all current shape predicates; bounded native selection/history checks. |
+| 2 | Drag and arrow snap round displacement, so an imported off-grid origin stays off-grid. | Selected next as `ED#19`: align the authored origin in one validated, undoable operation, preserving ordinary relative movement and slab geometry. |
+
+#### Cycle overlapping canvas objects (`ED#18`)
+
+**Done (2026-10-28).** Ctrl+click is a selection-only way to reach
+overlapping objects. It uses the existing hit eligibility and priority: team B
+spawns, team A spawns, collisions, decorations; each category visits later
+document entries first. If the current selection is eligible at that point,
+it selects the next hit and wraps. Otherwise it selects the first hit. One hit
+selects it; no hit retains the selection. Bounds retain their ordinary outline-edit
+behavior and do not join this object cycle.
+
+One ordered hit collector owns the existing ramp/slab tolerances and mover
+anchor/initial-pose tests. A mover counts once even when both rectangles hit.
+Ordinary clicks retain their first-hit selection and move/resize behavior.
+Ctrl+click applies pending properties through the existing guard, cancels an
+older gesture, changes only selection and acquires no capture. Mouse movement
+and button release after that selection cannot create an edit. The shortcut
+appears in the existing Help and eight-line hint; the inspector layout
+is unchanged.
+
+The private actual-message baseline failed to select the literal buried entry.
+Both presets now pass 28 Ctrl-click queries covering cycling/wrap and category
+order, absent current selection, single/no hit, shape exclusions/boundaries,
+mover deduplication, valid pending edits, cancelled previews, unchanged
+view/source/history and no capture. Ordinary click and selected-bounds resize
+controls retain their behavior. These tests run in the separate `--gestures`
+process; the original aggregate DPI/font fixture is unchanged and still reports
+28 transitions and GDI 21 to 21.
+
+All three editor targets and complete checkers pass in Debug and Release,
+including earlier metadata, gestures, 219 ramp queries, save guidance and four
+hidden launches. Independent review and six-file source-immutability checks
+pass. Invalid-property modal behavior, aggregate input-activated GDI lifetime
+and attended GUI/saved-stage play (`ED#5`) remain separate qualifications.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`ed18-baseline/ac87f34221bf41508231cf6157a712cb`, both-preset batch
+`ed18-candidate/2e2b7a80952e40d696ca823907656dbf`. Full checker receipts:
+`out/acceptance/x64-debug/level-editor/82aadf314c82420f9ba8571ce1c2c7ba`
+and `out/acceptance/x64-release/level-editor/716a3770d7034f6a990da6b6b8cf5489`.
+
+#### Align authored origins to the grid (`ED#19`)
+
+**Done (2026-10-28).** **Edit > Align origin to grid** aligns authored origins.
+Imported geometry can start off-grid; relative dragging and nudging retain
+that offset. The command aligns both coordinates to the current
+1/10/25/50/100-unit grid with one undo step.
+This explicit command uses `std::round` (half steps away from zero) regardless
+of Shift, while existing drag/nudge controls keep their behavior.
+
+**Qualification.** Initial Debug checks passed. Release builds and model checks passed, but its
+DPI fixture stopped at `DPI transition retained its replaced owned font` before
+gesture and hidden-launch checks. The failed run is retained under
+`out/validation/implementation-loop-20261028/ed19-candidate/1cf1306d7d2544c3b610c62f5af65630`
+(Release checker `436b5efa01ad4901a70ecba01b9b6a5b`). A separate original
+Release input process also failed its old-font type assertion after the eight
+alignment contexts passed (`ed19-release-input/2999ef9cea9e40028a0e84fc0ea55162`).
+
+A bounded private lifecycle experiment captured the invalid assumption:
+an unused, unselected font returned successful deletion and retained no GDI
+objects, yet `GetObjectType` returned `OBJ_FONT` while `GetObjectW` returned
+zero bytes. The first capture stopped the experiment; the other five cells
+were skipped (`ed19-font-matrix-run/f2d206d26b364289a2cad8890ea020bf`).
+No cache mechanism or exact cause of the earlier editor samples is claimed.
+
+The two retirement assertions now query the actual logical font record with
+[`GetObjectW`](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobjectw),
+whose documented failure result is zero. Input transitions also positively
+check the live replacement record, DPI height and handle identity. Default
+transitions retain their existing live-record/control checks, all 28 DPI
+transitions, exact GDI-count equality and complete pending/history invariants.
+Production font handling is unchanged. All three editor targets and complete
+checks now pass in both presets, including default GDI `21 -> 21`.
+Input-activated aggregate GDI lifetime and attended `ED#5` acceptance remain
+separate gates.
+
+`LevelDocument::align_origin(const Entry&, int grid)` is the atomic model
+operation. It rejects nonpositive grids and level metadata. For rectangular/TLBR
+objects, ramps, bounds and moving anchors, it aligns the geometric left/top.
+Spawns use their stored point; fixed slabs use the authored `slab/x,y`
+endpoint. Existing size, direction, motion and metadata are preserved through
+the current geometry writers.
+An already aligned origin returns before mutation, preserving number types,
+the saved point and redo history. Other changes use one `Impl::mutate` and its
+existing validation, so refused geometry leaves the entire model unchanged.
+
+The Edit menu command has its identifier appended after existing IDs. It is
+enabled for selected geometry, including bounds/spawns/slabs and already
+aligned entries, and disabled for no selection or level metadata. The command
+uses the current gesture barrier and pending-property guard, then refreshes
+the inspector. Help explains grid/Shift behavior and slab origins.
+
+The old-source native baseline failed on literal off-grid coordinates before
+implementation. Model checks qualify every supported grid,
+positive/negative half steps, rectangle/TLBR/ramp/bounds/spawn/mover/slab
+origins, no-op types/redo, exact one-step history and private save/reload.
+Refusal controls include the team-spawn midpoint, blocked mover corridors and
+slab endpoint limits. Eight native contexts qualify menu enablement, valid pending
+edits, gesture cancellation/late releases, view/source/history and caller
+restoration. Direct controller calls may catch geometry errors before the
+window's modal handler; invalid pending-property dialogs remain unqualified.
+The separate gesture process also retains prior overlap selection, button
+handoffs and all 219 ramp-hit queries. Independent source/test review and
+twelve-file source-immutability checks pass. Four hidden launches and complete
+destination/save guidance pass in each preset.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`ed19-baseline/436742cf1bc148d2a313cc3e36d6f921`, final both-preset batch
+`ed19-corrected/2cfde2a15b334278afafb8411425fd12`. Full checker leaves are
+`out/acceptance/x64-debug/level-editor/4497dc8e8bc94ad98e566acc3a63cf64`
+and `out/acceptance/x64-release/level-editor/779b68cf562d437cb6a54df051b962de`.
+
+#### Warmed input resource lifetime (`ED#20`)
+
+**Open (2026-10-28).** The separate `--gestures` process drives real hidden
+canvas input and DPI changes, but its aggregate GDI lifetime remains
+unqualified. The original unactivated 28-transition fixture has a separate
+exact GDI-count gate and stays unchanged.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | All six input helpers return their temporary GDI objects, yet `run_gestures` has no warmed aggregate counter. | Selected as `ED#20`: repeat the actual helper sequence in one hidden editor and require stable own-process GDI counts. Bounded software qualification, with private cycle artifacts and no claimed defect. |
+| 2 | Invalid pending-property dialogs remain unqualified. | A later explicit modal-driving scope with owned dialog and cancellation checks. |
+| 3 | Editor creation/destruction lifetime is distinct from one warmed editor. | Keep separate; do not introduce unsupported multiple-editor registration assumptions into this slice. |
+
+**Retained experimental plan.** Run all six helpers once for warm-up, then repeat the complete sequence three
+times using fresh `w`, `c1`, `c2`, `c3` subdirectories. Measure only after each
+helper's locals have died. Retain the raw count, execute one successful
+[`GdiFlush`](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-gdiflush)
+for the calling thread, then retain its settled count. Require each checked
+settled count to equal the nonzero warmed settled count. Stop at the first
+assertion, flush failure or count mismatch, with no extra warm-ups or tolerance.
+
+The first Debug qualification recorded raw counts `58, 58, 56` with every
+shell-state flag true; it stopped at `c2` and did not run Release. The failed
+receipt and all nine unchanged fixture hashes are retained in
+`ed20-candidate/8e426c0a4f854b9b850f70ab2f63bc68`, with native evidence under
+`out/acceptance/x64-debug/level-editor/1010ea5ae27c410fb29ba4f888716541`.
+That decrease is not evidence of a leak or proof of batching as its cause.
+The last ramp DPI restoration follows its final font-record query and may
+leave Boolean GDI operations queued; the explicit barrier gives the fixture
+a defined completion point.
+
+After warm-up, one owned pen control must increase the settled count by
+exactly one while held, then restore the exact baseline after successful
+deletion and flushing. The pen is never selected into a DC, and RAII cleanup
+retains ownership on exceptional exits. Persist the two control observations
+before their assertions. A changed settled count must still fail qualification.
+
+The settled Debug candidate also failed: `46` after warm-up, then `56` at
+`c1`, with successful flushes and every shell-state flag true. The pen control
+recorded `46 -> 47 -> 46`. Evidence is
+`ed20-candidate/8724a26569604dcd95d8089f745b59d5`; Release was not reached.
+Thus a thread flush alone does not resolve the discrepancy.
+
+A separate private diagnostic retained the same helper/state assertions and
+ran a predetermined six-cycle cap, recording aggregate mismatches without
+calling them passes. Its settled counts were `57, 58, 56, 56, 56, 56`;
+per-helper observations localized the later `+1` and `-2` changes to the
+empty-key inspector helper. All six cycles restored their caller state and
+the owned child exited with cleanup complete. Evidence is
+`ed20-phase-trace-run/fb50f06dc87647c1b93cdc89d0083483`. This does not establish
+a leak, a native-control cache explanation, or qualification. The next bounded
+investigation was to distinguish the helper's explicit bitmap/DC cleanup from
+its native inspector refreshes while preserving the failed candidate.
+
+That private six-cycle trace completed in
+`ed20-emptykey-trace-run/f5959706dea549d18e07fc429ade7ce3`: all 108 milestones,
+six exact bitmap restores and all bitmap/DC deletions succeeded. All settled
+counts were `56`; the earlier discrepancy did not reproduce. Observed changes
+occurred during bitmap creation/drawing/cleanup, with no changes at the native
+inspector milestones in this run. This narrows the observations without
+identifying the objects behind the earlier count differences.
+
+The unqualified counter candidate is retained byte-for-byte in
+`ed20-retained-experiment/gesture_checks.h`, with its hash and all receipt
+references in the sibling manifest. Only that new experimental `run_gestures`
+replacement was removed from the working harness; all established helpers and
+assertions remain. No aggregate pass is claimed. The next source step is to
+define checks for the explicit owned resources and their cleanup results before
+proposing another process-wide count gate. The
+[`GetGuiResources`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getguiresources)
+contract counts the process's GDI objects; the calling-thread flush does not
+establish ownership or promise stable native-control resource usage after one
+traversal. Keep any future aggregate criterion explicit and independently
+qualified.
+
+Every cycle must preserve shell source bytes/path, clean history and pending
+state, selection, viewport, snap/grid, DPI/window rectangle, thread keys,
+focus/capture and hidden state. Compare activation with its warmed value;
+input legitimately activates this thread's hidden parent. Preserve every
+existing helper assertion and all original unactivated DPI checks.
+
+Any replacement must qualify the full editor checker in both presets and
+retain source hashes, cycle artifacts and counts. A pass would establish only
+the replacement's stated bounded contract;
+creation/destruction lifetime, invalid-property dialogs and attended `ED#5`
+acceptance remain separate. No game graphics/audio device or player data is
+needed.
+
+#### Paint exception cleanup (`ED#21`)
+
+**Done (2026-10-29).** `canvas_message(WM_PAINT)` formerly released its
+compatible bitmap/DC and calls `EndPaint` only after `paint` returns normally.
+`paint` likewise restored the caller's selected font only on normal return.
+Drawing allocates strings and vectors and converts UTF-8 labels; an exception
+escapes to `canvas_proc`, which reports it and continues using the editor.
+The resources must be released before that handler runs.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Paint cleanup is skipped on a concrete throwing path. | Selected as `ED#21`: scope the paint session, buffer and selected font so unwinding releases them. Bounded robustness repair with a deterministic malformed-label regression. |
+| 2 | Empty-key input changes process-wide GDI counts without an identified owner. | Continue the separate bounded `ED#20` diagnostic; do not attribute those successful cycles to this exception defect. |
+| 3 | Invalid pending-property dialogs remain unqualified. | Keep the explicit modal-driving and cancellation scope separate. |
+
+Exercise the production drawing methods through the existing acceptance
+friend, using an invalid UTF-8 label in private in-memory draw data. Call the
+canvas message method directly so the test catches the exception without
+opening its outer error dialog. Observe the caller's selected font and
+repeated failed buffered paints; retain the failing baseline before the fix.
+Preserve the original document, source, controls and input state. Keep this
+after the existing unactivated DPI checks, and preserve their count gate.
+
+Small local guards now restore the borrowed font and release the selected
+bitmap, compatible DC and paint session during unwinding. The paint owner is
+fully constructed before later acquisitions can throw, and partial buffer
+creation failures use the same cleanup. Every attempted `BeginPaint` has its
+scoped `EndPaint`; drawing and the outer error policy stay intact.
+
+The unchanged-production Debug baseline reproduced both failures. The direct
+paint retained the editor's font in the caller's private DC. Three buffered
+exceptions increased settled GDI counts from `22` to `26`, `30`, then `34`;
+the following valid recovery paint still recorded `34`. Every controlled
+exception and caller-state check succeeded. The original 28-transition DPI
+fixture and 45 mechanism contexts passed before the ownership assertion failed.
+Evidence: `ed21-baseline/b6512abc4a8440e094c5d5c051de3093`, with native CSVs at
+`out/acceptance/x64-debug/level-editor/8e5b350655a64e04acace476c2035e1b/dpi-window`.
+
+All three editor targets and the complete checker pass in Debug and Release.
+Both controlled exception fixtures restore the caller's exact font and retain
+GDI `22 -> 22` through all three failures and recovery. All caller/source/history
+flags remain true. The original DPI gate remains `21 -> 21`, and mechanism,
+gesture, save-guidance and four hidden-launch checks pass in each preset.
+Independent source/test review, 14 unchanged source hashes and owned-process
+cleanup checks pass. Evidence: `ed21-candidate/cb444061cf02453491324e3606a4de63`;
+full checker leaves are `34b7de2ae6d142bdb08b0c933fb46cbd` under Debug and
+`ad957d94c8374a97bac5ae0e8cc38636` under Release's `out/acceptance` tree.
+Forced Win32 acquisition failures and the modal error UI were not exercised;
+partial cleanup and paint-session pairing also received source review.
+`ED#20` and attended `ED#5` remain independent gates.
+
+#### Invalid pending-property refusal (`ED#22`)
+
+**Done (2026-10-29).** A separate native `--pending` acceptance process now
+qualifies invalid numeric text across Apply, Save, Save As, Save to My Stages,
+object-list selection, Home navigation, Close/Cancel, Close/Yes followed by the
+validation error, and a controlled expired Close prompt. This adds evidence for
+the existing guards; no production editor behavior changed.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Invalid pending text reaches a modal error before the guarded action proceeds. | Selected as `ED#22`: qualify real Apply, save, selection, navigation and Close refusal paths against private stage files. Direct data-preservation value; isolate modal driving and its deadline in a separate acceptance process. |
+| 2 | The input fixtures' explicit bitmap/DC cleanup results are unchecked. | Continue `ED#20` with exact ownership receipts before proposing another aggregate resource gate. This does not establish a production leak. |
+| 3 | External capture loss clears drag/pan but leaves the resize flag. | Investigate the complete capture-loss contract separately; no lost-edit defect has been established. |
+
+The existing acceptance friend prepares real undo/redo history, a selected
+spawn coordinate and pending `true` text. Actual window messages exercise each
+guard. All nine contexts preserve the private stage bytes, document/path,
+history, selected rows, pending text and text selection, viewport, thread keys,
+window/font state and empty private profile. Capture and gesture flags remain
+idle. Both CRT and Win32 profile views are restored after the fixture.
+
+One timer lives for the whole fixture. Its nonthrowing callbacks use fixed
+storage and inspect only dialogs with the exact current PID/thread, editor
+owner, class, caption and body. Yes and Cancel require their enabled button
+IDs; the exact finite-number error requires its single enabled acknowledgement
+button. Unexpected dialogs receive no affirmative answer. Each action has a
+ten-second deadline; the controlled expiry is already expired and must cancel
+without saving. Cleanup clears the callback context, kills the timer and checks
+that no owned dialogs remain. The new native invocation alone has a 120-second
+private Job Object deadline, merged logs and a terminal cleanup receipt.
+
+Two private diagnostics corrected fixture assumptions before qualification.
+The error's sole enabled OK control had native ID `2`, with no ID `1`; using its
+actual control follows the existing save-guidance checker. Invalid and valid
+dirty Close/Cancel controls both returned focus from the edit field to the
+hidden editor window in the local qualification. Validation errors still require
+exact value-field focus. Hidden Cancel and expiry permit NULL current-thread
+focus or focus in the editor tree; non-null foreign targets still fail.
+Raw focus/capture values and the separate expectations remain in the receipts.
+The original failed runs and diagnostic-only builds are retained under
+`ed22-button-diagnostics-run/9d5cecce4a4e4a60ba3a5389df8ec296` and
+`ed22-focus-diagnostics-run/9d574280804244f28fe432564a23357a` in the validation
+cohort; they are not acceptance passes.
+
+All three editor targets and complete checkers pass in Debug and Release under
+PowerShell 7, and the complete Debug checker passes under Windows PowerShell
+5.1. The checker explicitly imports its own host's standard Utility module so
+later file-hash checks remain available after nested native-probe setup. Each
+run has nine passing action rows, ten verified dialog rows, timer cleanup,
+both profile-view restorations and an owned zero exit with cleanup confirmed.
+All 22 guarded source hashes remain unchanged. Existing document, 28-transition
+DPI/font, paint-failure, gesture, save-guidance and four hidden-launch checks
+also pass; the original DPI fixture retains GDI `21 -> 21`.
+
+Evidence: `ed22-candidate/93e462a4f2d14a3f9af471b54303c9a6` under
+`out/validation/implementation-loop-20261028/`. Full checker leaves under
+`out/acceptance/<preset>/level-editor/` are Debug
+`c560caab08d24c93a9a2f40122d9c7c6`, Release
+`c5e565c500704b75afe66adea3addd30`, and PowerShell 5.1 Debug
+`e442f2c3f97c4f0ea2196b13f80a987e`. No foreground input, player files,
+gameplay or engine update was involved. Modal appearance and attended `ED#5`
+remain separate, as do the archived `ED#20` aggregate measurements.
+
+Publication CI exposed the local focus assumption. Both Windows jobs in
+[run 290](https://github.com/matt439/ColourWars/actions/runs/40824582511)
+recorded NULL focus/activation after Cancel while every other state predicate
+passed. The failure logger retains the CSVs and terminal process receipt.
+[Run 291](https://github.com/matt439/ColourWars/actions/runs/40826079863), at
+`bcb6b0eb`, added one valid-dirty Cancel control after the original failed row
+was flushed. Its Debug control also returned NULL focus/activation, with all
+thirteen state flags and the strict owned Cancel response passing. The original
+assertion still failed; this diagnostic is not an acceptance pass.
+
+`confirm_discard` vetoes closing without calling `SetFocus`; validation errors
+explicitly refocus the edit. [GetFocus](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getfocus)
+permits NULL when the calling thread has no focused window. The correction
+qualifies that hidden-fixture outcome without changing product behavior or
+repairing focus after the observation. The temporary control is removed; all
+error-focus, data/history/selection, capture/gesture, modal and deadline checks
+remain. Debug and Release native targets and full PowerShell 7 checkers pass;
+the full Windows PowerShell 5.1 Debug checker also passes. Their leaves are
+`8a3961bd554449e582e7da85ccf17544`, `6f0937a736b047099ea3d3dbe4a73642` and
+`c070f0c237be41ff9d1b6ab0dcf44fa0`. Attended `ED#5` remains separate.
+
+#### Empty-key property targets (`ED#16`)
+
+**Done (2026-10-28).** Unknown metadata may contain an empty object-member
+name. The property generator formerly emitted `/display_name` for
+`"":{"display_name":"nested"}`; applying that generated path edited the actual
+root field instead. Object-relative properties had the same alias, and the
+preview map could mistake metadata `type` or `collision_type` for real fields.
+
+An empty first token now gets an explicit `/`, producing `//display_name` for
+its child. Ordinary generated paths, bare/absolute setter aliases, existing
+`~0`/`~1` escaping, unknown metadata and arrays are preserved. No setter API or
+gameplay change was needed.
+
+Both public-model and actual hidden-inspector baselines reproduced wrong-leaf
+edits before the fix. Model checks now cover root/object targets, nested empty
+names, scalar empty leaves, escaped-name siblings, unchanged runtime fields and
+arrays, complete history and private save/reopen. Two actual inspector edits
+retain the real names and preview type; two literal GDI body samples and hit
+points preserve the rectangle beside ramp-shaped metadata. Native history and
+Save/reopen retain the exact two edits and saved clean point.
+
+All three editor targets and the complete checker pass in Debug and Release,
+including prior gestures, ramp hits, save guidance and four hidden launches.
+The original unactivated 28-transition DPI/font fixture still reports GDI
+21 to 21. New inspector input remains in the separate gesture process and does
+not qualify its aggregate GDI lifetime. Independent review and eight-file
+source-immutability checks pass. Attended GUI/saved-stage play remains `ED#5`.
+
+Evidence under `out/validation/implementation-loop-20261028/`: failing model
+and native baseline `ed16-baseline/a3aa67efddf3457191620ea144c8477e`, final
+batch `ed16-candidate/242b010b86634c48b615eb77ee134fdd`. Full checker receipts
+are `out/acceptance/x64-debug/level-editor/cf4ae5c17ae54adb89d413ae48ceb86e`
+and `out/acceptance/x64-release/level-editor/edd33c1f31d64d4ea6c98cb3c1b1d30d`.
+
+#### Mouse-button gesture ownership (`ED#17`)
+
+**Done (2026-10-28).** This ranked authoring follow-up fixed a lost canvas
+edit when a left drag took over a middle-button pan. Left down reacquired the
+pan's existing capture after setting its new drag flag; the native baseline
+already observed cleared gesture flags at that point and a lost final edit.
+Middle up also unconditionally cancelled a newer left preview. Middle down
+already cancelled an older left drag, so the handoff was asymmetric.
+
+The latest admitted button-down now owns the gesture. Left down cancels the
+older gesture after the existing pending-property guard; middle up ends only
+an active pan. Releasing an older button is harmless, and releasing the owner
+ends the gesture without resuming another held button. An empty-space left
+click cancels the previous pan and leaves the canvas idle. Property admission,
+snap, resize and ordinary drop behavior are unchanged.
+
+The actual private hidden-canvas baseline reproduced a lost final rectangle
+with cleared gesture flags while capture remained on the canvas. Ten native
+contexts now pass both button/release orders,
+move/resize, empty-space and valid pending-property handoffs, ordinary controls,
+capture, exact document history, source bytes and caller restoration. These
+checks remain in the separate gesture process. All three editor targets and
+the complete checker pass in both presets, including the prior metadata,
+ramp, save-guidance and four hidden-launch checks. The original 28-transition
+DPI/font fixture remains unchanged and reports GDI 21 to 21 in both presets;
+input-activated aggregate GDI lifetime remains unqualified.
+Invalid inspector text remains guarded before cancellation; its modal error
+and external capture-loss lifecycle are separate scopes. Attended GUI/play
+acceptance remains `ED#5`.
+
+Independent review and four-file source-immutability checks pass. Evidence under
+`out/validation/implementation-loop-20261028/`: failing native baseline
+`ed17-baseline/04e0fd1ccde64c25bc6e9b1bf71797c7`, final both-preset batch
+`ed17-candidate/772dbc04693a4b5a8062f8d7a95873c6`. Full checker receipts are
+`out/acceptance/x64-debug/level-editor/5652c47762c747ba81f4fabdcf6c44ea`
+and `out/acceptance/x64-release/level-editor/c7a3f648b379493b881b4947abf635fb`.
+
+#### Reserved stage filenames (`ED#15`)
+
+**Done (2026-10-28).** The stage id becomes a Windows filename, so the shared
+editor/game contract now enforces the documented
+[reserved-name rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+alongside the existing ASCII/length/leading-character rules. It rejects `CON`,
+`PRN`, `AUX`, `NUL`, `COM1`-`COM9` and `LPT1`-`LPT9` without case; their
+`.json` extension does not make them ordinary files. Non-ASCII spellings
+remain covered by the existing ASCII-only rule. Explicit ASCII folding keeps
+the new match independent of locale. Valid neighboring identifiers, name
+collisions, source registration and folder policy are unchanged.
+
+The pure old-source contract first reproduced accepting `CON`, before any
+reserved path access. Tests now cover 22 reserved stems in three ASCII cases,
+17 valid neighbors and prior character/length rules. Sixty-six actual editor
+target refusals preserve an absent ordinary folder, private source and full
+history; only safe `console_map.json` performs save/reopen. The shared refusal
+explains the Windows restriction. No reserved destination is opened, written
+or inspected, and no player's stage folder is involved.
+
+Both game/editor builds, consumer user-stage checks, the full editor checker
+and native stage-scan details pass in both presets. Native checks include the
+longer shared refusal text, pagination and real menu transitions. Independent
+review and source-immutability checks pass. This does not establish attended
+wording, editor play or hardware acceptance.
+
+Evidence under `out/validation/implementation-loop-20261028/`: baseline
+`ed15-baseline/98db2c0ac3f74994a601e83d9f8255f2`, final both-preset batch
+`ed15-candidate/dbeb4001dff44ec49b4cda9caa3757ee`. Full editor runs under
+`out/acceptance/<preset>/level-editor/`: Debug
+`c912cc96102b452dac0628b5f08d090d`, Release
+`2bda6f3f55fb406e8cc19627ebf0b816`.
+
+#### Arrow edits during canvas gestures (`ED#13`)
+
+**Done (2026-10-28).** Actual hidden-window messages first reproduced a mouse
+release overwriting the preceding arrow edit. Nudging now cancels an active
+drag, resize or pan before pending-property admission, matching other editor
+commands. A late release cannot commit its discarded preview.
+
+Native checks cover move/resize/pan interruption, capture and selection,
+ordinary drops, grid/Shift nudges, valid pending properties, exact undo/redo
+and unchanged private source files. All three editor targets build and the
+full editor checker passes in Debug and Release. Evidence under
+`out/acceptance/<preset>/level-editor/`: Debug
+`e9675199e60d4271918c9dc0c8f76d10`, Release
+`4d11991322ff4eca89b3eac164269f18`. The original failing case is retained in
+`out/validation/implementation-loop-20261028/ed13-baseline/8c1b0ca3f3304ee1b98da6ef2ed52bea`.
+
+Gesture qualification runs in a separate `--gestures` invocation of the same
+native acceptance target, with its own scratch/log. Canvas
+[`SetFocus`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setfocus)
+also activates the hidden parent; this host could not restore the preceding
+null activation state. Mixing those lifetimes changed aggregate GDI counts.
+The default DPI check therefore retains its original 28 transitions and exact
+21-to-21 resource equality, with an added assertion that every replaced font
+is released. Aggregate GDI stability after input activation remains unqualified;
+no production resource workaround was added. Independent review passes.
+The attended editor/play acceptance remains `ED#5`.
+
+#### Ramp body selection (`ED#14`)
+
+**Done (2026-10-28).** The old-source native baseline reproduced an empty
+ramp corner intercepting the block beneath it. Ramp selection now follows the
+drawn screen-space triangle, with a three-logical-pixel edge tolerance.
+Collapsed triangles retain only finite edge/endpoint targets. Category and
+authored-order priority, selected resize handles, ordinary rectangles, slabs
+and mover poses are preserved.
+
+Both presets pass the full editor checker and all three editor builds.
+The isolated canvas-input mode checks 18 direction/DPI/view contexts,
+219 immutable queries and 36 independent actual GDI body samples. It covers
+edge/end-cap limits, legal zoom/clipping collapse, overlap/spawn/slab priority,
+resize handles and exact history/source preservation. Degenerate geometry is
+isolated from unrelated spawn targets; full-scene priority has separate checks.
+Input-activated DPI changes also assert disposal of each replaced owned font.
+Independent source/oracle review passes. Aggregate GDI stability after input
+activation and attended editor acceptance remain outside these checks.
+
+Evidence under `out/acceptance/<preset>/level-editor/`: Debug
+`c330ea6646f2401a871653f1ed28636a`, Release
+`a1a256d6df694473bbe5ed870b99ede7`; each retains CSV queries and six BMPs.
+The failing baseline is
+`out/validation/implementation-loop-20261028/ed14-baseline/c37833dd52514e31a373b22a3ee62eeb`.
+
 Select an object in the list or click it on the canvas. Drag its body to move
 it, or drag the handle at the bottom-right corner to resize it. Ramp editing
 moves or scales all three vertices together. Spawn markers can be moved;
 their boxes use `player.size` from source `game/content/tuning.json`.
 Fixed scored slabs move without a resize handle; their footprint is fixed.
+Arrow keys cancel an in-progress mouse gesture and nudge the committed position.
+Ramp selection follows the triangular body, so its empty corner lets you
+select an object beneath it.
+Ctrl+click cycles through overlapping objects without starting a drag. Repeated
+clicks wrap through the same hit order; empty space retains the selection.
 
 Use the palette to add paintable platforms, solid structures, jump-through
 platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),
@@ -74,6 +606,12 @@ the pending value automatically; an invalid value blocks that action until
 it is corrected or discarded with Escape or **Revert**.
 Use the inspector for exact coordinates, paintable faces, sprite-sheet and
 frame names, colours, and other object properties.
+
+Imported metadata containing an embedded NUL character is shown as escaped,
+read-only text. The inspector keeps those values and keys intact when you
+save or change selection. You can select and copy the preview; edit the JSON
+file externally to change it. String previews use quotes and escapes such as
+`\u0000` and `\\`, while numbers and booleans keep their usual form.
 
 ### Materials
 
@@ -101,6 +639,7 @@ them.
 | Action | Control |
 |---|---|
 | Select and move | Left click and drag |
+| Select overlapping objects without moving them | Ctrl+click repeatedly |
 | Resize selected geometry | Drag its bottom-right handle |
 | Pan | Middle mouse button and drag |
 | Zoom | Mouse wheel |
@@ -245,7 +784,10 @@ user stage appears in Stage Select after the shipped stages, with "Built by
 you." in the briefing, and `+stage <name>` starts it from the Debug command
 line. It is never a Random candidate. The game checks it as it checks a
 shipped stage. A file that fails prints one `user stage refused: <file>:
-<reason>` line on stderr and is left out; the game goes on without it. See
+<reason>` line on stderr and is left out; the game goes on without it. Main-menu
+Stage Select also shows an issue count: Down while browsing opens the retained
+filename/reason details, with issue/page controls and a return to the same
+arena choice. See
 [User stages](feature-roadmap.md#user-stages-road16).
 
 To ship a stage with the game, register it instead. A new file in
@@ -282,103 +824,198 @@ can be intentional boundary geometry and are allowed.
 
 ## Local implementation backlog (2026-10-28)
 
-These four slices are ready for local implementation. Their document and native
-checks need neither pads nor an author decision; actual GUI comfort and saved-stage
-play remain the attended `ED#5` review.
+These independent source slices need neither pads nor an author decision.
+Their entries record implementation status and document/native qualification;
+actual GUI comfort and saved-stage play remain the attended `ED#5` review.
 
 ### External-change save protection (`ED#7`)
 
-**OPEN, M.** `LevelDocument::load` reads the source bytes but retains only the
-normalized document as its saved state. `LevelDocument::save` already writes a
-complete sibling temporary and atomically replaces the destination; its unique
-temporary prevents collisions between writers' temporary files. It does not
-check whether another editor or text tool changed the destination since this
-document loaded or saved it. Ordinary Save can therefore overwrite that work.
+**Done (2026-10-28).** `LevelDocument` retains the exact bytes read by a
+successful load or written by a successful save, separately from normalized
+JSON used for dirty-state comparison. Same-destination Save compares those
+bytes before creating its sibling temporary and again after writing, flushing
+and closing it, directly before replacement. Changed, missing or unreadable
+files are refused with a diagnostic pointing to Save As. Target identity
+handles relative/case variants and existing equivalent files.
 
-Retain a byte baseline after each successful load and save. Before replacing the
-same file, refuse if it has changed, disappeared or become unreadable, and
-recheck the baseline before replacement. Compare bytes rather than relying on
-size or modification time. Use the existing Save As command to preserve the
-open work elsewhere; this slice adds no automatic merge or silent force-save.
-A refusal must retain the on-disk file, open JSON, path, dirty state and complete
-undo/redo history. A successful Save As establishes the new file's baseline.
+A refusal retains external bytes, open JSON, path, dirty state and complete
+undo/redo history, and removes any temporary. Save As preserves the open work
+elsewhere and establishes its new baseline; a failed Save As retains the
+previous one. The existing atomic replacement remains unchanged. The checks
+detect external writes visible at either comparison; they do not introduce
+file locking or an atomic filesystem compare-and-replace.
 
-Acceptance: use scratch files and two document instances to exercise an
-unchanged save, another writer's save, a same-length external edit with a
-retained timestamp, deletion and read failure. Every refused save preserves
-both the external bytes and the open document/history; Save As then succeeds
-without altering the conflicted file. Failed writes and replacements retain
-the existing atomic-save guarantees, and a successful retry uses the last
-successful baseline. No player save is involved.
+The isolated `level_editor/save_guard_checks.cpp` covers raw versus normalized
+source, unchanged saves, case variants, hard-link aliases, competing editors,
+same-length external edits with retained timestamps, deletion, exclusive-read
+failure, complete history, Save As and latest-success retries. Existing
+write/replacement-failure checks remain in `editing_checks.cpp`.
+
+Independent review and both builds pass. Full editor acceptance passes in
+Debug and Release, including hidden explicit-level launches, controls/status
+checks and graceful shutdown. All files and profiles are isolated. Attended
+GUI/saved-stage play remains `ED#5`; no player save is involved.
 
 ### Per-monitor editor DPI (`ED#8`)
 
-**OPEN, L.** The editor calls `SetProcessDPIAware`, creates a fixed 16-pixel
-font and uses fixed pixel constants for controls, minimum tracking size and
-its initial window. Its window procedure has no `WM_DPICHANGED` handling.
-The native editor therefore has no layout that follows the current monitor's
-DPI, even though the game has its own DPI policy.
+**Done (2026-10-28).** The editor requests per-monitor
+v2 awareness, with a per-monitor v1 fallback. Fonts, controls, spacing, toolbar
+wrapping and minimum sizes use one 96-DPI layout. Initial and minimum windows
+are clamped to the monitor work area; compact layouts keep property actions
+reachable before the optional hint. `WM_DPICHANGED` adopts the suggested window
+rectangle, replaces the shared control font before deleting its predecessor,
+and relays out the controls.
 
-Give the editor per-monitor awareness and scale its font, control geometry,
-spacing and minimum sizes from a 96-DPI layout. Recreate owned GDI resources
-safely when DPI changes, adopt the suggested window rectangle and keep the
-initial window usable within the work area. Preserve canvas world coordinates,
-selection, pending property text and document/history when layout changes;
-DPI is display state, never a level edit. This is editor code and does not
-require a Labrador change or a gameplay display-policy decision (`POL#34`).
+A DPI transition cancels an uncommitted pointer preview without applying pending
+property text, fitting the canvas or editing the document. World coordinates,
+view, selection and full history remain intact. The game display-policy decision
+(`POL#34`) and Labrador pin are independent.
 
-Acceptance: check layout calculations at 96, 144 and 192 DPI, including control
-containment, usable property/action controls and minimum-size behavior. Native
-checks exercise DPI-change handling and font replacement while preserving
-canvas coordinate conversion, selection, pending text, dirty state and undo
-history. Existing document and hidden-window checks pass in both presets. An
-actual mixed-monitor comfort review remains `ED#5`; local qualification can run
-without a particular monitor arrangement.
+`window_layout_checks.cpp` checks 96/144/192 geometry. The separate hidden,
+in-process `colourwars_editor_dpi_acceptance` target sends actual DPI messages
+with valid same-process rectangles and checks font/control/minimum geometry,
+suggested placement, pending text and selection, coordinate/hit conversion,
+undo/redo and GDI resource counts. Actual mixed-monitor comfort remains `ED#5`.
+
+All three editor targets build in Debug and Release. Complete editor checks
+pass in both, including 28 DPI transitions and stable GDI counts (21 to 21),
+the document model and hidden launch/status/close checks. No monitor
+arrangement or gameplay display policy is accepted by those synthetic messages.
+CI explicitly builds all three targets before its `-SkipBuild` editor check.
 
 ### Paint-mechanism canvas guides (`ED#9`)
 
-**OPEN, M.** `Editor::draw_item` shows mover anchor, travel and standing
-envelopes, but does not distinguish a paint ferry's authored direction from
-an automatic cycle. A team gate draws like an ordinary eraser block. Both
-mechanisms can already be authored and saved, so these omissions make the
-canvas less useful when checking a trial's structure.
+**Done (2026-10-28).** Paint gates have a schematic
+lintel/posts and `A / B` label. Paint ferries have a `PAINT FERRY` plaque with
+explicit A/B letters and opposing arrows from the authored `team_a_heads`.
+Ordinary erasers and automatic cycle movers have no mechanism plaque. These
+marks read current inspector properties and follow initial/provisional poses;
+they describe authored behavior without simulating ownership, permission or
+movement. Runtime cues remain `ROAD#26`/`ROAD#27`.
 
-Add a distinct schematic gate mark and a paint-ferry direction guide showing
-the authored team-A heading and opposite team-B heading. Use explicit team
-letters and direction shapes so the distinction does not depend on colour.
-Read the existing `gate`, `motion/drive` and `motion/team_a_heads` fields;
-ordinary erasers and cycle movers keep their existing guides. These marks
-describe authored behavior only: they do not simulate paint ownership, gate
-openness or ferry movement. Runtime mechanism cues have separate scopes in
-`ROAD#26` and `ROAD#27`.
+Screen-space plaques scale with DPI. Actual GDI font line height controls row
+spacing, arrow centers and panel height, so the labels and schematic stay apart.
+They do not extend hit geometry or alter travel/standing envelopes.
 
-Acceptance: guide generation distinguishes an ordinary eraser, team gate,
-cycle mover and both ferry headings. Inspector edits, duplication, undo/redo
-and save/reopen refresh the right guide without changing serialized level
-data. Native canvas checks cover selected and unselected objects and provisional
-drag positions, retaining existing hit-testing and motion-envelope behavior.
-The attended look at the guides remains part of `ED#5`.
+`mechanism_guide_checks.cpp` covers both headings, inspector/history,
+duplication and save/reopen. The native DPI target draws actual selected,
+unselected and provisional canvas objects at 96/144/192 DPI, comparing text
+and stroke pixels with independent expected guides. It retains three BMP
+sheets and a CSV, with font extents, separation, history and hit/envelope checks.
+An attended look remains `ED#5`.
+
+Both presets pass 45 native contexts and 90 actual canvas raster passes,
+including label/stroke containment and separation, selected/provisional
+translation and unchanged complete history, hit and envelope behavior.
+Review included the retained 96, 144 and 192 DPI sheets.
 
 ### Destination-aware save guidance (`ED#10`)
 
-**OPEN, S.** Save to My Stages correctly says to reopen Stage Select without
-a rebuild. It then makes that file the document's current path, so Ctrl+S
-saves there too. Ordinary Save still says to rebuild, and the normal refresh
-status repeats source-only advice, contradicting the workflow just completed.
+**Done (2026-10-28).** Save and refresh classify the
+current destination through the shared folder/name contract. A file directly
+in My Stages keeps the main-menu Stage Select/no-rebuild instruction after
+ordinary Save or refresh. Registered source files need a rebuild; new source
+filenames also need registration. Elsewhere/nested destinations say they are
+not discovered. Unavailable manifest/folder context gives qualified guidance.
+Destinations, registration and Random policy are unchanged.
 
-Choose save/refresh guidance from the current destination. Files directly in
-My Stages use the main-menu Stage Select rescan instruction; source levels
-retain the rebuild instruction and, for a new source filename, registration
-guidance. A file saved elsewhere must not claim the game already discovers
-it. Reuse the existing folder/name contract where applicable. This changes
-feedback, not save destinations, registration or the user's Random policy.
+The native check exposed a dialog boundary bug: cancellation could leave the
+process working directory in the newly created stage folder, preventing its
+empty-directory cleanup. The
+[legacy dialog calls](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-openfilenamew)
+now restore the previous directory before returning. The initial folder uses
+an absolute native path; the suggested basename, chosen destination and
+existing validation/overwrite rules stay the same.
 
-Acceptance: under a scratch `LOCALAPPDATA`, save to My Stages, edit and use
-ordinary Save, then refresh; each status continues to describe the no-rebuild
-workflow. Source Save and Save As elsewhere give the appropriate guidance,
-and cancellation or a failed save never reports success or changes the
-document's destination. Hidden-window status checks leave the real stage
-folder and player save untouched.
+The model checks cover each destination and unavailable context. The hidden
+window helper targets only its own HWNDs under scratch `LOCALAPPDATA`: it saves
+to My Stages, edits and ordinarily saves, refreshes, cancels dialogs, refuses an
+externally changed file and uses Save As elsewhere. A source-level launch is
+read-only. File hashes and the absence of a player save bound the checks.
+
+The complete checker passes in Debug and Release. Each native guidance run
+records seven status transitions and three strict cancellation/failure
+invariants, exact chosen-file writes, graceful exit and no player save.
+The helper supplies a complete scratch profile (Local/Roaming AppData and
+Desktop), verified to resolve there through the Shell; it restores the parent
+environment afterward. This keeps an unavailable real Desktop from becoming
+a fixture dependency.
+
+### NUL-bearing metadata preservation (`ED#11`)
+
+**Done (2026-10-28).** Valid unknown JSON metadata such as
+`"note":"keep\u0000suffix"` retained all bytes in the document, but the
+inspector passed its decoded value to a
+[null-terminated Win32 text message](https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-settext).
+The truncated control text appeared pending and was silently auto-applied by
+an untouched Save or a selection change. NUL-bearing property keys also reached
+a null-terminated JSON Pointer constructor and could address a prefix sibling.
+
+Ordinary plaintext editing is unchanged. A property whose value, path or label
+contains NUL now has a typed, escaped read-only preview in the list and enabled
+value control. An early label explains its read-only status; Apply/Revert are
+disabled, and pending/apply excludes the preview. Underlying metadata and
+history survive Save, selection and refresh. No editable escape grammar was
+added. RapidJSON's explicit-length Pointer constructor is used
+so direct model edits address the complete key rather than a prefix sibling.
+The same audit found null-terminated writes when duplicating object names and
+inserting missing material/motion strings. These now retain their full lengths:
+copies keep metadata suffixes, and NUL-suffixed invalid enums reach validation
+rather than becoming accepted prefixes. Escaped previews distinguish a literal
+backslash from a decoded NUL. The preview also covers NUL-bearing object-list
+names and individual unresolved resource warnings, retaining the remaining
+reason and save question. Surrounding prompts, raw diagnostics and model text
+are unchanged.
+
+Both failures were reproduced before the fix under
+`out/validation/implementation-loop-20261028/ed11-baseline/84d7f8ddd9d34945b1d71abd6df26ea1`:
+the model edited the wrong key and an actual untouched native Save wrote only
+`keep`. Independent review, all three editor targets and the complete editor
+checker now pass in Debug and Release. The added checks cover exact keys/bytes,
+Save/reopen, selection/refresh, full history, typed previews, duplication,
+invalid-enum refusals, normal editing and complete resource status text.
+Final checker evidence is under `out/acceptance/<preset>/level-editor/`:
+Debug `940f7c6bacab493eaa91fb01919eeb47`, Release
+`e05985fefdae496a978b3d85c1750c52`.
+
+A normal configure attempt stopped at an unavailable GitHub vcpkg-registry
+connection before compilation. Qualification used the already-installed
+dependencies with manifest installation disabled only for the offline
+configure/build, then restored the original `VCPKG_MANIFEST_INSTALL=ON`
+cache settings and ran the full checker with `-SkipBuild`. No network fetch
+was retried. These automated checks do not close the attended `ED#5` gate.
+
+### Raw-NUL JSON admission (`ED#12`)
+
+**Done (2026-10-28).** Source review recorded this shortlist after `ED#11`;
+the rows describe source before their associated fixes:
+
+| rank | candidate and evidence | value, scope and risk |
+|---|---|---|
+| 1 | The bundled RapidJSON reader treats a raw zero byte after a complete JSON root as EOF, even inside the supplied length. `level_json::parse` checks only the parser error, so Load or a numeric edit can accept a prefix and later Save drops the suffix. | Selected as `ED#12`: prevent silent source-byte loss with a narrow client parse guard and transactional regressions. Escaped JSON `\u0000` remains valid. |
+| 2 | The editor checker redirects `LOCALAPPDATA` before configure, giving vcpkg a fresh registry cache even when dependencies are installed. A normal configure hit an unavailable GitHub connection during `ED#11`. | Implemented separately as [HYG#14](code-hygiene.md#editor-build-profile-isolation-hyg14): isolate runtime after build preflight. |
+
+The public Load regression first reproduced accepted raw-NUL suffixes in
+`out/validation/implementation-loop-20261028/ed12-baseline/6e140c3b1bb04fc79522a1a9019a647b`.
+The client parse helper now checks the complete input after existing parser-error
+handling, retaining malformed-JSON diagnostic precedence. It rejects actual zero
+bytes in otherwise successful input with the existing BOM-stripped byte-offset
+convention; decoded NUL in valid escaped JSON remains accepted.
+This follows JSON's [grammar and string-escape rules](https://www.rfc-editor.org/rfc/rfc8259):
+a raw zero is neither trailing whitespace nor an unescaped string character.
+The regressions cover bare/trailing-whitespace/second-root/garbage suffixes
+with and without BOM, prior malformed diagnostics, numeric property input,
+escaped-NUL positives and ordinary trailing whitespace. Refusals retain exact
+model/history snapshots, paths, saved baselines and both open and rejected
+source files. Independent review, all three editor targets and the full editor
+checker pass in both presets. Evidence is under
+`out/acceptance/<preset>/level-editor/`: Debug
+`9d50fd1d0bdb4f8fa92d2319b0746843`, Release
+`423da374a22a46ff9a80f8b2ba7c6a8d`.
+
+Builds used the installed-dependency offline workflow above, restoring both
+manifest-install cache settings to `ON` before runtime checks. No engine or
+vendored RapidJSON source changed. The attended `ED#5` gate remains open.
 
 ## Acceptance checks
 
@@ -391,8 +1028,9 @@ document behaviour and hidden-window operation, not that manual acceptance.
 ./scripts/check-level-editor.ps1 -Preset x64-release
 ```
 
-These build and run a native document-model check followed by a hidden GUI
-launch/open/respond/close check. Neither creates a game graphics/audio device.
+These build and run the native document model, a hidden in-process DPI/canvas
+probe and hidden GUI launch/open/respond/close and save-guidance checks. None
+creates a game graphics/audio device.
 They cover the shipped levels, the canonical template, unknown-field preservation, both rectangle
 encodings, ramps, the palette, undo/redo and save
 state, Unicode paths and failure recovery. Evidence and generated test levels
@@ -402,7 +1040,7 @@ and each palette kind's default material, refusal of unknown and mismatched
 materials (in edits and loaded files), and inserting and clearing a material.
 They check the resource-name warnings against source content, and a third
 hidden launch reads the status line of a level the game would refuse.
-Save to My Stages is checked without its dialog. The checks find the folder
+The Save to My Stages model checks find the folder
 under a scratch `LOCALAPPDATA` without creating it, and refuse a case-only
 shipped-name collision, a space, a leading hyphen, a 65-character name, a
 non-ASCII name, a non-`.json` file, and files outside the folder or in a
@@ -412,14 +1050,19 @@ that a second save under another spelling is reported as a replacement of
 the same file and leaves one file, and that no save file appears.
 The script points `LOCALAPPDATA` at its run folder for every launch. It also
 checks that opening the editor creates neither a save nor the stage folder.
-The dialog and the replace question are modal, so they are part of the manual
-pass.
+The hidden save-guidance helper also drives its own file dialogs, checking
+Save to My Stages, ordinary Save/refresh, cancellation, failed-save recovery
+and Save As elsewhere. It waits for a responsive owner and the operation's
+observable results, including folder cleanup and saved file/status changes,
+before issuing the next action. Attended dialog usability and the replace
+question remain part of the manual pass.
 The document checks also cover the shared current version, legacy save upgrades,
 unknown-field preservation, strict format type/version rejection before other
 field decoding, filename diagnostics, failed-upgrade recovery and retained
 undo/redo branches across a successful upgrade.
 Use `-SkipBuild` only after
-building both `colourwars_editor_acceptance` and `ColourWarsEditor` for the
+building `colourwars_editor_acceptance`, `colourwars_editor_dpi_acceptance`
+and `ColourWarsEditor` for the
 current source.
 
 On 2026-10-15, both presets passed the document checks (including the optional
@@ -427,6 +1070,11 @@ Random setting) and hidden GUI launch/open/respond/close checks. Evidence:
 `out/acceptance/x64-debug/level-editor/088ef35b371047ee97c715f163c61008/`
 and `out/acceptance/x64-release/level-editor/2ca17df03ee24d7683cb8131b44fb245/`.
 The manual GUI and saved-stage play checks below remain open (`ED#5`).
+
+On 2026-10-28, both presets also pass the expanded DPI/canvas and native
+save-guidance checks: Debug `8c23b3aacabc4e26a2b4e25bb1986fcd`, Release
+`9f85cf04ebba419c94034365360a57bf`, under the same evidence root. These are
+software checks; the attended GUI and saved-stage play boundary remains.
 
 For a manual GUI check, open each shipped arena, select a platform, move and
 resize it, edit a field, duplicate/delete, undo/redo, and save a copy. Reopen

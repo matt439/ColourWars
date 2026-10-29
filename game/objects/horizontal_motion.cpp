@@ -114,6 +114,7 @@ HorizontalPreparedStep HorizontalMotion::prepare(float dt, int heading) const
 HorizontalPreparedStep HorizontalMotion::prepare_driven(float dt, int heading) const
 {
     HorizontalPreparedStep prepared;
+    prepared.paint_heading = heading;
     prepared.after_state = this->state_;
     HorizontalMotionStep& step = prepared.collision;
     step.dt = dt;

@@ -155,7 +155,8 @@ namespace colourwars_editor
             for (auto it = value.MemberBegin(); it != value.MemberEnd(); ++it)
             {
                 const std::string name(it->name.GetString(), it->name.GetStringLength());
-                const std::string path = prefix + escaped_key(name);
+                // Keep an empty first token distinct from an absolute root field.
+                const std::string path = prefix.empty() && name.empty() ? "/" : prefix + escaped_key(name);
                 if (it->value.IsObject()) { append_properties(it->value, path + "/", properties); }
                 else if (it->value.IsString())
                 {
@@ -179,6 +180,42 @@ namespace colourwars_editor
             }
             return string(object, "type") + " " + std::to_string(index + 1);
         }
+
+        std::filesystem::path save_target(const std::filesystem::path& path)
+        {
+            return std::filesystem::absolute(path).lexically_normal().make_preferred();
+        }
+
+        bool same_save_target(const std::filesystem::path& path,
+            const std::filesystem::path& baseline)
+        {
+            const std::filesystem::path target = save_target(path);
+            if (CompareStringOrdinal(target.c_str(), -1, baseline.c_str(), -1, TRUE) == CSTR_EQUAL)
+            { return true; }
+            std::error_code error;
+            return std::filesystem::equivalent(target, baseline, error) && !error;
+        }
+
+        void check_saved_source(const std::filesystem::path& path, const std::string& baseline)
+        {
+            std::ifstream input(path, std::ios::binary);
+            if (!input)
+            {
+                fail("Could not read the saved level file. It may have been removed or opened exclusively. "
+                    "Use Save As to preserve your edits in another file.");
+            }
+            const std::string text{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
+            if (input.bad())
+            {
+                fail("Could not read the complete saved level file. "
+                    "Use Save As to preserve your edits in another file.");
+            }
+            if (text != baseline)
+            {
+                fail("The level file has changed outside this editor since it was loaded or saved. "
+                    "Use Save As to preserve your edits in another file.");
+            }
+        }
     }
 
     struct LevelDocument::Impl
@@ -189,6 +226,8 @@ namespace colourwars_editor
         std::vector<std::string> history;
         std::size_t history_index = 0;
         std::string saved;
+        std::filesystem::path source_path;
+        std::string source_bytes;
 
         template<typename Operation> void mutate(Operation operation)
         {
@@ -268,6 +307,8 @@ namespace colourwars_editor
         auto next = std::make_unique<Impl>();
         next->motion_tuning = impl_->motion_tuning;
         next->path = path;
+        next->source_path = save_target(path);
+        next->source_bytes = text;
         next->saved = json_text(document);
         next->history.push_back(next->saved);
         next->document.Swap(document);
@@ -282,6 +323,8 @@ namespace colourwars_editor
         {
             fail("The save destination is not a regular file.");
         }
+        const bool replacing_source = !impl_->path.empty() && same_save_target(path, impl_->source_path);
+        if (replacing_source) { check_saved_source(path, impl_->source_bytes); }
         // Allocate document-state updates before committing any filesystem change.
         // Saving upgrades a legacy file, but a failed write must leave even
         // its omitted format field and undo/redo history untouched.
@@ -292,7 +335,9 @@ namespace colourwars_editor
             saved_document.AddMember("format", level_format::current, saved_document.GetAllocator());
         }
         std::filesystem::path saved_path = path;
+        std::filesystem::path source_path = save_target(path);
         std::string saved_text = json_text(saved_document);
+        std::string source_bytes = saved_text;
         std::vector<std::string> saved_history = impl_->history;
         saved_history[impl_->history_index] = saved_text;
         // A sibling temporary guarantees a same-volume rename. CREATE_NEW owns it
@@ -336,6 +381,9 @@ namespace colourwars_editor
                 throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
                     "Could not close the level file");
             }
+            // Another writer may have changed the destination while the temporary
+            // was written. Refuse before replacement, retaining both authors' work.
+            if (replacing_source) { check_saved_source(path, impl_->source_bytes); }
             // One Windows rename replaces the destination. Separate old->backup,
             // temp->destination renames leave the authored file absent between calls.
             // ReplaceFileW without a backup can also remove it on error 1176.
@@ -356,6 +404,8 @@ namespace colourwars_editor
         impl_->history.swap(saved_history);
         impl_->path.swap(saved_path);
         impl_->saved.swap(saved_text);
+        impl_->source_path.swap(source_path);
+        impl_->source_bytes.swap(source_bytes);
     }
 
     std::vector<Entry> LevelDocument::entries() const
@@ -417,6 +467,40 @@ namespace colourwars_editor
                 set_number(value, "y", rectangle.y);
             }
             else { move_shape(value, rectangle); }
+        });
+    }
+
+    void LevelDocument::align_origin(const Entry& entry, int grid)
+    {
+        if (grid <= 0) { fail("Grid spacing must be positive."); }
+        if (entry.kind == EntryKind::level) { fail("Select geometry before aligning its origin."); }
+        const Json& value = entry_json(impl_->document, entry);
+        const bool fixed_slab = entry.kind == EntryKind::collision && string(value, "type") == "FixedSlabPaintable";
+        Rect aligned;
+        if (fixed_slab)
+        {
+            const Json& origin = member(value, "slab");
+            aligned.x = number(origin, "x"); aligned.y = number(origin, "y");
+        }
+        else { aligned = rectangle(entry); }
+        const double x = std::round(aligned.x / grid) * grid;
+        const double y = std::round(aligned.y / grid) * grid;
+        if (x == aligned.x && y == aligned.y) { return; }
+        aligned.x = x; aligned.y = y;
+        impl_->mutate([&](Document& document)
+        {
+            Json& object = entry_json(document, entry);
+            if (fixed_slab)
+            {
+                Json& origin = member(object, "slab");
+                set_number(origin, "x", x); set_number(origin, "y", y);
+            }
+            else if (entry.kind == EntryKind::bounds) { write_rectangle(object, aligned); }
+            else if (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b)
+            {
+                set_number(object, "x", x); set_number(object, "y", y);
+            }
+            else { move_shape(object, aligned); }
         });
     }
 
@@ -524,7 +608,7 @@ namespace colourwars_editor
         {
             Json& object = entry_json(document, entry);
             const std::string pointer_text = path.starts_with('/') ? path : "/" + path;
-            const rapidjson::Pointer pointer(pointer_text.c_str());
+            const rapidjson::Pointer pointer(pointer_text.data(), pointer_text.size());
             if (!pointer.IsValid()) { fail("Invalid property path."); }
             Json* target = pointer.Get(object);
             if (target == nullptr && entry.kind == EntryKind::level &&
@@ -546,7 +630,8 @@ namespace colourwars_editor
                 if (value.empty()) { object.RemoveMember("material"); return; }
                 if (target == nullptr)
                 {
-                    object.AddMember("material", Json(value.c_str(), document.GetAllocator()),
+                    object.AddMember("material",
+                        Json(value.data(), static_cast<rapidjson::SizeType>(value.size()), document.GetAllocator()),
                         document.GetAllocator());
                     return;
                 }
@@ -563,7 +648,8 @@ namespace colourwars_editor
                 const auto put = [&](const char* key, const std::string& text)
                 {
                     if (motion.HasMember(key)) { motion.RemoveMember(key); }
-                    motion.AddMember(Json(key, allocator), Json(text.c_str(), allocator), allocator);
+                    motion.AddMember(Json(key, allocator),
+                        Json(text.data(), static_cast<rapidjson::SizeType>(text.size()), allocator), allocator);
                 };
                 if (pointer_text == "/motion/team_a_heads")
                 {
@@ -763,7 +849,8 @@ namespace colourwars_editor
                 if (value.HasMember("name") && value["name"].IsString())
                 {
                     const std::string name = string(value, "name") + " copy";
-                    value["name"].SetString(name.c_str(), document.GetAllocator());
+                    value["name"].SetString(name.data(), static_cast<rapidjson::SizeType>(name.size()),
+                        document.GetAllocator());
                     added.label = name;
                 }
             }
@@ -830,7 +917,8 @@ namespace colourwars_editor
         try
         {
             const Document& document = impl_->document;
-            // The game draws stage icons from the stage-select page's sheet.
+            // Match LevelLoadedInfo's legacy icon_frame validation. Stage Select
+            // draws a live preview, but the metadata must still name a real frame.
             const std::string icon = string(document, "icon_frame");
             const auto icons = sheet_of("sprite_sheet_1");
             if (icons == catalog.sprite_frames.end())

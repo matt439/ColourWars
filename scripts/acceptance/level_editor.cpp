@@ -16,6 +16,8 @@ int wmain(int argc, wchar_t* argv[])
         const fs::path repo = fs::absolute(argv[1]);
         const fs::path scratch = fs::absolute(argv[2]);
         require(fs::is_directory(scratch), "Acceptance scratch directory must already exist");
+        check_empty_property_keys(scratch);
+        check_alignment(repo, scratch);
         check_shipped_levels(repo, scratch);
         check_format_versions(scratch);
         check_ending_audio(repo);
@@ -31,6 +33,10 @@ int wmain(int argc, wchar_t* argv[])
         check_team_gate(repo, scratch);
         check_fixed_slabs(repo, scratch);
         check_history_and_failures(scratch);
+        check_external_save_changes(scratch);
+        check_save_guidance(scratch);
+        check_paint_mechanism_guides(repo, scratch);
+        check_editor_window_layout(scratch);
         check_stage_registration(repo, scratch);
         check_user_stage_save(repo, scratch);
         std::cout << "PASS level editor document acceptance\n";

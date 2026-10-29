@@ -7,6 +7,7 @@
 #include "game/debug/debug_console_view.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/debug_files.h"
+#include "game/debug/debug_file_name.h"
 #include "game/debug/debug_script.h"
 #include "game/debug/replay.h"
 #include "game/directory_consts.h"
@@ -21,6 +22,7 @@
 #include <iomanip>
 #include <locale>
 #include <sstream>
+#include <string_view>
 
 // Phase 4: scripts (exec, wait, echo), history, the live console, screenshot
 // folders and the perf overlay. Binds are in bind_commands.cpp.
@@ -96,6 +98,14 @@ namespace
 		if (!error.empty())
 		{
 			return {};
+		}
+		for (const std::string& part : segments)
+		{
+			if (debug_file_name::reserved_stem(part))
+			{
+				error = "reserved Windows folder name: " + part;
+				return {};
+			}
 		}
 		std::string joined;
 		for (const std::string& part : segments)
@@ -577,7 +587,10 @@ void DebugDirectorImpl::register_script_commands()
 				for (std::filesystem::directory_iterator it(directory, error), end;
 					!error && it != end; it.increment(error))
 				{
-					if (it->path().extension() == L".cfg")
+					const auto extension = it->path().extension().native();
+					std::error_code kind_error;
+					if (CompareStringOrdinal(extension.c_str(), -1, L".cfg", -1, TRUE) == CSTR_EQUAL &&
+						it->is_regular_file(kind_error))
 					{
 						const std::string stem = labrador::path_to_utf8(it->path().stem());
 						std::string file;

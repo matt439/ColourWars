@@ -37,6 +37,10 @@ void GameMenu::init()
 	if (this->user_stages_ != nullptr)
 	{
 		this->menu_context_->set_stage_rescan([folder = this->user_stages_] { folder->rescan(); });
+		this->menu_context_->set_stage_scan([folder = this->user_stages_]
+		{
+			return &folder->latest_scan();
+		});
 	}
 
 	this->open_menu(MainMenuScreen::title);
@@ -280,9 +284,12 @@ void GameLevel::build_and_enter_level()
 	++this->builds_;
 	// Untimed practice is what the menus' solo practice reaches on a stage
 	// with lessons; a developer start keeps the timed course for testing.
-	this->tape_.start(seed, this->settings_);
+	// A practice session has no replay and can run indefinitely. Clearing here
+	// also drops a previous timed round's inputs and suspend/resume gaps.
+	this->tape_.clear();
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->data()->save()->team_palette(), opening, this->start_ == MatchStart::menu);
+	if (!this->level_->practice()) { this->tape_.start(seed, this->settings_); }
 	this->data()->debug().after_level_build(*this);
 	this->level_->set_pad_devices(this->settings_.pad_devices());
 	this->menu_context_->reset_connection_audio();

@@ -176,6 +176,22 @@ struct WeaponSelectArtworkPresentation
 	const WeaponChoicePresentation& choice(WeaponType type) const;
 };
 
+// Optional user-stage diagnostic page; independent from the accepted arena's paper.
+struct StageScanPresentation
+{
+	std::string font = "courier_prime_bold_16";
+	float heading_scale = 3.0f;
+	float text_scale = 1.5f;
+	float status_scale = 1.0f;
+	// Footer text positions are offsets from menu_style.chrome.footer_y.
+	mattmath::Vector2F prompt_position = { 150.0f, 30.0f };
+	mattmath::Vector2F prompt_shadow_offset = { 1.0f, 1.0f };
+	mattmath::Vector2F box_size = { 1840.0f, 920.0f };
+	mattmath::Vector2F padding = { 36.0f, 24.0f };
+	float gap = 16.0f;
+	WidgetLayout status{ { 160.0f, 4.0f }, { 1600.0f, 24.0f }, {} };
+};
+
 struct MainMenuPresentation
 {
 	std::string backdrop_sheet;
@@ -239,6 +255,7 @@ struct MainMenuPresentation
 	SelectPresentation weapon_select;
 	WeaponSelectArtworkPresentation weapon_select_art;
 	StageSelectPresentation stage_select;
+	StageScanPresentation stage_scan;
 	std::string credits_font;
 	mattmath::Vector2F credits_heading_position;
 	mattmath::Vector2F credits_position;

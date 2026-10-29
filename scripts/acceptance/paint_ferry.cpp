@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <iostream>
 
+void check_ferry_cue(const std::filesystem::path& content);
+
 // ROAD#15's first paint-activated stage object: the paint ferry, a horizontal
 // mover that travels only while one team holds more of its own paint, toward
 // that team's heading. The motion checks drive HorizontalMotion directly; the
@@ -264,6 +266,7 @@ int main(int argc, char** argv)
     {
         require(argc == 2, "usage: paint_ferry <content>");
         check_motion();
+        check_ferry_cue(std::filesystem::absolute(argv[1]));
         World world(std::filesystem::absolute(argv[1]), "paint-ferry",
             "Paint ferry trial needs authored support '", "turbulence_ferry_trial");
         const Roster rosters[] = {

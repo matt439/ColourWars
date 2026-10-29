@@ -25,7 +25,8 @@ namespace user_stage_contract
 
 	// The file name, without .json, is the stage's id: 1 to 64 ASCII letters,
 	// digits, '_' or '-', not starting with '-' (the registration helper's
-	// character rule, so the file can later be registered unchanged).
+	// character rule, so the file can later be registered unchanged). Windows
+	// reserved device stems are refused in every ASCII spelling.
 	inline constexpr std::size_t max_name_length = 64;
 
 	inline bool usable_name(std::string_view name)
@@ -34,18 +35,41 @@ namespace user_stage_contract
 		{
 			return false;
 		}
-		return std::all_of(name.begin(), name.end(), [](char character)
+		if (!std::all_of(name.begin(), name.end(), [](char character)
 		{
 			const unsigned char value = static_cast<unsigned char>(character);
 			return value < 0x80 && (std::isalnum(value) || character == '_' || character == '-');
-		});
+		}))
+		{
+			return false;
+		}
+		if (name.size() == 3 || name.size() == 4)
+		{
+			const auto ascii_upper = [](char character)
+			{
+				return character >= 'a' && character <= 'z'
+					? static_cast<char>(character - 'a' + 'A') : character;
+			};
+			const char prefix[] = {ascii_upper(name[0]), ascii_upper(name[1]), ascii_upper(name[2])};
+			const std::string_view stem(prefix, 3);
+			if (name.size() == 3 && (stem == "CON" || stem == "PRN" || stem == "AUX" || stem == "NUL"))
+			{
+				return false;
+			}
+			if (name.size() == 4 && (stem == "COM" || stem == "LPT") && name[3] >= '1' && name[3] <= '9')
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	// What a refusal says about a name usable_name rejects.
 	inline std::string name_rule()
 	{
 		return "the file name must be 1 to " + std::to_string(max_name_length) +
-			" ASCII letters, digits, '_' or '-', not starting with '-'";
+			" ASCII letters, digits, '_' or '-', not starting with '-', and must not be a reserved Windows name"
+			" (CON, PRN, AUX, NUL, COM1-COM9 or LPT1-LPT9)";
 	}
 
 	// Stage ids collide without case: a user stage cannot take a shipped

@@ -537,8 +537,41 @@ namespace presentation_read
 			{ { L"{raw_x}", L"" }, { L"{raw_y}", L"" } });
 		text.stick_readouts.aim_active = read_stick("aim_active", true,
 			{ { L"{raw_x}", L"" }, { L"{raw_y}", L"" }, { L"{aim_x}", L"" }, { L"{aim_y}", L"" } });
+		if (json.has("stage_scan"))
+		{
+			const JsonValue scan = json.object("stage_scan");
+			text.stage_scan.heading = read_menu_line(scan, "heading");
+			text.stage_scan.status = read_menu_line(scan, "status");
+			text.stage_scan.browse_prompt = read_menu_line(scan, "browse_prompt");
+			text.stage_scan.details_prompt = read_menu_line(scan, "details_prompt");
+			text.stage_scan.counter = read_menu_line(scan, "counter");
+			text.stage_scan.no_refusals = read_menu_line(scan, "no_refusals");
+			text.stage_scan.unicode_hint = read_menu_line(scan, "unicode_hint");
+		}
+		try
+		{
+			std::ignore = text.stage_scan.summary(1);
+			std::ignore = text.stage_scan.progress(1, 1, 1, 1);
+		}
+		catch (const std::invalid_argument& error)
+		{ throw std::runtime_error(json.where() + ": stage_scan: " + error.what()); }
 		return text;
 	}
+}
+
+std::wstring StageScanMenuText::summary(size_t count) const
+{
+	if (count == 0) { return this->no_refusals; }
+	return format_label_template(this->status, { { L"{count}", std::to_wstring(count) } });
+}
+
+std::wstring StageScanMenuText::progress(size_t file, size_t files, size_t page, size_t pages) const
+{
+	if (file == 0 || file > files || page == 0 || page > pages)
+	{ throw std::invalid_argument("User-stage progress requires one-based file and page indices."); }
+	return format_label_template(this->counter,
+		{ { L"{file}", std::to_wstring(file) }, { L"{files}", std::to_wstring(files) },
+		  { L"{page}", std::to_wstring(page) }, { L"{pages}", std::to_wstring(pages) } });
 }
 
 std::wstring KeyboardJumpMenuText::release_key(std::wstring_view label) const

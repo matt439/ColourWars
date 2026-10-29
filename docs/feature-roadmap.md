@@ -2015,8 +2015,8 @@ drive is switched to paint.
 
 The stage-select painter checks (`check-painter.ps1 -StagePaperOnly`,
 `-StageCountsOnly`, `-StageSummaryOnly`) passed with the tenth stage on MattPC
-in Debug and Release (2026-10-28). The second object, and what `ROAD#15` still
-has open, is under [Team gate](#team-gate-road15-second-slice).
+in Debug and Release (2026-10-28). The second object and its bot-route
+qualification are under [Team gate](#team-gate-road15-second-slice).
 
 ### Team gate (`ROAD#15`, second slice)
 
@@ -2072,13 +2072,11 @@ top decides an even exchange. The format is in
 [Team gates](level-format.md#team-gates); the editor authors one from the
 palette ([Team gate authoring](level-editor.md#team-gate-authoring-road15)).
 
-**Bots** need no new policy and none was added. A gate is a structure, so a
-bot sees it in its obstacles, supports and sight line exactly as it sees a
-wall, whichever way the gate is open. A bot walking into a gate shut to it
-jumps or turns as at any wall; one walking into a gate open to it walks
-through, because the collision is gone even though the bot planned around
-it. A gate's faces are scoring tiles, so bots paint them as territory, which
-is what opens it. They do not plan a route through an open gate.
+**Bots in the initial gate slice** treated every gate as a wall for planning,
+even when collision permitted passage. A gate's faces are scoring tiles, so
+bots painted them as territory and could walk through incidentally. Deliberate
+team-aware passage is now implemented and qualified in the
+[route slice](#team-aware-bot-gate-routes-road15) below.
 
 The `team_gate` acceptance case checks the rule in the contract and on a
 standalone gate; walks two scripted humans at the trial's gate (shut to both
@@ -2101,81 +2099,135 @@ on the wall deciding it, rather than a separate bulb; a tie shutting it to
 both; a gate held open while its team is inside, rather than pushing them out;
 the eraser material; and the trial's single central floor gate.
 
-**Remaining work, split into independent scopes (2026-10-28):** deliberate
-gate routing stays `ROAD#15`; functional gate and ferry cues are `ROAD#26`
-and `ROAD#27`. Vertical lifts (`ROAD#28`) and growing sponges (`ROAD#29`)
-need their own contracts. Attended trial play is `ROAD#30`. Each has its own
-row so implementing one does not imply finishing the others.
+**Remaining work, split into independent scopes (2026-10-28):** the functional
+gate and ferry cues (`ROAD#26`, `ROAD#27`) are implemented below. Vertical lifts (`ROAD#28`)
+and growing sponges (`ROAD#29`) need their own contracts. Attended trial play
+is `ROAD#30`. Deliberate gate routing (`ROAD#15`) is complete below; each
+remaining scope keeps its own row.
 
 ### Team-aware bot gate routes (`ROAD#15`)
 
-**OPEN, L (2026-10-28).** The shipping driver currently copies the same
-`Level::bot_obstacles()` and `bot_supports()` to every bot
-(`game/ai/match_bot_driver.cpp`, `game/objects/level.cpp`). A gate remains a
-wall in those observations even when its settled `open_for()` permits the
-bot's team through it. Accidental passage in the trial is not deliberate
-route planning.
+**Implemented (2026-10-28).** `Level::bot_obstacles(team)` and
+`bot_supports(team)` omit only gates whose settled `open_for()` permits that
+team through. Their top is no longer a standing support for that team;
+closed and hostile gates retain both roles. Filtering preserves every other
+support's identity. The shared traversal observations feed standing goals,
+approaches, ascents, descents and local recovery.
 
-Provide team-aware traversal observations and use them for paint goals,
-approaches and local recovery. An open gate is passable for the permitted
-team. Bots of that team also cannot use its top as standing support. Closed
-and hostile gates remain obstacles and supports as before. Replan when settled
-permission changes, including when an occupied gate keeps its old team after
-the paint leader changes. Keep traversal separate from projectile visibility:
-an open gate still catches shots and remains cover in `bot_line_of_sight`.
-Do not remove it from every geometry query or change the gate's collision rule.
+Sampled non-team paint beyond a permitted gate can supply a navigation-only
+goal. It cannot supply an occluded paint aim or reveal an enemy. Enemy sight,
+support-paint qualification and ordinary paint targets still use projectile
+visibility; `bot_line_of_sight` and actual shots retain every gate as cover.
+The policy separately checks body clearance on candidate routes.
 
-Acceptance: a bot deliberately takes a useful floor goal through the gate for
-each permitted team, rejects that route while closed or hostile, and replans
-after takeover and delayed closure. Cover the observation/settlement step
-boundary without changing the no-crush update order. Qualify sight/shot
-occlusion independently, then retain the existing bot route, `team_gate` and
-replay checks in both presets. Trial play and difficulty values retain their
-human gates; no new arena layout or pad is required for this implementation.
+The shipping driver watches settled permissions and invalidates affected
+teams' held routes, ascent/descent/ramp/finish state and recovery decisions
+before resampling. It retains reserve policy and the private random sequence.
+A paint-leader change alone does not invalidate a route while an occupant
+holds its old permission. Input observation still precedes gate settlement:
+the first observation after settlement sees the new permission. Collision,
+no-crush settlement, tuning and authored stages are unchanged.
+
+**Qualification (Debug and Release, 2026-10-28).** The default
+`bot_gate_routes` acceptance case checks six mirrored policy/difficulty
+controls whose fallback initially heads away from the route, closed-route
+rejection, separate navigation/paint aim and RNG-preserving invalidation.
+Actual Level observations cover closed and either-team permissions, stable
+support IDs, occupied takeover and the input-before-settlement boundary.
+Four paired shipping-driver experiments cover direct and occupied takeovers
+from both teams, retaining decisions before settlement and replanning on the
+first observation afterwards, before ordinary reaction/replan expiry.
+Actual projectile launch sweeps stop both teams' shots at either open gate.
+
+Two isolated public-loader fixtures contain a flush scored floor patch beyond
+a tall gate and ordinary non-scoring floor elsewhere. Each permitted team
+reaches and paints the patch; each 420-step final-input tape reproduces the
+sampled player, projectile-count and exact paint state at every step.
+These capability fixtures do not alter a shipped arena.
+
+Both game builds, the new case and twelve retained acceptance cases pass:
+`bot_driver`, `bot_runtime`, `bot_recovery`, `bot_ballistics`, `bot_navigation`,
+`bot_territory`, `bot_mover_routes`, `bot_arena_routes`, `bot_hill_routes`,
+`bot_turbulence_routes`, `team_gate` and `instant_replay`. Hidden startup with
+the accepted audio bank also passes in both presets. Receipts are under
+`out/validation/road15-gate-routes/`; the new case is in `focused/<preset>/`.
+This is scoped software qualification, not the full acceptance suite or
+attended difficulty, route-value or physical-pad acceptance. Those human
+gates remain `ROAD#10`, `ROAD#30` and `ROAD#2`.
 
 ### Gate permission cue (`ROAD#26`)
 
-**OPEN, M (2026-10-28).** A gate draws as an ordinary eraser block. Paint
-colour alone cannot state its collision permission: `paint_leader()` can be
-team B while `open_for()` is still team A because an A player is inside.
+**Implemented (2026-10-28).** A steady paper plaque shows a closed X or the
+permitted team's A/B glyph and passage mark, accented with that team's selected
+palette colour. Two pause bars beside the glyph identify occupied hold. The shape carries the
+same information without hue or sound, including with Reduce effects. Match
+construction and Stage Select's live miniature both supply the cue.
 
-Add a small functional cue using existing drawing primitives and presentation
-data. Show closed, open-for-A and open-for-B by shape as well as the selected
-team palette; distinguish a held-open gate whose paint leader disagrees.
-Read settled permission, not a second approximation of the paint rule. Publish
-the actual hold reason at settlement: a later shot can change the paint leader
-before drawing, so a leader/permission mismatch alone does not prove that an
-occupant held the gate open. Keep the cue legible in the stage miniature and
-at 1/2/4-player sizes, with reduced effects and no sound. This is information
-for the explicit trial, not the deferred environment-art production pass.
+`held_open()` records the actual reason at settlement, alongside `open_for()`:
+only a living permitted occupant retaining a different paint leader sets it.
+A later shot cannot invent or clear that reason before the next settlement.
+The plaque reads these settled facts, rather than recomputing permission from
+current paint. Its size, keyline, inset and contrasting ink/paper are in
+`presentation.json`'s `gate_permission`; it scales down inside the body's
+paint-free interior, leaving face bands and existing cull bounds intact. The
+permission/hold marks sit toward the top so the occupant and its badge do not
+hide the important state at the bottom of the gate.
 
-Acceptance: draw checks and native captures cover unpainted/tied, either open
-team, occupied takeover and final closure, including monochrome legibility.
-The cue stays within its declared cull bounds and does not obscure paintable
-faces. Collision, scoring, the open-share value and replay remain unchanged.
-Attended preference is reviewed with `ROAD#30`.
+**Software qualification (Debug and Release, 2026-10-28).** Both game builds,
+`team_gate`, `menu_presentation`, `bot_gate_routes`, `instant_replay` and
+`terrain` pass, as does hidden startup with the accepted audio bank. Independent
+checks cover either team's occupied takeover, late paint, restored lead, ties,
+departure, dead/hostile occupants and final closure. Small/no-interior bodies,
+cull containment and exact paint-surface/credit/permission preservation are
+checked separately. Presentation fixtures reject missing, malformed, nonfinite,
+invisible and low-contrast values. Receipts are under
+`out/validation/road26-gate-cue/`.
+
+The focused native check, `scripts/check-painter.ps1 -GatePermissionOnly`,
+passes in both presets on D3D11 / RTX 5080.
+It compares seven controlled states in eight Levels built by LevelBuilder, all six
+palettes, native 1/2/4-player scales and the actual Stage Select miniature fit.
+Qualified base draws isolate the plaque's changed pixels; frozen/reduced draws
+retain paint, credit, permission, RNG and Debug replay fingerprints. Exact ink
+masks distinguish closed/A/B/held shapes independently of hue, and the actual
+StagePreview supplies a nonempty closed-sign witness. It retains 22 context
+frames, 155 unscaled crops and 112 state rows per preset. These are controlled
+inspection states; attended clarity and preference remain `ROAD#30`.
 
 ### Ferry direction and stop cue (`ROAD#27`)
 
-**OPEN, M (2026-10-28).** `TranslatingStructurePaintable` exposes
-`drive_heading()` and `motion_state()`, but its drawing only translates its
-ordinary material. A stopped ferry can mean a paint tie or that ownership is
-pushing it against an end stop; those are different actions for a rider.
+**Done (2026-10-28).** Paint-driven movers carry a small paper/ink plaque
+below their body. Fixed A/B letters and opposed arrows show each team's
+authored direction even when unpainted; the current paint leader is inverted.
+A separate lower shape describes the last positive committed step: initial
+dots before any step, pause bars for a tie/unpainted hold, a moving chevron,
+or a chevron against the reached end-stop bar. Cyclic movers have no plaque.
+The optional `ferry_direction` presentation record owns its size, gap, keyline
+and paper/ink colours; existing files without it retain valid defaults.
 
-Add a functional direction cue for paint-driven movers, using existing
-primitives and presentation values. Distinguish left/right ownership demand,
-tie/unpainted hold and ownership demand against a reached end stop; show that
-painting for the other team will reverse the demand. Do not imply that a
-cyclic mover is paint-driven or predict future motion before paint has landed.
-`drive_heading()` reads current paint while the committed motion used pre-step
-paint; publish a read-only cue snapshot that distinguishes ownership demand from the last
-actual movement/end-stop state, rather than conflating those two times.
+`cue_state()` keeps current paint demand separate from committed heading,
+actual world movement and end-stop state. New paint cannot rewrite a previous
+step's explanation, and zero updates retain that explanation. A local offset
+advance that rounds to no world movement does not claim movement. The cue
+translates/culls with its mover and draws in both gameplay and StagePreview.
+No motion rate, displacement, collision, scoring area, paint credit or RNG
+policy changed.
 
-Acceptance: both authored team-A headings, ties, repaint reversal and both
-endpoints have correct draw states. Check miniature and native 1/2/4-player
-composition, reduced effects and monochrome shape differences. Preserve ferry
-speed, displacement, paint credit and replay. Final trial preference remains
-`ROAD#30`; decorative material art stays in the later polish pass.
+**Qualification (Debug and Release, 2026-10-28).** `paint_ferry` checks both
+authored team-A headings, current versus pre-step ownership, repaint reversal,
+ties at either endpoint, zero updates, world-coordinate rounding, contained
+culling and bit-exact uncued motion/paint/credit controls. Existing
+`moving_structure`, `instant_replay` and presentation checks pass in both
+presets, as does hidden startup with the accepted audio bank.
+
+The focused native `FerryDirectionOnly` matrix passes in each preset: six
+Level builds, 3,138 updates, 424 readbacks, 43 full frames, 169 unscaled crops
+and 84 state rows. It covers native 1/2/4-player and miniature scales, both
+headings and seven controlled states, reduced-effects parity, monochrome
+shape differences, bounded draw output and the actual StagePreview widget.
+Contact sheets and representative full compositions were inspected. These
+are controlled inspection states; attended clarity/preference remains
+`ROAD#30`, and decorative production art remains a later pass.
 
 ### Unscoped paint-object contracts (`ROAD#28`, `ROAD#29`)
 
@@ -2202,9 +2254,9 @@ arena while `POL#21` remains a geometry decision.
 from both sides at 1-4P. Judge whether ownership-driven travel and selective
 passage create useful painting/route choices, whether the gate's held-open
 rule is understandable, and whether the open share and ferry headings feel
-fair. Record keep/change/cut decisions and any value changes. Functional cues
-can be reviewed as `ROAD#26`/`ROAD#27` land; current trial play is already
-available. Neither automated matches nor this review opts a trial into Random
+fair. Record keep/change/cut decisions and any value changes. The gate and
+ferry cues (`ROAD#26`, `ROAD#27`) are ready for review. Current
+trial play is already available. Neither automated matches nor this review opts a trial into Random
 or selects Turbulence's geometry (`POL#21`).
 
 ### Instant replay (`ROAD#19`)
@@ -2224,8 +2276,9 @@ it is built, and `RoundTape` (`game/round_tape.h`) keeps that seed, a copy of
 the setup (a re-pick page can change the match's own and then be backed out
 of), every participant's final input on every logic step, and where the round was
 suspended (which clears jump buffers) or resumed (which re-reads held jumps).
-`GameLevel` records through `RoundTapeRecorder`, the seat filter every live
-update passes through, behind the Debug filter when there is one. Watch Replay
+`GameLevel` records timed rounds through `RoundTapeRecorder`, the seat filter
+every live update passes through, behind the Debug filter when there is one.
+Untimed practice keeps the filter but starts no shipping tape (`ROAD#31`). Watch Replay
 destroys the finished level and builds it again from the seed, with no intro
 and the countdown skipped. It runs the steps before the replay's window with
 the sound groups at zero, up to 12 ms of steps a frame, which draws the round
@@ -2273,39 +2326,60 @@ case also checks the tape rules.
 
 ### Menu cards stay on the paper face (`ROAD#25`)
 
-**OPEN, M (2026-10-28).** Startup's menu-card containment uses the whole
-paper rectangle in `game/presentation_validation.cpp`, while
-`game/states/menu_panel.cpp` draws the face with its shadow offset removed.
-Use that same face boundary for containment, then move the existing Home,
-Options Back, Restore defaults, Pause and End paper-edge fixtures in
-`scripts/acceptance/menu_text/` to the face. The shipped overhangs were
-already corrected; this closes the validator gap that let them through.
+**Done (2026-10-28).** `check_menu_item` now uses the resting paper face's
+right/bottom boundary: the whole paper size minus its existing shadow offset,
+matching `MenuPaperArtwork::draw_card`. The renderer, authored presentation and
+intended page layout are unchanged. Font/measurement/fitting checks still
+precede containment, with the same diagnostic text and field order.
 
-Acceptance: a card exactly on the face edge passes, its first overhang into
-shadow fails with the relevant field, and shipped presentation loads in both
-presets. Run the focused `menu_text` case and relevant menu painter checks;
-keep the renderer's paper geometry and intended page layout unchanged.
+Home, Options Back, Restore defaults, Pause and End paper-edge fixtures now
+place their inclusive pass at the face, then refuse the first overhang into
+shadow with the existing relevant item diagnostic. The focused `menu_text`
+case passes in Debug and Release. Native `MainMenuOnly`, `SettingsMenuOnly`,
+`OptionsDefaultsOnly`, `PauseMenuOnly` and `EndMenuOnly` checks pass in both
+presets across six sizes/aspects (720p, 1080p, QHD, 4:3, 16:10 and ultrawide),
+including retained/reopened labels, focus cards/arrows and complete-page
+bounds. Representative full-page and contact-sheet captures were inspected.
+This is the corrected baseline for the separate `HYG#1` extraction.
 
 ### No shipping replay tape in untimed practice (`ROAD#31`)
 
-**OPEN, MED, M (2026-10-28).** `GameLevel::build_and_enter_level` unconditionally
-starts `RoundTape`; `RoundTapeRecorder` appends input and timing every logic
-step. The menu's lesson practice is untimed and never offers Watch Replay,
-so its unused tape grows for as long as the player stays.
+**Done (2026-10-28).** The menu's untimed lesson practice previously
+kept every logic step's inputs and timing in an unused shipping replay tape.
+`GameLevel::build_and_enter_level` now clears the previous tape, builds the
+level, and starts capture only when the built level is timed. An unstarted
+`RoundTape` ignores both input steps and suspend/resume gaps.
 
-Start or retain shipping replay capture only for a timed round. Use the built
-level's `practice()` result, rather than assuming that every solo or Movement
-Course launch is untimed: Debug can start the timed course. Clear an old tape
-when rebuilding into practice and prevent suspend/resume gaps accumulating
-there. Keep the independent Debug record/play filter working.
+The decision uses `Level::practice()`: ordinary solo arenas, multiplayer and
+developer-started timed Movement Course still capture. Seed generation is
+unchanged, and timed capture starts before the Debug post-build hook applies
+cheats or placements. The shipping filter remains installed in practice, so
+independent Debug input, recording and playback still pass through it.
 
-Acceptance: a sustained untimed practice run, pause/resume and restart retain
-no shipping tape steps or gaps; an ordinary timed solo round and a timed
-multiplayer round still offer and reproduce their replay. The shipping filter
-must still forward Debug input/recording when tape capture is disabled.
-Use the actual `GameLevel` path and existing `instant_replay` qualification in
-both presets. No practice wording or keep/cut decision (`POL#19`) is needed
-to fix this resource use.
+**Qualification (Debug and Release, 2026-10-28).** The focused native
+`scripts/check-painter.ps1 -PracticeReplayOnly -Preset <preset>` checks the
+actual `GameLevel` on a hidden shell. It retains no shipping steps or gaps
+through 4,800 simulated practice steps (60 seconds, then 10 seconds after
+Restart and 10 seconds after a timed-to-practice rebuild), actual Pause/Resume
+and focus count-ins. The rebuild first has a nonempty timed tape and gaps to
+clear. Debug additionally forwards 120 steps through the real `ReplayRecorder`
+and its inner input driver while the shipping tape remains empty.
+
+Ordinary menu solo, developer-started timed Movement Course and multiplayer
+with a shipping bot each offer Watch Replay through the actual End page.
+Their 543 combined recorded steps reproduce public player gameplay bits,
+projectile counts and hashes of every scoring tile. These checks initialize
+native devices but perform no raster drawing or readback and make no
+physical-pad or performance claim.
+
+Both builds, the CPU `instant_replay` and `practice_workshop` cases, and
+hidden startup with the accepted audio bank pass. The retained seven-arena
+replay case still reproduces 1,201 steps per arena; its new disabled-capture
+check forwards 10,000 downstream input steps and bot-replacement decisions.
+Receipts are under `out/validation/road31-practice-replay/` (`acceptance/`,
+`painter/` and `startup/`). This is focused qualification, not the full suite.
+
+The workshop wording and its attended keep/cut decision remain `POL#19`.
 
 ### Player profiles (`ROAD#21`)
 
@@ -2360,6 +2434,55 @@ instead of saving.
 
 Still open: play with real pads.
 
+#### Initial host profile Boost (`ROAD#34`)
+
+**Done (2026-10-29).** Player Count preclaims the initiating device for P1.
+Join formerly took a worn profile's Boost only after a later successful claim
+or profile cycle, so the already-claimed host skipped inheritance. A pad wearing
+`Boost +2` could reach Weapon Select with the old/default Boost; the normal
+menu-start carry-back could then replace its profile's `+2` with that stale value.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | The preclaimed host misses the profile Boost rule used by later joins. | Selected as `ROAD#34`: apply the existing rule at the initial claim boundary. Small setup correction using the existing shared page hierarchy and scripted-pad painter. |
+| 2 | The screenshot basename sanitizer preserves reserved Windows stems before appending `.png`. | A separate pure filename-policy slice; no reserved-path experiment. |
+| 3 | Input-fixture resource cleanup needs an explicit measurement contract. | Continue `ED#20` independently; preserve its failed candidate and diagnostic limits. |
+
+The existing `take_profile_boost` helper now belongs to `MainMenuPage`'s protected
+interface, with its body unchanged. Player Count calls it immediately after
+beginning the initial input claims. Later guests and profile cycling continue to
+use that same rule. Bare pads and keyboard/mouse retain their existing policy;
+there is no save format, value or profile-wearing policy change.
+
+The old-source baseline drove actual Player Count confirmation through the
+existing scripted reader, claimed Pad0 for P1 and recorded expected Boost `2`
+versus actual `0`. Its private save stayed unchanged, and it failed before
+any reference rendering or later case. Evidence is
+`out/validation/implementation-loop-20261028/road34-baseline/9f640a714cdb4a2caa8aeb7789607425`.
+
+Both game builds, the `player_profiles` CPU case and `-BotPlayersOnly` pass in
+Debug and Release. Sixteen actual Player Count/Join/Weapon paths cover pad
+slots 0 and 3, 1P/2P and Off/+1/+2, bare pads, keyboard/mouse and later guest
+inheritance. Forty-three CSV rows pass, including committed manual Boost
+preservation through Stage-to-Weapon-to-Team-to-Weapon navigation. Reference
+pages explicitly contain the literal expected Boost. Confirming Player Count
+again begins new claims and may inherit the profile again.
+
+Navigation preserves the complete private profile file and records; a separately
+labelled Save API call checks carry-back and reopening that existing private
+file. The new fixture does not build a match or qualify actual match-start
+persistence wiring. Existing 720p/1080p bot setup and mixed-GameLevel checks
+also pass unchanged. Outer isolated saves remain byte-identical, all 14 guarded
+sources remain unchanged, and independent review passes. Worktree-status
+collection is explicitly omitted and recorded as null.
+
+Candidate evidence is
+`out/validation/implementation-loop-20261028/road34-candidate/849726c0c5154677b7960b8975acfc72`;
+native painter leaves are Debug `2844bbe443f849c5a96e255b89bc30f6` and Release
+`978ad28fc1a14d1e96fa46bd58b1678d` under its `painter` directory. No real pad or
+player save was used. The attended `ROAD#21` and fairness `ROAD#5` gates remain
+unchanged.
+
 ### User stages (`ROAD#16`)
 
 **Scope (2026-10-28).** A player who saves a level with the editor should be
@@ -2413,9 +2536,11 @@ finished round records under the file name, Stage Select and Results show its
 best, and the remembered setup restores it while the file is there (falling
 back to the first stage, as for a retired stage, when it is not). Instant
 replay rebuilds the round from the loaded definition in memory. The Debug
-`record`/`play` files name the stage; playing one needs the file in the folder,
-and a file edited since the recording plays its new geometry, which the replay
-does not detect.
+Debug recordings now fingerprint the loaded semantic definition (`DBG#8`).
+Playback requires the current catalog entry and matching loaded definition;
+an edited/rescanned stage or a legacy unverified recording is refused before
+playback changes, even with `force`. An edit without rescan still uses the
+unchanged loaded snapshot. The usual same-build replay limits remain.
 
 Provisional decisions, open for the author:
 
@@ -2492,7 +2617,7 @@ copy of Close Quarters from an isolated profile.
 - **A note for players.** The release ZIP ships the root `README.md`
   (`cmake/release_package.cmake`). Its new "Your own stages" section names
   the folder and the name rule, says when the game reads the folder and
-  where a refusal is printed, and points to Save to My Stages, noting that
+  where refusal details are available, and points to Save to My Stages, noting that
   the editor is not in the ZIP.
 
 The `user_stages` case now also runs a session: an unattached folder (every
@@ -2514,34 +2639,48 @@ Provisional decisions, open for the author:
 - **The editor's shortcut** is Ctrl+M (for "My Stages"). Ctrl+Shift+S was
   taken.
 
-Still open: attended play of a real player-made stage (a human gate), and the
-Random and marker calls above.
+Still open: attended play of a real player-made stage (a human gate), the
+Random and marker calls above, and the provisional scan-details action/help
+wording identified in `ROAD#32` below.
 
 ### User-stage refusal details in the game (`ROAD#32`)
 
-**OPEN, MED, L (2026-10-28).** A broken user stage is correctly refused
-without stopping the game, but a player must redirect stderr to find out why.
-`UserStageScan` already returns accepted names and refusal reasons; the
-`GameMenu` rescan callback discards that result. A stage silently absent from
-the picker gives the author no usable repair path in the windowed game.
+**Done (2026-10-28).** `UserStageFolder` retains its latest scan. Main-menu
+Stage Select shows an issue count separately from the chosen arena's briefing;
+Down while browsing opens a covering details page. Left/Right changes issue,
+Up/Down changes page, and Confirm/Back/Pause dismisses. The page owns a copied
+snapshot and four text widgets, preserving the arena cursor underneath.
 
-Retain the latest scan outcome and expose a bounded, dismissible details view
-from main-menu Stage Select when there are refusals. Show the file name and
-the existing validation reason, with paging/wrapping for long diagnostics;
-reuse the current menu input and text-validation paths. A no-refusal scan
-clears old errors. Present scan status separately from the accepted stage's
-briefing, so the Random and user-stage-marker decisions stay independent.
-Any new action label/help copy must be identified for the author's wording;
-the existing refusal text can drive the implementation and fit fixtures.
+Existing filename/reason text is retained. Actual font extents wrap even an
+unbroken filename and divide it into pages. Printable ASCII stays verbatim;
+other UTF-16 units use `\uXXXX`, and invalid UTF-8 bytes use `\xXX`, matching
+the game's current font coverage. Folder-level and aggregate failures count
+as issues too. No-refusal scans clear stale details. Startup/rescan boundaries,
+per-file acceptance and stderr deduplication are unchanged; opening/closing
+details never scans, and matches/series rounds do not offer this view.
 
-Keep the startup/rescan boundary, per-file refusal and stderr deduplication.
-Do not scan during a match or between series rounds, automatically open a
-modal on startup, or turn an optional user-stage failure into a fatal one.
-Acceptance: one valid and one broken file leave the valid stage playable and
-the broken file's reason reachable; fixing, removing or changing the bad file
-updates the details on the next permitted scan. Verify long/non-ASCII file
-diagnostics, no-error/unattached contexts, returning to the selected stage,
-and native menu fit. Use isolated user folders throughout.
+Optional `main_menu.stage_scan` and `menu_text.stage_scan` records own layout
+and copy, with compatible defaults. Diagnostic legends have their own font
+and footer-relative geometry; status/counter text fits its reserved area.
+Resource checks run after the existing ordered presentation checks and cover
+full ASCII glyphs, templates, paper/row geometry and shadow-inclusive legends.
+The provisional new wording is identified in the content: `User-stage scan`,
+`issue(s)`, `Down Scan details`, issue/page navigation and the escape hint.
+The author's wording/readability review joins the existing `ROAD#16` workflow
+review; software qualification does not accept that copy or its Random/marker
+decisions.
+
+Both game builds, `user_stages`, `stage_selection`, `menu_presentation` and
+`menu_text`, plus isolated accepted-audio startup/user-stage fixtures pass in
+Debug and Release. `check-painter.ps1 -StageScanOnly` passes both presets:
+one good/one broken actual folder, selected-stage return and actual valid-match
+start; changed/removed/fixed scans; locked/series/unattached/clean controls;
+three deduplicated stderr lines over six permitted scans. Each run has 151
+menu updates, 181 level updates, 238 readbacks, 156 independent text/raster
+comparisons across six window sizes/aspects, ten full frames and five crops.
+The long Unicode/invalid-byte fixture spans five pages without losing text.
+Review included compact parent/details captures and the 4:3 long-text page.
+All folders and profiles are isolated; human play remains `ROAD#16`.
 
 ### Series stage rule (`ROAD#20`)
 

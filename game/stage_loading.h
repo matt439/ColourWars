@@ -94,6 +94,9 @@ public:
 	// Later: replaces the user stages and regroups the sounds. Prints only the
 	// refusals the previous scan did not, so reopening Stage Select is quiet.
 	UserStageScan rescan();
+	// Latest completed startup/rescan result, including refusals already reported
+	// on stderr. An empty successful scan clears earlier refusals.
+	const UserStageScan& latest_scan() const;
 
 private:
 	std::filesystem::path directory_;
@@ -102,6 +105,7 @@ private:
 	labrador::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
 	StageList* stages_ = nullptr;
 	std::set<std::string> reported_;
+	UserStageScan latest_scan_;
 
 	UserStageScan read_into(StageList& stages) const;
 	void report(const UserStageScan& scan);

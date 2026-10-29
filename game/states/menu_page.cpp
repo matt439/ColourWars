@@ -198,6 +198,15 @@ void MenuPage::set_prompts(MenuPrompt prompt)
 		this->text_.prompt(prompt), this->prompt_look_, this->render_resources());
 }
 
+void MenuPage::set_prompts(const std::wstring& legend, const PromptBarPresentation& look, float scale)
+{
+	PromptBarPresentation scaled = look;
+	scaled.shadow_offset *= scale;
+	this->prompt_bar_ = std::make_unique<PromptBar>("prompt_bar", legend, scaled, this->render_resources());
+	this->prompt_bar_->set_scale(scale);
+	this->prompt_bar_->set_shadow_scale(scale);
+}
+
 void MenuPage::draw(Renderer& renderer) const
 {
 	std::vector<UiLayer> layers;

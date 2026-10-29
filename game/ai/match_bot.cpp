@@ -43,6 +43,22 @@ bool MatchBot::needs_territory() const
 	return this->replan_in_ <= 0 && this->recovery_left_ == 0;
 }
 
+void MatchBot::replan_traversal()
+{
+	this->react_in_ = this->replan_in_ = this->blocked_steps_ = this->jump_left_ = 0;
+	this->recovery_left_ = this->progress_steps_ = 0;
+	this->has_goal_ = this->has_paint_goal_ = false;
+	this->ascending_ = this->ascent_airborne_ = this->continue_ascent_ = false;
+	this->climbing_ramp_ = false;
+	this->seeking_after_descent_ = this->descent_airborne_ = false;
+	this->descent_turns_ = 0;
+	this->finish_pending_ = false;
+	this->finish_left_ = 0;
+	this->has_off_enemy_ = false;
+	this->visited_supports_.clear();
+	this->decision_ = {};
+}
+
 bool MatchBot::deliberate(WeaponType weapon) const
 {
 	const float gate = this->tuning_->bots().deliberate_shot_interval;
@@ -99,6 +115,20 @@ void MatchBot::choose_territory(const MatchBotObservation& view)
 	float best_aim = std::numeric_limits<float>::max();
 	this->has_goal_ = false;
 	this->has_paint_goal_ = false;
+	const auto consider_route = [&](const Vector2F& candidate)
+	{
+		Vector2F standing;
+		if (!this->standing_goal(view, candidate, standing)) { return; }
+		const Vector2F gap = standing - view.center;
+		// Favour nearby paint, with a cost for changing floor. Ignore the tile
+		// already directly under our feet so a single target cannot pin us there.
+		if (std::fabs(gap.x) < view.size.x && std::fabs(gap.y) < view.size.y) { return; }
+		const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
+		if (cost < best)
+		{
+			best = cost; this->goal_ = standing; this->has_goal_ = true;
+		}
+	};
 	for (const Vector2F& candidate : view.territory)
 	{
 		const Vector2F aim_gap = candidate - view.center;
@@ -107,18 +137,9 @@ void MatchBot::choose_territory(const MatchBotObservation& view)
 		{
 			best_aim = aim_cost; this->paint_goal_ = candidate; this->has_paint_goal_ = true;
 		}
-		Vector2F standing;
-		if (!this->standing_goal(view, candidate, standing)) { continue; }
-		const Vector2F gap = standing - view.center;
-		// Favour nearby paint, with a cost for changing floor. Ignore the tile
-		// already directly under our feet so a single target cannot pin us there.
-		if (std::fabs(gap.x) < view.size.x && std::fabs(gap.y) < view.size.y) { continue; }
-		const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
-		if (cost < best)
-		{
-			best = cost; this->goal_ = standing; this->has_goal_ = true;
-		}
+		consider_route(candidate);
 	}
+	for (const Vector2F& candidate : view.route_territory) { consider_route(candidate); }
 	if (view.support_paint)
 	{
 		const Vector2F gap = *view.support_paint - view.center;

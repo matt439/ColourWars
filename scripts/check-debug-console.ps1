@@ -54,6 +54,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
 if (-not $OutputDirectory) {
@@ -65,7 +66,7 @@ $executable = Join-Path $repo "out/build/$Preset/game/ColourWars.exe"
 if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
     throw "Build $Preset first: $executable is missing."
 }
-$output = [IO.Path]::GetFullPath($OutputDirectory)
+$output = Resolve-CheckFileSystemPath $OutputDirectory
 $profileDirectory = Join-Path $output 'profile'
 $null = New-Item -ItemType Directory -Path $output -Force
 

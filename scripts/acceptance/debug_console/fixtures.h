@@ -2,8 +2,8 @@
 
 // What the debug_console acceptance pieces share: the fakes the director is
 // driven against, the test director and stages, the scratch folders, the log
-// and file helpers, and the checks main calls. Compiled in Release too, where
-// only require, FakeMatch and FakePage are used.
+// and file helpers, and the checks main calls. Release uses require, FakeMatch,
+// FakePage and the loaded-stage semantic checks.
 #include "game/debug/dev_tools.h"
 #include "game/debug/debug_director.h"
 #include "game/input_slots.h"
@@ -30,6 +30,7 @@
 namespace debug_console_acceptance
 {
 	void require(bool condition, const std::string& message);
+	void check_loaded_stage_semantics();
 
 	// A match as the director sees it: counts updates and rebuilds, records
 	// each update's jump/debug/intro edges, and can finish after a number of updates.
@@ -404,6 +405,11 @@ namespace debug_console_acceptance
 		"presentation.opening.acting.face", "presentation.opening.acting.sweat",
 		"presentation.opening.glass_colour", "presentation.opening.silhouette", "presentation.opening.scribble", "presentation.hud.health_colour", "presentation.hud.meter_track_colour", "presentation.opening.crack", "presentation.figure.arm_colour", "presentation.figure.hand_colour", "presentation.figure.quiet.face_colour", "presentation.hud.timer.colour", "presentation.hud.timer.shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.player_identity.colour", "presentation.hud.player_identity.shadow_colour", "presentation.hud.player_identity.background_colour", "presentation.hud.closing_clock.ink", "presentation.hud.closing_clock.paper", "presentation.hud.closing_clock.accent", "presentation.hud.closing_clock.shade", "presentation.hud.paper.ink", "presentation.hud.paper.paper", "presentation.hud.paper.shade" };
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
+
+	// bind_persistence_checks.cpp
+	void check_bind_persistence_failures(GameTuning& tuning, Presentation& presentation);
+	// word_round_trip_checks.cpp
+	void check_bind_word_round_trips(GameTuning& tuning, Presentation& presentation);
 
 	// console_checks.cpp
 	void check_tokenizer();

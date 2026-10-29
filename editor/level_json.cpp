@@ -502,6 +502,13 @@ namespace colourwars_editor
                 fail("Invalid JSON at byte " + std::to_string(document.GetErrorOffset()) + ": " +
                     rapidjson::GetParseError_En(document.GetParseError()));
             }
+            // RapidJSON also treats an actual zero inside bounded input as EOF.
+            // Valid JSON represents NUL with an escape in the source text.
+            const size_t nul = text.find('\0');
+            if (nul != std::string_view::npos)
+            {
+                fail("Invalid JSON at byte " + std::to_string(nul) + ": Unescaped NUL byte.");
+            }
             return document;
         }
 

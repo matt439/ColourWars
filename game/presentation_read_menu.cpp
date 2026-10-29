@@ -525,6 +525,22 @@ namespace presentation_read
 		describe(WeaponType::bucket, "bucket");
 		describe(WeaponType::random_primary, "random");
 
+		if (json.has("stage_scan"))
+		{
+			const JsonValue scan = json.object("stage_scan");
+			menu.stage_scan.font = scan.identifier("font");
+			menu.stage_scan.heading_scale = read_positive(scan, "heading_scale");
+			menu.stage_scan.text_scale = read_positive(scan, "text_scale");
+			menu.stage_scan.status_scale = read_positive(scan, "status_scale");
+			menu.stage_scan.prompt_position = read_vector(scan, "prompt_position");
+			menu.stage_scan.prompt_shadow_offset = read_vector(scan, "prompt_shadow_offset");
+			menu.stage_scan.box_size = read_positive_vector(scan, "box_size");
+			menu.stage_scan.padding = read_positive_vector(scan, "padding");
+			menu.stage_scan.gap = read_positive(scan, "gap");
+			const JsonValue status = scan.object("status");
+			menu.stage_scan.status.position = read_vector(status, "position");
+			menu.stage_scan.status.size = read_positive_vector(status, "size");
+		}
 		return menu;
 	}
 }

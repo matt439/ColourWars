@@ -22,12 +22,13 @@ namespace labrador
 // The developer debug service: console, debug menu, launch arguments, F-key
 // binds, the debug clock, overlays, cheats, screenshots, queued match
 // requests, live tuning, bots, seeded record and play, scripts, the live
-// console and the perf overlay. The states call
-// its hooks; it does nothing in Release.
+// console and the perf overlay. The states call its hooks; Release keeps ordinary
+// match-update forwarding and the launch-argument warning, without developer tools.
 //
 // Its layout is the same in every configuration (one pointer). In Debug the
 // pointer owns a DebugDirectorImpl; in Release it is always null and the hooks
-// below are inline no-ops, so no registry, console or command text is built.
+// below are inline no-ops or ordinary-update forwarding, so no registry,
+// console or command text is built.
 class DebugDirector
 {
 public:
@@ -78,8 +79,8 @@ public:
 	// (rebuild, leave). True: the match has done its work for this step.
 	bool before_match_update(DebugMatchTarget& match, float dt, bool active = true);
 
-	// Replaces GameLevel's single Level::update with the debug clock's
-	// 0..4 fixed-dt updates.
+	// Debug uses the clock's 0..4 fixed-dt updates; Release forwards one update
+	// through DebugMatchTarget, including GameLevel's shipping tape recorder.
 	void update_match(DebugMatchTarget& match,
 		const std::vector<PlayerInputData>& inputs, float dt);
 

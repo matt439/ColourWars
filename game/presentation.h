@@ -63,6 +63,28 @@ struct MatchPresentation
 	CountdownArtPresentation countdown_art;
 };
 
+// ROAD#26: a steady, in-body plaque for settled gate permission. World units;
+// drawing scales the plaque down to preserve the gate's paintable faces.
+struct GatePermissionPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	mattmath::Vector2F size;
+	float inset = 0.0f;
+	float keyline_width = 0.0f;
+};
+
+// ROAD#27: a steady sign below a paint ferry. The upper row shows paint's
+// current demand; the lower row reports the last committed motion step.
+struct FerryDirectionPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	mattmath::Vector2F size;
+	float gap = 0.0f;
+	float keyline_width = 0.0f;
+};
+
 // World-camera accent sizes in world units, and their timing in seconds.
 struct ViewShakePresentation
 {
@@ -644,6 +666,8 @@ public:
 	const HudPresentation& hud() const;
 	const PlayerIdentityPresentation& player_identity() const;
 	const MatchPresentation& match() const;
+	const GatePermissionPresentation& gate_permission() const;
+	const FerryDirectionPresentation& ferry_direction() const;
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const CombatFeedbackPresentation& combat_feedback() const;
@@ -662,6 +686,9 @@ public:
 	void set_movement_feedback_enabled(bool enabled);
 
 private:
+	struct Validation;
+	void validate_stage_scan_resources(const labrador::RenderResources& render) const;
+
 	std::string source_path_;
 	TeamPalettePresentation team_palette_;
 	MenuStyle menu_;
@@ -676,6 +703,8 @@ private:
 	HudPresentation hud_;
 	PlayerIdentityPresentation player_identity_;
 	MatchPresentation match_;
+	GatePermissionPresentation gate_permission_;
+	FerryDirectionPresentation ferry_direction_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
 	CombatFeedbackPresentation combat_feedback_;

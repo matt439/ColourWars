@@ -2,7 +2,7 @@
 # native PNG bytes afterward. It does not execute code from retained artifacts.
 $timerUpdates = @('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls','observation_weapon_updates')
 $timerStates = @('default','rgb','rgba128','alpha0')
-function Get-TimerSha([byte[]]$Bytes) { [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes)) }
+function Get-TimerSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
 function Assert-TimerKeys($Object,[string[]]$Expected,[string]$Scope) {
     if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($Expected | Sort-Object) -join '|')) { throw "Timer exact $Scope schema differs" }
 }

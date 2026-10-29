@@ -110,7 +110,7 @@ public:
     // rectangle; tuning supplies movement and health parameters.
     // secondary is currently accepted but ignored; players carry one weapon.
     // The builder supplies sound_index as the roster participant, independently
-    // of sparse device slots and device-less debug players.
+    // of sparse input slots and device-less bots or Debug dummy players.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
         const MovementFeedbackPresentation* movement_feedback,
@@ -206,6 +206,8 @@ public:
 	bool input_jump_pressed() const;
 	bool input_jump_held() const;
 	PlayerMoveState move_state() const;
+    // Stable human input slot, or -1 for a device-less player; not a roster
+    // participant or human-pane index. Pad reassignment leaves it unchanged.
     int player_num() const;
     // Drain after completed gameplay/contact work, even when output is gated.
     // The equipped weapon's dry-trigger event joins this player's events.

@@ -8,6 +8,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-path.ps1')
 
 function Assert-Check {
     param([bool] $Condition, [string] $Message)
@@ -74,7 +75,7 @@ function Invoke-NativeCheck {
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $repo "out/acceptance/$Preset/stage-registration" }
-$evidence = [IO.Path]::GetFullPath($OutputDirectory)
+$evidence = Resolve-CheckFileSystemPath $OutputDirectory
 $run = Join-Path $evidence ([Guid]::NewGuid().ToString('N'))
 $scratch = Join-Path $run 'repository'
 $content = Join-Path $scratch 'game/content'

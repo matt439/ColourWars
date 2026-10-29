@@ -194,6 +194,7 @@ void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 	settings->set_player_count(players);
 	settings->set_screen_layout(layout);
 	settings->begin_input_claims(this->activating_slot_);
+	this->take_profile_boost(this->activating_slot_);
 	if (settings->bot_count() > 0)
 	{
 		constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player,
@@ -397,7 +398,7 @@ void MainMenuJoin::change_host_row(Direction direction)
 	this->play_wave(this->direction_sound_);
 }
 
-void MainMenuJoin::take_profile_boost(int slot)
+void MainMenuPage::take_profile_boost(int slot)
 {
 	// A seat starts from the Boost its pad's profile carries; Weapon Select
 	// can still change it, and the match carries the choice back.

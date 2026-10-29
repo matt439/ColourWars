@@ -19,8 +19,9 @@ DebugTokens tokenize(std::string_view statement);
 // Splits a line on ';' outside quotes. Empty statements are dropped.
 std::vector<std::string> split_statements(std::string_view line);
 
-// Quotes a word when it would not survive tokenize() on its own.
-std::string quote_word(const std::string& word);
+// Quotes a word when it would not survive tokenize() on its own. Force quoting
+// when a script must also protect text such as // from its comment reader.
+std::string quote_word(const std::string& word, bool force_quote = false);
 
 // Launch arguments, after the program name. Every token that starts with '+'
 // followed by a letter begins a statement; every other token is an argument of

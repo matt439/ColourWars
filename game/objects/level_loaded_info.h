@@ -5,6 +5,7 @@
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
 #include "game/objects/level_station.h"
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,11 @@ class LevelLoadedInfo
 {
 public:
 	explicit LevelLoadedInfo(const char* json_path);
+
+	// The loaded JSON meaning, including authored member/array order. Whitespace,
+	// equivalent escapes and equal numeric spellings do not alter it. No disk read.
+	// This metadata supports Debug replay checks; layout is the same in Release.
+	std::uint64_t semantic_hash() const { return this->semantic_hash_; }
 
 	// Validate required keys and spawn bounds at startup; errors name the file and key.
 	// validate_content checks resource names and object entries after the complete
@@ -69,8 +75,11 @@ public:
 	float end_sting_volume() const;
 
 private:
+	LevelLoadedInfo(const char* json_path, std::string snapshot);
+
 	// Checked JSON access reports the source file and key on failure.
 	labrador::JsonDocument json_doc_;
+	std::uint64_t semantic_hash_ = 0;
 
 	// The four bounds rectangles differ only in which key they sit under.
 	mattmath::RectangleF bounds_rectangle(const char* key) const;

@@ -3,6 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay.h"
+#include "game/debug/debug_file_name.h"
 #include "engine/assets/json.h"
 #include "engine/core/file_path.h"
 #include "game/debug/match_plan.h"
@@ -459,6 +460,10 @@ std::string replay_name(std::string_view requested)
 	}
 	if (!name.empty())
 	{
+		if (debug_file_name::reserved_stem(name))
+		{
+			name.insert(name.begin(), '_');
+		}
 		return name;
 	}
 	const std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -489,6 +494,10 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	}
 	out << "  \"tuning_hash\": " << quoted(hex64(this->tuning_hash)) << ",\n";
 	out << "  \"presentation_hash\": " << quoted(hex64(this->presentation_hash)) << ",\n";
+	if (this->stage_hash)
+	{
+		out << "  \"stage_hash\": " << quoted(hex64(*this->stage_hash)) << ",\n";
+	}
 	out << "  \"tune_diff\": [";
 	for (std::size_t i = 0; i < this->tune_diff.size(); ++i)
 	{
@@ -632,6 +641,15 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 		!parse_hex(root.string("presentation_hash"), file.presentation_hash))
 	{
 		fail(path, "a content hash is not hex");
+	}
+	if (root.has("stage_hash"))
+	{
+		std::uint64_t hash = 0;
+		if (!parse_hex(root.string("stage_hash"), hash))
+		{
+			fail(path, "'stage_hash' is not hex");
+		}
+		file.stage_hash = hash;
 	}
 	const labrador::JsonValue diff = root.array("tune_diff");
 	for (std::size_t i = 0; i < diff.size(); ++i)

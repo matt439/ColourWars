@@ -18,9 +18,9 @@ class Level;
 // The same contract as the Debug recordings (DBG#2): it holds on this build,
 // this machine and this step, within one round, because the simulation is
 // deterministic from the build. It never leaves memory, so that is all it
-// needs. The developer tools can move a player or change the rules between
-// steps; anything that does spoils the tape rather than replaying a round that
-// was never played.
+// needs. Debug place/respawn/kill spoil the tape; a cheat change after the first
+// recorded step also spoils it. Live tuning edits and suspends injected by Debug
+// playback are not observed; such a replay can diverge (docs/feature-roadmap.md, ROAD#19).
 class RoundTape
 {
 public:

@@ -8,6 +8,8 @@ struct MenuPlayerSettings
 {
     PlayerTeam team = PlayerTeam::none;
     WeaponType weapon = WeaponType::sprayer;
+    // Stable human input slot; -1 for an unclaimed human or a bot. The vector
+    // position in MenuLevelSettings identifies the roster participant.
     int num = -1;
     PlayerController controller = PlayerController::human;
     BotDifficulty difficulty = BotDifficulty::normal;

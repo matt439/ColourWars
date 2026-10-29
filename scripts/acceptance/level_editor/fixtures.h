@@ -51,6 +51,8 @@ namespace level_editor_acceptance
     void check_resource_names(const fs::path& repo, const fs::path& scratch);
     void check_shipped_levels(const fs::path& repo, const fs::path& scratch);
     void check_format_versions(const fs::path& scratch);
+    void check_empty_property_keys(const fs::path& scratch);
+    void check_alignment(const fs::path& repo, const fs::path& scratch);
     void check_unknown_fields_and_rectangles(const fs::path& scratch);
     void check_ending_audio(const fs::path& repo);
     void check_random_setting(const fs::path& scratch);
@@ -62,6 +64,10 @@ namespace level_editor_acceptance
     void check_fixed_slabs(const fs::path& repo, const fs::path& scratch);
     void check_palette_and_ramps(const fs::path& scratch);
     void check_history_and_failures(const fs::path& scratch);
+    void check_external_save_changes(const fs::path& scratch);
+    void check_save_guidance(const fs::path& scratch);
+    void check_paint_mechanism_guides(const fs::path& repo, const fs::path& scratch);
+    void check_editor_window_layout(const fs::path& scratch);
     void check_stage_registration(const fs::path& repo, const fs::path& scratch);
     void check_user_stage_save(const fs::path& repo, const fs::path& scratch);
 }

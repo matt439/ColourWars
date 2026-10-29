@@ -143,6 +143,7 @@ protected:
 	// this page accepts; it can be built before or after the widget trees.
 	void set_prompts(const std::vector<PromptBar::Prompt>& prompts);
 	void set_prompts(MenuPrompt prompt);
+	void set_prompts(const std::wstring& legend, const PromptBarPresentation& look, float scale);
 
 	mattmath::Vector2F float_resolution() const;
 

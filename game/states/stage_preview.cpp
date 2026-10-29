@@ -32,7 +32,8 @@ void StagePreview::set_stage(const std::string& stage)
 	const LevelLoadedInfo* level = this->data_->level_infos()->get(stage);
 	const LevelObjectBuilder builder(this->data_->render_resources(),
 		this->data_->audio_resources(), &this->data_->save()->play_settings(),
-		&this->data_->tuning()->paint());
+		&this->data_->tuning()->paint(), &this->data_->presentation()->gate_permission(),
+		&this->data_->presentation()->ferry_direction());
 
 	// Build exactly the objects a fresh match uses, including mirrored ramps
 	// and unpainted surfaces. Nothing updates or receives collision contacts.
