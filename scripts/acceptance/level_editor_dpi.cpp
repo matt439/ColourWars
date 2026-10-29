@@ -81,6 +81,7 @@ namespace colourwars_editor
     struct EditorDpiProbe
     {
         static void check_mechanisms(Editor& editor, const std::filesystem::path& scratch);
+        static void check_paint_failure(Editor& editor, const std::filesystem::path& scratch);
         static void check_metadata(Editor& editor, const std::filesystem::path& scratch);
         static void check_empty_key_properties(Editor& editor, const std::filesystem::path& scratch);
         static void check_gestures(Editor& editor, const std::filesystem::path& scratch);
@@ -241,11 +242,13 @@ namespace colourwars_editor
                 "scaled fonts/controls/minimums, pending text+selection, view/hit conversion, full history and stable GDI "
                 << warmed_gdi << " -> " << final_gdi << '\n';
             check_mechanisms(editor, scratch);
+            check_paint_failure(editor, scratch);
         }
     };
 }
 
 #include "scripts/acceptance/level_editor_dpi/mechanism_checks.h"
+#include "scripts/acceptance/level_editor_dpi/paint_failure_checks.h"
 #include "scripts/acceptance/level_editor_dpi/empty_key_checks.h"
 #include "scripts/acceptance/level_editor_dpi/metadata_checks.h"
 #include "scripts/acceptance/level_editor_dpi/gesture_checks.h"

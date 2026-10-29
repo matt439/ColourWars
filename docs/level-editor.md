@@ -193,6 +193,145 @@ Evidence under `out/validation/implementation-loop-20261028/`: baseline
 `out/acceptance/x64-debug/level-editor/4497dc8e8bc94ad98e566acc3a63cf64`
 and `out/acceptance/x64-release/level-editor/779b68cf562d437cb6a54df051b962de`.
 
+#### Warmed input resource lifetime (`ED#20`)
+
+**Open (2026-10-28).** The separate `--gestures` process drives real hidden
+canvas input and DPI changes, but its aggregate GDI lifetime remains
+unqualified. The original unactivated 28-transition fixture has a separate
+exact GDI-count gate and stays unchanged.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | All six input helpers return their temporary GDI objects, yet `run_gestures` has no warmed aggregate counter. | Selected as `ED#20`: repeat the actual helper sequence in one hidden editor and require stable own-process GDI counts. Bounded software qualification, with private cycle artifacts and no claimed defect. |
+| 2 | Invalid pending-property dialogs remain unqualified. | A later explicit modal-driving scope with owned dialog and cancellation checks. |
+| 3 | Editor creation/destruction lifetime is distinct from one warmed editor. | Keep separate; do not introduce unsupported multiple-editor registration assumptions into this slice. |
+
+**Retained experimental plan.** Run all six helpers once for warm-up, then repeat the complete sequence three
+times using fresh `w`, `c1`, `c2`, `c3` subdirectories. Measure only after each
+helper's locals have died. Retain the raw count, execute one successful
+[`GdiFlush`](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-gdiflush)
+for the calling thread, then retain its settled count. Require each checked
+settled count to equal the nonzero warmed settled count. Stop at the first
+assertion, flush failure or count mismatch, with no extra warm-ups or tolerance.
+
+The first Debug qualification recorded raw counts `58, 58, 56` with every
+shell-state flag true; it stopped at `c2` and did not run Release. The failed
+receipt and all nine unchanged fixture hashes are retained in
+`ed20-candidate/8e426c0a4f854b9b850f70ab2f63bc68`, with native evidence under
+`out/acceptance/x64-debug/level-editor/1010ea5ae27c410fb29ba4f888716541`.
+That decrease is not evidence of a leak or proof of batching as its cause.
+The last ramp DPI restoration follows its final font-record query and may
+leave Boolean GDI operations queued; the explicit barrier gives the fixture
+a defined completion point.
+
+After warm-up, one owned pen control must increase the settled count by
+exactly one while held, then restore the exact baseline after successful
+deletion and flushing. The pen is never selected into a DC, and RAII cleanup
+retains ownership on exceptional exits. Persist the two control observations
+before their assertions. A changed settled count must still fail qualification.
+
+The settled Debug candidate also failed: `46` after warm-up, then `56` at
+`c1`, with successful flushes and every shell-state flag true. The pen control
+recorded `46 -> 47 -> 46`. Evidence is
+`ed20-candidate/8724a26569604dcd95d8089f745b59d5`; Release was not reached.
+Thus a thread flush alone does not resolve the discrepancy.
+
+A separate private diagnostic retained the same helper/state assertions and
+ran a predetermined six-cycle cap, recording aggregate mismatches without
+calling them passes. Its settled counts were `57, 58, 56, 56, 56, 56`;
+per-helper observations localized the later `+1` and `-2` changes to the
+empty-key inspector helper. All six cycles restored their caller state and
+the owned child exited with cleanup complete. Evidence is
+`ed20-phase-trace-run/fb50f06dc87647c1b93cdc89d0083483`. This does not establish
+a leak, a native-control cache explanation, or qualification. The next bounded
+investigation was to distinguish the helper's explicit bitmap/DC cleanup from
+its native inspector refreshes while preserving the failed candidate.
+
+That private six-cycle trace completed in
+`ed20-emptykey-trace-run/f5959706dea549d18e07fc429ade7ce3`: all 108 milestones,
+six exact bitmap restores and all bitmap/DC deletions succeeded. All settled
+counts were `56`; the earlier discrepancy did not reproduce. Observed changes
+occurred during bitmap creation/drawing/cleanup, with no changes at the native
+inspector milestones in this run. This narrows the observations without
+identifying the objects behind the earlier count differences.
+
+The unqualified counter candidate is retained byte-for-byte in
+`ed20-retained-experiment/gesture_checks.h`, with its hash and all receipt
+references in the sibling manifest. Only that new experimental `run_gestures`
+replacement was removed from the working harness; all established helpers and
+assertions remain. No aggregate pass is claimed. The next source step is to
+define checks for the explicit owned resources and their cleanup results before
+proposing another process-wide count gate. The
+[`GetGuiResources`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getguiresources)
+contract counts the process's GDI objects; the calling-thread flush does not
+establish ownership or promise stable native-control resource usage after one
+traversal. Keep any future aggregate criterion explicit and independently
+qualified.
+
+Every cycle must preserve shell source bytes/path, clean history and pending
+state, selection, viewport, snap/grid, DPI/window rectangle, thread keys,
+focus/capture and hidden state. Compare activation with its warmed value;
+input legitimately activates this thread's hidden parent. Preserve every
+existing helper assertion and all original unactivated DPI checks.
+
+Any replacement must qualify the full editor checker in both presets and
+retain source hashes, cycle artifacts and counts. A pass would establish only
+the replacement's stated bounded contract;
+creation/destruction lifetime, invalid-property dialogs and attended `ED#5`
+acceptance remain separate. No game graphics/audio device or player data is
+needed.
+
+#### Paint exception cleanup (`ED#21`)
+
+**Done (2026-10-29).** `canvas_message(WM_PAINT)` formerly released its
+compatible bitmap/DC and calls `EndPaint` only after `paint` returns normally.
+`paint` likewise restored the caller's selected font only on normal return.
+Drawing allocates strings and vectors and converts UTF-8 labels; an exception
+escapes to `canvas_proc`, which reports it and continues using the editor.
+The resources must be released before that handler runs.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Paint cleanup is skipped on a concrete throwing path. | Selected as `ED#21`: scope the paint session, buffer and selected font so unwinding releases them. Bounded robustness repair with a deterministic malformed-label regression. |
+| 2 | Empty-key input changes process-wide GDI counts without an identified owner. | Continue the separate bounded `ED#20` diagnostic; do not attribute those successful cycles to this exception defect. |
+| 3 | Invalid pending-property dialogs remain unqualified. | Keep the explicit modal-driving and cancellation scope separate. |
+
+Exercise the production drawing methods through the existing acceptance
+friend, using an invalid UTF-8 label in private in-memory draw data. Call the
+canvas message method directly so the test catches the exception without
+opening its outer error dialog. Observe the caller's selected font and
+repeated failed buffered paints; retain the failing baseline before the fix.
+Preserve the original document, source, controls and input state. Keep this
+after the existing unactivated DPI checks, and preserve their count gate.
+
+Small local guards now restore the borrowed font and release the selected
+bitmap, compatible DC and paint session during unwinding. The paint owner is
+fully constructed before later acquisitions can throw, and partial buffer
+creation failures use the same cleanup. Every attempted `BeginPaint` has its
+scoped `EndPaint`; drawing and the outer error policy stay intact.
+
+The unchanged-production Debug baseline reproduced both failures. The direct
+paint retained the editor's font in the caller's private DC. Three buffered
+exceptions increased settled GDI counts from `22` to `26`, `30`, then `34`;
+the following valid recovery paint still recorded `34`. Every controlled
+exception and caller-state check succeeded. The original 28-transition DPI
+fixture and 45 mechanism contexts passed before the ownership assertion failed.
+Evidence: `ed21-baseline/b6512abc4a8440e094c5d5c051de3093`, with native CSVs at
+`out/acceptance/x64-debug/level-editor/8e5b350655a64e04acace476c2035e1b/dpi-window`.
+
+All three editor targets and the complete checker pass in Debug and Release.
+Both controlled exception fixtures restore the caller's exact font and retain
+GDI `22 -> 22` through all three failures and recovery. All caller/source/history
+flags remain true. The original DPI gate remains `21 -> 21`, and mechanism,
+gesture, save-guidance and four hidden-launch checks pass in each preset.
+Independent source/test review, 14 unchanged source hashes and owned-process
+cleanup checks pass. Evidence: `ed21-candidate/cb444061cf02453491324e3606a4de63`;
+full checker leaves are `34b7de2ae6d142bdb08b0c933fb46cbd` under Debug and
+`ad957d94c8374a97bac5ae0e8cc38636` under Release's `out/acceptance` tree.
+Forced Win32 acquisition failures and the modal error UI were not exercised;
+partial cleanup and paint-session pairing also received source review.
+`ED#20` and attended `ED#5` remain independent gates.
+
 #### Empty-key property targets (`ED#16`)
 
 **Done (2026-10-28).** Unknown metadata may contain an empty object-member

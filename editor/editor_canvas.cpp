@@ -12,6 +12,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 namespace colourwars_editor
 {
@@ -21,6 +22,43 @@ namespace colourwars_editor
     {
         return entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b;
     }
+
+    // Construct ownership before acquiring each resource: a later allocation or
+    // drawing exception still unwinds every completed acquisition.
+    struct CanvasPaint
+    {
+        explicit CanvasPaint(HWND canvas) noexcept : window(canvas) { target = BeginPaint(window, &info); }
+        ~CanvasPaint()
+        {
+            if (previous && previous != HGDI_ERROR) SelectObject(buffer, previous);
+            if (bitmap) DeleteObject(bitmap);
+            if (buffer) DeleteDC(buffer);
+            EndPaint(window, &info);
+        }
+        CanvasPaint(const CanvasPaint&) = delete;
+        CanvasPaint& operator=(const CanvasPaint&) = delete;
+        HWND window;
+        PAINTSTRUCT info{};
+        HDC target = nullptr, buffer = nullptr;
+        HBITMAP bitmap = nullptr;
+        HGDIOBJ previous = nullptr;
+    };
+
+    class FontSelection
+    {
+    public:
+        FontSelection(HDC dc, HFONT font) : dc_(dc), previous_(SelectObject(dc, font))
+        {
+            if (!previous_ || previous_ == HGDI_ERROR)
+                throw std::runtime_error("Could not select the editor canvas font.");
+        }
+        ~FontSelection() { SelectObject(dc_, previous_); }
+        FontSelection(const FontSelection&) = delete;
+        FontSelection& operator=(const FontSelection&) = delete;
+    private:
+        HDC dc_;
+        HGDIOBJ previous_;
+    };
 
     void fill(HDC dc, const RECT& rectangle, COLORREF colour)
     {
@@ -320,7 +358,7 @@ namespace colourwars_editor
     {
         fill(dc, client, RGB(28, 36, 46));
         SetBkMode(dc, TRANSPARENT);
-        HGDIOBJ old_font = SelectObject(dc, font_);
+        const FontSelection font(dc, font_);
         double spacing = static_cast<double>(snap_);
         while (spacing * zoom_ < pixels(28)) spacing *= 2.0;
         const double pixel_spacing = spacing * zoom_;
@@ -350,7 +388,6 @@ namespace colourwars_editor
             + L"%    |    Grid " + std::to_wstring(static_cast<int>(spacing));
         fill(dc, RECT{pixels(8), pixels(8), pixels(370), pixels(35)}, RGB(28, 36, 46));
         SetTextColor(dc, RGB(181, 197, 213)); TextOutW(dc, pixels(16), pixels(13), legend.c_str(), static_cast<int>(legend.size()));
-        SelectObject(dc, old_font);
     }
 
     std::vector<Entry> Editor::hits(POINT point) const
@@ -466,14 +503,20 @@ namespace colourwars_editor
         case WM_ERASEBKGND: return 1;
         case WM_PAINT:
         {
-            PAINTSTRUCT info{}; HDC target = BeginPaint(canvas_, &info);
+            CanvasPaint painting(canvas_);
+            if (!painting.target) throw std::runtime_error("Could not begin editor canvas painting.");
             RECT client{}; GetClientRect(canvas_, &client);
-            HDC buffer = CreateCompatibleDC(target);
-            HBITMAP bitmap = CreateCompatibleBitmap(target, std::max(1L, client.right), std::max(1L, client.bottom));
-            HGDIOBJ old = SelectObject(buffer, bitmap);
-            paint(buffer, client);
-            BitBlt(target, 0, 0, client.right, client.bottom, buffer, 0, 0, SRCCOPY);
-            SelectObject(buffer, old); DeleteObject(bitmap); DeleteDC(buffer); EndPaint(canvas_, &info); return 0;
+            painting.buffer = CreateCompatibleDC(painting.target);
+            if (!painting.buffer) throw std::runtime_error("Could not create the editor canvas buffer DC.");
+            painting.bitmap = CreateCompatibleBitmap(painting.target,
+                std::max(1L, client.right), std::max(1L, client.bottom));
+            if (!painting.bitmap) throw std::runtime_error("Could not create the editor canvas buffer bitmap.");
+            painting.previous = SelectObject(painting.buffer, painting.bitmap);
+            if (!painting.previous || painting.previous == HGDI_ERROR)
+                throw std::runtime_error("Could not select the editor canvas buffer bitmap.");
+            paint(painting.buffer, client);
+            BitBlt(painting.target, 0, 0, client.right, client.bottom, painting.buffer, 0, 0, SRCCOPY);
+            return 0;
         }
         case WM_LBUTTONDOWN:
         {
