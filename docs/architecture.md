@@ -84,11 +84,12 @@ What holds at `272ecb75`:
   one of `debug_director.h` (`game_data.h`, `main.cpp`, `pause_menu.cpp`),
   `debug_targets.h` (`game_states.h`, `menu_page.h`) or
   `debug_overlay_draw.h` (`level_draw.cpp`). `GameLevel` inherits
-  `DebugMatchTarget` (`DebugMatchView`, `DebugMatchControl` and
-  `DebugMatchEdits`) privately and `MenuPage` inherits `DebugPageTarget`
-  protected, so the tools reach a state only through those interfaces. The
-  match step is `GameLevel`'s own `step_match`, called from its `update`; the
-  director only says how many steps run and with which developer filter.
+  `DebugMatchTarget` (since `HYG#33`, `DebugMatchView`, `DebugMatchControl`
+  and `DebugMatchEdits`) privately and `MenuPage` inherits `DebugPageTarget`
+  protected, so the tools reach a state only through those interfaces. Since
+  `HYG#33` the match step is `GameLevel`'s own `step_match`, called from its
+  `update`; the director only says how many steps run and with which
+  developer filter.
 - **The editor sees only the contracts**: it includes eight of the nine
   contract headers (and `simulation.h` through `horizontal_motion_contract.h`),
   and `colourwars_level_document` compiles without the engine's include path.
