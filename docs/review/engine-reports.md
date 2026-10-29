@@ -1937,38 +1937,87 @@ keys the new sprite-sheet checks accept.
 
 ## Trial-build against engine master (`HYG#24`)
 
-**Open, not started.** Build this game once against master in a scratch
-worktree, and record what breaks, by class, with counts. The real pin, the
-real submodule checkout and `master` stay as they are. The source breaks,
-from master's `CHANGES.md` (Unreleased), with grep estimates over `game/` and
-`scripts/` at this tree:
+**Done 2026-10-29.** This game was built once against engine master `b96bad6`
+(*Synchronize LineSweeper page-test key phases with UI updates*, 182 commits
+after `v0.2.0`). The build ran in a scratch worktree of `a992d8f1` whose own
+submodule was checked out at that commit, and the worktree was then removed.
+The real pin stays at `v0.2.0` (`1e60fb2`), and `git submodule status` is
+unchanged. Configuring `x64-debug` succeeded with no CMake change, because
+nothing here names the math target.
 
-| Break (engine commit, 2026-10-27 to 29) | What reaches this client |
-|---|---|
-| `mattmath` becomes `namespace labrador` and target `LabradorMath` | about 1,630 `mattmath` references in 365 files, plus `MattMath.lib` paths in `check-frame-pacing.ps1:164`, `check-movement-feedback.ps1:150`, `check-paint-fx.ps1:218`, `check-painter.ps1:377`, `run-acceptance.ps1:173` and `check-display-awake.ps1:61` |
-| constants renamed to snake_case | about 900 `::ZERO` uses in 283 files, 165 `PI`/`PI_OVER_2`, 92 `Camera::DEFAULT_CAMERA` in 75 files, plus a few `ONE` and `DIRECTION_*` (the `EPSILON` hits are a script-local constant) |
-| public members removed | `Camera::calculate_intermediate_camera` (`level.cpp:384`, `:659`, `level_intro.cpp:254`), `set_position_y_from_bottom` (`player.cpp:920`, `:1319`, `:1328`), `UiTexture::set_position_from_top_right_origin` (`results_menu.cpp:444`), `RectangleF::from_top_left_bottom_right` (`level_object_builder.cpp:114` and six acceptance files) |
-| `rectanglef.h` no longer declares `RectangleI` | 158 files name `RectangleI` and none includes `engine/math/rectanglei.h` directly; most may reach it through other headers |
-| seven types removed (`730dd99`) | 89 files; [`HYG#25`](#carry-the-seven-removed-engine-types-into-the-client-hyg25) owns them |
-| `/utf-8` added to `labrador_settings` | three acceptance sources carry non-ASCII bytes; `game/` has none |
-| `FocusStyle::disabled` default darkened | no change here: `presentation.json` sets the disabled colour explicitly (`presentation_read_menu.cpp:197`) |
+The game, the editor and every acceptance case were built in passes. Each
+pass added scratch-only stand-ins for one class, so the next class could
+surface. A raw error count mostly measures cascades: the first pass printed
+12,237 error lines, and `C1003` (too many errors) stopped 92 of them early.
+The counts below are therefore distinct error sites, each a file and line.
 
-- **Scope:** record facts only. Fixes land as their own rows: `HYG#23`,
-  `HYG#25`, and the rename sweep at the bump.
-- **First step:** in a scratch worktree, check out `origin/master` in that
-  worktree's own submodule, configure `x64-debug`, build, and tally the
-  compiler errors by class.
-- **Acceptance:** a dated subsection here records the master SHA that was
-  trialled, each class with its error count from the build log (replacing the
-  grep estimates above), and anything not in the table. `git submodule status`
-  in the real checkout is unchanged. No gamepad or author is needed.
-- **Does not decide:** when to bump. Engine releases set that, under the pin
-  policy. Whether to adopt the new names (`LabradorMath`, snake_case) beyond
-  what compiles is the bump's work.
+| Pass and scratch stand-in | Game (`ColourWars`) | Acceptance (88 cases, `-CompileOnly`) |
+|---|---|---|
+| 1. none | 165 translation units fail. In 132 the first error is `mattmath`, and in 33 it is one of the seven removed types. The editor builds and links unchanged. | `run-acceptance.ps1` stops before compiling: "A required build output is missing" for `engine/math/MattMath.lib`, now `LabradorMath.lib` |
+| 2. `namespace mattmath = labrador;` and the seven types copied from `v0.2.0` | 117 fail, every first error a constant: `ZERO` at 228 sites in 85 files, `PI`/`PI_OVER_2` at 21 in 11, `DEFAULT_CAMERA` 3, `ONE` 3 | with the library path patched: 61 fail; first errors are 54 constants, 4 removed members and 3 link failures; constants at 355 sites in 92 files; no `mattmath` errors, since the alias rides in `game/pch.h` |
+| 3. master's constant table applied mechanically | 6 fail: 8 removed-member sites in 5 files, plus the `pi` collision below | 7 fail: 5 removed-member sites, plus the three link failures below; the other 81 cases build |
+| 4. v0.2.0 bodies for the removed members | builds and links; `check-startup.ps1 -RequireAudio` passes on the master executable | not run |
+
+Breaks by class, measured:
+
+- **`mattmath` namespace and `LabradorMath`:** the first error in 132 game
+  translation units. `MattMath.lib` is named in six scripts:
+  `run-acceptance.ps1:173`, `check-display-awake.ps1`, `check-frame-pacing.ps1`,
+  `check-movement-feedback.ps1`, `check-paint-fx.ps1` and `check-painter.ps1`.
+  Each refuses to start without that library.
+- **Constant renames:** 255 sites in 91 files in `game/` (pass 2) and 355 in
+  92 files under `scripts/` (pass 2, acceptance). The grep estimate of about
+  900 `ZERO` uses counted every use, not the sites a compiler reports first.
+  Master's rename table covers every one, applied mechanically.
+- **A new name collision, not in the estimate:** `game/debug/bot.cpp:22`
+  declares its own `constexpr float pi`. Under `using namespace labrador` it
+  is ambiguous with master's `labrador::pi` at lines 279, 318 and 430.
+- **Removed members:** exactly the estimated set. In `game/`:
+  `calculate_intermediate_camera` (`level.cpp:384`, `:659`,
+  `level_intro.cpp:254`), `set_position_y_from_bottom` (`player.cpp:920`,
+  `:1319`, `:1328`), `from_top_left_bottom_right`
+  (`level_object_builder.cpp:114`) and `set_position_from_top_right_origin`
+  (`results_menu.cpp:444`). In acceptance there are five
+  `from_top_left_bottom_right` sites: `cq_blockout/fixtures.cpp:84`,
+  `crossfeed/fixtures.cpp:84`, `press_tower/fire_checks.cpp:38`,
+  `press_tower/fixtures.cpp:105` and `terrain.cpp:112`.
+- **Seven removed types:** the first error in 33 game translation units.
+  [`HYG#25`](#carry-the-seven-removed-engine-types-into-the-client-hyg25)
+  owns them. The `v0.2.0` copies compiled with no error against master's
+  public API once the alias and the constant table were applied to them.
+  `UiTextDropShadow` was carried as a separate header over master's
+  `widget.h`.
+- **A new link break, not in the estimate:** `action_bindings`,
+  `input_bindings` and `keyboard_jump_capture` each define a fake
+  `labrador::GamepadReader`, and `painter_visual.cpp` has the same kind of
+  fake. Master's reader adds `vibrate` and `stop_vibration` (`cadc962`, the
+  [report 25](#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit)
+  answer), and `Gamepads` calls them. The fakes lack them, so the linker pulls
+  the engine's `gamepad_reader.cpp.obj` as well, and every reader member is
+  defined twice (`LNK2005`, `LNK1169`). At the bump the fakes need both
+  members.
+- **`RectangleI` include:** no error. Every use reaches
+  `engine/math/rectanglei.h` through another header.
+- **`/utf-8`:** no error. `game/` and `editor/` are ASCII. The three
+  non-ASCII acceptance sources (`team_palette.cpp`, `user_stages.cpp` and
+  `level_editor/user_stage_checks.cpp`) are compiled by `run-acceptance.ps1`,
+  whose own flag list does not inherit `labrador_settings`. At the bump the
+  game objects get `/utf-8` but those probes do not, unless the runner adds it.
+- **Runtime:** none in the master build beyond the manifest key `HYG#23`
+  removed. Putting the old `_comment` back into the staged manifest made
+  master refuse startup: "assets[3] has unknown key '_comment'".
+- **Configure:** no change needed.
+
+What this left for the bump: the rename sweep (namespace, the six script
+library paths and the constants), the `pi` collision, the eight game and five
+acceptance removed-member sites, the three fake readers' two members, `/utf-8`
+in the acceptance runner, and `HYG#25`. It does not decide when to bump. Engine
+releases set that, under the pin policy, and adopting master's names beyond
+what compiles is the bump's work.
 
 ## Carry the seven removed engine types into the client (`HYG#25`)
 
-**Open, not started; after `HYG#24`.** `730dd99` (2026-10-27, *Remove engine
+**Open, not started; `HYG#24` is done.** Its trial found the `v0.2.0` copies compile on master once the namespace alias and constant table are applied. `730dd99` (2026-10-27, *Remove engine
 types nothing uses*) deletes `MovingObject`, `RotationOrigin`,
 `SoundBankObject`, `AnimationObject`, `CameraTools`, `TextDropShadow` and
 `UiTextDropShadow`. Its `CHANGES.md` entry gives no replacement: "A game that

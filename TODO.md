@@ -48,7 +48,7 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-29).** The 2026-10-28 shortlists are
 complete. Pick OPEN rows by section while attended reviews wait, with
-the next-bump preparation (`HYG#24`, `HYG#25`) before any Labrador minor tag.
+the next-bump preparation (`HYG#25`) before any Labrador minor tag.
 After each slice, record the next concrete gap in its owner.
 This does not change the arena/tuning order above. `ROAD#28`'s OPEN step is a
 contract draft only; vertical lifts and growing sponges (`ROAD#29`) do not count
@@ -276,8 +276,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#24` | OPEN | MED | M | Trial-build against engine master in a scratch worktree (pin stays) and record each break class with error counts: mattmath namespace and MattMath.lib script paths, constant renames, removed members, the RectangleI include, removed types, /utf-8. [Next bump](docs/review/engine-reports.md#trial-build-against-engine-master-hyg24) |
-| `HYG#25` | OPEN | MED | L | After `HYG#24`: copy the seven types `730dd99` deletes (MovingObject, SoundBankObject, AnimationObject, CameraTools, RotationOrigin, TextDropShadow, UiTextDropShadow) into game/, shape unchanged; record the rungs that move. Never flatten. [Next bump](docs/review/engine-reports.md#carry-the-seven-removed-engine-types-into-the-client-hyg25) |
+| `HYG#25` | OPEN | MED | L | Copy the seven types `730dd99` deletes (MovingObject, SoundBankObject, AnimationObject, CameraTools, RotationOrigin, TextDropShadow, UiTextDropShadow) into game/, shape unchanged; record the rungs that move. Never flatten. [Next bump](docs/review/engine-reports.md#carry-the-seven-removed-engine-types-into-the-client-hyg25) |
 | `HYG#26` | OPEN | LOW | S | Rename-only commit: `Level` parameters named `view` that index roster participants become `participant`; `view` stays only where a human pane is indexed. No behaviour change. [Owner](docs/code-hygiene.md#participant-parameter-names-in-level-hyg26) |
 
 ## The OOP showcase
