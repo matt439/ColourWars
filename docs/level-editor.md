@@ -1451,6 +1451,11 @@ and per-monitor v2 DPI awareness. No hardware skip was used. Evidence is under
 These automated checks complete `ED#4`; the attended editor and saved-stage
 play review remains `ED#5`.
 
+Since 2026-10-29 CI runs `-SkipBuild` in both jobs, after building
+`ColourWarsRegisterStage`, and uploads the receipts and logs. Timing and focus
+evidence are in
+[code-hygiene.md](code-hygiene.md#registration-and-failure-reporting-checks-in-ci-ci3).
+
 ## Movement Course icon (`ED#6`, retired)
 
 Retired 2026-10-18 during the backlog audit: `icon_frame` is required legacy

@@ -204,6 +204,45 @@ jobs:
           cmake --build --preset ${{ matrix.preset }} --target ColourWarsEditor colourwars_editor_acceptance colourwars_editor_dpi_acceptance
           pwsh -NoProfile -File scripts/check-level-editor.ps1 -Preset ${{ matrix.preset }} -SkipBuild
 
+      # CI#3: both are hidden and input-free (about 20 s and 1 s locally). The
+      # registration check stages a scratch game and runs check-startup on it;
+      # the failure check reads and closes its own process's dialog by message.
+      - name: Stage registration integration
+        timeout-minutes: 10
+        run: |
+          call "%VCVARS%"
+          cmake --build --preset ${{ matrix.preset }} --target ColourWarsRegisterStage
+          pwsh -NoProfile -File scripts/check-stage-registration.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/stage-registration
+
+      - name: Entry-point failure reporting
+        timeout-minutes: 5
+        run: |
+          call "%VCVARS%"
+          pwsh -NoProfile -File scripts/check-failure-reporting.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/failure-reporting
+
+      # Receipts and logs only: each registration run also holds a scratch
+      # repository, a junction to it and a staged game, none of them uploaded.
+      - name: Upload registration and failure-reporting evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: registration-failure-reporting-${{ matrix.preset }}
+          path: |
+            out/validation/stage-registration/*/*.json
+            out/validation/stage-registration/*/*.log
+            out/validation/stage-registration/*/*.txt
+            out/validation/stage-registration/*/startup/*/result.json
+            out/validation/stage-registration/*/startup/*/startup.err
+            out/validation/stage-registration/*/startup/*/startup.out
+            out/validation/failure-reporting/*/*/result.json
+            out/validation/failure-reporting/*/*/*/result.json
+            out/validation/failure-reporting/*/*/*/dialog-*.txt
+            out/validation/failure-reporting/*/*/*/metadata.log
+            out/validation/failure-reporting/*/*/*/startup.err
+            out/validation/failure-reporting/*/*/*/startup.out
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Package Release
         if: matrix.preset == 'x64-release'
         run: |

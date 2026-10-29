@@ -212,28 +212,44 @@ GPU runner.
 
 ### Registration and failure-reporting checks in CI (`CI#3`)
 
-**Open, not started.** `check-stage-registration.ps1` and
-`check-failure-reporting.ps1` both take `-SkipBuild` but neither is in
-[ci.yml](../.github/workflows/ci.yml). Their owners document only local runs
-([level-editor.md](level-editor.md) lines 1438-1439,
-[failure-reporting.md](failure-reporting.md#verification) lines 81-82), and
-no doc says why they are left out; `CI#1` is the only recorded exclusion.
-Hosted focus has surprised local assumptions before
-([level-editor.md](level-editor.md) line 434, runs 290 and 291).
+**Done 2026-10-29.** [ci.yml](../.github/workflows/ci.yml) runs both
+checkers after level-editor acceptance in both jobs, with `-SkipBuild` and an
+explicit `-OutputDirectory` under `out/validation/`. The registration step
+first builds `ColourWarsRegisterStage`, which is `EXCLUDE_FROM_ALL`. One
+upload, `registration-failure-reporting-<preset>` (`if: always()`, seven
+days), keeps the receipts, logs and dialog/stderr text by fixed-depth globs.
+It does not take the registration run's scratch repository, its junction or
+its staged game: those are about 150 MB a run, and `**` would walk the
+junction.
 
-Scope: run each with `-SkipBuild` in both presets and record duration, any
-focus or foreground dependence, and whether every dialog is dismissed without
-input. Then either add CI steps that upload their JSON/log evidence, or write
-the exclusion reason into each owner doc.
+Measured on MattPC under pwsh 7 in a vcvars64 shell, after an up-to-date
+build. A poller sampled the foreground window's owner every 50 ms for the
+whole of each run:
 
-First step: the four local timed runs, with receipts under
-`out/validation/`.
+| Checker | Preset | Seconds | Outcome | Foreground |
+|---|---|---|---|---|
+| `check-stage-registration` | Debug | 22.9 | passed, startup `passed` | unchanged (Notepad) |
+| `check-stage-registration` | Release | 20.6 | passed, startup `passed` | unchanged (Notepad) |
+| `check-failure-reporting` | Debug | 1.3 | passed, both cases | unchanged (Notepad) |
+| `check-failure-reporting` | Release | 1.0 | passed, both cases | unchanged (Notepad) |
 
-Acceptance: the measurements are recorded here; then either the steps exist
-with uploads and pass locally, or both owner docs state their exclusion.
-Hosted results wait for an authorized push.
+Neither checker depends on focus or input. Registration starts a game only
+through `check-startup.ps1`, hidden. CI already runs that script in both
+jobs, and Release keeps its no-hardware-adapter allowance. The failure
+checker finds its own process's `#32770` dialog, reads it with
+`WM_GETTEXT` and closes it with a posted `WM_CLOSE`, so it needs no
+keystroke or foreground window. Unlike the editor's Cancel check
+([level-editor.md](level-editor.md), runs 290 and 291), neither checker
+asserts focus or activation. Receipts:
+`out/validation/ci3-timing/`. The CI step commands, run as written in both
+presets afterwards, also passed and put their evidence under
+`out/validation/stage-registration/` and
+`out/validation/failure-reporting/`. The upload globs matched 102 files,
+about 200 KB in all. A hosted run waits for an authorised push.
 
-Not decided here: an attended or foreground runner model (that is `CI#1`).
+Not known until a hosted run: whether the runner's session shows the
+dialog of a hidden-start process the way MattPC does. If the step fails
+there, start with the failure checker's dialog search.
 
 ### Acceptance timing summary (`CI#4`)
 
