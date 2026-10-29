@@ -18,9 +18,12 @@ namespace colourwars_editor
 {
     namespace
     {
-    bool is_spawn(const Entry& entry)
+    // Spawns and stations are a character-sized marker at its top-left:
+    // moved, never resized.
+    bool is_marker(const Entry& entry)
     {
-        return entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b;
+        return entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b ||
+            entry.kind == EntryKind::station;
     }
 
     // Construct ownership before acquiring each resource: a later allocation or
@@ -153,16 +156,20 @@ namespace colourwars_editor
             const std::wstring label = wide(item.entry.label);
             TextOutW(dc, screen.left + pixels(5), screen.top + pixels(4), label.c_str(), static_cast<int>(label.size()));
         }
-        else if (is_spawn(item.entry))
+        else if (is_marker(item.entry))
         {
             screen = screen_rect(Rect{rectangle.x, rectangle.y,
                 blockout_tuning_ ? blockout_tuning_->player_width : 0.0,
                 blockout_tuning_ ? blockout_tuning_->player_height : 0.0});
-            const COLORREF colour = item.entry.kind == EntryKind::spawn_a ? RGB(70, 163, 250) : RGB(255, 158, 75);
-            outline(dc, screen, colour, 2);
+            const bool station = item.entry.kind == EntryKind::station;
+            const COLORREF colour = station ? RGB(140, 214, 120) :
+                (item.entry.kind == EntryKind::spawn_a ? RGB(70, 163, 250) : RGB(255, 158, 75));
+            // A station is a goto target, not a body: dashed, named in full.
+            outline(dc, screen, colour, station ? 1 : 2, station ? PS_DASH : PS_SOLID);
             line(dc, screen.left - pixels(5), screen.top, screen.left + pixels(5), screen.top, colour, 2);
             line(dc, screen.left, screen.top - pixels(5), screen.left, screen.top + pixels(5), colour, 2);
-            const std::wstring label = (item.entry.kind == EntryKind::spawn_a ? L"A" : L"B") + std::to_wstring(item.entry.index + 1);
+            const std::wstring label = station ? wide(value("name")) :
+                (item.entry.kind == EntryKind::spawn_a ? L"A" : L"B") + std::to_wstring(item.entry.index + 1);
             SetTextColor(dc, colour); TextOutW(dc, screen.left + pixels(3), screen.top - pixels(21), label.c_str(), static_cast<int>(label.size()));
         }
         else
@@ -264,7 +271,7 @@ namespace colourwars_editor
         {
             if (motion) { screen = screen_rect(motion->anchor); }
             outline(dc, screen, RGB(255, 255, 255), 2);
-            if (!is_spawn(item.entry) && !slab)
+            if (!is_marker(item.entry) && !slab)
                 fill(dc, RECT{screen.right - pixels(5), screen.bottom - pixels(5), screen.right + pixels(6), screen.bottom + pixels(6)}, RGB(255, 255, 255));
         }
     }
@@ -309,7 +316,7 @@ namespace colourwars_editor
             for (const DrawItem& item : draw_items_)
                 if (same_entry(item.entry, *selection_) && item.motion) { region = item.motion->initial_pose; break; }
         }
-        if (region && selection_ && is_spawn(*selection_) && blockout_tuning_)
+        if (region && selection_ && is_marker(*selection_) && blockout_tuning_)
         {
             region->width = blockout_tuning_->player_width;
             region->height = blockout_tuning_->player_height;
@@ -320,7 +327,7 @@ namespace colourwars_editor
             // A bounding guide, not a simulated ballistic curve or route promise.
             // Spawn origin is top-left; other selections launch from the top centre.
             const double x = region->x + region->width / 2.0;
-            const double feet = region->y + (is_spawn(*selection_) ? region->height : 0.0);
+            const double feet = region->y + (is_marker(*selection_) ? region->height : 0.0);
             outline(dc, screen_rect({x - blockout_tuning_->held_travel, feet - blockout_tuning_->held_rise,
                 2.0 * blockout_tuning_->held_travel, blockout_tuning_->held_rise}), RGB(240, 197, 95), 1, PS_DASH);
             outline(dc, screen_rect({x - blockout_tuning_->tap_travel, feet - blockout_tuning_->tap_rise,
@@ -380,7 +387,8 @@ namespace colourwars_editor
         const POINT origin = screen_point(0, 0);
         line(dc, origin.x, 0, origin.x, client.bottom, RGB(64, 77, 94));
         line(dc, 0, origin.y, client.right, origin.y, RGB(64, 77, 94));
-        for (EntryKind kind : {EntryKind::decoration, EntryKind::collision, EntryKind::bounds, EntryKind::spawn_a, EntryKind::spawn_b})
+        for (EntryKind kind : {EntryKind::decoration, EntryKind::collision, EntryKind::bounds, EntryKind::spawn_a,
+            EntryKind::spawn_b, EntryKind::station})
             for (const DrawItem& item : draw_items_) if (item.entry.kind == kind) draw_item(dc, item);
         if (selection_)
             for (const DrawItem& item : draw_items_) if (same_entry(item.entry, *selection_)) draw_item(dc, item);
@@ -394,7 +402,8 @@ namespace colourwars_editor
     std::vector<Entry> Editor::hits(POINT point) const
     {
         std::vector<Entry> result;
-        for (EntryKind kind : {EntryKind::spawn_b, EntryKind::spawn_a, EntryKind::collision, EntryKind::decoration})
+        for (EntryKind kind : {EntryKind::station, EntryKind::spawn_b, EntryKind::spawn_a, EntryKind::collision,
+            EntryKind::decoration})
         {
             for (std::vector<DrawItem>::const_reverse_iterator item = draw_items_.rbegin(); item != draw_items_.rend(); ++item)
             {
@@ -447,7 +456,7 @@ namespace colourwars_editor
                     }
                     continue;
                 }
-                if (is_spawn(item->entry))
+                if (is_marker(item->entry))
                 {
                     rectangle = screen_rect(Rect{item->rectangle.x, item->rectangle.y,
                         blockout_tuning_ ? blockout_tuning_->player_width : 0.0,
@@ -540,7 +549,7 @@ namespace colourwars_editor
                 }
                 return 0;
             }
-            if (selection_ && selection_->kind != EntryKind::level && !is_spawn(*selection_) &&
+            if (selection_ && selection_->kind != EntryKind::level && !is_marker(*selection_) &&
                 !document_.slab_guide(*selection_))
             {
                 const RECT rectangle = screen_rect(document_.rectangle(*selection_));

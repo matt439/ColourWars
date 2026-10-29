@@ -32,6 +32,7 @@ int wmain(int argc, wchar_t* argv[])
         check_paint_drive(repo, scratch);
         check_team_gate(repo, scratch);
         check_stations(repo, scratch);
+        check_station_editing(repo, scratch);
         check_mirror_copy(repo, scratch);
         check_symmetry_report(repo, scratch);
         check_fixed_slabs(repo, scratch);

@@ -57,6 +57,11 @@ namespace colourwars_editor
                 values = &member(member(document, "spawn_locations"),
                     entry.kind == EntryKind::spawn_a ? "team_a" : "team_b");
             }
+            else if (entry.kind == EntryKind::station)
+            {
+                if (!document.HasMember("stations")) { fail("The selected entry no longer exists."); }
+                values = &member(document, "stations");
+            }
             else
             {
                 values = &member(document,
@@ -75,6 +80,15 @@ namespace colourwars_editor
             {
                 return member(member(document, "spawn_locations"),
                     kind == EntryKind::spawn_a ? "team_a" : "team_b");
+            }
+            if (kind == EntryKind::station)
+            {
+                // A level without stations gains the optional array on its first.
+                if (!document.HasMember("stations"))
+                {
+                    document.AddMember("stations", Json(rapidjson::kArrayType), document.GetAllocator());
+                }
+                return member(document, "stations");
             }
             if (kind == EntryKind::collision || kind == EntryKind::decoration)
             {
@@ -179,6 +193,33 @@ namespace colourwars_editor
                 return string(object, "name");
             }
             return string(object, "type") + " " + std::to_string(index + 1);
+        }
+
+        bool is_point(EntryKind kind)
+        {
+            return kind == EntryKind::spawn_a || kind == EntryKind::spawn_b || kind == EntryKind::station;
+        }
+
+        // The first of base, base_2, base_3, ... (base_1, base_2, ... when
+        // numbered) that no station in the document already uses.
+        std::string unused_station_name(const Document& document, const std::string& base, bool numbered)
+        {
+            std::vector<std::string> names;
+            if (document.HasMember("stations") && document["stations"].IsArray())
+            {
+                for (const Json& station : document["stations"].GetArray())
+                {
+                    if (station.IsObject() && station.HasMember("name") && station["name"].IsString())
+                    {
+                        names.emplace_back(station["name"].GetString(), station["name"].GetStringLength());
+                    }
+                }
+            }
+            for (std::size_t number = 1;; ++number)
+            {
+                std::string name = numbered || number > 1 ? base + "_" + std::to_string(number) : base;
+                if (std::find(names.begin(), names.end(), name) == names.end()) { return name; }
+            }
         }
 
         std::filesystem::path save_target(const std::filesystem::path& path)
@@ -426,6 +467,14 @@ namespace colourwars_editor
                     "Team B spawn ") + std::to_string(index + 1) });
             }
         }
+        if (document.HasMember("stations"))
+        {
+            const Json& stations = array(document, "stations");
+            for (rapidjson::SizeType index = 0; index < stations.Size(); ++index)
+            {
+                result.push_back({ EntryKind::station, index, "Station " + string(stations[index], "name") });
+            }
+        }
         for (const auto& [kind, name] : { std::pair{ EntryKind::collision, "collision_objects" },
             std::pair{ EntryKind::decoration, "non_collision_objects" } })
         {
@@ -446,10 +495,8 @@ namespace colourwars_editor
             return plain_rectangle(member(member(value, "level_bounds"), "camera_bounds"));
         }
         if (entry.kind == EntryKind::bounds) { return plain_rectangle(value); }
-        if (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b)
-        {
-            return { number(value, "x"), number(value, "y"), 52.0, 120.0 };
-        }
+        // Spawns and stations are the character's top-left.
+        if (is_point(entry.kind)) { return { number(value, "x"), number(value, "y"), 52.0, 120.0 }; }
         return object_rectangle(value);
     }
 
@@ -461,8 +508,10 @@ namespace colourwars_editor
             Json& value = entry_json(document, entry);
             if (entry.kind == EntryKind::level) { fail("Select a bounds rectangle to change the level bounds."); }
             if (entry.kind == EntryKind::bounds) { write_rectangle(value, rectangle); }
-            else if (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b)
+            else if (is_point(entry.kind))
             {
+                // A station's lesson area stays put; the shared rule refuses a
+                // move that leaves it.
                 set_number(value, "x", rectangle.x);
                 set_number(value, "y", rectangle.y);
             }
@@ -496,7 +545,7 @@ namespace colourwars_editor
                 set_number(origin, "x", x); set_number(origin, "y", y);
             }
             else if (entry.kind == EntryKind::bounds) { write_rectangle(object, aligned); }
-            else if (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b)
+            else if (is_point(entry.kind))
             {
                 set_number(object, "x", x); set_number(object, "y", y);
             }
@@ -545,6 +594,18 @@ namespace colourwars_editor
                 metadata.AddMember("include_in_random", true, metadata.GetAllocator());
             }
             append_properties(metadata, "", result);
+        }
+        else if (entry.kind == EntryKind::station)
+        {
+            // The lesson block is preserved as written, with no controls.
+            Document fields;
+            fields.CopyFrom(value, fields.GetAllocator());
+            fields.RemoveMember("lesson");
+            append_properties(fields, "", result);
+            for (Property& property : result)
+            {
+                if (property.path == "name") { property.label = "name (a-z, 0-9 and _; unique)"; }
+            }
         }
         else { append_properties(value, "", result); }
         if (entry.kind == EntryKind::collision && value.HasMember("motion"))
@@ -610,6 +671,11 @@ namespace colourwars_editor
             const std::string pointer_text = path.starts_with('/') ? path : "/" + path;
             const rapidjson::Pointer pointer(pointer_text.data(), pointer_text.size());
             if (!pointer.IsValid()) { fail("Invalid property path."); }
+            if (entry.kind == EntryKind::station &&
+                (pointer_text == "/lesson" || pointer_text.starts_with("/lesson/")))
+            {
+                fail("A station's lesson is kept as written; edit it in the level file.");
+            }
             Json* target = pointer.Get(object);
             if (target == nullptr && entry.kind == EntryKind::level &&
                 pointer_text == "/include_in_random")
@@ -707,6 +773,15 @@ namespace colourwars_editor
             if (type == "SpawnA" || type == "SpawnB")
             {
                 added.kind = type == "SpawnA" ? EntryKind::spawn_a : EntryKind::spawn_b;
+                value.AddMember("x", rectangle.x, allocator);
+                value.AddMember("y", rectangle.y, allocator);
+            }
+            else if (type == "Station")
+            {
+                added.kind = EntryKind::station;
+                const std::string name = unused_station_name(document, "station", true);
+                value.AddMember("name", Json(name.data(), static_cast<rapidjson::SizeType>(name.size()), allocator),
+                    allocator);
                 value.AddMember("x", rectangle.x, allocator);
                 value.AddMember("y", rectangle.y, allocator);
             }
@@ -854,6 +929,18 @@ namespace colourwars_editor
                     added.label = name;
                 }
             }
+            else if (entry.kind == EntryKind::station)
+            {
+                // Station names must stay typeable and unique, so the copy
+                // takes _copy rather than " copy". Its lesson stays with the
+                // original; a copy would repeat its words over another area.
+                set_number(value, "x", number(value, "x") + 50.0);
+                set_number(value, "y", number(value, "y") + 50.0);
+                value.RemoveMember("lesson");
+                const std::string name = unused_station_name(document, string(value, "name") + "_copy", false);
+                value["name"].SetString(name.data(), static_cast<rapidjson::SizeType>(name.size()),
+                    document.GetAllocator());
+            }
             added.index = objects.Size();
             objects.PushBack(value, document.GetAllocator());
         });
@@ -956,6 +1043,8 @@ namespace colourwars_editor
     {
         if (entry.kind == EntryKind::level || entry.kind == EntryKind::bounds)
         { fail("Select an object or spawn to mirror; level settings and bounds have no mirror copy."); }
+        if (entry.kind == EntryKind::station)
+        { fail("Stations have no mirror copy: each names one place. Duplicate it and move the copy."); }
         Entry added = entry;
         impl_->mutate([&](Document& document)
         {
@@ -1139,6 +1228,8 @@ namespace colourwars_editor
             entry_json(document, entry);
             Json& objects = entry_array(document, entry.kind);
             objects.Erase(objects.Begin() + static_cast<std::ptrdiff_t>(entry.index));
+            // The array is optional; deleting the last station leaves none.
+            if (entry.kind == EntryKind::station && objects.Empty()) { document.RemoveMember("stations"); }
         });
     }
 

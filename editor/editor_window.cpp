@@ -181,7 +181,7 @@ namespace colourwars_editor
         const wchar_t* names[] = {L"Paintable block", L"Solid block", L"Jump-through platform",
             L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn",
             L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left",
-            L"Team gate"};
+            L"Team gate", L"Station (goto target)"};
         for (const wchar_t* name : names) SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
         SendMessageW(palette_, CB_SETCURSEL, 0, 0);
         toolbar_.push_back(control(L"BUTTON", L"+ Add", WS_TABSTOP, add_object));
@@ -322,7 +322,8 @@ namespace colourwars_editor
                 try { item.motion = document_.motion_guide(entry); }
                 catch (const std::exception& exception) { blockout_error_ = wide(exception.what()); }
                 item.slab = document_.slab_guide(entry);
-                if (blockout_tuning_ && (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b))
+                if (blockout_tuning_ && (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b ||
+                    entry.kind == EntryKind::station))
                 {
                     item.rectangle.width = blockout_tuning_->player_width;
                     item.rectangle.height = blockout_tuning_->player_height;
@@ -344,7 +345,7 @@ namespace colourwars_editor
         EnableMenuItem(menu_, edit_align_origin, MF_BYCOMMAND |
             (selection_ && selection_->kind != EntryKind::level ? MF_ENABLED : MF_GRAYED));
         EnableMenuItem(menu_, edit_mirror, MF_BYCOMMAND | (selection_ && selection_->kind != EntryKind::level &&
-            selection_->kind != EntryKind::bounds ? MF_ENABLED : MF_GRAYED));
+            selection_->kind != EntryKind::bounds && selection_->kind != EntryKind::station ? MF_ENABLED : MF_GRAYED));
         EnableWindow(toolbar_[3], document_.can_undo()); EnableWindow(toolbar_[4], document_.can_redo());
         const std::vector<std::string> errors = document_.validate();
         const std::wstring ready = L"Ready  |  " + std::to_wstring(draw_items_.size()) + L" items  |  ";
@@ -602,6 +603,8 @@ namespace colourwars_editor
                 L"Duplicate places a copy below the complete corridor; blocked edits/copies are refused. Guides do not simulate riding or qualify runtime rate limits.\n\n"
                 L"Scored slabs have a fixed 160 by 80 slope and 24-unit normal thickness. Drag moves them; their slab/rise property selects left or right. They cannot be resized.\n\n"
                 L"Cyan edges mark exposed scoring faces (authored edges when aids are off). Spawn boxes follow source tuning. "
+                L"Green dashed boxes are stations (goto targets), at the character's top-left like a spawn: drag moves one, its name "
+                L"row renames it, and a move out of its lesson area is refused. Lessons are kept as written. "
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
                 L"and its relative path in cmake/runtime_assets.cmake. The opt-in ColourWarsRegisterStage helper previews both entries; --apply registers them. "
@@ -655,7 +658,7 @@ namespace colourwars_editor
         {
             const char* types[] = {"StructurePaintable", "Structure", "StructureJumpThrough", "StructureRampRight",
                 "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft",
-                "TeamGate"};
+                "TeamGate", "Station"};
             const LRESULT index = SendMessageW(palette_, CB_GETCURSEL, 0, 0);
             if (index < 0 || index >= static_cast<LRESULT>(std::size(types))) break;
             RECT client{}; GetClientRect(canvas_, &client);

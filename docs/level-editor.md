@@ -623,7 +623,8 @@ Use the palette to add paintable platforms, solid structures, jump-through
 platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),
 left/right ramps, [fixed scored slabs](#fixed-scored-slab-authoring-gapd5)
 and decorative visuals. Team spawns and the four
-bounds rectangles are also selectable and editable. The level entry exposes
+bounds rectangles are also selectable and editable, and so are the level's
+[stations](#station-editing-ed26) (goto targets), which the palette also adds. The level entry exposes
 the stage name, menu icon and sound settings. New levels use the replacement
 `paint_exe` bank, `music.close_quarters` and its matching ending sting. Omit both
 music name and volume for a music-free arena; `end_sting_name` and
@@ -1086,7 +1087,7 @@ Crossfeed, Close Quarters, Press Tower and the Movement Course save and reopen
 with their stations. On the game side, the station refusals in `debug_console`
 and the lesson refusals in `practice_workshop` pass unchanged through the shared
 rules, and `level_format` still admits every registered level and the template.
-Station editing in the canvas remains `ED#26`.
+Station editing in the canvas followed as [`ED#26`](#station-editing-ed26).
 
 ### Mirror copy across the arena centre (`ED#24`)
 
@@ -1192,20 +1193,56 @@ hidden-window probe of its own; reading it belongs to the attended pass
 
 ### Station editing (`ED#26`)
 
-**Open, not started; `ED#23` is done.** `EntryKind`
-([level_document.h](../editor/level_document.h), line 15) has no station kind,
-and stations cannot be seen or moved: the editor only validates them, so a
-bounds edit that would strand one is refused, but nothing shows where they are.
+**Done 2026-10-30.** `EntryKind::station`
+([level_document.h](../editor/level_document.h)) lists each of a level's
+`"stations"` in Level Contents as `Station <name>`, after the spawns. Every
+edit goes through the document's ordinary validated, single-undo-step path, so
+the `ED#23` shared rules refuse what the game refuses, in the game's words.
 
-Scope: an `EntryKind::station` listed in Level Contents, drawn as a marker with
-its name, added from the palette and edited through a `name` inspector row and
-drag, all validated by the `ED#23` shared rules. Spawn entries already show the
-pattern (`entries()` and the spawn branch of add, `level_document.cpp` lines
-420-426 and 707-711). Lesson blocks remain preserved metadata with no
-controls. First step: document checks that add, rename, move, duplicate and
-delete a station with undo, and refuse a reserved or repeated name. Acceptance:
-those checks and a lesson round trip on the Movement Course pass in both
-builds. It does not place any station.
+- **Marker.** A station is the character's top-left, like a spawn, so the
+  canvas draws it as a green dashed character-sized box (source `player.size`)
+  with a crosshair at the origin and its full name above. It is moved by drag,
+  arrows and **Align origin to grid**, never resized, and is hit before spawns.
+- **Palette.** **Station (goto target)** adds `{name, x, y}` at the drop point,
+  named `station_1`, `station_2`, ... (the first unused number). A level with no
+  stations gains the optional array; deleting its last station removes it
+  again, so add-then-delete leaves the file as it was.
+- **Inspector.** `name`, `x`, `y` and any unknown fields are rows; the name row
+  says the spelling rule. A misspelt, reserved (`spawn_a`, `spawn_b`) or
+  repeated name is refused with the document unchanged.
+- **Lessons stay preserved metadata.** A `lesson` block has no rows, and an
+  edit to a `lesson/...` path is refused. Moving a station does not move its
+  lesson area, so a move that leaves the area is refused by the shared rule
+  ("does not contain station ..."); edit the area in the level file to move a
+  lesson. This was the call made over carrying the area with the station,
+  which would have been a lesson control the scope keeps out.
+- **Duplicate** offsets the copy by 50 units, names it `<name>_copy` (then
+  `_copy_2`, ...) since a space is not a station character, and drops the
+  lesson, whose words and area belong to the original. **Mirror copy** refuses
+  a station: a goto target names one place, and there is no `_a`/`_b` rule for
+  one. Neither the symmetry report nor scoring reads stations.
+
+It places no station in any shipped stage.
+
+Acceptance (`scripts/acceptance/level_editor/station_editing_checks.cpp`, in
+`check-level-editor`): the Movement Course lists its ten stations, with
+`drop_through` a 52 by 120 marker at (559, 715) and no lesson rows. Renaming it
+is accepted; `Drop`, `spawn_a`, `spawn_b`, `high_step`, an empty name and a
+spaced name are refused without change, the reserved and repeated ones in the
+game's words. A move inside its lesson area and an origin alignment are
+accepted, a move out of it is refused; saved and reopened, its lesson block
+equals the authored one and the other nine stations are unchanged as
+JSON values. Undo returns to the file as loaded and redo replays it. Duplicates are
+`high_step_copy` and `high_step_copy_2` without lessons; deleting them is undone
+and redone. On the template, the palette adds `station_1` and `station_2`,
+refuses one outside `out_of_bounds` and a drag out of bounds, saves and
+reopens both, and deleting both leaves no `stations` member. Mirror copy and a
+`lesson/title` edit are refused. Debug and Release passed on 2026-10-30
+(evidence `42cfbc10714d409d8d25981d6b1fc9a8` and `caa4b072e75d4ab987d302a50bb9ff6e` under
+`out/acceptance/<preset>/level-editor/`), and the `fixed_slab` case, which
+compiles the editor document, passed in Debug. The marker and palette entry
+have no hidden-window probe of their own; seeing and dragging them belongs to
+the attended pass (`ED#5`).
 
 ### Copy and paste between documents (`ED#27`)
 

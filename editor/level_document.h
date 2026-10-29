@@ -12,7 +12,9 @@ namespace colourwars_editor
 {
     struct ContentCatalog;
 
-    enum class EntryKind { level, bounds, spawn_a, spawn_b, collision, decoration };
+    // A station is one of the level's named "stations" (goto targets): its
+    // name, x and y are edited here; its lesson block is preserved as written.
+    enum class EntryKind { level, bounds, spawn_a, spawn_b, station, collision, decoration };
 
     struct Entry
     {
@@ -83,16 +85,20 @@ namespace colourwars_editor
         // Palette: Structure, StructureJumpThrough, StructurePaintable,
         // MovingPaintable, MovingJumpThrough, StructureRampRight,
         // StructureRampLeft, FixedSlabRight, FixedSlabLeft, TeamGate, Visual, SpawnA,
-        // SpawnB. A TeamGate is a solid eraser StructurePaintable with "gate": "paint"
-        // and its bottom face unpainted, as it stands on the floor.
+        // SpawnB, Station. A TeamGate is a solid eraser StructurePaintable with
+        // "gate": "paint" and its bottom face unpainted, as it stands on the
+        // floor. A Station is {name, x, y} at the rectangle's top-left, named
+        // station_<n> with the first unused n; it never gains a lesson.
         Entry add_object(const std::string& type, const Rect& rectangle);
+        // A station copy is renamed <name>_copy (then _copy_2, ...) and drops
+        // its lesson, which belongs to the original's words and area.
         Entry duplicate(const Entry& entry);
         // One validated copy reflected across the out_of_bounds centre: x
         // becomes left + right - x - width, ramps and fixed slabs change hand,
         // left/right paint faces swap, cycle movers reflect their whole path
         // with phase + 0.5 (drifting visuals likewise), a team spawn becomes
         // the other team's, and a trailing _a/_b name swaps. Paint ferries,
-        // level settings and bounds are refused.
+        // stations, level settings and bounds are refused.
         Entry mirror_copy(const Entry& entry);
         // Mirror partners under the mirror_copy rule, ignoring names: an
         // object partners one other object in its list (or itself, when it is
