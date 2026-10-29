@@ -2467,9 +2467,9 @@ change a vertical mover would force there, not a design.
 | Displacement budget | `game/objects/level_horizontal_motion.cpp:240-308`, refusals at `:301-305` | mover travel enters only the horizontal bound; the vertical bound counts the player's own y speed | the lift's per-step travel added to the vertical bound |
 | Frame preparation | `game/objects/level_horizontal_motion.cpp:320-332` | carrier displacement is `after.x - before.x` | `after.y - before.y` too |
 | Persisted pose | `game/objects/level_horizontal_motion.cpp:364-380` | poses rebuilt from `previous_offset.x`/`current_offset.x` | rebuild from the lift's axis |
-| Rider carry | `game/objects/player.h:169-171`, `game/objects/player.cpp:531-550` | offsets the body by `displacement_x` and records `movement_carried_x_` | a y offset applied before gravity (answer E2) |
+| Rider carry | `game/objects/player.h:169-171`, `game/objects/player.cpp:531-550` | offsets the body by `displacement_x` and records `movement_carried_x_` | a y offset applied before the rider's own integration (answer E2) |
 | Carrier choice | `game/objects/player.cpp:552-605` | a support is a measured or resolved top contact under the feet | unchanged rule; the top moves each step |
-| Movement feedback | `game/objects/player.cpp:455-460`, `game/objects/player.h:308`, `:365` | subtracts carried x from resolved x | a carried y kept out of landing/fall feedback |
+| Movement feedback | `game/objects/player.cpp:455-460`, `game/objects/player.h:307-308`, `:365` | subtracts carried x from resolved x | a carried y kept out of landing/fall feedback |
 | Level step order | `game/objects/level.cpp:203-210`, `:457-459` | prepare before input, supports after contacts | unchanged order |
 | Flying-paint sweep | `game/objects/projectile_contacts.cpp:115-124` (`relative_rectangle_at`) | subtracts the mover offset from left/right only | subtract it from top/bottom |
 | Swept response | `game/objects/projectile_contacts.cpp:251-326`, response `:318` | segments are x offsets; response offsets by the full translation | segment offsets on the lift's axis |
@@ -2481,13 +2481,13 @@ change a vertical mover would force there, not a design.
 | Loader | `game/objects/level_object_builder.cpp:150-185` | only `type: "horizontal"`; `axis`, `travel_y` and `rotation` are refused by name | a second type (answer E1) |
 | Editor guide and checks | `editor/horizontal_authoring.cpp:105-155` | guide and refusals use the horizontal path/corridor | the shared contract's lift path |
 | Editor duplicate | `editor/level_document.cpp:895-915` | a copy moves down past source body plus corridor | the copy clears the lift's whole vertical path |
-| Editor mirror | `editor/level_document.cpp:1005-1018` | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only |
+| Editor mirror | `editor/level_document.cpp:1005-1018` | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only, without the half-cycle phase advance a horizontal path needs |
 | Editor fields | `editor/level_document.cpp:616`, `:866` | `motion/travel_x` label and default | the lift's field |
 | Blockout aids | `editor/blockout_aids.cpp:175-190` | initial-phase offset added to x | added to y |
-| Bot supports | `game/objects/level.cpp:775-806` | `moving` marks a support whose bounds change | unchanged flag |
+| Bot supports | `game/objects/level.cpp:787-808` | `moving` marks a support whose bounds change | unchanged flag |
 | Bot riding | `game/ai/match_bot.cpp:83-120`, `:285-300`, `:437-460`; `game/ai/match_bot.h:117-134` | a ride is a feet-on-top match, and the bot paints/holds while carried sideways | the same match; deliberate lift routing is a later slice, as `ROAD#15` was for gates |
-| Match fingerprint | `game/debug/match_fingerprint.cpp:36-60`, `game/debug/match_fingerprint.h:56-61` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
-| Replay codec | `game/debug/replay.cpp:160-320` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
+| Match fingerprint | `game/debug/match_fingerprint.cpp:36-60`, `game/debug/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
+| Replay codec | `game/debug/replay.cpp:147-318` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
 | Replay version | `game/debug/replay.h:32`, `game/debug/replay.cpp:619-623` | writes 4, reads 3 and 4 | writes 5 (answer E5) |
 | Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:450-600`, `level_editor/motion_checks.cpp` | horizontal fixtures | lift fixtures beside them |
 
@@ -2503,7 +2503,8 @@ change a vertical mover would force there, not a design.
   **topmost** anchor, as the horizontal one is the leftmost.
 - **E2. Carry a rider by its support's identity, before its own motion.** The
   carrier step gains a y displacement; `apply_carrier` moves the body by both
-  components before gravity and integration, under the same checks (alive,
+  components after its velocity update and before its own integration, where
+  the x carry sits now (`player.cpp:1301-1303`), under the same checks (alive,
   flat, overlapping, feet at the previous top). Jump, drop, walk-off, death and
   placement release it, and release adds no lift velocity to the rider.
   *Precedent:* the x carry (`player.cpp:531-550`), keyed by
