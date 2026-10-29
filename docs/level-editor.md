@@ -367,8 +367,9 @@ Two private diagnostics corrected fixture assumptions before qualification.
 The error's sole enabled OK control had native ID `2`, with no ID `1`; using its
 actual control follows the existing save-guidance checker. Invalid and valid
 dirty Close/Cancel controls both returned focus from the edit field to the
-hidden editor window. Error paths explicitly refocus the field; Cancel and
-expiry instead require focus in the editor window or one of its controls.
+hidden editor window in the local qualification. Validation errors still require
+exact value-field focus. Hidden Cancel and expiry permit NULL current-thread
+focus or focus in the editor tree; non-null foreign targets still fail.
 Raw focus/capture values and the separate expectations remain in the receipts.
 The original failed runs and diagnostic-only builds are retained under
 `ed22-button-diagnostics-run/9d5cecce4a4e4a60ba3a5389df8ec296` and
@@ -393,6 +394,27 @@ Evidence: `ed22-candidate/93e462a4f2d14a3f9af471b54303c9a6` under
 `e442f2c3f97c4f0ea2196b13f80a987e`. No foreground input, player files,
 gameplay or engine update was involved. Modal appearance and attended `ED#5`
 remain separate, as do the archived `ED#20` aggregate measurements.
+
+Publication CI exposed the local focus assumption. Both Windows jobs in
+[run 290](https://github.com/matt439/ColourWars/actions/runs/40824582511)
+recorded NULL focus/activation after Cancel while every other state predicate
+passed. The failure logger retains the CSVs and terminal process receipt.
+[Run 291](https://github.com/matt439/ColourWars/actions/runs/40826079863), at
+`bcb6b0eb`, added one valid-dirty Cancel control after the original failed row
+was flushed. Its Debug control also returned NULL focus/activation, with all
+thirteen state flags and the strict owned Cancel response passing. The original
+assertion still failed; this diagnostic is not an acceptance pass.
+
+`confirm_discard` vetoes closing without calling `SetFocus`; validation errors
+explicitly refocus the edit. [GetFocus](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getfocus)
+permits NULL when the calling thread has no focused window. The correction
+qualifies that hidden-fixture outcome without changing product behavior or
+repairing focus after the observation. The temporary control is removed; all
+error-focus, data/history/selection, capture/gesture, modal and deadline checks
+remain. Debug and Release native targets and full PowerShell 7 checkers pass;
+the full Windows PowerShell 5.1 Debug checker also passes. Their leaves are
+`8a3961bd554449e582e7da85ccf17544`, `6f0937a736b047099ea3d3dbe4a73642` and
+`c070f0c237be41ff9d1b6ab0dcf44fa0`. Attended `ED#5` remains separate.
 
 #### Empty-key property targets (`ED#16`)
 
