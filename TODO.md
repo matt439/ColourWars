@@ -46,10 +46,11 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Independent implementation (2026-10-29).** The 2026-10-28 shortlists are
-complete. Pick OPEN rows by section while attended reviews wait; the next-bump
-preparation is complete (`HYG#23`-`HYG#25`).
-After each slice, record the next concrete gap in its owner.
+**Independent implementation (2026-10-30).** The 2026-10-28 shortlists and the
+2026-10-29 OPEN rows are complete, and no `OPEN` row remains: every row now
+waits on the author, hardware, another row or a deferral condition. The next-bump
+preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
+owner with a concrete local next step, as the rules below require.
 This does not change the arena/tuning order above. `ROAD#28`'s contract draft
 is recorded and waits on the author; vertical lifts and growing sponges
 (`ROAD#29`) do not count as ready work. Functional trial cues do not widen the
