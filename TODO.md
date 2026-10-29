@@ -78,6 +78,8 @@ comparison and physical-pad check; values remain provisional.
 - **Low-paint warning:** listen to the provisional cue in the 1/2/4P mix and look at the
   HUD tag and figure tank at 4P with sound muted (`POL#38`).
 - **Cursor marker:** judge the pointer marquee in play at 1/2/4P (`POL#39`).
+- **Design-process draft:** accept or amend the personas, stories and journeys, the
+  hypotheses they mark and the three unserved stories (`DES#1`); `DES#2` waits on it.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
@@ -264,8 +266,8 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DES#1` | OPEN | MED | M | Draft 3-6 personas, user stories with acceptance criteria, and journeys (first launch, a returning group's evening, solo practice, user stages), each citing existing docs/code or marked a hypothesis and mapped to what serves it. The author's acceptance follows as a DECISION. [Draft](docs/design-process.md#draft-personas-stories-and-journeys-des1) |
-| `DES#2` | BLOCKED | LOW | M | Waits on `DES#1`: trace stories to features, rows and acceptance cases; file unserved stories as candidates in their owners and list features no story explains. [Traceability](docs/design-process.md#traceability-and-gap-pass-des2) |
+| `DES#1` | DECISION | MED | M | Drafted: an evidence inventory, six personas, 49 stories with acceptance criteria and mappings, and four journeys, hypotheses marked. Left: the author accepts or amends the personas, hypotheses, unserved stories and priorities. [Draft](docs/design-process.md#draft-personas-stories-and-journeys-des1) |
+| `DES#2` | BLOCKED | LOW | M | Waits on the author accepting `DES#1`: trace the accepted stories to features, rows and acceptance cases; file unserved stories as candidates in their owners and list features no story explains. [Traceability](docs/design-process.md#traceability-and-gap-pass-des2) |
 
 ## Areas with no open rows
 
