@@ -2434,6 +2434,55 @@ instead of saving.
 
 Still open: play with real pads.
 
+#### Initial host profile Boost (`ROAD#34`)
+
+**Done (2026-10-29).** Player Count preclaims the initiating device for P1.
+Join formerly took a worn profile's Boost only after a later successful claim
+or profile cycle, so the already-claimed host skipped inheritance. A pad wearing
+`Boost +2` could reach Weapon Select with the old/default Boost; the normal
+menu-start carry-back could then replace its profile's `+2` with that stale value.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | The preclaimed host misses the profile Boost rule used by later joins. | Selected as `ROAD#34`: apply the existing rule at the initial claim boundary. Small setup correction using the existing shared page hierarchy and scripted-pad painter. |
+| 2 | The screenshot basename sanitizer preserves reserved Windows stems before appending `.png`. | A separate pure filename-policy slice; no reserved-path experiment. |
+| 3 | Input-fixture resource cleanup needs an explicit measurement contract. | Continue `ED#20` independently; preserve its failed candidate and diagnostic limits. |
+
+The existing `take_profile_boost` helper now belongs to `MainMenuPage`'s protected
+interface, with its body unchanged. Player Count calls it immediately after
+beginning the initial input claims. Later guests and profile cycling continue to
+use that same rule. Bare pads and keyboard/mouse retain their existing policy;
+there is no save format, value or profile-wearing policy change.
+
+The old-source baseline drove actual Player Count confirmation through the
+existing scripted reader, claimed Pad0 for P1 and recorded expected Boost `2`
+versus actual `0`. Its private save stayed unchanged, and it failed before
+any reference rendering or later case. Evidence is
+`out/validation/implementation-loop-20261028/road34-baseline/9f640a714cdb4a2caa8aeb7789607425`.
+
+Both game builds, the `player_profiles` CPU case and `-BotPlayersOnly` pass in
+Debug and Release. Sixteen actual Player Count/Join/Weapon paths cover pad
+slots 0 and 3, 1P/2P and Off/+1/+2, bare pads, keyboard/mouse and later guest
+inheritance. Forty-three CSV rows pass, including committed manual Boost
+preservation through Stage-to-Weapon-to-Team-to-Weapon navigation. Reference
+pages explicitly contain the literal expected Boost. Confirming Player Count
+again begins new claims and may inherit the profile again.
+
+Navigation preserves the complete private profile file and records; a separately
+labelled Save API call checks carry-back and reopening that existing private
+file. The new fixture does not build a match or qualify actual match-start
+persistence wiring. Existing 720p/1080p bot setup and mixed-GameLevel checks
+also pass unchanged. Outer isolated saves remain byte-identical, all 14 guarded
+sources remain unchanged, and independent review passes. Worktree-status
+collection is explicitly omitted and recorded as null.
+
+Candidate evidence is
+`out/validation/implementation-loop-20261028/road34-candidate/849726c0c5154677b7960b8975acfc72`;
+native painter leaves are Debug `2844bbe443f849c5a96e255b89bc30f6` and Release
+`978ad28fc1a14d1e96fa46bd58b1678d` under its `painter` directory. No real pad or
+player save was used. The attended `ROAD#21` and fairness `ROAD#5` gates remain
+unchanged.
+
 ### User stages (`ROAD#16`)
 
 **Scope (2026-10-28).** A player who saves a level with the editor should be

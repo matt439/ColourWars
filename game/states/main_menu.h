@@ -54,6 +54,9 @@ protected:
 
 	int player_count() const;
 
+	// Sets the seat `slot` joined to the Boost of the profile it wears.
+	void take_profile_boost(int slot);
+
 	// The unfinished series this page re-picks for, or empty during setup.
 	const std::optional<Session>& between_rounds() const;
 	// Back to the End menu this page replaced; only between rounds.
@@ -319,8 +322,6 @@ private:
 		std::unique_ptr<MenuJoinAccent> accent;
 	};
 	void refresh_players(const std::vector<ProcessedMenuInput>& inputs);
-	// Sets the seat `slot` joined to the Boost of the profile it wears.
-	void take_profile_boost(int slot);
 	mattmath::RectangleF check_paper_bounds(const labrador::UiWidget& widget,
 		const char* role, const labrador::UiWidget* accent = nullptr) const;
 	std::unique_ptr<labrador::UiTexture> background_;
