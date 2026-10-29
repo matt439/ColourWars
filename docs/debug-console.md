@@ -1204,6 +1204,8 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | `review_press_tower`, `review_close_quarters`, `review_crossfeed` | `review_arena` for that stage, then every station photographed on the one-player heavy frame with the station labels on |
 | `review_king_of_the_hill`, `review_turbulence`, `review_turbulence_blockout`, `review_turbulence_mover_trial`, `review_turbulence_slab_trial`, `review_turbulence_ferry_trial`, `review_turbulence_gate_trial` | `review_arena` for that stage |
 | `review_arena_frames`, `review_arena_pass`, `review_arena_end` | helpers of `review_arena` and the wrappers |
+| `turbulence_station_tours` | every Turbulence variant's stations, one screenshot each with the collision overlay: `turbulence_station_tour <stage>` (the ten shared stations) on the blockout and gate trial, `turbulence_mover_station_tour <stage>` (plus the four mover ends, photographed paused as placed) on the mover, ferry and slab trials, into `screens\turbulence-stations-<stage>-<time>\` |
+| `turbulence_station_tour_shared` | helper of the two Turbulence tours |
 | `review_bots_boost` | seed 7, four seats on Crossfeed: P1 (a paint bot drives it; drop `bot 1 paint` to play) with a Hard shipping bot against an Easy bot on Boost +2 and a Normal bot on Boost +1; `status` lists the roster, then 30 match seconds at x4, the checksum and a paused screenshot, into `screens\review-bots-boost-<time>\` |
 
 The jump and Crossfeed scripts change tuning live and globally, and do not put
@@ -1970,7 +1972,10 @@ seat <1-4> boost <0|1|2>
   `seat <n> human` leaves the seat's old difficulty in memory, which nothing
   reads for a human.
 - `status` shows `boost <n>` beside a seat with Boost.
-- `review_bots_boost.cfg` ships in the [scripts](#scripts) table.
+- `review_bots_boost.cfg` ships in the [scripts](#scripts) table. Run unattended
+  with `+script.background 1 +exec review_bots_boost +quit`, it plans the roster
+  shown by `status` and ended twice at the same checksum, `d3d2fc87ef1743d5` at
+  update 2276 (paint A 50016, B 42432 of 124320).
 
 **Acceptance (CPU, `debug_console`).** `scripts/acceptance/debug_console/roster_checks.cpp`:
 plans with no seat statement keep the devices, teams, layout and human seats
@@ -2001,7 +2006,8 @@ and is light on the larger stages. Ten wrappers cover Press Tower, Close
 Quarters, Crossfeed (for `POL#24`'s 1-4P readability), King of the Hill,
 Turbulence and its blockout and four trials. The three stages with stations
 also photograph every station on the one-player heavy frame with
-`overlay.stations` on; Turbulence gains them with `POL#40`.
+`overlay.stations` on, as do the five Turbulence variant wrappers since
+`POL#40` gave them stations.
 
 The shipped-script walk now checks a `goto` station against the stage the walk
 last named (the Movement Course before any), so a station name cannot drift
@@ -2035,7 +2041,8 @@ into `screens\review-<stage>-<time>\`, then puts back the bots, seed, folder
 and timescale as `bots_4p` does. One player has no idle seat, so the 1P heavy
 frame needs its own paint source (`bot 1 paint` on the keyboard seat). Where a
 stage has stations the pack uses `goto`; Turbulence gets them only once
-`POL#40` lands, and until then its frames are spawn-framed.
+`POL#40` lands, and until then its frames are spawn-framed. (`POL#40` has
+landed; the five variant wrappers now photograph their stations.)
 
 **First step.** Write `review_arena.cfg` against Press Tower, which already has
 stations, from the `bots_4p` pattern, then add the wrappers.

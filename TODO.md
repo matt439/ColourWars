@@ -48,7 +48,6 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-29).** The 2026-10-28 shortlists are
 complete. Pick OPEN rows while attended reviews wait, in this order:
-`POL#40` (Turbulence stations, now validated by the editor),
 `TOOL#2` (shipping bots in the headless runner), `POL#41` (Press Tower bot
 routes); then the rest by section,
 the next-bump preparation (`HYG#23`-`HYG#25`) before any Labrador minor tag.
@@ -141,7 +140,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
-| `POL#40` | OPEN | MED | M | Author mirrored `_a`/`_b` review stations (home exits, upper receivers, crossover ends, lower cover, mover endpoints) in turbulence_blockout and the mover, gate, ferry and slab trials, plus a stage-agnostic `turbulence_station_tour.cfg`; re-record replays against these stages. Does not choose geometry. [Stations](docs/polish-turbulence.md#authored-review-stations-pol40) |
 | `POL#42` | OPEN | MED | M | Shipping-bot route case on turbulence_blockout and natural-spawn team trials on the blockout and mover trial, so the variants compare like for like. Evidence for `POL#21`/`POL#27`, not a selection; the slab trial waits on `ROAD#38`. [Bot evidence](docs/polish-turbulence.md#shipping-bot-routes-and-team-trials-pol42) |
 | `ED#24` | OPEN | MED | M | Add Edit > Mirror copy (Ctrl+Shift+D): one validated undo step reflected across the out_of_bounds centre, swapping ramp handedness and faces, flipping slab rise, mirroring movers with phase +0.5, mapping spawn A to B and `_a` to `_b`; ferries refused. [Mirror copy](docs/level-editor.md#mirror-copy-across-the-arena-centre-ed24). |
 | `ED#25` | OPEN | LOW | M | After `ED#24`: add a symmetry line to the blockout-aids summary listing unmatched mirror partners and left/right scoring area, splitting centre-straddling objects; the Ferry Trial heading is a known authored asymmetry. Reports only. [Symmetry report](docs/level-editor.md#symmetry-report-in-the-blockout-aids-ed25). |

@@ -183,35 +183,55 @@ retreat at once. The samples will not prove universal spawn safety.
 
 ### Authored review stations (`POL#40`)
 
-**Open, not started; recorded 2026-10-29.** The stations named above exist
-only in this brief. None of the six `turbulence*.json` files has a `stations`
-key, while Crossfeed, Close Quarters, Press Tower and the Movement Course do, so
-Debug `goto` reaches only `spawn_a`/`spawn_b` on every Turbulence variant. An
-attended `POL#21` comparison therefore starts by walking to each position by
-hand, and the variants have no shared names to compare at.
+**Done 2026-10-29.** `turbulence_blockout` and the mover, gate, ferry and slab
+trials now share one station list, so Debug `goto` and an attended `POL#21`
+comparison reach the same named positions on every variant. Each station is a
+player's top-left with its feet on the surface, as the spawns stand (body 52 x
+120); B is A reflected by body width, `x_b = 3948 - x_a`.
 
-Scope: author mirrored stations in `turbulence_blockout` and the mover, gate,
-ferry and slab trials, using the [station format](level-format.md#stations-and-validation-limits)
-(lowercase names, top-left points, inside the bounds; they create no geometry
-and do not affect play). Use one name list with suffix `_a`/`_b`: each home
-exit, each upper receiver, both crossover ends and the lower centre cover in
-every variant, plus each mover's endpoints in the three trials that have
-movers. A position that a variant's added object occupies moves to the nearest
-clear standing point under the same name. Add `scripts/debug/turbulence_station_tour.cfg`
-on the pattern of `station_tour.cfg`, taking the stage as its first statement
-so one script tours any variant. The preserved `turbulence.json` is out of scope.
+| Station | A (x, y) | B (x, y) | Stands on |
+|---|---|---|---|
+| `home_lower_exit` | 540, 1160 | 3408, 1160 | ground, under the home floor's open edge (the drop departure) |
+| `home_upper_exit` | 714, 920 | 3234, 920 | side step (the tap departure) |
+| `upper_receiver` | 1134, 760 | 2814, 760 | upper approach, centre 1160 as in the slab comparison |
+| `crossover_end` | 1514, 680 | 2434, 680 | crossover half, centre 1540 as in the slab comparison |
+| `lower_cover` | 1394, 1080 | 2554, 1080 | lower bed |
+| `mover_outer_end` | 734, 600 | 3214, 600 | the mover or ferry at its home-side end (mover, ferry and slab trials) |
+| `mover_inner_end` | 1054, 600 | 2894, 600 | the mover or ferry at its centre-side end (same three trials) |
 
-First step: list the blockout's station points from its existing route and
-spawn geometry, reflected by body width as the spawn rule above requires, and
-check them against each trial's objects before editing any file.
+Before any file was edited, every body was checked against every variant's
+collision objects: each stands on its named support and overlaps no solid,
+including the slab trial's slabs (x 1240-1400 and 2600-2760) and the gate trial's
+centre gate. No added object occupies a shared position, so no station moved.
+The blockout and gate trial carry ten stations; the three mover trials carry
+fourteen. The preserved `turbulence.json` is unchanged.
 
-Acceptance: every edited stage loads at startup and in the `stage_selection`,
-`level_format` and `terrain` cases in both presets; the tour runs under
-`+exec` on each variant and writes one screenshot per station with the player
-supported at rest. The loaded stage's semantic hash covers the whole document
-(`replay.h:27`), so stations change it: re-record any replay kept against these
-stages, and leave the dated receipts above as written. `ED#23` has landed, so
-the editor's station check must also accept the saved files.
+`turbulence_station_tour <stage>` tours the ten shared stations and
+`turbulence_mover_station_tour <stage>` adds the four mover ends; both share
+`turbulence_station_tour_shared`, and `turbulence_station_tours` runs the
+right one on all five variants (62 screenshots). The review wrappers
+`review_turbulence_blockout` and the four trial wrappers now also photograph
+every station on the one-player heavy frame, as Crossfeed's does.
+
+**Limit: mover ends are placements, not rests.** A mover has no dwell at its
+ends, so the tour photographs `mover_*` stations paused as placed: the body at
+the endpoint, the mover wherever its phase is at that moment. The fixed
+stations are photographed after two updates, supported at rest. An unpainted
+ferry holds its starting pose, so a ferry's outer end has the ferry under it.
+
+Acceptance: the five stages load at startup and pass `stage_selection`,
+`level_format` and `terrain`, and the editor check accepts and round-trips them
+(`ED#23`). The Turbulence cases that read these stages also pass:
+`turbulence_blockout`, `team_gate`, `paint_ferry`, `fixed_slab`,
+`moving_structure`, `instant_replay`, `bot_gate_routes`, `balance_regions` and
+the opt-in mover, slope, slab and bot-route cases. `turbulence_movers` pinned the
+mover trial's metadata to the blockout's; it now requires the trial to carry the
+blockout's ten stations unchanged and in order, plus only `mover_*` ends. The
+`debug_console` shipped-script walk checks every `goto` against its stage
+(32 files, 1,437 statements). `+script.background 1
++exec turbulence_station_tours +quit` exits 0 with 62 screenshots. No replay is
+kept against these stages, so none needed re-recording; the dated receipts above
+are left as written.
 
 Not decided here: geometry, spawn safety or which variant `POL#21` keeps.
 Stations are review positions, not a pressure or balance claim.
@@ -1100,8 +1120,8 @@ and physical-pad acceptance remain open.
 `review_turbulence`, `_mover_trial`, `_slab_trial`, `_ferry_trial`,
 `_gate_trial`) writes seed-7 paint-bot clean and heavy frames at 1-4 panes
 ([pack](debug-console.md#arena-review-screenshot-pack-dbg18)). They are
-spawn-framed until `POL#40` adds stations, and are evidence for `POL#21`, not
-acceptance.
+now followed by every station on the one-player heavy frame (`POL#40`), and are
+evidence for `POL#21`, not acceptance.
 
 ### Shipping-bot routes and team trials (`POL#42`)
 
