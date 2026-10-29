@@ -355,8 +355,8 @@ namespace
             { look["size"].SetFloat(96.0f); look["ink_width"].SetFloat(8.5f); look["paper_width"].SetFloat(1.0f); });
         reject("paper_width above 8", [](rapidjson::Value& look, auto&)
             { look["size"].SetFloat(96.0f); look["ink_width"].SetFloat(1.0f); look["paper_width"].SetFloat(8.5f); });
-        // (2 * ink + paper) * 2 must stay below half the size: 44 at 3/2 leaves 16 of 22.
-        reject("less than half open", set("paper_width", 5.0f));
+        // (2 * ink + paper) * 2 must stay below half the size: 44 at 3/2 closes 16 of 22.
+        reject("less than half open", set("paper_width", 6.0f));
         reject("exactly half open", [](rapidjson::Value& look, auto&)
             { look["size"].SetFloat(32.0f); look["ink_width"].SetFloat(2.0f); look["paper_width"].SetFloat(4.0f); });
         reject("translucent ink", [](rapidjson::Value& look, auto& allocator) { look["ink"].SetString("141414FE", allocator); });

@@ -1639,7 +1639,10 @@ a scripted pointer show it over pale sky and mid-grey walls at 2P and 4P.
 The marquee follows the last polled position, so it can trail the hardware
 cursor by about a frame while the mouse moves fast. **Remaining (`DECISION`):**
 judge it in play over pale, dark and heavily painted scenes at 1/2/4P,
-including that trail; size and colours are provisional.
+including that trail; size and colours are provisional. The same decision
+should set a minimum size: the reader's open-half rule uses authored widths,
+so an accepted marquee of size 13 or less can close over the pointer once
+widths round up to a pixel ([`POL#44` finding](#cursor-marker-acceptance-case-pol44)).
 
 ### Cursor-marker acceptance case (`POL#44`)
 
