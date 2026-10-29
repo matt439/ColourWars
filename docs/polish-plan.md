@@ -1643,33 +1643,51 @@ including that trail; size and colours are provisional.
 
 ### Cursor-marker acceptance case (`POL#44`)
 
-**Open, not started (filed 2026-10-29).** The marquee has no automated check:
-nothing under `scripts/` mentions `cursor_marker`. Its visibility rule is
-`Level::cursor_marker_visible` (`game/objects/level_draw.cpp:172-193`): enabled,
-mouse focused, pointer inside the window, at least one non-bot
-keyboard-and-mouse seat. Its geometry is `draw_cursor_marker` (`:195-219`),
-which rounds widths and half-size to whole pixels at height/1080 scale.
-`game/presentation_read_match.cpp:136-153` refuses sizes above 96, widths above
-8, less than half the marquee open, translucent or equal ink/paper. Both
-`Level` members are private (`game/objects/level.h:597-598`, after `private:`
-at `:270`).
-
-Scope: make `cursor_marker_visible` public without changing it, and move the
-three frame rectangles into a pure function or accessor that
-`draw_cursor_marker` then uses, so drawing is unchanged. Add a
-`cursor_marker` CPU case to `scripts/run-acceptance.ps1`. First step: build the
-case on the `World` fixture in `scripts/acceptance/teammate_markers.cpp:40-60`,
-which already holds a `labrador::Mouse`, presentation and level builder.
-
-Acceptance: the case checks visible/hidden for each condition (disabled,
-unfocused, pointer outside on each edge, only bots or only pad seats, a
-keyboard-and-mouse seat in any participant slot); that every frame edge is a
-whole pixel and the hollow centre stays open at 720, 1080 and 1440 lines; and
-that each presentation refusal throws. It creates no device and passes under
+**Done (2026-10-29).** The marquee now has a CPU acceptance case,
+[`cursor_marker`](../scripts/acceptance/cursor_marker.cpp), in the default
+`run-acceptance.ps1` list. It creates no device and passes under
 `-Preset x64-debug` and `x64-release`.
 
-It does not decide the marquee's look, size, colours or the one-frame trail;
-that stays the `POL#39` `DECISION`.
+The code change is access only. `Level::cursor_marker_visible` moved to the
+public section unchanged. The frame arithmetic moved out of
+`draw_cursor_marker` into the pure static
+`Level::cursor_marker_frames(look, at, window_height)`
+([level_draw.cpp](../game/objects/level_draw.cpp)). It returns the three
+`CursorMarkerFrame`s (outer ink, paper rim, inner ink) as box, edge width and
+colour, and `draw_cursor_marker` draws the same four edges per frame from it in
+the same order. Drawing is unchanged.
+
+The case checks:
+
+- **Visibility.** 229 checks on real Movement Course Levels at 720, 1080 and
+  1440 lines. A keyboard/mouse human is placed in each participant slot (P1 to
+  P4) beside pads and bots, with pads in sparse slots. The pointer is inside at
+  the centre and at all four corner pixels, and outside one pixel past each
+  edge. The case also checks unfocused, presentation disabled and re-enabled,
+  pads only, a pad with only bots, and a Level built with no mouse.
+- **Geometry.** 45 marquees: the shipped look and the widest accepted looks
+  (size 96 with ink 8, or paper 8), each at 720, 1080 and 1440 lines and five
+  hotspots including the window corner. Every edge and width is a whole pixel
+  at least one pixel wide. Each frame is square, centred on the hotspot and
+  flush inside the one outside it. The hollow centre is at least 2 px and
+  contains the hotspot. The 1080-line sizes equal the presented values.
+- **Presentation refusals.** 25 malformed `cursor_marker` variants are refused,
+  and each error names the section. They cover: each field missing; text, zero
+  or negative sizes and widths; a numeric `enabled`; size above 96; each width
+  above 8; less than half open, including exactly half; translucent ink or
+  paper; ink equal to paper; and unreadable ink. Five boundary variants still
+  load: shipped, size 96, ink 8, paper 8 and disabled.
+
+**Finding, not acted on.** The reader's open-half rule uses the authored
+widths, but drawing rounds each width up to at least one pixel. A very small
+accepted marquee can therefore close or invert at some heights. Sweeping sizes
+in 0.5 steps and widths in 0.25 steps, the largest such accepted size is 13
+(for example size 3.5 with 0.25 widths). The shipped 44 and every size above 13
+stay open. A minimum size belongs to the `POL#39` look decision, so this case
+checks the shipped and largest looks only.
+
+The case does not decide the marquee's look, size, colours or one-frame trail.
+Those remain the `POL#39` `DECISION`.
 
 ### Help players read the tool and the fight
 

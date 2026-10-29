@@ -190,32 +190,40 @@ bool Level::cursor_marker_visible() const
 	return false;
 }
 
-void Level::draw_cursor_marker(DrawList& list) const
+std::array<CursorMarkerFrame, 3> Level::cursor_marker_frames(
+	const CursorMarkerPresentation& look, const Vector2F& at, float window_height)
 {
 	// Whole pixels keep the marquee's edges crisp while the pointer moves.
-	const CursorMarkerPresentation& look = this->presentation_->hud().cursor_marker;
-	const float scale = this->resolution_manager_->resolution_vec().y / 1080.0f;
+	const float scale = window_height / 1080.0f;
 	const float ink = std::max(1.0f, std::round(look.ink_width * scale));
 	const float paper = std::max(1.0f, std::round(look.paper_width * scale));
 	const float half = std::round(look.size * scale * 0.5f);
+	const auto frame = [&](float inset, float width, const Colour& colour)
+	{
+		return CursorMarkerFrame{ RectangleF(at.x - half + inset, at.y - half + inset,
+			(half - inset) * 2.0f, (half - inset) * 2.0f), width, colour };
+	};
+	// Ink outside and inside the paper rim reads on pale and dark ground alike.
+	return { frame(0.0f, ink, look.ink), frame(ink, paper, look.paper), frame(ink + paper, ink, look.ink) };
+}
+
+void Level::draw_cursor_marker(DrawList& list) const
+{
 	const Vector2F at(static_cast<float>(this->mouse_->state().position.x),
 		static_cast<float>(this->mouse_->state().position.y));
 	const SpriteSheet* sheet = this->render_resources_->sprite_sheet(this->overlay_sheet_);
-	const auto frame = [&](float inset, float width, const Colour& colour)
+	list.set_filter(TextureFilter::point);
+	for (const CursorMarkerFrame& frame : cursor_marker_frames(this->presentation_->hud().cursor_marker,
+		at, this->resolution_manager_->resolution_vec().y))
 	{
-		const RectangleF box(at.x - half + inset, at.y - half + inset,
-			(half - inset) * 2.0f, (half - inset) * 2.0f);
-		const Colour tint = CrudeDrawing::premultiplied(colour);
+		const RectangleF& box = frame.box;
+		const float width = frame.width;
+		const Colour tint = CrudeDrawing::premultiplied(frame.colour);
 		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.y, box.width, width), tint);
 		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.bottom() - width, box.width, width), tint);
 		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.y + width, width, box.height - width * 2.0f), tint);
 		sheet->draw(list, this->overlay_fill_, RectangleF(box.right() - width, box.y + width, width, box.height - width * 2.0f), tint);
-	};
-	list.set_filter(TextureFilter::point);
-	// Ink outside and inside the paper rim reads on pale and dark ground alike.
-	frame(0.0f, ink, look.ink);
-	frame(ink, paper, look.paper);
-	frame(ink + paper, ink, look.ink);
+	}
 }
 
 bool Level::player_identity_visible(int participant) const

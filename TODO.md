@@ -125,7 +125,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#38` | DECISION | MED | S | Implemented: HUD tag, figure tank and a once-per-descent cue before exhaustion. Listen to the provisional `tool.drip` cue in the 1/2/4P mix (with `POL#23`) and check tag/tank readability muted at 4P. [Record](docs/polish-weapon-feedback.md#low-paint-advance-warning-pol38). |
 | `POL#39` | DECISION | MED | S | A hollow marquee now marks the mouse pointer in matches. Judge it in play over pale, dark and painted scenes at 1/2/4P, including its one-frame trail. [Record](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
 | `POL#43` | OPEN | LOW | M | Finish-review detail A/B: `review_finish_details.cfg` takes seeded 4P Crossfeed frames with every detail on, then once per presentation `enabled` flag off (ten flags, restart where the scope needs it), and ends with `tune.reset presentation`. Equal checksums across variants are checked, not assumed. Prepares `POL#24` and accepts nothing. [Finish-review A/B](docs/polish-plan.md#finish-review-detail-ab-script-pol43) |
-| `POL#44` | OPEN | LOW | S | `cursor_marker` CPU acceptance case: make `Level::cursor_marker_visible` public (access only) and draw from a pure frame-rectangle accessor. Check each visibility condition, whole-pixel frames with an open centre at 720/1080/1440, and every presentation refusal. The look stays the `POL#39` DECISION. [Cursor-marker case](docs/polish-plan.md#cursor-marker-acceptance-case-pol44) |
 
 ## Levels and the editor
 

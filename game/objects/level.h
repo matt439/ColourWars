@@ -61,6 +61,15 @@ enum class LevelState
 	opening,
 };
 
+// POL#39: one of the cursor marquee's three nested frames, in window pixels.
+// Drawn as four edges `width` thick just inside `box`.
+struct CursorMarkerFrame
+{
+	mattmath::RectangleF box;
+	float width = 0.0f;
+	labrador::Colour colour;
+};
+
 
 // One paint match: countdown, clock, cameras, HUDs and music.
 // Scene owns and steps the objects; Level keeps borrowed player pointers
@@ -216,6 +225,13 @@ public:
 	// Reacquire one's own figure after a covering menu or focus loss.
 	void emphasise_players();
 	const BlockedShotFeedback& blocked_shot_feedback() const;
+	// POL#39: the marquee around the mouse pointer. Shown while enabled, the
+	// mouse is focused inside the window and a human seat uses keyboard/mouse.
+	bool cursor_marker_visible() const;
+	// Its frames (outer ink, paper rim, inner ink) centred on window pixel
+	// `at` in a window `window_height` lines tall, rounded to whole pixels.
+	static std::array<CursorMarkerFrame, 3> cursor_marker_frames(
+		const CursorMarkerPresentation& look, const mattmath::Vector2F& at, float window_height);
 
 	LevelEndInfo level_end_info() const;
 	// Exact scoring tiles in Scene paintable-role order, then per-source tile
@@ -592,8 +608,7 @@ private:
 	void refresh_station_labels();
 
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
-	// POL#39: the marquee around the mouse pointer, in window pixels.
-	bool cursor_marker_visible() const;
+	// POL#39: draws cursor_marker_frames at the mouse pointer.
 	void draw_cursor_marker(labrador::DrawList& draw_list) const;
 	void draw_opening_card(labrador::DrawList& draw_list,
 		const mattmath::RectangleF& rectangle, float scale) const;
