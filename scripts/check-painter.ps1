@@ -329,6 +329,16 @@ $process = $null
 $failure = $null
 try {
     . (Join-Path $PSScriptRoot 'check-painter/evidence-record.ps1')
+    if ($CompileOnly) {
+        # CI#2: a compile-only receipt, passed or failed, keeps the run's
+        # identity but none of the full matrix's scope or check descriptions.
+        $compileRecord = [ordered]@{ outcome = 'failed'; scope = 'compile-only' }
+        foreach ($key in 'preset', 'game_revision', 'engine_revision', 'worktree_status',
+            'worktree_status_omitted', 'profile') { $compileRecord[$key] = $result[$key] }
+        $compileRecord.compiled_variants = @()
+        $compileRecord.diagnostic = ''
+        $result = $compileRecord
+    }
     if ($RumbleOnly -and $Preset -eq 'x64-debug') {
         $result.background_supplement = 'Debug-only actual GameLevel script.background checks: native private-HWND facts; synthetic StateContext activation and injected hard gates; neutral physical actions, truthful presence, script/bot/replay, Music/SFX group mute before shots, recording motors and unchanged private Save. No physical pad, listening, real OS focus/power-sleep, CI1 or performance acceptance.'
     }
@@ -445,11 +455,11 @@ try {
             executable = $executable
             executable_sha256 = (Get-FileHash -LiteralPath $executable).Hash
         }
+        # A failed second reader still records the first one it compiled.
+        if ($CompileOnly) { $result.compiled_variants = $compiledVariants }
     }
     if ($CompileOnly) {
         # Return runs the finally below: it writes result.json and restores state.
-        $result.scope = 'compile-only'
-        $result.compiled_variants = $compiledVariants
         $result.outcome = 'compiled'
         $result.diagnostic = 'Probe compiled with both pad readers; no probe launched, no capture or GPU claim.'
         return

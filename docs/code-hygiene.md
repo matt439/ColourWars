@@ -172,7 +172,10 @@ Build, and uploads `out/validation/compile-gate/` JSON and logs as
   `painter_visual-normal-pads.exe` and `painter_visual-scripted-pads.exe`, then
   returns through the runner's `finally`, writing `result.json` with scope
   `compile-only`, outcome `compiled` and one `compiled_variants` entry per
-  reader. It launches nothing, so it makes no capture or GPU claim.
+  reader. That receipt keeps only the run's identity (preset, revisions,
+  worktree status, profile); a failed compile writes the same scope with
+  outcome `failed` and the readers it did compile. It launches nothing, so it
+  makes no capture or GPU claim.
   `CompileOnly` ends in `Only` but is not a focused matrix: the one-leaf guard
   skips it, it refuses a focused selector before any output is created, and a
   normal run compiles its one reader under its old file names.
