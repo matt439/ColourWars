@@ -28,12 +28,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check CI change detection
+      - name: Check CI change detection and the link checker
         run: python3 -m unittest discover -s scripts/ci -p test_*.py
 
       - name: Lint changes and select build jobs
         id: changes
         run: python3 scripts/ci/lint.py
+
+      # Relative links and heading anchors in tracked Markdown outside the engine.
+      - name: Check local Markdown links
+        run: python3 scripts/ci/check_doc_links.py
 
   windows:
     needs: lint

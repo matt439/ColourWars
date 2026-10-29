@@ -229,7 +229,27 @@ pull-request exclusions; those follow from the data in a later change.
 
 ### Local Markdown link check (`CI#5`)
 
-**Open, not started.** Nothing checks relative links. `scripts/ci/` holds only
+**Done 2026-10-29.** [check_doc_links.py](../scripts/ci/check_doc_links.py)
+runs in the always-on lint job after change selection. It reads tracked
+Markdown outside `external/` and checks inline links, images and reference
+definitions outside code. Each target must reach a file, and an anchor into a
+Markdown file must reach a GitHub heading slug (duplicates numbered) or an
+`<a id>`/`<a name>`. It allows targets under `out/`, `#` inside an existing
+file name, external schemes, and missing files named by a document that opens
+a line with "Historical" or "Frozen" in its first twelve. That rule matches
+the four retired workshop studies and nothing else; a passing mention of
+history is not a declaration. Those records' anchors into documents that still
+exist are still checked, which is how `polish-refine.md` line 131 was caught.
+Its first run on the tree found exactly the two stale `#retained-route-trials`
+anchors. Both now point at `#route-trials-2026-10-20-provisional-profile`, and
+the tree's 1,352 local links, 433 with anchors, resolve.
+[test_check_doc_links.py](../scripts/ci/test_check_doc_links.py) covers slugs,
+each allowance, a broken-anchor fixture, missing files, code spans and fences,
+the historical rule and the `external/` exclusion. All 24 tests in
+`scripts/ci` pass, and change selection is untouched, so a docs-only change
+still skips the Windows jobs. A hosted run waits for an authorised push.
+
+The record as filed: nothing checked relative links. `scripts/ci/` holds only
 `lint.py` and its tests, run by the always-on lint job
 ([ci.yml](../.github/workflows/ci.yml) lines 21-36). A survey of tracked
 Markdown outside the engine on 2026-10-29 found nine unresolved local targets,

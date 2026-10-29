@@ -269,7 +269,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `CI#2` | OPEN | MED | M | Add a CI compile gate in both presets: `run-acceptance -SkipBuild -CompileOnly` over the 14 opt-in cases, a new `check-painter -CompileOnly` (both pad readers) and `check-frame-pacing -CompileOnly`; no probe or GPU. Hosted run waits for an authorized push. [Owner](docs/code-hygiene.md#compile-gate-for-opt-in-probes-ci2) |
 | `CI#3` | OPEN | LOW | M | Time `check-stage-registration` and `check-failure-reporting` with `-SkipBuild` in both presets (duration, focus, dialogs), then add CI steps with evidence upload or record each exclusion in its owner doc. [Owner](docs/code-hygiene.md#registration-and-failure-reporting-checks-in-ci-ci3) |
 | `CI#4` | OPEN | LOW | S | Have `run-acceptance` write `acceptance-summary.json` (per-case compile and run seconds, outcome, longest first) and upload it from CI, so `$longestFirst` and the Debug PR exclusions rest on data. [Owner](docs/code-hygiene.md#acceptance-timing-summary-ci4) |
-| `CI#5` | OPEN | LOW | S | Add `scripts/ci/check_doc_links.py` with tests to the always-on lint job (allowing `out/`, historical docs, `#` in file names) and repoint the two broken `#retained-route-trials` anchors. [Owner](docs/code-hygiene.md#local-markdown-link-check-ci5) |
 
 ## Code hygiene and maintenance
 

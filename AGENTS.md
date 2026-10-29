@@ -167,7 +167,9 @@ ctest --test-dir out/labrador/x64-debug -R <name>    # a single test
 ```
 
 CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) always lints changed lines
-for whitespace errors and conflict markers. Pushes and pull requests that change
+for whitespace errors and conflict markers, and checks that relative links and
+heading anchors in tracked Markdown outside `external/` resolve
+(`scripts/ci/check_doc_links.py`). Pushes and pull requests that change
 only Markdown or image/video files under `docs/images/` skip the Windows jobs.
 Deleting a packaged Markdown file still runs full CI, as do code, scripts, schemas,
 runtime assets and submodule changes. Manual runs always run full CI. Change

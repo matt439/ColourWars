@@ -128,7 +128,7 @@ player's own countdown instead of freezing tick counts.
 
 Only intended outcomes are asserted. Everything else is a `MEASURE` line, because
 the tuning is still a candidate. Debug and Release logs are byte-identical. The
-results are recorded in [the course document](polish-movement-course.md#retained-route-trials).
+results are recorded in [the course document](polish-movement-course.md#route-trials-2026-10-20-provisional-profile).
 Its previous gap evidence came from a scratch probe that teleported the player;
 this case replaces it.
 

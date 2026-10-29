@@ -264,7 +264,8 @@ They use no graphics device or speaker and isolate
 all save writes. Evidence stays under `out/acceptance/<preset>/`. CI runs the
 same checks; `-SkipBuild` is for an already-current build.
 
-CI lints changed lines for whitespace errors and conflict markers on every run.
+CI lints changed lines for whitespace errors and conflict markers on every run,
+and checks that relative Markdown links and their heading anchors resolve.
 Pushes and pull requests containing only Markdown or images/videos under
 `docs/images/` stop after lint. Code, build files, scripts, schemas, runtime assets,
 submodule changes and deletion of packaged Markdown still run the full Windows
