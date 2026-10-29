@@ -154,7 +154,6 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 |---|---|---|---|---|
 | `POL#23` | DECISION | HIGH | L | Listen to the in-game 1/2/4-player mix and decide whether optional detail earns a cue; world detail follows the reference arena. [Remaining work](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration). |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains (now Music/SFX sound-group volumes, report 6), mute, suspension, resumed loops, the multiplayer mix, a lost output device; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
-| `ROAD#36` | OPEN | LOW | S | After the pin passes Labrador `2b3b97b`, device recovery stops persistent voices without an event, and ScreenMusic and the arena loop treat that as finished, leaving music silent. Replay a looping, not-leaving music voice stopped from outside; prove it with a `story_audio` case that stops the effect directly. Listening stays ROAD#3. [Audio inventory](docs/audio-inventory.md#looping-music-after-device-recovery-road36) |
 
 ## Acceptance and release
 

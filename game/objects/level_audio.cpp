@@ -111,8 +111,10 @@ void Level::prepare_resume(const std::vector<PlayerInputData>& inputs)
 
 void Level::update_music(float dt)
 {
-	if (!(dt > 0.0f) || !std::isfinite(dt) || !this->music_.valid() ||
-		this->sound_bank_->effect_state(this->music_) != SoundState::playing) { return; }
+	if (!(dt > 0.0f) || !std::isfinite(dt) || !this->music_.valid()) { return; }
+	const SoundState state = this->sound_bank_->effect_state(this->music_);
+	if (state == SoundState::stopped && this->restart_lost_music()) { return; }
+	if (state != SoundState::playing) { return; }
 	this->music_fade_.advance(dt);
 	this->music_duck_.advance(dt);
 	this->sound_bank_->set_effect_volume(this->music_, this->music_volume_ *
@@ -121,6 +123,19 @@ void Level::update_music(float dt)
 	{
 		this->sound_bank_->stop_effect(this->music_, true);
 	}
+}
+
+// After the countdown starts the arena loop, only the ending fade, the overview
+// cut and teardown stop it. Any other stop came from outside - device recovery
+// stops persistent voices without an event (ROAD#36) - so play it again from
+// silence and fade in; the duck keeps its own target. A silent bank stays silent.
+bool Level::restart_lost_music()
+{
+	if (!this->countdown_started_ || this->music_ending_ || !this->sound_bank_->audible()) { return false; }
+	this->music_fade_ = MusicEnvelope();
+	this->music_fade_.fade_to(1.0f, this->presentation_->music_mix().fade_in);
+	this->sound_bank_->play_effect(this->music_, true, 0.0f);
+	return true;
 }
 
 void Level::set_music_ducked(bool ducked)

@@ -1096,7 +1096,11 @@ POL#23, listening remains ROAD#3 and visual transitions/loading remain GAP#5.1.
 
 ### Looping music after device recovery (`ROAD#36`)
 
-**Open, not started (recorded 2026-10-29).** Labrador `2b3b97b` (on engine
+**Done 2026-10-29, ahead of the pin.** The client handling and its recorder
+case landed while the pin is still `v0.2.0`; see the result at the end of this
+section. The record below is the scope as written.
+
+Labrador `2b3b97b` (on engine
 `master`, not in the pinned `v0.2.0`) retries a lost XAudio2 output, and its
 contract (`engine/audio/audio_device.h:147-151` there) says recovery "stops
 persistent voices; their handles remain valid, and the game may play them
@@ -1133,3 +1137,44 @@ and Release. No device, speaker or gamepad is needed.
 Not decided here: whether the restart should resume position instead of
 starting over (the engine contract gives none), and how it sounds, which stays
 with `ROAD#3`.
+
+Result (2026-10-29). Nothing in the handling depends on the engine revision:
+it reacts to a stopped voice, whoever stopped it. It is therefore in place
+before the pin passes `2b3b97b`. On `v0.2.0` nothing outside the owners stops
+these voices, so nothing changes in play until that bump.
+
+- `ScreenMusic` remembers whether it loops. On a positive update, a looping
+  voice that is stopped, not leaving and on an audible bank is played again at
+  zero gain, and a fresh envelope fades it in over `music_mix.fade_in`
+  (`restart_lost_loop`, `game/states/screen_music.cpp`). `resume` still revives
+  only a paused voice, and `finished` is unchanged. The results coda
+  (`loop` false), an exit (`leaving_`) and a silent bank keep their stopped voice.
+- `Level::update_music` does the same for the arena loop (`restart_lost_music`,
+  `game/objects/level_audio.cpp`), but only after the countdown has started it,
+  before `music_ending_` and on an audible bank. The duck envelope keeps its own
+  target, so a loop stopped under a pause page comes back ducked. Time up, the
+  overview cut and teardown still own their stops. A Movement Course has no
+  resolved effect.
+- Suspension is unchanged: the owners still get no update while inactive, and a
+  voice stopped while paused comes back on the first positive tick after focus
+  returns, not on `resume`. "Muted" in the scope is read as the immediate muted
+  exit, which is leaving. A staying loop at zero music gain is replayed too, so
+  that unmuting is heard.
+
+`story_audio` gains `scripts/acceptance/story_audio/music_recovery_checks.h`.
+It stops each effect through its own `SoundBank::stop_effect`, which stands in
+for recovery, and checks five things. Main-menu music is replayed once, from
+silence, then fades to the midpoint. Zero time and `resume` do not replay it.
+Menu music stopped while suspended comes back on the next positive tick only.
+The arena loop comes back in the countdown, in live play and under a ducked
+pause page, then restores after `resume`. No replay happens for a leaving menu
+loop, the one-shot results coda, an ending arena loop, the Movement Course, or
+silent menu and arena banks. One existing `music_mix_checks.h` assertion
+expected an outside-stopped arena loop to stay stopped. It now checks only that
+`resume_music` leaves it stopped. A negative build that disabled the arena
+restart failed the case at the countdown assertion. Debug and Release build
+under `/W4 /WX`; the Debug `story_audio` case and the full Release acceptance
+suite (75 cases) pass.
+
+Left: room tone, redraw, weapon and results-fill loops (outside this scope),
+resume-position, and hearing a real device loss and recovery (`ROAD#3`).

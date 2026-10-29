@@ -25,6 +25,8 @@ private:
 	MusicMixPresentation mix_;
 	labrador::SoundBank::EffectHandle effect_;
 	MusicEnvelope envelope_;
+	bool loop_ = false;
 	bool leaving_ = false;
 	void apply_gain();
+	bool restart_lost_loop();
 };

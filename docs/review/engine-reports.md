@@ -1443,9 +1443,10 @@ still only reads.
   `v0.2.0`) retries an unavailable default output once a second while active.
   Banks and persistent voice handles stay valid, but one-shots are dropped and
   persistent voices stop, and the game has to play them again. So no report
-  is owed. What the next bump leaves here is restarting the music voice after
-  recovery. That is listed under
-  [Preparing the next bump (2026-10-29)](#preparing-the-next-bump-2026-10-29).
+  is owed. Both music owners now replay a looping voice stopped from outside
+  ([`ROAD#36`](../audio-inventory.md#looping-music-after-device-recovery-road36),
+  done 2026-10-29 ahead of the bump), so the bump leaves nothing here for music.
+  Other persistent loops are outside that scope.
 
 - **The display-idle owner is client-side** (added 2026-10-24).
   `ROAD#6` now supplies the [client exhibit](../../game/display_awake.cpp):

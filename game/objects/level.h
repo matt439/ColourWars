@@ -622,6 +622,7 @@ private:
 
 	float zoom_out_camera_ratio() const;
 
+	bool restart_lost_music();
 	void stop_player_sounds() const;
 	void pause_player_sounds() const;
 	void resume_player_sounds() const;

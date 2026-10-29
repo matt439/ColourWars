@@ -128,12 +128,13 @@ namespace
 		world.level->update_music(0.001f);
 		require(close_to(world.last_volume(music), stage->music_volume() * 0.65f) && world.plays(music) == 1,
 			"Settled music ignored unmute/current music gain or restarted its loop");
+		// A staying loop stopped from outside is replayed (ROAD#36,
+		// music_recovery_checks.h); resume alone still leaves it stopped.
 		world.device.stop_voice(world.voices.at(music), true);
 		const auto stopped = recorded_sounds(world.device).size();
 		world.level->resume_music();
-		world.level->update_music(10.0f);
 		require(world.state(music) == SoundState::stopped && recorded_sounds(world.device).size() == stopped,
-			"Stopped music was restarted or adjusted by resume/raw time");
+			"Resume restarted or adjusted stopped music");
 		world.level.reset();
 		world.set_music_volume(original_music);
 		world.set_sfx_volume(original_sfx);

@@ -341,6 +341,7 @@ namespace
 #include "scripts/acceptance/story_audio/match_checks.h"
 #include "scripts/acceptance/story_audio/results_music_checks.h"
 #include "scripts/acceptance/story_audio/music_mix_checks.h"
+#include "scripts/acceptance/story_audio/music_recovery_checks.h"
 
 int main(int argc, char** argv)
 {
@@ -373,6 +374,8 @@ int main(int argc, char** argv)
 		check_music_mix_duck_and_suspend(world);
 		check_music_mix_ending(world, std::filesystem::path(argv[1]));
 		check_music_mix_silence(world);
+		check_screen_music_recovery(world);
+		check_arena_music_recovery(world);
 		const ContentVariant content(std::filesystem::path(argv[1]) / "tuning.json");
 		check_match_content(world, content);
 		check_last_ten_boundaries(world);
@@ -416,6 +419,7 @@ int main(int argc, char** argv)
 			"resume content/beats/cancellation/gains/mute and stale-fire loop cleanup, "
 			"results coda one-shot/focus/gains/mute/completed-state guard/teardown and arena ending-sting content/selection/lifecycle, "
 			"arena music raw-clock fades/ducking/restore/preferences/suspension/ending/silent fallback, "
+			"outside-stopped menu/arena loops replayed once from silence (not leaving/ending/one-shot/silent), "
 			"opening/reveal content and atlas palette validation, swatch/undo/colour/glass/skip edges, "
 			"winner/draw click/close and per-team reactions, long-step cue order, off/solo, "
 			"countdown/GO/last-ten/time up, room-tone loop boundaries, gains/mute, suspension, destruction, weapon feedback validation, "
