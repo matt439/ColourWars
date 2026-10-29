@@ -2,7 +2,6 @@
 #include "game/objects/level_builder.h"
 #include "game/drawable_text.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -16,7 +15,6 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	ResolutionManager* resolution_manager,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner,
-	// Disambiguate from DirectX::Mouse.
 	const labrador::Mouse* mouse, const InputBindings* input_bindings) :
 	render_resources_(render_resources),
 	audio_resources_(audio_resources),

@@ -7,7 +7,6 @@
 
 #include <stdexcept>
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;

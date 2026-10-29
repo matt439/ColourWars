@@ -1,6 +1,9 @@
 #include "game/pch.h"
 #include "game/objects/collision_object_type.h"
 
+#include <stdexcept>
+#include <string>
+
 using labrador::CollisionLayer;
 using labrador::CollisionMask;
 

@@ -11,7 +11,6 @@
 #include "game/stage_loading.h"
 #include "game/carried/ui_text_drop_shadow.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;

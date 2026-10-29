@@ -2,7 +2,6 @@
 #include "game/objects/projectile_ball.h"
 
 using namespace mattmath;
-using namespace DirectX;
 using namespace labrador;
 
 ProjectileBall::ProjectileBall(const RectangleF& rectangle,

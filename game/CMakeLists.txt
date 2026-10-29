@@ -1,8 +1,3 @@
-# xaudio2redist first: directxtk's config references Microsoft::XAudio2Redist
-# but does not find it itself.
-find_package(xaudio2redist CONFIG REQUIRED)
-find_package(directxtk CONFIG REQUIRED)
-
 # Every game source except the entry point and the two platform adapters. The
 # executable and the acceptance probes link this one library, so a probe sees
 # the game exactly as the executable does without reaching into its objects.
@@ -228,7 +223,6 @@ target_include_directories(colourwars_game SYSTEM PRIVATE
 target_link_libraries(colourwars_game
     PUBLIC
         LabradorEngine
-        Microsoft::DirectXTK
         comctl32
     PRIVATE
         labrador_settings

@@ -2,7 +2,6 @@
 #include "game/objects/paint_tile.h"
 #include "game/objects/fixed_slab_geometry.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 

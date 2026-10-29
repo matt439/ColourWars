@@ -2,7 +2,6 @@
 #include "game/objects/player_builder.h"
 #include "game/paint_owners.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 

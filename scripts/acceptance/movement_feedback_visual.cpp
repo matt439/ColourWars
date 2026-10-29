@@ -3,7 +3,9 @@
 #include "game/game_data.h"
 #include "game/input_slots.h"
 
+#include <dxgi1_3.h>
 #include <dxgidebug.h>
+#include <wrl/client.h>
 #include <dbghelp.h>
 #pragma comment(lib, "dbghelp.lib")
 

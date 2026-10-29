@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_page.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 

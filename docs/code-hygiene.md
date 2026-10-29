@@ -158,10 +158,26 @@ entries; inbound links were repointed. Both presets build under `/W4 /WX`;
 
 ### The precompiled header stops claiming a backend (`HYG#32`)
 
-Drop the D3D11, DXGI, DirectXMath and DirectXTK includes from `game/pch.h`, the
-32 dead `using namespace DirectX` lines and the `Microsoft::DirectXTK` link,
-keeping WIC/WRL local to `debug_screenshot.cpp`. Fix any header that compiled
-only because the PCH carried its includes.
+**Done 2026-10-30.** [game/pch.h](../game/pch.h) now carries the Windows
+version floor, the lean `<Windows.h>` and the standard library headers, and no
+backend: the WRL, D3D11, DXGI, DirectXMath, `dxgidebug` and 18 DirectXTK
+includes are gone. The 32 dead `using namespace DirectX` lines and the two
+"disambiguate from `DirectX::Mouse`" comments went with them.
+[game/CMakeLists.txt](../game/CMakeLists.txt) no longer finds `directxtk` or
+`xaudio2redist` or links `Microsoft::DirectXTK`; the engine finds and links its
+own backends' DirectXTK privately, the executable still imports `DirectXTK.dll`
+through it, and `vcpkg.json` keeps the port for the engine. `<wrl/client.h>` is
+now local to `debug_screenshot.cpp` and `movement_feedback_visual.cpp`, the two
+files that use `ComPtr`, and the latter includes `<dxgi1_3.h>` for
+`DXGIGetDebugInterface1`. Only `collision_object_type.cpp` in the game had
+compiled on the PCH's includes; it now includes `<stdexcept>` and `<string>`. Debug and Release
+build the game and editor under `/W4 /WX`; the full default acceptance list
+passes in Release and in Debug without the four slow cases; the opt-in, painter
+and frame-pacing compile gates, `check-movement-feedback.ps1`,
+`check-display-awake.ps1` in both presets and `check-startup.ps1` on the Debug
+executable pass. `check-paint-fx.ps1` compiles and runs but stops on "matrix no
+longer matches the authored gameplay camera scale", as its 06:36 run on the
+pre-`HYG#32` tree already did; that is not this row's.
 
 ### The shipping match step out of debug code (`HYG#33`)
 

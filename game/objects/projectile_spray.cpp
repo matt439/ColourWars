@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile_spray.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 

@@ -22,7 +22,6 @@
 #include <string>
 #include <vector>
 
-using namespace DirectX;
 using namespace directory_consts;
 using namespace labrador;
 

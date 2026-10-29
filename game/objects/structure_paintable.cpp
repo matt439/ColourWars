@@ -3,7 +3,6 @@
 #include "game/objects/projectile.h"
 #include "game/paint_face_geometry.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 

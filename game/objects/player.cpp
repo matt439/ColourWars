@@ -10,7 +10,6 @@
 
 #include <limits>
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 

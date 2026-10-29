@@ -13,7 +13,6 @@
 #include <stdexcept>
 
 using namespace mattmath;
-using namespace DirectX;
 using namespace labrador;
 
 
@@ -47,7 +46,6 @@ Level::Level(std::unique_ptr<Scene> scene,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
-	// Disambiguate from DirectX::Mouse.
 	const labrador::Mouse* mouse,
 	std::vector<LevelStation> stations,
 	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings,
