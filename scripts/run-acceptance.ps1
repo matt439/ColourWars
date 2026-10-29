@@ -198,26 +198,16 @@ try {
     }
 
     $gameDirectory = Join-Path $build 'game'
-    $objectDirectory = Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir'
-    $objects = @(Get-ChildItem -LiteralPath $objectDirectory -Filter '*.obj' -File -Recurse |
-        Where-Object {
-            if ($_.Name -eq 'main.cpp.obj') { return $false }
-            if ($_.Name -eq 'cmake_pch.cxx.obj') { return $true }
-            # CMake may leave an old object behind after its source is retired.
-            $sourceRelative = $_.FullName.Substring($objectDirectory.Length + 1)
-            $sourceRelative = $sourceRelative.Substring(0, $sourceRelative.Length - '.obj'.Length)
-            Test-Path -LiteralPath (Join-Path (Join-Path $repo 'game') $sourceRelative) -PathType Leaf
-        } |
-        Sort-Object FullName)
-    if ($objects.Count -eq 0) {
-        throw 'No game objects exist. Run without -SkipBuild first.'
-    }
-
     $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
     $dependencyLibraries = if ($debug) { Join-Path $installed 'debug/lib' } else {
         Join-Path $installed 'lib'
     }
+    # The game library is every game source but main.cpp; the cases also link
+    # both platform adapters, as the executable does (game/CMakeLists.txt).
     $libraries = @(
+        (Join-Path $gameDirectory 'colourwars_game.lib'),
+        (Join-Path $gameDirectory 'colourwars_rumble_xinput.lib'),
+        (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
         (Join-Path $build 'external/labrador/engine/math/MattMath.lib'),
         (Join-Path $dependencyLibraries 'DirectXTK.lib'),
@@ -291,7 +281,6 @@ try {
             # Bound probe compiler fan-out while other local projects are active.
             '/MP2'
         )
-        $arguments += @($objects | ForEach-Object { Quote-ResponsePath $_.FullName })
         $arguments += @($libraries | ForEach-Object { Quote-ResponsePath $_ })
         $arguments += $windowsLibraries
         # CL accepts UTF-16 response files, including checkout paths that are

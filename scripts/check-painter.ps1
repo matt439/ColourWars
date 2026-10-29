@@ -378,22 +378,14 @@ try {
         throw 'The probe requires this checkout and the selected d3d11/xaudio2 x64-windows preset.'
     }
     $gameDirectory = Join-Path $build 'game'
-    $objectDirectory = Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir'
-    $objects = @(Get-ChildItem -LiteralPath $objectDirectory `
-        -Filter '*.obj' -File -Recurse | Where-Object {
-            # Every painter mode supplies a fake factory, so no existing or
-            # future GameLevel probe can contact physical rumble motors.
-            if ($_.Name -in @('main.cpp.obj', 'rumble_xinput.cpp.obj')) { return $false }
-            if ($_.Name -eq 'cmake_pch.cxx.obj') { return $true }
-            # CMake may leave an old object behind after its source is retired.
-            $sourceRelative = $_.FullName.Substring($objectDirectory.Length + 1)
-            $sourceRelative = $sourceRelative.Substring(0, $sourceRelative.Length - '.obj'.Length)
-            Test-Path -LiteralPath (Join-Path (Join-Path $repo 'game') $sourceRelative) -PathType Leaf
-        } | Sort-Object FullName)
-    if ($objects.Count -eq 0) { throw 'Game objects are missing. Run without -SkipBuild first.' }
     $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
     $dependencyLibraries = if ($debug) { Join-Path $installed 'debug/lib' } else { Join-Path $installed 'lib' }
+    # Every painter mode supplies a fake factory and never links the motor
+    # adapter, so no existing or future GameLevel probe can contact physical
+    # rumble motors.
     $libraries = @(
+        (Join-Path $gameDirectory 'colourwars_game.lib'),
+        (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
         (Join-Path $build 'external/labrador/engine/math/MattMath.lib'),
         (Join-Path $dependencyLibraries 'DirectXTK.lib'),
@@ -440,7 +432,6 @@ try {
         }
         $arguments += @((Quote-Path $source), ('/Fe:' + (Quote-Path $executable)),
             ('/Fo:' + (Quote-Path (Join-Path $run "painter_visual$variantSuffix.obj"))))
-        $arguments += @($objects | ForEach-Object { Quote-Path $_.FullName })
         $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
         $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib',
             'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib',

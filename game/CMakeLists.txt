@@ -3,7 +3,10 @@
 find_package(xaudio2redist CONFIG REQUIRED)
 find_package(directxtk CONFIG REQUIRED)
 
-add_executable(ColourWars WIN32
+# Every game source except the entry point and the two platform adapters. The
+# executable and the acceptance probes link this one library, so a probe sees
+# the game exactly as the executable does without reaching into its objects.
+add_library(colourwars_game STATIC
     ai/match_bot.cpp
     ai/match_bot_ascent.cpp
     ai/match_bot_ballistics.cpp
@@ -23,12 +26,10 @@ add_executable(ColourWars WIN32
     content_value.cpp
     controls_text.cpp
     directory_consts.cpp
-    display_awake.cpp
     drawable_text.cpp
     fatal_report.cpp
     game_data.cpp
     last_match_setup.cpp
-    main.cpp
     match_records.cpp
     match_setup.cpp
     presentation.cpp
@@ -47,7 +48,6 @@ add_executable(ColourWars WIN32
     presentation_validation_text.cpp
     round_tape.cpp
     rumble.cpp
-    rumble_xinput.cpp
     save.cpp
     save_profiles.cpp
     series_stage_rule.cpp
@@ -214,28 +214,52 @@ add_executable(ColourWars WIN32
     states/results_menu.cpp
     states/stage_preview.cpp
     states/wrapped_text_drop_shadow.cpp
-
-    resource.rc
-    settings.manifest
 )
 # Resolve game includes from this repository's root.
-target_include_directories(ColourWars PRIVATE
+target_include_directories(colourwars_game PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/.."
 )
 
 # save.cpp uses RapidJSON to write saves; Labrador does not expose it.
 # SYSTEM keeps third-party headers outside the game's /W4 /WX checks.
-target_include_directories(ColourWars SYSTEM PRIVATE
+target_include_directories(colourwars_game SYSTEM PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../external/rapidjson/include"
 )
-target_link_libraries(ColourWars PRIVATE
-    LabradorEngine
-    Microsoft::DirectXTK
-    labrador_settings
-    Xinput
-    comctl32
+target_link_libraries(colourwars_game
+    PUBLIC
+        LabradorEngine
+        Microsoft::DirectXTK
+        comctl32
+    PRIVATE
+        labrador_settings
 )
-target_precompile_headers(ColourWars PRIVATE pch.h)
+target_precompile_headers(colourwars_game PRIVATE pch.h)
+
+# The platform adapters are libraries of their own, so a probe chooses each by
+# linking it or supplying its own definitions: make_rumble_sink() for the motor
+# adapter, DisplayAwake's default constructor for the display-idle request.
+# Each implements a seam the game library declares, so it builds against that
+# library's headers and precompiled header; the game library never names them.
+add_library(colourwars_rumble_xinput STATIC rumble_xinput.cpp)
+target_link_libraries(colourwars_rumble_xinput PRIVATE Xinput)
+add_library(colourwars_display_awake STATIC display_awake.cpp)
+foreach(adapter IN ITEMS colourwars_rumble_xinput colourwars_display_awake)
+    target_link_libraries(${adapter} PRIVATE colourwars_game labrador_settings)
+    target_precompile_headers(${adapter} REUSE_FROM colourwars_game)
+endforeach()
+
+add_executable(ColourWars WIN32
+    main.cpp
+    resource.rc
+    settings.manifest
+)
+target_link_libraries(ColourWars PRIVATE
+    colourwars_game
+    colourwars_rumble_xinput
+    colourwars_display_awake
+    labrador_settings
+)
+target_precompile_headers(ColourWars REUSE_FROM colourwars_game)
 
 add_custom_target(colourwars_build_info
     COMMAND "${CMAKE_COMMAND}"
@@ -250,7 +274,7 @@ add_custom_target(colourwars_build_info
         "${PROJECT_BINARY_DIR}/generated/build-info.txt"
     VERBATIM
 )
-add_dependencies(ColourWars colourwars_build_info)
+add_dependencies(colourwars_game colourwars_build_info)
 
 # The Debug developer console's `reload` reads tuning and presentation from the
 # source tree, so edits apply without a rebuild, `tune.save` writes edits back
@@ -283,7 +307,7 @@ file(CONFIGURE OUTPUT "${PROJECT_BINARY_DIR}/generated/game/version.rc.h"
 #define COLOURWARS_VERSION_STRING \"${PROJECT_VERSION}\"
 "
     @ONLY)
-target_include_directories(ColourWars PRIVATE "${PROJECT_BINARY_DIR}/generated")
+target_include_directories(colourwars_game PUBLIC "${PROJECT_BINARY_DIR}/generated")
 
 # Stage the same reviewed assets as Release, pruning stale files only inside
 # the build's four owned content directories. Root DLLs and other outputs stay.

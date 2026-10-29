@@ -241,7 +241,9 @@ feedback. Release ignores `+` arguments and contains none of it. See
 There is no `ctest` step here: the engine's test suite lives with
 the engine. Labrador puts its tests, its benchmark and its samples behind
 `PROJECT_IS_TOP_LEVEL`, so consuming it as a submodule brings in the library
-and nothing else.
+and nothing else. The game's own checks below are not CTest tests either: their
+runner builds them only on request and owns their selection, deadlines,
+evidence and timing summary.
 
 ### Consumer acceptance
 
@@ -255,9 +257,10 @@ pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset x64-debug -SkipBuild -C
 ```
 
 These commands configure/build the game, then compile small native checks
-against its actual objects. They cover full-cost ammunition and held-fire
-recovery, exposed paint surfaces and ownership, settings persistence and
-write-failure recovery, camera framing and aiming, jump buffering and ledge grace,
+against the game library the executable is linked from (`colourwars_game`).
+They cover full-cost ammunition and held-fire recovery, exposed paint surfaces
+and ownership, settings persistence and write-failure recovery, camera framing
+and aiming, jump buffering and ledge grace,
 takeoff/landing feedback events and lifetime, stage eligibility for Random,
 Movement Course routes, developer tools and audio cue content/lifecycle.
 They use no graphics device or speaker and isolate

@@ -396,6 +396,8 @@ story/redraw audio and replay determinism remain covered. The registry no longer
 offers `visual`, F8 has no default action, and replay v3 explicitly rejects the
 old v2 schema. Acceptance runners ignore object files whose retired source no
 longer exists, so an incremental build cannot link the old visual into a probe.
+(Since `HYG#29` they link the `colourwars_game` library instead, which the
+build archives from the current sources only.)
 
 The hidden D3D11 movement-feedback probe passes in one/four views at 720p,
 1080p and QHD, including camera pan, aim sweeps and frozen redraw. Both staged

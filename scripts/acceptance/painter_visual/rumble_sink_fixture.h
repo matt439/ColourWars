@@ -4,8 +4,9 @@
 #include <array>
 #include <cmath>
 
-// Every painter probe links this factory instead of rumble_xinput.cpp. Most
-// modes discard intent; the rumble leaf attaches a bounded recording context.
+// Every painter probe links this factory instead of the colourwars_rumble_xinput
+// adapter library. Most modes discard intent; the rumble leaf attaches a
+// bounded recording context.
 // Neither path can invoke a native motor API, including existing GameLevel
 // tests that do not explicitly know about rumble.
 namespace painter_rumble

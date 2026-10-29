@@ -37,7 +37,7 @@ namespace display_awake_probe
     }
 }
 // The only substituted production symbol. The SAME real inline helper owns
-// acquisition/conditional cleanup; the thin Win32 default-ctor .obj is omitted.
+// acquisition/conditional cleanup; the thin Win32 default-ctor library is not linked.
 DisplayAwake::DisplayAwake() noexcept : DisplayAwake(display_awake_probe::record_request) {}
 
 namespace

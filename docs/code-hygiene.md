@@ -50,13 +50,37 @@ on the Debug executable.
 
 ### A game library for the executable and the probes (`HYG#29`)
 
-Split `game/CMakeLists.txt` into a `colourwars_game` static library (every source
-except `main.cpp` and the platform adapters), adapter libraries for
-`rumble_xinput.cpp` and `display_awake.cpp`, and the thin `ColourWars`
-executable. Then point `run-acceptance.ps1` and the five `check-*.ps1` scripts at
-the library's output instead of globbing `CMakeFiles/ColourWars.dir`, so the
-filename filters go. Keep "no CTest by design" unless the rationale changes, and
-say in the docs why the game's own probes are not CTest tests.
+**Done 2026-10-30.** [game/CMakeLists.txt](../game/CMakeLists.txt) now builds
+every game source but `main.cpp` and the two platform adapters into the
+`colourwars_game` static library, `rumble_xinput.cpp` into
+`colourwars_rumble_xinput` and `display_awake.cpp` into
+`colourwars_display_awake` (each building against the game library's headers
+and reusing its precompiled header), and links all three into the thin
+`ColourWars` executable of `main.cpp`, `resource.rc` and the manifest.
+`run-acceptance.ps1`, `check-movement-feedback.ps1` and `check-paint-fx.ps1`
+link the game library and both adapters; `check-painter.ps1` and
+`check-frame-pacing.ps1` link the game and display adapters and supply their own
+rumble factory; `check-display-awake.ps1` links the game library alone, checks
+with `lib /list` that it holds `game_states.cpp` and neither the entry point nor
+an adapter, and records the three libraries in its receipt. No script globs
+`CMakeFiles/ColourWars.dir` or filters object filenames any more, and a retired
+source can no longer reach a probe. A link map showed every game-library member
+with code in the executable in Debug, and in Release every member but the
+Debug-only `game/debug` units, which compile to nothing there and carry no
+initializers, so the executable's contents are unchanged. "No CTest by design"
+stands; AGENTS.md and the README now say why the game's own probes are not
+CTest tests (the runner builds them on request and owns selection, deadlines,
+evidence and the timing summary). The Release ZIP's 72 entries are the same as
+before. Both presets build under `/W4 /WX`. The full default acceptance list
+passed in Release (74 cases) and in Debug without the four slow cases (71);
+the sixteen opt-in cases and `check-painter.ps1 -CompileOnly` compiled in both
+presets and `check-frame-pacing.ps1 -CompileOnly` in Debug;
+`check-display-awake.ps1`, `check-movement-feedback.ps1` and
+`check-startup.ps1` passed on Debug, and `check-acceptance-selection.ps1` and
+`check-painter-selection.ps1` passed. `check-paint-fx.ps1` links and runs but
+fails its "authored gameplay camera scale" check; HEAD's script on the
+unchanged pre-split objects fails the same way, so that is older than this row
+(its last pass on record is 2026-10-18).
 
 ### One acceptance case list and a shared probe header (`HYG#30`)
 

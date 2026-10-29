@@ -118,9 +118,21 @@ suite lives with the engine, and Labrador puts its tests, benchmark and sample
 behind `PROJECT_IS_TOP_LEVEL` — so consuming it as a submodule brings in the
 library and nothing else. A `ctest` run from here is empty, not broken.
 
+The game's own probes are not CTest tests either, and that is a choice rather
+than an omission. `scripts/run-acceptance.ps1` compiles them only when asked,
+so the default build stays the game, and it owns what CTest would not give
+them: case selection, a Windows Job Object and deadline per probe, retained
+logs and evidence, and `acceptance-summary.json`. They link the build's own
+output rather than a copy of it: [game/CMakeLists.txt](game/CMakeLists.txt)
+builds every game source but `main.cpp` into the `colourwars_game` static
+library, the two platform adapters into `colourwars_rumble_xinput` and
+`colourwars_display_awake`, and links all three into the thin `ColourWars`
+executable. A probe links `colourwars_game.lib` and chooses each adapter by
+linking its library or defining the adapter's symbols itself.
+
 Consumer acceptance checks live under `scripts/acceptance/`. From an x64 VS
 Developer shell, `scripts/run-acceptance.ps1 -Preset x64-debug` (or
-`x64-release`) builds the game and checks its actual objects for ammunition,
+`x64-release`) builds the game and checks the game library for ammunition,
 paint coverage and save regressions. They do not create a graphics/audio device
 or touch the player's save. `scripts/check-startup.ps1` separately checks a
 hidden game process, its per-monitor DPI awareness, isolated save, diagnostics

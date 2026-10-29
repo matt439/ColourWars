@@ -81,7 +81,7 @@ scripts/check-frame-pacing.ps1 -Preset x64-debug -LoadCondition shared `
   -Python '<path to Python 3>'
 ```
 
-The runner builds and links the actual Debug game objects into a small diagnostic
+The runner builds and links the actual Debug game library into a small diagnostic
 shell, then uses the engine's ordinary Application loop and Present. It defaults
 to hidden windows, takes no screenshots or GPU readbacks, and changes no native
 focus, process priorities or unrelated processes. Every child has its own profile,
