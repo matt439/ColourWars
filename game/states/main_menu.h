@@ -225,7 +225,8 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 	// Candidate validation (game/states/menu_content_validation.h) uses the
-	// same unscaled row and complete ornament as a real Mode page, after the ordinary resource checks have passed.
+	// same unscaled row and complete ornament as a real Mode page, after the
+	// ordinary resource checks have passed.
 	// Rows of mode_select_spacing under the heading; Match length and Series
 	// stage are the two OptionRows. The practice hint sits on Single Match's
 	// row, one card padding after that row's complete focus card.
