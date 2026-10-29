@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/ai/match_bot_ballistics.h"
+#include "game/simulation.h"
 #include "engine/core/step_timer.h"
 #include <cmath>
 #include <limits>
@@ -24,7 +25,7 @@ namespace
 		Vector2F inherited, Vector2F target, Vector2F target_velocity)
 	{
 		const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
-			labrador::StepTimer::TicksPerSecond / 60));
+			labrador::StepTimer::TicksPerSecond / SIMULATION_HZ));
 		const Vector2F direction(std::cos(angle), std::sin(angle));
 		Vector2F position = Vector2F::rotate_vector(tool.details.nozzle_offset +
 			Vector2F(tool.details.size.x, 0.0f), angle);
@@ -36,7 +37,7 @@ namespace
 		float elapsed = 0.0f;
 		// One second, including the first sweep of a shorter-lived projectile.
 		// Use relative swept distance so a fast shot need not land on a tick endpoint.
-		for (int step = 0; step < 60; ++step)
+		for (int step = 0; step < SIMULATION_HZ; ++step)
 		{
 			elapsed += dt;
 			if (step > 0 && elapsed > projectile.details.delete_timer) { break; }
@@ -58,6 +59,42 @@ namespace
 		}
 		return best;
 	}
+}
+
+float match_bot_ballistics::horizontal_reach(const WeaponTuning& tool,
+	const ProjectileTuning& projectile)
+{
+	const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
+		labrador::StepTimer::TicksPerSecond / SIMULATION_HZ));
+	float speed = tool.details.starting_vel_length;
+	float distance = 0.0f;
+	float elapsed = 0.0f;
+	// A conservative local engagement heuristic, not a projectile-hit promise.
+	for (int step = 0; step < SIMULATION_HZ; ++step)
+	{
+		elapsed += dt;
+		if (step > 0 && elapsed > projectile.details.delete_timer) { break; }
+		if (std::fabs(speed) > projectile.details.wind_resistance * projectile.wind_stop_factor)
+		{
+			speed += speed > 0.0f ? -projectile.details.wind_resistance * dt :
+				projectile.details.wind_resistance * dt;
+		}
+		else { speed = 0.0f; }
+		speed = std::clamp(speed, -projectile.max_velocity.x, projectile.max_velocity.x);
+		distance += std::fabs(speed * dt);
+	}
+	if (projectile.details.gravity != 0.0f)
+	{
+		// Horizontal speed integrated for a whole second overstates a curved
+		// shot's useful range: the bot otherwise stops while the shot falls
+		// short. The ideal same-height maximum is v^2 / |g|; drag and short
+		// lifetimes may reduce the existing local estimate further.
+		const double speed_squared = static_cast<double>(tool.details.starting_vel_length) *
+			tool.details.starting_vel_length;
+		const double ballistic = speed_squared / std::fabs(static_cast<double>(projectile.details.gravity));
+		distance = static_cast<float>(std::min(static_cast<double>(distance), ballistic));
+	}
+	return distance;
 }
 
 Vector2F match_bot_ballistics::aim_direction(const WeaponTuning& tool, const ProjectileTuning& projectile,

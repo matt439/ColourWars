@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/math/vector2f.h"
+#include "game/ai/bot_random.h"
 #include "game/objects/player_input_data.h"
 #include "game/objects/player_team.h"
 #include <cstdint>
@@ -8,24 +9,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-// A bot's own random numbers: splitmix64, seeded from the match seed and the
-// seat, so a bot never touches rand() and two bots never share a sequence.
-class BotRandom
-{
-public:
-	explicit BotRandom(std::uint64_t seed = 0);
-
-	std::uint64_t next();
-	// [0, 1).
-	float unit();
-	// [low, high], inclusive.
-	int between(int low, int high);
-	float between(float low, float high);
-
-private:
-	std::uint64_t state_ = 0;
-};
 
 // What one bot sees on one logic step: public state only, built by
 // BotDriver from the running Level.

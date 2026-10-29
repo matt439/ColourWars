@@ -2,6 +2,7 @@
 # executable and the acceptance probes link this one library, so a probe sees
 # the game exactly as the executable does without reaching into its objects.
 add_library(colourwars_game STATIC
+    ai/bot_random.cpp
     ai/match_bot.cpp
     ai/match_bot_ascent.cpp
     ai/match_bot_ballistics.cpp

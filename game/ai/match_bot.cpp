@@ -2,6 +2,7 @@
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_ballistics.h"
 #include "game/ai/match_bot_territory.h"
+#include "game/simulation.h"
 #include <cmath>
 #include <limits>
 
@@ -17,7 +18,7 @@ namespace
 }
 
 MatchBot::MatchBot(const GameTuning* tuning, BotDifficulty difficulty, std::uint64_t seed) :
-	tuning_(tuning), difficulty_(difficulty), random_state_(seed)
+	tuning_(tuning), difficulty_(difficulty), random_(seed)
 {
 	if (tuning == nullptr) { throw std::invalid_argument("A match bot requires tuning"); }
 	(void)tuning->bot(difficulty);
@@ -26,16 +27,13 @@ MatchBot::MatchBot(const GameTuning* tuning, BotDifficulty difficulty, std::uint
 
 std::uint64_t MatchBot::random()
 {
-	// splitmix64; no global random state or other participant's sequence.
-	std::uint64_t value = (this->random_state_ += 0x9E3779B97F4A7C15ull);
-	value = (value ^ (value >> 30)) * 0xBF58476D1CE4E5B9ull;
-	value = (value ^ (value >> 27)) * 0x94D049BB133111EBull;
-	return value ^ (value >> 31);
+	// No global random state or other participant's sequence.
+	return this->random_.next();
 }
 
 float MatchBot::random_unit()
 {
-	return static_cast<float>(this->random() >> 40) / 16777216.0f;
+	return this->random_.unit();
 }
 
 bool MatchBot::needs_territory() const
@@ -101,12 +99,12 @@ void MatchBot::open_finish(const MatchBotObservation& view, const MatchBotSuppor
 	if (this->refilling_)
 	{
 		const double per_step = static_cast<double>(this->tuning_->ammo_regen_rate()) *
-			view.paint_refill / this->tuning_->starting_ammo() / 60.0;
-		refill = std::ceil(static_cast<double>(this->tuning_->ammo_regen_delay()) * 60.0) + (per_step > 0.0 ?
+			view.paint_refill / this->tuning_->starting_ammo() / SIMULATION_HZ;
+		refill = std::ceil(static_cast<double>(this->tuning_->ammo_regen_delay()) * SIMULATION_HZ) + (per_step > 0.0 ?
 			std::ceil(std::max(0.0, static_cast<double>(policy.reserve_resume - view.ammo)) / per_step) : 0.0);
 	}
 	const double budget = refill + std::ceil(static_cast<double>(
-		this->tuning_->weapon(view.weapon).details.shoot_interval) * 60.0) + policy.finish_dwell_steps;
+		this->tuning_->weapon(view.weapon).details.shoot_interval) * SIMULATION_HZ) + policy.finish_dwell_steps;
 	this->finish_support_ = support;
 	this->finish_left_ = static_cast<int>(std::min(budget, 3600.0));
 	// A ride's hold is bounded, even while unpainted top remains in sight.
@@ -330,7 +328,7 @@ void MatchBot::decide(const MatchBotObservation& view)
 			this->obstacle_ahead(view) || (this->ledge_ahead(view) && goal.y <= view.center.y));
 	if (jump && !this->jump_was_held_)
 	{
-		const double steps = std::ceil(static_cast<double>(this->tuning_->player().jump_max_time) * 60.0);
+		const double steps = std::ceil(static_cast<double>(this->tuning_->player().jump_max_time) * SIMULATION_HZ);
 		this->jump_left_ = std::max(1, static_cast<int>(std::min(steps,
 			static_cast<double>((std::numeric_limits<int>::max)()))));
 	}

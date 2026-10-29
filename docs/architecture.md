@@ -20,7 +20,8 @@ game/                  the game executable and the colourwars_game library
   states/              the engine states: GameMenu, GameLevel and the menu pages
   objects/             one match: Level, Player, weapons, projectiles,
                        structures, terrain, HUD and the builders
-  ai/                  the shipping match bots (MatchBotDriver and its helpers)
+  ai/                  the shipping match bots (MatchBotDriver and its helpers),
+                       and the RNG and ballistics the Debug bots share with them
   carried/             engine types removed after v0.2.0, copied here (colourwars::)
   debug/               the Debug-only developer tools; compiled to nothing in Release
   content/             runtime assets staged beside the exe: manifest, tuning,

@@ -5,7 +5,6 @@
 #include "game/objects/level.h"
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/objects/weapon.h"
-#include "engine/core/step_timer.h"
 #include <array>
 #include <cmath>
 #include <limits>
@@ -74,7 +73,7 @@ MatchBotDriver::MatchBotDriver(const GameTuning* tuning,
 		if (seats[seat])
 		{
 			this->bots_[seat] = std::make_unique<MatchBot>(tuning, *seats[seat],
-				seed * 0x9E3779B97F4A7C15ull + static_cast<std::uint64_t>(seat) + 1);
+				BotRandom::seat_seed(seed, static_cast<int>(seat)));
 		}
 	}
 }
@@ -88,42 +87,6 @@ bool MatchBotDriver::drives(int participant) const
 const MatchBot* MatchBotDriver::bot(int participant) const
 {
 	return this->drives(participant) ? this->bots_[static_cast<size_t>(participant)].get() : nullptr;
-}
-
-float match_bot_ballistics::horizontal_reach(const WeaponTuning& tool,
-	const ProjectileTuning& projectile)
-{
-	const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
-		labrador::StepTimer::TicksPerSecond / 60));
-	float speed = tool.details.starting_vel_length;
-	float distance = 0.0f;
-	float elapsed = 0.0f;
-	// A conservative local engagement heuristic, not a projectile-hit promise.
-	for (int step = 0; step < 60; ++step)
-	{
-		elapsed += dt;
-		if (step > 0 && elapsed > projectile.details.delete_timer) { break; }
-		if (std::fabs(speed) > projectile.details.wind_resistance * projectile.wind_stop_factor)
-		{
-			speed += speed > 0.0f ? -projectile.details.wind_resistance * dt :
-				projectile.details.wind_resistance * dt;
-		}
-		else { speed = 0.0f; }
-		speed = std::clamp(speed, -projectile.max_velocity.x, projectile.max_velocity.x);
-		distance += std::fabs(speed * dt);
-	}
-	if (projectile.details.gravity != 0.0f)
-	{
-		// Horizontal speed integrated for a whole second overstates a curved
-		// shot's useful range: the bot otherwise stops while the shot falls
-		// short. The ideal same-height maximum is v^2 / |g|; drag and short
-		// lifetimes may reduce the existing local estimate further.
-		const double speed_squared = static_cast<double>(tool.details.starting_vel_length) *
-			tool.details.starting_vel_length;
-		const double ballistic = speed_squared / std::fabs(static_cast<double>(projectile.details.gravity));
-		distance = static_cast<float>(std::min(static_cast<double>(distance), ballistic));
-	}
-	return distance;
 }
 
 float MatchBotDriver::engagement_distance(const Player& player, const GameTuning& tuning)

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/ai/match_bot.h"
+#include "game/simulation.h"
 #include <cmath>
 #include <limits>
 
@@ -27,11 +28,11 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 	const float inset = std::min(2.0f, half.x);
 	float vy = movement.jump_launch_velocity, height = 0.0f, rise = 0.0f;
 	float vx = movement.x_initial_velocity, reach = 0.0f;
-	constexpr float dt = 1.0f / 60.0f;
+	constexpr float dt = SECONDS_PER_STEP;
 	const int held_steps = std::max(1, static_cast<int>(std::min(
-		std::ceil(static_cast<double>(movement.jump_max_time) * 60.0),
+		std::ceil(static_cast<double>(movement.jump_max_time) * SIMULATION_HZ),
 		static_cast<double>((std::numeric_limits<int>::max)()))));
-	for (int step = 0; step < 120; ++step)
+	for (int step = 0; step < 2 * SIMULATION_HZ; ++step)
 	{
 		// Player::start_jump overwrites gravity on the takeoff tick. Held
 		// extension begins on the following tick and includes only held outputs.
@@ -141,7 +142,7 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 			// Allow the supported approach at ordinary minimum moving speed,
 			// then retain the existing finite jump/recovery allowance.
 			const double travel = std::ceil(static_cast<double>(approach) /
-				movement.x_initial_velocity * 60.0);
+				movement.x_initial_velocity * SIMULATION_HZ);
 			const double budget = travel + this->tuning_->bots().progress_window_steps +
 				this->tuning_->bots().recovery_steps;
 			this->ascent_steps_left_ = static_cast<int>(std::min(budget,
@@ -244,11 +245,11 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 	if (crossing && !this->ascent_airborne_)
 	{ input.x_movement = landing.x > view.center.x ? 1.0f : -1.0f; }
 	input.left_analog_stick = Vector2F(input.x_movement, 0.0f);
-	const float launch_margin = crossing ? std::max(3.0f, std::fabs(view.velocity.x) / 60.0f + 2.0f) : 3.0f;
+	const float launch_margin = crossing ? std::max(3.0f, std::fabs(view.velocity.x) / static_cast<float>(SIMULATION_HZ) + 2.0f) : 3.0f;
 	if (!this->ascent_airborne_ && std::fabs(view.center.x - destination) <= launch_margin &&
 		(crossing || std::fabs(view.velocity.x) <= movement.x_initial_velocity) && !this->jump_was_held_)
 	{
-		const double steps = std::ceil(static_cast<double>(movement.jump_max_time) * 60.0);
+		const double steps = std::ceil(static_cast<double>(movement.jump_max_time) * SIMULATION_HZ);
 		this->jump_left_ = std::max(1, static_cast<int>(std::min(steps,
 			static_cast<double>((std::numeric_limits<int>::max)()))));
 	}
