@@ -164,7 +164,6 @@ here.
 | `POL#24` | DECISION | MED | M | The finish review and fresh-player observations on the Crossfeed reference match, including its spawn pressure and 1-4P clean/heavy readability; the gate before production widens. [Process](docs/polish-plan.md#7-acceptance-and-delivery). |
 | `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
 | `GAP#7.6` | DEFERRED | LOW | S | Replace the stock `directx.ico` in the later UI/release-art pass using the approved style; the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
-| `ROAD#37` | OPEN | LOW | M | Record Labrador `PI-14`'s 2026-10-28 Windows Sandbox run of the Release ZIP here with its limits, then add a `.wsb` driver that writes a receipt (ZIP hash, exit code, log). Not a clean physical PC; `ROAD#1` stays DECISION. [Scope](docs/feature-roadmap.md#windows-sandbox-run-of-the-release-zip-road37) |
 
 ## Game gaps
 

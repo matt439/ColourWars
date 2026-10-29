@@ -1522,34 +1522,98 @@ are recorded in [audio inventory §9](audio-inventory.md#9-runtime-migration-and
 
 ### Windows Sandbox run of the Release ZIP (`ROAD#37`)
 
-**Open, not started (filed 2026-10-29).** Labrador's `PI-14` (master
+**Done 2026-10-30.** A Windows Sandbox run proves that the ZIP loads and runs
+on a clean OS. It does not prove that the game runs on a player's PC or GPU:
+`ROAD#1` stays `DECISION`, and no CI job runs a sandbox.
+
+**Labrador's run, recorded here.** Labrador's `PI-14` (master
 `docs/product/BACKLOG.md:294`, at `b96bad6`) records a 2026-10-28 Windows
 Sandbox run of this repository's CI Release ZIP (ColourWars `26a249d`, engine
-`1e60fb2` = v0.2.0): Windows 11 Enterprise 10.0.26100, no Visual C++ runtime in
-System32, no Visual Studio, configured by the engine's
-`tools/consumer_check/sandbox.py` with a scripted run. The sandbox's GPU was
-the host's RTX 5080 behind a paravirtual driver, so the game drew rather than
-refusing. Synthetic keys reached a keyboard-seat match and its pause menu, and
-closing the window exited 0. The entry says the record belongs in ColourWars,
-and the engine's `PI-14` row (master `TODO.md:163`) lists that as one of three
-things left. Its limits (`BACKLOG.md:2102`): a sandbox proves the loader and
-runtime requirements on a clean OS, not a target GPU. Release has no WARP
-fallback, so `--vgpu Disable` gives the missing-adapter refusal. Not checked:
-a match on a physical pad, the Radeon iGPU, a non-paravirtual GPU.
+`1e60fb2` = v0.2.0). The sandbox was Windows 11 Enterprise 10.0.26100, with no
+Visual C++ runtime in System32 and no Visual Studio. The engine's
+`tools/consumer_check/sandbox.py` set it up, and a script drove the run. The
+sandbox's GPU was the host's RTX 5080 behind a paravirtual driver (guest driver
+10.0.26100.1150, host driver 32.0.16.1692), so the game drew instead of
+refusing. Synthetic key presses reached a keyboard-seat match and its pause
+menu. Closing the window exited with code 0. The limits Labrador states
+(`BACKLOG.md:2102`): a sandbox proves the loader and runtime requirements on a
+clean OS, not a target GPU, and Release has no WARP fallback. Not checked: a
+match on a physical pad, the Radeon iGPU (Labrador `SM-01`) and a
+non-paravirtual GPU.
 
-First, copy that record here with its limits. Then add a driver under
-`scripts/` that writes a `.wsb` (extracted ZIP read-only, results folder
-writable, networking off) and a logon command. The command starts
-`ColourWars.exe` with `LOCALAPPDATA` in the results folder, closes it with
-`WM_CLOSE` as `check-startup.ps1` does, and writes a receipt: ZIP SHA-256, exit
-code, the game's log, Windows version, System32 runtime presence and display
-adapters. The engine's script runs `--smoke-test`, which this game does not
-have.
+**The driver.** `scripts/sandbox-release.ps1 [-Zip <zip>] [-VGpu
+Default|Enable|Disable] [-Run | -HostTrial]` uses
+`out/build/x64-release/packages/ColourWars-windows-x64.zip` unless `-Zip` names
+another. It writes a run folder under `out/validation/sandbox/` containing:
 
-Acceptance: the generator's output is checked on the host without starting a
-sandbox, and one run on this machine (`WindowsSandbox.exe` is present) leaves
-a receipt whose hash matches the ZIP. This is not a clean physical PC or a
-target GPU: `ROAD#1` stays `DECISION`, and no CI job is added.
+- `package/`: the ZIP and its extraction, mapped into the sandbox read-only.
+- `results/`: holds a copy of `scripts/sandbox/logon.ps1` and is mapped
+  writable.
+- `clean-machine.wsb`: networking is off, and the sandbox runs the logon script
+  at logon.
+- `host.json`: the host's ZIP SHA-256 and, after a run, the verdict.
+
+The logon script is self-contained and runs under Windows PowerShell 5.1. It
+starts `ColourWars.exe` with `LOCALAPPDATA` set to the results folder, waits
+for `ColourWarsWindowClass`, and captures the sandbox screen to `screen.png`.
+It then closes the game with `WM_CLOSE`, as `check-startup.ps1` does, and
+shuts the sandbox down. Before shutdown it writes `receipt.json`, which
+records:
+
+- the ZIP's SHA-256, hashed inside the sandbox;
+- `build-info.txt`;
+- the exit code;
+- the game's stderr, stdout and `last-error.log`;
+- the Windows caption, edition and build;
+- whether `vcruntime140.dll`, `vcruntime140_1.dll` and `msvcp140.dll` are in
+  System32;
+- the display adapters.
+
+The Release build has no `--smoke-test` (Labrador's script runs one), so the
+logon script checks for the window, the save and a clean exit.
+
+`-Run` starts `WindowsSandbox.exe` and waits for the receipt. It then checks
+that the receipt's hash equals the host's and closes the leftover client
+window. `-HostTrial` runs the same logon script on the host. It skips the
+screenshot, because a host screenshot would capture the user's other windows,
+and it skips the shutdown.
+
+`scripts/check-sandbox-release.ps1` checks the generator without starting a
+sandbox, using a synthetic ZIP. It checks:
+
+- the `.wsb` XML: its elements, read-only and writable mappings, networking and
+  logon command;
+- XML escaping and relative paths;
+- the copied ZIP and its extraction;
+- that the logon script parses;
+- refusals of bad input.
+
+With `-Zip` the checker also runs a host trial of a real ZIP. The game cannot
+open content through paths of 260 characters or more, so `-HostTrial` refuses
+a deep `-OutputDirectory`.
+
+**This machine's runs (MattPC, 2026-10-30).** All runs used a local Release ZIP
+built from `74df941` (engine `1e60fb2`, SHA-256
+`0C55115F...8555B9083`).
+
+- **`-Run`:** the receipt's hash matched the host's. The guest was Windows 11
+  Enterprise 24H2 26100.9711, with none of the three runtime DLLs in System32.
+  Its adapters were an "NVIDIA GeForce RTX 5080" on the Microsoft paravirtual
+  driver 10.0.26100.1150, plus the Remote Display Adapter. The title screen
+  drew, showing "Build 74df941891da / Release". The save was created, stderr was
+  empty, and `WM_CLOSE` exited with code 0.
+- **`-Run -VGpu Disable`:** the same result. The paravirtual adapter was still
+  present, so the missing-adapter refusal that Labrador describes did not
+  happen. The receipt's `refused-no-hardware-adapter` path remains unexercised.
+- **`-HostTrial`:** passed under both Windows PowerShell 5.1 and pwsh 7.6.9.
+
+The first `-Run` produced no receipt. Windows PowerShell 5.1 leaves
+`PSScriptRoot` empty in parameter defaults, so the script failed before
+writing anything. The fix sets the default in the script body, and the host
+trial now leaves `-Results` at that default as the sandbox does.
+
+These runs did not include a match, any input, audio or a physical pad. They
+also did not cover a target or non-paravirtual GPU.
 
 ## Fourth increment: pause controls/settings
 
