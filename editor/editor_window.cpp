@@ -290,11 +290,13 @@ namespace colourwars_editor
         draw_items_.clear();
         blockout_tuning_.reset();
         scoring_faces_.clear();
+        symmetry_.clear();
         try
         {
             blockout_tuning_ = load_blockout_tuning(std::filesystem::path(COLOURWARS_CONTENT_DIR) / "tuning.json",
                 std::filesystem::path(COLOURWARS_EDITOR_DIR) / "movement-baseline.json");
             scoring_faces_ = scoring_faces(document_, *blockout_tuning_);
+            symmetry_ = wide(symmetry_summary(document_, scoring_faces_));
             blockout_error_.clear();
         }
         catch (const std::exception& exception) { blockout_error_ = wide(exception.what()); }

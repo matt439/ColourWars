@@ -346,11 +346,12 @@ namespace colourwars_editor
                 : L"Movement tuning changed: remeasure before using the jump guide",
             measured ? held_label.str()
                 : L"Spawn sizes and scoring area still follow current source tuning.",
-            L"Guide boxes start at selection; no collision test or guaranteed route. Source tuning.json."};
+            L"Guide boxes start at selection; no collision test or guaranteed route. Source tuning.json.",
+            dragging_ ? L"Symmetry updates on drop" : symmetry_};
         RECT client{}; GetClientRect(canvas_, &client);
-        fill(dc, RECT{pixels(8), pixels(38), client.right - pixels(8), pixels(128)}, RGB(28, 36, 46));
+        fill(dc, RECT{pixels(8), pixels(38), client.right - pixels(8), pixels(149)}, RGB(28, 36, 46));
         SetTextColor(dc, RGB(181, 197, 213));
-        for (int index = 0; index < 4; ++index)
+        for (int index = 0; index < 5; ++index)
             TextOutW(dc, pixels(16), pixels(43 + index * 21), lines[index].c_str(), static_cast<int>(lines[index].size()));
     }
 

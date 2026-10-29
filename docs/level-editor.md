@@ -725,6 +725,9 @@ level or the player's save. A missing or invalid aid file displays a diagnostic.
   Slabs retain local face areas and display actual world quads; selection
   regions clip those quads, including their empty bounding-box corners.
   During a drag, measurements and scoring edges wait for the committed drop.
+- **Symmetry** gives the scoring area either side of the arena centre and lists
+  spawns and objects without an `ED#24` mirror partner. See
+  [Symmetry report](#symmetry-report-in-the-blockout-aids-ed25).
 - **Purple/gold boxes** show the recorded tap/held jump envelope in both
   directions from the top centre of the selected geometry, or the feet of a
   selected spawn. They bound maximum rise and same-height horizontal travel;
@@ -1058,8 +1061,8 @@ vendored RapidJSON source changed. The attended `ED#5` gate remains open.
 
 A verified source brainstorm on 2026-10-29 found these editor gaps. None needs
 a pad or the author, and none settles a layout, route or attended result: those
-stay with `ED#5` and the stage's own `DECISION` rows. `ED#25` builds on `ED#24`
-and `ED#26` on `ED#23`, both now done.
+stay with `ED#5` and the stage's own `DECISION` rows. `ED#25` built on `ED#24`
+and `ED#26` builds on `ED#23`, both now done.
 
 ### Station validation in the editor (`ED#23`)
 
@@ -1138,22 +1141,54 @@ them belongs to the attended pass (`ED#5`).
 
 ### Symmetry report in the blockout aids (`ED#25`)
 
-**Open, not started; `ED#24` is done.** The [blockout aids](#blockout-aids)
-summary reports total and selected scoring area
-([editor_canvas.cpp](../editor/editor_canvas.cpp), lines 331-332, using
-`scoring_area` from [blockout_aids.h](../editor/blockout_aids.h), lines 37-42)
-but not whether the two halves match. Press Tower checks mirror partners by
-geometry only in acceptance (`press_tower/geometry_checks.cpp`, lines
-385-397).
+**Done 2026-10-30.** The [blockout aids](#blockout-aids) summary has a fifth
+line, built by `symmetry_summary` in [blockout_aids.cpp](../editor/blockout_aids.cpp)
+from `LevelDocument::symmetry` ([level_document.cpp](../editor/level_document.cpp)):
 
-Scope: add a symmetry line to the summary that lists objects without a mirror
-partner under the `ED#24` rule and the left and right scoring areas, splitting
-centre-straddling objects by region. The Ferry Trial's two ferries both use
-`"team_a_heads": "right"` (`turbulence_ferry_trial.json`, lines 494 and 523);
-report that as a known authored asymmetry rather than a defect. First step: a
-document check on Press Tower expecting no unmatched objects and equal halves.
-Acceptance: that check plus one on a deliberately unmatched copy pass in both
-builds. It reports only; fairness and side-swap acceptance stay play review.
+```
+Symmetry: left 70200.0 / right 70200.0  |  every object has a mirror partner  |  Art without partner: brush_pot
+```
+
+- **Left and right** are the scoring area either side of the `out_of_bounds`
+  centre (`side_scoring_areas`). Each half is a region passed to the existing
+  `scoring_area`, so a strip across the centre splits by region and left plus
+  right is the total.
+- **Mirror partners** use the `ED#24` reflection (`mirror_object`), compared
+  without names and with a 1e-6 relative tolerance. An object partners one
+  other in its own list, or itself when it is its own reflection (a centred
+  floor); a spawn partners one of the other team's, reflected at the source
+  `player.size` width. Pairing is one to one in document order, so a duplicate
+  on one side is still reported. Up to four names are shown, then `+N more`.
+- **Art without partner** lists unpartnered decorations apart from spawns and
+  collision objects. They have no collision or paint, and most shipped skies
+  are not mirrored; Press Tower's left `brush_pot` is the one example there.
+  This is a deliberate split, made because the scope's "no unmatched objects"
+  on Press Tower holds for play objects but not for that pot.
+- **Authored: paint-ferry heading** lists paint ferries whose path has a
+  partner. A ferry's heading and phase have no mirror rule, so they are
+  ignored and the pair is reported as authored, not unmatched: the Ferry
+  Trial's two ferries both use `"team_a_heads": "right"`. A ferry without a
+  path partner is unmatched.
+
+During a drag the line reads "Symmetry updates on drop", like the measurements.
+
+Acceptance (`scripts/acceptance/level_editor/symmetry_checks.cpp`, in
+`check-level-editor`): Press Tower has no unmatched spawns or collision
+objects, only `brush_pot` as art, and equal halves of 70,200. Without
+`stair_1_b` exactly `stair_1_a` is reported and the left half scores more;
+mirror-copying it restores equal halves. A Team A spawn moved 10 units reports
+it and its Team B partner. A 300-unit object 100 units left of centre is the
+one unmatched object and adds more area right than left; centred, it is its own
+partner. The Ferry Trial lists `ferry_a` and `ferry_b` as authored with
+nothing unmatched. Every other shipped stage is read and its line printed,
+judging nothing: the Turbulence blockout and trials and Close Quarters and
+Crossfeed have every play object partnered; King of the Hill, Turbulence and
+the Movement Course report unmatched spawns and objects. Debug and Release
+passed on 2026-10-30 (evidence `90f4f091e58b447d8a666cb9c1bbec53` and
+`7afea1e81ea1418eac60ffe9e999a1fa` under
+`out/acceptance/<preset>/level-editor/`). The canvas line has no
+hidden-window probe of its own; reading it belongs to the attended pass
+(`ED#5`). It reports only: fairness and side-swap acceptance stay play review.
 
 ### Station editing (`ED#26`)
 

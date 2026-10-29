@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
@@ -235,5 +236,46 @@ namespace colourwars_editor
             result += width * height;
         }
         return result;
+    }
+
+    SideScoring side_scoring_areas(const std::vector<ScoringFace>& faces, const Rect& out_of_bounds)
+    {
+        // Each half reaches well past the arena vertically and outwards, so
+        // only the centre line divides a strip.
+        constexpr double margin = 1.0e6;
+        const double centre = out_of_bounds.x + out_of_bounds.width / 2.0;
+        const double top = out_of_bounds.y - margin, height = out_of_bounds.height + 2.0 * margin;
+        const double left_edge = out_of_bounds.x - margin;
+        const double right_edge = out_of_bounds.x + out_of_bounds.width + margin;
+        return { scoring_area(faces, Rect{ left_edge, top, centre - left_edge, height }),
+            scoring_area(faces, Rect{ centre, top, right_edge - centre, height }) };
+    }
+
+    std::string symmetry_summary(const LevelDocument& document, const std::vector<ScoringFace>& faces)
+    {
+        const SideScoring sides = side_scoring_areas(faces, document.rectangle(Entry{ EntryKind::bounds, 0, "" }));
+        const LevelDocument::SymmetryReport report = document.symmetry();
+        const auto area = [](double value)
+        {
+            char text[32];
+            std::snprintf(text, sizeof text, "%.1f", value);
+            return std::string(text);
+        };
+        // A few names fit the canvas line; the count says how many there are.
+        const auto names = [](const std::vector<Entry>& entries)
+        {
+            std::string text;
+            for (std::size_t i = 0; i < entries.size() && i < 4; ++i) { text += (i ? ", " : "") + entries[i].label; }
+            if (entries.size() > 4) { text += ", +" + std::to_string(entries.size() - 4) + " more"; }
+            return text;
+        };
+        std::string text = "Symmetry: left " + area(sides.left) + " / right " + area(sides.right) + "  |  ";
+        text += report.unmatched.empty() ? std::string("every object has a mirror partner")
+            : std::to_string(report.unmatched.size()) + " without a mirror partner: " + names(report.unmatched);
+        if (!report.unmatched_art.empty())
+            text += "  |  Art without partner: " + names(report.unmatched_art);
+        if (!report.paint_ferries.empty())
+            text += "  |  Authored: paint-ferry heading (" + names(report.paint_ferries) + ")";
+        return text;
     }
 }

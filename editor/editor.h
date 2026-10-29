@@ -79,6 +79,8 @@ namespace colourwars_editor
         bool show_blockout_ = true;
         std::optional<BlockoutTuning> blockout_tuning_;
         std::vector<ScoringFace> scoring_faces_;
+        // ED#25: left/right scoring area and unpartnered objects, per refresh.
+        std::wstring symmetry_;
         std::wstring blockout_error_;
         // Reread with tuning on every refresh; warnings only, never a blocked edit.
         ContentCatalog content_catalog_;

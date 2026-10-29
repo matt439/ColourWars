@@ -94,6 +94,20 @@ namespace colourwars_editor
         // the other team's, and a trailing _a/_b name swaps. Paint ferries,
         // level settings and bounds are refused.
         Entry mirror_copy(const Entry& entry);
+        // Mirror partners under the mirror_copy rule, ignoring names: an
+        // object partners one other object in its list (or itself, when it is
+        // its own reflection) and a spawn one of the other team's. Paint
+        // ferries have no mirror rule for heading or phase, so they are paired
+        // by path alone and listed apart as authored, not as unmatched.
+        // Unpartnered decorations (art, no collision or paint) are listed
+        // apart from unmatched spawns and collision objects.
+        struct SymmetryReport
+        {
+            std::vector<Entry> unmatched;
+            std::vector<Entry> unmatched_art;
+            std::vector<Entry> paint_ferries;
+        };
+        SymmetryReport symmetry() const;
         void erase(const Entry& entry);
 
         bool undo();

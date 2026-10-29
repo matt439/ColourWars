@@ -985,6 +985,153 @@ namespace colourwars_editor
         return added;
     }
 
+    namespace
+    {
+        bool paint_ferry(const Json& object)
+        {
+            if (!object.IsObject() || !object.HasMember("motion") || !object["motion"].IsObject()) { return false; }
+            const Json& motion = object["motion"];
+            return motion.HasMember("drive") && motion["drive"].IsString() &&
+                std::string_view(motion["drive"].GetString()) == "paint";
+        }
+
+        // Names are labels, not shape: a centred object reflects onto itself
+        // under another name. A ferry's heading and phase have no mirror rule.
+        void strip_unmirrored(Json& object, bool ferry)
+        {
+            if (object.IsObject()) { object.RemoveMember("name"); }
+            if (ferry)
+            {
+                Json& motion = object["motion"];
+                for (const char* field : { "drive", "team_a_heads", "phase" }) { motion.RemoveMember(field); }
+            }
+        }
+
+        // Equal shapes up to the rounding the reflection itself introduces.
+        bool same_shape(const Json& a, const Json& b)
+        {
+            if (a.IsNumber() && b.IsNumber())
+            {
+                const double x = a.GetDouble(), y = b.GetDouble();
+                return std::abs(x - y) <= 1e-6 * std::max({ 1.0, std::abs(x), std::abs(y) });
+            }
+            if (a.IsObject() && b.IsObject())
+            {
+                if (a.MemberCount() != b.MemberCount()) { return false; }
+                for (auto it = a.MemberBegin(); it != a.MemberEnd(); ++it)
+                {
+                    const auto other = b.FindMember(it->name);
+                    if (other == b.MemberEnd() || !same_shape(it->value, other->value)) { return false; }
+                }
+                return true;
+            }
+            if (a.IsArray() && b.IsArray())
+            {
+                if (a.Size() != b.Size()) { return false; }
+                for (rapidjson::SizeType i = 0; i < a.Size(); ++i)
+                {
+                    if (!same_shape(a[i], b[i])) { return false; }
+                }
+                return true;
+            }
+            return a == b;
+        }
+    }
+
+    LevelDocument::SymmetryReport LevelDocument::symmetry() const
+    {
+        // Work on a copy, so the reflection helpers can edit freely.
+        Document work;
+        work.CopyFrom(impl_->document, work.GetAllocator());
+        Allocator& allocator = work.GetAllocator();
+        const Rect world = plain_rectangle(member(member(work, "level_bounds"), "out_of_bounds"));
+        const double sum = world.x + (world.x + world.width);
+        const double spawn_width = impl_->motion_tuning.empty() ? 52.0 :
+            static_cast<double>(load_motion_player_size(impl_->motion_tuning).width);
+        const std::vector<Entry> all = entries();
+        const auto listed = [&](EntryKind kind)
+        {
+            std::vector<Entry> result;
+            for (const Entry& entry : all) { if (entry.kind == kind) { result.push_back(entry); } }
+            return result;
+        };
+        SymmetryReport report;
+
+        // Spawns pair across teams, one to one, in document order.
+        {
+            const std::vector<Entry> team_a = listed(EntryKind::spawn_a), team_b = listed(EntryKind::spawn_b);
+            std::vector<bool> used(team_b.size(), false);
+            for (const Entry& spawn : team_a)
+            {
+                Json reflected;
+                reflected.CopyFrom(entry_json(work, spawn), allocator);
+                set_number(reflected, "x", sum - number(reflected, "x") - spawn_width);
+                bool found = false;
+                for (std::size_t j = 0; j < team_b.size() && !found; ++j)
+                {
+                    if (used[j] || !same_shape(reflected, entry_json(work, team_b[j]))) { continue; }
+                    used[j] = found = true;
+                }
+                if (!found) { report.unmatched.push_back(spawn); }
+            }
+            for (std::size_t j = 0; j < team_b.size(); ++j)
+            {
+                if (!used[j]) { report.unmatched.push_back(team_b[j]); }
+            }
+        }
+
+        // Objects pair within their own list; a self-reflection is its own partner.
+        for (const EntryKind kind : { EntryKind::collision, EntryKind::decoration })
+        {
+            const std::vector<Entry> objects = listed(kind);
+            std::vector<Json> shapes(objects.size()), reflections(objects.size());
+            std::vector<bool> ferry(objects.size(), false), mirrored(objects.size(), false);
+            for (std::size_t i = 0; i < objects.size(); ++i)
+            {
+                const Json& source = entry_json(work, objects[i]);
+                ferry[i] = paint_ferry(source);
+                shapes[i].CopyFrom(source, allocator);
+                strip_unmirrored(shapes[i], ferry[i]);
+                // Reflect the path alone: without its drive a ferry mirrors as
+                // an ordinary mover, and its phase is then dropped like its heading.
+                reflections[i].CopyFrom(source, allocator);
+                if (ferry[i])
+                {
+                    for (const char* field : { "drive", "team_a_heads" }) { reflections[i]["motion"].RemoveMember(field); }
+                }
+                // A malformed record has no reflection; it simply stays unmatched.
+                try { mirror_object(reflections[i], sum, allocator); mirrored[i] = true; }
+                catch (const std::exception&) {}
+                if (mirrored[i])
+                {
+                    if (ferry[i]) { reflections[i]["motion"].RemoveMember("phase"); }
+                    reflections[i].RemoveMember("name");
+                }
+            }
+            std::vector<bool> used(objects.size(), false);
+            for (std::size_t i = 0; i < objects.size(); ++i)
+            {
+                if (used[i]) { continue; }
+                if (mirrored[i])
+                {
+                    for (std::size_t j = i; j < objects.size(); ++j)
+                    {
+                        if (used[j] || ferry[j] != ferry[i] || !same_shape(reflections[i], shapes[j])) { continue; }
+                        used[i] = used[j] = true;
+                        if (ferry[i])
+                        {
+                            report.paint_ferries.push_back(objects[i]);
+                            if (j != i) { report.paint_ferries.push_back(objects[j]); }
+                        }
+                        break;
+                    }
+                }
+                if (!used[i]) { (kind == EntryKind::decoration ? report.unmatched_art : report.unmatched).push_back(objects[i]); }
+            }
+        }
+        return report;
+    }
+
     void LevelDocument::erase(const Entry& entry)
     {
         impl_->mutate([&](Document& document)
