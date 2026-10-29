@@ -50,9 +50,10 @@ when they don't compete with it.
 complete. Pick OPEN rows by section while attended reviews wait; the next-bump
 preparation is complete (`HYG#23`-`HYG#25`).
 After each slice, record the next concrete gap in its owner.
-This does not change the arena/tuning order above. `ROAD#28`'s OPEN step is a
-contract draft only; vertical lifts and growing sponges (`ROAD#29`) do not count
-as ready work. Functional trial cues do not widen the deferred production-art pass.
+This does not change the arena/tuning order above. `ROAD#28`'s contract draft
+is recorded and waits on the author; vertical lifts and growing sponges
+(`ROAD#29`) do not count as ready work. Functional trial cues do not widen the
+deferred production-art pass.
 
 **Bots (`ROAD#10`):** Easy/Normal/Hard setup and the shipping driver are integrated,
 including mover painting and pane-clamped labels. Next is the attended difficulty
@@ -67,6 +68,8 @@ comparison and physical-pad check; values remain provisional.
   the shipping-bot evidence is in its owner.
 - **Bots and paint-object trials:** compare Easy/Normal/Hard usefulness (`ROAD#10`)
   and play the explicit Ferry/Gate Trials from both sides at 1-4P (`ROAD#30`).
+- **Vertical lifts:** accept or amend the draft's engineering answers and pick its
+  travel, speed, drive, scoring and trial options (`ROAD#28`).
 - **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
   recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
   five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
@@ -196,7 +199,7 @@ excluded modes.
 | `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#28` | OPEN | MED | M | Vertical lifts need carry, ceiling/crush, admission and sweep contracts. The step is a contract draft: a file:line inventory of horizontal-only sites, engineering answers following existing practice, gameplay calls as author options. The capability stays unscoped until the owner accepts the draft. [Draft](docs/feature-roadmap.md#vertical-lift-contract-draft-road28) |
+| `ROAD#28` | DECISION | MED | M | The vertical-lift contract draft is recorded: a file:line inventory, six engineering answers with precedents and five gameplay option sets. Left: the author accepts or amends the answers and picks options; then promote one explicit-only slice. [Draft](docs/feature-roadmap.md#vertical-lift-contract-draft-road28) |
 | `ROAD#29` | UNSCOPED | MED | XL | Growing sponges need occupied resize, changing-area scoring and paint-credit contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#30` | DECISION | MED | M | Play the Ferry/Gate Trials from both sides at 1-4P; judge route value, held-open clarity and provisional values. Arena selection remains `POL#21`. [Scope](docs/feature-roadmap.md#paint-object-trial-play-road30). |
 | `ROAD#16` | DECISION | LOW | S | User stages and scan details are implemented. Left: attended saved-stage play, Random opt-in and hint-only marker choices, and provisional scan-details wording. [Owner](docs/feature-roadmap.md#user-stages-road16). |

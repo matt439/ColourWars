@@ -2426,7 +2426,8 @@ above:
 - **Vertical lifts (`ROAD#28`, XL):** define vertical admission and swept
   displacement, rider support identity and carry, ceilings/crush refusal,
   projectiles, shadows, editor envelopes and replay before choosing a trial.
-  The current horizontal carry contract does not answer these.
+  The current horizontal carry contract does not answer these; the
+  [draft](#vertical-lift-contract-draft-road28) below does, pending the author.
 - **Growing sponges (`ROAD#29`, XL):** define occupied growth/shrink behavior,
   paint-tile identity, changing scored area and retained paint/contribution
   credit before choosing an implementation. `PaintSurfaceSample` explicitly
@@ -2438,30 +2439,129 @@ arena while `POL#21` remains a geometry decision.
 
 #### Vertical-lift contract draft (`ROAD#28`)
 
-**Open, not started (filed 2026-10-29).** The step is a written draft in this
-section, not code. The capability stays unscoped until the owner accepts it.
-The draft has three parts:
+**DECISION: draft recorded, awaiting the author (2026-10-30).** The step was
+a written draft, not code; it is below. The capability stays unscoped until the
+author accepts the engineering answers and picks among the gameplay options.
+Acceptance of the draft step: every inventory row below resolved against the
+tree at the commit that records it, each engineering answer names its
+precedent, and no code, tuning or content changed. The draft chooses no trial
+and does not touch Turbulence's geometry (`POL#21`).
 
-1. **Inventory.** Every horizontal-only site with its file:line, starting from
-   `HorizontalCarryStep` (`game/objects/horizontal_motion.h:71`), the relative
-   displacement refusals (`game/objects/level_horizontal_motion.cpp:302-305`),
-   the capability note "not a lift or a rotating body"
-   (`game/objects/translating_structure_paintable.h:23-24`), the player's
-   carrier step (`game/objects/player.h:170`), `game/horizontal_motion_contract.h`,
-   the projectile sweeps, the translated shadow, the editor envelope, the
-   replay's `horizontal_motion` fields (`game/debug/replay.cpp`) and the match
-   fingerprint (`game/debug/match_fingerprint.cpp`).
-2. **Engineering answers that follow existing practice.** Refuse a crush, as
-   the gate holds open while its team is inside rather than pushing them out
-   ([Team gate](#team-gate-road15-second-slice)). Carry a rider relative to its
-   support's identity, as the x carry does now. Bump the replay format version
-   (it reads 3 and the current one).
-3. **Gameplay calls as options for the author.** Speed, travel, what drives a
-   lift, whether its surface scores, and which trial carries it.
+**1. Inventory of horizontal-only sites.** Line numbers are as of this commit.
+"Assumes" is what the site takes for granted today; "A lift needs" is the
+change a vertical mover would force there, not a design.
 
-Acceptance: every inventory row resolves at the commit that records it, each
-engineering answer names its precedent, and no code, tuning or content changes.
-The draft does not choose a trial or touch Turbulence's geometry (`POL#21`).
+| Area | Site | Assumes | A lift needs |
+|---|---|---|---|
+| Capability note | `game/objects/translating_structure_paintable.h:23-24` | "not a lift or a rotating body" | the note rewritten for the accepted axis |
+| Engine-free spec | `game/horizontal_motion_contract.h:32-40` (`Spec::travel_x`) | one travel along +x | a vertical travel (see answer E1) |
+| Spec validation | `game/horizontal_motion_contract.h:91-110` | the endpoint is `anchor.x + travel_x` and must exceed `anchor.x` | the same distinct-endpoint check on y |
+| Paint-drive heading | `game/horizontal_motion_contract.h:26-75` (`team_a_heading`, `decode_drive`) | headings are `right`/`left`; phase 0 is the left end | `up`/`down` naming, if a lift is paint-driven (option G3) |
+| Pose | `game/horizontal_motion_contract.h:159-165`, `game/objects/horizontal_motion.cpp:59-64` | an offset adds to x only | an offset adds to y for a lift |
+| Path | `game/horizontal_motion_contract.h:167-174` | the path keeps the anchor's top and bottom and widens left/right | widen top/bottom instead |
+| Standing corridor | `game/horizontal_motion_contract.h:176-184` | one body height above a fixed `path.top` | the corridor rises with the highest pose (answer E3) |
+| Motion state | `game/objects/horizontal_motion.h:22-60` | `HorizontalMotionSpec::travel_x`; segments carry `from_x`/`to_x` | segment offsets on the lift's axis; `Vector2F` offsets already hold a y that is always 0 |
+| Segment building | `game/objects/horizontal_motion.cpp:97-103`, `:142-149` | reads `current_offset.x` | read the lift's axis |
+| Carry step | `game/objects/horizontal_motion.h:71-77` (`HorizontalCarryStep::displacement_x`) | x displacement only | a y displacement (answer E2) |
+| Admission | `game/objects/level_horizontal_motion.cpp:42-56`, `:199-238` | pose/path are horizontal; standing envelope and obstacle refusals use that path | the lift's path and corridor, same refusals |
+| Displacement budget | `game/objects/level_horizontal_motion.cpp:240-308`, refusals at `:301-305` | mover travel enters only the horizontal bound; the vertical bound counts the player's own y speed | the lift's per-step travel added to the vertical bound |
+| Frame preparation | `game/objects/level_horizontal_motion.cpp:320-332` | carrier displacement is `after.x - before.x` | `after.y - before.y` too |
+| Persisted pose | `game/objects/level_horizontal_motion.cpp:364-380` | poses rebuilt from `previous_offset.x`/`current_offset.x` | rebuild from the lift's axis |
+| Rider carry | `game/objects/player.h:169-171`, `game/objects/player.cpp:531-550` | offsets the body by `displacement_x` and records `movement_carried_x_` | a y offset applied before gravity (answer E2) |
+| Carrier choice | `game/objects/player.cpp:552-605` | a support is a measured or resolved top contact under the feet | unchanged rule; the top moves each step |
+| Movement feedback | `game/objects/player.cpp:455-460`, `game/objects/player.h:308`, `:365` | subtracts carried x from resolved x | a carried y kept out of landing/fall feedback |
+| Level step order | `game/objects/level.cpp:203-210`, `:457-459` | prepare before input, supports after contacts | unchanged order |
+| Flying-paint sweep | `game/objects/projectile_contacts.cpp:115-124` (`relative_rectangle_at`) | subtracts the mover offset from left/right only | subtract it from top/bottom |
+| Swept response | `game/objects/projectile_contacts.cpp:251-326`, response `:318` | segments are x offsets; response offsets by the full translation | segment offsets on the lift's axis |
+| Roller footprint | `game/objects/projectile_contacts.cpp:332-368`, union `:355-361` | the visited footprint grows left/right, keeping `entered.top`/`bottom` | grow top/bottom |
+| Mover world queries | `game/objects/translating_structure_paintable.cpp:248-249`, `:266-267`, `:272-273`, `:278-286`, `:300-305` | bounds, splash, `top_paint_team`, runoff and paint samples shift by `translation().x` | shift by y as well (draws at `:224`, `:230` and the cue at `:111` already use the full vector) |
+| Ferry cue | `game/objects/translating_structure_paintable.cpp:195-201` | movement heading is the sign of `after.x - before.x` | a lift's cue, if any, is its own presentation (option G3) |
+| Translated shadow | `game/objects/translated_airbrush_shadow.cpp:52-65` | bounds/cull shift by `offset.x` only; anchored at the anchor's bottom | shift by y; the shadow rides with the lift |
+| Shadow admission | `game/objects/level_object_builder.cpp:645-662` | casts for wide, thin movers | unchanged rule |
+| Loader | `game/objects/level_object_builder.cpp:150-185` | only `type: "horizontal"`; `axis`, `travel_y` and `rotation` are refused by name | a second type (answer E1) |
+| Editor guide and checks | `editor/horizontal_authoring.cpp:105-155` | guide and refusals use the horizontal path/corridor | the shared contract's lift path |
+| Editor duplicate | `editor/level_document.cpp:895-915` | a copy moves down past source body plus corridor | the copy clears the lift's whole vertical path |
+| Editor mirror | `editor/level_document.cpp:1005-1018` | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only |
+| Editor fields | `editor/level_document.cpp:616`, `:866` | `motion/travel_x` label and default | the lift's field |
+| Blockout aids | `editor/blockout_aids.cpp:175-190` | initial-phase offset added to x | added to y |
+| Bot supports | `game/objects/level.cpp:775-806` | `moving` marks a support whose bounds change | unchanged flag |
+| Bot riding | `game/ai/match_bot.cpp:83-120`, `:285-300`, `:437-460`; `game/ai/match_bot.h:117-134` | a ride is a feet-on-top match, and the bot paints/holds while carried sideways | the same match; deliberate lift routing is a later slice, as `ROAD#15` was for gates |
+| Match fingerprint | `game/debug/match_fingerprint.cpp:36-60`, `game/debug/match_fingerprint.h:56-61` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
+| Replay codec | `game/debug/replay.cpp:160-320` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
+| Replay version | `game/debug/replay.h:32`, `game/debug/replay.cpp:619-623` | writes 4, reads 3 and 4 | writes 5 (answer E5) |
+| Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:450-600`, `level_editor/motion_checks.cpp` | horizontal fixtures | lift fixtures beside them |
+
+**2. Engineering answers, each following existing practice.**
+
+- **E1. One axis per mover, a second motion type.** A lift is
+  `"motion": { "type": "vertical", "travel_y": …, "period": …, "phase": … }`
+  on the same `TranslatingStructurePaintable`, with the triangular path,
+  phase and drive rules unchanged; diagonal or two-axis motion stays refused.
+  *Precedent:* the loader already reserves `travel_y` and `axis` by name
+  (`level_object_builder.cpp:157-163`), and the paint ferry joined the same
+  class as a new `drive` value rather than a subclass. The rectangle is the
+  **topmost** anchor, as the horizontal one is the leftmost.
+- **E2. Carry a rider by its support's identity, before its own motion.** The
+  carrier step gains a y displacement; `apply_carrier` moves the body by both
+  components before gravity and integration, under the same checks (alive,
+  flat, overlapping, feet at the previous top). Jump, drop, walk-off, death and
+  placement release it, and release adds no lift velocity to the rider.
+  *Precedent:* the x carry (`player.cpp:531-550`), keyed by
+  `HorizontalMotionId`, "without adding personal velocity or tool travel"
+  ([capability](#horizontal-movement-capability-2026-10-26)).
+- **E3. Refuse a crush; never push a player through geometry.** Two parts:
+  (a) *static:* admission refuses a lift whose path or standing corridor —
+  one body height above its *highest* pose — meets blocking geometry or
+  leaves the scene, so a ceiling cannot close on a rider. The same check runs
+  below the *lowest* pose: a descending underside must leave either a full
+  body height plus the corridor pad above the floor beneath it, or meet that
+  floor flush with no gap to stand in. (b) *dynamic:* a lift whose next step
+  would close on a living player under it holds still for that step, and
+  resumes as soon as they are clear. *Precedent:* (a) is the horizontal
+  standing-envelope refusal (`level_horizontal_motion.cpp:216-234`, mirrored in
+  the editor at `horizontal_authoring.cpp:137-151`); (b) is the team gate,
+  which stays open while a permitted player is inside rather than pushing them
+  out (`team_gate_structure_paintable.cpp:65-84`,
+  [Team gate](#team-gate-road15-second-slice)), and is settled from the state
+  before the step, as the gate and the paint ferry's heading are.
+- **E4. Sweeps and world queries generalise, they do not fork.** Flying paint,
+  Roller footprints, splash, runoff, `top_paint_team`, shadows and culling take
+  the full offset vector. Paint, credit and scored area stay on local anchor
+  faces. *Precedent:* the horizontal increment kept paint local and moved only
+  world queries; draws and the ferry cue already use the full vector
+  (`translating_structure_paintable.cpp:111`, `:224`, `:230`).
+- **E5. Version the record.** The motion block's `schema` goes 1 → 2 with the
+  axis and travel, and `Replay::format_version` 4 → 5. The reader keeps 3 and 4.
+  *Precedent:* the 3 → 4 bump kept 3 readable (`replay.cpp:619-623`), and the
+  motion block already carries its own schema number.
+- **E6. Budget the relative motion.** The lift's per-step travel joins the
+  vertical relative-displacement bound beside the player's own speed, refused
+  at admission like the horizontal one. *Precedent:*
+  `level_horizontal_motion.cpp:301-305`.
+
+**3. Gameplay calls, as options for the author.** Values follow the current
+movers (320 travel, 4 s round trip, about 160 units/s) only as a reference
+point; values stay provisional, and none of these gates the engineering.
+
+- **G1. Travel.** (a) Less than a jump's height, a lift that only saves a
+  jump; (b) one storey, reaching a ledge a jump cannot; (c) a full arena
+  height, a route in itself.
+- **G2. Speed.** (a) The current movers' 160 units/s; (b) slower, 80-100
+  units/s, so a ride is a commitment under fire; (c) faster, a quick escape.
+- **G3. What drives it.** (a) A cycle, always running; (b) paint, like the
+  ferry, with team A's paint carrying it up or down (headings `up`/`down`, and
+  a cue of its own); (c) a rider — it rises only while occupied and returns
+  empty. (c) has no precedent here and would need its own contract.
+- **G4. Whether its surface scores.** (a) Scored, like the ferry; (b) material
+  only (cover/route, no score); (c) scored top, unscored sides.
+- **G5. Which trial carries it.** (a) A new explicit-only Lift Trial beside the
+  Ferry and Gate Trials; (b) an explicit variant of an existing trial. Neither
+  joins Random nor touches Turbulence's selected geometry (`POL#21`).
+
+**Next step after acceptance.** Promote one bounded slice: E1-E6 with
+`moving_structure`, `level_format` and editor acceptance, behind the chosen
+G-options, in an explicit-only trial. Bot routing and attended play stay
+separate rows, as for the gate and ferry.
 
 ### Paint-object trial play (`ROAD#30`)
 
