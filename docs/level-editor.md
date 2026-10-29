@@ -1226,7 +1226,8 @@ It places no station in any shipped stage.
 
 Acceptance (`scripts/acceptance/level_editor/station_editing_checks.cpp`, in
 `check-level-editor`): the Movement Course lists its ten stations, with
-`drop_through` a 52 by 120 marker at (559, 715) and no lesson rows. Renaming it
+`drop_through` a 52 by 120 marker at (559, 715) and no lesson rows; a
+`lesson/title` edit and a mirror copy of it are refused. Renaming it
 is accepted; `Drop`, `spawn_a`, `spawn_b`, `high_step`, an empty name and a
 spaced name are refused without change, the reserved and repeated ones in the
 game's words. A move inside its lesson area and an origin alignment are
@@ -1236,8 +1237,7 @@ JSON values. Undo returns to the file as loaded and redo replays it. Duplicates 
 `high_step_copy` and `high_step_copy_2` without lessons; deleting them is undone
 and redone. On the template, the palette adds `station_1` and `station_2`,
 refuses one outside `out_of_bounds` and a drag out of bounds, saves and
-reopens both, and deleting both leaves no `stations` member. Mirror copy and a
-`lesson/title` edit are refused. Debug and Release passed on 2026-10-30
+reopens both, and deleting both leaves no `stations` member. Debug and Release passed on 2026-10-30
 (evidence `42cfbc10714d409d8d25981d6b1fc9a8` and `caa4b072e75d4ab987d302a50bb9ff6e` under
 `out/acceptance/<preset>/level-editor/`), and the `fixed_slab` case, which
 compiles the editor document, passed in Debug. The marker and palette entry
