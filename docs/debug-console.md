@@ -958,8 +958,8 @@ device (or the neutral input of an idle dummy):
   resolved, through a seat filter `Level::update` takes as a parameter
   (`game/objects/seat_input_filter.h`).
 - Bots draw on their own random numbers (splitmix64 from the seed and the seat,
-  the shipping bots' `BotRandom` in `game/ai/bot_random.h`), never `rand()`: with `seed` set, the same match plays out the same way every
-  time.
+  the shipping bots' `BotRandom` in `game/ai/bot_random.h`), never `rand()`:
+  with `seed` set, the same match plays out the same way every time.
 - A seat a bot drives never opens the disconnected-pad pause, the pause page's
   "Controller lost" or the restart fallback - not even a pad seat whose pad is
   unplugged.
