@@ -5,6 +5,7 @@
 #include "engine/render/font.h"
 #include "engine/render/render_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <cmath>
@@ -23,10 +24,7 @@ using namespace labrador;
 // shipped atlases for the weapon descriptions the game wraps today.
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     template<class Call>
     std::string thrown(Call call)
@@ -188,7 +186,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("text wrap", [&]
     {
         require(argc == 2, "Usage: text_wrap.exe <staged content directory>");
         const std::filesystem::path content(argv[1]);
@@ -212,10 +210,5 @@ int main(int argc, char** argv)
             "over-long words whole and refused at load with their key, the wrapping widget rewraps on text and scale, "
             "and every shipped weapon description draws exactly as authored at its width.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL text wrap: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

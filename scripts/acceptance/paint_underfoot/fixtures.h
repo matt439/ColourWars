@@ -11,6 +11,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 #include <bit>
 #include <cmath>
 #include <filesystem>
@@ -26,8 +27,7 @@
 
 namespace paint_underfoot_acceptance
 {
-    inline void require(bool condition, const char* reason)
-    { if (!condition) { throw std::runtime_error(reason); } }
+    using acceptance::require;
     inline std::uint32_t bits(float value) { return std::bit_cast<std::uint32_t>(value); }
     inline const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
         labrador::StepTimer::SecondsToTicks(1.0 / 60.0)));

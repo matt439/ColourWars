@@ -3,6 +3,7 @@
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_driver.h"
 #include "game/objects/team_gate_structure_paintable.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -438,7 +439,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot gate routes", [&]
     {
         require(argc == 2, "usage: bot_gate_routes <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-gate-routes", "Gate routes need support '", "turbulence_gate_trial");
@@ -449,7 +450,5 @@ int main(int argc, char** argv)
         World control_world(std::filesystem::absolute(argv[1]), "bot-gate-control", "Gate routes need support '", "turbulence_gate_trial");
         check_driver(world, control_world, files);
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot gate routes: " << error.what() << '\n'; return 1; }
+    });
 }

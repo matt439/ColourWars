@@ -2,6 +2,7 @@
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/ai/match_bot_support.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #include "game/debug/replay.h"
@@ -240,12 +241,11 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot runtime", [&]
     {
         require(argc == 2, "usage: bot_runtime <content>");
         World world(std::filesystem::absolute(argv[1]));
         check_mapping(world); check_support_roles(world); check_inputs(world);
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL bot runtime: " << error.what() << '\n'; return 1; }
+    });
 }

@@ -1,6 +1,7 @@
 // Level editor document acceptance. The checks live in level_editor/ and run
 // here in a fixed order: they share one scratch directory.
 #include "scripts/acceptance/level_editor/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <exception>
 #include <filesystem>
@@ -10,7 +11,7 @@ using namespace level_editor_acceptance;
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("level editor acceptance", [&]
     {
         require(argc == 3, "Usage: colourwars_editor_acceptance <repository> <empty-scratch-directory>");
         const fs::path repo = fs::absolute(argv[1]);
@@ -46,10 +47,5 @@ int wmain(int argc, wchar_t* argv[])
         check_user_stage_save(repo, scratch);
         std::cout << "PASS level editor document acceptance\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL level editor acceptance: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

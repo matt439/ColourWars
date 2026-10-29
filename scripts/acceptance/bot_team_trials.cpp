@@ -2,6 +2,7 @@
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "scripts/acceptance/balance_regions/exchange.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -648,7 +649,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot team trials", [&]
     {
         require(argc == 2, "usage: bot_team_trials <content>");
         const std::filesystem::path output = std::filesystem::absolute(argv[0]).parent_path();
@@ -1015,6 +1016,5 @@ int main(int argc, char** argv)
             path_to_utf8(crossing_path) << "; crossings, arrival updates, takeoffs and held paint are measurements, "
             "not requirements\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL bot team trials: " << error.what() << '\n'; return 1; }
+    });
 }

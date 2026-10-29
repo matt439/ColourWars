@@ -3,6 +3,7 @@
 #include "game/objects/level_builder.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cmath>
 #include <filesystem>
@@ -24,10 +25,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     // A seat: a pad, the shared keyboard/mouse, or a bot (never P1).
     enum class Seat { pad, keyboard, bot };
@@ -381,7 +379,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("cursor marker", [&]
     {
         // Unbuffered, so a crash still shows how far the case got.
         std::cout << std::unitbuf;
@@ -393,10 +391,5 @@ int main(int argc, char** argv)
         check_validation(content, std::filesystem::absolute(argv[0]).parent_path());
         std::cout << "PASS cursor marker\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL cursor marker: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

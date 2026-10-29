@@ -1,13 +1,11 @@
 #pragma once
 
 #include "game/ai/match_bot.h"
+#include "scripts/acceptance/support/probe.h"
 
 namespace bot_ascent_acceptance
 {
-    inline void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     inline MatchBotObservation floor_fixture(const GameTuning& tuning)
     {

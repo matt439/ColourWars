@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/save.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -11,13 +12,7 @@
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition)
-		{
-			throw std::runtime_error(message);
-		}
-	}
+	using acceptance::require;
 
 	// Save reads LOCALAPPDATA through the CRT. This process never opens the
 	// player's real preferences, and removes only the paths it creates here.
@@ -518,7 +513,7 @@ namespace
 
 int main()
 {
-	try
+	return acceptance::run_probe("settings", [&]
 	{
 		const IsolatedSaveDirectory directory;
 		Save save;
@@ -609,10 +604,5 @@ int main()
 			"stick normalization, independent per-slot rumble recovery and persistence, "
 			"per-slot comfort overrides, their resolution and field-independent recovery\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL settings: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

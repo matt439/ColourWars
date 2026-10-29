@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/round_tape.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 
 // ROAD#19: the end-of-round instant replay is the same round built again from
@@ -267,7 +268,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("instant replay", [&]
     {
         require(argc == 2, "usage: instant_replay <content>");
         World world(std::filesystem::absolute(argv[1]));
@@ -282,6 +283,5 @@ int main(int argc, char** argv)
             check_stage(world, stage, seed++);
         }
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL instant replay: " << error.what() << '\n'; return 1; }
+    });
 }

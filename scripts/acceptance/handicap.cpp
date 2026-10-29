@@ -12,6 +12,7 @@
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -39,10 +40,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* reason)
-    {
-        if (!condition) { throw std::runtime_error(reason); }
-    }
+    using acceptance::require;
 
     template<class Action> bool throws_invalid(Action action)
     {
@@ -441,7 +439,7 @@ namespace
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("handicap", [&]
     {
         require(argc == 2, "usage: handicap <content>");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
@@ -459,6 +457,5 @@ int wmain(int argc, wchar_t* argv[])
             "paint_refill bit-exact per level, enemy zero kept, off paint and dead give paint_refill alone, Off unchanged; "
             "a boosted bot's refilling finish window uses its level's paint_refill, underfoot off and on\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL handicap: " << error.what() << '\n'; return 1; }
+    });
 }

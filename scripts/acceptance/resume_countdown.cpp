@@ -1,15 +1,13 @@
 #include "game/pch.h"
 #include "game/states/resume_countdown.h"
+#include "scripts/acceptance/support/probe.h"
 #include <cstdlib>
 #include <iostream>
 #include <limits>
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	std::vector<PlayerInputData> sampled()
 	{
@@ -168,17 +166,12 @@ namespace
 
 int main()
 {
-	try
+	return acceptance::run_probe("resume count-in", [&]
 	{
 		check_clock();
 		check_action_rearming();
 		check_pause_and_cancel();
 		std::cout << "PASS resume count-in timing, held-action rearming and deliberate pause\n";
 		return EXIT_SUCCESS;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL resume count-in: " << error.what() << '\n';
-		return EXIT_FAILURE;
-	}
+	});
 }

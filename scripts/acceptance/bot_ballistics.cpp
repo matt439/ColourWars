@@ -2,6 +2,7 @@
 #include "game/ai/match_bot_ballistics.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/objects/weapon_builder.h"
+#include "scripts/acceptance/support/probe.h"
 #include <cmath>
 #include <filesystem>
 #include <iostream>
@@ -9,10 +10,7 @@
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	void require_near(float actual, float expected, float tolerance, const char* message)
 	{
@@ -169,7 +167,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-	try
+	return acceptance::run_probe("bot ballistics", [&]
 	{
 		require(argc == 2, "Usage: bot_ballistics <staged-content-directory>");
 		const std::filesystem::path content(argv[1]);
@@ -180,9 +178,5 @@ int wmain(int argc, wchar_t** argv)
 		check_actual_flight(world);
 		std::cout << "PASS bot projectile reach and 16 actual paid-shot centerlines: five tools, gravity, reversed launch, lifetime, drag, stationary contact volume, muzzle and inherited/target motion\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL " << error.what() << '\n'; return 1;
-	}
+	});
 }

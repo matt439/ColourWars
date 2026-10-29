@@ -7,6 +7,7 @@
 #include "game/objects/projectile_builder.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/structure_paintable.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -17,10 +18,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -583,7 +581,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-    try
+    return acceptance::run_probe("paint fx visual", [&]
     {
         require(argc == 3, "usage: paint_fx_visual <staged-content> <output>");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
@@ -673,10 +671,5 @@ int wmain(int argc, wchar_t** argv)
         std::cout << "PASS playing-size matrices use real builder dimensions and all palettes; "
             "roller is a contact effect, not a flying shot; no physical-device or listening acceptance\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

@@ -4,6 +4,7 @@
 #include "editor/window_dpi.h"
 #include "editor/window_layout.h"
 #include "editor/win32_text.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <commctrl.h>
 #include <shellscalingapi.h>
@@ -22,10 +23,7 @@ namespace colourwars_editor
 {
     namespace
     {
-        void require(bool condition, const char* message)
-        {
-            if (!condition) { throw std::runtime_error(message); }
-        }
+        using acceptance::require;
 
         bool same_rectangle(const RECT& first, const RECT& second)
         {
@@ -264,7 +262,7 @@ namespace colourwars_editor
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("native editor DPI", [&]
     {
         const bool gestures = argc == 3 && std::wstring(argv[2]) == L"--gestures";
         const bool pending = argc == 3 && std::wstring(argv[2]) == L"--pending";
@@ -276,10 +274,5 @@ int wmain(int argc, wchar_t* argv[])
         else if (pending) { colourwars_editor::EditorDpiProbe::run_pending(scratch); }
         else { colourwars_editor::EditorDpiProbe::run(scratch); }
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL native editor DPI: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

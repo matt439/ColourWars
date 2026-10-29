@@ -9,6 +9,7 @@
 #include "game/input_slots.h"
 #include "game/presentation.h"
 #include "game/tuning.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <array>
@@ -29,7 +30,7 @@
 
 namespace debug_console_acceptance
 {
-	void require(bool condition, const std::string& message);
+	using acceptance::require;
 	void check_loaded_stage_semantics();
 
 	// A match as the director sees it: counts updates and rebuilds, records

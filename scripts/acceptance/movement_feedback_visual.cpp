@@ -19,6 +19,7 @@
 // controlled matrix calls the public cosmetic producers to isolate their art.
 #define private public
 #include "game/objects/level_builder.h"
+#include "scripts/acceptance/support/probe.h"
 #undef private
 
 using namespace labrador;
@@ -26,10 +27,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     // A Debug engine asks its debug layers to break on error, and with no
     // debugger attached a break is an uncaught STATUS_BREAKPOINT that ends the
@@ -631,7 +629,7 @@ int wmain(int argc, wchar_t** argv)
     // Keep whatever was printed if the process dies anyway.
     std::cout << std::unitbuf;
     AddVectoredExceptionHandler(1, step_over_debug_break);
-    try
+    return acceptance::run_probe("movement feedback visual", [&]
     {
         require(argc == 4 || argc == 5 || argc == 6,
             "usage: movement_feedback_visual <staged-content> <output> <sequence-frames> "
@@ -836,10 +834,5 @@ int wmain(int argc, wchar_t** argv)
             "720p/1080p/QHD; feedback on/off; paused redraw; moving aim-swept route in "
             "the runtime presentation with camera pan; scripted inputs, no physical-device claim\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

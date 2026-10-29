@@ -3,6 +3,7 @@
 #include "game/presentation.h"
 #include "engine/render/resolution_manager.h"
 #include "engine/render/viewport_manager.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <array>
@@ -17,13 +18,7 @@ using namespace mattmath;
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition)
-		{
-			throw std::runtime_error(message);
-		}
-	}
+	using acceptance::require;
 
 	bool close_to(float actual, float expected)
 	{
@@ -350,7 +345,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("camera framing", [&]
 	{
 		require(argc == 2, "Usage: camera_framing.exe <game/content directory>");
 		const std::string path = (std::filesystem::path(argv[1]) / "presentation.json").string();
@@ -379,10 +374,5 @@ int main(int argc, char** argv)
 		std::cout << "PASS camera framing: exact zero-option history and loaded/lead/minimum-width profiles; "
 			"1-4 players at 720p/1080p/QHD/odd/aspect sizes; bounds, body/badge space, rear tradeoffs, stop/reversal and mouse aim.\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL camera framing: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

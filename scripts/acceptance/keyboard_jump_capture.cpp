@@ -5,6 +5,7 @@
 #include "game/input_slots.h"
 #include "engine/input/gamepad_reader.h"
 #include "engine/input/mouse.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <array>
 #include <cstdio>
@@ -39,10 +40,7 @@ namespace
     using Phase = KeyboardJumpCapture::Phase;
     using Rejection = KeyboardJumpCapture::Rejection;
 
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     constexpr std::array<Key, 27> binding_keys{{
         Key::a, Key::b, Key::c, Key::d, Key::e, Key::f, Key::g, Key::h, Key::i,
@@ -560,7 +558,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("keyboard Jump capture", [&]
     {
         require(argc == 2, "Usage: keyboard_jump_capture.exe <staged content directory>");
         domain_and_rejection();
@@ -573,10 +571,5 @@ int main(int argc, char** argv)
         std::fputs("PASS keyboard Jump capture: all six check groups completed\n", stdout);
         require(std::fflush(stdout) == 0, "Could not flush the completed capture acceptance receipt");
         return EXIT_SUCCESS;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL keyboard Jump capture: " << error.what() << '\n';
-        return EXIT_FAILURE;
-    }
+    });
 }

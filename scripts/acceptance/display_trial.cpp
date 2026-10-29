@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/display_settings_trial.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -18,10 +19,7 @@ using labrador::ScreenResolution;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     // All Save calls happen after replacing LOCALAPPDATA in this process.
     // Cleanup removes only these individually created files/directories.
@@ -580,7 +578,7 @@ namespace
 int main(int argc, char** /*argv*/)
 {
     static_assert(std::is_nothrow_destructible_v<DisplaySettingsTrial>);
-    try
+    return acceptance::run_probe("display trial", [&]
     {
         require(argc == 2, "Usage: display_trial.exe <staged content directory>");
         const IsolatedSaveDirectory directory;
@@ -599,15 +597,5 @@ int main(int argc, char** /*argv*/)
             "apply/rollback exceptions, no writes before Keep, current shared/four-pad/remembered-setup preservation, "
             "real isolated save failures and recovery; fake display callback only, no window/device\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL display trial: " << error.what() << '\n';
-        return 1;
-    }
-    catch (...)
-    {
-        std::cerr << "FAIL display trial: an unknown exception escaped the trial\n";
-        return 1;
-    }
+    });
 }

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/display_awake.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cstddef>
 #include <iostream>
@@ -20,10 +21,7 @@ namespace
     static_assert(!std::is_constructible_v<DisplayAwake, std::nullptr_t>);
     static_assert(!std::is_constructible_v<DisplayAwake, ThrowingRequest&>);
 
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     struct Requests
     {
@@ -152,7 +150,7 @@ namespace
 
 int main()
 {
-    try
+    return acceptance::run_probe("display-awake helper", [&]
     {
         success(); acquire_failure(); clear_failure(); owner_construction_unwind();
         clear_failure_during_unwind(); sequential_owners();
@@ -161,10 +159,5 @@ int main()
             "clear failure during unwind and sequential ownership; static noncopy/move/non-null/noexcept checks. "
             "Injected boolean intent only: no GameLevel construction, SetThreadExecutionState call, window, device or power-setting change.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL display-awake helper: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

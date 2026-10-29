@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -12,10 +13,7 @@
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	void check_no_candidates(const StageList& stages)
 	{
@@ -191,7 +189,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("stage selection", [&]
 	{
 		require(argc == 2, "Usage: stage_selection.exe <game/content directory>");
 		check_mapping();
@@ -199,10 +197,5 @@ int main(int argc, char** argv)
 		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
 		std::cout << "PASS stage selection: explicit course, Press Tower and Turbulence comparisons, Crossfeed in Random, eligible Random mapping, defaults and rejection guards.\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL stage selection: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

@@ -1,16 +1,14 @@
 #pragma once
 
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #include <filesystem>
 #include <stdexcept>
 #include <string>
 
 namespace skirmish_acceptance
 {
-	inline void require(bool condition, const std::string& message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 #if COLOURWARS_DEV_TOOLS
 	void check_policy();
 	void check_sequences();

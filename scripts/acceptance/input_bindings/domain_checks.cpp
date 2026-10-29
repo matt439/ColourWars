@@ -5,9 +5,6 @@
 
 namespace input_bindings_acceptance
 {
-    void require(bool condition, const char* message)
-    { if (!condition) { throw std::runtime_error(message); } }
-
     uint16_t button_bit(GamepadButton button)
     { return uint16_t(1u << static_cast<unsigned int>(button)); }
 

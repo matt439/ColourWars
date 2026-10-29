@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/ai/match_bot_support.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 #include <sstream>
 
@@ -163,7 +164,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot mover routes", [&]
     {
         require(argc == 2, "usage: bot_mover_routes <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-mover-routes",
@@ -199,7 +200,5 @@ int main(int argc, char** argv)
             "difficulties, 2400 steps); every landing left the mover again (" << left << '/' << landed <<
             "); reaching and painting the mover are measurements (painted=" << painted << "/60)\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot mover routes: " << error.what() << '\n'; return 1; }
+    });
 }

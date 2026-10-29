@@ -2,6 +2,7 @@
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/team_gate_contract.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -529,7 +530,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("team gate", [&]
     {
         require(argc == 2, "usage: team_gate <content>");
         check_contract();
@@ -552,7 +553,5 @@ int main(int argc, char** argv)
         std::cout << "PASS team gate trial: the gate loads shut; every step of three whole 3-bot matches follows "
             "the paint held before it, never shuts on a player inside, and no bot sticks; passing is a measurement\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL team gate: " << error.what() << '\n'; return 1; }
+    });
 }

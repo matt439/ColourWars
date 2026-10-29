@@ -13,6 +13,7 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <objbase.h>
 #include <cstdlib>
@@ -35,10 +36,7 @@ using namespace labrador;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     // A fresh GUID directory is the only profile this process touches.
     class IsolatedSaveDirectory
@@ -432,7 +430,7 @@ namespace
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("series stage rule", [&]
     {
         require(argc == 2, "usage: series_stage_rule <content>");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
@@ -450,10 +448,5 @@ int wmain(int argc, wchar_t* argv[])
             "Same (save version 5), and old, unknown or wrong-typed rules read as Same without touching the rest; "
             "menu text read, mapped, fit-checked and refused when missing or too wide\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL series stage rule: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

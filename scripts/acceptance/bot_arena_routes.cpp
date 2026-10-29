@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -259,7 +260,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot arena routes", [&]
     {
         require(argc == 2, "usage: bot_arena_routes <content>");
         int trials = 0, passed = 0, paint_trials = 0;
@@ -336,7 +337,5 @@ int main(int argc, char** argv)
         std::cout << "PASS 120 bounded actual-driver Press Tower R2/R3/R4/summit measurements and eight final-input "
             "replays; unfinished routes are measured limits, not failures\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot arena routes: " << error.what() << '\n'; return 1; }
+    });
 }

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/rumble.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <iostream>
 #include <limits>
@@ -11,10 +12,7 @@ namespace rumble_acceptance { void check_callers(const std::filesystem::path& co
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     bool equals(const RumbleMotors& actual, float low, float high)
     {
@@ -347,7 +345,7 @@ namespace
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("rumble pulse policy", [&]
     {
         require(argc == 2, "rumble <content>");
         events_and_expiry();
@@ -363,10 +361,5 @@ int wmain(int argc, wchar_t* argv[])
             "no stale resume and atomic invalid-input rejection. Fake sink only; no native motors, "
             "GameLevel output or physical feel acceptance.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL rumble pulse policy: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

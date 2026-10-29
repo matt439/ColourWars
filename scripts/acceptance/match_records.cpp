@@ -3,6 +3,7 @@
 #include "game/match_records.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/results_menu.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <cmath>
@@ -20,13 +21,7 @@
 // CPU data only, against an isolated LOCALAPPDATA.
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition)
-		{
-			throw std::runtime_error(message);
-		}
-	}
+	using acceptance::require;
 
 	// Save reads LOCALAPPDATA through the CRT. This process never opens the
 	// player's real save, and removes only the paths it creates here.
@@ -445,7 +440,7 @@ namespace
 
 int main()
 {
-	try
+	return acceptance::run_probe("match records", [&]
 	{
 		const IsolatedSaveDirectory directory;
 		check_display_precision();
@@ -459,10 +454,5 @@ int main()
 			"results line, version 0/1/newer saves, per-section and per-entry recovery, "
 			"bounded values, retired-stage retention, exact round trip and unreadable saves kept aside\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL match records: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

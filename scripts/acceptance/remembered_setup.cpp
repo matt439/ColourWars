@@ -6,6 +6,7 @@
 #include "game/objects/stage.h"
 #include "game/match_setup.h"
 #include "engine/assets/json.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <objbase.h>
 #include <array>
@@ -23,10 +24,7 @@ void check_handicap_remembered_setup(const std::filesystem::path& save_path);
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     template<class Action> void rejects(Action action, const char* message)
     {
@@ -521,7 +519,7 @@ namespace
 
 int main(int argc, char** /*argv*/)
 {
-    try
+    return acceptance::run_probe("remembered setup", [&]
     {
         require(argc == 2, "Usage: remembered_setup.exe <staged content directory>");
         const IsolatedSaveDirectory directory;
@@ -539,10 +537,5 @@ int main(int argc, char** /*argv*/)
             "per-seat handicaps round-trip, recover to none and are refused unresolved; "
             "GUID-isolated profile, no window/device\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL remembered setup: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

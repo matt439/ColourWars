@@ -2,6 +2,7 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 #include "game/debug/debug_tokenizer.h"
 #include "game/input_slots.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cstdio>
 #include <filesystem>
@@ -131,7 +132,7 @@ int main(int argc, char** argv)
 {
 	using namespace debug_console_acceptance;
 
-	try
+	return acceptance::run_probe("debug console", [&]
 	{
 		require(argc == 2 || (argc == 3 && std::string(argv[2]) == "--background-only"),
 			"Usage: debug_console.exe <game directory> [--background-only]");
@@ -330,10 +331,5 @@ int main(int argc, char** argv)
 			"in ColourWars.exe.\n";
 #endif
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL debug console: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

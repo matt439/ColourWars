@@ -16,6 +16,7 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <array>
@@ -40,10 +41,7 @@ using namespace labrador;
 
 namespace
 {
-	void require(bool condition, const std::string& message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	void check_name_contract()
 
@@ -792,7 +790,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("user stages", [&]
 	{
 		require(argc == 2, "Usage: user_stages.exe <staged game directory>");
 		check_name_contract();
@@ -817,10 +815,5 @@ int main(int argc, char** argv)
 		std::cout << "PASS user stages: per-user folder, per-file validation and refusal, "
 			"no shipped or user name collisions, Stage Select order and marker, outside Random.\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL user stages: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

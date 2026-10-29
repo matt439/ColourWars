@@ -11,11 +11,6 @@
 
 namespace debug_console_acceptance
 {
-	void require(bool condition, const std::string& message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
-
 #if COLOURWARS_DEV_TOOLS
 	bool log_contains(const DebugLog& log, const std::string& text, DebugSeverity severity)
 	{

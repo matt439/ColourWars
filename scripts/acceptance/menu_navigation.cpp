@@ -4,6 +4,7 @@
 #include "game/states/pause_menu.h"
 #include "game/presentation.h"
 #include "game/states/player_label.h"
+#include "scripts/acceptance/support/probe.h"
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -15,10 +16,7 @@ using namespace labrador;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     struct InputVariant
     {
@@ -204,7 +202,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("menu navigation", [&]
     {
         require(argc == 2, "Expected staged content directory");
         const Presentation look((std::filesystem::path(argv[1]) / "presentation.json").string().c_str());
@@ -374,10 +372,5 @@ int main(int argc, char** argv)
             "Resetting one pad must preserve other device results");
         std::cout << "PASS menu navigation: press, repeat, hysteresis, page arming, focus, stable reads, owner routing and seat reclaim\n";
         return EXIT_SUCCESS;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << error.what() << '\n';
-        return EXIT_FAILURE;
-    }
+    });
 }

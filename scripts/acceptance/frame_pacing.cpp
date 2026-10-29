@@ -7,6 +7,7 @@
 #include "game/drawable_text.h"
 #include "game/game_data.h"
 #include "game/states/game_states.h"
+#include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
@@ -32,10 +33,7 @@ extern "C"
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     int integer(const wchar_t* text, int minimum, int maximum)
     {
@@ -165,7 +163,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-    try
+    return acceptance::run_probe("frame pacing", [&]
     {
         require(argc == 9,
             "usage: frame_pacing <content> <output> <players> <frames> <warmup-updates> <resolution> <max-threads> <visible:0|1>");
@@ -254,10 +252,5 @@ int wmain(int argc, wchar_t** argv)
         std::cout << "CAPTURE 1x Close Quarters " << players << "P; " << frames
             << " requested rendered samples; Debug diagnostic, no baseline acceptance\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "frame-pacing capture failure: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

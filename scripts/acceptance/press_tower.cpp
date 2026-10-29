@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/press_tower/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 
 // Baseline evidence for the authored Press Tower stage on current tuning:
 // geometry, paint budget and sightline claims from the blueprint, then driven
@@ -8,7 +9,7 @@
 int main(int argc, char** argv)
 {
     using namespace press_tower_acceptance;
-    try
+    return acceptance::run_probe("Press Tower", [&]
     {
         require(argc == 2, "Usage: press_tower.exe <content directory>");
         Services services(argv[1]);
@@ -25,10 +26,5 @@ int main(int argc, char** argv)
             "crossing, optional climbs and five-tool paint contact. Attended play, camera framing, balance "
             "and physical-pad acceptance remain open\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL Press Tower: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

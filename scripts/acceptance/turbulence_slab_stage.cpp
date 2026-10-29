@@ -1,11 +1,12 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_slab_stage/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 #include <process.h>
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("registered slab stage", [&]
     {
         using namespace turbulence_slab_stage_acceptance;
         require(argc == 3, "turbulence_slab_stage <staged-content> <repository>");
@@ -17,7 +18,5 @@ int main(int argc, char** argv)
         std::cout << "PASS registered slab stage: source/staged identity, explicit-only selection and public1/2/3/4P short endings. "
             "CPU preconditions only; no native rendering or human balance acceptance. Receipts=" << evidence.string() << '\n';
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL registered slab stage: " << error.what() << '\n'; return 1; }
+    });
 }

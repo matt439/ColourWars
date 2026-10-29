@@ -5,6 +5,7 @@
 #include "game/presentation.h"
 #include "game/match_setup.h"
 #include "game/states/player_label.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <stdexcept>
@@ -12,10 +13,7 @@
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 }
 
 void check_unsupported_bot_consumers(const std::filesystem::path& content)

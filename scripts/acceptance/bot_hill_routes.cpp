@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -206,7 +207,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot hill routes", [&]
     {
         require(argc == 2, "usage: bot_hill_routes <content>");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
@@ -240,7 +241,5 @@ int main(int argc, char** argv)
             "ordered named grounded contacts and ordinary jumps; six 1800-step final-input replays; "
             "territory usefulness remains unqualified\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot hill routes: " << error.what() << '\n'; return 1; }
+    });
 }

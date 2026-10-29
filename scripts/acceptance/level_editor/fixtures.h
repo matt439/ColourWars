@@ -6,6 +6,7 @@
 // run-acceptance.ps1's same-named-folder rule; do not add level_editor to that
 // script's case list.
 #include "editor/level_document.h"
+#include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
 
 #include <cstddef>
@@ -18,7 +19,7 @@ namespace level_editor_acceptance
     using namespace colourwars_editor;
     namespace fs = std::filesystem;
 
-    void require(bool condition, const std::string& message);
+    using acceptance::require;
     std::string contents(const fs::path& path);
     void write(const fs::path& path, const std::string& text);
     rapidjson::Document parse(const std::string& text);

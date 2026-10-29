@@ -6,6 +6,7 @@
 #include "game/objects/player_input.h"
 #include "game/states/menu_input.h"
 #include "engine/input/gamepad_reader.h"
+#include "scripts/acceptance/support/probe.h"
 #include <objbase.h>
 #include <array>
 #include <cstdint>
@@ -25,7 +26,7 @@ namespace input_bindings_acceptance
 {
     using namespace labrador;
 
-    void require(bool condition, const char* message);
+    using acceptance::require;
 
     template<class Action> void rejects(Action action, const char* message)
     {

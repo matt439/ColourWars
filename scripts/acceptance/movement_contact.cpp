@@ -8,6 +8,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -22,10 +23,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -557,7 +555,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("movement contact", [&]
     {
         require(argc == 2, "Usage: movement_contact.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -570,10 +568,5 @@ int main(int argc, char** argv)
         check_equivalence(world);
         check_content(content);
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

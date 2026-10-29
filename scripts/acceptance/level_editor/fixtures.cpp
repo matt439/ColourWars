@@ -10,11 +10,6 @@
 
 namespace level_editor_acceptance
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) throw std::runtime_error(message);
-    }
-
     std::string contents(const fs::path& path)
     {
         std::ifstream stream(path, std::ios::binary);

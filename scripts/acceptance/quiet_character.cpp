@@ -4,6 +4,7 @@
 #include "game/objects/weapon_builder.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -22,10 +23,7 @@ namespace
 {
     constexpr float dt = 1.0f / 60.0f;
 
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     void check_rest_and_interruptions(const FigurePresentation& look)
     {
@@ -321,7 +319,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("quiet character", [&]
     {
         require(argc == 2, "Usage: quiet_character.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -332,10 +330,5 @@ int main(int argc, char** argv)
         check_live_preference(world);
         check_validation(content);
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL quiet character: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

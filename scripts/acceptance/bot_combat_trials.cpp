@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -265,7 +266,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot combat trials", [&]
     {
         require(argc == 2, "usage: bot_combat_trials <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-combat-trials", "Combat trial needs support '", "crossfeed");
@@ -321,6 +322,5 @@ int main(int argc, char** argv)
         std::cout << "PASS 60 bounded moving/opposed combat trials and six 1200-step final-input replays; report=" <<
             path_to_utf8(report) << "; ordinary fire/motion/damage/owned-paint gates; only lethal contacts have owner attribution; repaint counts remain measurements\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL bot combat trials: " << error.what() << '\n'; return 1; }
+    });
 }

@@ -5,6 +5,7 @@
 #include "game/states/menu_input.h"
 #include "game/match_setup.h"
 #include "engine/input/gamepad_reader.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cmath>
 #include <filesystem>
@@ -39,10 +40,7 @@ using mattmath::Vector2F;
 
 namespace
 {
-	void require(bool value, const std::string& message)
-	{
-		if (!value) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 	uint16_t button(GamepadButton value) { return static_cast<uint16_t>(1u << static_cast<unsigned int>(value)); }
 	bool pad_down(const GamepadState& state, GamepadButton value) { return (state.buttons & button(value)) != 0; }
 	bool key_down(const KeyboardState& state, Key value)
@@ -496,7 +494,7 @@ namespace
 
 int main(int argc, char* argv[])
 {
-	try
+	return acceptance::run_probe("default actions", [&]
 	{
 		require(argc == 2, "Expected the staged game directory");
 		GameTuning tuning((std::filesystem::path(argv[1]) / "tuning.json").string().c_str());
@@ -504,9 +502,5 @@ int main(int argc, char* argv[])
 		std::cout << "PASS default actions: independent frozen legacy mappings, aliases/source edges, focus/connection/epoch boundaries, "
 			"strict triggers/drop, menu arming/chords/reset/repeated reads, direction aliases, raw sticks and live per-slot preferences; no hardware/window\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL default actions: " << error.what() << '\n'; return 1;
-	}
+	});
 }

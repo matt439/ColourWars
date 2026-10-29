@@ -7,6 +7,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <array>
 #include <cstdlib>
@@ -24,10 +25,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     bool nearly_equal(float first, float second)
     {
@@ -185,7 +183,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("idle drip", [&]
     {
         require(argc == 2, "Usage: idle_drip.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -200,10 +198,5 @@ int main(int argc, char** argv)
         check_empty_held_fire(content);
         check_round_end(content);
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL idle drip: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

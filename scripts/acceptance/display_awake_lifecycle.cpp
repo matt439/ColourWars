@@ -13,6 +13,7 @@
 #include <string>
 #include <string_view>
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
+#include "scripts/acceptance/support/probe.h"
 
 using namespace labrador;
 namespace display_awake_probe
@@ -43,7 +44,7 @@ DisplayAwake::DisplayAwake() noexcept : DisplayAwake(display_awake_probe::record
 namespace
 {
     using namespace display_awake_probe;
-    void require(bool condition, const char* message) { if (!condition) { throw std::runtime_error(message); } }
+    using acceptance::require;
     void held(size_t count, bool owned)
     { require(event_count == count && client_owned == owned && !overflow && !violation && unexpected_thread.load(std::memory_order_relaxed) == 0, "Recorded display lifetime/thread/order differs"); }
     void finish_case(const char* name, size_t first, size_t last)

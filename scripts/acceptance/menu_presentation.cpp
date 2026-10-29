@@ -5,6 +5,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -19,10 +20,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     rapidjson::Document read_document(const std::filesystem::path& path)
     {
@@ -551,7 +549,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("menu presentation", [&]
     {
         require(argc == 2, "Usage: menu_presentation.exe <staged content directory>");
         const std::filesystem::path content(argv[1]);
@@ -574,10 +572,5 @@ int main(int argc, char** argv)
         std::cout << "PASS menu presentation: unchanged defaults, optional camera framing, authored base layout/artwork, contextual rejection, "
             "sparse paper construction and retained built-in primitive validation.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL menu presentation: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

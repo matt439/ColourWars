@@ -20,6 +20,7 @@
 #include "engine/math/triangle.h"
 #include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -35,10 +36,7 @@ using namespace labrador;
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	bool close_to(float a, float b)
 	{
@@ -345,7 +343,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("story audio", [&]
 	{
 		require(argc == 2, "Usage: story_audio.exe <content directory>");
 		World world{ std::filesystem::path(argv[1]) };
@@ -428,10 +426,5 @@ int main(int argc, char** argv)
 			"redraw pen boundaries/voices/lifecycle, painted support ownership and wet movement budgets, "
 			"paint content, tool impacts/capture/duds, swept/launch contacts, roller aggregation and shared limits\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL story audio: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

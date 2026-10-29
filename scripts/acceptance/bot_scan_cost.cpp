@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/ai/match_bot_driver.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
@@ -228,7 +229,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot scan cost", [&]
     {
         require(argc == 2, "usage: bot_scan_cost <content>");
         World world(std::filesystem::absolute(argv[1]));
@@ -261,7 +262,5 @@ int main(int argc, char** argv)
             "difficulties, 1800 active steps each; every bot moved; timings are measurements against a "
             << std::setprecision(1) << frame_budget_us / 1000.0 << " ms frame\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot scan cost: " << error.what() << '\n'; return 1; }
+    });
 }

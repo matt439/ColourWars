@@ -10,6 +10,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/assets/sound_bank_loader.h"
 #include "editor/content_catalog.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -27,10 +28,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     rapidjson::Document read_document(const std::filesystem::path& path)
     {
@@ -682,7 +680,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("level format", [&]
     {
         require(argc == 3, "Usage: level_format.exe <staged content directory> <repository directory>");
         const std::filesystem::path content(argv[1]);
@@ -749,10 +747,5 @@ int main(int argc, char** argv)
         std::cout << "PASS level format 1: " << checked << " staged/source/template files, legacy object/paint parity, "
             "early version rejection, schema fixtures and runtime resource/geometry authority.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL level format: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

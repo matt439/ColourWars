@@ -1,5 +1,6 @@
 ﻿#include "game/pch.h"
 #include "game/presentation.h"
+#include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -17,10 +18,7 @@
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
 
     // Colour-vision check (ROAD#8). Machado, Oliveira and Fernandes (2009)
@@ -191,7 +189,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("team palette", [&]
     {
         require(argc == 2, "Usage: team_palette.exe <game/content directory>");
         const std::filesystem::path source = std::filesystem::path(argv[1]) / "presentation.json";
@@ -297,10 +295,5 @@ int main(int argc, char** argv)
         reset(); document.RemoveMember("team_palette"); fixture.reject(document, "team_palette");
         std::cout << "PASS team palette: authored values, colour-vision bar, reordered fixed preferences, data-only random expansion, startup rejection.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL team palette: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

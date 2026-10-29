@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/stick_response.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cmath>
 #include <iostream>
@@ -10,10 +11,7 @@ using mattmath::Vector2F;
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	bool approximately(float actual, float expected)
 	{
@@ -149,7 +147,7 @@ namespace
 
 int main()
 {
-	try
+	return acceptance::run_probe("stick settings", [&]
 	{
 		check_thresholds();
 		check_slots_and_live_preferences();
@@ -157,10 +155,5 @@ int main()
 		std::cout << "PASS stick settings: shared gameplay/preview response, scalar movement, radial aiming, "
 			"threshold continuity, full travel, four live pad profiles, inheritance and safe bounds\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL stick settings: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

@@ -12,6 +12,7 @@
 #include "engine/collision/narrow_phase.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <array>
 #include <cmath>
@@ -32,7 +33,7 @@ namespace crossfeed_acceptance
         StepTimer::SecondsToTicks(1.0 / 60.0)));
     inline constexpr float tolerance = 0.05f;
 
-    void require(bool condition, const std::string& message);
+    using acceptance::require;
     std::string fixed(float value, int precision = 2);
     bool approximately(float first, float second, float allowed = tolerance);
     bool supported(const Player& player);

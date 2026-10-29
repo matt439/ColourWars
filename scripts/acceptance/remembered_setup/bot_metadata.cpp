@@ -4,6 +4,7 @@
 #include "game/last_match_setup.h"
 #include "game/save.h"
 #include "game/match_setup.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <array>
 #include <filesystem>
@@ -14,10 +15,7 @@
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     template<class Action> void rejects(Action action)
     {

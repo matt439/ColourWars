@@ -10,6 +10,7 @@
 #include "engine/collision/narrow_phase.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <array>
 #include <cmath>
@@ -25,7 +26,7 @@ namespace turbulence_blockout_acceptance
     using namespace mattmath;
     inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
     inline constexpr float tolerance = 0.05f;
-    void require(bool value, const std::string& reason);
+    using acceptance::require;
     bool supported(const Player& player);
     PlayerInputData input(float movement = 0.0f, bool pressed = false, bool held = false, bool drop = false);
 

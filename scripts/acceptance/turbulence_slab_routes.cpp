@@ -1,12 +1,13 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_slab_routes/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 #include <process.h>
 #include <string_view>
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("public slab Roller routes", [&]
     {
         using namespace turbulence_slab_routes_acceptance;
         require(argc == 4 || (argc == 5 && std::string_view(argv[4]) == "--replay"),
@@ -26,7 +27,5 @@ int main(int argc, char** argv)
         std::cout << "PASS public driven Roller geometry comparison; receipts=" << evidence.string()
             << ". Local route/paint samples do not establish opposed balance or human acceptance\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL public slab Roller routes: " << error.what() << '\n'; return 1; }
+    });
 }

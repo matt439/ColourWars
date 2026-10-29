@@ -9,6 +9,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <bit>
 #include <cstdlib>
@@ -22,8 +23,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* reason)
-    { if (!condition) { throw std::runtime_error(reason); } }
+    using acceptance::require;
 
     std::uint64_t credited(const Player& player)
     {
@@ -298,7 +298,7 @@ namespace
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("lethal provenance", [&]
     {
         require(argc == 2, "usage: lethal_provenance <content>");
         World world(std::filesystem::absolute(argv[1]));
@@ -312,6 +312,5 @@ int wmain(int argc, wchar_t* argv[])
             "timed/forced respawn persistence, immunity/debug kill, invalid owners/tag proxy, actual self/friendly masks, "
             "real launch/movement sweeps, shared roller double elimination and read-only RNG/state invariance. No environmental or sampled-death kill inference.\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL lethal provenance: " << error.what() << '\n'; return 1; }
+    });
 }

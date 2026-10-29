@@ -1,10 +1,11 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_underfoot/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("paint underfoot", [&]
     {
         if (argc != 2) { throw std::invalid_argument("paint_underfoot <content>"); }
         paint_underfoot_acceptance::World world(std::filesystem::absolute(argv[1]));
@@ -17,7 +18,5 @@ int wmain(int argc, wchar_t* argv[])
         paint_underfoot_acceptance::check_health_regen(world);
         std::cout << "PASS paint underfoot: actual contact/movement/recovery/schema/bounds; no human balance acceptance\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL paint underfoot: " << error.what() << '\n'; return 1; }
+    });
 }

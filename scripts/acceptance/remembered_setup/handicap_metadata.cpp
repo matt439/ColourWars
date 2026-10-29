@@ -4,6 +4,7 @@
 #include "game/last_match_setup.h"
 #include "game/save.h"
 #include "game/match_setup.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -13,10 +14,7 @@
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const StageList handicap_stages{ { "arena", "Arena", "", true } };
 

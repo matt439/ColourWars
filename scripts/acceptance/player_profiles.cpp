@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/save.h"
 #include "engine/assets/json.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -15,13 +16,7 @@
 // slot, which is what lets a person's settings follow them between pads.
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition)
-		{
-			throw std::runtime_error(message);
-		}
-	}
+	using acceptance::require;
 
 	template <typename Function>
 	void rejects(Function function, const char* message)
@@ -281,7 +276,7 @@ namespace
 
 int main()
 {
-	try
+	return acceptance::run_probe("player profiles", [&]
 	{
 		IsolatedSaveDirectory directory;
 		check_names();
@@ -292,10 +287,5 @@ int main()
 			"buttons and Boost, the worn-profile overlay and its write-through, session-only wearing, "
 			"cycling, delete and rename, Boost carry-back, and per-field recovery\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL player_profiles: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

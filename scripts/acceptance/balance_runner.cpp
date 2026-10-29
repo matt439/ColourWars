@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 #if COLOURWARS_DEV_TOOLS
 #include "scripts/acceptance/balance_runner/runner.h"
@@ -9,7 +10,7 @@
 int wmain(int argc, wchar_t* argv[])
 {
 #if COLOURWARS_DEV_TOOLS
-    try
+    return acceptance::run_probe("balance runner", [&]
     {
         if (argc < 2)
         {
@@ -39,12 +40,7 @@ int wmain(int argc, wchar_t* argv[])
             << "Aggregate held paint, pre-step empty-readiness ticks, observed death edges and validated enemy eliminations. "
             "Final region/face held ownership is in the companion; statistical reports and attended balance acceptance remain separate.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL balance runner: " << error.what() << '\n';
-        return 1;
-    }
+    });
 #else
     (void)argc; (void)argv;
     std::cerr << "balance_runner requires Debug game objects; it is not a Release tool.\n";

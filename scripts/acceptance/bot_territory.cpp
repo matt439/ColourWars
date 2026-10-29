@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/ai/match_bot_territory.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 
 namespace
@@ -328,7 +329,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot territory", [&]
     {
         require(argc == 2, "usage: bot_territory <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-territory", "Bot territory needs support '", "turbulence");
@@ -339,7 +340,5 @@ int main(int argc, char** argv)
             "aim-only/RNG/expiry/enemy priority and 30 finite "
             "actual-driver paid top-paint trials; opposed territory usefulness remains unqualified\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot territory: " << error.what() << '\n'; return 1; }
+    });
 }

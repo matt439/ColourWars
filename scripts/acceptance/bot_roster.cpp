@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/input_slots.h"
 #include "game/match_setup.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cstdlib>
 #include <filesystem>
@@ -12,10 +13,7 @@ void check_unsupported_bot_consumers(const std::filesystem::path& content);
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     void same_settings(const MatchSetup& before, const MatchSetup& after,
         bool compare_teams = true)
@@ -264,7 +262,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot roster", [&]
     {
         require(argc == 2, "Usage: bot_roster.exe <game/content directory>");
         check_defaults_and_errors();
@@ -275,10 +273,5 @@ int main(int argc, char** argv)
         std::cout << "PASS bot roster: per-seat difficulty, mixed human/bot claims, host retention, "
             "conversion, reset, copies, balanced teams and resizing.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL bot roster: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

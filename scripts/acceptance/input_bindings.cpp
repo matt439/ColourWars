@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/input_bindings/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <cstdlib>
 #include <iostream>
 
@@ -25,7 +26,7 @@ using namespace input_bindings_acceptance;
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("input bindings", [&]
     {
         if (argc == 4) { check_relaunch(argv[1], argv[2], std::filesystem::path(argv[3])); return EXIT_SUCCESS; }
         require(argc == 2, "Usage: input_bindings.exe <content> [relaunch-write|relaunch-read <private profile root>]");
@@ -50,7 +51,5 @@ int main(int argc, char** argv)
             "alternates, conflicts and trigger thresholds, legacy face migration, local recovery, "
             "sparse-slot/remap/reconnect/resume and failed-pad-save checks; GUID-isolated profile, no window/device\n";
         return EXIT_SUCCESS;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL input bindings: " << error.what() << '\n'; return EXIT_FAILURE; }
+    });
 }

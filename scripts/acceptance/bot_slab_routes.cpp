@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/objects/fixed_slab_geometry.h"
+#include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
 #include <algorithm>
 #include <fstream>
@@ -188,7 +189,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot slab routes", [&]
     {
         require(argc == 2, "usage: bot_slab_routes <content>");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
@@ -232,7 +233,5 @@ int main(int argc, char** argv)
         std::cout << "PASS 120 bounded actual-driver slab/mover trials (two stages, approach and spawn starts, both "
             "sides, five tools, three difficulties, 2400 steps); slab and crossover counts are measurements\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot slab routes: " << error.what() << '\n'; return 1; }
+    });
 }

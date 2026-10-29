@@ -30,6 +30,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <cmath>
@@ -45,7 +46,7 @@ using namespace labrador;
 
 namespace menu_text_acceptance
 {
-    void require(bool condition, const std::string& message);
+    using acceptance::require;
     rapidjson::Document read_document(const std::filesystem::path& path);
     UiText* row_text(OptionRow& row, const std::string& name);
     MenuPaperArtPresentation options_art(const MainMenuPresentation& main);

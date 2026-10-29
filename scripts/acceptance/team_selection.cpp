@@ -2,6 +2,7 @@
 #include "game/input_slots.h"
 #include "game/states/menu_input.h"
 #include "game/match_setup.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cstdlib>
 #include <filesystem>
@@ -11,10 +12,7 @@
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     MatchSetup roster(int count, unsigned int variant = 0)
     {
@@ -231,7 +229,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("team selection", [&]
     {
         require(argc == 2, "Usage: team_selection.exe <game/content directory>");
         check_refused_rosters();
@@ -240,10 +238,5 @@ int main(int argc, char** argv)
         std::cout << "PASS team selection: balanced seeded shuffles, both odd sides, joined-roster guards, "
             "retained devices/weapons/setup, manual choices and armed keyboard shuffle.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL team selection: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

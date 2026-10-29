@@ -2,6 +2,7 @@
 #include "scripts/acceptance/balance_regions/metrics.h"
 #include "game/objects/level_loaded_info.h"
 #include "engine/core/file_path.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -15,8 +16,7 @@ namespace balance_regions
 {
     namespace
     {
-        void require(bool condition, const char* reason)
-        { if (!condition) { throw std::runtime_error(reason); } }
+        using acceptance::require;
         void require_near(double actual, double expected, double tolerance = 1e-10)
         { require(std::abs(actual - expected) <= tolerance, "Clipped area disagrees with an independent analytical oracle"); }
         template<class Action> void rejected(Action action)

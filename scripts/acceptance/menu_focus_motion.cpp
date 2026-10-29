@@ -3,6 +3,7 @@
 #include "game/states/menu_focus_motion.h"
 #include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -18,10 +19,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     void require_near(float actual, float expected, const char* message)
     {
@@ -380,7 +378,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("menu focus motion", [&]
     {
         require(argc == 2, "Usage: menu_focus_motion.exe <staged content directory>");
         const std::filesystem::path content(argv[1]);
@@ -397,10 +395,5 @@ int main(int argc, char** argv)
             "invalid/hitch time, const samples, reduced/reset/reopen, "
             "unchanged RNG and contextual presentation limits.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL menu focus motion: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

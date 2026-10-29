@@ -2,6 +2,7 @@
 #include "game/objects/weapon_builder.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <iostream>
@@ -12,13 +13,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition)
-        {
-            throw std::runtime_error(message);
-        }
-    }
+    using acceptance::require;
 
     class ProbeWeapon final : public Weapon
     {
@@ -84,7 +79,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("ammo", [&]
     {
         require(argc == 2, "Usage: ammo.exe <game/content directory>");
         const std::filesystem::path content(argv[1]);
@@ -217,10 +212,5 @@ int main(int argc, char** argv)
             "rounding allowance bought a shot with a tiny authored ammo cost");
         std::cout << "PASS tiny authored cost: no tank-sized rounding allowance\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

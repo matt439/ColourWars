@@ -71,6 +71,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
+#include "scripts/acceptance/support/probe.h"
 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 // This focused probe supplies the concrete input backend at the link seam.
@@ -260,7 +261,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-    try
+    return acceptance::run_probe("painter visual", [&]
     {
         require(argc == 3 || (argc == 5 && (std::wstring(argv[3]) == L"turbulence-mover" || std::wstring(argv[3]) == L"turbulence-shoulder" || std::wstring(argv[3]) == L"turbulence-slab") && !std::wstring(argv[4]).empty()) || (argc == 4 && (std::wstring(argv[3]) == L"hud-paper-tune-colours" || std::wstring(argv[3]) == L"hud-closing-shade" || std::wstring(argv[3]) == L"hud-closing-materials" || std::wstring(argv[3]) == L"stage-preview-background-tune-colour" || std::wstring(argv[3]) == L"hud-label-tune-colours" || std::wstring(argv[3]) == L"hud-timer-tune-colour" ||
             std::wstring(argv[3]) == L"identity" ||
@@ -1375,10 +1376,5 @@ int wmain(int argc, wchar_t** argv)
             "moving aim quadrants and both facings; four same-team figures; frozen motion/redraw; "
             "raster culling bounds; death/outline/fill/respawn; tool-free and whole story poses\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

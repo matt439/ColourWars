@@ -6,6 +6,7 @@
 #include "scripts/acceptance/bot_driver/ascent_approach_checks.h"
 #include "scripts/acceptance/bot_driver/ramp_checks.h"
 #include "engine/assets/json.h"
+#include "scripts/acceptance/support/probe.h"
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -19,10 +20,7 @@ using namespace mattmath;
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	bool same(const PlayerInputData& left, const PlayerInputData& right)
 	{
@@ -484,7 +482,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-	try
+	return acceptance::run_probe("bot driver", [&]
 	{
 		require(argc == 2, "Usage: bot_driver <staged-content-directory>");
 		const std::filesystem::path content(argv[1]);
@@ -512,10 +510,5 @@ int wmain(int argc, wchar_t** argv)
 		bot_ramp_acceptance::check(tuning);
 		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, refill off enemy paint under the underfoot trial, bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

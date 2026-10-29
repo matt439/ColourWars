@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -271,7 +272,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot trials", [&]
     {
         require(argc == 2, "usage: bot_trials <content>");
         World world(std::filesystem::absolute(argv[1]));
@@ -332,6 +333,5 @@ int main(int argc, char** argv)
         std::cout << "PASS " << trials << " bounded actual-driver trials, CQ paid-paint gates and three 600-step final-input replays; report=" <<
             path_to_utf8(report) << "; measurements do not establish arena/difficulty quality\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL bot trials: " << error.what() << '\n'; return 1; }
+    });
 }

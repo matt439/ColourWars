@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -186,7 +187,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot ascents", [&]
     {
         require(argc == 2, "usage: bot_ascents <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-ascents", "Bot ascent needs authored support '");
@@ -215,7 +216,5 @@ int main(int argc, char** argv)
             "contacts and ordinary jumps; six 900-step final-input replays; deck paint is measured, "
             "territory usefulness remains unqualified\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot ascents: " << error.what() << '\n'; return 1; }
+    });
 }

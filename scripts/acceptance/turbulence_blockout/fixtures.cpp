@@ -5,9 +5,6 @@
 
 namespace turbulence_blockout_acceptance
 {
-    void require(bool value, const std::string& reason)
-    { if (!value) { throw std::runtime_error(reason); } }
-
     bool supported(const Player& player)
     {
         const auto state = player.move_state();

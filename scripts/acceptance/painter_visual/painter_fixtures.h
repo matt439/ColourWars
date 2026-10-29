@@ -1,10 +1,7 @@
 // Included inside painter_visual.cpp's private namespace, before every other
 // painter_visual/ header: the shared probe fixtures and raster helpers.
 
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
