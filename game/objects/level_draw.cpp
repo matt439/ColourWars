@@ -372,7 +372,7 @@ bool Level::aim_marker_visible(int participant) const
 	const Player& player = *this->players_.at(static_cast<size_t>(participant));
 	return this->state_ == LevelState::active && this->preferences_->aim_marker_enabled(player.player_num()) &&
 		this->presentation_->weapon_feedback().enabled && player.aim_marker_allowed() &&
-		player.primary_weapon().type() != WeaponType::roller;
+		player.primary_weapon().has_aim_marker();
 }
 
 const BlockedShotFeedback& Level::blocked_shot_feedback() const

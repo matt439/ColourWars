@@ -26,6 +26,15 @@ public:
 
 	void update_ground_contact(bool supported, bool established_support,
 		float dt) override;
+	// The roller lays paint where it rolls; it has no aim to mark.
+	bool has_aim_marker() const override { return false; }
+
+protected:
+	// Ground contact, rather than input, turns the sleeve, lifts it in the
+	// air and compresses it on landing.
+	void advance_travel_motion(bool supported, bool established_support,
+		float signed_distance, float dt) override;
+	ToolMotionPose motion_pose() const override;
 
 private:
 	labrador::SoundBank::WaveHandle lift_sound_;

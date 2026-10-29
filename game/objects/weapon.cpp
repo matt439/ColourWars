@@ -384,14 +384,14 @@ WeaponReadiness Weapon::readiness() const
 
 void Weapon::draw_aim_marker(DrawList& draw_list) const
 {
-    if (this->type() == WeaponType::roller || this->feedback_ == nullptr) { return; }
+    if (!this->has_aim_marker() || this->feedback_ == nullptr) { return; }
     this->feedback_->draw_aim_marker(draw_list, this->nozzle_pos(), this->rotation(),
         this->readiness(), this->team_colour());
 }
 
 RectangleF Weapon::aim_marker_bounds() const
 {
-    if (this->type() == WeaponType::roller || this->feedback_ == nullptr)
+    if (!this->has_aim_marker() || this->feedback_ == nullptr)
     {
         return RectangleF(this->nozzle_pos(), Vector2F::ZERO);
     }

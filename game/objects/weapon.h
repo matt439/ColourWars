@@ -104,7 +104,9 @@ public:
 	// Player invokes it only while the player can act.
 	bool ready_to_shoot() const;
 	WeaponReadiness readiness() const;
-	// Direction only, never a predicted hit point. The roller has no marker.
+	// Direction only, never a predicted hit point, for a tool that aims.
+	// The roller has no marker.
+	virtual bool has_aim_marker() const { return true; }
 	void draw_aim_marker(labrador::DrawList& draw_list) const;
 	mattmath::RectangleF aim_marker_bounds() const;
 	// Infinite-ammo refills preserve the paid shot's cooldown notification.
@@ -173,6 +175,20 @@ protected:
 
 	// Tint only the paint overlay without mutating shared state during draw.
 	virtual labrador::Colour paint_colour() const;
+
+	// Resolved ground travel's share of the decorative tool motion, called
+	// only while motion presentation is enabled. The default swings a bucket's
+	// handle or a sprayer's hose; the roller turns its sleeve instead.
+	virtual void advance_travel_motion(bool supported, bool established_support,
+		float signed_distance, float dt);
+	// The pose the motion state shows now. The roller reads its lift and turn.
+	virtual ToolMotionPose motion_pose() const;
+	ToolMotionState& tool_motion();
+	const ToolMotionState& tool_motion() const;
+	// The borrowed record; only while motion presentation is set.
+	const ToolMotionPresentation& motion_look() const;
+	// Whether the last resolved travel was supported; cleared with the motion.
+	bool motion_supported_ = false;
 
 	const mattmath::Vector2F& player_center() const;
 
@@ -264,7 +280,6 @@ private:
 	labrador::RenderResources::SpriteSheetHandle mist_sheet_;
 	labrador::SpriteSheet::frame_handle mist_frame_;
 	bool motion_firing_ = false;
-	bool motion_supported_ = false;
 	mattmath::Vector2F mist_release_position_;
 	float mist_release_rotation_ = 0.0f;
 	labrador::SoundBank::WaveHandle empty_sound_;
