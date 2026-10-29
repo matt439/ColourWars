@@ -1125,7 +1125,7 @@ evidence for `POL#21`, not acceptance.
 
 ### Shipping-bot routes and team trials (`POL#42`)
 
-**Open, not started; recorded 2026-10-29.** The shipping bots have unequal
+**Measured 2026-10-30; recorded 2026-10-29.** When filed, the shipping bots had unequal
 evidence across the Turbulence family. `bot_turbulence_routes.cpp:100` sets
 the preserved `turbulence` stage, not the blockout. The mover and gate trials
 have their own route cases (`bot_mover_routes.cpp:38`, `bot_gate_routes.cpp:45`),
@@ -1159,3 +1159,67 @@ failure to hide by changing geometry or bot tuning.
 Not decided here: arena selection, weapon balance or bot difficulty. These are
 descriptive evidence for `POL#21` and `POL#27`; bots are not a stand-in for
 attended play.
+
+**Team trials (first step).** `bot_team_trials` now ends with a third pass,
+after its unchanged Crossfeed/CQ/King/Turbulence and Press Tower contracts:
+the blockout, the mover trial and, since `ROAD#38` landed, the slab trial, each
+with ten same-tool 2v2 (five tools, both human sides) and ten mixed-tool
+rotations on the first seed, Normal bots, 1800 steps from ordinary spawns, and
+one final-input replay per stage. The blockout uses its `x_band` bands; the two
+trials use geographic thirds. A mover's scoring tiles may now move during a
+team trial provided each keeps its starting region pieces (the movers stay
+inside the left and right thirds). Per bot, `bot_team_trials_turbulence.csv`
+records the first update on nine named contacts from its own side, takeoffs
+(jump presses) and its team's held paint, including paint in the opposing half,
+which does not depend on the partition. A *crossing* is the first arrival on
+the far crossover, far upper approach, far lower bed, far approach yard or far
+home floor. Each team row is 30 bots (10 trials as the one-bot side, 10 as the
+two-bot side).
+
+| Stage, team | Crossing | Mean / min arrival update | Via far crossover / far bed | Takeoffs | Mean held paint | In far half |
+|---|---|---|---|---|---|---|
+| blockout, a | 25/30 | 719 / 207 | 13 / 10 | 384 | 35618 | 11945 |
+| blockout, b | 24/30 | 632 / 204 | 0 / 24 | 337 | 31956 | 11758 |
+| mover trial, a | 21/30 | 904 / 207 | 6 / 15 | 399 | 36667 | 11566 |
+| mover trial, b | 22/30 | 743 / 204 | 5 / 17 | 371 | 34056 | 11222 |
+| slab trial, a | 23/30 | 1000 / 522 | 10 / 12 | 329 | 34990 | 9258 |
+| slab trial, b | 19/30 | 945 / 463 | 12 / 7 | 387 | 32342 | 6491 |
+
+The bots do cross every variant from ordinary spawns. The blockout has the
+most crossings and the earliest arrivals. On it, team b crossed only by the
+lower route: 4 of its 30 bots reached their own crossover and 2 the far one,
+against 14 and 13 for team a. The mover trial loses crossings on both sides. The
+slab trial has the latest arrivals, and team b holds the least far-half paint.
+By tool, over all three stages, Sniper bots crossed least (16/36) and Roller
+most (32/36). Every bot left home except 3 and 4 slab-trial bots
+(left_home 27/30, 26/30). The side asymmetry on a mirrored arena comes from
+the bots, which share one seed here; it is not a geometry finding.
+
+**Route case.** The opt-in `bot_blockout_routes` runs the actual driver for 3600
+steps against a stationary human, from three starts, both teams, five tools and
+three difficulties (90 trials, one replay per start). Each start is measured
+against the authored chains that leave from it; a chain advances only on
+grounded contact with its next named support. The home start is the ordinary
+spawn. The upper start is placed on the bot's upper approach, and the centre
+start on the lower-crossing floor at x 2000. Only valid driver output and the
+replays are gated.
+
+| Start, chain (contacts) | Team a | Team b | Most common stop (a / b) |
+|---|---|---|---|
+| home, lower route (home, own yard, own bed, far bed, far yard) | 9/15, mean 2437 | 6/15, mean 2571 | far yard 3 / far yard 7 |
+| home, upper departure (home, side step, own upper, own crossover, far crossover) | 6/15, mean 1973 | 4/15, mean 1513 | side step 8 / side step 6 |
+| upper, fixed crossover (own upper, own crossover, far crossover, far upper) | 8/15, mean 815 | 5/15, mean 1797 | far upper 6 / far upper 6 |
+| centre, return home (own yard, home) | 11/15, mean 1604 | 11/15, mean 1236 | own yard 2, home 2 / own yard 4 |
+| centre, return to height (own yard, side step, own upper) | 9/15, mean 1539 | 10/15, mean 1442 | own yard, side step, own upper 2 each / own yard 4 |
+
+Means are the completing update. No bot died. Every recorded stop is a measurement; geometry
+and bot tuning are unchanged. From home, the common upper-departure stop is the
+side step: those bots took the lower route. On the fixed crossover, most
+stops come after the far crossover, before the far upper approach; 4 of team
+b's 15 never reached the far crossover. That matches team b's low crossover
+use in the team trials. Release and Debug `MEASURE` lines are identical.
+
+Receipts: `out/validation/pol42/team/` (Release; `bot_team_trials-run.log` and
+`bot_team_trials_turbulence.csv`) and `out/validation/pol42/routes/` (Release
+and Debug `bot_blockout_routes-run.log`). The team trials also pass in Debug,
+with all six CSVs byte-identical to Release.

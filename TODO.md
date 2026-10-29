@@ -137,7 +137,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
-| `POL#42` | OPEN | MED | M | Shipping-bot route case on turbulence_blockout and natural-spawn team trials on the blockout and mover trial, so the variants compare like for like. Evidence for `POL#21`/`POL#27`, not a selection; slab-trial bot counts are in `ROAD#38`'s record. [Bot evidence](docs/polish-turbulence.md#shipping-bot-routes-and-team-trials-pol42) |
 
 ## Audio replacement
 
