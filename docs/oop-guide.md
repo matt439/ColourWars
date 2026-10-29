@@ -302,7 +302,8 @@ scored slab needed.
    like one of them; the gate passes `structure_paintable` to the base
    constructor. A new tag, as `structure_fixed_slab` was, is appended after
    `none` so existing replay and debug tag values keep their numbers, and is
-   added to `is_structure` and to `collision_layer` and `collision_mask` in
+   added to `is_structure` in that header and to `collision_layer` and
+   `collision_mask` in
    [collision_object_type.cpp](../game/objects/collision_object_type.cpp).
 4. Build it in `LevelObjectBuilder::build_collision_object`
    ([level_object_builder.cpp](../game/objects/level_object_builder.cpp)),
@@ -318,8 +319,10 @@ scored slab needed.
    ([level_horizontal_motion.cpp](../game/objects/level_horizontal_motion.cpp)),
    both by `dynamic_cast`, and calls them each step (`settle_team_gates`). The
    slab is static and needed none of this.
-6. Teach contacts only what the shape needs. A `StructurePaintable` leaf
-   inherits the base's painting `on_contact`. The slab's sloped face needed its
+6. Teach contacts only what the shape needs. The gate inherits the base's
+   painting `on_contact`; the translating structure overrides it only to shift
+   the splash back into its rest frame before handing it to the base's
+   `paint_from_projectile`. The slab's sloped face needed its
    own player support (`Player::on_fixed_slab_contact` in
    [player.cpp](../game/objects/player.cpp)) and its own projectile resolution
    in [projectile_contacts.cpp](../game/objects/projectile_contacts.cpp), where
