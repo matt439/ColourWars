@@ -652,7 +652,7 @@ Each tool's own share of painted against every opponent, pooled over both seats
 | turbulence_slab_trial | 52.2 | 13.6 | 51.8 | 59.2 | 48.7 |
 
 The Hard Sniper bot holds about an eighth of the painted area against any other
-tool on every stage, and two Hard Snipers together cover a median 10-14% of the arena;
+tool on every stage, and two Hard Snipers together cover a median 9.8-14.3% of the arena;
 on the Turbulence family Mister holds the most and Roller less than on the two
 arenas. These describe this bot with these tools; whether a human Sniper's
 held-paint/elimination trade is acceptable is the existing `POL#27` question,

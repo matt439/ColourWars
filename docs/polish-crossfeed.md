@@ -1301,7 +1301,7 @@ the author's arena acceptance, C2/pad or finish-review gates.
 
 125 matches of the 875-match `TOOL#3` rerun: all 25 ordered five-tool pairs at
 seeds 0, 1, 17, 42, 2026, 2P A/B, 60 seconds, Hard shipping bots on both sides.
-No gameplay value changed. Bands are **final held area** at time-up, not route use, visits, time held,
+No gameplay value changed. Bands are **final held area** at time-up, not route use, visits, time held or
 spawn pressure. The policy is the shipping `MatchBotDriver` at Hard on both
 seats, 2P only: it has a route planner and ballistic aim, unlike `TOOL#1`'s
 Skirmish, but it is one bot at one difficulty, and ordered swaps combine side,

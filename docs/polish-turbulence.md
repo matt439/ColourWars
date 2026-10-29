@@ -1233,7 +1233,7 @@ each with all 25 ordered five-tool pairs at seeds 0, 1, 17, 42, 2026, 2P A/B,
 60 seconds, Hard shipping bots on both sides. No gameplay value changed. The
 four trials now use the blockout's five `x_band` bands (they share its bounds),
 so all five stages compare band for band; the 6200-wide `turbulence` candidate
-was not run. Bands are **final held area** at time-up, not route use, visits, time held,
+was not run. Bands are **final held area** at time-up, not route use, visits, time held or
 spawn pressure. A moving scored tile is credited to the band its
 final position falls in, so the ferry trial's band denominators vary by match. The policy is the shipping `MatchBotDriver` at Hard on both
 seats, 2P only: it has a route planner and ballistic aim, unlike `TOOL#1`'s
