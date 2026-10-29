@@ -1100,7 +1100,7 @@ same validated, single-undo-step edit as Duplicate, and selects it. With
   (`sum - x - 160`, y moved by the 80-unit rise) and `slab.rise` flips;
 - a cycle mover reflects its whole path (`sum - x - width - travel_x`) and its
   phase moves half a cycle (+0.5, wrapping, rounded to 12 places so a decimal
-  stays a short decimal); a drifting `Visual` shifts its drift phase the same
+  stays a short decimal, and wrapping again if the rounding reaches 1); a drifting `Visual` shifts its drift phase the same
   way, since its sine offset half a cycle on is its reflection;
 - paintable `left` and `right` faces swap;
 - a Team A spawn becomes a Team B spawn and back, reflecting the whole body at
@@ -1125,11 +1125,14 @@ pairs cover plain and jump-through paintables, ramps of both hands, the fixed
 slab, the Mover Trial's `mover_a` (x 600 becomes 2760, phase 0.5) and visuals;
 Crossfeed's two clouds are authored different sizes and are skipped. Every
 spawn in three stages mirrors onto its other-team partner. A one-sided face,
-an unsuffixed name and a Close Quarters drift phase (0.51 to 0.01) reflect;
+an unsuffixed name and a Close Quarters drift phase (0.51 to 0.01, and
+0.4999999999999 to 0) reflect;
 the Ferry Trial's `ferry_a`, level settings, bounds and a spawn 10 units left
 of Press Tower's centre are refused without change. Debug and Release passed
-on 2026-10-29: evidence `0dc49c15b2fc42dda5eae3b4ee727168` and
-`c5f0d8b71a9a4108ba57c9b808ed4748` under `out/acceptance/<preset>/level-editor/`.
+on 2026-10-29 (evidence `0dc49c15b2fc42dda5eae3b4ee727168` and
+`c5f0d8b71a9a4108ba57c9b808ed4748`) and again with the wrap case on 2026-10-30
+(`d083756a97b84c00a47b4323ebe29b45` and `eae75ae0f01f48c9ade390ff16c9be88`),
+under `out/acceptance/<preset>/level-editor/`.
 The menu item and accelerator have no hidden-window probe of their own; using
 them belongs to the attended pass (`ED#5`).
 
@@ -1173,7 +1176,7 @@ builds. It does not place any station.
 
 **Open, not started.** Neither [editor.h](../editor/editor.h) (lines 20-26) nor
 the accelerator table in [editor_window.cpp](../editor/editor_window.cpp)
-(lines 157-164) has Copy or Paste; `duplicate` copies only within one
+(lines 158-166) has Copy or Paste; `duplicate` copies only within one
 document.
 
 Scope: **Edit > Copy** puts one selected object on the clipboard as

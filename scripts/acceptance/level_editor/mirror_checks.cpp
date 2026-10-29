@@ -183,6 +183,11 @@ namespace level_editor_acceptance
             require(copy["rectangle"]["x"].GetDouble() == world.x + (world.x + world.width) -
                 source["rectangle"]["x"].GetDouble() - source["rectangle"]["width"].GetDouble(),
                 "A drifting visual did not reflect its anchor");
+            // A phase just under 0.5 rounds to a whole cycle, which wraps to 0.
+            document.set_property(cloud, "drift/phase", "0.4999999999999");
+            const auto wrapped = record(document, mirror_once(document, cloud, "Close Quarters cloud_4 near 0.5"));
+            require(wrapped["drift"]["phase"].GetDouble() == 0.0,
+                "A drift phase just under 0.5 did not wrap to 0");
         }
 
         // Level settings and bounds have no mirror; a copy that would leave

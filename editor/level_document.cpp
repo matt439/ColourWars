@@ -878,7 +878,10 @@ namespace colourwars_editor
         {
             double phase = number(fields, "phase") + 0.5;
             if (phase >= 1.0) { phase -= 1.0; }
-            set_number(fields, "phase", std::round(phase * 1e12) / 1e12);
+            phase = std::round(phase * 1e12) / 1e12;
+            // A phase just under 0.5 can round up to a whole cycle, which is 0.
+            if (phase >= 1.0) { phase -= 1.0; }
+            set_number(fields, "phase", phase);
         }
 
         // Reflect one object record across x = sum / 2, where sum is the
