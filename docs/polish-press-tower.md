@@ -402,5 +402,8 @@ not move Press Tower into Random.
 - Shipping-bot routes and team trials (`POL#41`, above): descriptive evidence
   for `POL#31`, not a substitute for it.
 - Support art for the brief, above.
+- Review frames: `ColourWars.exe +exec review_press_tower +quit` writes the
+  seeded 1-4P clean and heavy frames and every station
+  ([`DBG#18`](debug-console.md#arena-review-screenshot-pack-dbg18)).
 - Spawn margins depend on the gantry ending at X 1000; shortening it to 940
   opens a standing summit line to X 405. Any geometry edit re-runs the checks.

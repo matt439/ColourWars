@@ -1094,6 +1094,15 @@ Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.
 
+### Review frames (`DBG#18`)
+
+`ColourWars.exe +exec review_turbulence_blockout +quit` (and
+`review_turbulence`, `_mover_trial`, `_slab_trial`, `_ferry_trial`,
+`_gate_trial`) writes seed-7 paint-bot clean and heavy frames at 1-4 panes
+([pack](debug-console.md#arena-review-screenshot-pack-dbg18)). They are
+spawn-framed until `POL#40` adds stations, and are evidence for `POL#21`, not
+acceptance.
+
 ### Shipping-bot routes and team trials (`POL#42`)
 
 **Open, not started; recorded 2026-10-29.** The shipping bots have unequal

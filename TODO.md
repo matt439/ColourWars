@@ -263,7 +263,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
 | `DBG#17` | OPEN | MED | M | Add launch and console roster statements for a seat's team, a shipping bot at Easy/Normal/Hard and Boost 0/1/2, spelled so they don't clash with `bot <seat> <behaviour>`. Keep P1 human and bot seats deviceless, round-trip through replay format 4, ship `review_bots_boost.cfg`. Preparation only; `ROAD#10` and `ROAD#5` stay DECISION. [Scope](docs/debug-console.md#roster-statements-for-bots-teams-and-boost-dbg17) |
-| `DBG#18` | OPEN | LOW | S | Arena review screenshot pack: `review_arena.cfg` plus wrappers for Press Tower, Turbulence with its blockout and four trials, King of the Hill and Close Quarters. Seeded paint-bot clean and heavy frames at 1/2/4P with checksums into `screens\review-*`. 1P heavy uses `bot 1 paint`; Turbulence uses `goto` after `POL#40`. [Scope](docs/debug-console.md#arena-review-screenshot-pack-dbg18) |
 
 ## Tooling, CI and docs
 

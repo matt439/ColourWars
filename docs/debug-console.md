@@ -1192,6 +1192,10 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | `crossfeed_baseline` | Crossfeed comparison P0: the 2026-10-08 movement and original tool supply and lifetime |
 | `crossfeed_movement`, `crossfeed_lower` | Crossfeed P1 and P2: an experimental lower jump with the original (P1) or coupled (P2) tool supply and lifetime; neither clears existing 200-unit climbs |
 | `crossfeed_coupled` | Crossfeed P3: the provisional global compatibility movement and coupled tools |
+| `review_arena <stage>` | the [arena review pack](#arena-review-screenshot-pack-dbg18): seed 7, paint bots on every seat, a clean frame at GO and a heavy one after 20 match seconds at 4, 3, 2 and 1 players, each with its checksum, into `screenseview-<stage>-<time>` |
+| `review_press_tower`, `review_close_quarters`, `review_crossfeed` | `review_arena` for that stage, then every station photographed on the one-player heavy frame with the station labels on |
+| `review_king_of_the_hill`, `review_turbulence`, `review_turbulence_blockout`, `review_turbulence_mover_trial`, `review_turbulence_slab_trial`, `review_turbulence_ferry_trial`, `review_turbulence_gate_trial` | `review_arena` for that stage |
+| `review_arena_frames`, `review_arena_pass`, `review_arena_end` | helpers of `review_arena` and the wrappers |
 
 The jump and Crossfeed scripts change tuning live and globally, and do not put
 it back: `tune.reset tuning` restores the loaded defaults, and `tune.save
@@ -1199,7 +1203,8 @@ tuning` is the only thing that writes them.
 
 The acceptance case follows every shipped script from the top-level ones
 through each `exec` with the arguments it passes, and checks every statement's
-command and word count and every stage, bot and station it names.
+command and word count and every stage, bot and station it names. A station
+must belong to the stage the walk last named, or the Movement Course before any.
 
 ### Worked example: `review_feedback_ab`
 
@@ -1918,8 +1923,6 @@ none.
   this machine has no pad; both are covered on the CPU side (`DBG#7`).
 - **Roster statements** for a seat's team, shipping-bot difficulty and Boost
   ([`DBG#17`](#roster-statements-for-bots-teams-and-boost-dbg17)).
-- **An arena review screenshot pack** beyond the Movement Course and Close
-  Quarters scripts ([`DBG#18`](#arena-review-screenshot-pack-dbg18)).
 
 ## Roster statements for bots, teams and Boost (`DBG#17`)
 
@@ -1963,7 +1966,33 @@ no difficulty, Boost or team default changes.
 
 ## Arena review screenshot pack (`DBG#18`)
 
-**Open, not started (filed 2026-10-29).** The shipped scripts photograph the
+**Done (2026-10-29).** `review_arena <stage>` and its helpers take seed-7
+paint-bot frames at 4, 3, 2 and 1 players (3P added beside the scoped 1/2/4, as
+the Turbulence owner asks for 1-4 panes), a clean one at GO with its banner and
+a heavy one after 20 match seconds at x4, each paused and preceded by
+`checksum`, into `screens\review-<stage>-<time>\`. Seat 1 is a paint bot, so
+the one-player pass has a paint source; its heavy frame is one bot's 20 seconds
+and is light on the larger stages. Ten wrappers cover Press Tower, Close
+Quarters, Crossfeed (for `POL#24`'s 1-4P readability), King of the Hill,
+Turbulence and its blockout and four trials. The three stages with stations
+also photograph every station on the one-player heavy frame with
+`overlay.stations` on; Turbulence gains them with `POL#40`.
+
+The shipped-script walk now checks a `goto` station against the stage the walk
+last named (the Movement Course before any), so a station name cannot drift
+from its stage. Qualification on x64-debug: the `debug_console` case passes
+(27 files, 1027 statements followed), and fails as expected
+(`review_turbulence.cfg:8: no turbulence station crown`) with a Press Tower
+station planted in a Turbulence wrapper. Every wrapper run with `+quit` exits
+0 and finishes (`review_arena: done`): 26 shots for Press Tower, 16 for
+Crossfeed, 13 for Close Quarters, 8 for each other stage. Two Press Tower runs
+logged the same eight checksums (first `7f5d58f38d8aae9e`, heavy 4P
+`144cd67c8c7fb7e4`). Keep the window in front during a run, as for every
+script.
+
+The scope as filed follows.
+
+The shipped scripts photographed the
 Movement Course (`station_tour`, `review_feedback_ab`) and Close Quarters
 (`bots_4p`); nothing in `scripts/debug/` covers Press Tower or Turbulence.
 Every explicit-only stage is reachable with `+stage`, since

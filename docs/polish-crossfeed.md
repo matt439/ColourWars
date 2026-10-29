@@ -1299,6 +1299,13 @@ the author's arena acceptance, C2/pad or finish-review gates.
 
 ## Verification record
 
+### Review frames (`DBG#18`, 2026-10-29)
+
+`ColourWars.exe +exec review_crossfeed +quit` writes seed-7 paint-bot clean
+and heavy frames at 1-4P and every station
+([pack](debug-console.md#arena-review-screenshot-pack-dbg18)), for the
+`POL#24` readability look; it accepts nothing.
+
 ### Selected C2 framing and identity ink (2026-10-20)
 
 The receipt root is `out/validation/crossfeed-20261020/camera-final-v1/`.
