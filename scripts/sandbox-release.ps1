@@ -161,8 +161,11 @@ try {
 
     $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
     if ($receipt.schema -cne 'colourwars-sandbox-receipt/1') { throw "Unknown receipt schema '$($receipt.schema)'." }
-    if ($null -eq $receipt.zip -or $receipt.zip.sha256 -cne $hostRecord.zip_sha256) {
-        throw "The receipt's ZIP hash does not match the host's $($hostRecord.zip_sha256)."
+    # A guest that failed before hashing the ZIP leaves zip null; report why
+    # rather than calling it a hash mismatch.
+    if ($null -eq $receipt.zip) { throw "The receipt records no ZIP hash ($($receipt.outcome)): $($receipt.diagnostic)" }
+    if ($receipt.zip.sha256 -cne $hostRecord.zip_sha256) {
+        throw "The receipt's ZIP hash $($receipt.zip.sha256) does not match the host's $($hostRecord.zip_sha256)."
     }
     $hostRecord.outcome = $receipt.outcome
     $hostRecord.diagnostic = $receipt.diagnostic
