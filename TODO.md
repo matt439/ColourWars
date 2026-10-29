@@ -290,7 +290,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `HYG#25` | OPEN | MED | L | After `HYG#24`: copy the seven types `730dd99` deletes (MovingObject, SoundBankObject, AnimationObject, CameraTools, RotationOrigin, TextDropShadow, UiTextDropShadow) into game/, shape unchanged; record the rungs that move. Never flatten. [Next bump](docs/review/engine-reports.md#carry-the-seven-removed-engine-types-into-the-client-hyg25) |
 | `HYG#22` | OPEN | MED | S | An existing save that fails to parse is silently replaced by defaults and overwritten at the next match start; copy it aside (never overwritten) with one stderr line, and correct the roadmap's save-layout record (version 5, `profiles` nested). [Owner](docs/code-hygiene.md#unreadable-save-preservation-hyg22) |
 | `HYG#26` | OPEN | LOW | S | Rename-only commit: `Level` parameters named `view` that index roster participants become `participant`; `view` stays only where a human pane is indexed. No behaviour change. [Owner](docs/code-hygiene.md#participant-parameter-names-in-level-hyg26) |
-| `HYG#27` | OPEN | LOW | S | Refresh README's line counts and explicit-only stage list (Ferry and Gate Trials), and AGENTS.md's backend paragraph (three audio backends, the input-backend axis); the AGENTS.md wording needs the author's approval at commit. [Owner](docs/code-hygiene.md#stale-readme-and-agents-structure-facts-hyg27) |
 
 ## The OOP showcase
 

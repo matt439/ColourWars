@@ -86,7 +86,14 @@ Not decided here: any rename outside `Level`, or of the public accessors
 
 ### Stale README and AGENTS structure facts (`HYG#27`)
 
-**Open, not started.** Two structural descriptions have drifted.
+**Done (2026-10-29).** README now gives `game/` as ~69k lines with ~16k in
+`game/debug/` and `editor/` as ~5.5k (tracked `.cpp`/`.h`, blank lines and
+comments included, rounded), and lists the gate and ferry Turbulence Trials as
+explicit-only. AGENTS.md, with the author's approval, names the three audio
+backends and the `xinput`/`web` input axis and the Windows defaults this
+repository gets. The record below is the finding as filed.
+
+Two structural descriptions had drifted.
 [README.md](../README.md) lines 176-177 give `game/` as ~34k lines with ~14k of
 Debug tools and `editor/` as ~2k; tracked `.cpp`/`.h` files measured on
 2026-10-29 are about 69k in `game/`, 15.7k in `game/debug/` and 5.5k in

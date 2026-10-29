@@ -34,8 +34,8 @@ round. After the series, Play Series Again clears the wins. Quitting discards
 the session. For solo practice, choose Single Match and 1 Player. The experimental
 [Movement Course](docs/polish-movement-course.md) provides repeatable jump, landing
 and platform-drop trials; select it explicitly, as Random uses the four arenas
-(including Crossfeed). The provisional Press Tower and the static, mover and
-scored-slab Turbulence Yard comparisons are also explicit-only.
+(including Crossfeed). The provisional Press Tower and the static, mover, scored-slab,
+gate and ferry Turbulence Yard comparisons are also explicit-only.
 The chosen art direction is Paint.exe Maximalism, crude mouse-drawn box-heads.
 Its five round-2 rules are accepted in [the polish plan](docs/polish-plan.md#1-establish-the-art-and-display-rules);
 the superseded workshop comparison was retired on 2026-10-15. Open work is in
@@ -172,9 +172,9 @@ no client is a library of guesses, and ColourWars is what keeps saying "this
 API is awkward" loudly enough to be worth fixing.
 
 ```
-game/                 ~34k lines     the game: states, objects, content, and
-                                     ~14k of Debug-only tools in game/debug/
-editor/               ~2k lines      the desktop level editor
+game/                 ~69k lines     the game: states, objects, content, and
+                                     ~16k of Debug-only tools in game/debug/
+editor/               ~5.5k lines    the desktop level editor
 scripts/                             acceptance checks, startup, capture and
                                      art-build scripts, developer-console scripts
 docs/                                the backstory, polish plan, roadmap,
