@@ -1348,6 +1348,48 @@ Evidence under `out/validation/implementation-loop-20261028/`: baseline
 `dbg12-baseline/61543302c85847c5bfa92f293b7b2dfd`, both-preset candidate
 `dbg12-candidate/1adfef9a2f72413f99310aa144cdc843`.
 
+## Screenshot folder names (`DBG#13`)
+
+**Done (2026-10-29).** `screenshot.dir NUL` formerly reported success, although
+the later capture could not create that Windows device-named directory. The
+setter now rejects reserved components and preserves its previous setting, so the
+command reports the problem while it can still be corrected.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Screenshot folder validation accepts reserved Windows components and defers failure until capture. | Selected as `DBG#13`: validate sanitized components with pure command tests, without opening those paths or requesting a capture. Small immediate-feedback fix. |
+| 2 | The input fixture's process-wide GDI count criterion remains unresolved. | Continue `ED#20` independently; its failed candidate and bounded diagnostics are retained. |
+| 3 | Screenshot file basenames have a separate sanitizer and naming policy. | Keep separate from the folder setter; scope a pure naming policy before changing filenames. |
+
+After the existing placeholder expansion, segmentation and sanitization, it rejects
+case-insensitive ASCII `CON`, `PRN`, `AUX`, `NUL`, `COM1` through `COM9` and
+`LPT1` through `LPT9` in any component. Windows applies its
+[reserved-name rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+to directories as well as files. The existing ASCII sanitizer already replaces
+extensions, non-ASCII bytes and punctuation with underscores; validate its
+result rather than introducing another filename grammar.
+
+It preserves `off`, query and empty-argument behavior, `{time}`, both separators,
+dot/empty components, ordinary sanitization, the three-folder limit and existing
+error precedence. Refusal leaves the previous folder and screenshot queue
+unchanged. A local ASCII-only predicate avoids importing the stage-name
+validator's unrelated length and leading-dash restrictions.
+
+The unchanged-production baseline reproduced the old setter accepting `CON`.
+The first test fixture had stopped earlier on its own success-message oracle;
+that fixture and receipt are retained separately. Corrected query assertions
+read one fresh console-log info row, matching execution's existing contract.
+The corrected baseline is `dbg13-baseline/802a7609d93a4f07baa55677c9b90d5e`.
+
+Both game builds and the full console CPU case pass in
+`dbg13-candidate/7796eb6475564c7abd1d73ef5b5d779d`: Debug took 89 seconds and
+Release 17 seconds. The new setter-only matrix checks 397 refusals across all
+22 ASCII device stems, three spellings, both separators and every component
+position, plus valid neighbors, long names, sanitization, `{time}`, `off`,
+empty arguments and combined traversal/depth precedence. No proposed path is
+opened and no screenshot is queued by these checks. Independent review and
+both source hashes pass; the Release inert/layout/RTTI boundary remains intact.
+
 ## Quoted completion boundaries (`DBG#11`)
 
 **Done (2026-10-28).** Tab completion now recognizes statement and word

@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <locale>
 #include <sstream>
+#include <string_view>
 
 // Phase 4: scripts (exec, wait, echo), history, the live console, screenshot
 // folders and the perf overlay. Binds are in bind_commands.cpp.
@@ -45,6 +46,19 @@ namespace
 		char buffer[32] = {};
 		std::strftime(buffer, sizeof(buffer), "%Y%m%d-%H%M%S", &local);
 		return buffer;
+	}
+
+	bool reserved_directory_segment(std::string_view segment)
+	{
+		if (segment.size() != 3 && segment.size() != 4) return false;
+		const auto upper = [](char value)
+		{
+			return value >= 'a' && value <= 'z' ? static_cast<char>(value - 'a' + 'A') : value;
+		};
+		const char prefix[] = { upper(segment[0]), upper(segment[1]), upper(segment[2]) };
+		const std::string_view stem(prefix, 3);
+		return (segment.size() == 3 && (stem == "CON" || stem == "PRN" || stem == "AUX" || stem == "NUL")) ||
+			(segment.size() == 4 && (stem == "COM" || stem == "LPT") && segment[3] >= '1' && segment[3] <= '9');
 	}
 
 	// "review-{time}" -> "review-20261009-031500"; each '/' segment kept to
@@ -96,6 +110,14 @@ namespace
 		if (!error.empty())
 		{
 			return {};
+		}
+		for (const std::string& part : segments)
+		{
+			if (reserved_directory_segment(part))
+			{
+				error = "reserved Windows folder name: " + part;
+				return {};
+			}
 		}
 		std::string joined;
 		for (const std::string& part : segments)
