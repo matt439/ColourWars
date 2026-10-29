@@ -53,7 +53,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
     data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
@@ -361,7 +361,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(2);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
     MenuContext context(&data, &input, &settings);

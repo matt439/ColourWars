@@ -39,7 +39,7 @@ namespace debug_console_acceptance
 	}
 
 	// A match's settings with `players` seats on stage x (seat 0 keyboard/mouse).
-	MenuLevelSettings planned(int players)
+	MatchSetup planned(int players)
 	{
 		MatchRequest roster;
 		roster.stage = "x";

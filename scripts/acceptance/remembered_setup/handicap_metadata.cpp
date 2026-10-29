@@ -3,7 +3,7 @@
 #include "game/input_slots.h"
 #include "game/last_match_setup.h"
 #include "game/save.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 
 #include <filesystem>
 #include <fstream>
@@ -34,9 +34,9 @@ namespace
         return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
     }
 
-    MenuLevelSettings handicapped_roster()
+    MatchSetup handicapped_roster()
     {
-        MenuLevelSettings roster;
+        MatchSetup roster;
         roster.set_player_count(3);
         roster.set_stage("arena");
         roster.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -57,7 +57,7 @@ namespace
 
 void check_handicap_remembered_setup(const std::filesystem::path& save_path)
 {
-    const MenuLevelSettings original = handicapped_roster();
+    const MatchSetup original = handicapped_roster();
     const LastMatchSetup captured = LastMatchSetup::capture(original);
     require(captured.players[0].handicap == 0 && captured.players[1].handicap == 2 &&
         captured.players[2].handicap == 1, "Capture lost a seat's handicap");
@@ -71,7 +71,7 @@ void check_handicap_remembered_setup(const std::filesystem::path& save_path)
     Save reloaded;
     reloaded.load_save_file();
     require(reloaded.last_match_setup().has_value(), "Handicapped setup did not reload");
-    const MenuLevelSettings restored = reloaded.last_match_setup()->restore(handicap_stages);
+    const MatchSetup restored = reloaded.last_match_setup()->restore(handicap_stages);
     for (int seat = 0; seat < 3; ++seat)
     {
         require(restored.player_handicap(seat) == original.player_handicap(seat),

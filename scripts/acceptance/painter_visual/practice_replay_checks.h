@@ -8,7 +8,7 @@ namespace practice_replay_acceptance
         friend typename Tag::Type member(Tag) { return Member; }
     };
     struct TapeTag { using Type = RoundTape GameLevel::*; friend Type member(TapeTag); };
-    struct SettingsTag { using Type = MenuLevelSettings GameLevel::*; friend Type member(SettingsTag); };
+    struct SettingsTag { using Type = MatchSetup GameLevel::*; friend Type member(SettingsTag); };
     struct StartTag { using Type = MatchStart GameLevel::*; friend Type member(StartTag); };
     struct BuildTag { using Type = void (GameLevel::*)(); friend Type member(BuildTag); };
     struct EndMenuTag { using Type = void (GameLevel::*)(); friend Type member(EndMenuTag); };
@@ -43,9 +43,9 @@ namespace practice_replay_acceptance
             "Untimed actual GameLevel retained shipping replay inputs or suspend/resume gaps");
     }
 
-    MenuLevelSettings settings(const char* stage, int count = 1)
+    MatchSetup settings(const char* stage, int count = 1)
     {
-        MenuLevelSettings result; result.set_stage(stage); result.set_duration(3.0f);
+        MatchSetup result; result.set_stage(stage); result.set_duration(3.0f);
         result.set_player_count(count); result.begin_input_claims(input_slots::keyboard_and_mouse);
         for (int seat = 0; seat < count; ++seat)
         {
@@ -135,7 +135,7 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     { app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); ++updates; };
     const auto tap = [&](Key key)
     { app.keyboard()->on_key_down(key); tick(0.0f); app.keyboard()->on_key_up(key); tick(0.0f); };
-    const auto push = [&](const MenuLevelSettings& plan, MatchStart start)
+    const auto push = [&](const MatchSetup& plan, MatchStart start)
     {
         stack.clear(); stack.push(std::make_unique<ResumeProbeRoot>());
         auto owned = std::make_unique<GameLevel>(&data, plan, start); GameLevel* game = owned.get();

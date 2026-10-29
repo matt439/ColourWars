@@ -25,7 +25,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages = shipped;
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, initial;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app; MenuPage* active = nullptr;
     struct ClearStagePaper
     {
@@ -59,7 +59,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; for (int player = 1; player < count; ++player) { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.set_best_of(best_of); settings.set_duration(73.0f); settings.set_stage(stages[static_cast<size_t>(selected)].name);
+        settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(best_of); settings.set_duration(73.0f); settings.set_stage(stages[static_cast<size_t>(selected)].name);
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Stage paper fixture claim failed"); }
         for (int player = 0; player < count; ++player) { settings.set_player_team(player, player % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(player, tools[static_cast<size_t>(player)]); }
@@ -169,7 +169,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     };
     const auto destination = [&](bool count)
     {
-        MenuLevelSettings copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
+        MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
         other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); if (count) { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); } else { other.push(std::make_unique<MainMenuWeaponSelect>(&other_context)); }
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
     };

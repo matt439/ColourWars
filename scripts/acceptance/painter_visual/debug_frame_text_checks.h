@@ -43,7 +43,7 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
     {
         app.viewport_manager()->set_layout(count == 1 ? ScreenLayout::one_player :
             count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_stage("movement_course");
         settings.set_duration(60.0f);
         settings.set_player_count(count);

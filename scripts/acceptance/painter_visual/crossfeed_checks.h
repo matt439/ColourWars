@@ -62,7 +62,7 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
     constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
     constexpr std::array<WeaponType, 4> tools{ WeaponType::sprayer, WeaponType::sniper,
         WeaponType::roller, WeaponType::bucket };
-    MenuLevelSettings settings; settings.set_stage(stage); settings.set_player_count(count);
+    MatchSetup settings; settings.set_stage(stage); settings.set_player_count(count);
     settings.set_screen_layout(layouts[static_cast<size_t>(count - 1)]);
     settings.begin_input_claims(slots[0]);
     for (int view = 1; view < count; ++view)

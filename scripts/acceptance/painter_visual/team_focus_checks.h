@@ -9,7 +9,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, initial;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     bool closed = false, warning = false; int ticks = 0, captures = 0, records_written = 0;
     std::wstring expected_title = L"Team Select";
@@ -69,7 +69,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (int slot : { 3, 0, 2 }) { painter_scripted_pads::states[static_cast<size_t>(slot)].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.begin_input_claims(slots[0]);
+        settings = MatchSetup(); settings.set_player_count(count); settings.begin_input_claims(slots[0]);
         for (int seat = 1; seat < count; ++seat) { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Team focus claim failed"); }
         settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3);
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player :
@@ -229,7 +229,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     require(std::rand() == after_shuffle, "Team focus shuffle changed its seeded RNG budget"); tick(); tick(settle); compare("shuffle-priority-clears-readiness");
     tap(1, GamepadButton::b); plan();
     {
-        MenuLevelSettings copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext other_context(&data, &other_input, &copy); StateContext other;
         other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); other.push(std::make_unique<MainMenuPlayerCount>(&other_context));
         const Frame actual = frame(); app.renderer()->begin_frame(); other.draw(*app.renderer());
@@ -242,7 +242,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     tap(3, GamepadButton::dpad_right); teams[3] = PlayerTeam::b; warning = false; tick(settle); compare("playable-clears-warning");
     const auto weapon = [&]
     {
-        MenuLevelSettings copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext other_context(&data, &other_input, &copy); StateContext other;
         other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); other.push(std::make_unique<MainMenuWeaponSelect>(&other_context));
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
@@ -348,12 +348,12 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
     impl.log().set_mirror_to_debugger(false);
     require(impl.log().set_transcript((output / "team-tune-commands.log").string()), "Cannot retain Team tune transcript");
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(3); require(settings.claim_input_slot(4), "Cannot claim Team tune keyboard seat");
     settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3); settings.set_screen_layout(ScreenLayout::two_player);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
     settings.set_player_weapon(0, WeaponType::roller); settings.set_player_weapon(1, WeaponType::sniper);
-    const MenuLevelSettings before = settings; MenuContext context(&data, &input, &settings); StateContext& stack = app;
+    const MatchSetup before = settings; MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct ClearTeamTuneStack
     {
         StateContext& stack;

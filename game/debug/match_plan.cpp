@@ -180,7 +180,7 @@ std::string MatchPlanner::parse_seat_choice(const std::string& field, const std:
 	return {};
 }
 
-void MatchPlanner::assign_devices(MenuLevelSettings& settings, int players,
+void MatchPlanner::assign_devices(MatchSetup& settings, int players,
 	const ConnectedPads& pads)
 {
 	settings.set_player_count(players);
@@ -192,7 +192,7 @@ void MatchPlanner::assign_devices(MenuLevelSettings& settings, int players,
 	}
 }
 
-void MatchPlanner::claim_devices(MenuLevelSettings& settings, const ConnectedPads& pads)
+void MatchPlanner::claim_devices(MatchSetup& settings, const ConnectedPads& pads)
 {
 	std::vector<int> devices;
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
@@ -214,7 +214,7 @@ void MatchPlanner::claim_devices(MenuLevelSettings& settings, const ConnectedPad
 	settings.set_screen_layout(layout_for(settings.human_count()));
 }
 
-MatchPlan MatchPlanner::resolve(const MenuLevelSettings* current,
+MatchPlan MatchPlanner::resolve(const MatchSetup* current,
 	const MatchRequest& request, const ConnectedPads& pads, const Random& random) const
 {
 	MatchPlan plan;
@@ -239,7 +239,7 @@ MatchPlan MatchPlanner::resolve(const MenuLevelSettings* current,
 		return plan;
 	}
 	const bool fresh = current == nullptr || current->player_count() == 0;
-	MenuLevelSettings settings = current != nullptr ? *current : MenuLevelSettings();
+	MatchSetup settings = current != nullptr ? *current : MatchSetup();
 
 	// Stage.
 	std::size_t index = 0;
@@ -369,7 +369,7 @@ MatchPlan MatchPlanner::resolve(const MenuLevelSettings* current,
 		plan.reset_session = true;
 	}
 	// The rules a format-4 replay enforces, so a planned match always records.
-	const std::vector<MenuPlayerSettings>& seats = settings.player_settings();
+	const std::vector<SeatSetup>& seats = settings.player_settings();
 	for (std::size_t seat = 0; seat < seats.size(); ++seat)
 	{
 		if (seats[seat].controller == PlayerController::bot && (seat == 0 || seats[seat].num != -1))

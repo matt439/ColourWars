@@ -3,13 +3,14 @@
 #include "game/states/main_menu.h"
 #include "game/states/pause_menu.h"
 #include "game/debug/debug_director.h"
+#include "game/states/player_label.h"
 
 using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
 
-bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
+bool match_owns_pad_slot(const MatchSetup& settings, int slot)
 {
 	if (slot < 0)
 	{
@@ -18,17 +19,17 @@ bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
 	return settings.player_index_for_slot(slot) != -1;
 }
 
-bool pad_seat_missing(const MenuLevelSettings& settings, int slot,
+bool pad_seat_missing(const MatchSetup& settings, int slot,
 	const Gamepads& gamepads, const DebugDirector& debug)
 {
 	return input_slots::is_pad(slot) && !gamepads.connected(settings.device_slot(slot)) &&
 		!debug.drives_slot(slot);
 }
 
-int disconnected_player_slot(const MenuLevelSettings& settings,
+int disconnected_player_slot(const MatchSetup& settings,
 	const Gamepads& gamepads, const DebugDirector& debug)
 {
-	for (const MenuPlayerSettings& player : settings.player_settings())
+	for (const SeatSetup& player : settings.player_settings())
 	{
 		if (pad_seat_missing(settings, player.num, gamepads, debug))
 		{
@@ -38,10 +39,10 @@ int disconnected_player_slot(const MenuLevelSettings& settings,
 	return -1;
 }
 
-int reclaim_missing_seat(MenuLevelSettings& settings,
+int reclaim_missing_seat(MatchSetup& settings,
 	const std::vector<ProcessedMenuInput>& inputs, unsigned int missing_seats)
 {
-	const std::vector<MenuPlayerSettings>& players = settings.player_settings();
+	const std::vector<SeatSetup>& players = settings.player_settings();
 	int seat = -1;
 	for (int player = 0; player < static_cast<int>(players.size()); ++player)
 	{
@@ -210,7 +211,7 @@ void PauseMenuInitial::update_page(float /*dt*/)
 
 void PauseMenuInitial::refresh_connections()
 {
-	const std::vector<MenuPlayerSettings>& players = this->level_settings()->player_settings();
+	const std::vector<SeatSetup>& players = this->level_settings()->player_settings();
 	// Both texts follow only which seats are missing, so they are rebuilt when
 	// that set changes; the empty record forces the first build.
 	unsigned int missing_seats = 0;
@@ -235,7 +236,7 @@ void PauseMenuInitial::refresh_connections()
 				{
 					missing += count % 2 == 0 ? L"\n" : L"   ";
 				}
-				missing += this->level_settings()->player_label(player, this->text());
+				missing += player_label(*this->level_settings(), player, this->text());
 				++count;
 			}
 		}
@@ -318,7 +319,7 @@ void PauseMenuInitial::init()
 	{
 		// Start from the tool in hand, so Select on an untouched row is a
 		// clean course with the same tool, where the player stands.
-		const std::vector<MenuPlayerSettings>& players = this->level_settings()->player_settings();
+		const std::vector<SeatSetup>& players = this->level_settings()->player_settings();
 		if (!players.empty() && players.front().weapon < WeaponType::max_prim_wep)
 		{
 			this->tool_choice_ = players.front().weapon;

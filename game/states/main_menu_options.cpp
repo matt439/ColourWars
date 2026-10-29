@@ -79,7 +79,7 @@ void MainMenuOptions::close()
 	}
 }
 
-bool MainMenuOptions::debug_start_match(const MenuLevelSettings& plan)
+bool MainMenuOptions::debug_start_match(const MatchSetup& plan)
 {
 	return !this->pausing_slot_ && MainMenuPage::debug_start_match(plan);
 }

@@ -3,7 +3,7 @@
 #include "engine/app/content_root.h"
 #include "engine/core/file_path.h"
 #include "engine/core/registry.h"
-#include "game/content_validation.h"
+#include "game/states/menu_content_validation.h"
 #include "game/directory_consts.h"
 #include "game/fatal_report.h"
 #include "game/debug/debug_director.h"
@@ -116,7 +116,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// Check every name, stage and authored string against the loaded assets
 		// before the first menu. The Debug `reload` command runs the same checks.
 		phase = FailurePhase::validation;
-		validate_game_content(tuning, presentation, app.render_resources(),
+		validate_shell_content(tuning, presentation, app.render_resources(),
 			app.audio_resources(), level_infos, stages, save.play_settings());
 		// The saved Music and SFX volumes are group volumes from here on;
 		// the Controls page pushes a change through the same call.

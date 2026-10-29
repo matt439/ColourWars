@@ -7,12 +7,12 @@ using namespace labrador;
 // Release updates through debug_update_level, which wraps any Debug filter in
 // the shipping recorder. The other adapters serve the developer tools.
 
-const MenuLevelSettings& GameLevel::debug_settings() const
+const MatchSetup& GameLevel::debug_settings() const
 {
 	return this->settings_;
 }
 
-void GameLevel::debug_rebuild(const MenuLevelSettings& plan, bool reset_session)
+void GameLevel::debug_rebuild(const MatchSetup& plan, bool reset_session)
 {
 	this->start_ = MatchStart::developer;
 	this->settings_ = plan;
@@ -23,7 +23,7 @@ void GameLevel::debug_rebuild(const MenuLevelSettings& plan, bool reset_session)
 	this->build_and_enter_level();
 }
 
-void GameLevel::debug_adopt(const MenuLevelSettings& plan, bool reset_session)
+void GameLevel::debug_adopt(const MatchSetup& plan, bool reset_session)
 {
 	this->start_ = MatchStart::developer;
 	this->settings_ = plan;
@@ -181,7 +181,7 @@ MatchPaint GameLevel::debug_paint() const
 	paint.team_b = info.team_b_area;
 	paint.total = info.total_area;
 	// Convert roster positions to the same owners used by their projectiles.
-	for (const MenuPlayerSettings& player : this->settings_.player_settings())
+	for (const SeatSetup& player : this->settings_.player_settings())
 	{
 		const int owner = paint_owners::index(player.num, static_cast<int>(paint.seats.size()));
 		paint.seats.push_back(owner >= 0 ? info.player_areas.at(static_cast<size_t>(owner)) : 0.0f);

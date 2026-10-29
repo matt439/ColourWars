@@ -48,7 +48,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct ClearTrial
     {

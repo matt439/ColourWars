@@ -51,7 +51,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const labrador::Mouse* mouse,
 	std::vector<LevelStation> stations,
 	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings,
-	const MenuLevelSettings* roster, std::uint64_t bot_seed, std::vector<LevelLesson> lessons) :
+	const MatchSetup* roster, std::uint64_t bot_seed, std::vector<LevelLesson> lessons) :
 	scene_(std::move(scene)),
 	players_(std::move(players)),
 	stations_(std::move(stations)),

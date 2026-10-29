@@ -228,7 +228,7 @@ void drift_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Can
         for (const int count : { 1, 4 })
         {
             if (count == 4 && std::string(stage) != "close_quarters") { continue; }
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_player_count(count);
             settings.set_stage(stage);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);

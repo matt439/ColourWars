@@ -48,7 +48,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
     const std::string saved = saved_bytes();
     GameData data; data.set_application(&app); data.set_save(&preferences);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.set_best_of(3); settings.set_duration(73.0f);
     settings.set_stage("movement_course"); settings.set_screen_layout(ScreenLayout::two_player);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);

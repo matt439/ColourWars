@@ -37,7 +37,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
     struct RestoreBriefingPads
@@ -75,7 +75,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
     };
     const auto frame = [&]
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read(*app.renderer()); };
-    const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b)
+    const auto same_plan = [](const MatchSetup& a, const MatchSetup& b)
     {
         if (a.player_count() != b.player_count() || a.stage() != b.stage() || a.duration() != b.duration() ||
             a.best_of() != b.best_of() || a.screen_layout() != b.screen_layout()) { return false; }
@@ -99,7 +99,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
 #endif
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_player_count(fixture.players);
+        settings = MatchSetup(); settings.set_player_count(fixture.players);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         if (fixture.players == 2)
         {
@@ -205,7 +205,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
     const auto cycle_and_lock = [&](const BriefingCase& fixture, const Presentation& snapshot,
         const Words& words, const std::string& name)
     {
-        const MenuLevelSettings before = settings;
+        const MatchSetup before = settings;
         std::srand(3169); const int next_random = std::rand(); std::srand(3169);
         tap(Key::right); tap(Key::enter); tap(Key::escape); tap(Key::left);
         require(std::rand() == next_random && same_plan(settings, before) && stack.depth() == 2 &&

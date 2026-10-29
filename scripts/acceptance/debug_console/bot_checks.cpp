@@ -153,7 +153,7 @@ namespace debug_console_acceptance
 				require(test.director.before_page_update(page, 1.0f / 60.0f) && page.starts == 1,
 					"A seeded stage starts from the menus");
 				std::string weapons;
-				for (const MenuPlayerSettings& seat : page.started.player_settings())
+				for (const SeatSetup& seat : page.started.player_settings())
 				{
 					weapons += MatchPlanner::weapon_name(seat.weapon) + std::string(" ");
 				}
@@ -181,7 +181,7 @@ namespace debug_console_acceptance
 				require(test.director.before_page_update(page, 1.0f / 60.0f) && page.starts == 1,
 					"A seeded stage starts from the menus");
 				std::string weapons;
-				for (const MenuPlayerSettings& seat : page.started.player_settings())
+				for (const SeatSetup& seat : page.started.player_settings())
 				{
 					weapons += MatchPlanner::weapon_name(seat.weapon) + std::string(" ");
 				}

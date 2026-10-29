@@ -49,7 +49,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearResultsStates
@@ -154,7 +154,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     const auto contribution = [&](const LevelEndInfo& info, int player)
     {
         const auto players = settings.player_settings();
-        const MenuPlayerSettings& entry = players.at(static_cast<size_t>(player));
+        const SeatSetup& entry = players.at(static_cast<size_t>(player));
         constexpr std::array<const wchar_t*, 5> devices{
             L"Pad 1", L"Pad 2", L"Pad 3", L"Pad 4", L"Keyboard/mouse" };
         const std::wstring device = entry.num < 0 ? L"Waiting to join" : devices.at(static_cast<size_t>(entry.num));

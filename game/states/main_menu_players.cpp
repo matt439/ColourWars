@@ -2,6 +2,7 @@
 #include "game/states/main_menu.h"
 #include "game/objects/crude_drawing.h"
 #include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -191,7 +192,7 @@ void MainMenuPlayerCount::init()
 void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 {
 	this->play_wave(this->confirm_sound_);
-	MenuLevelSettings* settings = this->level_settings();
+	MatchSetup* settings = this->level_settings();
 	settings->set_player_count(players);
 	settings->set_screen_layout(layout);
 	settings->begin_input_claims(this->activating_slot_);
@@ -249,7 +250,7 @@ void MainMenuJoin::init()
 	for (int player = 0; player < this->player_count(); ++player)
 	{
 		this->players_.push_back(std::make_unique<colourwars::UiTextDropShadow>(
-			"player_" + std::to_string(player), this->level_settings()->player_label(player, this->text()), style.item_font,
+			"player_" + std::to_string(player), player_label(*this->level_settings(), player, this->text()), style.item_font,
 			this->calculate_widget_position(0, player + 2), this->render_resources(),
 			this->setup_art_.ink, clear_shadow, style.item_shadow_offset));
 		this->text_container_->add_child(this->players_.back().get());
@@ -298,7 +299,7 @@ RectangleF MainMenuJoin::check_paper_bounds(const UiWidget& widget, const char* 
 void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs)
 {
 	bool ready = this->level_settings()->input_roster_complete();
-	const std::vector<MenuPlayerSettings>& players = this->level_settings()->player_settings();
+	const std::vector<SeatSetup>& players = this->level_settings()->player_settings();
 	float previous_bottom = this->heading_->bounds().bottom();
 	for (int player = 0; player < this->player_count(); ++player)
 	{
@@ -308,7 +309,7 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		const int worn = players[player].controller == PlayerController::human && connected ?
 			this->save()->worn_profile(players[player].num) : -1;
 		const std::wstring label = this->text().worn_profile_label(
-			this->level_settings()->player_label(player, this->text()), worn < 0 ? std::string_view() :
+			player_label(*this->level_settings(), player, this->text()), worn < 0 ? std::string_view() :
 			std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)) +
 			(!connected && players[player].num >= 0 ? this->text().connection.join_reconnect_suffix : L"");
 		const bool row_changed = motion.slot != players[player].num || motion.connected != connected ||
@@ -368,7 +369,7 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 
 void MainMenuJoin::change_host_row(Direction direction)
 {
-	MenuLevelSettings& settings = *this->level_settings();
+	MatchSetup& settings = *this->level_settings();
 	if (this->host_row_ <= 0 || this->host_row_ >= this->player_count()) { return; }
 	const auto& seat = settings.player_settings()[static_cast<size_t>(this->host_row_)];
 	if (seat.controller == PlayerController::human)
@@ -418,7 +419,7 @@ void MainMenuJoin::update_page(float /*dt*/)
 	{
 		return;
 	}
-	MenuLevelSettings* settings = this->level_settings();
+	MatchSetup* settings = this->level_settings();
 	const std::vector<ProcessedMenuInput> players = this->input()->player_inputs(*settings);
 	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	// Evaluate readiness before accepting joins: the last join cannot also

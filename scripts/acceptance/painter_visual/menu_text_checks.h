@@ -1,5 +1,5 @@
 RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resources,
-    const Presentation& captured, const Presentation& fitted, const MenuLevelSettings& settings,
+    const Presentation& captured, const Presentation& fitted, const MatchSetup& settings,
     bool random, bool locked, size_t eligible_count, float accent_offset);
 
 // Shared text is selected by a fixed role. The independent literals below pin
@@ -71,7 +71,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct RestoreMenuText
@@ -99,7 +99,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_player_count(1);
+        settings = MatchSetup(); settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_player_team(0, PlayerTeam::a); settings.set_stage("movement_course");
         input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));

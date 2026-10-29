@@ -1,7 +1,7 @@
 // Independent construction of the Stage papers and moving briefing stripe.
 // Text and preview renderers remain separate so every old crop keeps its scope.
 RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resources,
-    const Presentation& captured, const Presentation& fitted, const MenuLevelSettings& settings,
+    const Presentation& captured, const Presentation& fitted, const MatchSetup& settings,
     bool random, bool locked, size_t eligible_count = 1, float accent_offset = 0.0f)
 {
     const auto& style = captured.menu(); const auto& main = captured.main_menu();
@@ -80,7 +80,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     play.music_volume = play.sfx_volume = 0;
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreStageRandom
     {
@@ -106,7 +106,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     };
     const auto frame = [&]
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read(*app.renderer()); };
-    const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b, bool stage = true)
+    const auto same_plan = [](const MatchSetup& a, const MatchSetup& b, bool stage = true)
     {
         return a.player_count() == b.player_count() && (!stage || a.stage() == b.stage()) &&
             a.duration() == b.duration() && a.best_of() == b.best_of() && a.screen_layout() == b.screen_layout() &&
@@ -120,7 +120,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(1);
+        settings = MatchSetup(); settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_player_team(0, PlayerTeam::a);
         settings.set_player_weapon(0, WeaponType::bucket);
         settings.set_stage(course ? "movement_course" : "close_quarters");
@@ -131,7 +131,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     };
     const auto cycle = [&](Key key)
     {
-        const MenuLevelSettings before = settings;
+        const MatchSetup before = settings;
         tap_without_random(key);
         require(same_plan(settings, before) && stack.depth() == 2,
             "Stage browsing consumed RNG, committed the provisional slot or changed the match plan");
@@ -274,7 +274,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     {
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
-        open(); const MenuLevelSettings before = settings;
+        open(); const MatchSetup before = settings;
         compare("default-real", original, L"Close Quarters", false, false, 2);
         const Frame browse_status = compare_status("default-browse", original, legacy_browse_status, false, false);
         if (size.x == 1280) { status_baseline = browse_status; }
@@ -346,7 +346,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     tap(Key::escape); compare("old-live-width-shadow-unlocked", old, old_word, true, false, 1);
 
     presentation = original; open(true); cycle(Key::left);
-    const MenuLevelSettings before = settings;
+    const MatchSetup before = settings;
     require(compare("restored-default", original, legacy, true, false, 2).pixels == baseline.pixels,
         "Reopened stage page failed to restore the original Random raster");
     const Frame before_lock = frame(); app.keyboard()->on_key_down(Key::enter); tick();
@@ -370,7 +370,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     require(std::rand() == after_pick && context.music_exit_pending() && stack.depth() == 2 && music_updates == 1 &&
         settings.stage() == "close_quarters" && same_plan(settings, before, false),
         "Random start bypassed eligibility, changed other settings, or failed to consume exactly one choice");
-    const MenuLevelSettings committed = settings;
+    const MatchSetup committed = settings;
     tap(Key::right); tap(Key::enter); tap(Key::escape); tick(0.1f);
     require(frame().pixels == locked.pixels && same_plan(settings, committed) && context.music_exit_pending() &&
         stack.depth() == 2, "Pending Random music exit accepted input, rebased its label or changed the committed plan");
@@ -413,7 +413,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     status_next.validate_resources(*app.render_resources(), *app.audio_resources());
     presentation = status_old; open();
     compare_status("custom-old-browse", status_old, old_status.browse_status, false, false);
-    const MenuLevelSettings status_plan = settings; const Frame status_before = frame();
+    const MatchSetup status_plan = settings; const Frame status_before = frame();
     presentation = status_next; tick(); require(frame().pixels == status_before.pixels,
         "Live stage status text/font/geometry/shadow replacement changed an existing widget before refresh");
     tap_without_random(Key::enter);

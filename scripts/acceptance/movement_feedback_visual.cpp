@@ -371,7 +371,7 @@ namespace
     std::unique_ptr<Level> build_course(Application& app, LevelBuilder& builder,
         int count)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(count);
         settings.set_stage("movement_course");
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
@@ -716,7 +716,7 @@ int wmain(int argc, wchar_t** argv)
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         for (int count : { 1, 4 })
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_player_count(count);
             settings.set_stage("movement_course");
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);

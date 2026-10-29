@@ -32,12 +32,12 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
     impl.set_content_directories(source, staged); impl.set_user_directory(root / "user"); impl.set_script_directories({ root / "scripts" });
     director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
     require(impl.log().set_transcript((output / "weapon-tune-commands.log").string()), "Cannot retain Weapon tint transcript");
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(3); require(settings.claim_input_slot(4), "Cannot claim Weapon tint keyboard seat");
     settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3); settings.set_screen_layout(ScreenLayout::two_player);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
     settings.set_player_weapon(0, WeaponType::sprayer); settings.set_player_weapon(1, WeaponType::mister);
-    const MenuLevelSettings before = settings; MenuContext context(&data, &input, &settings); StateContext& stack = app;
+    const MatchSetup before = settings; MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct ClearWeaponTuneStack
     {
         StateContext& stack;

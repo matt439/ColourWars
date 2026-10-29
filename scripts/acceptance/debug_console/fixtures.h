@@ -41,7 +41,7 @@ namespace debug_console_acceptance
 	public:
 		explicit FakeMatch(DebugDirector& director) : director_(director) {}
 
-		MenuLevelSettings settings;
+		MatchSetup settings;
 		int updates = 0;
 		int finish_after = -1;
 		std::vector<bool> jumps;
@@ -70,8 +70,8 @@ namespace debug_console_acceptance
 		SeatInputFilter* last_filter = nullptr;
 		int filtered_updates = 0;
 
-		const MenuLevelSettings& debug_settings() const override { return this->settings; }
-		void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) override
+		const MatchSetup& debug_settings() const override { return this->settings; }
+		void debug_rebuild(const MatchSetup& plan, bool reset_session) override
 		{
 			this->settings = plan;
 			++this->rebuilds;
@@ -79,7 +79,7 @@ namespace debug_console_acceptance
 			this->director_.before_level_build(*this);
 			this->director_.after_level_build(*this);
 		}
-		void debug_adopt(const MenuLevelSettings& plan, bool reset_session) override
+		void debug_adopt(const MatchSetup& plan, bool reset_session) override
 		{
 			this->settings = plan;
 			++this->adopts;
@@ -199,9 +199,9 @@ namespace debug_console_acceptance
 		int resets = 0;
 		std::vector<int> reset_slots;
 		bool last_leaving = false;
-		MenuLevelSettings started;
+		MatchSetup started;
 
-		bool debug_start_match(const MenuLevelSettings& plan) override
+		bool debug_start_match(const MatchSetup& plan) override
 		{
 			++this->starts;
 			this->started = plan;
@@ -223,7 +223,7 @@ namespace debug_console_acceptance
 #if COLOURWARS_DEV_TOOLS
 	bool log_contains(const DebugLog& log, const std::string& text, DebugSeverity severity);
 	const StageList& test_stages();
-	MenuLevelSettings planned(int players);
+	MatchSetup planned(int players);
 
 	// A director over the two test stages, with no application: what the
 	// hooks do without a window.

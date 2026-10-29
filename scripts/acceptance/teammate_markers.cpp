@@ -87,7 +87,7 @@ namespace
 
         std::unique_ptr<Level> build(const std::vector<SeatPlan>& plan)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(static_cast<int>(plan.size()));
             settings.set_duration(300.0f);

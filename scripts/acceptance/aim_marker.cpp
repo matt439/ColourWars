@@ -75,7 +75,7 @@ namespace
         std::unique_ptr<Level> build(WeaponType first = WeaponType::sprayer,
             OpeningMode opening = OpeningMode::off, float duration = 300.0f)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(4);
             settings.set_screen_layout(ScreenLayout::four_player);

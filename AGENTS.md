@@ -274,7 +274,7 @@ engine's state stack:
 A match is pushed *above* the menu, never in place of it, so returning from a
 match returns to a screen that still exists. `GameLevel` restores the screen
 layout it took in its destructor. Menu pages derive from `MenuPage` and share a
-`MenuContext` (services + pad reader + the `MenuLevelSettings` being assembled),
+`MenuContext` (services + pad reader + the `MatchSetup` being assembled),
 owned by whichever state owns the screen.
 
 ### Level vs Scene

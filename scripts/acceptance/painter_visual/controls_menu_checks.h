@@ -49,7 +49,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     director.run_launch_arguments({ L"+intro", L"off" });
 #endif
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearControlsStates

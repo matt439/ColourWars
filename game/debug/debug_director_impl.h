@@ -37,7 +37,7 @@ class GameData;
 class GameTuning;
 class MenuContext;
 class MenuInput;
-class MenuLevelSettings;
+class MatchSetup;
 class Presentation;
 
 namespace labrador
@@ -244,7 +244,7 @@ private:
 
 	DebugMenuPage* debug_menu_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_;
-	std::unique_ptr<MenuLevelSettings> menu_settings_;
+	std::unique_ptr<MatchSetup> menu_settings_;
 	std::unique_ptr<MenuContext> menu_context_;
 
 	bool keyboard_capture_ = false;

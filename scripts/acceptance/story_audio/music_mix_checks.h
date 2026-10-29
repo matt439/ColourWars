@@ -208,9 +208,9 @@ namespace
 		world.set_music_volume(original_music);
 	}
 
-	MenuLevelSettings music_mix_settings()
+	MatchSetup music_mix_settings()
 	{
-		MenuLevelSettings settings;
+		MatchSetup settings;
 		settings.set_stage("close_quarters");
 		settings.set_duration(0.25f);
 		settings.set_player_count(2);

@@ -10,7 +10,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     play.music_volume = play.sfx_volume = 0;
     GameData data; data.set_application(&app); data.set_save(&preferences);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreEndHeadings

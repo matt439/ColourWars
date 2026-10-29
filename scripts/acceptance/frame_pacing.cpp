@@ -2,7 +2,7 @@
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 #include "game/sound_groups.h"
 #include "engine/app/application.h"
-#include "game/content_validation.h"
+#include "game/states/menu_content_validation.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/drawable_text.h"
 #include "game/game_data.h"
@@ -215,7 +215,7 @@ int wmain(int argc, wchar_t** argv)
                 levels.add(name, std::move(info));
             }, nullptr });
         app.load_manifest((content / "manifest.json").string().c_str());
-        validate_game_content(tuning, presentation, app.render_resources(), app.audio_resources(),
+        validate_shell_content(tuning, presentation, app.render_resources(), app.audio_resources(),
             levels, stages, preferences.play_settings());
         sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages);
         sound_groups::apply(*app.audio_resources(), preferences.play_settings());

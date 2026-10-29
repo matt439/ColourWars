@@ -35,6 +35,7 @@
 #include "game/states/pause_menu.h"
 #include "game/states/results_menu.h"
 #include "game/states/main_menu.h"
+#include "game/states/menu_content_validation.h"
 #include "game/text_wrap.h"
 #include "game/states/display_confirmation.h"
 #include "game/states/controls_settings_menu.h"

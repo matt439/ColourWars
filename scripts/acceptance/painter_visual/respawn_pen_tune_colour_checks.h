@@ -17,7 +17,7 @@ public:
             "Pen fixture requires the reviewed68x120/nib4 recipe");
         preferences_.music_volume = 0; preferences_.sfx_volume = 0;
         preferences_.view_shake = false; preferences_.reduce_effects = false;
-        MenuLevelSettings settings; settings.set_player_count(1); settings.set_stage("movement_course");
+        MatchSetup settings; settings.set_player_count(1); settings.set_stage("movement_course");
         settings.set_screen_layout(ScreenLayout::one_player); settings.begin_input_claims(3);
         settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer);
         PlayerBuilder builder(&tuning, &presentation);

@@ -8,7 +8,7 @@
 #include "game/objects/projectile_spray.h"
 #include "game/objects/weapon_builder.h"
 #include "game/presentation.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
@@ -148,7 +148,7 @@ namespace
 
     void check_roster()
     {
-        MenuLevelSettings roster;
+        MatchSetup roster;
         roster.set_player_count(2);
         roster.begin_input_claims(input_slots::keyboard_and_mouse);
         require(roster.player_handicap(0) == 0 && roster.player_handicap(1) == 0, "A new seat starts handicapped");
@@ -173,7 +173,7 @@ namespace
         require(roster.claim_input_slot(0) && roster.claim_input_slot(1) && roster.claim_input_slot(2),
             "Cannot complete the handicap roster");
         roster.shuffle_teams();
-        const MenuLevelSettings copy = roster;
+        const MatchSetup copy = roster;
         require(copy.player_handicap(1) == 2, "Shuffle or copy dropped a handicap");
         roster.begin_input_claims(3);
         require(roster.player_handicap(1) == 2, "Fresh device claims dropped a handicap");
@@ -328,9 +328,9 @@ namespace
     // therefore shows which paint_refill the driver observed for the seat.
     namespace navigation = bot_navigation_acceptance;
 
-    MenuLevelSettings ride_roster(int level)
+    MatchSetup ride_roster(int level)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, BotDifficulty::hard);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -347,7 +347,7 @@ namespace
     class RideProbe final : public SeatInputFilter
     {
     public:
-        RideProbe(const GameTuning& tuning, const MenuLevelSettings& settings) : driver(&tuning, settings, 7751) {}
+        RideProbe(const GameTuning& tuning, const MatchSetup& settings) : driver(&tuning, settings, 7751) {}
         bool replaces_bot_inputs() const override { return true; }
         void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override
         {
@@ -380,7 +380,7 @@ namespace
     // Returns the first refilling window's length at this tuning and level.
     int observe_refilling_window(navigation::World& world, int level)
     {
-        const MenuLevelSettings settings = ride_roster(level);
+        const MatchSetup settings = ride_roster(level);
         std::unique_ptr<Level> match = world.build(settings);
         const std::vector<PlayerInputData> physical = navigation::physical_inputs();
         for (int tick = 0; tick < 900 && match->state() != LevelState::active; ++tick)

@@ -91,7 +91,7 @@ namespace balance_runner
             const GameTuning& tuning() const { return this->tuning_; }
             std::unique_ptr<Level> build(const Options& options, const std::string& stage, std::uint32_t seed)
             {
-                MenuLevelSettings settings;
+                MatchSetup settings;
                 settings.set_player_count(options.players);
                 settings.set_stage(stage);
                 settings.set_duration(options.duration);

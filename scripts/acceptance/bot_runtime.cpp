@@ -26,7 +26,7 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(MenuLevelSettings settings)
+        std::unique_ptr<Level> build(MatchSetup settings)
         {
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
@@ -41,9 +41,9 @@ namespace
         Partitioner partitioner;
     };
 
-    MenuLevelSettings roster(int count, unsigned int mask, BotDifficulty difficulty)
+    MatchSetup roster(int count, unsigned int mask, BotDifficulty difficulty)
     {
-        MenuLevelSettings settings; settings.set_player_count(count);
+        MatchSetup settings; settings.set_player_count(count);
         for (int seat = 1; seat < count; ++seat)
         {
             if ((mask & (1u << (seat - 1))) != 0) { settings.set_player_bot(seat, difficulty); }
@@ -71,7 +71,7 @@ namespace
                 // Every legal human/bot arrangement; difficulties rotate across
                 // cases, while per-seat enum/data coverage lives in bot_driver.
                 const auto difficulty = static_cast<BotDifficulty>(cases % 3);
-                const MenuLevelSettings settings = roster(count, mask, difficulty);
+                const MatchSetup settings = roster(count, mask, difficulty);
                 std::srand(8301); auto level = world.build(settings);
                 require(level->player_count() == count && level->view_count() == settings.human_count(),
                     "Runtime conflated participants and human views");
@@ -122,7 +122,7 @@ namespace
         // non-scoring one-way supports; collision alone cannot supply this role.
         for (const char* stage : { "crossfeed", "king_of_the_hill" })
         {
-            MenuLevelSettings settings = roster(2, 1, BotDifficulty::normal);
+            MatchSetup settings = roster(2, 1, BotDifficulty::normal);
             settings.set_stage(stage);
             auto level = world.build(settings);
             int scoring_one_way = 0, plain_one_way = 0;
@@ -181,7 +181,7 @@ namespace
 
     void check_inputs(World& world)
     {
-        MenuLevelSettings settings = roster(4, 5, BotDifficulty::hard); // P1/P3 humans, P2/P4 bots.
+        MatchSetup settings = roster(4, 5, BotDifficulty::hard); // P1/P3 humans, P2/P4 bots.
         settings.set_stage("movement_course");
         settings.set_player_weapon(1, WeaponType::sprayer); settings.set_player_weapon(3, WeaponType::roller);
         std::srand(8301); auto level = world.build(settings);

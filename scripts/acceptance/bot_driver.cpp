@@ -179,7 +179,7 @@ namespace
 			require(differs, "Different bot seeds never changed a decision sequence");
 			require(std::rand() == expected_random, "Bot decisions consumed the game's global random stream");
 		}
-		MenuLevelSettings settings;
+		MatchSetup settings;
 		settings.set_player_count(4); settings.begin_input_claims(0);
 		settings.set_player_bot(1, BotDifficulty::hard); settings.set_player_bot(3, BotDifficulty::easy);
 		MatchBotDriver driver(&tuning, settings, 12);

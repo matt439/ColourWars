@@ -2,7 +2,7 @@
 
 #include "game/game_data.h"
 #include "game/states/menu_input.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "game/states/connection_audio.h"
 #include <functional>
 
@@ -14,13 +14,13 @@ class MenuContext
 {
 public:
 	MenuContext(GameData* data, MenuInput* input,
-		MenuLevelSettings* level_settings);
+		MatchSetup* level_settings);
 
 	GameData* data() const;
 	MenuInput* input() const;
 
 	// Non-null settings being assembled, or those used to build the active match.
-	MenuLevelSettings* level_settings() const;
+	MatchSetup* level_settings() const;
 	// Enabled only by GameLevel; a setup-menu roster is still being edited.
 	void reset_connection_audio();
 	void update_connection_audio();
@@ -46,7 +46,7 @@ public:
 private:
 	GameData* data_ = nullptr;
 	MenuInput* input_ = nullptr;
-	MenuLevelSettings* level_settings_ = nullptr;
+	MatchSetup* level_settings_ = nullptr;
 	std::unique_ptr<ConnectionAudio> connection_audio_;
 	std::function<void(float)> music_update_;
 	std::function<void()> music_suspend_;

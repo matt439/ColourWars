@@ -182,9 +182,9 @@ namespace turbulence_slab_tools_acceptance
             return output;
         }
 
-        MenuLevelSettings settings(bool side_b)
+        MatchSetup settings(bool side_b)
         {
-            MenuLevelSettings result; result.set_stage("turbulence_slab_tools"); result.set_player_count(2);
+            MatchSetup result; result.set_stage("turbulence_slab_tools"); result.set_player_count(2);
             result.set_screen_layout(labrador::ScreenLayout::two_player); result.begin_input_claims(3);
             require(result.claim_input_slot(1), "Cannot claim sparse lower-approach target seat");
             result.set_player_team(0, side_b ? PlayerTeam::b : PlayerTeam::a);

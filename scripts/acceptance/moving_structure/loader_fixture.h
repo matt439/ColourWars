@@ -9,13 +9,13 @@ namespace moving_structure_acceptance
     // owned file into a fresh registry and constructs through LevelBuilder.
     void write_loaded_stage(const std::filesystem::path& path, bool jump_through = false,
         bool blocked = false);
-    MenuLevelSettings loaded_settings();
+    MatchSetup loaded_settings();
 
     class LoadedFixture final
     {
     public:
         LoadedFixture(World& world, const std::filesystem::path& stage,
-            const MenuLevelSettings& settings, unsigned int seed);
+            const MatchSetup& settings, unsigned int seed);
         void tick(const PlayerInputData& input = moving_structure_acceptance::input(),
             float seconds = dt, SeatInputFilter* next = nullptr);
         void start();

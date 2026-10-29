@@ -294,7 +294,7 @@ std::string DebugDirectorImpl::bot_for_seat(int seat, int slot, bool shipping_bo
 void DebugDirectorImpl::rebuild_bots(const DebugMatchTarget& match)
 {
 	this->bot_driver_.reset();
-	const std::vector<MenuPlayerSettings> seats = match.debug_settings().player_settings();
+	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();
 	// The same seed gives the same bots on every build; without one each
 	// build draws a new one.
 	const std::uint64_t seed = this->seed_ ? static_cast<std::uint64_t>(*this->seed_) :

@@ -5,11 +5,10 @@
 #include "game/debug/tune_target.h"
 #include "engine/app/application.h"
 #include "engine/assets/json.h"
-#include "game/content_validation.h"
 #include "game/game_data.h"
 #include "game/presentation.h"
 #include "game/save.h"
-#include "game/states/main_menu.h"
+#include "game/states/menu_content_validation.h"
 #include "game/tuning.h"
 
 namespace
@@ -29,7 +28,7 @@ namespace
 	void check_levels(const GameTuning& tuning, const Presentation& presentation,
 		const GameData& context)
 	{
-		validate_game_content(tuning, presentation, context.render_resources(),
+		validate_shell_content(tuning, presentation, context.render_resources(),
 			context.audio_resources(), *context.level_infos(), *context.stages(),
 			context.save()->play_settings());
 	}
@@ -57,7 +56,7 @@ void TuningTarget::validate(std::string_view candidate_text, const std::string& 
 		// Startup's checks of numbers against the loaded resources, without
 		// building every stage.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
-		MainMenuModeSelect::validate_durations(context->render_resources(), *candidate, *this->presentation_);
+		validate_mode_durations(context->render_resources(), *candidate, *this->presentation_);
 	}
 	this->candidate_ = std::move(candidate);
 }
@@ -93,8 +92,8 @@ void PresentationTarget::validate(std::string_view candidate_text, const std::st
 		// Frame sizes against each frame's native texels, and the countdown
 		// box against its heading: startup's checks that need the resources.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
-		MainMenuModeSelect::validate_durations(context->render_resources(), *this->tuning_, *candidate);
-		MainMenuModeSelect::validate_stage_rules(context->render_resources(), *candidate);
+		validate_mode_durations(context->render_resources(), *this->tuning_, *candidate);
+		validate_mode_stage_rules(context->render_resources(), *candidate);
 	}
 	this->candidate_ = std::move(candidate);
 }

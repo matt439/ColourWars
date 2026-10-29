@@ -81,7 +81,7 @@ namespace paint_surfaces_acceptance
         }
         std::unique_ptr<Level> level(const std::string& stage, unsigned int seed)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_player_count(2);
             settings.set_screen_layout(labrador::ScreenLayout::two_player);
             settings.set_stage(stage);

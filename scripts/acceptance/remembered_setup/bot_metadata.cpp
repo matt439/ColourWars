@@ -3,7 +3,7 @@
 #include "game/input_slots.h"
 #include "game/last_match_setup.h"
 #include "game/save.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 
 #include <array>
 #include <filesystem>
@@ -60,7 +60,7 @@ namespace
             {
                 for (size_t variant = 0; variant < difficulties.size(); ++variant)
                 {
-                    MenuLevelSettings original;
+                    MatchSetup original;
                     original.set_player_count(count);
                     original.set_stage("arena");
                     original.set_best_of(count == 1 ? 1 : 5);

@@ -130,7 +130,7 @@ bool DebugDirectorImpl::drives_slot(int slot) const
 		this->play_armed_.get();
 	if (replay != nullptr)
 	{
-		for (const MenuPlayerSettings& seat : replay->file().settings.player_settings())
+		for (const SeatSetup& seat : replay->file().settings.player_settings())
 		{
 			if (seat.num == slot)
 			{
@@ -140,7 +140,7 @@ bool DebugDirectorImpl::drives_slot(int slot) const
 	}
 	if (this->match_ != nullptr)
 	{
-		const std::vector<MenuPlayerSettings> seats = this->match_->debug_settings().player_settings();
+		const std::vector<SeatSetup> seats = this->match_->debug_settings().player_settings();
 		for (std::size_t i = 0; i < seats.size(); ++i)
 		{
 			if (seats[i].num == slot && !this->bot_for_seat(static_cast<int>(i), slot).empty())
@@ -628,7 +628,7 @@ void DebugDirectorImpl::register_replay_commands()
 				log.info("play: recorded with " + line);
 			}
 			this->play_armed_ = std::make_unique<ReplayPlayer>(name, std::move(file));
-			const MenuLevelSettings& settings = this->play_armed_->file().settings;
+			const MatchSetup& settings = this->play_armed_->file().settings;
 			this->request_ = MatchRequest();
 			this->request_.exact = settings;
 			this->request_.exact_label = name;

@@ -14,7 +14,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     GameData data; data.set_application(&app); data.set_save(&preferences);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     MenuPage* active_home = nullptr; bool pad = false;
     struct ClearHomeReturn
@@ -56,7 +56,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = pad;
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
-        app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); settings = MenuLevelSettings();
+        app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); settings = MatchSetup();
         stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); active_home = nullptr;
         if (page == 0)
         {

@@ -5,7 +5,7 @@
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
 #include "engine/render/text_encoding.h"
-#include "game/content_validation.h"
+#include "game/states/menu_content_validation.h"
 #include "game/debug/bot.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/debug_screenshot.h"
@@ -402,7 +402,7 @@ DebugStatus DebugDirectorImpl::reload_content()
 	{
 		auto tuning = std::make_unique<GameTuning>(tuning_path.c_str());
 		auto presentation = std::make_unique<Presentation>(presentation_path.c_str());
-		validate_game_content(*tuning, *presentation, this->data_->render_resources(),
+		validate_shell_content(*tuning, *presentation, this->data_->render_resources(),
 			this->data_->audio_resources(), *this->data_->level_infos(),
 			*this->data_->stages(), this->data_->save()->play_settings());
 		// A sound the candidate names for the first time joins its group now.

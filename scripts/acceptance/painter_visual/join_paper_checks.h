@@ -9,7 +9,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation); data.set_stages(&stages); data.set_level_infos(&levels);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     MenuPage* active = nullptr;
     struct ClearJoinPaper
@@ -81,7 +81,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             std::array<int, 4>{ input_slots::keyboard_and_mouse, 3, 0, 2 };
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.set_best_of(1);
+        settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(1);
         settings.set_stage("movement_course"); settings.set_duration(73.0f);
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player :
             count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
@@ -224,7 +224,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     const auto destination = [&](int kind)
     {
-        MenuLevelSettings plan = settings; MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup plan = settings; MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &plan); StateContext reference_stack;
         reference_stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
         if (kind == 0) { reference_stack.push(std::make_unique<MainMenuPlayerCount>(&reference_context)); }
@@ -323,7 +323,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             ~RestoreJoinDetailFont() { this->font = this->original; }
         } restore_font{ live_style.detail_font, live_style.detail_font };
         live_style.detail_font = "lato_black_144";
-        MenuLevelSettings invalid_settings; invalid_settings.set_player_count(1); invalid_settings.begin_input_claims(input_slots::keyboard_and_mouse);
+        MatchSetup invalid_settings; invalid_settings.set_player_count(1); invalid_settings.begin_input_claims(input_slots::keyboard_and_mouse);
         MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext invalid_context(&data, &invalid_input, &invalid_settings); StateContext invalid_stack;
         bool rejected = false;

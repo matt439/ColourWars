@@ -88,7 +88,7 @@ namespace
         std::unique_ptr<Level> build(bool practice, int humans = 1, float duration = 1.0f,
             WeaponType tool = WeaponType::sprayer)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(humans);
             settings.set_screen_layout(humans == 1 ? ScreenLayout::one_player : ScreenLayout::two_player);

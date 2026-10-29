@@ -20,7 +20,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearRepick

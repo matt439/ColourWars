@@ -280,7 +280,7 @@ namespace
             {
                 for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
                 {
-                    MenuLevelSettings settings;
+                    MatchSetup settings;
                     settings.set_player_count(2); settings.set_player_bot(1, difficulty);
                     settings.begin_input_claims(input_slots::keyboard_and_mouse);
                     settings.set_screen_layout(ScreenLayout::one_player);

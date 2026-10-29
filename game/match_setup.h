@@ -5,21 +5,21 @@
 #include <optional>
 #include <vector>
 #include "game/objects/weapon_type.h"
-#include "game/states/menu_player_settings.h"
+#include "game/seat_setup.h"
 #include "engine/render/screen_layout.h"
 #include "game/input_slots.h"
 #include "game/series_stage_rule.h"
-
-struct MenuText;
 
 // The roster is empty until a player count is chosen, then contains 1-4 seats.
 // Human seats are unclaimed (-1) or hold a unique valid device slot. Bots have
 // no device and carry their own difficulty. P1 is always the human setup host.
 // Only roster operations mutate assignments; snapshots cannot alter the roster.
-class MenuLevelSettings
+// The menu assembles it and the level, its bots and the round tape read it; its
+// one menu word, the seat label, is player_label in game/states/player_label.h.
+class MatchSetup
 {
 public:
-	MenuLevelSettings() = default;
+	MatchSetup() = default;
 	int best_of() const;
 	void set_best_of(int best_of);
 	std::optional<float> duration() const;
@@ -28,7 +28,7 @@ public:
 	// Which stage a series' later rounds play; Same unless chosen (ROAD#20).
 	SeriesStageRule series_stage_rule() const;
 	void set_series_stage_rule(SeriesStageRule rule);
-	const std::vector<MenuPlayerSettings>& player_settings() const;
+	const std::vector<SeatSetup>& player_settings() const;
 	// Preserves retained seats and defaults newly added seats to unclaimed.
 	// Rejects counts outside 1-4 without changing the roster or its count.
 	void set_player_count(int player_count);
@@ -68,7 +68,7 @@ public:
 	bool input_roster_complete() const;
 	int player_index_for_slot(int slot) const;
 
-	// A human's stable input slot (MenuPlayerSettings::num) keys its preferences
+	// A human's stable input slot (SeatSetup::num) keys its preferences
 	// and paint credit; bots have no slot and use participant-based paint credit.
 	// Roster order identifies participants and their results, independently of
 	// human panes. A pad reads device_slot(num), normally num unless a controller
@@ -83,13 +83,11 @@ public:
 	// Move a human pad seat onto a pad no seat reads. Returns false and
 	// changes nothing otherwise; moving back to its own slot is allowed.
 	bool move_to_device(int slot, int device);
-	// Stable participant number, with a human device or explicit bot difficulty.
-	std::wstring player_label(int player_index, const MenuText& text) const;
 
 private:
 	void reset_devices();
 
-	std::vector<MenuPlayerSettings> player_settings_;
+	std::vector<SeatSetup> player_settings_;
 	// Per pad input slot, the pad that now drives it; -1 is the slot itself.
 	std::array<int, input_slots::pad_count> devices_ = { -1, -1, -1, -1 };
 	int best_of_ = 1;

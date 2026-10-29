@@ -165,9 +165,9 @@ namespace fixed_slab_acceptance
             return total;
         }
 
-        MenuLevelSettings setup(int count)
+        MatchSetup setup(int count)
         {
-            MenuLevelSettings result;
+            MatchSetup result;
             result.set_stage("turbulence_slab_trial"); result.set_player_count(count);
             result.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
             constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };

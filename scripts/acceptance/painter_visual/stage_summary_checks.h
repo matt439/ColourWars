@@ -58,7 +58,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     require(random_stage_indices(stages) == std::vector<size_t>{ 1 }, "Summary refresh fixture needs an actual eligible Random slot");
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, expected;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreStageSummary
     {
@@ -99,7 +99,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         stack.clear(); context.cancel_music_exit(); context.set_music_update({}); stack.notify_activation(true);
         app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down }) { app.keyboard()->on_key_up(key); }
-        painter_scripted_pads::states = {}; settings = MenuLevelSettings(); settings.set_player_count(fixture.players);
+        painter_scripted_pads::states = {}; settings = MatchSetup(); settings.set_player_count(fixture.players);
         settings.begin_input_claims(slots[0]);
         for (int seat = 1; seat < fixture.players; ++seat)
         { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Cannot claim the connected summary fixture roster"); painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(seat)])].connected = true; }

@@ -1,13 +1,13 @@
 #include "game/pch.h"
 #include "game/states/menu_input.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 
 using namespace mattmath;
 using namespace labrador;
 
 ProcessedMenuInput menu_input_for_owner(
 	const std::vector<ProcessedMenuInput>& inputs, int opening_slot,
-	const MenuLevelSettings& settings)
+	const MatchSetup& settings)
 {
 	if (opening_slot < 0 || opening_slot >= input_slots::count ||
 		static_cast<size_t>(opening_slot) >= inputs.size())
@@ -251,11 +251,11 @@ std::vector<ProcessedMenuInput> MenuInput::menu_inputs()
 }
 
 std::vector<ProcessedMenuInput> MenuInput::player_inputs(
-	const MenuLevelSettings& settings)
+	const MatchSetup& settings)
 {
 	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	std::vector<ProcessedMenuInput> result;
-	for (const MenuPlayerSettings& player : settings.player_settings())
+	for (const SeatSetup& player : settings.player_settings())
 	{
 		if (player.controller == PlayerController::bot)
 		{

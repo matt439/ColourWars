@@ -66,7 +66,7 @@ namespace
             roof->tag() == floor->tag() && floor_bounds.height == 10.0f && roof_bounds.height == 10.0f,
             "Paintable rulers changed their ten-unit one-way collision classification");
         area_is(floor->paint_total().total, floor_bounds.width * tuning.paint().thickness);
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(1);
         settings.set_screen_layout(ScreenLayout::one_player);
         settings.set_stage("crossfeed");

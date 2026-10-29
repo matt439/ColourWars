@@ -109,7 +109,7 @@ public:
         stack_.notify_activation(true); app_.keyboard()->set_focused(true); app_.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app_.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; poll(); poll(); input_.reset_actions();
-        settings_ = MenuLevelSettings(); settings_.set_player_count(1); settings_.set_best_of(1); settings_.set_duration(73.0f);
+        settings_ = MatchSetup(); settings_.set_player_count(1); settings_.set_best_of(1); settings_.set_duration(73.0f);
         settings_.set_stage("crossfeed"); settings_.set_screen_layout(ScreenLayout::one_player);
         settings_.begin_input_claims(input_slots::keyboard_and_mouse); settings_.set_player_team(0, PlayerTeam::a);
         settings_.set_player_weapon(0, WeaponType::sprayer); slot_ = 0; locked_ = false; captured_ = look_.player_identity_background_colour;
@@ -258,7 +258,7 @@ private:
         require(record.good(), "Cannot preserve preview failure receipt");
     }
     Application& app_; Presentation& presentation_; const HudPresentation& look_; const Canvas& canvas_;
-    Save preferences_; StageList stages_; GameData data_; MenuInput input_; MenuLevelSettings settings_; MenuContext context_; StateContext& stack_;
+    Save preferences_; StageList stages_; GameData data_; MenuInput input_; MatchSetup settings_; MenuContext context_; StateContext& stack_;
     const SpriteSheet* sheet_; const SpriteFrame& pixel_; std::vector<float> fixed_, identity_fixed_; TeamPalettePresentation palette_;
     std::vector<int> preferences_before_; std::array<std::string, 6> font_names_{}; std::array<FontHandle, 6> fonts_{}; std::array<const Font*, 6> font_pointers_{};
     const std::filesystem::path output_; const std::string phase_; KeyboardState initial_keyboard_, initial_previous_; bool initial_mouse_focus_, initial_activation_;

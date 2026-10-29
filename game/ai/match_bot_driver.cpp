@@ -45,10 +45,10 @@ namespace
 
 namespace
 {
-	std::vector<std::optional<BotDifficulty>> roster_bots(const MenuLevelSettings& settings)
+	std::vector<std::optional<BotDifficulty>> roster_bots(const MatchSetup& settings)
 	{
 		std::vector<std::optional<BotDifficulty>> seats;
-		for (const MenuPlayerSettings& player : settings.player_settings())
+		for (const SeatSetup& player : settings.player_settings())
 		{
 			seats.push_back(player.controller == PlayerController::bot ?
 				std::optional<BotDifficulty>(player.difficulty) : std::nullopt);
@@ -57,7 +57,7 @@ namespace
 	}
 }
 
-MatchBotDriver::MatchBotDriver(const GameTuning* tuning, const MenuLevelSettings& settings,
+MatchBotDriver::MatchBotDriver(const GameTuning* tuning, const MatchSetup& settings,
 	std::uint64_t seed) : MatchBotDriver(tuning, roster_bots(settings), seed)
 {
 }

@@ -10,7 +10,7 @@
 #include <array>
 #include <vector>
 
-class MenuLevelSettings;
+class MatchSetup;
 
 // One device's held navigation, blocked until neutral after a context change.
 class MenuDirectionRepeat
@@ -34,12 +34,12 @@ struct ProcessedMenuInput
 };
 
 // Retain the opening device while connected; for a seat, that is the pad the
-// seat reads now (MenuLevelSettings::device_slot). Otherwise accept another match
+// seat reads now (MatchSetup::device_slot). Otherwise accept another match
 // participant, or any device if all participants are missing. Invalid owners
 // return neutral input.
 ProcessedMenuInput menu_input_for_owner(
 	const std::vector<ProcessedMenuInput>& inputs, int opening_slot,
-	const MenuLevelSettings& settings);
+	const MatchSetup& settings);
 
 // Maps engine device state to menu navigation and armed action releases.
 class MenuInput
@@ -60,7 +60,7 @@ public:
 	// Same input, in the fixed roster's player order. A missing device leaves
 	// its own row neutral instead of handing the row to another controller.
 	// Explicit bots are connected and neutral; pages route host choices to them.
-	std::vector<ProcessedMenuInput> player_inputs(const MenuLevelSettings& settings);
+	std::vector<ProcessedMenuInput> player_inputs(const MatchSetup& settings);
 
 	// Clear ownership when taking input back from gameplay or another context.
 	void reset_actions();

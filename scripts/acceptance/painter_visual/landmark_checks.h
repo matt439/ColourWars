@@ -278,7 +278,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
         }
         for (const int count : { 1, 4 })
         {
-            MenuLevelSettings settings; settings.set_stage(stage.name); settings.set_player_count(count); settings.set_duration(0.75f);
+            MatchSetup settings; settings.set_stage(stage.name); settings.set_player_count(count); settings.set_duration(0.75f);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player); settings.begin_input_claims(3);
             for (int view = 1; view < count; ++view) { require(settings.claim_input_slot(view - 1), "Landmark story sparse claim failed"); }
             for (int view = 0; view < count; ++view) { settings.set_player_team(view, view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(view, WeaponType::roller); }

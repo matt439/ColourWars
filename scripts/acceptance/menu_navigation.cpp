@@ -1,8 +1,9 @@
 #include "game/pch.h"
 #include "game/states/menu_input.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "game/states/pause_menu.h"
 #include "game/presentation.h"
+#include "game/states/player_label.h"
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -55,7 +56,7 @@ namespace
 
     void check_owner_routing()
     {
-        MenuLevelSettings roster;
+        MatchSetup roster;
         roster.set_player_count(2);
         roster.begin_input_claims(3);
         require(roster.claim_input_slot(0), "Owner-routing fixture must retain sparse pad slots 3 and 0");
@@ -120,7 +121,7 @@ namespace
     // match waits. The seat keeps its slot as identity and reads the new pad.
     void check_seat_reclaim(const MenuText& text)
     {
-        MenuLevelSettings roster;
+        MatchSetup roster;
         roster.set_player_count(3);
         roster.begin_input_claims(0);
         require(roster.claim_input_slot(1) && roster.claim_input_slot(input_slots::keyboard_and_mouse),
@@ -151,7 +152,7 @@ namespace
             "The reclaimed seat must keep its identity slot and read the new pad only");
         require(roster.pad_devices() == std::array<int, input_slots::pad_count>{ 2, 1, 2, 3 },
             "Indexed readers must see the seat's new pad in its own slot");
-        require(roster.player_label(0, text) == text.roster_label(0, 2),
+        require(player_label(roster, 0, text) == text.roster_label(0, 2),
             "The roster must name the pad the seat now uses");
 
         const auto same = [](const ProcessedMenuInput& left, const ProcessedMenuInput& right)
@@ -190,7 +191,7 @@ namespace
             roster.device_slot(1) == 1 && roster.player_index_for_device(2) == -1,
             "A setup claim operation must put every seat back on its own slot");
 
-        MenuLevelSettings with_bot;
+        MatchSetup with_bot;
         with_bot.set_player_count(2);
         with_bot.begin_input_claims(0);
         with_bot.set_player_bot(1, BotDifficulty::normal);

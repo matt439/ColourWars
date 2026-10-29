@@ -21,7 +21,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct RestoreSetupText
@@ -49,7 +49,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_best_of(best_of);
+        settings = MatchSetup(); settings.set_best_of(best_of);
         input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
         if (count) { stack.push(std::make_unique<MainMenuPlayerCount>(&context)); }
         else { stack.push(std::make_unique<MainMenuModeSelect>(&context)); }
@@ -58,7 +58,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     };
     const auto destination = [&](bool join)
     {
-        MenuLevelSettings copy = settings;
+        MatchSetup copy = settings;
         MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &copy);
         StateContext reference_stack;

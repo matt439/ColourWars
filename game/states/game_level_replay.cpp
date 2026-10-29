@@ -39,7 +39,7 @@ void GameLevel::start_replay()
 
 	// The round's own setup: a re-pick page may have changed settings_ and
 	// been backed out of.
-	const MenuLevelSettings& round = this->tape_.settings();
+	const MatchSetup& round = this->tape_.settings();
 	this->data()->viewport_manager()->set_layout(round.screen_layout());
 	std::srand(this->tape_.seed());
 	// The tape starts at the first step of play, which needs no intro.

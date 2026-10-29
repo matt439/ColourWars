@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/content_validation.h"
+#include "game/states/menu_content_validation.h"
 #include "game/directory_consts.h"
 #include "game/objects/stage.h"
 #include "game/play_settings.h"
@@ -512,7 +513,7 @@ namespace
 
 		// The startup path after the scan: the whole list, user stages
 		// included, passes the same checks and joins the sound groups.
-		validate_game_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
+		validate_shell_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
 			&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);
 		AudioResources audio;
 		audio.add_sound_bank("paint_exe", SoundBank::silent());
@@ -647,7 +648,7 @@ namespace
 		menu.set_stage_scan({});
 		require(menu.stage_scan() == nullptr, "Detaching scan details left a stale callback");
 		// The whole list still passes what startup checks.
-		validate_game_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
+		validate_shell_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
 			&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);
 		std::cout << "PASS a rescan adds a new user stage, rereads an edited one and drops a deleted or broken one, "
 			"keeping the shipped stages first\n";

@@ -2,7 +2,7 @@
 
 #include "game/objects/player_input_data.h"
 #include "game/objects/seat_input_filter.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <cstddef>
 #include <vector>
 
@@ -27,7 +27,7 @@ public:
 	// A fresh, empty tape for a level built from `settings` after std::srand(seed).
 	// The setup is copied: the End menu's re-pick pages may change the match's
 	// own before its Watch Replay is chosen.
-	void start(unsigned int seed, const MenuLevelSettings& settings);
+	void start(unsigned int seed, const MatchSetup& settings);
 	void clear();
 	void spoil();
 	// The Debug cheats the level plays under. A change once the round has
@@ -37,7 +37,7 @@ public:
 	// Recorded and not spoiled.
 	bool playable() const;
 	unsigned int seed() const { return this->seed_; }
-	const MenuLevelSettings& settings() const { return this->settings_; }
+	const MatchSetup& settings() const { return this->settings_; }
 	bool damage_immune() const { return this->damage_immune_; }
 	bool infinite_ammo() const { return this->infinite_ammo_; }
 
@@ -65,7 +65,7 @@ private:
 	};
 
 	unsigned int seed_ = 0;
-	MenuLevelSettings settings_;
+	MatchSetup settings_;
 	bool damage_immune_ = false;
 	bool infinite_ammo_ = false;
 	bool started_ = false;

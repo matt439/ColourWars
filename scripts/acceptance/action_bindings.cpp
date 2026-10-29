@@ -3,7 +3,7 @@
 #include "game/input_slots.h"
 #include "game/objects/player_input.h"
 #include "game/states/menu_input.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "engine/input/gamepad_reader.h"
 #include <array>
 #include <cmath>
@@ -481,7 +481,7 @@ namespace
 		pad.buttons = 0; action_test_pads::states[1].buttons = 0; h.keyboard.on_key_up(Key::enter); h.step("reset one owner only");
 		require(h.menus[3].action == MenuInputAction::none && h.menus[1].action == MenuInputAction::shuffle &&
 			h.menus[4].action == MenuInputAction::proceed, "Resetting one pad must preserve other pad and keyboard owners");
-		MenuLevelSettings roster; roster.set_player_count(2); roster.begin_input_claims(3); require(roster.claim_input_slot(4), "Roster setup failed");
+		MatchSetup roster; roster.set_player_count(2); roster.begin_input_claims(3); require(roster.claim_input_slot(4), "Roster setup failed");
 		const auto ordered = h.menu.player_inputs(roster);
 		require(ordered.size() == 2 && ordered[0].action == h.menus[3].action && ordered[1].action == h.menus[4].action &&
 			ordered[0].connected == h.menus[3].connected && ordered[1].connected == h.menus[4].connected &&

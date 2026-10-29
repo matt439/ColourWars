@@ -30,6 +30,7 @@ add_executable(ColourWars WIN32
     last_match_setup.cpp
     main.cpp
     match_records.cpp
+    match_setup.cpp
     presentation.cpp
     presentation_menu_text.cpp
     presentation_read_match.cpp
@@ -202,12 +203,13 @@ add_executable(ColourWars WIN32
     states/menu_context.cpp
     states/user_stage_refusals_menu.cpp
     states/menu_focus_motion.cpp
+    states/menu_content_validation.cpp
     states/menu_input.cpp
-    states/menu_level_settings.cpp
     states/menu_page.cpp
     states/menu_panel.cpp
     states/option_row.cpp
     states/pause_menu.cpp
+    states/player_label.cpp
     states/prompt_bar.cpp
     states/results_menu.cpp
     states/stage_preview.cpp

@@ -29,13 +29,13 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const std::string saved = bytes();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(4);
     require(settings.claim_input_slot(3), "Cannot specify the readout fixture's retained sparse roster");
     settings.set_stage("movement_course"); settings.set_best_of(3); settings.set_duration(73.0f);
     settings.set_screen_layout(ScreenLayout::two_player);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
-    const MenuLevelSettings retained = settings;
+    const MatchSetup retained = settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreReadouts
     {
@@ -182,12 +182,12 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             }
             return true;
         };
-        MenuLevelSettings recovered = retained;
+        MatchSetup recovered = retained;
         recovered.begin_input_claims(0);
         require(recovered.claim_input_slot(2) && recovered.move_to_device(0, 3), "Cannot arrange the private recovered seat");
         recovered.set_player_weapon(0, WeaponType::sniper); recovered.set_player_handicap(0, 2);
         recovered.set_player_weapon(1, WeaponType::mister); recovered.set_series_stage_rule(SeriesStageRule::rotate);
-        const MenuLevelSettings expected_settings = recovered;
+        const MatchSetup expected_settings = recovered;
         MenuContext recovery_context(&data, &input, &recovered);
         struct ClearRecoveryPage
         {

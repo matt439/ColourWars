@@ -114,7 +114,7 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
     };
     const auto build_cq = [&](int count, float duration, WeaponType solo_tool)
     {
-        MenuLevelSettings settings; settings.set_stage("close_quarters");
+        MatchSetup settings; settings.set_stage("close_quarters");
         settings.set_player_count(count); settings.set_duration(duration);
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
         constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };

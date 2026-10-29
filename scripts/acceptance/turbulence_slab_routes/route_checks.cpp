@@ -208,14 +208,14 @@ namespace turbulence_slab_routes_acceptance
             Roles map;
 
             Trial(World& with, const fs::path& stage, const Roles& groups, bool side_b,
-                const MenuLevelSettings* decoded_settings = nullptr, const unsigned int* decoded_seed = nullptr) :
+                const MatchSetup* decoded_settings = nullptr, const unsigned int* decoded_seed = nullptr) :
                 world(with), map(groups)
             {
                 auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage).c_str()); info->validate();
                 const LevelObjectBuilder objects(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
                 info->validate_content(objects, world.render, world.audio); bounds = info->out_of_bounds_rectangle();
                 infos.add(decoded_settings ? decoded_settings->stage() : "turbulence_roller_route", std::move(info));
-                MenuLevelSettings settings;
+                MatchSetup settings;
                 settings.set_stage("turbulence_roller_route"); settings.set_player_count(1);
                 settings.set_screen_layout(ScreenLayout::one_player); settings.begin_input_claims(input_slots::keyboard_and_mouse);
                 settings.set_player_team(0, side_b ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(0, WeaponType::roller);

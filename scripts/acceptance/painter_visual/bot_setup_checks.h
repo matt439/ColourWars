@@ -32,7 +32,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         host_data.set_level_infos(&levels); host_data.set_stages(&host_stages);
         host_data.set_tuning(&tuning); host_data.set_presentation(&presentation);
         MenuInput host_input(app.gamepads(), app.keyboard(), &tuning);
-        MenuLevelSettings host_settings;
+        MatchSetup host_settings;
         MenuContext host_context(&host_data, &host_input, &host_settings);
         StateContext& host_stack = app;
         require(host_stack.depth() == 0, "ROAD34 needs the painter's empty owned state stack");
@@ -107,7 +107,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         };
         const auto host_expect_page = [&](int page, int expected_host, int expected_guest)
         {
-            MenuLevelSettings expected = host_settings;
+            MatchSetup expected = host_settings;
             expected.set_player_handicap(0, expected_host);
             if (expected.player_count() == 2) expected.set_player_handicap(1, expected_guest);
             MenuInput expected_input(app.gamepads(), app.keyboard(), &tuning);
@@ -144,7 +144,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
             if (count == 2) painter_scripted_pads::states[static_cast<size_t>(current_guest)].connected = true;
             app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
             app.mouse()->poll(); app.mouse()->poll();
-            host_settings = MenuLevelSettings(); host_settings.set_player_count(count);
+            host_settings = MatchSetup(); host_settings.set_player_count(count);
             host_settings.set_player_handicap(0, previous_boost);
             host_settings.set_stage("movement_course"); host_settings.set_duration(73.0f);
             for (int seat = 0; seat < count; ++seat)
@@ -228,7 +228,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearBotSetup
@@ -258,7 +258,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     };
     const auto reference = [&](int page)
     {
-        MenuLevelSettings copy = settings;
+        MatchSetup copy = settings;
         MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext other_context(&data, &other_input, &copy);
         StateContext other;
@@ -285,7 +285,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = claimed;
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_player_count(count);
+        settings = MatchSetup(); settings.set_player_count(count);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         if (claimed) { require(settings.claim_input_slot(3), "Cannot claim bot setup's sparse human seat"); }
         settings.set_stage("movement_course"); settings.set_duration(73.0f);

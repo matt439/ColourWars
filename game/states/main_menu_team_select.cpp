@@ -2,6 +2,7 @@
 #include "game/states/main_menu.h"
 #include "game/objects/crude_drawing.h"
 #include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -136,7 +137,7 @@ void MainMenuTeamSelect::shuffle_teams()
 {
 	// Like manual choices, a shuffle is provisional until everyone confirms.
 	// Only the final team commit writes the shared match settings.
-	MenuLevelSettings shuffled = *this->level_settings();
+	MatchSetup shuffled = *this->level_settings();
 	if (!shuffled.shuffle_teams()) { return; }
 	for (int i = 0; i < this->player_count(); ++i)
 	{
@@ -397,7 +398,7 @@ void MainMenuTeamSelect::init()
 		auto widgets = std::make_unique<PlayerWidgets>(this->menu_style().motion);
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::wstring label_text = this->level_settings()->player_label(i, this->text());
+		std::wstring label_text = player_label(*this->level_settings(), i, this->text());
 
 		widgets->player = std::make_unique<colourwars::UiTextDropShadow>(
 			name,

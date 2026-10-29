@@ -114,7 +114,7 @@ void tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(impl.log().set_transcript((output / "tune-colour-commands.log").string()),
         "cannot retain tune-colour command transcript");
     StateContext& stack = app;
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings menu_settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup menu_settings;
     MenuContext context(&data, &input, &menu_settings);
     struct ClearStack { StateContext& stack; ~ClearStack() { this->stack.clear(); } } clear{ stack };
     const Canvas black(app.render_resources(), Colour::black);
@@ -157,7 +157,7 @@ void tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             "reset did not restore the existing movement feedback raster");
     }
 
-    MenuLevelSettings plan; plan.set_stage("movement_course"); plan.set_player_count(1);
+    MatchSetup plan; plan.set_stage("movement_course"); plan.set_player_count(1);
     plan.set_screen_layout(ScreenLayout::one_player); plan.begin_input_claims(input_slots::keyboard_and_mouse);
     plan.set_player_team(0, PlayerTeam::a); plan.set_player_weapon(0, WeaponType::roller);
     auto match = std::make_unique<GameLevel>(&data, plan); GameLevel* game = match.get();

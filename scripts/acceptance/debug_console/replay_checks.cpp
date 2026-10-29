@@ -184,7 +184,7 @@ namespace debug_console_acceptance
         file.final_print.seats[0].paint_underfoot = false;
         file.write(path);
         require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
-		const std::vector<MenuPlayerSettings> seats = read.settings.player_settings();
+		const std::vector<SeatSetup> seats = read.settings.player_settings();
 		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
 			read.settings.stage() == "x" &&

@@ -59,9 +59,9 @@ namespace moving_structure_acceptance
         require(output.good(), "Cannot retain the public-loader stage receipt");
     }
 
-    MenuLevelSettings loaded_settings()
+    MatchSetup loaded_settings()
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_player_team(0, PlayerTeam::a);
@@ -73,7 +73,7 @@ namespace moving_structure_acceptance
     }
 
     LoadedFixture::LoadedFixture(World& world, const std::filesystem::path& stage,
-        const MenuLevelSettings& settings, unsigned int seed) :
+        const MatchSetup& settings, unsigned int seed) :
         tuning(world.variant([](rapidjson::Document& source) { set_countdown(source, dt / 4.0f); }))
     {
         viewports.set_layout(settings.screen_layout());

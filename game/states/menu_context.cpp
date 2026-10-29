@@ -2,7 +2,7 @@
 #include "game/states/menu_context.h"
 
 MenuContext::MenuContext(GameData* data, MenuInput* input,
-	MenuLevelSettings* level_settings) :
+	MatchSetup* level_settings) :
 	data_(data), input_(input), level_settings_(level_settings)
 {
 
@@ -18,7 +18,7 @@ MenuInput* MenuContext::input() const
 	return this->input_;
 }
 
-MenuLevelSettings* MenuContext::level_settings() const
+MatchSetup* MenuContext::level_settings() const
 {
 	return this->level_settings_;
 }

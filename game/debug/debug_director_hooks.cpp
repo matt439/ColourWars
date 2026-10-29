@@ -14,7 +14,7 @@
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/objects/level.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <bit>
 #include <cctype>
 #include <chrono>
@@ -238,7 +238,7 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 {
 	if (this->build_began_ms_ >= 0.0)
 	{
-		const MenuLevelSettings& built = match.debug_settings();
+		const MatchSetup& built = match.debug_settings();
 		this->last_build_ = LevelBuildTime{ perf_now_ms() - this->build_began_ms_,
 			built.stage(), built.player_count() };
 		this->build_began_ms_ = -1.0;
@@ -302,7 +302,7 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 
 std::vector<std::wstring> DebugDirectorImpl::seat_labels(const DebugMatchTarget& match) const
 {
-	const std::vector<MenuPlayerSettings> seats = match.debug_settings().player_settings();
+	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();
 	std::vector<std::wstring> labels(seats.size());
 	bool any = false;
 	for (std::size_t i = 0; i < seats.size(); ++i)

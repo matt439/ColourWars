@@ -154,7 +154,7 @@ namespace
         std::unique_ptr<Level> build(float duration = 300.0f,
             const std::array<WeaponType, 4>& tools = roster)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(4);
             settings.set_screen_layout(ScreenLayout::four_player);

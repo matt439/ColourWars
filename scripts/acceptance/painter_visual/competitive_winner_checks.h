@@ -54,7 +54,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     const std::string saved = saved_bytes();
     GameData data; data.set_application(&app); data.set_save(&preferences);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_duration(73.0f); settings.set_stage("movement_course");
     MenuContext context(&data, &input, &settings); StateContext stack;
     struct RestoreCompetitiveWinner

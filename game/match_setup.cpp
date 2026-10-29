@@ -1,17 +1,16 @@
 #include "game/pch.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "game/input_slots.h"
-#include "game/presentation.h"
 #include <array>
 #include <cstdlib>
 using namespace labrador;
 
-std::optional<float> MenuLevelSettings::duration() const
+std::optional<float> MatchSetup::duration() const
 {
 	return this->duration_;
 }
 
-void MenuLevelSettings::set_duration(std::optional<float> seconds)
+void MatchSetup::set_duration(std::optional<float> seconds)
 {
 	if (seconds && (!std::isfinite(*seconds) || *seconds <= 0.0f))
 	{
@@ -20,12 +19,12 @@ void MenuLevelSettings::set_duration(std::optional<float> seconds)
 	this->duration_ = seconds;
 }
 
-const std::vector<MenuPlayerSettings>& MenuLevelSettings::player_settings() const
+const std::vector<SeatSetup>& MatchSetup::player_settings() const
 {
 	return this->player_settings_;
 }
 
-void MenuLevelSettings::set_player_count(int player_count)
+void MatchSetup::set_player_count(int player_count)
 {
 	if (player_count < 1 || player_count > input_slots::pad_count)
 	{
@@ -35,26 +34,26 @@ void MenuLevelSettings::set_player_count(int player_count)
 	this->player_settings_.resize(static_cast<size_t>(player_count));
 }
 
-int MenuLevelSettings::player_count() const
+int MatchSetup::player_count() const
 {
 	return static_cast<int>(this->player_settings_.size());
 }
 
-int MenuLevelSettings::human_count() const
+int MatchSetup::human_count() const
 {
 	return this->player_count() - this->bot_count();
 }
 
-int MenuLevelSettings::bot_count() const
+int MatchSetup::bot_count() const
 {
 	return static_cast<int>(std::count_if(this->player_settings_.begin(),
-		this->player_settings_.end(), [](const MenuPlayerSettings& player)
+		this->player_settings_.end(), [](const SeatSetup& player)
 		{ return player.controller == PlayerController::bot; }));
 }
 
-void MenuLevelSettings::set_player_bot(int player_index, BotDifficulty difficulty)
+void MatchSetup::set_player_bot(int player_index, BotDifficulty difficulty)
 {
-	MenuPlayerSettings& player = this->player_settings_.at(static_cast<size_t>(player_index));
+	SeatSetup& player = this->player_settings_.at(static_cast<size_t>(player_index));
 	if (player_index == 0)
 	{
 		throw std::invalid_argument("Player 1 must remain the human setup host");
@@ -70,9 +69,9 @@ void MenuLevelSettings::set_player_bot(int player_index, BotDifficulty difficult
 	this->reset_devices();
 }
 
-void MenuLevelSettings::set_player_human(int player_index)
+void MatchSetup::set_player_human(int player_index)
 {
-	MenuPlayerSettings& player = this->player_settings_.at(static_cast<size_t>(player_index));
+	SeatSetup& player = this->player_settings_.at(static_cast<size_t>(player_index));
 	if (player.controller == PlayerController::bot)
 	{
 		player.controller = PlayerController::human;
@@ -81,36 +80,36 @@ void MenuLevelSettings::set_player_human(int player_index)
 	}
 }
 
-void MenuLevelSettings::set_stage(const std::string& stage)
+void MatchSetup::set_stage(const std::string& stage)
 {
 	this->stage_ = stage;
 }
 
-const std::string& MenuLevelSettings::stage() const
+const std::string& MatchSetup::stage() const
 {
 	return this->stage_;
 }
 
-ScreenLayout MenuLevelSettings::screen_layout() const
+ScreenLayout MatchSetup::screen_layout() const
 {
 	return this->screen_layout_;
 }
 
-void MenuLevelSettings::set_screen_layout(ScreenLayout screen_layout)
+void MatchSetup::set_screen_layout(ScreenLayout screen_layout)
 {
 	this->screen_layout_ = screen_layout;
 }
 
-void MenuLevelSettings::set_player_team(int player_index, PlayerTeam team)
+void MatchSetup::set_player_team(int player_index, PlayerTeam team)
 {
 	this->player_settings_.at(static_cast<size_t>(player_index)).team = team;
 }
-PlayerTeam MenuLevelSettings::player_team(int player_index) const
+PlayerTeam MatchSetup::player_team(int player_index) const
 {
 	return this->player_settings_.at(static_cast<size_t>(player_index)).team;
 }
 
-bool MenuLevelSettings::shuffle_teams()
+bool MatchSetup::shuffle_teams()
 {
 	const int count = this->player_count();
 	if (count < 2 || !this->input_roster_complete()) { return false; }
@@ -131,37 +130,37 @@ bool MenuLevelSettings::shuffle_teams()
 	return true;
 }
 
-void MenuLevelSettings::set_player_weapon(int player_index, WeaponType weapon)
+void MatchSetup::set_player_weapon(int player_index, WeaponType weapon)
 {
 	this->player_settings_.at(static_cast<size_t>(player_index)).weapon = weapon;
 }
-WeaponType MenuLevelSettings::player_weapon(int player_index) const
+WeaponType MatchSetup::player_weapon(int player_index) const
 {
 	return this->player_settings_.at(static_cast<size_t>(player_index)).weapon;
 }
 
-void MenuLevelSettings::set_player_handicap(int player_index, int handicap)
+void MatchSetup::set_player_handicap(int player_index, int handicap)
 {
-	MenuPlayerSettings& player = this->player_settings_.at(static_cast<size_t>(player_index));
+	SeatSetup& player = this->player_settings_.at(static_cast<size_t>(player_index));
 	if (!handicaps::valid(handicap))
 	{
 		throw std::invalid_argument("Handicap level must be none, +1 or +2");
 	}
 	player.handicap = handicap;
 }
-int MenuLevelSettings::player_handicap(int player_index) const
+int MatchSetup::player_handicap(int player_index) const
 {
 	return this->player_settings_.at(static_cast<size_t>(player_index)).handicap;
 }
 
-void MenuLevelSettings::begin_input_claims(int initiating_slot)
+void MatchSetup::begin_input_claims(int initiating_slot)
 {
 	if (this->player_settings_.empty() ||
 		initiating_slot < 0 || initiating_slot >= input_slots::count)
 	{
 		throw std::invalid_argument("Cannot bind the player roster to these inputs");
 	}
-	for (MenuPlayerSettings& player : this->player_settings_)
+	for (SeatSetup& player : this->player_settings_)
 	{
 		player.num = -1;
 	}
@@ -169,14 +168,14 @@ void MenuLevelSettings::begin_input_claims(int initiating_slot)
 	this->reset_devices();
 }
 
-bool MenuLevelSettings::claim_input_slot(int slot)
+bool MatchSetup::claim_input_slot(int slot)
 {
 	if (slot < 0 || slot >= input_slots::count ||
 		this->player_index_for_slot(slot) != -1)
 	{
 		return false;
 	}
-	for (MenuPlayerSettings& player : this->player_settings_)
+	for (SeatSetup& player : this->player_settings_)
 	{
 		if (player.controller == PlayerController::human && player.num == -1)
 		{
@@ -188,7 +187,7 @@ bool MenuLevelSettings::claim_input_slot(int slot)
 	return false;
 }
 
-bool MenuLevelSettings::release_input_slot(int slot)
+bool MatchSetup::release_input_slot(int slot)
 {
 	const int player = this->player_index_for_slot(slot);
 	if (player <= 0)
@@ -200,15 +199,15 @@ bool MenuLevelSettings::release_input_slot(int slot)
 	return true;
 }
 
-bool MenuLevelSettings::input_roster_complete() const
+bool MatchSetup::input_roster_complete() const
 {
 	return !this->player_settings_.empty() && std::all_of(
 		this->player_settings_.begin(), this->player_settings_.end(),
-		[](const MenuPlayerSettings& player)
+		[](const SeatSetup& player)
 		{ return player.controller == PlayerController::bot || player.num >= 0; });
 }
 
-int MenuLevelSettings::player_index_for_slot(int slot) const
+int MatchSetup::player_index_for_slot(int slot) const
 {
 	if (slot < 0 || slot >= input_slots::count)
 	{
@@ -224,7 +223,7 @@ int MenuLevelSettings::player_index_for_slot(int slot) const
 	return -1;
 }
 
-int MenuLevelSettings::device_slot(int slot) const
+int MatchSetup::device_slot(int slot) const
 {
 	if (!input_slots::is_pad(slot) || this->devices_[static_cast<size_t>(slot)] < 0)
 	{
@@ -233,7 +232,7 @@ int MenuLevelSettings::device_slot(int slot) const
 	return this->devices_[static_cast<size_t>(slot)];
 }
 
-std::array<int, input_slots::pad_count> MenuLevelSettings::pad_devices() const
+std::array<int, input_slots::pad_count> MatchSetup::pad_devices() const
 {
 	std::array<int, input_slots::pad_count> devices{};
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
@@ -243,7 +242,7 @@ std::array<int, input_slots::pad_count> MenuLevelSettings::pad_devices() const
 	return devices;
 }
 
-int MenuLevelSettings::player_index_for_device(int device) const
+int MatchSetup::player_index_for_device(int device) const
 {
 	if (device < 0 || device >= input_slots::count)
 	{
@@ -260,7 +259,7 @@ int MenuLevelSettings::player_index_for_device(int device) const
 	return -1;
 }
 
-bool MenuLevelSettings::move_to_device(int slot, int device)
+bool MatchSetup::move_to_device(int slot, int device)
 {
 	const int player = this->player_index_for_slot(slot);
 	if (player == -1 || !input_slots::is_pad(slot) || !input_slots::is_pad(device) ||
@@ -277,39 +276,28 @@ bool MenuLevelSettings::move_to_device(int slot, int device)
 	return true;
 }
 
-void MenuLevelSettings::reset_devices()
+void MatchSetup::reset_devices()
 {
 	this->devices_.fill(-1);
 }
 
-std::wstring MenuLevelSettings::player_label(int player_index, const MenuText& text) const
-{
-	const MenuPlayerSettings& player =
-		this->player_settings_.at(static_cast<size_t>(player_index));
-	if (player.controller == PlayerController::bot)
-	{
-		return text.bot_roster_label(player_index, player.difficulty);
-	}
-	return text.roster_label(player_index, this->device_slot(player.num));
-}
-
-SeriesStageRule MenuLevelSettings::series_stage_rule() const
+SeriesStageRule MatchSetup::series_stage_rule() const
 {
 	return this->series_stage_rule_;
 }
 
-void MenuLevelSettings::set_series_stage_rule(SeriesStageRule rule)
+void MatchSetup::set_series_stage_rule(SeriesStageRule rule)
 {
 	std::ignore = series_stage_rule_key(rule);
 	this->series_stage_rule_ = rule;
 }
 
-int MenuLevelSettings::best_of() const
+int MatchSetup::best_of() const
 {
 	return this->best_of_;
 }
 
-void MenuLevelSettings::set_best_of(int best_of)
+void MatchSetup::set_best_of(int best_of)
 {
 	if (best_of != 1 && best_of != 3 && best_of != 5)
 	{

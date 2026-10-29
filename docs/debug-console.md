@@ -1953,7 +1953,7 @@ seat <1-4> boost <0|1|2>
   Debug behaviour drives a seat's input, a shipping bot is the seat's
   controller. `bot all` drives only idle dummies and never a shipping bot.
 - **Planning.** `MatchRequest::seats` holds the statements;
-  `MatchPlanner::resolve` applies them through the existing `MenuLevelSettings`
+  `MatchPlanner::resolve` applies them through the existing `MatchSetup`
   setters after `players`: controllers first, then devices are claimed (the
   claims skip bots, so with every pad connected the humans still take pads in
   slot order), then teams and Boost in typed order, so a later statement wins.

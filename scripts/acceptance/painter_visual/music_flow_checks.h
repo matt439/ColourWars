@@ -224,7 +224,7 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
         stack.clear();
         stack.notify_activation(true);
         stack.push(std::make_unique<ResumeProbeRoot>());
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_stage("movement_course");
         settings.set_duration(0.25f);
         settings.set_player_count(count);
@@ -479,7 +479,7 @@ void arena_music_flow_matrix(Application& app, GameData& data, const GameTuning&
         stack.clear();
         stack.notify_activation(true);
         stack.push(std::make_unique<ResumeProbeRoot>());
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_stage("close_quarters");
         settings.set_duration(60.0f);
         settings.set_player_count(count);

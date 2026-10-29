@@ -2,6 +2,7 @@
 #include "game/states/main_menu.h"
 #include "game/objects/crude_drawing.h"
 #include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -317,7 +318,7 @@ void MainMenuWeaponSelect::init()
 		auto widgets = std::make_unique<Widgets>(this->menu_style().motion);
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::wstring label_text = this->level_settings()->player_label(i, this->text());
+		std::wstring label_text = player_label(*this->level_settings(), i, this->text());
 
 		widgets->player = std::make_unique<colourwars::UiTextDropShadow>(
 			name,

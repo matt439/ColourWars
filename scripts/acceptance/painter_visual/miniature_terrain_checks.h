@@ -453,7 +453,7 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const Vector2F spawn = info->team_a_spawns().front();
         scenery.push_back(scene.add(std::make_unique<Visual>("sprite_sheet_1", "pixel",
             RectangleF(spawn - Vector2F(32, 24), Vector2F(96, 96)), app.render_resources(), Colour(0.7f, 0.2f, 0.6f))));
-        MenuLevelSettings player_settings; player_settings.set_stage(stage); player_settings.set_player_count(1);
+        MatchSetup player_settings; player_settings.set_stage(stage); player_settings.set_player_count(1);
         player_settings.set_screen_layout(ScreenLayout::one_player); player_settings.begin_input_claims(3);
         player_settings.set_player_team(0, PlayerTeam::a); player_settings.set_player_weapon(0, WeaponType::roller);
         const PlayerBuilder player_builder(&tuning, &presentation);
@@ -560,7 +560,7 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
         for (const int count : { 1, 4 })
         {
             std::cout << "CHECK miniature story " << stage << ' ' << count << "P\n";
-            MenuLevelSettings settings; settings.set_stage(stage); settings.set_player_count(count); settings.set_duration(0.75f);
+            MatchSetup settings; settings.set_stage(stage); settings.set_player_count(count); settings.set_duration(0.75f);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
             constexpr int slots[] = { 3, 1, 2, 0 }; settings.begin_input_claims(slots[0]);
             for (int view = 1; view < count; ++view)

@@ -4,7 +4,7 @@
 #include "game/input_slots.h"
 #include "game/objects/level_end_info.h"
 #include "game/objects/stage.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "engine/assets/json.h"
 
 #include <objbase.h>
@@ -141,9 +141,9 @@ namespace
             record->best_coverage_percentage == 37.5f, "Remembered setup lost a removed stage's records");
     }
 
-    MenuLevelSettings settings(int count, size_t variant)
+    MatchSetup settings(int count, size_t variant)
     {
-        MenuLevelSettings result;
+        MatchSetup result;
         result.set_player_count(count);
         result.set_screen_layout(layouts[static_cast<size_t>(count - 1)]);
         result.set_stage(variant % 2 == 0 ? "arena" : "movement_course");
@@ -178,7 +178,7 @@ namespace
         return true;
     }
 
-    void require_choices(const LastMatchSetup& actual, const MenuLevelSettings& expected)
+    void require_choices(const LastMatchSetup& actual, const MatchSetup& expected)
     {
         require(actual.players.size() == static_cast<size_t>(expected.player_count()) &&
             actual.stage == expected.stage() && actual.layout == expected.screen_layout() &&
@@ -192,7 +192,7 @@ namespace
         }
     }
 
-    void require_fresh(const MenuLevelSettings& actual)
+    void require_fresh(const MatchSetup& actual)
     {
         require(!actual.input_roster_complete(), "Restored setup retained match readiness");
         for (const auto& player : actual.player_settings())
@@ -436,7 +436,7 @@ namespace
         {
             candidate = before; candidate.duration = duration; invalid(candidate);
         }
-        rejects([] { LastMatchSetup::capture(MenuLevelSettings{}); }, "An unresolved empty menu was captured");
+        rejects([] { LastMatchSetup::capture(MatchSetup{}); }, "An unresolved empty menu was captured");
         auto menu = settings(2, 1); menu.set_stage("");
         rejects([&] { LastMatchSetup::capture(menu); }, "An unresolved stage was captured");
         menu = settings(2, 1); menu.set_player_team(1, PlayerTeam::none);

@@ -26,7 +26,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, expected;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreMenuLabels
     {
@@ -77,7 +77,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (auto& state : painter_scripted_pads::states) { state.connected = kind != 3; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(kind == 0 ? 3 : 4);
+        settings = MatchSetup(); settings.set_player_count(kind == 0 ? 3 : 4);
         settings.begin_input_claims(3); const auto& slots = kind == 3 ? pads : sparse;
         for (int seat = 1; seat < settings.player_count(); ++seat)
         { if (kind != 0 || seat == 1) { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Menu label fixture claim failed"); } }

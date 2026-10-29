@@ -70,9 +70,9 @@ namespace
         throw std::runtime_error("Unknown bot ascent endpoints");
     }
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, trial.difficulty);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -122,7 +122,7 @@ namespace
 
     TrialResult run(World& world, const Trial& trial, bool replay_check)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, world, trial);
         const Endpoints route = endpoints(world, trial);

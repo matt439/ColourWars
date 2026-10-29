@@ -3,7 +3,8 @@
 #include "game/last_match_setup.h"
 #include "game/objects/level_builder.h"
 #include "game/presentation.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
+#include "game/states/player_label.h"
 
 #include <filesystem>
 #include <stdexcept>
@@ -19,7 +20,7 @@ namespace
 
 void check_unsupported_bot_consumers(const std::filesystem::path& content)
 {
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(2);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
     settings.set_player_bot(1, BotDifficulty::normal);
@@ -31,10 +32,10 @@ void check_unsupported_bot_consumers(const std::filesystem::path& content)
     for (size_t index = 0; index < std::size(difficulties); ++index)
     {
         settings.set_player_bot(1, difficulties[index]);
-        require(settings.player_label(1, text) == L"P2 - Bot (" + std::wstring(words[index]) + L")",
+        require(player_label(settings, 1, text) == L"P2 - Bot (" + std::wstring(words[index]) + L")",
             "A bot label lost its stable participant number or difficulty");
     }
-    require(settings.player_label(0, text) == L"P1 - Keyboard/mouse",
+    require(player_label(settings, 0, text) == L"P1 - Keyboard/mouse",
         "Bot metadata changed the human host label");
 
     settings.set_player_human(1);
@@ -44,6 +45,6 @@ void check_unsupported_bot_consumers(const std::filesystem::path& content)
     settings.set_player_team(1, PlayerTeam::b);
     const LastMatchSetup captured = LastMatchSetup::capture(settings);
     require(captured.players.size() == 2 && settings.player_settings()[1].num == -1 &&
-        settings.player_label(1, text) == L"P2 - Waiting to join",
+        player_label(settings, 1, text) == L"P2 - Waiting to join",
         "An unclaimed human/Debug dummy was mistaken for a playable bot");
 }

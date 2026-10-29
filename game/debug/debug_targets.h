@@ -5,7 +5,7 @@
 #include "game/objects/level_station.h"
 #include "game/objects/player_input_data.h"
 #include "game/objects/seat_input_filter.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <string>
 #include <vector>
 
@@ -30,16 +30,16 @@ class DebugMatchTarget
 public:
 	virtual ~DebugMatchTarget() = default;
 
-	virtual const MenuLevelSettings& debug_settings() const = 0;
+	virtual const MatchSetup& debug_settings() const = 0;
 
 	// Builds a fresh level from `plan` through the match's one build path,
 	// which calls DebugDirector::before_level_build between destroying the old
 	// level and building the new one. reset_session starts a new session.
-	virtual void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) = 0;
+	virtual void debug_rebuild(const MatchSetup& plan, bool reset_session) = 0;
 
 	// Inside a build already in progress (a restart from the pause or end
 	// menu): take `plan` as the settings that build uses, without building.
-	virtual void debug_adopt(const MenuLevelSettings& plan, bool reset_session) = 0;
+	virtual void debug_adopt(const MatchSetup& plan, bool reset_session) = 0;
 
 	// Leaves the match for the main menu's home page.
 	virtual void debug_leave() = 0;
@@ -112,7 +112,7 @@ public:
 
 	// May this page be dismissed so a queued match starts with `plan`? Only
 	// main-menu pages, whose frame starts a match on close, say yes.
-	virtual bool debug_start_match(const MenuLevelSettings& plan) = 0;
+	virtual bool debug_start_match(const MatchSetup& plan) = 0;
 
 	// Close this page the way its own controls would, so a queued request
 	// can reach the match (or the menus) beneath it. `leaving_match` asks for

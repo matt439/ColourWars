@@ -2,7 +2,7 @@
 
 #include "game/debug/match_fingerprint.h"
 #include "game/objects/seat_input_filter.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <cstdint>
 #include <filesystem>
 #include <optional>
@@ -49,7 +49,7 @@ public:
 	std::vector<std::string> tune_diff;
 	bool god = false;
 	bool infinite_ammo = false;
-	MenuLevelSettings settings;
+	MatchSetup settings;
 
 	int updates = 0;
 	// Level updates already run when the match was suspended.

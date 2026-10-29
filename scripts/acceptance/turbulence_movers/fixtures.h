@@ -23,7 +23,7 @@ namespace turbulence_movers_acceptance
 
     void author_trial(const fs::path& static_stage, const fs::path& tuning, const fs::path& output);
     std::string read_text(const fs::path& path);
-    MenuLevelSettings settings(int count = 1, PlayerTeam first_team = PlayerTeam::a);
+    MatchSetup settings(int count = 1, PlayerTeam first_team = PlayerTeam::a);
     mattmath::RectangleF named_rectangle(const fs::path& path, const std::string& name);
     fs::path station_variant(Context& context, const std::string& label, float phase,
         bool side_b, bool on_mover = false);
@@ -35,7 +35,7 @@ namespace turbulence_movers_acceptance
     class Trial final
     {
     public:
-        Trial(Context& context, const fs::path& stage, const MenuLevelSettings& setup,
+        Trial(Context& context, const fs::path& stage, const MatchSetup& setup,
             unsigned int seed = 439u);
         void tick(const PlayerInputData& action = input(), SeatInputFilter* next = nullptr,
             float seconds = dt);

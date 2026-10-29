@@ -10,7 +10,7 @@ FerryDirectionFixture ferry_direction_level(Application& app, const LevelLoadedI
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences, int count,
     bool left_heading)
 {
-    MenuLevelSettings settings; settings.set_stage("turbulence_ferry_trial"); settings.set_player_count(count);
+    MatchSetup settings; settings.set_stage("turbulence_ferry_trial"); settings.set_player_count(count);
     settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
         (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
     settings.begin_input_claims(3); constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };

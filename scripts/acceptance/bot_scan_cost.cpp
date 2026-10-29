@@ -36,7 +36,7 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(const MenuLevelSettings& settings)
+        std::unique_ptr<Level> build(const MatchSetup& settings)
         {
             std::srand(trial_seed);
             viewports.set_layout(settings.screen_layout());
@@ -62,9 +62,9 @@ namespace
     };
 
     // One idle human view; bots alternate teams so every roster has opponents.
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(trial.bots + 1);
         for (int seat = 1; seat <= trial.bots; ++seat) { settings.set_player_bot(seat, trial.difficulty); }
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -94,7 +94,7 @@ namespace
     class TimedDriver final : public SeatInputFilter
     {
     public:
-        TimedDriver(const GameTuning* tuning, const MenuLevelSettings& settings) :
+        TimedDriver(const GameTuning* tuning, const MatchSetup& settings) :
             driver_(tuning, settings, trial_seed) {}
         void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override
         {
@@ -176,7 +176,7 @@ namespace
 
     Costs run(World& world, const Trial& trial, int& moved, int& bots)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings);
         const std::vector<PlayerInputData> physical = physical_inputs();
         for (int tick = 0; tick < 900 && level->state() != LevelState::active; ++tick) { level->update(physical, dt); }

@@ -23,7 +23,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(2); settings.set_best_of(1); settings.set_stage("movement_course");
     settings.set_screen_layout(ScreenLayout::two_player); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
@@ -336,7 +336,7 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
         "Duration target private font did not exclude the scientific exponent sign");
     const_cast<MenuStyle&>(private_presentation.menu()).item_font = font_name;
     private_presentation.validate_resources(resources, *app.audio_resources());
-    MainMenuModeSelect::validate_durations(&resources, private_tuning, private_presentation);
+    validate_mode_durations(&resources, private_tuning, private_presentation);
     const auto tuning_path = scratch / "tuning.candidate";
     const std::string valid_tuning = replace(originals[0], "match.duration", "90.0");
     const std::string bad_tuning = replace(originals[0], "match.duration", "600000000.0");
@@ -347,7 +347,7 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
     write(tuning_path, bad_tuning);
     const GameTuning bad_balance(tuning_path.string().c_str());
     bad_balance.validate_resources(resources, *app.audio_resources()); ++legacy_acceptances;
-    refusal([&] { MainMenuModeSelect::validate_durations(&resources, bad_balance, private_presentation); },
+    refusal([&] { validate_mode_durations(&resources, bad_balance, private_presentation); },
         "menu_text.values.duration_default"); ++paired_refusals;
     refusal([&] { ++validations; tuning_target.validate(bad_tuning, tuning_path.string(), &data, false); },
         "menu_text.values.duration_default"); ++target_refusals;
@@ -375,7 +375,7 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
     write(presentation_path, bad_presentation);
     const Presentation bad_layout(presentation_path.string().c_str());
     bad_layout.validate_resources(resources, *app.audio_resources()); ++legacy_acceptances;
-    refusal([&] { MainMenuModeSelect::validate_durations(&resources, private_tuning, bad_layout); },
+    refusal([&] { validate_mode_durations(&resources, private_tuning, bad_layout); },
         "the complete duration row"); ++paired_refusals;
     refusal([&] { ++validations; presentation_target.validate(bad_presentation, presentation_path.string(), &data, false); },
         "the complete duration row"); ++target_refusals;

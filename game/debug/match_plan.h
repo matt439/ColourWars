@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/objects/stage.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <array>
 #include <functional>
 #include <optional>
@@ -39,7 +39,7 @@ struct MatchRequest
 	// Settings to build verbatim (`play`): the planner claims no device and
 	// draws nothing at random. `stage` is set beside it, so every gate that
 	// waits for a queued stage starts the match from the menus too.
-	std::optional<MenuLevelSettings> exact;
+	std::optional<MatchSetup> exact;
 	std::string exact_label;
 
 
@@ -51,13 +51,13 @@ struct MatchPlan
 {
 	bool ok = false;
 	std::string error;
-	MenuLevelSettings settings;
+	MatchSetup settings;
 
 	// A new roster, stage or best-of starts a new session; a restart does not.
 	bool reset_session = false;
 };
 
-// Turns a request into complete MenuLevelSettings. Pure: it takes the stage
+// Turns a request into complete MatchSetup. Pure: it takes the stage
 // list, which pads are connected and a random source as values, so the
 // acceptance case can drive it without a window or a pad.
 class MatchPlanner
@@ -70,7 +70,7 @@ public:
 
 	// `current` is the running match's settings, or nullptr when starting a
 	// match from the menus (one keyboard/mouse player on the first stage).
-	MatchPlan resolve(const MenuLevelSettings* current, const MatchRequest& request,
+	MatchPlan resolve(const MatchSetup* current, const MatchRequest& request,
 		const ConnectedPads& pads, const Random& random) const;
 
 	// Human seats take connected pads in slot order, then keyboard/mouse;
@@ -78,11 +78,11 @@ public:
 	// never reported as a disconnected pad. With no pad, seat 0 is
 	// keyboard/mouse. Shipping bots keep their seats and take no device, and
 	// the layout gives a pane to each human. Teams alternate a, b by seat.
-	static void assign_devices(MenuLevelSettings& settings, int players,
+	static void assign_devices(MatchSetup& settings, int players,
 		const ConnectedPads& pads);
 	// assign_devices without the count or the teams: claims devices for the
 	// roster's humans and sets the layout.
-	static void claim_devices(MenuLevelSettings& settings, const ConnectedPads& pads);
+	static void claim_devices(MatchSetup& settings, const ConnectedPads& pads);
 
 	// The split-screen layout a plan gives `players` (1-4) seats.
 	static labrador::ScreenLayout layout_for(int players);

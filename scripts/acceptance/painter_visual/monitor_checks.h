@@ -163,7 +163,7 @@ void monitor_frozen(Application& app, Level& level, const std::filesystem::path&
 
 std::unique_ptr<Level> monitor_story(Application& app, LevelBuilder& builder, int count)
 {
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(count);
     settings.set_stage("movement_course");
     settings.set_duration(1.25f);

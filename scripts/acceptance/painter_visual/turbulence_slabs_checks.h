@@ -535,7 +535,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&trial_levels);
         data.set_tuning(&tuning); data.set_presentation(&presentation);
         MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-        MenuLevelSettings settings; settings.set_stage("turbulence_slab_trial"); settings.set_player_count(count);
+        MatchSetup settings; settings.set_stage("turbulence_slab_trial"); settings.set_player_count(count);
         constexpr std::array<int, 4> slots{ 3, 1, 2, 0 }; settings.begin_input_claims(slots[0]);
         for (int view = 1; view < count; ++view) { require(settings.claim_input_slot(slots[static_cast<std::size_t>(view)]), "Ending sparse input claim failed"); }
         for (int view = 0; view < count; ++view) { settings.set_player_team(view, fixture.level->player(view).team()); }

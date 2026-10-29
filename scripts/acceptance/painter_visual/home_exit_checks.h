@@ -12,7 +12,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     GameData data; data.set_application(&app); data.set_save(&preferences);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct ClearHomeExit
     {
@@ -65,7 +65,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = connect_pad;
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); settings = MenuLevelSettings();
+        input.reset_actions(); settings = MatchSetup();
         stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuHome>(&context)); tick(); tick();
         for (int row = 0; row < 3; ++row) { tap(GamepadButton::dpad_down); }
         tick(settled); retained_home = frame(); home();

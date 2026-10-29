@@ -83,8 +83,8 @@ namespace debug_console_acceptance
 				expected.inputs.size() == actual.inputs.size(), "Bot replay header or participant count changed");
 			for (std::size_t seat = 0; seat < expected.settings.player_settings().size(); ++seat)
 			{
-				const MenuPlayerSettings& source = expected.settings.player_settings()[seat];
-				const MenuPlayerSettings& read = actual.settings.player_settings()[seat];
+				const SeatSetup& source = expected.settings.player_settings()[seat];
+				const SeatSetup& read = actual.settings.player_settings()[seat];
 				require(source.controller == read.controller && source.num == read.num && source.team == read.team &&
 					source.weapon == read.weapon && read.difficulty == (source.controller == PlayerController::bot ?
 						source.difficulty : BotDifficulty::normal), "Bot replay changed seat identity/difficulty or choices");

@@ -47,7 +47,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     const std::string first_refusal = folder.latest_scan().refused[0];
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation); data.set_level_infos(&levels); data.set_stages(&stages);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     settings.set_screen_layout(ScreenLayout::one_player); settings.set_stage("movement_course");
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer); settings.set_duration(73.0f);

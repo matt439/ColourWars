@@ -561,7 +561,7 @@ namespace
 
     std::unique_ptr<Level> level(Application& app, LevelBuilder& builder, TeamColourPair palette)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(4);
         settings.set_stage("movement_course");
         settings.set_screen_layout(ScreenLayout::four_player);

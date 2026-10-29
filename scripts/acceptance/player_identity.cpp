@@ -85,7 +85,7 @@ namespace
         std::unique_ptr<Level> build(int count = 4, OpeningMode opening = OpeningMode::off,
             float duration = 300.0f)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(count);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :

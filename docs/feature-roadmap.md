@@ -66,7 +66,7 @@ establish difficulty or gameplay quality.
 #### Roster foundation (2026-10-27)
 
 The first bounded slice adds explicit human/bot seats and `BotDifficulty`
-(`easy`, `normal`, `hard`) to `MenuLevelSettings` in both builds. Existing
+(`easy`, `normal`, `hard`) to `MenuLevelSettings` (now `MatchSetup`) in both builds. Existing
 seats default to human; P1 remains the human setup host. A bot occupies one of
 the four participant seats and has no physical device slot. An unclaimed
 human, including a Debug dummy, is still human: `num == -1` alone never means
@@ -2826,7 +2826,7 @@ explicitly omitted. This software wiring check does not qualify physical-pad
 comfort or the attended `ROAD#21` session.
 
 `StickSettingsMenu::preview_device` now resolves a slot through
-`MenuLevelSettings::device_slot` only while the page has a pause owner. The
+`MatchSetup::device_slot` only while the page has a pause owner. The
 paused preview samples that device. A keyboard-owned pause starts on the first
 logical pad whose device is connected, the rule `pad_seat_missing` already uses.
 Profile, deadzone, rumble and comfort edits and labels remain keyed by the

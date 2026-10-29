@@ -60,7 +60,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     const std::string saved = saved_bytes();
     GameData data; data.set_application(&app); data.set_save(&preferences);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_duration(73.0f); settings.set_stage("movement_course");
     MenuContext context(&data, &input, &settings); StateContext stack;
     struct RestoreResultPercentage
@@ -441,7 +441,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     };
     const auto build_monitor = [&]
     {
-        MenuLevelSettings setup; setup.set_player_count(2); setup.set_best_of(3); setup.set_duration(1.25f);
+        MatchSetup setup; setup.set_player_count(2); setup.set_best_of(3); setup.set_duration(1.25f);
         setup.set_stage("movement_course"); setup.set_screen_layout(ScreenLayout::two_player); setup.begin_input_claims(3);
         require(setup.claim_input_slot(1), "Cannot claim the monitor's second roller seat");
         setup.set_player_team(0, PlayerTeam::a); setup.set_player_team(1, PlayerTeam::b);

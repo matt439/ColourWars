@@ -12,7 +12,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     const StageList original_stages = stages;
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     MenuPage* page = nullptr;
     struct ClearJoinStageMotion
@@ -84,7 +84,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     const RectangleF join_detail(style.layout.position.x - style.focus_padding.x - 10.0f,
         style.layout.position.y + look.player_count_spacing.y * 2.0f - 10.0f,
         1000.0f, look.player_count_spacing.y * 4.0f);
-    const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b, bool stage = true)
+    const auto same_plan = [](const MatchSetup& a, const MatchSetup& b, bool stage = true)
     {
         if (a.player_count() != b.player_count() || (stage && a.stage() != b.stage()) ||
             a.best_of() != b.best_of() || a.duration() != b.duration() || a.screen_layout() != b.screen_layout())
@@ -96,7 +96,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     };
     const auto frozen = [&](const Frame& image)
     {
-        const MenuLevelSettings before = settings;
+        const MatchSetup before = settings;
         std::srand(1373); const int next = std::rand(); std::srand(1373);
         require(image.pixels == frame().pixels && image.pixels == frame().pixels && std::rand() == next &&
             same_plan(settings, before), "Frozen Join/Stage drawing changed pixels, plan or RNG");
@@ -152,7 +152,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         for (auto& state : painter_scripted_pads::states) { state.connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(4); settings.begin_input_claims(initiating_slot);
+        settings = MatchSetup(); settings.set_player_count(4); settings.begin_input_claims(initiating_slot);
         settings.set_stage("movement_course"); settings.set_best_of(3); settings.set_duration(73.0f);
         settings.set_screen_layout(ScreenLayout::four_player);
         if (complete || stage)
@@ -228,7 +228,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     };
     const auto destination = [&](bool team)
     {
-        MenuLevelSettings plan = settings; MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup plan = settings; MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &plan); StateContext reference_stack;
         if (team) { reference_stack.push(std::make_unique<MainMenuTeamSelect>(&reference_context)); }
         else { reference_stack.push(std::make_unique<MainMenuPlayerCount>(&reference_context)); }
@@ -292,7 +292,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
             frame().pixels == destination(false).pixels,
             "Missing-P1 rescue Back did not return to Player Count");
 
-        open(true); const MenuLevelSettings provisional = settings;
+        open(true); const MatchSetup provisional = settings;
         const auto browse = [&](GamepadButton direction)
         {
             std::srand(1571); const int next = std::rand(); std::srand(1571); tap(slots[0], direction);
@@ -333,7 +333,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         require(std::rand() == after_pick && settings.stage() == "close_quarters" && same_plan(settings, provisional, false) &&
             context.music_exit_pending() && stack.depth() == 2 && music_updates == 1 && outgoing_random.pixels == frame().pixels,
             "Final Random start consumed wrong RNG, changed plan, refreshed its outgoing page or restarted motion");
-        const MenuLevelSettings committed = settings;
+        const MatchSetup committed = settings;
         tap(slots[0], GamepadButton::dpad_left); tap(slots[1], GamepadButton::b); tap(slots[0], GamepadButton::a); tick(settled);
         require(outgoing_random.pixels == frame().pixels && same_plan(settings, committed) && context.music_exit_pending(),
             "Pending Stage fade accepted input or refreshed Random visuals");
@@ -351,7 +351,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         tap(slots[0], GamepadButton::a);
         require(std::rand() == after_rapid_pick && settings.stage() == "close_quarters" && context.music_exit_pending() &&
             rapid_lock_rest.pixels == frame().pixels, "Rapid final Stage start retained lock motion or refreshed outgoing Random");
-        const MenuLevelSettings rapid_committed = settings; const Frame rapid_pending = frame(); frozen(rapid_pending);
+        const MatchSetup rapid_committed = settings; const Frame rapid_pending = frame(); frozen(rapid_pending);
         static_cast<WindowNotify&>(app).on_deactivated(); tick(); static_cast<WindowNotify&>(app).on_activated(); tick();
         tap(slots[0], GamepadButton::dpad_right); tap(slots[0], GamepadButton::a); tap(slots[1], GamepadButton::b); tick(settled);
         require(rapid_pending.pixels == frame().pixels && same_plan(settings, rapid_committed) && context.music_exit_pending(),

@@ -69,7 +69,7 @@ namespace turbulence_blockout_acceptance
             Mouse mouse;
             Partitioner partitioner;
             const InputBindings bindings;
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_player_count(count);
             settings.set_stage("turbulence_blockout");
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);

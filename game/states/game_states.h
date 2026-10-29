@@ -2,7 +2,7 @@
 
 #include "engine/core/state.h"
 #include "game/session.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "game/game_data.h"
 #include "game/objects/level_builder.h"
 #include "game/states/pause_menu.h"
@@ -49,7 +49,7 @@ private:
 	GameData* game_data_ = nullptr;
 	UserStageFolder* user_stages_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
-	std::unique_ptr<MenuLevelSettings> menu_level_settings_ = nullptr;
+	std::unique_ptr<MatchSetup> match_setup_ = nullptr;
 	std::unique_ptr<MenuContext> menu_context_ = nullptr;
 	std::unique_ptr<ScreenMusic> music_;
 	void update_music(float dt);
@@ -67,7 +67,7 @@ private:
 class GameLevel final : public labrador::State, private DebugMatchTarget
 {
 public:
-	GameLevel(GameData* game_data, const MenuLevelSettings& settings,
+	GameLevel(GameData* game_data, const MatchSetup& settings,
 		MatchStart start = MatchStart::developer);
 
 	// Restores the screen layout that was active before the match.
@@ -94,7 +94,7 @@ private:
 	// Levels this screen has built: the first has the whole intro.
 	int builds_ = 0;
 	GameData* game_data_ = nullptr;
-	MenuLevelSettings settings_ = MenuLevelSettings();
+	MatchSetup settings_ = MatchSetup();
 	MatchStart start_ = MatchStart::developer;
 	Session session_;
 	// The sink outlives every policy, including reset/unwind during a rebuild.
@@ -161,9 +161,9 @@ private:
 
 	// DebugMatchTarget adapters. debug_update_level also carries ordinary Release
 	// updates through DebugDirector's forwarding hook and the shipping recorder.
-	const MenuLevelSettings& debug_settings() const override;
-	void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) override;
-	void debug_adopt(const MenuLevelSettings& plan, bool reset_session) override;
+	const MatchSetup& debug_settings() const override;
+	void debug_rebuild(const MatchSetup& plan, bool reset_session) override;
+	void debug_adopt(const MatchSetup& plan, bool reset_session) override;
 	void debug_leave() override;
 	void debug_update_level(const std::vector<PlayerInputData>& inputs,
 		float dt, SeatInputFilter* seats) override;

@@ -19,11 +19,11 @@ namespace debug_console_acceptance
 		constexpr int roster_length = 240;
 
 		// Every field a plan sets, in seat order, for byte comparisons.
-		std::string roster_text(const MenuLevelSettings& settings)
+		std::string roster_text(const MatchSetup& settings)
 		{
 			std::ostringstream out;
 			out << settings.stage() << '|' << static_cast<int>(settings.screen_layout());
-			for (const MenuPlayerSettings& seat : settings.player_settings())
+			for (const SeatSetup& seat : settings.player_settings())
 			{
 				out << '|' << seat.num << ':' << static_cast<int>(seat.team) << ':' <<
 					static_cast<int>(seat.weapon) << ':' << static_cast<int>(seat.controller) << ':' <<
@@ -34,11 +34,11 @@ namespace debug_console_acceptance
 		}
 
 		// The roster as a replay stores it: a human's difficulty reads back normal.
-		std::string recorded_roster(const MenuLevelSettings& settings)
+		std::string recorded_roster(const MatchSetup& settings)
 		{
 			std::ostringstream out;
 			out << settings.stage() << '|' << static_cast<int>(settings.screen_layout());
-			for (const MenuPlayerSettings& seat : settings.player_settings())
+			for (const SeatSetup& seat : settings.player_settings())
 			{
 				out << '|' << seat.num << ':' << static_cast<int>(seat.team) << ':' <<
 					static_cast<int>(seat.weapon) << ':' << static_cast<int>(seat.controller) << ':' <<
@@ -91,7 +91,7 @@ namespace debug_console_acceptance
 					plan.settings.human_count() == players, "A players plan changed its layout or humans");
 				for (int seat = 0; seat < players; ++seat)
 				{
-					const MenuPlayerSettings& settings = plan.settings.player_settings()[static_cast<std::size_t>(seat)];
+					const SeatSetup& settings = plan.settings.player_settings()[static_cast<std::size_t>(seat)];
 					require(settings.controller == PlayerController::human &&
 						settings.difficulty == BotDifficulty::normal && settings.handicap == 0 &&
 						settings.team == (players == 1 || seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b),
@@ -120,7 +120,7 @@ namespace debug_console_acceptance
 			seat_choice(0, "team", "b"), seat_choice(3, "boost", "1"), seat_choice(0, "boost", "1") };
 		MatchPlan plan = planner.resolve(nullptr, every, all_pads, random);
 		require(plan.ok, "A plan with every seat field resolves: " + plan.error);
-		const std::vector<MenuPlayerSettings> seats = plan.settings.player_settings();
+		const std::vector<SeatSetup> seats = plan.settings.player_settings();
 		require(seats[0].controller == PlayerController::human && seats[0].num == 0 &&
 			seats[0].team == PlayerTeam::b && seats[0].handicap == 1, "Seat 1: pad 0, team b, Boost 1");
 		require(seats[1].controller == PlayerController::bot && seats[1].num == -1 &&
@@ -144,7 +144,7 @@ namespace debug_console_acceptance
 			seat_choice(2, "human", ""), seat_choice(3, "boost", "0") };
 		const MatchPlan changed = planner.resolve(&plan.settings, later, all_pads, random);
 		require(changed.ok, "Seat statements resolve on a running match: " + changed.error);
-		const std::vector<MenuPlayerSettings> now = changed.settings.player_settings();
+		const std::vector<SeatSetup> now = changed.settings.player_settings();
 		require(now[1].controller == PlayerController::bot && now[1].difficulty == BotDifficulty::hard &&
 			now[1].team == PlayerTeam::a && now[1].handicap == 2,
 			"A later difficulty wins and keeps the bot's team and Boost");
@@ -211,7 +211,7 @@ namespace debug_console_acceptance
 				}
 				const MatchPlan result = planner.resolve(nullptr, request, pads, random);
 				require(result.ok, "Bot mask plan resolves: " + result.error);
-				for (const MenuPlayerSettings& seat : result.settings.player_settings())
+				for (const SeatSetup& seat : result.settings.player_settings())
 				{
 					require(seat.controller == PlayerController::human || seat.num == -1,
 						"A planned bot seat holds a device");
@@ -291,8 +291,8 @@ namespace debug_console_acceptance
 		const int builds = match.builds;
 		for (int step = 0; step < 10 && match.builds == builds; ++step) { roster_tick(director, match); }
 		require(match.builds == builds + 1 && impl.request().empty(), "The seat statements rebuild the match once");
-		const MenuLevelSettings planned = match.settings;
-		const std::vector<MenuPlayerSettings> seats = planned.player_settings();
+		const MatchSetup planned = match.settings;
+		const std::vector<SeatSetup> seats = planned.player_settings();
 		require(planned.stage() == "close_quarters" && seats.size() == 4 &&
 			seats[0].num == input_slots::keyboard_and_mouse && seats[0].team == PlayerTeam::a && seats[0].handicap == 1 &&
 			seats[1].controller == PlayerController::bot && seats[1].difficulty == BotDifficulty::easy &&

@@ -4,7 +4,7 @@
 #include "game/objects/player_team.h"
 #include "game/objects/stage.h"
 
-class MenuLevelSettings;
+class MatchSetup;
 class Session;
 
 // Which stage a series' next round plays (ROAD#20). Chosen on the Mode page
@@ -33,7 +33,7 @@ std::string rotated_stage(const StageList& stages, const std::string& current);
 // The team that opens Stage Select before the next round: under Loser's pick,
 // the loser of the finished round when that team has a human seat. None after
 // a draw, under another rule, outside a series, or for a bot-only loser.
-PlayerTeam series_stage_picker(const MenuLevelSettings& settings, const Session& session);
+PlayerTeam series_stage_picker(const MatchSetup& settings, const Session& session);
 
 // The stage the next round plays. A stage chosen by hand between rounds
 // (Change Level) is already in `settings` and always wins. Otherwise a draw
@@ -41,5 +41,5 @@ PlayerTeam series_stage_picker(const MenuLevelSettings& settings, const Session&
 // keeps the stage, and Rotate moves on. Loser's pick moves on the same way
 // only when the loser is all bots and so cannot pick; a human loser picks on
 // Stage Select, which arrives here already chosen by hand.
-std::string series_next_stage(const MenuLevelSettings& settings, const StageList& stages,
+std::string series_next_stage(const MatchSetup& settings, const StageList& stages,
 	const Session& session, bool chosen_by_hand);

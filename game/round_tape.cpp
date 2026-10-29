@@ -2,7 +2,7 @@
 #include "game/round_tape.h"
 #include "game/objects/level.h"
 
-void RoundTape::start(unsigned int seed, const MenuLevelSettings& settings)
+void RoundTape::start(unsigned int seed, const MatchSetup& settings)
 {
 	this->clear();
 	this->seed_ = seed;

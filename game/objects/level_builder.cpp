@@ -39,7 +39,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 }
 
 std::unique_ptr<Level>
-	LevelBuilder::build_level(const MenuLevelSettings& settings, TeamColourPair palette,
+	LevelBuilder::build_level(const MatchSetup& settings, TeamColourPair palette,
 		OpeningMode opening, bool practice)
 {
 	if (settings.player_count() < 1 || settings.human_count() < 1 ||

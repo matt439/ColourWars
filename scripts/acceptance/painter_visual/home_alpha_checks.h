@@ -41,7 +41,7 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings plan;
+    MatchSetup plan;
     plan.set_player_count(1); plan.set_best_of(1); plan.set_stage("movement_course");
     plan.set_duration(73.0f); plan.set_screen_layout(ScreenLayout::one_player);
     plan.begin_input_claims(input_slots::keyboard_and_mouse);

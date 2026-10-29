@@ -40,7 +40,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct RestoreControlsItems

@@ -32,7 +32,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, initial;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app; MenuPage* active = nullptr;
     struct ClearTeamPaper { StateContext& stack; Presentation& presentation; Presentation original; ~ClearTeamPaper() { this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; } } clear{ stack, presentation, original };
     const std::array<int, 4> slots{ input_slots::keyboard_and_mouse, 3, 0, 2 };
@@ -59,7 +59,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (Key key : { Key::enter, Key::escape, Key::r, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; for (int player = 1; player < count; ++player) { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.set_best_of(3); settings.set_duration(73.0f); settings.set_stage("movement_course");
+        settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(3); settings.set_duration(73.0f); settings.set_stage("movement_course");
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player : count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Team paper fixture claim failed"); }
         teams.clear(); ready.assign(static_cast<size_t>(count), false); warning = missing = false;
@@ -142,7 +142,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     const auto destination = [&](bool weapon)
     {
-        MenuLevelSettings copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
+        MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
         other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); if (weapon) { other.push(std::make_unique<MainMenuWeaponSelect>(&other_context)); } else { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); }
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
     };
@@ -222,7 +222,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         auto& live = const_cast<MainMenuPresentation&>(presentation.main_menu());
         struct RestoreTeamWarning { Vector2F& position; Vector2F original; ~RestoreTeamWarning() { this->position = this->original; } } restore_warning{ live.team_warning_position, live.team_warning_position };
         live.team_warning_position.y = 930.0f;
-        MenuLevelSettings invalid_settings = settings; MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup invalid_settings = settings; MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext invalid_context(&data, &invalid_input, &invalid_settings); StateContext invalid_stack; bool rejected = false;
         try { invalid_stack.push(std::make_unique<MainMenuTeamSelect>(&invalid_context)); }
         catch (const std::runtime_error& error) { rejected = std::string(error.what()).find("Team Select warning must fit the paper") != std::string::npos; }

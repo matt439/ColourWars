@@ -2,7 +2,7 @@
 
 #include "game/ai/match_bot.h"
 #include "game/objects/seat_input_filter.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <memory>
 #include <optional>
 #include <vector>
@@ -14,7 +14,7 @@ class Player;
 class MatchBotDriver final : public SeatInputFilter
 {
 public:
-	MatchBotDriver(const GameTuning* tuning, const MenuLevelSettings& settings,
+	MatchBotDriver(const GameTuning* tuning, const MatchSetup& settings,
 		std::uint64_t seed);
 	// One entry per participant, a difficulty for each bot and nullopt for a
 	// human. The roster form above is this with the roster's bot seats. Only

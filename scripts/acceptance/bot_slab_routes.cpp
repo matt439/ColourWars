@@ -66,9 +66,9 @@ namespace
         return slabs;
     }
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, trial.difficulty);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);

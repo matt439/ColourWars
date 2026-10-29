@@ -46,7 +46,7 @@ public:
 
 	// Main-menu frames start a match with the shared plan when they pop.
 	// Options also serves as a paused child and guards that route separately.
-	bool debug_start_match(const MenuLevelSettings& plan) override;
+	bool debug_start_match(const MatchSetup& plan) override;
 	// Between rounds these pages close like the End menu they replaced.
 	bool debug_dismiss(bool leaving_match) override;
 protected:
@@ -174,7 +174,7 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 	bool covers_screen() const override { return this->pausing_slot_.has_value(); }
-	bool debug_start_match(const MenuLevelSettings& plan) override;
+	bool debug_start_match(const MatchSetup& plan) override;
 	bool debug_dismiss(bool leaving_match) override;
 	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
@@ -224,8 +224,8 @@ public:
 	explicit MainMenuModeSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
-	// Candidate validation uses the same unscaled row and complete ornament
-	// as a real Mode page, after the ordinary resource checks have passed.
+	// Candidate validation (game/states/menu_content_validation.h) uses the
+	// same unscaled row and complete ornament as a real Mode page, after the ordinary resource checks have passed.
 	// Rows of mode_select_spacing under the heading; Match length and Series
 	// stage are the two OptionRows. The practice hint sits on Single Match's
 	// row, one card padding after that row's complete focus card.
@@ -237,8 +237,6 @@ public:
 		OptionRow::Adjust on_adjust = {});
 	static void check_duration_row(const OptionRow& duration_row,
 		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
-	static void validate_durations(labrador::RenderResources* render,
-		const GameTuning& tuning, const Presentation& presentation);
 	// The Series stage row (ROAD#20), checked like the duration row for
 	// every rule's value.
 	static std::unique_ptr<OptionRow> make_stage_rule_row(labrador::RenderResources* render,
@@ -246,7 +244,6 @@ public:
 		OptionRow::Adjust on_adjust = {});
 	static void check_stage_rule_row(const OptionRow& stage_rule_row,
 		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
-	static void validate_stage_rules(labrador::RenderResources* render, const Presentation& presentation);
 protected:
 	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }

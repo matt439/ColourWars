@@ -53,7 +53,7 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
         std::ignore = app.renderer()->window_size_changed(1280, 720);
         stack.push(std::make_unique<ResumeProbeRoot>());
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_stage("movement_course");
         settings.set_duration(60.0f);
         settings.set_player_count(count);

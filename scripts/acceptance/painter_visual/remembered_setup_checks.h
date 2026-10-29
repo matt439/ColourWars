@@ -18,7 +18,7 @@ std::string remembered_setup_section(const std::filesystem::path& path)
     return { buffer.GetString(), buffer.GetSize() };
 }
 
-bool remembered_setup_matches(const LastMatchSetup& actual, const MenuLevelSettings& expected)
+bool remembered_setup_matches(const LastMatchSetup& actual, const MatchSetup& expected)
 {
     if (actual.players.size() != static_cast<size_t>(expected.player_count()) ||
         actual.stage != expected.stage() || actual.layout != expected.screen_layout() ||
@@ -118,9 +118,9 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     };
     // Reference pages have independently specified choices/claims. Their
     // constructors show the expected unconfirmed state, never the live page's.
-    const auto reference = [&](int page, const MenuLevelSettings& choices)
+    const auto reference = [&](int page, const MatchSetup& choices)
     {
-        MenuLevelSettings expected = choices; MenuInput input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup expected = choices; MenuInput input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext context(&data, &input, &expected); StateContext other;
         other.notify_activation(true);
         if (page == 0) { other.push(std::make_unique<MainMenuModeSelect>(&context)); }
@@ -133,13 +133,13 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     };
     std::ofstream evidence(output / (reader ? "remembered-setup-reader.csv" : "remembered-setup.csv"));
     evidence << "check,players,best_of,stage,first_slot,second_slot,save_preserved,outcome\n";
-    const auto note = [&](const char* check, const MenuLevelSettings& choices, bool preserved)
+    const auto note = [&](const char* check, const MatchSetup& choices, bool preserved)
     {
         const auto seats = choices.player_settings();
         evidence << check << ',' << choices.player_count() << ',' << choices.best_of() << ',' << choices.stage() << ',' <<
             seats[0].num << ',' << seats[1].num << ',' << (preserved ? "true" : "false") << ",passed\n";
     };
-    const auto compare = [&](int page, const MenuLevelSettings& choices, const char* name, bool capture = false)
+    const auto compare = [&](int page, const MatchSetup& choices, const char* name, bool capture = false)
     {
         const Frame actual = frame(); const Frame wanted = reference(page, choices);
         if (actual.pixels != wanted.pixels)
@@ -156,12 +156,12 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
                 (std::string("remembered-setup-") + (reader ? "reader-" : "writer-") + name + "-detail.ppm"));
         }
     };
-    MenuLevelSettings seed; seed.set_player_count(2); seed.begin_input_claims(3);
+    MatchSetup seed; seed.set_player_count(2); seed.begin_input_claims(3);
     require(seed.claim_input_slot(input_slots::keyboard_and_mouse), "Cannot seed sparse remembered-setup roster");
     seed.set_screen_layout(ScreenLayout::two_player); seed.set_best_of(5); seed.set_duration(0.25f);
     seed.set_stage("king_of_the_hill"); seed.set_player_team(0, PlayerTeam::b); seed.set_player_team(1, PlayerTeam::a);
     seed.set_player_weapon(0, WeaponType::sprayer); seed.set_player_weapon(1, WeaponType::mister);
-    MenuLevelSettings chosen = seed; chosen.set_best_of(3); chosen.set_stage("movement_course");
+    MatchSetup chosen = seed; chosen.set_best_of(3); chosen.set_stage("movement_course");
     chosen.set_player_weapon(0, WeaponType::sniper); chosen.set_player_weapon(1, WeaponType::bucket);
 
     if (reader)
@@ -169,7 +169,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         require(preferences->last_match_setup() && remembered_setup_matches(*preferences->last_match_setup(), chosen),
             "A separate process did not load the writer's resolved preferences");
         const std::string before = remembered_setup_bytes(save_path);
-        MenuLevelSettings expected = preferences->last_match_setup()->restore(stages);
+        MatchSetup expected = preferences->last_match_setup()->restore(stages);
         for (const auto& player : expected.player_settings()) { require(player.num == -1, "Disk reload restored a device claim"); }
         open(false); tap(4, GamepadButton::a); tap(4, GamepadButton::a);
         compare(0, expected, "mode-restored"); tap(4, GamepadButton::a);
@@ -199,12 +199,12 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
 
     // Normal setup restores bots while requiring fresh human claims.
     {
-        MenuLevelSettings mixed = seed; mixed.set_player_bot(1, BotDifficulty::hard);
+        MatchSetup mixed = seed; mixed.set_player_bot(1, BotDifficulty::hard);
         mixed.set_screen_layout(ScreenLayout::one_player);
         require(preferences->remember_match_setup_and_save(LastMatchSetup::capture(mixed)),
             "Cannot seed the private bot setup");
         const std::string bot_save = remembered_setup_bytes(save_path);
-        MenuLevelSettings expected = preferences->last_match_setup()->restore(stages);
+        MatchSetup expected = preferences->last_match_setup()->restore(stages);
         open(false); tap(4, GamepadButton::a); tap(4, GamepadButton::a);
         compare(0, expected, "bot-restored-mode"); tap(4, GamepadButton::a);
         compare(1, expected, "bot-restored-count", true);
@@ -228,7 +228,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     const auto unchanged = [&] { require(remembered_setup_bytes(save_path) == prior, "Uncommitted normal menu choices changed the prior save"); };
     open(true); tap(3, GamepadButton::a); tap(3, GamepadButton::a); compare(0, seed, "seeded-mode");
     tap(3, GamepadButton::dpad_up); tap(3, GamepadButton::a);
-    MenuLevelSettings expected = seed; expected.set_best_of(3); compare(1, expected, "seeded-count");
+    MatchSetup expected = seed; expected.set_best_of(3); compare(1, expected, "seeded-count");
     tap(3, GamepadButton::a); expected.begin_input_claims(3); compare(2, expected, "explicit-join", true);
     tap(3, GamepadButton::a); compare(2, expected, "no-auto-claim");
     tap(4, GamepadButton::a); require(expected.claim_input_slot(4), "Cannot specify the second explicit claim");

@@ -37,9 +37,9 @@ namespace
         return names[static_cast<int>(difficulty)];
     }
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(trial.mode == Mode::moving_human ? 2 : 3);
         settings.set_player_bot(1, trial.difficulty);
         if (trial.mode == Mode::opposed_bots) { settings.set_player_bot(2, trial.difficulty); }
@@ -154,7 +154,7 @@ namespace
 
     Metrics run(World& world, const Trial& trial, bool replay_check)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings); prepare(*level, world, trial);
         Metrics result; result.actors.resize(static_cast<std::size_t>(level->player_count()));
         for (int seat = 0; seat < level->player_count(); ++seat)

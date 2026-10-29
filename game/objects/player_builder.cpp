@@ -31,7 +31,7 @@ PlayerBuilder::PlayerBuilder(const GameTuning* tuning, const Presentation* prese
 }
 
 std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
-	const MenuLevelSettings& settings,
+	const MatchSetup& settings,
 	const LevelLoadedInfo* load_info,
 	TeamColour team_colours,
 	RenderResources* render_resources,

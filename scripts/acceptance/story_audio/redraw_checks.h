@@ -175,7 +175,7 @@ namespace
         {
             world.level.reset();
             world.begin = recorded_sounds(world.device).size();
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("close_quarters");
             settings.set_player_count(count);
             for (int index = 0; index < count; ++index)

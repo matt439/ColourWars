@@ -11,7 +11,7 @@
 #include "game/save_section.h"
 #include "game/series_stage_rule.h"
 
-class MenuLevelSettings;
+class MatchSetup;
 
 // A seat's resolved choices, without a device claim or confirmation state.
 struct LastMatchPlayer
@@ -40,11 +40,11 @@ struct LastMatchSetup
 
 	// Rejects unresolved or invalid choices; input claims are neither required
 	// nor copied. The caller establishes that this was a normal user start.
-	static LastMatchSetup capture(const MenuLevelSettings& settings);
+	static LastMatchSetup capture(const MatchSetup& settings);
 	// Returns fresh, unclaimed human seats and retains device-less bot seats.
 	// A removed stage uses the first registered
 	// stage, including arenas excluded from Random. An empty list is invalid.
-	MenuLevelSettings restore(const StageList& stages) const;
+	MatchSetup restore(const StageList& stages) const;
 	// Repairs recoverable saved fields without randomness. Counts outside 1-4
 	// cannot form a setup and throw invalid_argument. An empty stage is left for
 	// restore(), which has the current catalogue needed to choose a fallback.

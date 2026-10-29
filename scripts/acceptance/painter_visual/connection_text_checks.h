@@ -27,7 +27,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation); data.set_stages(&stages); data.set_level_infos(&levels);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, expected;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreConnection
     {
@@ -89,7 +89,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (int slot : { 3, 0, 2 }) { painter_scripted_pads::states[static_cast<size_t>(slot)].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); choice.reset();
-        settings = MenuLevelSettings(); settings.set_player_count(kind == 0 ? 3 : kind == 1 ? 4 : 2);
+        settings = MatchSetup(); settings.set_player_count(kind == 0 ? 3 : kind == 1 ? 4 : 2);
         settings.begin_input_claims(3); require(settings.claim_input_slot(4), "Cannot create the connection text sparse roster");
         if (kind == 1)
         {

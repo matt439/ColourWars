@@ -15,7 +15,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
     struct RestoreCuePads
@@ -47,7 +47,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     };
     const auto frame = [&]
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read(*app.renderer()); };
-    const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b)
+    const auto same_plan = [](const MatchSetup& a, const MatchSetup& b)
     {
         return a.player_count() == b.player_count() && a.stage() == b.stage() && a.duration() == b.duration() &&
             a.best_of() == b.best_of() && a.screen_layout() == b.screen_layout() &&
@@ -65,7 +65,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
 #endif
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(1);
+        settings = MatchSetup(); settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_player_team(0, PlayerTeam::a);
         settings.set_player_weapon(0, WeaponType::bucket); settings.set_stage("close_quarters");
         settings.set_duration(91.0f);
@@ -76,7 +76,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     };
     const auto provisional = [&](Key key)
     {
-        const MenuLevelSettings before = settings;
+        const MatchSetup before = settings;
         std::srand(3581); const int next_random = std::rand(); std::srand(3581); tap(key);
         require(std::rand() == next_random && same_plan(settings, before) && stack.depth() == 2 &&
             !context.music_exit_pending(), "Stage cue browsing/lock/unlock changed the plan or consumed RNG");

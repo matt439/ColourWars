@@ -340,7 +340,7 @@
         int count, TeamColourPair palette, bool roller = false, bool same_team = false,
         WeaponType tool = WeaponType::none, OpeningMode opening = OpeningMode::off)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(count);
         settings.set_stage("movement_course");
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);

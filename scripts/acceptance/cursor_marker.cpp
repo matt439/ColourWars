@@ -83,7 +83,7 @@ namespace
         std::unique_ptr<Level> build(const std::vector<Seat>& plan)
         {
             require(!plan.empty() && plan[0] != Seat::bot, "P1 cannot be a bot");
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(static_cast<int>(plan.size()));
             settings.set_duration(300.0f);
@@ -210,7 +210,7 @@ namespace
         world.resolution.set_resolution(ScreenResolution::s_1920_1080);
         LevelBuilder mouseless(&world.viewports, &world.render, &world.audio, &world.preferences,
             &world.levels, &world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner, nullptr);
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_stage("movement_course");
         settings.set_player_count(1);
         settings.set_duration(300.0f);

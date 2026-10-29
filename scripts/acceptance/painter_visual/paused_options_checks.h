@@ -186,7 +186,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
 #endif
     std::ofstream worlds(output / "paused-options-world.csv");
     worlds << "check,players,level_identity,observation,level_hud_pixels,roster,layout,resume_zero\n";
-    int world_checks = 0; MenuLevelSettings plan;
+    int world_checks = 0; MatchSetup plan;
     Presentation captured = original;
     std::wstring resolution_value = L"1280x720", palette_value = L"A: Blue / B: Yellow", status;
     bool warning = false;
@@ -255,7 +255,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         painter_scripted_pads::states = {};
         for (int slot : { 3, 0, 2, 1 }) { painter_scripted_pads::states[static_cast<size_t>(slot)].connected = count > 1; }
         tick(); tick(); stack.push(std::make_unique<ResumeProbeRoot>());
-        plan = MenuLevelSettings{}; plan.set_stage("close_quarters"); plan.set_duration(120.0f); plan.set_player_count(count);
+        plan = MatchSetup{}; plan.set_stage("close_quarters"); plan.set_duration(120.0f); plan.set_player_count(count);
         plan.begin_input_claims(owner); if (count > 1) { require(plan.claim_input_slot(0), "Cannot claim joined pad0"); }
         if (count == 4) { require(plan.claim_input_slot(2) && plan.claim_input_slot(1), "Cannot claim sparse four-pad roster"); }
         plan.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);

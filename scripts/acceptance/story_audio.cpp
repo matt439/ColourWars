@@ -196,7 +196,7 @@ namespace
 		{
 			this->level.reset();
 			this->begin = recorded_sounds(this->device).size();
-			MenuLevelSettings settings;
+			MatchSetup settings;
 			settings.set_stage(stage);
 			settings.set_player_count(players);
 			for (int index = 0; index < players; ++index)

@@ -20,13 +20,13 @@ void GameMenu::init()
 {
 	this->menu_input_ = std::make_unique<MenuInput>(this->data()->gamepads(),
 		this->data()->keyboard(), this->data()->tuning());
-	this->menu_level_settings_ = std::make_unique<MenuLevelSettings>();
+	this->match_setup_ = std::make_unique<MatchSetup>();
 	if (const auto& remembered = this->data()->save()->last_match_setup(); remembered)
 	{
-		*this->menu_level_settings_ = remembered->restore(*this->data()->stages());
+		*this->match_setup_ = remembered->restore(*this->data()->stages());
 	}
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
-		this->menu_input_.get(), this->menu_level_settings_.get());
+		this->menu_input_.get(), this->match_setup_.get());
 	this->menu_context_->set_music_update([this](float dt) { this->update_music(dt); });
 	this->menu_context_->set_music_suspend([this]
 	{
@@ -105,7 +105,7 @@ void GameMenu::start_match(MatchStart start)
 	this->music_.reset();
 	// Keep the menu context and its settings alive beneath the match.
 	this->context()->push<EndMenuAction>(
-		std::make_unique<GameLevel>(this->data(), *this->menu_level_settings_, start),
+		std::make_unique<GameLevel>(this->data(), *this->match_setup_, start),
 		[this](const EndMenuAction& action) { this->on_match_ended(action); });
 }
 
@@ -156,7 +156,7 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 	}
 }
 
-GameLevel::GameLevel(GameData* game_data, const MenuLevelSettings& settings, MatchStart start) :
+GameLevel::GameLevel(GameData* game_data, const MatchSetup& settings, MatchStart start) :
 	game_data_(game_data), settings_(settings), start_(start),
 	session_(settings.player_count() == 1 ? 1 : settings.best_of()),
 	rumble_sink_(make_rumble_sink())
@@ -220,14 +220,14 @@ void GameLevel::init()
 	this->build_and_enter_level();
 	// Remember only a normally confirmed setup, after its first complete build.
 	// Later restarts/series rounds use build_and_enter_level without this write.
-	const std::vector<MenuPlayerSettings> seats = this->settings_.player_settings();
+	const std::vector<SeatSetup> seats = this->settings_.player_settings();
 	if (this->start_ == MatchStart::menu &&
-		std::none_of(seats.begin(), seats.end(), [this](const MenuPlayerSettings& seat)
+		std::none_of(seats.begin(), seats.end(), [this](const SeatSetup& seat)
 			{ return this->data()->debug().drives_slot(seat.num); }))
 	{
 		// Each worn profile keeps the Boost its seat started with (ROAD#21).
 		std::array<int, input_slots::pad_count> boosts{ -1, -1, -1, -1 };
-		for (const MenuPlayerSettings& seat : seats)
+		for (const SeatSetup& seat : seats)
 		{
 			if (seat.controller == PlayerController::human && input_slots::is_pad(seat.num))
 			{
@@ -658,8 +658,8 @@ void GameLevel::open_results_menu()
 	// Every finished round counts toward its stage's record, unless a Debug
 	// bot or replay played a seat (never in Release).
 	RecordOutcome record;
-	const std::vector<MenuPlayerSettings> seats = this->settings_.player_settings();
-	if (std::none_of(seats.begin(), seats.end(), [this](const MenuPlayerSettings& seat)
+	const std::vector<SeatSetup> seats = this->settings_.player_settings();
+	if (std::none_of(seats.begin(), seats.end(), [this](const SeatSetup& seat)
 		{ return this->data()->debug().drives_slot(seat.num); }))
 	{
 		record = this->data()->save()->record_result_and_save(this->settings_.stage(), result);

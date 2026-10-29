@@ -43,7 +43,7 @@ namespace bot_navigation_acceptance
         }
 
         // The whole-match seed reaches stage draws and then the bot seed.
-        std::unique_ptr<Level> build(const MenuLevelSettings& settings, unsigned int seed = trial_seed)
+        std::unique_ptr<Level> build(const MatchSetup& settings, unsigned int seed = trial_seed)
         {
             std::srand(seed);
             viewports.set_layout(settings.screen_layout());

@@ -28,7 +28,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 #endif
     director.attach(&app, &data);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     const Presentation original = presentation;

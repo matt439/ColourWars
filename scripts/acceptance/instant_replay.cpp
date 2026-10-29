@@ -30,7 +30,7 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(const MenuLevelSettings& settings, OpeningMode opening)
+        std::unique_ptr<Level> build(const MatchSetup& settings, OpeningMode opening)
         {
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
@@ -47,9 +47,9 @@ namespace
     };
 
     // P1 a pad human, the other three shipping bots, on alternating teams.
-    MenuLevelSettings roster(const char* stage)
+    MatchSetup roster(const char* stage)
     {
-        MenuLevelSettings settings; settings.set_player_count(4);
+        MatchSetup settings; settings.set_player_count(4);
         settings.begin_input_claims(0);
         std::ignore = settings.claim_input_slot(0);
         for (int seat = 1; seat < 4; ++seat)
@@ -114,7 +114,7 @@ namespace
 
     void check_stage(World& world, const char* stage, unsigned int seed)
     {
-        const MenuLevelSettings settings = roster(stage);
+        const MatchSetup settings = roster(stage);
         const float step = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
 
         // The round, as GameLevel plays it.
@@ -189,7 +189,7 @@ namespace
     {
         RoundTape tape;
         require(!tape.playable(), "An unstarted tape was playable");
-        tape.start(7, MenuLevelSettings());
+        tape.start(7, MatchSetup());
         require(!tape.playable(), "An empty tape was playable");
         tape.set_cheats(true, false);
         require(tape.damage_immune() && !tape.infinite_ammo(), "Cheats before the first step were lost");
@@ -201,12 +201,12 @@ namespace
         require(tape.playable(), "Re-applying the same cheats spoiled the tape");
         tape.set_cheats(false, false);
         require(!tape.playable(), "Changing cheats mid-round left the tape playable");
-        tape.start(8, MenuLevelSettings());
+        tape.start(8, MatchSetup());
         tape.record_step(std::vector<PlayerInputData>(2), 0.5f);
         tape.spoil();
         tape.record_step(std::vector<PlayerInputData>(2), 0.5f);
         require(!tape.playable() && tape.seed() == 8, "A spoiled tape recorded again or lost its seed");
-        tape.start(9, MenuLevelSettings());
+        tape.start(9, MatchSetup());
         require(!tape.playable() && tape.steps() == 0 && tape.seed() == 9 && !tape.damage_immune(),
             "A new round's tape kept the last round's steps, spoil or cheats");
         std::cout << "PASS tape rules: empty and spoiled tapes are not offered; cheats change only before play\n";

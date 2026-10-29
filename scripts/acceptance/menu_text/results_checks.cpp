@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
 #include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
 // Results: plain roles, session outcomes, competitive winners and
 // contribution teams.
@@ -575,7 +576,7 @@ namespace menu_text_acceptance
 
     void check_contribution_team_roster(World& world, const Presentation& defaults)
     {
-        MenuLevelSettings settings; settings.set_player_count(2); settings.begin_input_claims(3);
+        MatchSetup settings; settings.set_player_count(2); settings.begin_input_claims(3);
         require(settings.claim_input_slot(4), "Sparse Results roster must claim Pad4 and keyboard/mouse");
         settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
         LevelEndInfo result; result.total_area = 100.0f; result.player_areas[3] = 12.5f; result.player_areas[4] = 87.5f;
@@ -584,7 +585,7 @@ namespace menu_text_acceptance
         const auto compose = [&](int index, const MenuText& text)
         {
             const auto player = settings.player_settings().at(static_cast<size_t>(index));
-            return settings.player_label(index, text) + (player.team == PlayerTeam::a ?
+            return player_label(settings, index, text) + (player.team == PlayerTeam::a ?
                 text.results.contribution_team_a : text.results.contribution_team_b) +
                 result.player_percentage_string(paint_owners::index(player.num, index));
         };

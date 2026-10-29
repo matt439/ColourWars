@@ -84,7 +84,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     { std::ifstream file(output / "stage-count-profile/ColourWars/save_data.json", std::ios::binary); require(file.good(), "Cannot read the private Stage count save"); return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()); };
     const std::string saved = bytes(); StageList stages;
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, expected; MenuContext context(&data, &input, &settings); StateContext& stack = app;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected; MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreStageCounts
     {
         StateContext& stack; MenuContext& context; Presentation& look; Presentation original;
@@ -116,7 +116,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down }) { app.keyboard()->on_key_up(key); }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
+        settings = MatchSetup(); settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_stage(stage); settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::bucket); settings.set_duration(83.0f); settings.set_screen_layout(ScreenLayout::one_player); expected = settings;
         stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
     };

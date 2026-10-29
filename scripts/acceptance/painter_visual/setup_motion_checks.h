@@ -29,7 +29,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
     data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     MenuPage* active_page = nullptr;
@@ -213,7 +213,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.set_best_of(best_of);
+        settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(best_of);
         settings.begin_input_claims(slots[0]);
         for (int player = 1; player < count; ++player)
             { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Setup-motion input claim failed"); }
@@ -238,7 +238,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto expected_page = [&](int page)
     {
-        MenuLevelSettings plan = settings;
+        MatchSetup plan = settings;
         MenuInput expected_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext expected_context(&data, &expected_input, &plan);
         StateContext expected_stack;
@@ -329,7 +329,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             frame().pixels == expected_page(2).pixels,
             "Count confirmation waited for cosmetic motion instead of starting Join");
 
-        open(2); const MenuLevelSettings initial_team = settings;
+        open(2); const MatchSetup initial_team = settings;
         together(GamepadButton::dpad_right, GamepadButton::dpad_left);
         const Frame team_arrival = frame(); frozen(team_arrival);
         tick(motion.focus_duration * 0.4f); const Frame team_middle = frame(); tick(settle_time);
@@ -366,7 +366,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (int player = 0; player < 3; ++player) { tap(player, GamepadButton::a); }
         tick(settle_time); tap(3, GamepadButton::a); const Frame refused = frame(); tick(settle_time);
         require(refused.pixels == frame().pixels, "Refused empty-team completion invented a press");
-        MenuLevelSettings shuffled = initial_team;
+        MatchSetup shuffled = initial_team;
         std::srand(67); require(shuffled.shuffle_teams(), "Expected setup shuffle failed"); std::srand(67);
         together(GamepadButton::x, GamepadButton::a); const Frame shuffle = frame(); frozen(shuffle);
         tick(settle_time); const Frame shuffle_rest = frame(); std::vector<RectangleF> shuffled_boxes;
@@ -379,7 +379,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(frame().pixels == expected_page(0).pixels,
             "Final Team confirmation waited for motion or carried motion into Weapon Select");
 
-        open(3); const MenuLevelSettings initial_weapon = settings;
+        open(3); const MatchSetup initial_weapon = settings;
         together(GamepadButton::dpad_right, GamepadButton::dpad_right);
         const Frame weapon_arrival = frame(); frozen(weapon_arrival);
         tick(motion.focus_duration * 0.4f); const Frame weapon_middle = frame(); tick(settle_time);

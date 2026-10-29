@@ -59,7 +59,7 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     MenuPage* active = nullptr;
     struct ClearSetupPaper { StateContext& stack; ~ClearSetupPaper() { this->stack.clear(); } } clear{ stack };
@@ -98,7 +98,7 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); settings = MenuLevelSettings(); settings.set_best_of(1);
+        input.reset_actions(); settings = MatchSetup(); settings.set_best_of(1);
         stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
         std::unique_ptr<MenuPage> page;
         if (count) { page = std::make_unique<MainMenuPlayerCount>(&context); }
@@ -256,7 +256,7 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         // The value anchor still has positive interior width; its actual text
         // does not. This reaches the compound-row runtime guard deliberately.
         source.mode_select_spacing.x = 800.0f;
-        MenuLevelSettings invalid_settings; MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup invalid_settings; MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext invalid_context(&data, &invalid_input, &invalid_settings); StateContext invalid_stack;
         bool rejected = false;
         try { invalid_stack.push(std::make_unique<MainMenuModeSelect>(&invalid_context)); }

@@ -21,7 +21,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
     painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = true;
     app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
 
-    MenuLevelSettings settings; settings.set_player_count(4);
+    MatchSetup settings; settings.set_player_count(4);
     settings.set_player_bot(1, BotDifficulty::easy); settings.set_player_bot(3, BotDifficulty::hard);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
     require(settings.claim_input_slot(3), "Cannot claim P3's sparse human device");
@@ -179,7 +179,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
     stack.clear();
 
     // One human pane beside two bots, captured live for label inspection.
-    MenuLevelSettings solo; solo.set_player_count(3);
+    MatchSetup solo; solo.set_player_count(3);
     solo.set_player_bot(1, BotDifficulty::normal); solo.set_player_bot(2, BotDifficulty::hard);
     solo.begin_input_claims(input_slots::keyboard_and_mouse);
     solo.set_screen_layout(ScreenLayout::one_player); solo.set_stage("crossfeed"); solo.set_duration(60.0f);

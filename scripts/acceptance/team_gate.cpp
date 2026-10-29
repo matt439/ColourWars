@@ -209,7 +209,7 @@ namespace
 
     std::unique_ptr<Level> two_humans(World& world)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_screen_layout(ScreenLayout::two_player);
         settings.set_stage("turbulence_gate_trial");
@@ -416,9 +416,9 @@ namespace
     };
 
     // Seat 0 is an idle human on team A; seats 1-3 are bots, two of them on B.
-    MenuLevelSettings roster(const Roster& variant)
+    MatchSetup roster(const Roster& variant)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(4);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_screen_layout(ScreenLayout::one_player);

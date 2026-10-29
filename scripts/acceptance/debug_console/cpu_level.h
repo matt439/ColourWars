@@ -84,7 +84,7 @@ namespace debug_console_acceptance
 	public:
 		CpuMatch(CpuWorld& world, DebugDirector& director) : world_(world), director_(director) {}
 
-		MenuLevelSettings settings;
+		MatchSetup settings;
 		std::unique_ptr<Level> level;
 		int builds = 0;
 		// What GameLevel would choose; the director may override it.
@@ -108,13 +108,13 @@ namespace debug_console_acceptance
 			this->director_.match_suspended(*this);
 		}
 
-		const MenuLevelSettings& debug_settings() const override { return this->settings; }
-		void debug_rebuild(const MenuLevelSettings& plan, bool) override
+		const MatchSetup& debug_settings() const override { return this->settings; }
+		void debug_rebuild(const MatchSetup& plan, bool) override
 		{
 			this->settings = plan;
 			this->build();
 		}
-		void debug_adopt(const MenuLevelSettings& plan, bool) override { this->settings = plan; }
+		void debug_adopt(const MatchSetup& plan, bool) override { this->settings = plan; }
 		void debug_leave() override {}
 		void debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
 			SeatInputFilter* seats) override

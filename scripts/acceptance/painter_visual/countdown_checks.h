@@ -79,7 +79,7 @@ void countdown_glyph_matrix(Application& app, const Canvas& canvas,
 std::unique_ptr<Level> countdown_level(Application& app, LevelBuilder& builder,
     int count, OpeningMode opening, const std::string& stage = "movement_course")
 {
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(count);
     settings.set_stage(stage);
     settings.set_duration(10.0f);

@@ -15,16 +15,16 @@
 class DebugDirector;
 
 // Whether an input slot belongs to the match, including keyboard/mouse.
-// MenuPlayerSettings::num is the device slot; its roster index is the view.
-bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot);
+// SeatSetup::num is the device slot; its roster index is the view.
+bool match_owns_pad_slot(const MatchSetup& settings, int slot);
 
 // A pad the match waits for: a pad slot that is not connected and whose seat
 // the developer tools do not drive (a Debug bot or replay; never in Release).
 // The one rule behind the missing-pad pause, the pause page's "Controller
 // lost" and the restart confirmation's fallback.
-bool pad_seat_missing(const MenuLevelSettings& settings, int slot,
+bool pad_seat_missing(const MatchSetup& settings, int slot,
 	const labrador::Gamepads& gamepads, const DebugDirector& debug);
-int disconnected_player_slot(const MenuLevelSettings& settings,
+int disconnected_player_slot(const MatchSetup& settings,
 	const labrador::Gamepads& gamepads, const DebugDirector& debug);
 
 // ROAD#4. XInput cannot tell a controller that came back in another slot from
@@ -32,7 +32,7 @@ int disconnected_player_slot(const MenuLevelSettings& settings,
 // pad that no seat reads takes the first missing seat in roster order
 // (missing_seats has a bit per roster index). Returns that seat's input slot,
 // or -1 with the settings unchanged.
-int reclaim_missing_seat(MenuLevelSettings& settings,
+int reclaim_missing_seat(MatchSetup& settings,
 	const std::vector<ProcessedMenuInput>& inputs, unsigned int missing_seats);
 
 // Over the intro, Start (Escape) skips it rather than pausing. A press that

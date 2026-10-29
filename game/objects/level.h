@@ -41,7 +41,7 @@
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
 #include "game/objects/music_envelope.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <cstdint>
 #include <span>
 #include <string_view>
@@ -105,7 +105,7 @@ public:
 		std::vector<LevelStation> stations,
 		OpeningMode opening, std::optional<float> duration = std::nullopt,
 		const InputBindings* input_bindings = nullptr,
-		const MenuLevelSettings* roster = nullptr, std::uint64_t bot_seed = 0,
+		const MatchSetup* roster = nullptr, std::uint64_t bot_seed = 0,
 		std::vector<LevelLesson> lessons = {});
 
 	// Stop the level's voices and player weapon/redraw loops.
@@ -258,7 +258,7 @@ public:
 	// By participant: an optional identity-label override ("Bot: paint"). Empty
 	// entries keep the shipping bot difficulty label or human device name.
 	void set_seat_labels(std::vector<std::wstring> labels);
-	// The pad each pad input slot reads (MenuLevelSettings::pad_devices), so
+	// The pad each pad input slot reads (MatchSetup::pad_devices), so
 	// a HUD names the pad a reclaimed seat now uses. Rebuilds only on change.
 	void set_pad_devices(const std::array<int, input_slots::pad_count>& devices);
 	// The countdown's opening cards in window pixels while they are drawn,
@@ -317,7 +317,7 @@ private:
 	// The vector index is the participant's stable roster seat, independent of
 	// their human view or physical input slot (player_num()).
 	std::vector<Player*> players_;
-	std::vector<MenuPlayerSettings> roster_;
+	std::vector<SeatSetup> roster_;
 	std::vector<int> view_participants_;
 	std::vector<int> participant_views_;
 	std::unique_ptr<MatchBotDriver> bot_driver_;

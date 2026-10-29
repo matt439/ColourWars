@@ -3,7 +3,7 @@
 #include "game/play_settings.h"
 
 #include "game/objects/level.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "game/objects/team_colour.h"
 #include "game/objects/player_builder.h"
 #include "engine/render/resolution_manager.h"
@@ -34,7 +34,7 @@ public:
 	// `practice` asks for untimed solo practice: a one-human roster on a stage
 	// whose stations carry lessons gets them and no clock (POL#19). Any other
 	// roster or stage is built as an ordinary timed match.
-	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings,
+	std::unique_ptr<Level> build_level(const MatchSetup& settings,
 		TeamColourPair palette, OpeningMode opening, bool practice = false);
 
 private:

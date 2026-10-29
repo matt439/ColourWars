@@ -33,7 +33,7 @@ namespace menu_text_acceptance
             return GameTuning(path.string().c_str());
         };
         const auto complete = [&](const GameTuning& balance, const Presentation& look)
-        { validate_game_content(balance, look, &world.render, &world.audio, levels, stages, PlaySettings{}); };
+        { validate_shell_content(balance, look, &world.render, &world.audio, levels, stages, PlaySettings{}); };
         const auto rejected = [](const std::string& owner, auto action)
         {
             bool refused = false; std::string diagnostic = "accepted without exception";
@@ -101,7 +101,7 @@ namespace menu_text_acceptance
                 main.setup_box_size);
             MenuPaperArtPresentation art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
             MainMenuModeSelect::check_duration_row(row, panel, art, main.mode_select_spacing.y);
-            MainMenuModeSelect::validate_durations(&world.render, authored, look);
+            validate_mode_durations(&world.render, authored, look);
             auto produced = MainMenuModeSelect::make_duration_row(&world.render, look.menu(), main, look.menu_text());
             produced->set_value(L"~4");
             require(produced->bounds() == row.bounds(), "Actual Mode factory changed the independently constructed duration row");

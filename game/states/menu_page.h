@@ -50,7 +50,7 @@ public:
 	// Debug hooks (DebugPageTarget). Only main-menu pages, whose frame starts
 	// a match on close, start one; child and match-overlay pages dismiss
 	// themselves; every page forgets armed presses on request.
-	bool debug_start_match(const MenuLevelSettings& plan) override;
+	bool debug_start_match(const MatchSetup& plan) override;
 	bool debug_dismiss(bool leaving_match) override;
 	void debug_reset_input(int pad_slot) override;
 
@@ -96,7 +96,7 @@ protected:
 	const MenuStyle& menu_style() const;
 	const MenuText& text() const;
 
-	MenuLevelSettings* level_settings() const;
+	MatchSetup* level_settings() const;
 	MenuInput* input() const;
 	labrador::ResolutionManager* resolution_manager() const;
 	Save* save() const;

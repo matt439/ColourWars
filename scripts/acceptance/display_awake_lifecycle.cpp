@@ -59,7 +59,7 @@ namespace
     class FailingOwner final : public State
     {
     public:
-        FailingOwner(GameData& data, const MenuLevelSettings& settings) : game_(std::make_unique<GameLevel>(&data, settings)) {}
+        FailingOwner(GameData& data, const MatchSetup& settings) : game_(std::make_unique<GameLevel>(&data, settings)) {}
         void update(float) override {} void draw(Renderer&) const override {}
         void init() override { throw std::runtime_error("fixture owner init failure"); }
     private: std::unique_ptr<GameLevel> game_;
@@ -67,11 +67,11 @@ namespace
     class QueueFailure final : public State
     {
     public:
-        QueueFailure(GameData& data, const MenuLevelSettings& settings) : data_(data), settings_(settings) {}
+        QueueFailure(GameData& data, const MatchSetup& settings) : data_(data), settings_(settings) {}
         void draw(Renderer&) const override {} void init() override {}
         void update(float) override
         { context()->push(std::make_unique<GameLevel>(&data_, settings_)); throw std::runtime_error("fixture queued update failure"); }
-    private: GameData& data_; MenuLevelSettings settings_;
+    private: GameData& data_; MatchSetup settings_;
     };
     void write_evidence(const std::filesystem::path& output, bool passed)
     {
@@ -106,7 +106,7 @@ namespace
         GameTuning tuning((content / "tuning.json").string().c_str()); Presentation presentation((content / "presentation.json").string().c_str());
         Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
         GameData data; data.set_save(&preferences); data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-        MenuLevelSettings settings; settings.set_player_count(1); settings.set_stage("movement_course"); settings.set_duration(60.0f);
+        MatchSetup settings; settings.set_player_count(1); settings.set_stage("movement_course"); settings.set_duration(60.0f);
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_screen_layout(ScreenLayout::one_player);
         settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer);
         ApplicationOptions options; options.window_class_name = L"ColourWarsDisplayAwakeProbe"; options.window_title = L"ColourWars display lifetime validation";

@@ -234,7 +234,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     const auto launch = [&]
     {
         stack.clear(); pads_neutral();
-        MenuLevelSettings settings; settings.set_stage("movement_course"); settings.set_duration(60.0f);
+        MatchSetup settings; settings.set_stage("movement_course"); settings.set_duration(60.0f);
         settings.set_player_count(3); settings.begin_input_claims(3);
         require(settings.claim_input_slot(1) && settings.claim_input_slot(input_slots::keyboard_and_mouse),
             "Cannot form sparse background roster");

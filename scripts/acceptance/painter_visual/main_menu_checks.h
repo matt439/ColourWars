@@ -107,7 +107,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     menu_widget_geometry_checks(context, presentation, output);
     StateContext& stack = app;

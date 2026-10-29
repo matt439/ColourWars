@@ -27,14 +27,26 @@ listed. Refresh line numbers before starting; they are from `96c65373`.
 
 ### Match setup out of the menu layer (`HYG#28`)
 
-Rename `MenuLevelSettings` to `MatchSetup` and `MenuPlayerSettings` to
-`SeatSetup`, and move them out of `game/states/` to `game/match_setup.h` and
-`game/seat_setup.h`. Keep `player_label(int, const MenuText&)` as a free
-function in `states/`. Move `MainMenuModeSelect::validate_durations` and
-`validate_stage_rules` so `content_validation.cpp` stops including
-`states/main_menu.h`. Done when `game/objects`, `game/ai`, `round_tape` and
-`content_validation.cpp` include no `states/` header and acceptance passes; the
-presentation files' copied `states/` includes are `HYG#38`.
+**Done 2026-10-30.** `MenuLevelSettings` is now `MatchSetup` in
+[game/match_setup.h](../game/match_setup.h) and `MenuPlayerSettings` is
+`SeatSetup` in [game/seat_setup.h](../game/seat_setup.h), with no other
+change to either type; `GameMenu`'s member followed as `match_setup_`. The seat
+label left the class as the free function `player_label(const MatchSetup&, int,
+const MenuText&)` in [game/states/player_label.h](../game/states/player_label.h).
+The two Mode-row validators left `MainMenuModeSelect` as
+`validate_mode_durations` and `validate_mode_stage_rules` in
+[game/states/menu_content_validation.h](../game/states/menu_content_validation.h),
+beside `validate_shell_content`, which runs `validate_game_content` and then
+those two, in the order startup ran them before. `wWinMain`, `reload`, the
+level-checking `tune` path and the probes that ran the startup checks call it
+instead. `game/objects`, `game/ai`, `round_tape`, `last_match_setup`,
+`series_stage_rule` and `content_validation` now include no `states/` header.
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74 cases) and in Debug without the four slow cases (71), and
+`debug_console` and `menu_text` also passed in Debug. The Debug compile gate
+(the sixteen opt-in cases, `check-painter.ps1 -CompileOnly` and
+`check-frame-pacing.ps1 -CompileOnly`) compiled, and `check-startup.ps1` passed
+on the Debug executable.
 
 ### A game library for the executable and the probes (`HYG#29`)
 
@@ -1207,14 +1219,14 @@ Completion evidence, by edited declaration or claim:
 | comment location | verified implementation/caller |
 |---|---|
 | `PlayerBuilder::build_players` declaration and local identity comment | `player_builder.cpp` keeps roster order, increments `human_view` only for humans, passes participant to sound and `paint_owners::index(setting.num, participant_index)` to the weapon |
-| `MenuPlayerSettings::num`, `MenuLevelSettings::device_slot` and `Player::player_num` | `menu_level_settings.cpp` assigns human slots, gives bots `-1` and remaps only the device; `Level::apply_player_inputs` reads stable slots; `results_menu.cpp` maps participants through `paint_owners::index` |
+| `SeatSetup::num`, `MatchSetup::device_slot` and `Player::player_num` | `match_setup.cpp` assigns human slots, gives bots `-1` and remaps only the device; `Level::apply_player_inputs` reads stable slots; `results_menu.cpp` maps participants through `paint_owners::index` |
 | `paint_owners.h` owner-domain comment and `Player` constructor's sound comment | `PlayerBuilder` uses slot-based human paint credit and participant-derived bot credit; the constructor receives a separate participant sound index |
 | `Level` participant/pane, feedback and acting comments | `Level` constructs `view_participants_` only for humans; `take_rumble_events` retains `player_num()`; `level_dev_tools.cpp` indexes players by participant; `level_draw.cpp::refresh_identity_texts` falls back to bot difficulty or human device; `level_intro.cpp::update_acting` and `draw_acting` index `acts_` alongside `players_` |
 | `Level::update`, `DebugDirector::update_match`, `GameLevel` adapter declarations and `game_level_dev_tools.cpp` heading | `game_states.cpp::update` calls the director in both builds; the Release inline hook forwards to `debug_update_level`, which supplies `RoundTapeRecorder`; `game_level_replay.cpp::step_replay` supplies `RoundTapePlayer` |
 | `Level` shipping setup/replay adapter comment | `game_states.cpp` calls `set_pad_devices` during build and update; `game_level_replay.cpp::start_replay` restores pad mappings and cheats |
 | `DebugDirector` Release overview | `debug_director.h` retains ordinary update forwarding and `opening_mode` pass-through; `debug_director.cpp::run_launch_arguments` retains the Release argument warning |
 | `RoundTape` invalidation overview | `GameLevel::debug_place`, `debug_respawn` and `debug_kill` call `spoil`; `RoundTape::set_cheats` spoils after a recorded step; `tune_commands.cpp` applies live edits without tape invalidation; the `ROAD#19` owner records that exception and Debug-injected suspends |
-| `GameData::stages` and `MenuLevelSettings::set_stage` | `stage_loading.cpp` appends accepted user definitions after manifest stages in file-name order; `MainMenuStageSelect::set_level_settings` chooses the selected stage's registry name |
+| `GameData::stages` and `MatchSetup::set_stage` | `stage_loading.cpp` appends accepted user definitions after manifest stages in file-name order; `MainMenuStageSelect::set_level_settings` chooses the selected stage's registry name |
 | `LevelDocument::unresolved_resources` and `LevelLoadedInfo::validate_content` icon comments | both still check `icon_frame` in `sprite_sheet_1`; `MainMenuStageSelect::update_stage_select_visuals` selects `StagePreview`, not the legacy icon |
 
 The accurate `stage_loading.h` rescan, borrowed-registry and no-match lifetime

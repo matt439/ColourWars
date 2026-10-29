@@ -139,7 +139,7 @@ void MenuPage::press_focus()
 	if (focused != nullptr) { this->focus_motion_.press(); }
 }
 
-bool MenuPage::debug_start_match(const MenuLevelSettings& /*plan*/)
+bool MenuPage::debug_start_match(const MatchSetup& /*plan*/)
 {
 	return false;
 }
@@ -291,7 +291,7 @@ const MenuText& MenuPage::text() const
 {
 	return this->text_;
 }
-MenuLevelSettings* MenuPage::level_settings() const
+MatchSetup* MenuPage::level_settings() const
 {
 	return this->context_->level_settings();
 }

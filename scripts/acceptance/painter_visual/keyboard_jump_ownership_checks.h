@@ -29,7 +29,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
     static_cast<void>(content);
 #endif
     director.attach(&app, &data);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(0);
     require(settings.claim_input_slot(1), "Cannot build Jump ownership participant roster");
     MenuContext context(&data, &input, &settings); StateContext& stack = app;

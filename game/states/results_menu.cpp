@@ -2,6 +2,7 @@
 #include "game/states/menu_panel.h"
 #include "game/states/results_menu.h"
 #include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -329,15 +330,15 @@ void ResultsMenuInitial::init()
 	}
 	add_detail(this->text().results.contribution_heading,
 		look.contribution_position, look.contribution_font);
-	const std::vector<MenuPlayerSettings> players =
+	const std::vector<SeatSetup> players =
 		this->level_settings()->player_settings();
 	std::vector<int> owners;
 	std::vector<const colourwars::UiTextDropShadow*> rows;
 	for (size_t i = 0; i < players.size(); ++i)
 	{
-		const MenuPlayerSettings& player = players[i];
+		const SeatSetup& player = players[i];
 		owners.push_back(paint_owners::index(player.num, static_cast<int>(i)));
-		add_detail(this->level_settings()->player_label(static_cast<int>(i), this->text()) +
+		add_detail(player_label(*this->level_settings(), static_cast<int>(i), this->text()) +
 			(player.team == PlayerTeam::a ? this->text().results.contribution_team_a :
 				this->text().results.contribution_team_b) +
 			end_info.player_percentage_string(owners[i]),

@@ -23,7 +23,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     static_cast<void>(content);
 #endif
     director.attach(&app, &data);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     const Presentation original = presentation;
     struct RestorePadJump
@@ -365,7 +365,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         ViewportManager& viewports; ScreenLayout layout;
         ~RestoreMappedReplayLayout() { this->viewports.set_layout(this->layout); }
     } replay_layout{ *app.viewport_manager(), app.viewport_manager()->layout() };
-    const auto fresh = [&](const MenuLevelSettings& setup, unsigned int seed)
+    const auto fresh = [&](const MatchSetup& setup, unsigned int seed)
     {
         app.viewport_manager()->set_layout(setup.screen_layout());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),

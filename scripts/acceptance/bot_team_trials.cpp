@@ -86,9 +86,9 @@ namespace
     }
     const char* tool_label(const Trial& trial) { return trial.mixed() ? "mixed" : name(trial.tool(1)); }
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(seats);
         for (int seat = 1; seat < seats; ++seat) { if (trial.bot(seat)) { settings.set_player_bot(seat, trial.difficulty); } }
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -322,7 +322,7 @@ namespace
     Metrics run(World& world, const Trial& trial, const balance_regions::Partition& regions,
         bool replay_check, int trial_id, std::ostream& regional_csv, std::ostream& exchange_csv)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings, trial.seed); prepare(*level);
         const std::optional<TowerSupports> tower = std::string_view(trial.stage) == "press_tower" ?
             std::optional<TowerSupports>(tower_supports(world)) : std::nullopt;

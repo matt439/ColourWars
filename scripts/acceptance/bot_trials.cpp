@@ -31,7 +31,7 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(const MenuLevelSettings& settings)
+        std::unique_ptr<Level> build(const MatchSetup& settings)
         {
             std::srand(trial_seed);
             viewports.set_layout(settings.screen_layout());
@@ -56,9 +56,9 @@ namespace
         bool local_combat = false;
     };
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, trial.difficulty);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -153,7 +153,7 @@ namespace
 
     Metrics run(World& world, const Trial& trial, bool replay_check)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, trial);
         Metrics metrics;

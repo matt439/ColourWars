@@ -134,9 +134,9 @@ namespace turbulence_slab_stage_acceptance
             return result;
         }
 
-        MenuLevelSettings setup(int count)
+        MatchSetup setup(int count)
         {
-            MenuLevelSettings settings; settings.set_stage(stage_name); settings.set_player_count(count);
+            MatchSetup settings; settings.set_stage(stage_name); settings.set_player_count(count);
             constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player, ScreenLayout::two_player,
                 ScreenLayout::three_player, ScreenLayout::four_player };
             settings.set_screen_layout(layouts[static_cast<std::size_t>(count - 1)]);

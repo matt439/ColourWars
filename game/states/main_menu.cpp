@@ -23,7 +23,7 @@ MainMenuPage::MainMenuPage(MenuContext* context, std::optional<Session> between_
 	this->unready_sound_ = this->resolve_wave(look.unready_sound.name);
 }
 
-bool MainMenuPage::debug_start_match(const MenuLevelSettings& plan)
+bool MainMenuPage::debug_start_match(const MatchSetup& plan)
 {
 	// Between rounds this frame belongs to the match, which takes the plan.
 	if (this->between_rounds_) { return false; }
@@ -451,52 +451,6 @@ void MainMenuModeSelect::check_stage_rule_row(const OptionRow& stage_rule_row,
 	{
 		throw std::runtime_error("main_menu.mode_select_spacing: the complete series stage row must fit main_menu.setup_box_size.");
 	}
-}
-
-void MainMenuModeSelect::validate_stage_rules(RenderResources* render, const Presentation& presentation)
-{
-	const MenuStyle& style = presentation.menu();
-	const MainMenuPresentation& look = presentation.main_menu();
-	const MenuText& text = presentation.menu_text();
-	const RectangleF panel((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-		look.setup_box_size);
-	MenuPaperArtPresentation art = look.art;
-	art.focus_padding = look.setup_focus_padding;
-	art.shadow_offset = look.setup_shadow_offset;
-	for (const SeriesStageRule rule : { SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick })
-	{
-		const std::wstring& value = text.series_stage_value(rule);
-		drawable_text::check_font_can_draw(render, style.item_font, value,
-			std::string("presentation.json: menu_text.values.series_stage_") + series_stage_rule_key(rule));
-		auto row = make_stage_rule_row(render, style, look, text);
-		row->set_value(value);
-		check_stage_rule_row(*row, panel, art, look.mode_select_spacing.y);
-	}
-}
-
-void MainMenuModeSelect::validate_durations(RenderResources* render,
-	const GameTuning& tuning, const Presentation& presentation)
-{
-	const MenuStyle& style = presentation.menu();
-	const MainMenuPresentation& look = presentation.main_menu();
-	const MenuText& text = presentation.menu_text();
-	const RectangleF panel((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-		look.setup_box_size);
-	MenuPaperArtPresentation art = look.art;
-	art.focus_padding = look.setup_focus_padding;
-	art.shadow_offset = look.setup_shadow_offset;
-	const auto check = [&](float seconds, bool use_default)
-	{
-		const std::string where = std::string("presentation.json: menu_text.values.") +
-			(use_default ? "duration_default" : "duration_minutes");
-		const std::wstring value = text.setting_duration(seconds, use_default);
-		drawable_text::check_font_can_draw(render, style.item_font, value, where);
-		auto row = make_duration_row(render, style, look, text);
-		row->set_value(value);
-		check_duration_row(*row, panel, art, look.mode_select_spacing.y);
-	};
-	check(tuning.match().duration, true);
-	for (const float seconds : tuning.match().duration_choices) { check(seconds, false); }
 }
 
 void MainMenuModeSelect::refresh_duration()

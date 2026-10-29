@@ -89,7 +89,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     // Clear borrowed pages before MenuContext, GameData or Save is destroyed,
     // including failure exits; the caller's Presentation and tuning then return.
