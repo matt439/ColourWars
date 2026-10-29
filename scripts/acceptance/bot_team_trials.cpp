@@ -400,8 +400,11 @@ namespace
                     "Static team scoring tile order changed during measurement");
                 // A mover's tiles travel with it (POL#42). The ledger computes
                 // pieces once, so a moving tile must keep its starting regions.
+                // Only the Turbulence family has movers; every other stage keeps
+                // its original static-corner contract.
                 if (now.corners != before.corners)
                 {
+                    require(crossing.has_value(), "Static team scoring tile moved during measurement");
                     require(balance_regions::region_pieces(now, regions) == balance_regions::region_pieces(start_paint[tile], regions),
                         "A moving team scoring tile changed region during measurement");
                 }

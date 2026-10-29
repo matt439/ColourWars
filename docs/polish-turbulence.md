@@ -1130,16 +1130,16 @@ evidence across the Turbulence family. `bot_turbulence_routes.cpp:100` sets
 the preserved `turbulence` stage, not the blockout. The mover and gate trials
 have their own route cases (`bot_mover_routes.cpp:38`, `bot_gate_routes.cpp:45`),
 and the slab trial has `ROAD#38`'s measurement case (`bot_slab_routes.cpp:199`).
-The blockout has none. The natural-spawn team matrix in
-`bot_team_trials.cpp:582` covers Crossfeed, Close Quarters, King of the Hill and
-the preserved Turbulence, so no current variant has bot-held paint from
+The blockout had none. The natural-spawn team matrix in
+`bot_team_trials.cpp:678` covers Crossfeed, Close Quarters, King of the Hill and
+the preserved Turbulence, so no current variant had bot-held paint from
 ordinary spawns.
 
 Scope: a shipping-bot route case on `turbulence_blockout` (home departures,
 the lower route, the fixed crossover and the return, both teams and all five
 tools, on the `bot_turbulence_routes` pattern), and `turbulence_blockout` plus
 `turbulence_mover_trial` added to the team matrix. The matrix gives a stage
-partition only to Crossfeed and Press Tower (`bot_team_trials.cpp:120`); let the blockout use
+partition only to Crossfeed and Press Tower (now `bot_team_trials.cpp:122`, with the blockout); let the blockout use
 its existing `balance_regions` bands and keep geographic thirds for the mover
 trial until `TOOL#3` supplies its own. Report completion, takeoffs, arrival updates and
 held paint per team so the two stages compare like for like. The slab trial
@@ -1167,8 +1167,9 @@ with ten same-tool 2v2 (five tools, both human sides) and ten mixed-tool
 rotations on the first seed, Normal bots, 1800 steps from ordinary spawns, and
 one final-input replay per stage. The blockout uses its `x_band` bands; the two
 trials use geographic thirds. A mover's scoring tiles may now move during a
-team trial provided each keeps its starting region pieces (the movers stay
-inside the left and right thirds). Per bot, `bot_team_trials_turbulence.csv`
+Turbulence-family team trial provided each keeps its starting region pieces
+(the movers stay inside the left and right thirds); every other stage still
+rejects a moved tile. Per bot, `bot_team_trials_turbulence.csv`
 records the first update on nine named contacts from its own side, takeoffs
 (jump presses) and its team's held paint, including paint in the opposing half,
 which does not depend on the partition. A *crossing* is the first arrival on
