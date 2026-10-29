@@ -1390,6 +1390,44 @@ empty arguments and combined traversal/depth precedence. No proposed path is
 opened and no screenshot is queued by these checks. Independent review and
 both source hashes pass; the Release inert/layout/RTTI boundary remains intact.
 
+## Screenshot file basenames (`DBG#14`)
+
+**Done (2026-10-29).** `screenshot_file_name("CON", now)` formerly returned
+`CON.png`. Windows reserves that stem even with an extension, so sanitizing
+punctuation alone did not produce a usable capture filename. The
+[Windows naming contract](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+also applies to the final screenshot basename.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Reserved screenshot stems survive normalization and `.png` appending. | Selected as `DBG#14`: prefix the final sanitized reserved stem with `_`, using pure string regression checks and the existing folder rule. Small capture reliability fix without a device-path experiment. |
+| 2 | Input-fixture cleanup needs an explicit resource measurement contract. | Continue the separate `ED#20` investigation; its failed count candidate remains retained. |
+
+After existing extension stripping, ASCII replacement and timestamp fallback,
+the sanitizer prefixes `_` only for an exact case-insensitive ASCII device stem. Thus `CON`
+becomes `_CON.png` and `lPt9.PNG` becomes `_lPt9.png`. Preserve valid names,
+stem spelling, default timestamps and existing `.png` handling, including the
+literal request `.png` becoming `_png.png`. Names such as `CON.` already
+normalize to `CON_.png` and stay unchanged.
+
+The two Debug callers share the existing folder predicate through a small
+standard-library-only header. Its body, the folder policy and the shipping
+stage-name contract are unchanged.
+
+The pure old-source baseline returned `CON.png` and failed before the existing
+PNG-writing checks, with all five source/absence guards intact. Evidence is
+`dbg14-baseline/1fd3035850a44e21a6b463997b15f69e` under
+`out/validation/implementation-loop-20261028/`.
+
+Both game builds and the full console CPU case pass in
+`dbg14-candidate/2c3ebacbedb84a328e0580a790888319` (Debug 88 seconds, Release
+18 seconds). Debug checks 199 reserved stem/case/suffix values, 24 valid
+neighbors and four sanitizer controls through `screenshot_file_name` itself.
+The earlier 397 folder refusals and original PNG/queue checks remain intact;
+Release confirms the inert/layout/RTTI boundary. All five source hashes and
+independent review pass. New checks use pure string values, with no capture
+request or reserved-path access.
+
 ## Quoted completion boundaries (`DBG#11`)
 
 **Done (2026-10-28).** Tab completion now recognizes statement and word

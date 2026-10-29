@@ -39,6 +39,7 @@ bool write_png(const std::filesystem::path& path, const ScreenCapture& image,
 
 // `requested` kept to [A-Za-z0-9_-] (anything else becomes '_', a trailing
 // ".png" is dropped), plus ".png"; empty requests the local-time default
-// colourwars-YYYYMMDD-HHMMSS-mmm.png.
+// colourwars-YYYYMMDD-HHMMSS-mmm.png. Reserved Windows stems receive a leading
+// underscore before the extension ("CON" becomes "_CON.png").
 std::string screenshot_file_name(std::string_view requested,
 	std::chrono::system_clock::time_point now);

@@ -574,6 +574,49 @@ namespace debug_console_acceptance
 		}
 
 		const auto now = std::chrono::system_clock::now();
+		// DBG14: pure filename values only; never open a reserved device path.
+		{
+			const std::string first = screenshot_file_name("CON", now);
+			require(first == "_CON.png", "DBG14 reserved screenshot basename was not protected: " + first);
+			std::vector<std::string> reserved{ "CON", "PRN", "AUX", "NUL" };
+			for (int digit = 1; digit <= 9; ++digit)
+			{
+				reserved.push_back("COM" + std::to_string(digit));
+				reserved.push_back("LPT" + std::to_string(digit));
+			}
+			std::size_t protected_names = 1;
+			for (const std::string& stem : reserved)
+				for (int spelling = 0; spelling < 3; ++spelling)
+				{
+					std::string name = stem;
+					for (std::size_t index = 0; index < name.size(); ++index)
+						if ((spelling == 1 || (spelling == 2 && index % 2 == 1)) && name[index] >= 'A' && name[index] <= 'Z')
+							name[index] = static_cast<char>(name[index] - 'A' + 'a');
+					for (const char* suffix : { "", ".png", ".PnG" })
+					{
+						const std::string requested = name + suffix;
+						const std::string actual = screenshot_file_name(requested, now);
+						require(actual == "_" + name + ".png", "DBG14 reserved basename changed: " + requested + " -> " + actual);
+						++protected_names;
+					}
+				}
+			require(protected_names == 199, "DBG14 reserved matrix did not visit every spelling and suffix");
+			for (const char* neighbor : { "COM0", "COM10", "LPT0", "LPT10", "CON_", "_CON", "-CON", "CONSOLE" })
+				for (const char* suffix : { "", ".png", ".PnG" })
+				{
+					const std::string name(neighbor);
+					require(screenshot_file_name(name + suffix, now) == name + ".png",
+						"DBG14 valid neighboring basename changed: " + name + suffix);
+				}
+			require(screenshot_file_name("CON.", now) == "CON_.png" &&
+				screenshot_file_name("CON.txt", now) == "CON_txt.png" &&
+				screenshot_file_name("dir/CON", now) == "dir_CON.png" &&
+				screenshot_file_name(".png", now) == "_png.png",
+				"DBG14 filename protection changed existing suffix or punctuation sanitization");
+			std::printf("PASS DBG14 screenshot basenames: 199 reserved stem/case/suffix values, 24 valid neighbors, "
+				"sanitized punctuation/path controls; pure strings, no capture or reserved-path access\n");
+		}
+
 		require(screenshot_file_name("my shot!", now) == "my_shot_.png",
 			"A name keeps [A-Za-z0-9_-]");
 		require(screenshot_file_name("drive.png", now) == "drive.png",
