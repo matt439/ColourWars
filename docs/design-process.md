@@ -179,7 +179,7 @@ by** names the feature or row and, where one exists, the retained
 | A6 | P2: to know what each tool does before I pick it, so I pick one that suits me | Weapon Select names and describes all five tools in text that fits; the choice can change before Stage Select | Weapon Select descriptions; `weapon_catalog`, `text_wrap`; whether the text is enough is `POL#24` | E12, E23 |
 | A7 | P1: to see the arena and its record before locking it, so the choice is informed | Stage Select draws the live arena and its best record; Random draws only from Random stages | Stage Select, `GAP#6.2`; `stage_selection`, `match_records` | E1, E20 |
 | A8 | P2: the controls before my first shot, so I do not learn them by dying | The countdown shows a controls card for each device in the match; Controls / audio carries a full reference, also from Pause | Countdown cards, Controls / audio; `menu_text`; observation is `POL#24` | E17, E19 |
-| A9 | P1: to skip the opening once everyone has seen it, so rematches start fast | A, B or Start (Space, Escape or Enter) skips; a skip press is never a pause; a rematch starts at the preview | `latch_intro_pause` in `game/states/game_states.cpp`; no case covers the skip itself | E19 |
+| A9 | P1: to skip the opening once everyone has seen it, so rematches start fast | A, B or Start (Space, Escape or Enter) skips; a skip press is never a pause; a rematch starts at the preview | `Level::skip_intro` (`game/objects/level_intro.cpp`), `latch_intro_pause` (`game/states/pause_menu.cpp`, called from `game_states.cpp`); `debug_console` (skip, latch), `action_bindings` (skip keys) | E19 |
 
 #### B. In the match
 
@@ -213,9 +213,9 @@ by** names the feature or row and, where one exists, the retained
 | D1 | P4: to turn off shake and effects for my pane only, so I can play without changing anyone else's screen | Per-pad Off/Shared/On for View shake, Aim marker and Reduce effects; other panes unchanged; no state signal lost | `ROAD#7` (attended); `view_shake`, `aim_marker`, `settings`, `player_identity` | E14 |
 | D2 | P4: to avoid a palette I cannot read, so I can tell the teams apart | Options offers fixed pairs beside Random; the choice is saved; the HUD spells out the team | Team palette option; `team_palette` | E15 |
 | D3 | P4: a handicap that keeps me in the game, without changing what wins | Boost Off/+1/+2 per seat on Weapon Select; less damage taken and faster refill; score stays painted surface | `ROAD#5` (attended); `handicap` | E16 |
-| D4 | P4: stick response that suits my pad, so movement and aim feel right | Per-pad movement and aim deadzones with a live preview; Apply or Back | `POL#18` (pads: `ROAD#2`); `stick_settings` | E17 |
+| D4 | P4: stick response that suits my pad, so movement and aim feel right | Per-pad movement and aim deadzones with a live preview; Apply or Back | `POL#18` (attended, with pads: `ROAD#2`); `stick_settings` | E17 |
 | D5 | Any seat: to rebind my controls, so they suit my hands | Pad buttons and the keyboard's six actions are rebindable; a control in use is refused, not swapped | `GAP#4.2` (attended: provisional calls); `action_bindings`, `input_bindings`, `keyboard_jump_capture` | E17 |
-| D6 | P4: my settings to follow me to whichever pad I pick up | A named profile carries deadzones, rumble, comfort toggles, buttons and Boost; Join cycles profiles | `ROAD#21` (pads: `ROAD#2`); `player_profiles` | E17 |
+| D6 | P4: my settings to follow me to whichever pad I pick up | A named profile carries deadzones, rumble, comfort toggles, buttons and Boost; Join cycles profiles | `ROAD#21` (attended: real pads, `ROAD#2`); `player_profiles` | E17 |
 | D7 | Any seat: music, effects and rumble at a level I can stand | Separate music and SFX volume; a per-pad rumble choice | Controls / audio, `ROAD#9` (attended); `settings`, `rumble` | E17 |
 | D8 | P1: to change resolution without being stuck on a bad mode | A display change opens a Keep/Revert trial; nothing is saved until Keep | `DisplaySettingsTrial`; `display_trial` | E23 |
 
@@ -224,7 +224,7 @@ by** names the feature or row and, where one exists, the retained
 | Id | As ..., I want ..., so that ... | Acceptance criteria | Served by | Basis |
 |---|---|---|---|---|
 | S1 | P3: to learn movement without a clock, so I can repeat what I need | 1 Player on the Movement Course is untimed; each station shows its lesson while I stand in it | `POL#19` (attended: keep or cut); `practice_workshop`, `movement_course` | E13 |
-| S2 | P3: to try every tool on the same wall and start clean, so I can compare them | The practice pause has a Tool row that rebuilds the course clean with the chosen tool | `POL#19`; `practice_workshop` | E13 |
+| S2 | P3: to try every tool on the same wall and start clean, so I can compare them | The practice pause has a Tool row that rebuilds the course clean with the chosen tool | `POL#19` (attended); `practice_workshop` | E13 |
 | S3 | P3: an opponent when nobody else is here | One human with one to three bots on either team | `ROAD#10` (attended); `bot_runtime` | E5 |
 | S4 | P3: something to beat next time | A finished round records under its stage; Stage Select and Results show the best | `GAP#6.2`; `match_records` | E10 |
 | S5 | P3: a timed solo run on a real arena that reports coverage honestly | Solo on any stage ends with coverage and no opponent, and skips the opening and reveal | Match scope decisions; `paint` covers coverage | E6, E19 |
