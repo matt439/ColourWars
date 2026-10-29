@@ -2483,6 +2483,56 @@ native painter leaves are Debug `2844bbe443f849c5a96e255b89bc30f6` and Release
 player save was used. The attended `ROAD#21` and fairness `ROAD#5` gates remain
 unchanged.
 
+#### Paused stick preview after controller recovery (`ROAD#35`)
+
+**Done (2026-10-29).** A seat reclaimed by a controller in another XInput slot
+keeps its original profile (`ROAD#4`). Paused Pad sticks correctly selects that
+profile, but its preview reads the original physical slot directly. With logical
+Pad 1 mapped to device 4, the page can show disconnected or unrelated input even
+though gameplay and pause navigation use device 4.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | `StickSettingsMenu::refresh_preview` reads `state(slot_)` while pause navigation already resolves `device_slot`. | Selected as `ROAD#35`: use the recovered device only in paused previews, retaining the logical profile and labels. Small caller-wiring correction with an existing scripted-pad readout fixture. |
+| 2 | Input-fixture bitmap/DC cleanup has no explicit ownership receipt. | Continue the independent `ED#20` scope; its aggregate discrepancy remains unexplained. |
+| 3 | External capture loss leaves the editor's resize flag set. | Investigate separately before asserting a lost-edit defect. |
+
+Preserve unpaused Options' physical-slot preview even if its shared setup object
+retains an old mapping. Keep profile selection, deadzones, persistence, roster,
+navigation and live gameplay unchanged. Extend `-StickReadoutsOnly` with literal
+connection, raw movement, processed movement and aim expectations for a remapped
+paused seat. Reconnecting the original device with different input must not
+change that paused preview. An unpaused control with the same stale mapping
+must read the original physical slot instead. Preserve every existing readout
+matrix, private save bytes and seat/device mapping. Retain an old-source failure,
+then qualify both builds and focused native checks with worktree-status collection
+explicitly omitted. This software wiring check does not qualify physical-pad
+comfort or the attended `ROAD#21` session.
+
+`StickSettingsMenu::preview_device` now resolves a slot through
+`MenuLevelSettings::device_slot` only while the page has a pause owner. The
+paused preview samples that device. A keyboard-owned pause starts on the first
+logical pad whose device is connected, the rule `pad_seat_missing` already uses.
+Profile, deadzone, rumble and comfort edits and labels remain keyed by the
+logical slot. Independent review found the keyboard-owner start; the first
+candidate had remapped only the preview.
+
+The old source failed at the first new comparison, `road35-paused-recovered`,
+because it read disconnected Pad 1 instead of device 4. With the preview remapped
+but the old start loop, `road35-keyboard-owner-recovered` failed because the page
+opened on physical Pad 3. The final fixture has 14 cases and 56 literal readouts
+at 720p and 1080p, within its separate 96-update budget, and adds no crops.
+The cases are paused owner, original-device reconnect, replacement reversal and
+disconnect, unpaused stale map, unmapped paused owner and keyboard owner. Every
+existing readout matrix passes unchanged. Private save bytes, active
+preferences, worn profiles, both rosters and device mappings are unchanged.
+
+`-StickReadoutsOnly` and `-PausedOptionsOnly` pass in Debug and Release. So
+does the `stick_settings` acceptance case, which builds both games. Worktree-status
+collection was explicitly omitted. Evidence is under `out/validation/road35`:
+`red-debug` (old source), `red-keyboard` (preview only) and the `final-*` runs.
+No real pad or player save was used.
+
 ### User stages (`ROAD#16`)
 
 **Scope (2026-10-28).** A player who saves a level with the editor should be

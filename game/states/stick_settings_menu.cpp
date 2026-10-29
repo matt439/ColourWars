@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/stick_settings_menu.h"
+#include "game/states/menu_level_settings.h"
 #include "game/objects/stick_response.h"
 #include "game/objects/crude_drawing.h"
 #include <algorithm>
@@ -111,7 +112,7 @@ void StickSettingsMenu::init()
 	{
 		for (int slot = 0; slot < input_slots::pad_count; ++slot)
 		{
-			if (this->data()->gamepads()->connected(slot)) { this->slot_ = slot; break; }
+			if (this->data()->gamepads()->connected(this->preview_device(slot))) { this->slot_ = slot; break; }
 		}
 	}
 	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
@@ -273,9 +274,16 @@ void StickSettingsMenu::refresh_values()
 	this->refresh_preview();
 }
 
+// A recovered seat keeps its logical profile while its input arrives on another
+// device. Unpaused Options read physical slots even if the shared setup kept a mapping.
+int StickSettingsMenu::preview_device(int slot) const
+{
+	return this->pausing_player() >= 0 ? this->level_settings()->device_slot(slot) : slot;
+}
+
 void StickSettingsMenu::refresh_preview()
 {
-	const GamepadState& pad = this->data()->gamepads()->state(this->slot_);
+	const GamepadState& pad = this->data()->gamepads()->state(this->preview_device(this->slot_));
 	const Vector2F left = pad.connected ? pad.left_stick : Vector2F::ZERO;
 	const Vector2F right = pad.connected ? pad.right_stick : Vector2F::ZERO;
 	const float authored = this->data()->tuning()->input().movement_deadzone;

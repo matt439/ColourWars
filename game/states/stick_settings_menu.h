@@ -26,6 +26,7 @@ protected:
 private:
 	void refresh_values();
 	void refresh_preview();
+	int preview_device(int slot) const;
 	void set_status(const std::wstring& text, bool warning = false);
 	void apply_settings();
 	void close();
