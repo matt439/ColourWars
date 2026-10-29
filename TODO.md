@@ -47,8 +47,7 @@ Rows outside this sequence (audio, release, engine, tooling) are picked from OPE
 when they don't compete with it.
 
 **Independent implementation (2026-10-29).** The 2026-10-28 shortlists are
-complete. Pick OPEN rows while attended reviews wait, in this order:
-`POL#41` (Press Tower bot routes); then the rest by section,
+complete. Pick OPEN rows by section while attended reviews wait, with
 the next-bump preparation (`HYG#23`-`HYG#25`) before any Labrador minor tag.
 After each slice, record the next concrete gap in its owner.
 This does not change the arena/tuning order above. `ROAD#28`'s OPEN step is a
@@ -64,7 +63,8 @@ comparison and physical-pad check; values remain provisional.
 
 - **Turbulence play and selection:** choose among the explicit-only comparisons after
   both-side 1-4P pressure, crossing-comfort and regional-value play (`POL#21`).
-- **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`).
+- **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`);
+  the shipping-bot evidence is in its owner.
 - **Bots and paint-object trials:** compare Easy/Normal/Hard usefulness (`ROAD#10`)
   and play the explicit Ferry/Gate Trials from both sides at 1-4P (`ROAD#30`).
 - **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
@@ -144,7 +144,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `ED#25` | OPEN | LOW | M | After `ED#24`: add a symmetry line to the blockout-aids summary listing unmatched mirror partners and left/right scoring area, splitting centre-straddling objects; the Ferry Trial heading is a known authored asymmetry. Reports only. [Symmetry report](docs/level-editor.md#symmetry-report-in-the-blockout-aids-ed25). |
 | `ED#26` | OPEN | LOW | M | Show and edit stations in the editor (`EntryKind::station`, named marker, palette entry, validated `name` row and drag, using the shared rules). Lesson blocks stay preserved metadata; places no station. [Station editing](docs/level-editor.md#station-editing-ed26). |
 | `ED#27` | OPEN | LOW | M | Add Edit > Copy and Paste of one object between documents through `CF_UNICODETEXT` JSON, appended as one undo step with full validation; the inspector field keeps its own Ctrl+C/V. No multi-selection. [Copy and paste](docs/level-editor.md#copy-and-paste-between-documents-ed27). |
-| `POL#41` | OPEN | MED | M | Press Tower has no shipping-bot routes or team trials. Add R2/R3/R4/summit routes and a team-trial pass for both teams, five tools and Easy/Normal/Hard, recording landed, summit, left-home and died counts. Unfinished routes are recorded as limits, and existing rows stay byte-identical. [Scope](docs/polish-press-tower.md#shipping-bot-routes-and-team-trials-pol41) |
 
 ## Audio replacement
 
