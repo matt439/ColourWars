@@ -302,8 +302,16 @@ namespace
             {
                 Stand stand(world, floor, level);
                 Player& player = *stand.course.player;
-                player.kill();
-                require(player.health() <= 0.0f, "The Boost-underfoot fatal fixture did not reach zero health");
+                // An actual enemy projectile, not the debug kill(), so the
+                // fatal path is the one a match takes.
+                const auto& jet = world.tuning.projectile(ProjectileType::jet);
+                require(jet.details.player_damage > 0.0f, "The Boost-underfoot fatal fixture needs positive projectile damage");
+                ProjectileJet hit(player.rectangle(), Vector2F::ZERO, PlayerTeam::b, 1, labrador::Colour::white,
+                    &world.render, resolve_projectile_strip(jet, world.render), &jet);
+                for (int hit_count = 0; hit_count < 1000 && player.health() > 0.0f; ++hit_count)
+                { player.on_contact(hit, Vector2F::ZERO, 0.0f); }
+                require(player.health() <= 0.0f && player.state() == PlayerState::alive,
+                    "The Boost-underfoot fatal fixture did not reach zero health through actual hits");
                 require(bits(player.ammo_regen_multiplier()) == bits(refill),
                     "A fatally hit player on paint did not get the level's paint_refill alone");
                 stand.course.tick();
