@@ -104,6 +104,50 @@ if ($env:VSCMD_ARG_TGT_ARCH -and $env:VSCMD_ARG_TGT_ARCH -ne 'x64') {
     throw 'The acceptance executables require the x64 Visual Studio environment.'
 }
 
+# Per-case compile and run seconds and outcome, longest first, for every
+# selected case. A case the run never reached is 'not-run'.
+function Write-AcceptanceSummary {
+    $entries = @(foreach ($case in $selectedCases) {
+        $result = $timedResults[$case]
+        if ($null -ne $result) {
+            $compile = [Math]::Round([double]$result.CompileSeconds, 1)
+            $run = [Math]::Round([double]$result.RunSeconds, 1)
+            $outcome = [string]$result.Outcome
+        } else {
+            $compile = 0.0
+            $run = 0.0
+            $outcome = if ($runnerFailures.ContainsKey($case)) { 'runner-failed' } else { 'not-run' }
+        }
+        [pscustomobject][ordered]@{
+            case = $case
+            outcome = $outcome
+            compile_seconds = $compile
+            run_seconds = $run
+            total_seconds = [Math]::Round($compile + $run, 1)
+        }
+    })
+    $sorted = @($entries | Sort-Object -Property @{ Expression = 'total_seconds'; Descending = $true },
+        @{ Expression = { [array]::IndexOf($selectedCases, $_.case) } })
+    $passing = if ($CompileOnly) { 'compiled' } else { 'passed' }
+    $summary = [ordered]@{
+        schema_version = 1
+        preset = $Preset
+        compile_only = $CompileOnly.IsPresent
+        parallel = $Parallel
+        outcome = if (@($sorted | Where-Object { $_.outcome -ne $passing }).Count -eq 0) { 'passed' } else { 'failed' }
+        started_utc = $summaryStarted.ToString('o')
+        completed_utc = [DateTime]::UtcNow.ToString('o')
+        wall_seconds = [Math]::Round($summaryWatch.Elapsed.TotalSeconds, 1)
+        shell_edition = $PSVersionTable.PSEdition
+        shell_version = $PSVersionTable.PSVersion.ToString()
+        cases = $sorted
+    }
+    [System.IO.File]::WriteAllText($summaryPath, ($summary | ConvertTo-Json -Depth 4),
+        [System.Text.UTF8Encoding]::new($false))
+    Write-Host "Acceptance summary: $summaryPath"
+}
+
+$summaryPath = $null
 Push-Location -LiteralPath $repo
 $previousPath = $env:PATH
 $probeControl = $null
@@ -267,6 +311,15 @@ try {
         }
     }
 
+    # acceptance-summary.json is rewritten by every run that reaches this
+    # point, even a failed or interrupted one, so a stale one never survives.
+    $summaryPath = Join-Path $evidence 'acceptance-summary.json'
+    if (Test-Path -LiteralPath $summaryPath) { Remove-Item -LiteralPath $summaryPath -Force }
+    $timedResults = @{}
+    $runnerFailures = @{}
+    $summaryWatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $summaryStarted = [DateTime]::UtcNow
+
     # Compiles and runs one case. Self-contained so it can run in a parallel
     # runspace; output is returned rather than printed so cases never interleave.
     $runCase = {
@@ -277,6 +330,8 @@ try {
         $watch = [System.Diagnostics.Stopwatch]::StartNew()
         $lines = @()
         $failure = $null
+        $outcome = $null
+        $runSeconds = 0.0
         $log = Join-Path $Spec.Evidence "$($Spec.Case)-build.log"
         $compileSkipped = $Spec.CancellationToken.IsCancellationRequested -or
             ($null -ne $Spec.ProbeControl -and $Spec.ProbeControl.IsCancellationRequested)
@@ -289,14 +344,19 @@ try {
             $output = & $Spec.Compiler "@$($Spec.ResponseFile)" 2>&1
             $code = $LASTEXITCODE
         }
+        $compileSeconds = $watch.Elapsed.TotalSeconds
         $output | Out-File -LiteralPath $log -Encoding utf8
         if ($code -ne 0) {
             $lines = $output
+            $outcome = if ($compileSkipped) { 'cancelled' } else { 'compile-failed' }
             $failure = if ($compileSkipped) { "Compilation cancelled before launch. See $log" }
                 else { "$($Spec.Compiler) exited with $code. See $log" }
-        } elseif (-not $CompileOnly) {
+        } elseif ($CompileOnly) {
+            $outcome = 'compiled'
+        } else {
             $log = Join-Path $Spec.Evidence "$($Spec.Case)-run.log"
             $command = $null
+            $runWatch = [System.Diagnostics.Stopwatch]::StartNew()
             try {
                 $command = [ColourWars.Acceptance.OwnedCommand]::Start(
                     $Spec.Executable, [string[]]$Spec.Arguments, $Spec.WorkingDirectory,
@@ -317,19 +377,26 @@ try {
                 $failure = "$($Spec.Executable): probe runner failed: $_. See $log"
             } finally {
                 if ($null -ne $command) { $command.Dispose() }
+                $runSeconds = $runWatch.Elapsed.TotalSeconds
             }
+            $outcome = if ($failure) { 'run-failed' } else { 'passed' }
         }
         [pscustomobject]@{
             Case = $Spec.Case
             Lines = @($lines | ForEach-Object { "$_" })
             Failure = $failure
+            Outcome = $outcome
+            CompileSeconds = $compileSeconds
+            RunSeconds = $runSeconds
             Seconds = [int]$watch.Elapsed.TotalSeconds
         }
     }
     $failures = [System.Collections.Generic.List[string]]::new()
     $report = {
         param($Result)
-        Write-Host "Acceptance: $($Result.Case) ($Preset, $($Result.Seconds)s)"
+        $timedResults[$Result.Case] = $Result
+        Write-Host ("Acceptance: $($Result.Case) ($Preset, $($Result.Seconds)s; compile " +
+            "$([int]$Result.CompileSeconds)s, run $([int]$Result.RunSeconds)s)")
         $Result.Lines | ForEach-Object { Write-Host $_ }
         if ($Result.Failure) { $failures.Add("$($Result.Case): $($Result.Failure)") }
     }
@@ -356,7 +423,7 @@ try {
                 $shell = [powershell]::Create()
                 $shell.RunspacePool = $pool
                 [void]$shell.AddScript($runCase.ToString()).AddArgument($spec).AddArgument($CompileOnly.IsPresent)
-                $pending.Add([pscustomobject]@{ Shell = $shell; Handle = $shell.BeginInvoke() })
+                $pending.Add([pscustomobject]@{ Case = $spec.Case; Shell = $shell; Handle = $shell.BeginInvoke() })
             }
             while ($pending.Count -gt 0) {
                 $done = @($pending | Where-Object { $_.Handle.IsCompleted })
@@ -367,6 +434,7 @@ try {
                         foreach ($result in $item.Shell.EndInvoke($item.Handle)) { & $report $result }
                     } catch {
                         $failures.Add("runner: $_")
+                        $runnerFailures[$item.Case] = "$_"
                     } finally {
                         $item.Shell.Dispose()
                     }
@@ -381,8 +449,13 @@ try {
                 # active compilation finishes before its runspace is disposed.
                 foreach ($item in $pending) {
                     while (-not $item.Handle.IsCompleted) { [Threading.Thread]::Sleep(100) }
-                    try { [void]$item.Shell.EndInvoke($item.Handle) }
-                    catch { }
+                    # Keep each drained case's timing for the summary only.
+                    try {
+                        foreach ($result in $item.Shell.EndInvoke($item.Handle)) {
+                            if ($null -ne $result.PSObject.Properties['Outcome']) { $timedResults[$result.Case] = $result }
+                        }
+                    }
+                    catch { $runnerFailures[$item.Case] = "$_" }
                     finally { $item.Shell.Dispose() }
                 }
             }
@@ -411,6 +484,13 @@ try {
     Write-Host "PASS $operation ($Preset). Evidence: $evidence"
 }
 finally {
+    if ($null -ne $summaryPath) {
+        try {
+            Write-AcceptanceSummary
+        } catch {
+            Write-Warning "Could not write $($summaryPath): $_"
+        }
+    }
     try {
         $caseCancellation.Cancel()
         if ($null -ne $probeControl) { $probeControl.Dispose() }

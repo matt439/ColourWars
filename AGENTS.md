@@ -153,8 +153,10 @@ with `-RunTimeoutSeconds`. Its merged output is retained while it runs in a
 Timeout or cancellation cleans only that probe's private Windows Job Object;
 compilation and the initial CMake build have no new deadline. Already-running
 parallel compiles finish during cancellation; queued compiles are skipped.
-`-CompileOnly` does not load the native process helper. From the same Developer
-shell, `scripts/check-acceptance-process.ps1` qualifies ownership, deadlines,
+`-CompileOnly` does not load the native process helper. Every run past
+preflight, passing or not, writes `acceptance-summary.json` beside its
+evidence: each case's compile and run seconds and outcome, longest first. CI
+uploads it. From the same Developer shell, `scripts/check-acceptance-process.ps1` qualifies ownership, deadlines,
 logging and cancellation with isolated processes under PowerShell 5.1 and pwsh.
 
 To run engine tests, configure the submodule as its own top-level project:

@@ -206,27 +206,34 @@ Not decided here: an attended or foreground runner model (that is `CI#1`).
 
 ### Acceptance timing summary (`CI#4`)
 
-**Open, not started.** `run-acceptance.ps1` measures each case only as a
-combined `Seconds` it prints (lines 322-333), and its `$longestFirst`
-scheduling order says it comes "from CI timings" (lines 337-341) without
-recorded data. The Debug pull-request exclusions rest on prose figures
-([ci.yml](../.github/workflows/ci.yml) lines 128-131), and CI uploads nothing
-from the acceptance run.
+**Done 2026-10-29.** [run-acceptance.ps1](../scripts/run-acceptance.ps1)
+times each case's compile and run separately inside `$runCase` and writes
+`acceptance-summary.json` beside the run's evidence
+(`out/acceptance/<preset>/` by default). It holds the preset,
+`compile_only`, `parallel`, the run's outcome, the shell, the wall seconds
+from the first case scheduled, and one entry per selected case with
+`compile_seconds`, `run_seconds`, `total_seconds` and `outcome`, sorted
+longest first. Outcomes are `passed`, `compiled` (`-CompileOnly`),
+`compile-failed`, `run-failed` (including a timeout), `cancelled`,
+`runner-failed`, and `not-run` for a case the run never reached, such as
+those after a serial failure. The file is deleted once the build preflight
+passes and rewritten in the runner's `finally`, so a failed or interrupted run
+still leaves a fresh summary and never a stale one; a run that stops in
+selection or tool preflight writes none, which keeps the selection checker's
+no-artifact rule. The per-case console line now also shows the compile/run
+split. [ci.yml](../.github/workflows/ci.yml) uploads it after consumer
+acceptance in both jobs, `if: always()`, as `acceptance-summary-<preset>`.
 
-Scope: write `acceptance-summary.json` beside the run's evidence with each
-case's compile seconds, run seconds and outcome, sorted longest first, and
-upload it from both CI jobs. No change to case selection or order in this
-row.
+Verified on MattPC: a Windows PowerShell 5.1 `-Parallel 4 -Cases
+ammo,text_wrap,settings,paint,rumble` run and a pwsh 7 `-Parallel 4
+-CompileOnly` run of the same five each wrote a valid summary with all five
+cases (`passed` and `compiled`). A serial `-RunTimeoutSeconds 1 -Cases
+movement_course,ammo` run recorded `run-failed` then `not-run` with outcome
+`failed`. `check-acceptance-selection` and `check-acceptance-process` pass in
+both shells. A hosted run waits for an authorised push.
 
-First step: time compile and run separately inside the per-case script block,
-then emit the summary after the report loop, including on failure.
-
-Acceptance: a local `-Parallel 4 -Cases` run and a `-CompileOnly` run each
-produce a valid summary with every selected case; the selection and process
-checkers pass in both shells.
-
-Not decided here: re-ordering `$longestFirst` or changing the Debug
-pull-request exclusions; those follow from the data in a later change.
+Still open and not this row's: re-ordering `$longestFirst` and changing the
+Debug pull-request exclusions follow from the uploaded data in a later change.
 
 ### Local Markdown link check (`CI#5`)
 

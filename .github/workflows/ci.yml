@@ -138,6 +138,17 @@ jobs:
           call "%VCVARS%"
           pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 ${{ (matrix.preset == 'x64-debug' && github.event_name == 'pull_request') && '-ExcludeCases crossfeed,press_tower,menu_text,debug_console' || '' }}
 
+      # CI#4: per-case compile and run seconds, outcome, longest first. The
+      # data the scheduling order and the Debug exclusions above should rest on.
+      - name: Upload acceptance timing summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-summary-${{ matrix.preset }}
+          path: out/acceptance/${{ matrix.preset }}/acceptance-summary.json
+          if-no-files-found: ignore
+          retention-days: 30
+
       # Hidden, scripted correctness checks. Debug can fall back to WARP on
       # GPU-less runners; this establishes no hardware or performance acceptance.
       - name: Movement feedback rendering checks
