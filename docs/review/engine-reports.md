@@ -1899,7 +1899,18 @@ spent at the bump itself, not here.
 
 ## Remove the manifest's `_comment` key (`HYG#23`)
 
-**Open, not started.** Engine `e166dcc` (2026-10-29, *Reject unknown manifest
+**Done 2026-10-29.** The key is gone; README's Audio section already said
+everything it did, so no wording moved. A JSON check of
+`game/content/manifest.json` finds only `assets` at the root and only `kind`,
+`directory`, `names` and `optional` in its four groups. At the current pin the
+x64-debug consumer acceptance passed (69 cases, the pull-request exclusions)
+and x64-release passed all 73 (`movement` rerun alone after the parallel
+compile ran out of compiler heap). `check-startup.ps1` passed the Debug
+executable with `-RequireAudio`, and a copy with `sounds/paint_exe.xwb`
+removed with `-RequireNoAudio`, reporting the silent bank once on stderr.
+The record as filed:
+
+Engine `e166dcc` (2026-10-29, *Reject unknown manifest
 and sprite-sheet keys*, not in `v0.2.0`) makes `read_asset_manifest` refuse
 any key it does not know. The root may hold only `assets`
 (`engine/assets/asset_manifest_loader.cpp:16` on master). A group may hold

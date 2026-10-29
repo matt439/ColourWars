@@ -45,7 +45,6 @@
         {
             "kind": "sound_bank",
             "directory": "./sounds/",
-            "_comment": "Accepted redistributable Paint.exe audio ships with the game. Optional loading keeps a missing-bank installation playable with the silent fallback; see README, 'Audio'.",
             "optional": true,
             "names": [
                 "paint_exe"
