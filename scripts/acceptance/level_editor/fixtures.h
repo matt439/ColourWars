@@ -61,6 +61,7 @@ namespace level_editor_acceptance
     void check_motion(const fs::path& repo, const fs::path& scratch);
     void check_paint_drive(const fs::path& repo, const fs::path& scratch);
     void check_team_gate(const fs::path& repo, const fs::path& scratch);
+    void check_stations(const fs::path& repo, const fs::path& scratch);
     void check_fixed_slabs(const fs::path& repo, const fs::path& scratch);
     void check_palette_and_ramps(const fs::path& scratch);
     void check_history_and_failures(const fs::path& scratch);

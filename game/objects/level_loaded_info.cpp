@@ -5,6 +5,7 @@
 #include "engine/math/intersects.h"
 #include "game/objects/level_object_builder.h"
 #include "game/drawable_text.h"
+#include "game/station_contract.h"
 #include "engine/core/file_path.h"
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -258,31 +259,24 @@ void LevelLoadedInfo::validate_stations(const RectangleF& out_of_bounds) const
 		return;
 	}
 	const JsonValue stations = root.array("stations");
+	const station_contract::Rectangle arena{ out_of_bounds.x, out_of_bounds.y,
+		out_of_bounds.width, out_of_bounds.height };
 	std::vector<std::string> seen;
 	for (size_t index = 0; index < stations.size(); ++index)
 	{
 		const JsonValue station = stations.at(index);
 		const std::string name = station.identifier("name");
-		const bool spelled = !name.empty() && std::all_of(name.begin(), name.end(),
-			[](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_'; });
-		if (!spelled)
+		try { station_contract::validate_name(name, seen); }
+		catch (const std::invalid_argument& error)
 		{
-			throw std::runtime_error(station.where() + " names a station '" + name +
-				"'; station names are lower-case letters, digits and '_', so they can be typed.");
+			throw std::runtime_error(station.where() + " " + error.what());
 		}
-		if (name == "spawn_a" || name == "spawn_b")
-		{
-			throw std::runtime_error(station.where() + " names a station '" + name +
-				"', which every level already has (its team's first spawn).");
-		}
-		if (std::find(seen.begin(), seen.end(), name) != seen.end())
-		{
-			throw std::runtime_error(station.where() + " repeats the station name '" +
-				name + "'.");
-		}
-		seen.push_back(name);
 		const Vector2F position(station.number("x"), station.number("y"));
-		validate_position(root, position, out_of_bounds, "a station '" + name + "'");
+		try { station_contract::validate_position(name, { position.x, position.y }, arena); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(root.where() + " " + error.what());
+		}
 		if (station.has("lesson"))
 		{
 			validate_lesson(station.object("lesson"), position, name);
@@ -294,33 +288,25 @@ void LevelLoadedInfo::validate_lesson(const JsonValue& lesson,
 	const Vector2F& station, const std::string& name) const
 {
 	const RectangleF area = lesson_area(lesson);
-	if (!std::isfinite(area.x) || !std::isfinite(area.y) ||
-		!std::isfinite(area.width) || !std::isfinite(area.height) ||
-		area.width <= 0.0f || area.height <= 0.0f)
-	{
-		throw std::runtime_error(lesson.object("area").where() +
-			" needs finite coordinates and positive width and height");
-	}
 	const RectangleF camera = this->camera_bounds_rectangle();
-	if (area.left() < camera.left() || area.top() < camera.top() ||
-		area.right() > camera.right() || area.bottom() > camera.bottom())
+	try
 	{
-		throw std::runtime_error(lesson.object("area").where() +
-			" leaves the camera bounds; no player could stand in all of it.");
+		station_contract::validate_lesson_area(name, { station.x, station.y },
+			{ area.x, area.y, area.width, area.height },
+			{ camera.x, camera.y, camera.width, camera.height });
 	}
-	// `goto <station>` must land inside the station's own lesson.
-	if (!rectangle_point_intersect(area, station))
+	catch (const std::invalid_argument& error)
 	{
-		throw std::runtime_error(lesson.object("area").where() + " does not contain station '" +
-			name + "'; going to the station must show its lesson.");
+		throw std::runtime_error(lesson.object("area").where() + " " + error.what());
 	}
 	for (const char* key : { "title", "text" })
 	{
 		const std::string words = lesson.string(key);
 		const std::string where = lesson.where() + "." + key;
-		if (words.find_first_not_of(" \n") == std::string::npos)
+		try { station_contract::validate_lesson_words(words); }
+		catch (const std::invalid_argument& error)
 		{
-			throw std::runtime_error(where + " is empty; a lesson needs a title and a line to read.");
+			throw std::runtime_error(where + " " + error.what());
 		}
 		std::ignore = drawable_text::widen_drawable(words, where);
 	}

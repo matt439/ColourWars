@@ -210,8 +210,8 @@ Acceptance: every edited stage loads at startup and in the `stage_selection`,
 `+exec` on each variant and writes one screenshot per station with the player
 supported at rest. The loaded stage's semantic hash covers the whole document
 (`replay.h:27`), so stations change it: re-record any replay kept against these
-stages, and leave the dated receipts above as written. Should `ED#23` land
-first, the editor's station check must also accept the saved files.
+stages, and leave the dated receipts above as written. `ED#23` has landed, so
+the editor's station check must also accept the saved files.
 
 Not decided here: geometry, spawn safety or which variant `POL#21` keeps.
 Stations are review positions, not a pressure or balance claim.

@@ -1058,31 +1058,31 @@ vendored RapidJSON source changed. The attended `ED#5` gate remains open.
 A verified source brainstorm on 2026-10-29 found these editor gaps. None needs
 a pad or the author, and none settles a layout, route or attended result: those
 stay with `ED#5` and the stage's own `DECISION` rows. `ED#25` follows `ED#24`
-and `ED#26` follows `ED#23`.
+and `ED#26` builds on `ED#23`, now done.
 
 ### Station validation in the editor (`ED#23`)
 
-**Open, not started.** `level_json::validate_document`
-([level_json.cpp](../editor/level_json.cpp), lines 409-493) checks bounds,
-spawns, objects, slabs, movers and gates, but not `stations`. The game refuses
-a bad station at startup in `LevelLoadedInfo::validate_stations` and
-`validate_lesson` ([level_loaded_info.cpp](../game/objects/level_loaded_info.cpp),
-lines 253-327): name spelling, reserved and repeated names, out-of-bounds
-containment, and lesson area size, camera containment and station containment.
-So shrinking `out_of_bounds` past Press Tower's `crown` station at (1774, 620)
-saves a stage the game will not load.
+**Done 2026-10-29.** The engine-free station and lesson rules now live in
+[station_contract.h](../game/station_contract.h), beside
+`user_stage_contract.h` and `team_gate_contract.h`.
+`LevelLoadedInfo::validate_stations` and `validate_lesson` call them with
+unchanged messages, and `level_json::validate_document` calls them too, so
+every editor edit and load refuses what the game refuses: name spelling,
+reserved and repeated names, a station outside `out_of_bounds`, and a lesson
+area that is flat, leaves the camera bounds or misses its station, or a blank
+lesson title or text. The editor names the entry (`stations[2] ('crown')`)
+where the game names the JSON path. Whether lesson words can be drawn is
+checked by the game alone, since it owns the fonts.
 
-Scope: move the engine-free station and lesson-geometry rules into a shared
-header beside `user_stage_contract.h` and `team_gate_contract.h`, call it from
-both the game loader and `validate_document`, and keep the game's messages.
-Drawable-text and font checks on lesson words stay in the game, which owns the
-fonts. First step: a failing editor document check that shrinks Press Tower's
-`out_of_bounds` past `crown` and expects the edit to be refused with undo
-history intact. Acceptance: that check passes in Debug and Release; the
-`level_format` consumer case still admits every registered level and the
-template, and its station fixtures produce the same refusals through the shared
-rules. It does not decide where any station goes; hand-authored review stations
-(`POL#40`) should land on top of it.
+Acceptance (`scripts/acceptance/level_editor/station_checks.cpp`, in
+`check-level-editor`): shrinking Press Tower's `out_of_bounds` past `crown` at
+(1774, 620) is refused in the game's words with the earlier undo step intact;
+eight station files are refused at load without changing the open document;
+Crossfeed, Close Quarters, Press Tower and the Movement Course save and reopen
+with their stations. On the game side, the station refusals in `debug_console`
+and the lesson refusals in `practice_workshop` pass unchanged through the shared
+rules, and `level_format` still admits every registered level and the template.
+Station editing in the canvas remains `ED#26`.
 
 ### Mirror copy across the arena centre (`ED#24`)
 
@@ -1126,10 +1126,10 @@ builds. It reports only; fairness and side-swap acceptance stay play review.
 
 ### Station editing (`ED#26`)
 
-**Open, not started; after `ED#23`.** `EntryKind`
+**Open, not started; `ED#23` is done.** `EntryKind`
 ([level_document.h](../editor/level_document.h), line 15) has no station kind,
-and the editor mentions stations only in `template.json`. Stations are kept
-but can be neither seen nor moved, so a layout edit can strand one silently.
+and stations cannot be seen or moved: the editor only validates them, so a
+bounds edit that would strand one is refused, but nothing shows where they are.
 
 Scope: an `EntryKind::station` listed in Level Contents, drawn as a marker with
 its name, added from the palette and edited through a `name` inspector row and

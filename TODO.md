@@ -48,7 +48,7 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-29).** The 2026-10-28 shortlists are
 complete. Pick OPEN rows while attended reviews wait, in this order:
-`POL#40` with `ED#23` (Turbulence stations, validated by the editor),
+`POL#40` (Turbulence stations, now validated by the editor),
 `TOOL#2` (shipping bots in the headless runner), `POL#41` (Press Tower bot
 routes); then the rest by section,
 the next-bump preparation (`HYG#23`-`HYG#25`) before any Labrador minor tag.
@@ -143,10 +143,9 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 | `POL#40` | OPEN | MED | M | Author mirrored `_a`/`_b` review stations (home exits, upper receivers, crossover ends, lower cover, mover endpoints) in turbulence_blockout and the mover, gate, ferry and slab trials, plus a stage-agnostic `turbulence_station_tour.cfg`; re-record replays against these stages. Does not choose geometry. [Stations](docs/polish-turbulence.md#authored-review-stations-pol40) |
 | `POL#42` | OPEN | MED | M | Shipping-bot route case on turbulence_blockout and natural-spawn team trials on the blockout and mover trial, so the variants compare like for like. Evidence for `POL#21`/`POL#27`, not a selection; the slab trial waits on `ROAD#38`. [Bot evidence](docs/polish-turbulence.md#shipping-bot-routes-and-team-trials-pol42) |
-| `ED#23` | OPEN | MED | S | The editor never checks `stations`, so shrinking out_of_bounds past Press Tower's `crown` saves a stage the game refuses. Share the engine-free station/lesson rules between the game loader and `validate_document`; start with that failing check. [Station validation](docs/level-editor.md#station-validation-in-the-editor-ed23). |
 | `ED#24` | OPEN | MED | M | Add Edit > Mirror copy (Ctrl+Shift+D): one validated undo step reflected across the out_of_bounds centre, swapping ramp handedness and faces, flipping slab rise, mirroring movers with phase +0.5, mapping spawn A to B and `_a` to `_b`; ferries refused. [Mirror copy](docs/level-editor.md#mirror-copy-across-the-arena-centre-ed24). |
 | `ED#25` | OPEN | LOW | M | After `ED#24`: add a symmetry line to the blockout-aids summary listing unmatched mirror partners and left/right scoring area, splitting centre-straddling objects; the Ferry Trial heading is a known authored asymmetry. Reports only. [Symmetry report](docs/level-editor.md#symmetry-report-in-the-blockout-aids-ed25). |
-| `ED#26` | OPEN | LOW | M | After `ED#23`: show and edit stations in the editor (`EntryKind::station`, named marker, palette entry, validated `name` row and drag, using the shared rules). Lesson blocks stay preserved metadata; places no station. [Station editing](docs/level-editor.md#station-editing-ed26). |
+| `ED#26` | OPEN | LOW | M | Show and edit stations in the editor (`EntryKind::station`, named marker, palette entry, validated `name` row and drag, using the shared rules). Lesson blocks stay preserved metadata; places no station. [Station editing](docs/level-editor.md#station-editing-ed26). |
 | `ED#27` | OPEN | LOW | M | Add Edit > Copy and Paste of one object between documents through `CF_UNICODETEXT` JSON, appended as one undo step with full validation; the inspector field keeps its own Ctrl+C/V. No multi-selection. [Copy and paste](docs/level-editor.md#copy-and-paste-between-documents-ed27). |
 | `POL#41` | OPEN | MED | M | Press Tower has no shipping-bot routes or team trials. Add R2/R3/R4/summit routes and a team-trial pass for both teams, five tools and Easy/Normal/Hard, recording landed, summit, left-home and died counts. Unfinished routes are recorded as limits, and existing rows stay byte-identical. [Scope](docs/polish-press-tower.md#shipping-bot-routes-and-team-trials-pol41) |
 

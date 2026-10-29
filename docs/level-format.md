@@ -472,8 +472,11 @@ content validation also checks that the menu detail font can draw the title and
 the match controls font the text. The editor preserves lesson blocks unchanged
 and exposes no station or lesson controls.
 
-The editor does not yet apply the station checks itself, so a bounds resize can
-save a stage the game refuses: [`ED#23`](level-editor.md#station-validation-in-the-editor-ed23).
+The editor applies the same station and lesson-geometry rules
+([station_contract.h](../game/station_contract.h)), so a bounds resize or a
+loaded file the game would refuse is refused in the editor too
+([`ED#23`](level-editor.md#station-validation-in-the-editor-ed23)). Only the
+lesson fonts stay a game-side check.
 
 The schema covers required keys, scalar/array types, positive rectangle sizes,
 spawn counts, type/collision combinations, material values and the collision
@@ -498,8 +501,8 @@ checks to their owners:
 - Editor: its additional nonempty-string, numeric and upright-ramp checks,
   and warnings, not refusals, for resource names that do not resolve.
   Unknown metadata, stations and their lessons remain preserved even when not
-  exposed as dedicated editor controls. The editor does not check stations
-  (`ED#23`).
+  exposed as dedicated editor controls. The editor applies the runtime station
+  and lesson-geometry rules above through the shared contract (`ED#23`).
 - Play/review: supported spawns, routes, weapon roles, fair side swaps, paint
   budgets, readability, timing and frame pacing. Format validity supplies none
   of those acceptance results.

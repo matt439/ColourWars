@@ -2,6 +2,7 @@
 #include "game/level_format.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
+#include "game/station_contract.h"
 #include "game/team_gate_contract.h"
 
 #include <rapidjson/error/en.h>
@@ -15,6 +16,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace colourwars_editor
 {
@@ -290,6 +292,62 @@ namespace colourwars_editor
             }
         }
 
+        // The game's own station rules (LevelLoadedInfo::validate_stations), so
+        // a bounds or station edit the game would refuse at load is refused
+        // here, in its words. Lesson words are only checked for emptiness: the
+        // game alone owns the fonts that decide what can be drawn.
+        void validate_stations(const Document& document, const Rect& arena)
+        {
+            if (!document.HasMember("stations")) { return; }
+            const Json& stations = array(document, "stations");
+            const auto contract_rectangle = [](const Rect& rectangle)
+                {
+                    return station_contract::Rectangle{ static_cast<float>(rectangle.x),
+                        static_cast<float>(rectangle.y), static_cast<float>(rectangle.width),
+                        static_cast<float>(rectangle.height) };
+                };
+            const station_contract::Rectangle out_of_bounds = contract_rectangle(arena);
+            const station_contract::Rectangle camera = contract_rectangle(
+                plain_rectangle(member(member(document, "level_bounds"), "camera_bounds")));
+            std::vector<std::string> seen;
+            for (rapidjson::SizeType index = 0; index < stations.Size(); ++index)
+            {
+                const Json& station = stations[index];
+                std::string where = "stations[" + std::to_string(index) + "]";
+                if (!station.IsObject()) { fail(where + " must be a JSON object."); }
+                const std::string name = string(station, "name");
+                if (!name.empty()) { where += " ('" + name + "')"; }
+                const station_contract::Point point{ static_cast<float>(number(station, "x")),
+                    static_cast<float>(number(station, "y")) };
+                try
+                {
+                    station_contract::validate_name(name, seen);
+                    station_contract::validate_position(name, point, out_of_bounds);
+                }
+                catch (const std::invalid_argument& error) { fail(where + " " + error.what()); }
+                if (!station.HasMember("lesson")) { continue; }
+                const Json& lesson = member(station, "lesson");
+                try
+                {
+                    // Read as numbers, not plain_rectangle, so a flat area gets the game's words.
+                    const Json& area = member(lesson, "area");
+                    station_contract::validate_lesson_area(name, point,
+                        { static_cast<float>(number(area, "x")), static_cast<float>(number(area, "y")),
+                            static_cast<float>(number(area, "width")), static_cast<float>(number(area, "height")) },
+                        camera);
+                }
+                catch (const std::invalid_argument& error) { fail(where + ".lesson.area " + error.what()); }
+                for (const char* key : { "title", "text" })
+                {
+                    try { station_contract::validate_lesson_words(string(lesson, key)); }
+                    catch (const std::invalid_argument& error)
+                    {
+                        fail(where + ".lesson." + key + " " + error.what());
+                    }
+                }
+            }
+        }
+
         void validate_object(const Json& object, bool collision)
         {
             if (!object.IsObject())
@@ -490,6 +548,7 @@ namespace colourwars_editor
             validate_slab_pairs(document);
             validate_motion_geometry(document, motion_tuning);
             validate_gate_spawns(document, motion_tuning);
+            validate_stations(document, arena);
         }
 
         Document parse(std::string_view text)
