@@ -80,8 +80,10 @@ namespace replay_codec
 	std::vector<PlayerInputData> expand(const std::vector<std::string>& entries);
 }
 
-// A file name stem from a requested name: [A-Za-z0-9_-] kept, anything else
-// '_'; empty gives "replay-YYYYMMDD-HHMMSS".
+// A file name stem: keep [A-Za-z0-9_-], replace anything else with '_',
+// then remove one case-sensitive trailing "_json" when a stem remains.
+// Reserved Windows stems receive a leading '_'; empty gives
+// "replay-YYYYMMDD-HHMMSS".
 std::string replay_name(std::string_view requested);
 
 // Appends every seat's input, after letting `inner` (the bots, or null)

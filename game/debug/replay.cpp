@@ -3,6 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay.h"
+#include "game/debug/debug_file_name.h"
 #include "engine/assets/json.h"
 #include "engine/core/file_path.h"
 #include "game/debug/match_plan.h"
@@ -459,6 +460,10 @@ std::string replay_name(std::string_view requested)
 	}
 	if (!name.empty())
 	{
+		if (debug_file_name::reserved_stem(name))
+		{
+			name.insert(name.begin(), '_');
+		}
 		return name;
 	}
 	const std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

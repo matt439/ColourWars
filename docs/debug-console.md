@@ -1428,6 +1428,44 @@ Release confirms the inert/layout/RTTI boundary. All five source hashes and
 independent review pass. New checks use pure string values, with no capture
 request or reserved-path access.
 
+## Replay file basenames (`DBG#15`)
+
+**Done (2026-10-29).** `replay_name("CON")` formerly returned `CON`, which
+recording later appended `.json` to before opening an output stream. Play uses
+the same normalizer. That result still named a
+[reserved Windows stem](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+instead of the ordinary replay file the commands promise. The exact device
+I/O outcome has not been tested and must not be probed for this fix.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Replay normalization admits reserved device stems before both read and write paths. | Selected as `DBG#15`: reuse the Debug stem rule and prefix `_`, with pure helper checks before replay-file work. Small naming correction; no device-path access. |
+| 2 | Repeated normalization strips another `_json` from some otherwise valid stems. | Examine the compatibility and raw-suffix policy separately before changing that existing behavior. |
+| 3 | Script-name validation also accepts reserved stems, but execution first requires a regular file. | A weaker early-diagnostic follow-up; keep outside this replay slice. |
+
+After the existing ASCII replacement and one case-sensitive `_json` stripping
+step, the helper now prefixes `_` for an exact reserved stem before returning
+the nonempty name. Empty timestamp fallback and every other normalization rule remain.
+Thus `CON`, `CON.json` and `CON_json` become `_CON`, while `CON.JSON` remains
+`CON_JSON`. Do not change the separate suffix-ordering behavior in this slice.
+
+The existing shared predicate's body is unchanged. The old-source pure-helper
+baseline returned `CON` and failed at the new assertion in
+`dbg15-baseline/b81be67df1924737895429290533834b`, with all four source guards
+intact. The new block performs no I/O; earlier existing bot-metadata checks
+already perform their own private file checks.
+
+Both game builds and the complete console CPU case pass in
+`dbg15-candidate/c3adb92a3e8049a79faa692f1ed08137` under
+`out/validation/implementation-loop-20261028/` (Debug 104 seconds, Release
+18 seconds). Debug checks 199 reserved stem/case/suffix values, 24 valid
+neighbors and eight suffix/sanitizer controls. Existing codec, private file,
+real-Level record/play and screenshot checks pass; Release's inert/layout/RTTI
+boundary remains intact. Independent review and all four source hashes pass.
+New tests call `replay_name` only, with no reserved-name record/play command
+or device-path access. File format, recorded simulation, playback policy and
+existing files remain unchanged.
+
 ## Quoted completion boundaries (`DBG#11`)
 
 **Done (2026-10-28).** Tab completion now recognizes statement and word

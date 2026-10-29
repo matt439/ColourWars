@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-// Screenshot callers supply one sanitized ASCII stem or directory component.
+// Debug file callers supply one sanitized ASCII stem or directory component.
 namespace debug_file_name
 {
 	inline bool reserved_stem(std::string_view segment)
