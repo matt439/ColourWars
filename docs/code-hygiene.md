@@ -75,31 +75,29 @@ side copies are ever pruned.
 
 ### Participant parameter names in `Level` (`HYG#26`)
 
-**Open, not started.** `HYG#8` corrected the comments about participants and
+**Done (2026-10-29).** `HYG#8` corrected the comments about participants and
 panes but no identifiers (see [its record](#source-comment-contract-audit-hyg8)).
-Several [level.h](../game/objects/level.h) parameters are still named `view`
-while they index roster participants in `players_`: `player` (line 181),
-`view_camera` through `player_identity_bounds_for` (lines 199-210) and
-`place_player`, `respawn_player`, `kill_player` (lines 239-242), whose comment
-at lines 230-232 has to explain that "`view` here indexes roster participants".
-`participant_for_view` (line 184) and `teammate_markers` (line 215) really take
-panes. In the definitions, `Level::view_camera` reads `players_.at(view)` and
-then derives `pane` from it ([level.cpp](../game/objects/level.cpp) line 681),
-and `draw_player_overlay` passes a participant into `aim_marker_visible`
-([level_draw.cpp](../game/objects/level_draw.cpp) lines 61-71).
+This commit renamed the identifiers, and nothing else: every [level.h](../game/objects/level.h)
+parameter that indexes a roster participant in `players_` is now `participant`
+in declaration and definition: `player`, `view_camera`, `idle_drip`,
+`aim_marker_visible`, `player_identity_visible`, `player_identity_emphasis`,
+`player_identity_bounds` and their `_for` forms, and `place_player`,
+`respawn_player` and `kill_player`. The comment over the developer-tools block
+lost its "`view` here indexes roster participants" caveat. Three loop and
+buffer locals that walked `players_` under the name `view` (the death snapshot
+in `update_level_logic`, `refresh_identity_texts` and `apply_player_inputs`'s
+`by_view`) became `participant`/`by_participant`.
 
-Scope: one rename-only commit. Parameters that index participants become
-`participant` in declarations and definitions; `view` stays only where a human
-pane is indexed; the lines 230-232 comment loses its caveat. No signature
-type, order, layout or behaviour change, and no caller edits beyond local
-variable names that would otherwise mislead.
+`view` is kept where it really is a human pane: `participant_for_view`,
+`teammate_markers`, `hud_scale`, `update_teammate_markers`' loop and the pane
+local in `refresh_player_cameras`. `draw_acting`'s unnamed `view` is the
+Scene's view index and stays. `view_camera` keeps its name: it is the
+cosmetic camera for that participant's pane, and its public name was out of
+scope.
 
-First step: list every `int view` parameter in `game/objects/level*.h/.cpp`
-with its first use, classified participant or pane.
-
-Acceptance: a token diff that changes identifiers and comments only; both
-presets build under `/W4 /WX`; the default acceptance suite passes, including
-`player_identity`, `teammate_markers` and `bot_roster`.
+Verified: the diff changes identifiers and one comment only; both presets
+build under `/W4 /WX`; Debug acceptance for the cases that reach these members
+passed (see the commit message for the list).
 
 Not decided here: any rename outside `Level`, or of the public accessors
 `view_count`, `participant_for_view` and `view_for_participant`.

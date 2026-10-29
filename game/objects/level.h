@@ -178,7 +178,7 @@ public:
 	// Read-only participants for developer status; the index is the stable
 	// roster seat, independent of physical slot and human pane.
 	int player_count() const;
-	const Player& player(int view) const;
+	const Player& player(int participant) const;
 	// Participant indices are stable roster seats; views contain only humans.
 	int view_count() const;
 	int participant_for_view(int view) const;
@@ -196,18 +196,18 @@ public:
 	// Candidate route visibility only; the policy separately sweeps its body.
 	bool bot_traversal_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to, PlayerTeam team) const;
 	// Cosmetic camera by participant; player(index).camera() remains the stable aim/follow camera.
-	labrador::Camera view_camera(int view) const;
-	// Null for tools without an idle drip. Index follows player(view).
-	const IdleDrip* idle_drip(int view) const;
+	labrador::Camera view_camera(int participant) const;
+	// Null for tools without an idle drip. Index follows player(participant).
+	const IdleDrip* idle_drip(int participant) const;
 	// A local cue only during live play; frozen pause draws preserve its state.
-	bool aim_marker_visible(int view) const;
-	bool player_identity_visible(int view) const;
-	float player_identity_emphasis(int view) const;
-	mattmath::RectangleF player_identity_bounds(int view) const;
+	bool aim_marker_visible(int participant) const;
+	bool player_identity_visible(int participant) const;
+	float player_identity_emphasis(int participant) const;
+	mattmath::RectangleF player_identity_bounds(int participant) const;
 	// The same badge as seen by the pad in viewer_slot: a bot's badge in a
 	// human pane follows that pane's Reduce effects, not the bot's.
-	float player_identity_emphasis_for(int view, int viewer_slot) const;
-	mattmath::RectangleF player_identity_bounds_for(int view, int viewer_slot) const;
+	float player_identity_emphasis_for(int participant, int viewer_slot) const;
+	mattmath::RectangleF player_identity_bounds_for(int participant, int viewer_slot) const;
 	// ROAD#18: one marker per living teammate (human or bot) whose body is
 	// outside human pane `view`'s camera, during live play only, in that pane's
 	// HUD pixels and roster order. Empty for an invalid pane. Opacity follows
@@ -228,18 +228,17 @@ public:
     std::span<const TeamGateStructurePaintable* const> team_gates() const;
 
 	// Developer tools and shipping setup/replay adapters, called between world
-	// updates. `view` here indexes roster participants in players_, not human
-	// panes. Shipping code sets pad mappings and replay also restores cheats.
+	// updates. Shipping code sets pad mappings and replay also restores cheats.
 	void set_overlays(const LevelOverlays& overlays);
 	void set_players_showing_debug(bool showing);
 	void set_player_cheats(bool damage_immune, bool infinite_ammo);
 	// At rest at `top_left`, respawning first if dead; the weapon and the
 	// cameras follow at once, so the move shows even while the clock is
 	// paused. False: no such participant.
-	bool place_player(int view, const mattmath::Vector2F& top_left);
-	bool respawn_player(int view);
+	bool place_player(int participant, const mattmath::Vector2F& top_left);
+	bool respawn_player(int participant);
 	// Dies on the next world update, at the spawn's redraw. False: no such participant.
-	bool kill_player(int view);
+	bool kill_player(int participant);
 	// By participant: an optional identity-label override ("Bot: paint"). Empty
 	// entries keep the shipping bot difficulty label or human device name.
 	void set_seat_labels(std::vector<std::wstring> labels);

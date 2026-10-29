@@ -419,9 +419,9 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal)
 {
 	std::array<bool, 4> was_dead{};
-	for (size_t view = 0; view < this->players_.size(); ++view)
+	for (size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
-		was_dead[view] = this->players_[view]->state() == PlayerState::dead;
+		was_dead[participant] = this->players_[participant]->state() == PlayerState::dead;
 	}
 	this->update_player_identity(dt);
 	// Run the scene phases in order, with game-specific work between them.
@@ -461,11 +461,11 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	}
 
 	this->update_players_after_resolve();
-	for (size_t view = 0; view < this->players_.size(); ++view)
+	for (size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
-		if (was_dead[view] && this->players_[view]->state() == PlayerState::alive)
+		if (was_dead[participant] && this->players_[participant]->state() == PlayerState::alive)
 		{
-			this->player_identity_remaining_[view] =
+			this->player_identity_remaining_[participant] =
 				this->presentation_->player_identity().emphasis_duration;
 		}
 	}
@@ -521,7 +521,7 @@ void Level::apply_player_inputs(
 	const std::vector<PlayerInputData>& player_inputs, SeatInputFilter* seats)
 {
 	// One input per participant; an idle human dummy gets neutral input.
-	std::vector<PlayerInputData> by_view(this->players_.size());
+	std::vector<PlayerInputData> by_participant(this->players_.size());
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
 		Player* player = this->players_[i];
@@ -529,35 +529,35 @@ void Level::apply_player_inputs(
 
 		if (slot >= 0 && static_cast<size_t>(slot) < player_inputs.size())
 		{
-			by_view[i] = player_inputs[slot];
+			by_participant[i] = player_inputs[slot];
 
 			// Copy the slot input to fill in this player's camera-dependent mouse aim.
 			if (input_slots::is_keyboard_and_mouse(slot))
 			{
 				this->resolve_mouse_aim(player,
-					static_cast<size_t>(this->view_for_participant(static_cast<int>(i))), by_view[i]);
+					static_cast<size_t>(this->view_for_participant(static_cast<int>(i))), by_participant[i]);
 			}
 		}
 	}
 
 	if (this->bot_driver_ != nullptr && (seats == nullptr || !seats->replaces_bot_inputs()))
 	{
-		this->bot_driver_->filter_seats(by_view, *this);
+		this->bot_driver_->filter_seats(by_participant, *this);
 	}
 	if (seats != nullptr)
 	{
-		seats->filter_seats(by_view, *this);
+		seats->filter_seats(by_participant, *this);
 	}
 
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
-		this->players_[i]->set_player_input(by_view[i]);
+		this->players_[i]->set_player_input(by_participant[i]);
 	}
 }
 
-const IdleDrip* Level::idle_drip(int view) const
+const IdleDrip* Level::idle_drip(int participant) const
 {
-	return this->idle_drips_.at(static_cast<size_t>(view));
+	return this->idle_drips_.at(static_cast<size_t>(participant));
 }
 
 void Level::update_idle_drips(float dt)
@@ -676,10 +676,10 @@ void Level::update_players_after_resolve()
 	}
 }
 
-Camera Level::view_camera(int view) const
+Camera Level::view_camera(int participant) const
 {
-	const Player& player = *this->players_.at(static_cast<size_t>(view));
-	const int pane = this->view_for_participant(view);
+	const Player& player = *this->players_.at(static_cast<size_t>(participant));
+	const int pane = this->view_for_participant(participant);
 	if (this->state_ != LevelState::active || !this->preferences_->view_shake_enabled(player.player_num()) ||
 		pane < 0 || player.view_shake().offset() == Vector2F::ZERO) { return player.camera(); }
 	return PlayerCamera::displaced(player.camera(),
@@ -736,9 +736,9 @@ int Level::player_count() const
 	return static_cast<int>(this->players_.size());
 }
 
-const Player& Level::player(int view) const
+const Player& Level::player(int participant) const
 {
-	return *this->players_.at(static_cast<size_t>(view));
+	return *this->players_.at(static_cast<size_t>(participant));
 }
 
 int Level::view_count() const

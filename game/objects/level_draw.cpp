@@ -218,39 +218,39 @@ void Level::draw_cursor_marker(DrawList& list) const
 	frame(ink + paper, ink, look.ink);
 }
 
-bool Level::player_identity_visible(int view) const
+bool Level::player_identity_visible(int participant) const
 {
-	return view >= 0 && view < this->player_count() &&
+	return participant >= 0 && participant < this->player_count() &&
 		this->presentation_->player_identity().enabled &&
 		(this->state_ == LevelState::start_countdown || this->state_ == LevelState::active) &&
-		this->player(view).state() == PlayerState::alive && this->player(view).health() > 0.0f;
+		this->player(participant).state() == PlayerState::alive && this->player(participant).health() > 0.0f;
 }
 
-float Level::player_identity_emphasis(int view) const
+float Level::player_identity_emphasis(int participant) const
 {
-	return this->player_identity_emphasis_for(view, this->player(view).player_num());
+	return this->player_identity_emphasis_for(participant, this->player(participant).player_num());
 }
 
-float Level::player_identity_emphasis_for(int view, int viewer_slot) const
+float Level::player_identity_emphasis_for(int participant, int viewer_slot) const
 {
-	if (!this->player_identity_visible(view) || this->preferences_->reduce_effects_for(viewer_slot))
+	if (!this->player_identity_visible(participant) || this->preferences_->reduce_effects_for(viewer_slot))
 	{
 		return 0.0f;
 	}
-	return std::clamp(this->player_identity_remaining_[static_cast<size_t>(view)] /
+	return std::clamp(this->player_identity_remaining_[static_cast<size_t>(participant)] /
 		this->presentation_->player_identity().emphasis_duration, 0.0f, 1.0f);
 }
 
-RectangleF Level::player_identity_bounds(int view) const
+RectangleF Level::player_identity_bounds(int participant) const
 {
-	return this->player_identity_bounds_for(view, this->player(view).player_num());
+	return this->player_identity_bounds_for(participant, this->player(participant).player_num());
 }
 
-RectangleF Level::player_identity_bounds_for(int view, int viewer_slot) const
+RectangleF Level::player_identity_bounds_for(int participant, int viewer_slot) const
 {
 	const PlayerIdentityPresentation& look = this->presentation_->player_identity();
-	const RectangleF body = this->player(view).rectangle();
-	const float emphasis = this->player_identity_emphasis_for(view, viewer_slot);
+	const RectangleF body = this->player(participant).rectangle();
+	const float emphasis = this->player_identity_emphasis_for(participant, viewer_slot);
 	const float scale = 1.0f + (look.emphasis_scale - 1.0f) * emphasis;
 	const Vector2F size = look.world_size * scale;
 	const Vector2F bottom = Vector2F(body.center().x, body.top()) + look.world_offset;
@@ -267,15 +267,15 @@ void Level::emphasise_players()
 void Level::refresh_identity_texts()
 {
 	this->identity_texts_.resize(this->players_.size());
-	for (std::size_t view = 0; view < this->players_.size(); ++view)
+	for (std::size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
-		const Player& player = *this->players_[view];
-		const bool labelled = view < this->seat_labels_.size() &&
-			!this->seat_labels_[view].empty();
-		this->identity_texts_[view] = InterfaceGameplay::identity_text(
-			static_cast<int>(view), player.team(), labelled ?
-			this->seat_labels_[view] : (this->is_bot(static_cast<int>(view)) ?
-				this->presentation_->menu_text().bot_label(this->roster_[view].difficulty) :
+		const Player& player = *this->players_[participant];
+		const bool labelled = participant < this->seat_labels_.size() &&
+			!this->seat_labels_[participant].empty();
+		this->identity_texts_[participant] = InterfaceGameplay::identity_text(
+			static_cast<int>(participant), player.team(), labelled ?
+			this->seat_labels_[participant] : (this->is_bot(static_cast<int>(participant)) ?
+				this->presentation_->menu_text().bot_label(this->roster_[participant].difficulty) :
 				input_slots::device_name(this->pad_device(player.player_num()))));
 	}
 }
@@ -358,10 +358,10 @@ void Level::update_teammate_markers(float dt)
 	}
 }
 
-bool Level::aim_marker_visible(int view) const
+bool Level::aim_marker_visible(int participant) const
 {
-	if (view < 0 || static_cast<size_t>(view) >= this->players_.size()) { return false; }
-	const Player& player = *this->players_.at(static_cast<size_t>(view));
+	if (participant < 0 || static_cast<size_t>(participant) >= this->players_.size()) { return false; }
+	const Player& player = *this->players_.at(static_cast<size_t>(participant));
 	return this->state_ == LevelState::active && this->preferences_->aim_marker_enabled(player.player_num()) &&
 		this->presentation_->weapon_feedback().enabled && player.aim_marker_allowed() &&
 		player.primary_weapon().type() != WeaponType::roller;
