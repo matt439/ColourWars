@@ -1128,8 +1128,9 @@ evidence for `POL#21`, not acceptance.
 **Open, not started; recorded 2026-10-29.** The shipping bots have unequal
 evidence across the Turbulence family. `bot_turbulence_routes.cpp:100` sets
 the preserved `turbulence` stage, not the blockout. The mover and gate trials
-have their own route cases (`bot_mover_routes.cpp:38`, `bot_gate_routes.cpp:45`).
-The blockout and slab trial have none. The natural-spawn team matrix in
+have their own route cases (`bot_mover_routes.cpp:38`, `bot_gate_routes.cpp:45`),
+and the slab trial has `ROAD#38`'s measurement case (`bot_slab_routes.cpp:199`).
+The blockout has none. The natural-spawn team matrix in
 `bot_team_trials.cpp:582` covers Crossfeed, Close Quarters, King of the Hill and
 the preserved Turbulence, so no current variant has bot-held paint from
 ordinary spawns.
