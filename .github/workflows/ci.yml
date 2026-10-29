@@ -98,14 +98,13 @@ jobs:
           cmake --build --preset ${{ matrix.preset }}
 
       # CI#2: compile, but never run, the probes CI does not otherwise build:
-      # the fourteen opt-in acceptance cases (keep this list equal to the
-      # opt-ins in run-acceptance.ps1's $availableCases, minus the Debug-only
-      # balance_runner), the painter with both pad readers and, Debug-only
-      # like its harness, frame pacing. No probe, window or GPU is used.
+      # the opt-in acceptance cases (-OptIn, the 'opt-in' group in
+      # scripts/acceptance/cases.psd1), the painter with both pad readers and,
+      # Debug-only like its harness, frame pacing. No probe, window or GPU is used.
       - name: Compile gate for opt-in probes
         run: |
           call "%VCVARS%"
-          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -Parallel 4 -OutputDirectory out/validation/compile-gate/acceptance -Cases bot_trials,bot_combat_trials,bot_team_trials,bot_ascents,bot_arena_routes,bot_hill_routes,bot_turbulence_routes,bot_scan_cost,bot_mover_routes,bot_slab_routes,bot_blockout_routes,turbulence_movers,turbulence_slopes,turbulence_slab_routes,turbulence_slab_stage,turbulence_slab_tools
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -Parallel 4 -OutputDirectory out/validation/compile-gate/acceptance -OptIn
           if errorlevel 1 exit /b 1
           pwsh -NoProfile -File scripts/check-painter.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/painter
           if errorlevel 1 exit /b 1
@@ -155,13 +154,14 @@ jobs:
           retention-days: 7
 
       # Four cases at a time on the runner's four cores. Pull requests leave
-      # out the four Debug simulations that take three to eight minutes each
-      # under checked iterators; Release still runs them on every pull
-      # request, and every push to master runs the full Debug suite.
+      # out the Debug simulations that take three to eight minutes each under
+      # checked iterators (-SkipSlowDebug: SlowInDebug in cases.psd1); Release
+      # still runs them on every pull request, and every push to master runs
+      # the full Debug suite.
       - name: Consumer acceptance checks
         run: |
           call "%VCVARS%"
-          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 ${{ (matrix.preset == 'x64-debug' && github.event_name == 'pull_request') && '-ExcludeCases crossfeed,press_tower,menu_text,debug_console' || '' }}
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 ${{ (matrix.preset == 'x64-debug' && github.event_name == 'pull_request') && '-SkipSlowDebug' || '' }}
 
       # CI#4: per-case compile and run seconds, outcome, longest first. The
       # data the scheduling order and the Debug exclusions above should rest on.

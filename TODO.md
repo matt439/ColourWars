@@ -48,7 +48,7 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: the
-[Architecture review](#architecture-review) rows (`HYG#30`-`HYG#51`, `CI#6`) and the
+[Architecture review](#architecture-review) rows (`HYG#31`-`HYG#51`, `CI#6`) and the
 owed reports `ENG#27`-`ENG#32` are `OPEN`, in the order listed there. Before them,
 the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
@@ -114,7 +114,6 @@ comparison and physical-pad check; values remain provisional.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#30` | OPEN | LOW | M | Declare each acceptance case once for the runner and CI, and add a shared probe header. [Scope](docs/code-hygiene.md#one-acceptance-case-list-and-a-shared-probe-header-hyg30). |
 | `HYG#31` | OPEN | MED | L | Move the architecture overview out of AGENTS.md into `docs/architecture.md`, correct its `GameData`, state-stack and chain claims, and index `docs/` and `scripts/`. [Scope](docs/code-hygiene.md#a-human-architecture-overview-and-accurate-docs-hyg31). |
 | `HYG#32` | OPEN | MED | S | Drop D3D11 and DirectXTK from `pch.h`, the link and 32 dead `using namespace DirectX` lines. [Scope](docs/code-hygiene.md#the-precompiled-header-stops-claiming-a-backend-hyg32). |
 | `HYG#33` | OPEN | MED | M | Make the shipping match step a plain `GameLevel` member instead of `debug_update_level`, then split `DebugMatchTarget` by client. [Scope](docs/code-hygiene.md#the-shipping-match-step-out-of-debug-code-hyg33). |

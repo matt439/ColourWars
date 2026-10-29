@@ -138,10 +138,20 @@ or touch the player's save. `scripts/check-startup.ps1` separately checks a
 hidden game process, its per-monitor DPI awareness, isolated save, diagnostics
 and graceful shutdown.
 
+Each case is declared once, in `scripts/acceptance/cases.psd1`: its name, its
+group (default, Debug-only or opt-in), extra sources, arguments, start rank and
+whether it is slow in Debug. A new case is a `.cpp` there plus one entry; the
+runner and CI read the list and write no case names of their own. Probes share
+`scripts/acceptance/support/probe.h`: `acceptance::require` throws on a failed
+check, and `acceptance::run_probe` turns an escaping exception into a `FAIL`
+line and exit code 1.
+
 Use `-Cases ammo,text_wrap` to select a subset, including with `pwsh -File`.
 PowerShell arrays also work; names are trimmed and case-insensitive, while
 empty names, unknown names and duplicate selections are refused. `-ExcludeCases`
-removes cases from the chosen/default list. `scripts/check-acceptance-selection.ps1`
+removes cases from the chosen/default list. `-OptIn` selects the opt-in group
+instead of the default list, and `-SkipSlowDebug` (Debug only) leaves out the
+cases declared slow in Debug. `scripts/check-acceptance-selection.ps1`
 checks these rules without starting CMake, a compiler or the native helper.
 
 `scripts/check-painter-selection.ps1` checks every focused painter selector,
@@ -191,12 +201,12 @@ runtime assets and submodule changes. Manual runs always run full CI. Change
 detection and its regression checks live in `scripts/ci/`.
 
 Full CI builds both presets, compiles without running the opt-in probes
-(the fourteen opt-in acceptance cases, `check-painter.ps1 -CompileOnly` with
+(the sixteen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
 both pad readers and, in Debug, `check-frame-pacing.ps1 -CompileOnly`), runs
 consumer acceptance and checks startup.
 Acceptance runs four cases at a
 time (`-Parallel 4`); on pull requests the Debug job leaves out `crossfeed`,
-`press_tower`, `menu_text` and `debug_console` (`-ExcludeCases`), which take
+`press_tower`, `menu_text` and `debug_console` (`-SkipSlowDebug`), which take
 minutes each under Debug's checked iterators (with them, Debug acceptance
 alone took 27 minutes). Release runs them on every pull request and a push to
 `master` runs the full Debug suite. Debug startup is required; Release

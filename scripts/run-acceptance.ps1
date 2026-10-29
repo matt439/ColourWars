@@ -6,6 +6,8 @@ param(
     [string] $OutputDirectory,
     [string[]] $Cases,
     [string[]] $ExcludeCases,
+    [switch] $OptIn,
+    [switch] $SkipSlowDebug,
     [ValidateRange(1, 64)]
     [int] $Parallel = 1,
     [switch] $CompileOnly,
@@ -16,10 +18,34 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$acceptanceCases = @('display_awake', 'rumble', 'rumble_adapter', 'action_bindings', 'input_bindings', 'keyboard_jump_capture', 'ammo', 'settings', 'player_profiles', 'match_records', 'remembered_setup', 'bot_roster', 'stick_settings', 'paint', 'camera_framing', 'view_shake', 'movement', 'movement_contact', 'combat_feedback', 'tool_motion', 'weapon_feedback', 'low_paint', 'aim_marker', 'player_identity', 'blocked_shot', 'idle_drip', 'quiet_character', 'stage_selection', 'team_palette', 'team_selection', 'menu_navigation',
-        'movement_course', 'cq_blockout', 'crossfeed', 'press_tower', 'turbulence_blockout', 'resume_countdown', 'debug_console', 'story_audio', 'level_format', 'fatal_report', 'gameplay_tuning', 'menu_presentation', 'weapon_catalog', 'menu_text', 'menu_focus_motion', 'display_trial', 'tunnelling', 'text_wrap', 'terrain', 'lethal_provenance', 'skirmish_bot', 'paint_surfaces', 'balance_regions', 'paint_underfoot', 'moving_structure', 'fixed_slab', 'practice_workshop', 'results_awards', 'paint_ferry', 'team_gate')
-$acceptanceCases += @('bot_driver', 'bot_runtime', 'bot_recovery', 'bot_ballistics', 'bot_navigation', 'bot_territory', 'bot_gate_routes', 'handicap', 'instant_replay', 'user_stages', 'series_stage_rule', 'teammate_markers', 'cursor_marker')
-$availableCases = @($acceptanceCases) + @('balance_runner', 'bot_trials', 'bot_combat_trials', 'bot_team_trials', 'bot_ascents', 'bot_arena_routes', 'bot_hill_routes', 'bot_turbulence_routes', 'bot_scan_cost', 'bot_mover_routes', 'bot_slab_routes', 'bot_blockout_routes', 'turbulence_movers', 'turbulence_slopes', 'turbulence_slab_routes', 'turbulence_slab_stage', 'turbulence_slab_tools')
+# Each case is declared once, in scripts/acceptance/cases.psd1.
+$declaredCases = @((Import-PowerShellDataFile -LiteralPath (Join-Path $PSScriptRoot 'acceptance/cases.psd1')).Cases)
+$caseKeys = @('Name', 'Group', 'Sources', 'Arguments', 'StartRank', 'SlowInDebug', 'Utf8Output')
+$caseTable = @{}
+foreach ($declared in $declaredCases) {
+    foreach ($key in $declared.Keys) {
+        if ($key -cnotin $caseKeys) { throw "acceptance/cases.psd1: unknown key $key." }
+    }
+    if ($declared.Name -cnotmatch '^[a-z0-9_]+$' -or $caseTable.ContainsKey($declared.Name)) {
+        throw "acceptance/cases.psd1: case names must be unique lower-case identifiers ($($declared.Name))."
+    }
+    if (-not $declared.ContainsKey('Group')) { $declared.Group = 'default' }
+    if ($declared.Group -cnotin @('default', 'debug-only', 'opt-in')) {
+        throw "acceptance/cases.psd1: $($declared.Name) has an unknown group."
+    }
+    # Fill in what a declaration leaves out, so every key reads under strict mode.
+    $defaults = @{ Arguments = @('game'); Sources = @(); StartRank = [int]::MaxValue; SlowInDebug = $false; Utf8Output = $false }
+    foreach ($key in $defaults.Keys) {
+        if (-not $declared.ContainsKey($key)) { $declared[$key] = $defaults[$key] }
+    }
+    foreach ($argument in $declared.Arguments) {
+        if ($argument -cnotin @('game', 'repo')) { throw "acceptance/cases.psd1: $($declared.Name) has an unknown argument." }
+    }
+    $caseTable[$declared.Name] = $declared
+}
+$availableCases = @($declaredCases | ForEach-Object { $_.Name })
+if ($OptIn -and $PSBoundParameters.ContainsKey('Cases')) { throw 'Choose -Cases or -OptIn, not both.' }
+if ($SkipSlowDebug -and $Preset -ne 'x64-debug') { throw 'SkipSlowDebug applies only to x64-debug.' }
 $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
     if (-not $Cases) { throw 'Cases must contain at least one case name.' }
     @($Cases | ForEach-Object {
@@ -29,13 +55,17 @@ $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
             $name.Trim().ToLowerInvariant()
         }
     })
+} elseif ($OptIn) {
+    @($declaredCases | Where-Object { $_.Group -ceq 'opt-in' } | ForEach-Object { $_.Name })
 } else {
-    @($acceptanceCases) + @(if ($Preset -eq 'x64-debug') { 'balance_runner' })
+    @($declaredCases | Where-Object {
+        $_.Group -ceq 'default' -or ($_.Group -ceq 'debug-only' -and $Preset -eq 'x64-debug')
+    } | ForEach-Object { $_.Name })
 }
 foreach ($case in $selectedCases) {
     if ($case -notin $availableCases) { throw "Unknown acceptance case: $case" }
-    if ($case -eq 'balance_runner' -and $Preset -ne 'x64-debug') {
-        throw 'balance_runner is a Debug-only developer tool.'
+    if ($caseTable[$case].Group -ceq 'debug-only' -and $Preset -ne 'x64-debug') {
+        throw "$case is a Debug-only developer tool."
     }
 }
 if (@($selectedCases | Select-Object -Unique).Count -ne @($selectedCases).Count) {
@@ -49,6 +79,10 @@ if ($ExcludeCases) {
         if ($case -notin $availableCases) { throw "Unknown excluded acceptance case: $case" }
     }
     $selectedCases = @($selectedCases | Where-Object { $_ -notin $excluded })
+    if (-not $selectedCases) { throw 'Every selected acceptance case was excluded.' }
+}
+if ($SkipSlowDebug) {
+    $selectedCases = @($selectedCases | Where-Object { -not $caseTable[$_].SlowInDebug })
     if (-not $selectedCases) { throw 'Every selected acceptance case was excluded.' }
 }
 
@@ -247,22 +281,9 @@ try {
     }
     $specs = @()
     foreach ($case in $selectedCases) {
+        $declared = $caseTable[$case]
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
-        if ($case -eq 'story_audio') {
-            # The real game objects use the engine's audio seam unchanged.
-            # Supply its recording backend before the static engine archive,
-            # so this case can observe sound calls without opening hardware.
-            $sources += Join-Path $repo 'external/labrador/engine/audio/null/audio_device.cpp'
-        }
-        if ($case -eq 'balance_runner') {
-            # Reuse only the reviewed measurement/serializer, not its fixture or main.
-            foreach ($shared in @('metrics.cpp','csv.cpp')) {
-                $sources += Join-Path $PSScriptRoot ('acceptance/balance_regions/' + $shared)
-            }
-        }
-        if ($case -eq 'bot_team_trials') {
-            $sources += Join-Path $PSScriptRoot 'acceptance/balance_regions/metrics.cpp'
-        }
+        $sources += @($declared.Sources | ForEach-Object { Join-Path $repo $_ })
         $parts = Join-Path $PSScriptRoot "acceptance/$case"
         if (Test-Path -LiteralPath $parts -PathType Container) {
             $sources += @(Get-ChildItem -LiteralPath $parts -Filter '*.cpp' -File |
@@ -286,8 +307,9 @@ try {
         # CL accepts UTF-16 response files, including checkout paths that are
         # not representable in the machine's active ANSI code page.
         $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
-        $caseArguments = @($gameDirectory)
-        if ($case -in @('level_format', 'turbulence_slab_stage')) { $caseArguments += $repo }
+        $caseArguments = @($declared.Arguments | ForEach-Object {
+            if ($_ -ceq 'repo') { $repo } else { $gameDirectory }
+        })
         $specs += [pscustomobject]@{
             Case = $case
             Compiler = $cache.CMAKE_CXX_COMPILER
@@ -299,9 +321,10 @@ try {
             RunTimeoutSeconds = $RunTimeoutSeconds
             ProbeControl = $probeControl
             CancellationToken = $caseCancellation.Token
-            # The new console tool emits UTF-8 paths. Native decoding is
-            # process-wide, so it runs on its own after any parallel batch.
-            Utf8 = $case -eq 'balance_runner'
+            # Native decoding is process-wide, so a UTF-8 case runs on its
+            # own after any parallel batch.
+            Utf8 = [bool]$declared.Utf8Output
+            StartRank = [int]$declared.StartRank
         }
     }
 
@@ -396,14 +419,9 @@ try {
     }
 
     # Start the longest cases first so none of them is left running alone at
-    # the end; the order is from CI timings, slowest first.
-    $longestFirst = @('crossfeed', 'menu_text', 'press_tower', 'debug_console', 'story_audio',
-        'movement_course', 'menu_presentation', 'movement', 'cq_blockout', 'balance_regions',
-        'paint_surfaces', 'moving_structure', 'paint_underfoot', 'weapon_catalog')
-    $parallelSpecs = @($specs | Where-Object { -not $_.Utf8 } | Sort-Object {
-        $rank = [array]::IndexOf($longestFirst, $_.Case)
-        if ($rank -lt 0) { $longestFirst.Count } else { $rank }
-    }, { [array]::IndexOf($selectedCases, $_.Case) })
+    # the end; StartRank in cases.psd1 is from CI timings, slowest first.
+    $parallelSpecs = @($specs | Where-Object { -not $_.Utf8 } | Sort-Object { $_.StartRank },
+        { [array]::IndexOf($selectedCases, $_.Case) })
     $serialSpecs = @($specs | Where-Object { $_.Utf8 })
     if ($Parallel -gt 1) {
         # A runspace pool rather than ForEach-Object -Parallel, so this also

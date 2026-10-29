@@ -84,10 +84,52 @@ unchanged pre-split objects fails the same way, so that is older than this row
 
 ### One acceptance case list and a shared probe header (`HYG#30`)
 
-After `HYG#29`. Declare each case once (name, group, extra sources, arguments)
-and have the runner and CI read that list rather than pasted arrays. Correct the
-opt-in count. Add `scripts/acceptance/support/probe.h` with `require` and an
-exception-to-exit-code wrapper, and move probes onto it.
+**Done 2026-10-30.** Every consumer acceptance case is declared once, in
+[scripts/acceptance/cases.psd1](../scripts/acceptance/cases.psd1): its name,
+group (default, `debug-only` for `balance_runner`, or `opt-in`), extra sources,
+arguments (`game`, `repo`), the start rank that replaced `$longestFirst`,
+`SlowInDebug` and `Utf8Output`. [run-acceptance.ps1](../scripts/run-acceptance.ps1)
+reads it with `Import-PowerShellDataFile`, refuses unknown keys, groups and
+arguments, and no longer names a case anywhere. Two switches replace the case
+lists CI pasted: `-OptIn` selects the opt-in group (refused with `-Cases`) and
+`-SkipSlowDebug` (refused outside `x64-debug`) leaves out the `SlowInDebug`
+cases. [ci.yml](../.github/workflows/ci.yml) uses them, and selects exactly what
+it did: the same sixteen opt-in cases in the same order (not fourteen, as
+AGENTS.md said; it now says sixteen) and the same four Debug pull-request
+exclusions. [check-acceptance-selection.ps1](../scripts/check-acceptance-selection.ps1)
+checks both switches against the declarations and their refusals, and hashes
+the declaration file.
+
+[scripts/acceptance/support/probe.h](../scripts/acceptance/support/probe.h)
+holds `acceptance::require` (both message types, throwing `std::runtime_error`
+as every copy did) and `acceptance::run_probe(name, body)`, which prints
+`FAIL <name>: <reason>` and returns 1 for any escaping exception. 80 files
+dropped their own `require` for a `using acceptance::require;` (fixture
+headers carry it for their folder), and 98 entry points, the runner's cases and
+the painter, frame-pacing, movement-feedback, paint-fx and editor probes, now
+return `run_probe`. Probes that printed a bare `FAIL:` or no label now name
+themselves. Two keep their own code on purpose: `display_awake_lifecycle`'s
+main writes failure evidence before returning, and `balance_runner`'s
+self-check `require` prefixes `Self-check:`. No probe's checks changed.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Debug without the four slow cases (71). In Release 73 of 74 passed first time;
+`debug_console` failed to compile because the script had put the new include
+inside its fixture header's `#if COLOURWARS_DEV_TOOLS`. After that and ten
+similar includes were moved out, `debug_console` and the ten bot probes passed
+in Release, and `debug_console`, `menu_text`, `crossfeed`, `press_tower`,
+`balance_runner` and those bot probes passed in Debug except the opt-in
+`bot_team_trials`, which stopped on `bad allocation` while the machine was
+short of resources (a shell started then could not fork); its checks are
+unchanged and it passed in Release. The sixteen opt-in cases (`-OptIn -CompileOnly`) and
+`check-painter.ps1 -CompileOnly` compiled in both presets and
+`check-frame-pacing.ps1 -CompileOnly` in Debug. `check-display-awake.ps1`,
+`check-movement-feedback.ps1` and `check-level-editor.ps1` passed (the editor
+check failed once in each preset during that load, on a clipboard paste and a
+locked file, and passed on rerun), and `check-acceptance-selection.ps1`
+passed under Windows PowerShell 5.1; pwsh is not installed here.
+`check-paint-fx.ps1` still fails its camera-scale check, as recorded under
+`HYG#29`.
 
 ### A human architecture overview and accurate docs (`HYG#31`)
 
