@@ -8,6 +8,9 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+# Load standard helpers from this host before nested native-probe setup.
+Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
+
 function Invoke-Logged {
     param(
         [string] $Command,
@@ -24,6 +27,94 @@ function Invoke-Logged {
     $output | ForEach-Object { Write-Host $_ }
     if ($code -ne 0) {
         throw "$Command exited with $code. See $LogPath"
+    }
+}
+
+function Invoke-EditorPendingProbe {
+    param(
+        [string] $Command,
+        [string[]] $NativeArguments,
+        [string] $LogPath
+    )
+
+    $pendingControl = $null
+    $pendingCommand = $null
+    $pendingResult = $null
+    $pendingFailure = $null
+    $pendingInterrupted = $false
+    $pendingStartAttempted = $false
+    $pendingDisposalErrors = [Collections.Generic.List[string]]::new()
+    try {
+        # Only this new modal probe needs a runtime deadline and private job.
+        . (Join-Path $PSScriptRoot 'acceptance-process.ps1')
+        Initialize-AcceptanceProcess
+        $pendingControl = [ColourWars.Acceptance.OwnedRunControl]::new()
+        $pendingStartAttempted = $true
+        $pendingCommand = [ColourWars.Acceptance.OwnedCommand]::Start(
+            $Command, [string[]]$NativeArguments, $repo, $LogPath,
+            [Console]::OutputEncoding.CodePage, 120, $pendingControl)
+        while (-not $pendingCommand.Poll(100)) { }
+    } catch [System.Management.Automation.PipelineStoppedException] {
+        $pendingInterrupted = $true
+        throw
+    } catch {
+        $pendingFailure = $_
+    } finally {
+        try {
+            if ($null -ne $pendingControl) { $pendingControl.Cancel() }
+        } catch {
+            $pendingDisposalErrors.Add("Cancel: $($_.Exception.Message)")
+        }
+        try {
+            if ($null -ne $pendingCommand) { $pendingCommand.Dispose() }
+        } catch {
+            $pendingDisposalErrors.Add("Command disposal: $($_.Exception.Message)")
+        }
+        try {
+            if ($null -ne $pendingControl) { $pendingControl.Dispose() }
+        } catch {
+            $pendingDisposalErrors.Add("Control disposal: $($_.Exception.Message)")
+        }
+        if ($null -ne $pendingCommand) { $pendingResult = $pendingCommand.Result }
+        # Dispose first: cancellation also needs the terminal outcome and its
+        # cleanup proof. The raw sidecar remains owned by the existing helper.
+        $pendingReceipt = [ordered]@{
+            schema = 1
+            scope = 'editor-pending-property-modal-probe'
+            command = $Command
+            arguments = @($NativeArguments)
+            working_directory = $repo
+            deadline_seconds = 120
+            outcome = if ($null -ne $pendingResult) { $pendingResult.Outcome } elseif ($null -ne $pendingCommand) {
+                'cleanup_uncertain'
+            } elseif ($pendingStartAttempted) {
+                'start_outcome_unknown'
+            } else { 'not_started' }
+            start_attempted = $pendingStartAttempted
+            exit_code = if ($null -ne $pendingResult) { $pendingResult.ExitCode } else { $null }
+            process_id = if ($null -ne $pendingResult) { $pendingResult.ProcessId } else { $null }
+            cleanup_completed = if ($null -ne $pendingResult) { $pendingResult.CleanupCompleted } else { $false }
+            elapsed_ms = if ($null -ne $pendingResult) { $pendingResult.ElapsedMilliseconds } else { $null }
+            log_path = $LogPath
+            raw_log_path = $LogPath + '.raw'
+            message = if ($null -ne $pendingResult) { $pendingResult.Message } else { '' }
+            runner_error = if ($null -ne $pendingFailure) { $pendingFailure.Exception.Message } else { '' }
+            runner_interrupted = $pendingInterrupted
+            disposal_errors = @($pendingDisposalErrors.ToArray())
+        }
+        $pendingJson = ConvertTo-Json -InputObject $pendingReceipt -Depth 4
+        [IO.File]::WriteAllText($LogPath + '.process.json', $pendingJson, [Text.UTF8Encoding]::new($false))
+    }
+    if ([IO.File]::Exists($LogPath)) {
+        Get-Content -LiteralPath $LogPath -Encoding utf8 | ForEach-Object { Write-Host $_ }
+    }
+    if ($null -ne $pendingFailure) { throw $pendingFailure }
+    if ($pendingDisposalErrors.Count -ne 0) {
+        throw "Pending-property probe disposal failed. See $LogPath.process.json"
+    }
+    if ($null -eq $pendingResult -or $pendingResult.Outcome -cne 'exited' -or
+        $null -eq $pendingResult.ExitCode -or $pendingResult.ExitCode -ne 0 -or -not $pendingResult.CleanupCompleted) {
+        throw "Pending-property probe did not exit successfully with confirmed cleanup. See $LogPath.process.json"
     }
 }
 
@@ -295,6 +386,9 @@ try {
         -LogPath (Join-Path $run 'dpi-window.log')
     Invoke-Logged -Command $dpiProbe -Arguments @((Join-Path $run 'canvas-gestures'), '--gestures') `
         -LogPath (Join-Path $run 'canvas-gestures.log')
+    Invoke-EditorPendingProbe -Command $dpiProbe `
+        -NativeArguments @((Join-Path $run 'pending-properties'), '--pending') `
+        -LogPath (Join-Path $run 'pending-properties.log')
     $editor = Join-Path $build 'editor/ColourWarsEditor.exe'
     if (-not (Test-Path -LiteralPath $editor -PathType Leaf)) {
         throw "Missing editor executable: $editor. Run without -SkipBuild first."

@@ -332,6 +332,68 @@ Forced Win32 acquisition failures and the modal error UI were not exercised;
 partial cleanup and paint-session pairing also received source review.
 `ED#20` and attended `ED#5` remain independent gates.
 
+#### Invalid pending-property refusal (`ED#22`)
+
+**Done (2026-10-29).** A separate native `--pending` acceptance process now
+qualifies invalid numeric text across Apply, Save, Save As, Save to My Stages,
+object-list selection, Home navigation, Close/Cancel, Close/Yes followed by the
+validation error, and a controlled expired Close prompt. This adds evidence for
+the existing guards; no production editor behavior changed.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | Invalid pending text reaches a modal error before the guarded action proceeds. | Selected as `ED#22`: qualify real Apply, save, selection, navigation and Close refusal paths against private stage files. Direct data-preservation value; isolate modal driving and its deadline in a separate acceptance process. |
+| 2 | The input fixtures' explicit bitmap/DC cleanup results are unchecked. | Continue `ED#20` with exact ownership receipts before proposing another aggregate resource gate. This does not establish a production leak. |
+| 3 | External capture loss clears drag/pan but leaves the resize flag. | Investigate the complete capture-loss contract separately; no lost-edit defect has been established. |
+
+The existing acceptance friend prepares real undo/redo history, a selected
+spawn coordinate and pending `true` text. Actual window messages exercise each
+guard. All nine contexts preserve the private stage bytes, document/path,
+history, selected rows, pending text and text selection, viewport, thread keys,
+window/font state and empty private profile. Capture and gesture flags remain
+idle. Both CRT and Win32 profile views are restored after the fixture.
+
+One timer lives for the whole fixture. Its nonthrowing callbacks use fixed
+storage and inspect only dialogs with the exact current PID/thread, editor
+owner, class, caption and body. Yes and Cancel require their enabled button
+IDs; the exact finite-number error requires its single enabled acknowledgement
+button. Unexpected dialogs receive no affirmative answer. Each action has a
+ten-second deadline; the controlled expiry is already expired and must cancel
+without saving. Cleanup clears the callback context, kills the timer and checks
+that no owned dialogs remain. The new native invocation alone has a 120-second
+private Job Object deadline, merged logs and a terminal cleanup receipt.
+
+Two private diagnostics corrected fixture assumptions before qualification.
+The error's sole enabled OK control had native ID `2`, with no ID `1`; using its
+actual control follows the existing save-guidance checker. Invalid and valid
+dirty Close/Cancel controls both returned focus from the edit field to the
+hidden editor window. Error paths explicitly refocus the field; Cancel and
+expiry instead require focus in the editor window or one of its controls.
+Raw focus/capture values and the separate expectations remain in the receipts.
+The original failed runs and diagnostic-only builds are retained under
+`ed22-button-diagnostics-run/9d5cecce4a4e4a60ba3a5389df8ec296` and
+`ed22-focus-diagnostics-run/9d574280804244f28fe432564a23357a` in the validation
+cohort; they are not acceptance passes.
+
+All three editor targets and complete checkers pass in Debug and Release under
+PowerShell 7, and the complete Debug checker passes under Windows PowerShell
+5.1. The checker explicitly imports its own host's standard Utility module so
+later file-hash checks remain available after nested native-probe setup. Each
+run has nine passing action rows, ten verified dialog rows, timer cleanup,
+both profile-view restorations and an owned zero exit with cleanup confirmed.
+All 22 guarded source hashes remain unchanged. Existing document, 28-transition
+DPI/font, paint-failure, gesture, save-guidance and four hidden-launch checks
+also pass; the original DPI fixture retains GDI `21 -> 21`.
+
+Evidence: `ed22-candidate/93e462a4f2d14a3f9af471b54303c9a6` under
+`out/validation/implementation-loop-20261028/`. Full checker leaves under
+`out/acceptance/<preset>/level-editor/` are Debug
+`c560caab08d24c93a9a2f40122d9c7c6`, Release
+`c5e565c500704b75afe66adea3addd30`, and PowerShell 5.1 Debug
+`e442f2c3f97c4f0ea2196b13f80a987e`. No foreground input, player files,
+gameplay or engine update was involved. Modal appearance and attended `ED#5`
+remain separate, as do the archived `ED#20` aggregate measurements.
+
 #### Empty-key property targets (`ED#16`)
 
 **Done (2026-10-28).** Unknown metadata may contain an empty object-member

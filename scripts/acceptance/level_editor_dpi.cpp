@@ -90,6 +90,7 @@ namespace colourwars_editor
         static void check_align_origin(Editor& editor, const std::filesystem::path& scratch);
         static void check_ramp_hits(Editor& editor, const std::filesystem::path& scratch);
         static void run_gestures(const std::filesystem::path& scratch);
+        static void run_pending(const std::filesystem::path& scratch);
 
         static void check_controls(Editor& editor)
         {
@@ -249,6 +250,7 @@ namespace colourwars_editor
 
 #include "scripts/acceptance/level_editor_dpi/mechanism_checks.h"
 #include "scripts/acceptance/level_editor_dpi/paint_failure_checks.h"
+#include "scripts/acceptance/level_editor_dpi/pending_checks.h"
 #include "scripts/acceptance/level_editor_dpi/empty_key_checks.h"
 #include "scripts/acceptance/level_editor_dpi/metadata_checks.h"
 #include "scripts/acceptance/level_editor_dpi/gesture_checks.h"
@@ -262,11 +264,13 @@ int wmain(int argc, wchar_t* argv[])
     try
     {
         const bool gestures = argc == 3 && std::wstring(argv[2]) == L"--gestures";
-        if (argc != 2 && !gestures)
-        { throw std::runtime_error("Usage: colourwars_editor_dpi_acceptance <scratch-directory> [--gestures]"); }
+        const bool pending = argc == 3 && std::wstring(argv[2]) == L"--pending";
+        if (argc != 2 && !gestures && !pending)
+        { throw std::runtime_error("Usage: colourwars_editor_dpi_acceptance <scratch-directory> [--gestures|--pending]"); }
         const std::filesystem::path scratch = std::filesystem::absolute(argv[1]);
         std::filesystem::create_directories(scratch);
         if (gestures) { colourwars_editor::EditorDpiProbe::run_gestures(scratch); }
+        else if (pending) { colourwars_editor::EditorDpiProbe::run_pending(scratch); }
         else { colourwars_editor::EditorDpiProbe::run(scratch); }
         return 0;
     }
