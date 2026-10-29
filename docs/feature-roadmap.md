@@ -3880,7 +3880,8 @@ and 60/1 on one. The capture is complete and every row is engine-paired:
 |---:|---:|---:|---:|---:|---:|---:|
 | 59.236 | 16.665 | 16.887 | 33.500 | 33.788 | 613 | 10 |
 
-The ten ~33.5 ms intervals fall every 59 rendered frames (rows 61 to 592),
+The ten ~33.5 ms intervals fall every 59 rendered frames (0-based rows 61
+to 592, CSV `frame` 62 to 593),
 each carrying two updates, while their `end` phase (9–11 ms) matches normal
 frames, so the extra time is outside the measured Present-wait phase. A
 59.951 Hz/60 Hz beat alone would drop a frame about every 20 s, not every

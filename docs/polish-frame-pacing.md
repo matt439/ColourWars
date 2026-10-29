@@ -217,3 +217,8 @@ matches, including ordinary combat/elimination/respawn as well as paint-heavy
 play, and establish the supported CPU/GPU/RAM/display floor from that evidence;
 one high-end machine cannot establish a minimum specification. No minimum hardware
 or performance acceptance is claimed by this increment.
+
+These captures also decide whether `GAP#L9` resumes: its Debug receipt showed a
+~33.5 ms, two-update interval once a second on uncontrolled load. If a visible,
+uncontended capture repeats it, record it in the
+[presentation-rate slice](feature-roadmap.md#presentation-rate-inspection-slice-gapl9).
