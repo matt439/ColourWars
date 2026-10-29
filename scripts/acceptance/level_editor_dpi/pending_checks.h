@@ -194,6 +194,116 @@ namespace colourwars_editor
                     << ',' << (focus_after == editor.value_edit_) << ',' << (capture_after == nullptr)
                     << ',' << (!editor.dragging_ && !editor.resizing_ && !editor.panning_) << ',' << focus_owned << ',' << focus_expected << '\n';
                 evidence.flush();
+                if (action == Action::close_cancel && driver_ok && timer_owned && !expired &&
+                    unchanged_source && unchanged_document && unchanged_history && unchanged_selection && unchanged_property &&
+                    unchanged_pending && unchanged_view && unchanged_keys && shell && same_profile && no_save &&
+                    capture_after == nullptr && !editor.dragging_ && !editor.resizing_ && !editor.panning_ && !focus_expected)
+                {
+                    try
+                    {
+                        const std::wstring invalid_text = window_text(editor.value_edit_);
+                        const std::wstring valid_text = wide(editor.properties_[static_cast<std::size_t>(row)].value);
+                        DWORD original_start = 0, original_end = 0;
+                        SendMessageW(editor.value_edit_, EM_GETSEL, reinterpret_cast<WPARAM>(&original_start), reinterpret_cast<LPARAM>(&original_end));
+                        const auto control_state = [&](bool pending, const std::wstring& text) -> std::array<bool, 13>
+                        {
+                            DWORD first = 0, last = 0;
+                            SendMessageW(editor.value_edit_, EM_GETSEL, reinterpret_cast<WPARAM>(&first), reinterpret_cast<LPARAM>(&last));
+                            std::array<BYTE, 256> current_keys{}; const BOOL have_keys = GetKeyboardState(current_keys.data());
+                            RECT current_rectangle{}; const BOOL have_rectangle = GetWindowRect(editor.window_, &current_rectangle);
+                            return {
+                                pending_file_bytes(stage) == source,
+                                editor.document_.serialize() == document && editor.document_.path() == stage && editor.document_.dirty(),
+                                editor.document_.can_undo() && editor.document_.can_redo() && native_history(editor.document_) == history,
+                                editor.selection_ && selection && same_entry(*editor.selection_, *selection) &&
+                                    SendMessageW(editor.object_list_, LB_GETCURSEL, 0, 0) == object_row,
+                                editor.property_index_ == row && ListView_GetNextItem(editor.property_list_, -1, LVNI_SELECTED) == row &&
+                                    window_text(editor.status_) == status && window_text(editor.window_) == title,
+                                editor.pending() == pending && window_text(editor.value_edit_) == text && first == original_start && last == original_end,
+                                editor.zoom_ == 0.65 && editor.view_x_ == 10.25 && editor.view_y_ == 100.5,
+                                have_keys != FALSE && current_keys == keys,
+                                GetCapture() == nullptr,
+                                !editor.dragging_ && !editor.resizing_ && !editor.panning_,
+                                IsWindow(editor.window_) && IsWindowEnabled(editor.window_) && !IsWindowVisible(editor.window_) &&
+                                    have_rectangle && same_rectangle(rectangle, current_rectangle) && editor.dpi_ == dpi && editor.font_ == font,
+                                pending_windows_profile() == profile.wstring() && pending_crt_profile() == profile.wstring(),
+                                std::filesystem::is_empty(profile)
+                            };
+                        };
+                        std::ofstream control(scratch / "pending-close-cancel-control.csv", std::ios::trunc);
+                        const char* columns = "phase,original_focus,original_active,original_capture,original_focus_expected,source,document,history,selection,property,text_selection,view,keys,capture_none,gestures_idle,shell,profile,no_save,focus_before,focus_after,active_before,active_after,capture_before,capture_after,edit,owner,alive,enabled,dragging,resizing,panning,driver,dialog,answer,owned,title,body,button,hidden,attempted,posted,expired,gone,acknowledgement\n";
+                        control << columns;
+                        std::cout << "DIAGNOSTIC failed Close Cancel control columns: " << columns;
+                        PendingDialogReceipt control_dialog;
+                        bool control_driver = false;
+                        std::array<HWND, 3> control_before{}, control_after{};
+                        std::array<bool, 13> cancelled{};
+                        const auto write_control = [&](const char* phase, const std::array<bool, 13>& state,
+                            const std::array<HWND, 3>& after)
+                        {
+                            const auto row_to = [&](std::ostream& output)
+                            {
+                                output << phase << ',' << reinterpret_cast<UINT_PTR>(focus_after) << ',' << reinterpret_cast<UINT_PTR>(active_after) << ',' << reinterpret_cast<UINT_PTR>(capture_after) << ',' << focus_expected;
+                                for (bool field : state) output << ',' << field;
+                                output << ',' << reinterpret_cast<UINT_PTR>(control_before[0]) << ',' << reinterpret_cast<UINT_PTR>(after[0])
+                                    << ',' << reinterpret_cast<UINT_PTR>(control_before[1]) << ',' << reinterpret_cast<UINT_PTR>(after[1])
+                                    << ',' << reinterpret_cast<UINT_PTR>(control_before[2]) << ',' << reinterpret_cast<UINT_PTR>(after[2])
+                                    << ',' << reinterpret_cast<UINT_PTR>(editor.value_edit_) << ',' << reinterpret_cast<UINT_PTR>(editor.window_)
+                                    << ',' << (IsWindow(editor.window_) != FALSE) << ',' << (IsWindowEnabled(editor.window_) != FALSE)
+                                    << ',' << editor.dragging_ << ',' << editor.resizing_ << ',' << editor.panning_ << ',' << control_driver
+                                    << ',' << reinterpret_cast<UINT_PTR>(control_dialog.dialog) << ',' << control_dialog.answer << ',' << control_dialog.owned
+                                    << ',' << control_dialog.title << ',' << control_dialog.body << ',' << control_dialog.button << ',' << control_dialog.hidden
+                                    << ',' << control_dialog.attempted << ',' << control_dialog.posted << ',' << control_dialog.expired << ',' << control_dialog.gone
+                                    << ',' << control_dialog.acknowledgement << '\n';
+                            };
+                            row_to(control); control.flush();
+                            std::cout << "DIAGNOSTIC failed Close Cancel control: "; row_to(std::cout); std::cout.flush();
+                        };
+                        {
+                            // Normalize only the inspector text/EM range and private-edit focus.
+                            // The measured original failure is immutable; null focus is not restored.
+                            struct RestoreInspector
+                            {
+                                HWND edit; const std::wstring& text; DWORD first, last;
+                                ~RestoreInspector()
+                                {
+                                    SetWindowTextW(edit, text.c_str());
+                                    SendMessageW(edit, EM_SETSEL, first, last);
+                                    SetFocus(edit);
+                                }
+                            } restore_inspector{ editor.value_edit_, invalid_text, original_start, original_end };
+                            SetWindowTextW(editor.value_edit_, valid_text.c_str());
+                            SendMessageW(editor.value_edit_, EM_SETSEL, original_start, original_end);
+                            SetFocus(editor.value_edit_);
+                            require(!editor.pending(), "Close Cancel control needs the existing value without pending text");
+                            control_before = { GetFocus(), GetActiveWindow(), GetCapture() };
+                            driver.begin({ prompt });
+                            SendMessageW(editor.window_, WM_CLOSE, 0, 0);
+                            control_after = { GetFocus(), GetActiveWindow(), GetCapture() };
+                            control_driver = driver.finish();
+                            control_dialog = driver.receipts()[0];
+                            cancelled = control_state(false, valid_text);
+                            write_control("after-cancel", cancelled, control_after);
+                        }
+                        const std::array<HWND, 3> normalized_windows{ GetFocus(), GetActiveWindow(), GetCapture() };
+                        const auto normalized = control_state(true, invalid_text);
+                        write_control("normalized", normalized, normalized_windows);
+                        require(control.good(), "Could not retain the optional Close Cancel control");
+                        require(control_driver && std::all_of(cancelled.begin(), cancelled.end(), [](bool field) { return field; }),
+                            "Valid-dirty Close Cancel control changed its strict private state");
+                        require(std::all_of(normalized.begin(), normalized.end(), [](bool field) { return field; }) &&
+                            normalized_windows[0] == editor.value_edit_,
+                            "Close Cancel control could not normalize its inspector without changing private state");
+                    }
+                    catch (const std::exception& exception)
+                    {
+                        std::cout << "DIAGNOSTIC failed Close Cancel control error: " << exception.what() << std::endl;
+                    }
+                    catch (...)
+                    {
+                        std::cout << "DIAGNOSTIC failed Close Cancel control error: unknown exception" << std::endl;
+                    }
+                }
                 require(evidence.good() && dialogs.good(), "Could not retain pending property action receipts");
                 require(driver_ok && timer_owned && expired == (action == Action::expiry), "Pending property modal driver failed its exact bounded action contract");
                 require(unchanged_source && unchanged_document && unchanged_history && unchanged_selection && unchanged_property &&
