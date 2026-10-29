@@ -22,8 +22,9 @@ direction, the services and the state stack these classes sit in.
 | Specializing a concrete class | [TeamGateStructurePaintable](../game/objects/team_gate_structure_paintable.h), [TranslatingStructurePaintable](../game/objects/translating_structure_paintable.h) | `StructurePaintable` is concrete and built directly for ordinary painted walls; these two are `final` subclasses. The gate adds a team permission settled from its own held paint and overrides `mask`; the translating structure adds horizontal motion and overrides its geometry, contact and paint-surface functions. Both keep the base's tiles and scoring. |
 | Implementation inheritance | [CrudeDrawing](../game/objects/crude_drawing.h), [PlayerBadge](../game/objects/player_badge.h), [Monitor](../game/objects/monitor.h) | A base over the engine's `TextureObject` whose constructor and drawing helpers (`fill`, `blob`, `ring`, `line`, ...) are protected. Nine `final` leaves reuse those helpers: `CountdownArt`, `FigureActing`, `FigureAttachments`, `Monitor`, `PlayerBadge`, `RevealArt`, `ScreenCursor`, `Silhouette` and `TeammateMarker`. They share how to draw, not an interface: owners hold and call each leaf by its own type. |
 | Runtime polymorphism | [Player::update_weapon_and_get_projectiles](../game/objects/player.cpp), [WeaponBuilder](../game/objects/weapon_builder.cpp) | Player owns a `unique_ptr<Weapon>`; the factory chooses its concrete type and virtual calls select the behavior. Player does not switch on weapon classes. |
+| Double dispatch and role queries | [Collider](../game/objects/collider.h), [Structure](../game/objects/structure.h), [Player::on_structure_contact](../game/objects/player.cpp) | The engine names the other party of a contact only as a `CollisionObject`. `Collider::on_contact` asks that party to `touch` this one, and its `touch` calls the handler for its own class: `on_structure_contact`, `on_player_contact` or `on_projectile_contact`. A structure then answers queries (`jump_through`, `ramp`, `slab_geometry`, `top_paint_team`, `cover_point`, `passable_for`) instead of being cast to its leaf. `Collider::of` is the one conversion from the engine's type, and no class reads another's tag to decide how to respond. |
 | Factory over a closed family | [LevelObjectBuilder](../game/objects/level_object_builder.cpp), [TerrainMaterial](../game/objects/terrain_material.h), [implementation](../game/objects/terrain_material.cpp) | The level object builder reads a record's `type`, `gate` and `motion` fields and returns a `StructurePaintable`, `TeamGateStructurePaintable`, `TranslatingStructurePaintable` or `FixedSlabPaintable` as an owning collision object. `TerrainMaterial::make` maps a level's `material` name and collision type to `GroundMaterial`, `PencilMaterial` and their siblings, refusing a mismatch. Each leaf works out its drawing in its constructor ([terrain_material_drawings.cpp](../game/objects/terrain_material_drawings.cpp)); `OrientedTerrainMaterial` shares the long-axis layout between pencil, ruler, eraser and tin. A `Structure` owns its material and never asks which one it has. |
-| Overriding and shared algorithms | [WeaponRoller](../game/objects/weapon_roller.cpp), [WeaponBucket](../game/objects/weapon_bucket.cpp) | Roller changes aim and tint; bucket changes firing sound. Shared ammunition and firing work remains in the base workflow. |
+| Overriding and shared algorithms | [WeaponRoller](../game/objects/weapon_roller.cpp), [WeaponBucket](../game/objects/weapon_bucket.cpp), [ProjectileRolling](../game/objects/projectile_rolling.h) | Roller changes aim, tint, its sleeve's motion and pose, and answers `has_aim_marker` with false; bucket changes firing sound. The rolling projectile overrides its contact handlers, `resolve_travel`, `launch_hits_players` and `duds_on_bare_cover`. Shared ammunition, firing and sweep work remains in the base workflow, which never asks which tool or kind it is running. |
 | Composition | [PaintTile](../game/objects/paint_tile.h), [OptionRow](../game/states/option_row.h) | A tile owns its splash animation. A settings row owns its label and value, and accepts an adjustment callback. |
 | Ownership and borrowing | [Level](../game/objects/level.h), [LevelBuilder](../game/objects/level_builder.cpp) | Scene owns its objects; Level owns Scene and borrows Player pointers. Moving a `unique_ptr` transfers ownership. |
 | Dependency injection | [Player constructor](../game/objects/player.h), [GameData](../game/game_data.h), [main](../game/main.cpp) | Constructors receive their services and tuning. The application entry point owns and connects their lifetimes. |
@@ -32,8 +33,8 @@ direction, the services and the state stack these classes sit in.
 
 `Weapon` and `RelativeVelocityWeapon` are concrete classes. Sprayer and mister
 are constructed directly as `RelativeVelocityWeapon` with different tuning.
-`Projectile`, `DiffusingProjectile`, `PaintableObject`, `MenuPage` and
-`MainMenuPage` are abstract. `CrudeDrawing` is not abstract, but only its
+`Collider`, `Projectile`, `DiffusingProjectile`, `PaintableObject`, `MenuPage`
+and `MainMenuPage` are abstract. `CrudeDrawing` is not abstract, but only its
 leaves can construct it. `override` checks that a declaration actually
 overrides a base function; `final` closes a leaf class to further derivation.
 An overload has a different parameter list and is a different function, even
@@ -153,11 +154,12 @@ colour and one frame, so it is not used here.
    objects into Scene through the engine's `CollisionObject` interface.
 5. [Level::update_level_logic](../game/objects/level.cpp) coordinates Scene's
    update/contact phases and the game's swept projectile movement.
-   [Projectile::resolve_movement_contacts](../game/objects/projectile.cpp)
-   prevents a fast flying shot from passing through intervening cover. Collision
-   responses operate through virtual `on_contact` methods; the engine does not
-   know what painting means.
-6. [StructurePaintable::on_contact](../game/objects/structure_paintable.cpp)
+   [Projectile::resolve_movement_contacts](../game/objects/projectile_contacts.cpp)
+   prevents a fast flying shot from passing through intervening cover. The
+   engine calls each party's `on_contact`, and
+   [Collider](../game/objects/collider.h) dispatches it a second time on the
+   other party's class; the engine does not know what painting means.
+6. [StructurePaintable::on_projectile_contact](../game/objects/structure_paintable.cpp)
    identifies the reached tiles and calls
    [PaintTile::paint](../game/objects/paint_tile.cpp). A capture changes team and
    player ownership; friendly repaint retains the original player's credit.
@@ -280,14 +282,18 @@ a case in [ProjectileBuilder](../game/objects/projectile_builder.cpp). Decide
 whether it is swept: list it in `is_swept` beside the enum, or
 [tunnelling_limits.cpp](../game/tunnelling_limits.cpp) refuses to compile
 until the unswept kind has a tunnelling bound.
-Follow the existing team-tag mappings and contact handling in
-[collision_object_type.h](../game/objects/collision_object_type.h),
-[collision_object_type.cpp](../game/objects/collision_object_type.cpp),
-[Projectile](../game/objects/projectile.cpp),
-[Player](../game/objects/player.cpp) and
-[StructurePaintable](../game/objects/structure_paintable.cpp). A new shape or
-trajectory must still satisfy the launch/sweep assumptions; changing the enum
-alone does not establish that behavior.
+Follow the existing team-tag mappings in
+[collision_object_type.h](../game/objects/collision_object_type.h) and
+[collision_object_type.cpp](../game/objects/collision_object_type.cpp), which
+choose its layer and mask. Its contact rules belong to its class: the base
+[Projectile](../game/objects/projectile.h) dies on its first contact and sweeps
+its travel, and a kind that behaves otherwise overrides `on_structure_contact`,
+`on_player_contact`, `resolve_travel`, `launch_hits_players` or
+`duds_on_bare_cover`, as [ProjectileRolling](../game/objects/projectile_rolling.h)
+does. Players and structures receive it as a `Projectile` through
+`on_projectile_contact` and need no change. A new shape or trajectory must still
+satisfy the launch/sweep assumptions; changing the enum alone does not
+establish that behavior.
 
 The classes named `WeaponBuilder` and `ProjectileBuilder` are factories: one
 call selects and constructs finished objects. `LevelBuilder` assembles a larger
@@ -303,8 +309,9 @@ not need artificial inheritance or every design pattern to fill a checklist.
 
 Scoring is a role, not a registration. Level keeps no list of scored objects:
 [Level::level_end_info and Level::paint_surfaces](../game/objects/level.cpp)
-walk Scene's collision objects and `dynamic_cast` each to `PaintableObject`.
-Whatever answers is scored, whatever its collision tag. The only check runs the
+walk Scene's collision objects and ask each for its `paintable()` role
+([Collider](../game/objects/collider.h)). Whatever answers is scored, whatever
+its collision tag. The only check runs the
 other way: an object tagged `structure_paintable` that is not a
 `PaintableObject` throws. The steps below are what the team gate and the fixed
 scored slab needed.
@@ -320,8 +327,8 @@ scored slab needed.
    frame, take `Structure` and `PaintableObject` directly, as
    [FixedSlabPaintable](../game/objects/fixed_slab_paintable.h) does, and own
    the scoring state: its own `PaintTile`s, `PaintCredit` and
-   `PaintSplashClips`. Tiles borrow the splash clips, so copying is deleted in
-   both bases.
+   `PaintSplashClips`, and answer `paintable()` with itself. Tiles borrow the
+   splash clips, so copying is deleted in both bases.
 2. Keep the [PaintableObject](../game/objects/paintable_object.h) contract.
    `paint_total` reports area held now (neutral area in `total`, team areas,
    owner areas by paint owner) and the match's `PaintCredit`.
@@ -344,20 +351,23 @@ scored slab needed.
    how neighbouring faces clip their paint, add it to the `StageContext`
    pre-pass as well, as the slab does through `context.slabs`. Scene owns the
    result from there.
-5. Give per-step behaviour a typed borrow. Level collects its gates in
-   `build_opening_frame` ([level_opening.cpp](../game/objects/level_opening.cpp))
+5. Give per-step behaviour a typed borrow through a role. Level collects its
+   gates in `build_opening_frame` ([level_opening.cpp](../game/objects/level_opening.cpp))
    and its movers in `admit_horizontal_structures`
-   ([level_horizontal_motion.cpp](../game/objects/level_horizontal_motion.cpp)),
-   both by `dynamic_cast`, and calls them each step (`settle_team_gates`). The
-   slab is static and needed none of this.
-6. Teach contacts only what the shape needs. The gate inherits the base's
-   painting `on_contact`; the translating structure overrides it only to shift
-   the splash back into its rest frame before handing it to the base's
-   `paint_from_projectile`. The slab's sloped face needed its
-   own player support (`Player::on_fixed_slab_contact` in
-   [player.cpp](../game/objects/player.cpp)) and its own projectile resolution
-   in [projectile_contacts.cpp](../game/objects/projectile_contacts.cpp), where
-   the translating structure's relative sweep also lives.
+   ([level_horizontal_motion.cpp](../game/objects/level_horizontal_motion.cpp))
+   by asking each [Structure](../game/objects/structure.h) for its `gate()` or
+   `mover()`, which those two leaves answer with themselves, and calls them each
+   step (`settle_team_gates`). The slab is static and needed none of this.
+6. Teach contacts only what the shape needs, as answers to `Structure`'s
+   queries rather than as a new case in its callers. The gate inherits the
+   base's painting `on_projectile_contact` and answers `passable_for`; the
+   translating structure overrides the handler only to shift the splash back
+   into its rest frame before handing it to the base's `paint_from_projectile`.
+   The slab answers `slab_geometry`, `top_paint_team`, `top_paint_colour` and
+   `cover_point` for its sloped face, which `Player::on_fixed_slab_contact` in
+   [player.cpp](../game/objects/player.cpp) and the projectile resolution in
+   [projectile_contacts.cpp](../game/objects/projectile_contacts.cpp) read;
+   the translating structure's relative sweep lives there too.
 7. Make it authorable and refused in the same words by game and editor: the
    [level schema](level.schema.json) and [level format](level-format.md), the
    editor's [level document](../editor/level_document.cpp) and

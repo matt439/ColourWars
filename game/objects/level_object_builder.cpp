@@ -283,6 +283,44 @@ namespace
 
 	// Platforms, not walls or the stage's foundations.
 	constexpr float shadow_caster_limit = 200.0f;
+
+	// The rules every collision record meets before its type is built, and
+	// whether it is a team gate.
+	bool checked_record_gate(const JsonValue& json)
+	{
+		if (json.has("drift"))
+		{
+			throw std::runtime_error(json.where() + ": drift belongs only on decorative Visual entries");
+		}
+		const std::string type = json.string("type");
+		if (json.has("motion") && type != "StructurePaintable")
+		{
+			throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
+		}
+		// A team gate is read by the shared rule, so the editor refuses exactly
+		// the gates refused here.
+		bool gate = false;
+		if (json.has("gate"))
+		{
+			team_gate_contract::Record record;
+			record.gate = json.string("gate");
+			record.structure_paintable = type == "StructurePaintable";
+			record.moving = json.has("motion");
+			if (record.structure_paintable)
+			{
+				record.solid = json.string("collision_type") == "STRUCTURE_PAINTABLE";
+				const JsonValue face = json.object("paintable_faces");
+				record.any_paintable_face = face.boolean("left") || face.boolean("top") ||
+					face.boolean("right") || face.boolean("bottom");
+			}
+			try { gate = team_gate_contract::decode(record); }
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(json.where() + ": gate: " + error.what());
+			}
+		}
+		return gate;
+	}
 }
 
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
@@ -303,46 +341,11 @@ std::unique_ptr<CollisionObject>
 		const TeamColour& team_colours,
 		const StageContext& context) const
 {
-	if (json.has("drift"))
-	{
-		throw std::runtime_error(json.where() + ": drift belongs only on decorative Visual entries");
-	}
+	const bool gate = checked_record_gate(json);
 	const std::string type = json.string("type");
-	if (json.has("motion") && type != "StructurePaintable")
-	{
-		throw std::runtime_error(json.where() + ": motion belongs only on flat StructurePaintable entries");
-	}
-	// A team gate is read by the shared rule, so the editor refuses exactly
-	// the gates refused here.
-	bool gate = false;
-	if (json.has("gate"))
-	{
-		team_gate_contract::Record record;
-		record.gate = json.string("gate");
-		record.structure_paintable = type == "StructurePaintable";
-		record.moving = json.has("motion");
-		if (record.structure_paintable)
-		{
-			record.solid = json.string("collision_type") == "STRUCTURE_PAINTABLE";
-			const JsonValue face = json.object("paintable_faces");
-			record.any_paintable_face = face.boolean("left") || face.boolean("top") ||
-				face.boolean("right") || face.boolean("bottom");
-		}
-		try { gate = team_gate_contract::decode(record); }
-		catch (const std::invalid_argument& error)
-		{
-			throw std::runtime_error(json.where() + ": gate: " + error.what());
-		}
-	}
 	if (type == "FixedSlabPaintable")
 	{
-		(void)collision_type_of(json, type, { CollisionObjectType::structure_fixed_slab });
-		const FixedSlabSpec spec = decode_slab(json);
-		const JsonValue face = json.object("paintable_faces");
-		const PaintableFaces faces{ face.boolean("left"), face.boolean("top"),
-			face.boolean("right"), face.boolean("bottom") };
-		return std::make_unique<FixedSlabPaintable>(spec, this->render_resources_, this->audio_resources_,
-			this->preferences_, this->paint_, team_colours, faces, context.flat);
+		return this->build_fixed_slab(json, team_colours, context);
 	}
 	if (type == "Structure")
 	{
@@ -565,6 +568,20 @@ LevelObjectBuilder::StageContext
 	return context;
 }
 
+std::unique_ptr<FixedSlabPaintable>
+	LevelObjectBuilder::build_fixed_slab(const JsonValue& json,
+		const TeamColour& team_colours, const StageContext& context) const
+{
+	const std::string type = json.string("type");
+	(void)collision_type_of(json, type, { CollisionObjectType::structure_fixed_slab });
+	const FixedSlabSpec spec = decode_slab(json);
+	const JsonValue face = json.object("paintable_faces");
+	const PaintableFaces faces{ face.boolean("left"), face.boolean("top"),
+		face.boolean("right"), face.boolean("bottom") };
+	return std::make_unique<FixedSlabPaintable>(spec, this->render_resources_, this->audio_resources_,
+		this->preferences_, this->paint_, team_colours, faces, context.flat);
+}
+
 std::vector<std::unique_ptr<CollisionObject>>
 	LevelObjectBuilder::build_collision_objects(const JsonValue& json,
 		const TeamColour& team_colours) const
@@ -579,14 +596,19 @@ std::vector<std::unique_ptr<CollisionObject>>
 	}
 	// This bounded shape supports clipping against existing flat terrain.
 	// Intersecting slabs need a separate shared-boundary/credit contract.
+	const auto is_slab = [](const CollisionObject& object)
+	{
+		const Structure* structure = Collider::of(object).structure();
+		return structure != nullptr && structure->slab_geometry() != nullptr;
+	};
 	for (size_t index = 0; index < collision_objects.size(); ++index)
 	{
-		const auto* slab = dynamic_cast<const FixedSlabPaintable*>(collision_objects[index].get());
-		if (slab == nullptr) { continue; }
+		const CollisionObject& slab = *collision_objects[index];
+		if (!is_slab(slab)) { continue; }
 		for (size_t previous = 0; previous < index; ++previous)
 		{
-			const auto* other = dynamic_cast<const FixedSlabPaintable*>(collision_objects[previous].get());
-			if (other != nullptr && narrow_phase(*slab->shape(), *other->shape()))
+			const CollisionObject& other = *collision_objects[previous];
+			if (is_slab(other) && narrow_phase(*slab.shape(), *other.shape()))
 			{ throw std::runtime_error(json.at(index).where() + ": intersecting fixed slabs are unsupported"); }
 		}
 	}
@@ -605,9 +627,9 @@ std::vector<std::unique_ptr<GameObject>>
 		if (object.has("motion")) { continue; }
 		if (type == "FixedSlabPaintable")
 		{
-			const auto owner = this->build_collision_object(object, TeamColour{}, context);
-			const auto& slab = dynamic_cast<const FixedSlabPaintable&>(*owner);
-			shadows.push_back(std::make_unique<FixedSlabShadow>(slab.geometry(), slab.exposed_bottom(), this->render_resources_));
+			(void)checked_record_gate(object);
+			const auto slab = this->build_fixed_slab(object, TeamColour{}, context);
+			shadows.push_back(std::make_unique<FixedSlabShadow>(slab->geometry(), slab->exposed_bottom(), this->render_resources_));
 			continue;
 		}
 		if (!object.has("material") || (type != "Structure" && type != "StructurePaintable"))
@@ -648,7 +670,8 @@ std::vector<std::unique_ptr<GameObject>>
 	std::vector<std::unique_ptr<GameObject>> shadows;
 	for (size_t index = 0; index < objects.size(); ++index)
 	{
-		const auto* mover = dynamic_cast<const TranslatingStructurePaintable*>(objects[index].get());
+		const Structure* structure = Collider::of(*objects[index]).structure();
+		const TranslatingStructurePaintable* mover = structure != nullptr ? structure->mover() : nullptr;
 		if (mover == nullptr || !json.at(index).has("material")) { continue; }
 		const RectangleF anchor = mover->motion_state().spec.anchor;
 		if (anchor.width > anchor.height && anchor.height < shadow_caster_limit)

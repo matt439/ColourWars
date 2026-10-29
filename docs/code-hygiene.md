@@ -296,11 +296,42 @@ and Debug attachment scopes created in `init()`.
 
 ### Structure queries instead of casts (`HYG#42`)
 
-Give `Structure` (or a role interface) the support and moving-surface queries
-`Player`, `Projectile` and `Level` cast for; turn the bases' tag tests
-(`WeaponType::roller`, projectile kinds) into virtuals with defaults; replace the
-collision tag switch-and-cast with game-side double dispatch. Update the guide's
-extension recipes. The engine half is `ENG#29`.
+**Done 2026-10-30.** Structures, players and projectiles now derive from the
+new abstract [Collider](../game/objects/collider.h), a game-side
+`labrador::CollisionObject`. Its final `on_contact` asks the other party to
+`touch` this one, and that party's `touch` calls `on_structure_contact`,
+`on_player_contact` or `on_projectile_contact`. `Player` and `Projectile` no
+longer decode the tag of what they touched, and the painted structures no longer
+cast it. `Collider` answers the roles `structure()`, `projectile()` and
+`paintable()`. `Collider::of` is the one conversion from the engine's type and
+refuses anything else. That cross-cast is now `ENG#29`'s exhibit in the
+[ledger](review/engine-reports.md). [Structure](../game/objects/structure.h)
+answers `jump_through`, `ramp`, `ramp_rises_right`, `flat`, `slab_geometry`,
+`top_paint_team`/`top_paint_colour`, `holds_flat_top_paint`, `passable_for` and
+`cover_point`, and the roles `mover()` and `gate()`. With those, `Player`,
+`Projectile`, `Level`, `LevelObjectBuilder`, content validation and the stage
+preview have no `dynamic_cast` to a structure leaf left. Of the 33 in
+`game/objects`, only `Collider::of`'s and a terrain-shape cast remain. The base
+tag tests are virtuals now. `Weapon::has_aim_marker`,
+`advance_travel_motion` and `motion_pose` are overridden by `WeaponRoller`.
+`Projectile::resolve_travel`, `launch_hits_players` and `duds_on_bare_cover`
+are overridden by `ProjectileRolling`, which also answers both contact handlers.
+The translating structure's redundant roller test is gone. Some tag tests
+remain: those for the sprayer and mister, which have no class of their own; the
+bucket and sniper ones beside them; `is_swept`, the tunnelling contract's table;
+and the tag-only classifications (`is_structure`/`is_projectile` in the bot
+queries, idle drips, the any-slab test in `resolve_sweep`). None of these casts,
+and they keep the per-step cost where it was. `lethal_provenance` now checks
+that a tag-only proxy is refused rather than damaging by tag. The OOP guide
+gained a double-dispatch row, and its projectile and scored-object recipes now
+say to answer these queries. Both presets build under `/W4 /WX`. The full
+default list passed in Release (74 cases), including the bot trials' fingerprints
+and the movement, paint, slab, gate and moving-structure cases. In Debug
+without the four slow cases, 68 passed in the working tree. `moving_structure`
+and `bot_runtime` did not compile there, and `balance_runner` did not run,
+because of `HYG#35`'s uncommitted `ReplayFile` work in that tree. All three,
+with `lethal_provenance`, passed in a scratch worktree holding only this
+change. `check-startup.ps1` passed on the Debug executable.
 
 ### Menu page bases named by role (`HYG#43`)
 

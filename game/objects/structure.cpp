@@ -31,7 +31,7 @@ Structure::Structure(const std::string& sheet_name,
 
 void Structure::update(float /*dt*/)
 {
-	
+
 }
 void Structure::draw(DrawList& draw_list) const
 {
@@ -56,9 +56,9 @@ RectangleF Structure::bounds() const
 {
 	return this->sprite_rectangle_;
 }
-void Structure::on_contact(const CollisionObject& /*other*/,
-	const Vector2F& /*normal*/, float /*penetration*/)
+void Structure::touch(Collider& receiver, const Vector2F& normal, float penetration) const
 {
+	receiver.on_structure_contact(*this, normal, penetration);
 }
 CollisionLayer Structure::layer() const
 {
@@ -87,6 +87,52 @@ bool Structure::for_deletion() const
 const TerrainMaterial* Structure::material() const
 {
 	return this->material_.get();
+}
+bool Structure::jump_through() const
+{
+	return this->collision_type_ == CollisionObjectType::structure_jump_through;
+}
+bool Structure::ramp() const
+{
+	return is_structure_ramp(this->collision_type_);
+}
+bool Structure::ramp_rises_right() const
+{
+	return this->collision_type_ == CollisionObjectType::structure_ramp_right;
+}
+bool Structure::flat() const
+{
+	return !this->ramp() && this->slab_geometry() == nullptr;
+}
+PlayerTeam Structure::top_paint_team(float /*x*/) const
+{
+	return PlayerTeam::none;
+}
+std::optional<Colour> Structure::top_paint_colour(float /*x*/) const
+{
+	return std::nullopt;
+}
+bool Structure::passable_for(PlayerTeam /*team*/) const
+{
+	return false;
+}
+Vector2F Structure::cover_point(const Vector2F& shot_centre, const Vector2F& normal) const
+{
+	// The normal points from the shot into this cover. Anchor the cue on its
+	// actual face, with tangential position clamped to the face (including
+	// corner hits and very thin walls).
+	const RectangleF cover = this->shape()->bounding_box();
+	Vector2F point(std::clamp(shot_centre.x, cover.left(), cover.right()),
+		std::clamp(shot_centre.y, cover.top(), cover.bottom()));
+	if (std::abs(normal.x) >= std::abs(normal.y))
+	{
+		point.x = normal.x > 0.0f ? cover.left() : cover.right();
+	}
+	else
+	{
+		point.y = normal.y > 0.0f ? cover.top() : cover.bottom();
+	}
+	return point;
 }
 const RectangleF& Structure::rectangle() const
 {

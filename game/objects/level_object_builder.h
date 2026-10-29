@@ -12,6 +12,7 @@
 
 struct GatePermissionPresentation;
 struct FerryDirectionPresentation;
+class FixedSlabPaintable;
 
 class LevelObjectBuilder
 {
@@ -74,6 +75,11 @@ private:
 
 	std::unique_ptr<labrador::CollisionObject>
 		build_collision_object(const labrador::JsonValue& json,
+			const TeamColour& team_colours,
+			const StageContext& context) const;
+	// A FixedSlabPaintable record, built by its own type for its shadow too.
+	std::unique_ptr<FixedSlabPaintable>
+		build_fixed_slab(const labrador::JsonValue& json,
 			const TeamColour& team_colours,
 			const StageContext& context) const;
 

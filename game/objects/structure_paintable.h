@@ -74,16 +74,20 @@ public:
 	void draw_miniature(labrador::DrawList& draw_list) const override;
 	// Surface splashes affect rendering extent, never layout/contact geometry.
 	mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
-	void on_contact(const labrador::CollisionObject& other,
+	// Players are ignored; only projectiles paint the surface.
+	void on_projectile_contact(const Projectile& other,
 		const mattmath::Vector2F& normal, float penetration) override;
 
+	PaintableObject* paintable() override { return this; }
+	const PaintableObject* paintable() const override { return this; }
 	PaintTotal paint_total() const override;
 	void append_paint_surfaces(std::vector<PaintSurfaceSample>& samples,
 		std::size_t source_index = 0) const override;
 	// Ownership directly under a confirmed top-support contact. Tile intervals
 	// are half open, so a seam has one answer; side/bottom paint never counts.
-	virtual PlayerTeam top_paint_team(float x) const;
-	std::optional<labrador::Colour> top_paint_colour(float x) const;
+	PlayerTeam top_paint_team(float x) const override;
+	std::optional<labrador::Colour> top_paint_colour(float x) const override;
+	bool holds_flat_top_paint() const override { return true; }
 	virtual std::vector<PaintRunoffVisual> runoff_visuals() const;
 
 protected:

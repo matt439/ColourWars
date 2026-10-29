@@ -101,6 +101,7 @@ add_library(colourwars_game STATIC
     debug/view_commands.cpp
 
     objects/blocked_shot_feedback.cpp
+    objects/collider.cpp
     objects/collision_object_type.cpp
     objects/combat_feedback.cpp
     objects/airbrush_shadow.cpp

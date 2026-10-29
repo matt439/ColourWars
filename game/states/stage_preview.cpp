@@ -54,7 +54,7 @@ void StagePreview::set_stage(const std::string& stage)
 	// Configure only the new objects before replacing the previous selection.
 	for (const auto& object : collision_objects)
 	{
-		if (auto* structure = dynamic_cast<Structure*>(object.get()))
+		if (Structure* structure = Collider::of(*object).structure())
 		{
 			structure->set_miniature(true);
 		}

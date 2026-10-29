@@ -19,8 +19,13 @@ public:
     FixedSlabPaintable& operator=(const FixedSlabPaintable&) = delete;
 
     const FixedSlabGeometry& geometry() const;
-    PlayerTeam top_paint_team(float world_x) const;
-    std::optional<labrador::Colour> top_paint_colour(float world_x) const;
+    const FixedSlabGeometry* slab_geometry() const override;
+    // Read along the slope, at the world x of a player's support point.
+    PlayerTeam top_paint_team(float world_x) const override;
+    std::optional<labrador::Colour> top_paint_colour(float world_x) const override;
+    // The face point is taken in the slab's own frame, not its bounding box.
+    mattmath::Vector2F cover_point(const mattmath::Vector2F& shot_centre,
+        const mattmath::Vector2F& normal) const override;
     const TerrainMaterial& local_material() const;
     const std::vector<std::pair<float, float>>& exposed_bottom() const;
 
@@ -29,8 +34,10 @@ public:
     void draw_miniature(labrador::DrawList& draw_list) const override;
     mattmath::RectangleF bounds() const override;
     mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
-    void on_contact(const labrador::CollisionObject& other,
+    void on_projectile_contact(const Projectile& other,
         const mattmath::Vector2F& normal, float penetration) override;
+    PaintableObject* paintable() override { return this; }
+    const PaintableObject* paintable() const override { return this; }
     PaintTotal paint_total() const override;
     void append_paint_surfaces(std::vector<PaintSurfaceSample>& samples,
         std::size_t source_index = 0) const override;

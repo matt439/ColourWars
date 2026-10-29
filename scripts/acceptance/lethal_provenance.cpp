@@ -157,10 +157,16 @@ namespace
             require(credited(*victim) == 0 && victim->lethal_projectiles().uncredited == 1,
                 "Invalid projectile owner was credited or lost instead of reported uncredited");
         }
+        // Contacts dispatch on the other party's class (Collider), never its
+        // tag: an engine object that only carries a projectile tag is refused.
         ProjectileTagProxy proxy;
-        auto tagged = world.player(); world.eliminate(*tagged, proxy);
-        require(credited(*tagged) == 0 && tagged->lethal_projectiles().uncredited == 1,
-            "A tag-only collision proxy changed damage behavior or fabricated a typed source");
+        auto tagged = world.player(); const float untouched = tagged->health();
+        bool refused = false;
+        try { tagged->on_contact(proxy, Vector2F::ZERO, 0.0f); }
+        catch (const std::logic_error&) { refused = true; }
+        require(refused && tagged->health() == untouched && credited(*tagged) == 0 &&
+            tagged->lethal_projectiles().uncredited == 0,
+            "A tag-only collision proxy was answered by its tag instead of refused");
         // Deliberately bypass masks here to preserve the pre-existing public
         // callback behavior while proving that friendly metadata never earns credit.
         auto forced = world.player(); auto friendly = world.shot(PlayerTeam::a, paint_owners::index(-1, 2));

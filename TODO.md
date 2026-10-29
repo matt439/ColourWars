@@ -121,7 +121,8 @@ comparison and physical-pad check; values remain provisional.
 | `HYG#39` | OPEN | MED | M | Pass an explicit match random stream into the level build instead of seeding the global `rand()`. [Scope](docs/code-hygiene.md#an-explicit-match-random-stream-hyg39). |
 | `HYG#40` | OPEN | MED | XL | Compose `Level` from owned parts: grouped constructor inputs, extracted collaborators and a world-query interface for the bots. [Scope](docs/code-hygiene.md#level-composed-of-owned-parts-hyg40). |
 | `HYG#41` | OPEN | MED | M | Put `GameLevel`'s focus, pause and audio rules in one owned suspension object; pair its scopes with `init()`. [Scope](docs/code-hygiene.md#gamelevels-suspension-rules-in-one-object-hyg41). |
-| `HYG#42` | OPEN | MED | L | Give `Structure` the queries callers cast for, turn base tag tests into virtuals, and dispatch collisions without tag casts. [Scope](docs/code-hygiene.md#structure-queries-instead-of-casts-hyg42). |
+@@END
+
 | `HYG#43` | OPEN | MED | L | Name menu page bases by role: a settings-panel base without `finish()`, a roster-setup base, no unused hooks. [Scope](docs/code-hygiene.md#menu-page-bases-named-by-role-hyg43). |
 | `HYG#44` | OPEN | LOW | M | A `MenuOwner` interface in place of `MenuContext`'s `std::function` slots, and main-menu navigation in one place. [Scope](docs/code-hygiene.md#menu-owner-and-navigation-hyg44). |
 | `HYG#45` | OPEN | MED | L | Build seat commands outside `Level`, split `PlayerInputData` into commands and shell signals, and derive input defaults from one source. [Scope](docs/code-hygiene.md#device-to-command-in-one-place-hyg45). |

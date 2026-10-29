@@ -36,6 +36,10 @@ public:
 
     // The team that passes through now, or none.
     PlayerTeam open_for() const;
+    // A real team that the gate is open for now.
+    bool passable_for(PlayerTeam team) const override;
+    TeamGateStructurePaintable* gate() override { return this; }
+    const TeamGateStructurePaintable* gate() const override { return this; }
     // The team the paint held now opens it for, or none.
     PlayerTeam paint_leader() const;
     // The last settlement retained permission because a living permitted

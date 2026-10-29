@@ -126,6 +126,10 @@ CollisionTag Projectile::tag() const
 {
     return to_collision_tag(this->collision_type());
 }
+void Projectile::touch(Collider& receiver, const Vector2F& normal, float penetration) const
+{
+    receiver.on_projectile_contact(*this, normal, penetration);
+}
 CollisionObjectType Projectile::collision_type() const
 {
     ProjectileType type = this->type();

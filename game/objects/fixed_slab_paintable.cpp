@@ -188,16 +188,15 @@ RectangleF FixedSlabPaintable::cull_bounds(float units_per_pixel) const
     return result;
 }
 
-void FixedSlabPaintable::on_contact(const CollisionObject& other,
+void FixedSlabPaintable::on_projectile_contact(const Projectile& projectile,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
-    if (other.layer() != collision_layers::PROJECTILE_TEAM_A &&
-        other.layer() != collision_layers::PROJECTILE_TEAM_B) { return; }
-    if (other.shape()->shape_type() != ShapeType::rectangle)
+    if (projectile.layer() != collision_layers::PROJECTILE_TEAM_A &&
+        projectile.layer() != collision_layers::PROJECTILE_TEAM_B) { return; }
+    if (projectile.shape()->shape_type() != ShapeType::rectangle)
     { throw std::invalid_argument("Fixed slab paint currently requires rectangular projectile footprints"); }
-    const Projectile& projectile = dynamic_cast<const Projectile&>(other);
-    const PlayerTeam team = other.layer() == collision_layers::PROJECTILE_TEAM_A ? PlayerTeam::a : PlayerTeam::b;
-    const Quad footprint = this->geometry_.local_quad(other.shape()->bounding_box());
+    const PlayerTeam team = projectile.layer() == collision_layers::PROJECTILE_TEAM_A ? PlayerTeam::a : PlayerTeam::b;
+    const Quad footprint = this->geometry_.local_quad(projectile.shape()->bounding_box());
     bool painted = false, captured = false;
     for (Tile& tile : this->tiles_)
     {
@@ -258,4 +257,24 @@ std::optional<Colour> FixedSlabPaintable::top_paint_colour(float world_x) const
     const PlayerTeam team = this->top_paint_team(world_x);
     if (team == PlayerTeam::none) { return std::nullopt; }
     return this->team_colours_.team_colour(team);
+}
+
+const FixedSlabGeometry* FixedSlabPaintable::slab_geometry() const
+{
+    return &this->geometry_;
+}
+
+Vector2F FixedSlabPaintable::cover_point(const Vector2F& shot_centre, const Vector2F& normal) const
+{
+    // Clamp into the slab's local box, then put the point on the face the
+    // normal enters: an end cap along the tangent, else the top or underside.
+    const auto& geometry = this->geometry_;
+    Vector2F local = geometry.to_local(shot_centre);
+    local.x = std::clamp(local.x, 0.0f, geometry.length());
+    local.y = std::clamp(local.y, 0.0f, FixedSlabGeometry::normal_thickness);
+    const float along = normal.dot(geometry.tangent());
+    const float across = normal.dot(geometry.inward_normal());
+    if (std::abs(along) > std::abs(across)) { local.x = along > 0.0f ? 0.0f : geometry.length(); }
+    else { local.y = across > 0.0f ? 0.0f : FixedSlabGeometry::normal_thickness; }
+    return geometry.to_world(local);
 }

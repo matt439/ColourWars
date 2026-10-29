@@ -28,7 +28,8 @@ namespace
 		const auto built = builder.build_collision_objects(objects, TeamColour{});
 		for (size_t index = 0; index < built.size(); ++index)
 		{
-			const auto* gate = dynamic_cast<const TeamGateStructurePaintable*>(built[index].get());
+			const Structure* structure = Collider::of(*built[index]).structure();
+			const TeamGateStructurePaintable* gate = structure != nullptr ? structure->gate() : nullptr;
 			if (gate == nullptr) { continue; }
 			const mattmath::RectangleF bounds = gate->bounds();
 			for (const mattmath::Vector2F& spawn : spawns)

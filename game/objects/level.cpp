@@ -21,8 +21,8 @@ namespace
     bool passable_gate(const CollisionObject* object, PlayerTeam team)
     {
         if (team == PlayerTeam::none) { return false; }
-        const auto* gate = dynamic_cast<const TeamGateStructurePaintable*>(object);
-        return gate != nullptr && gate->open_for() == team;
+        const Structure* structure = Collider::of(*object).structure();
+        return structure != nullptr && structure->passable_for(team);
     }
 }
 
@@ -439,11 +439,10 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	this->scene_->resolve();
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
-		if (is_projectile(to_collision_type(object->tag())))
+		if (Projectile* projectile = Collider::of(*object).projectile())
 		{
-			Projectile& projectile = dynamic_cast<Projectile&>(*object);
-			projectile.flush_paint_audio(*this->paint_audio_);
-			if (const auto contact = projectile.take_blocked_contact())
+			projectile->flush_paint_audio(*this->paint_audio_);
+			if (const auto contact = projectile->take_blocked_contact())
 			{
 				this->blocked_shot_feedback_->emit(*contact);
 			}
@@ -603,10 +602,9 @@ void Level::resolve_projectile_movement()
 	// can consume it in scene order or miss a thin paintable face.
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
-		if (is_projectile(to_collision_type(object->tag())))
+		if (Projectile* projectile = Collider::of(*object).projectile())
 		{
-			dynamic_cast<Projectile&>(*object).resolve_movement_contacts(
-				this->projectile_targets_);
+			projectile->resolve_movement_contacts(this->projectile_targets_);
 		}
 	}
 }
@@ -696,7 +694,7 @@ void Level::refresh_views()
 	// retiring projectile. This is mode configuration, not a draw-order mirror.
 	for (CollisionObject* object : this->projectile_targets_)
 	{
-		if (auto* structure = dynamic_cast<Structure*>(object))
+		if (Structure* structure = Collider::of(*object).structure())
 		{
 			structure->set_miniature(miniature);
 		}
@@ -791,15 +789,13 @@ std::vector<MatchBotSupport> Level::bot_supports(PlayerTeam team) const
 	for (const CollisionObject* object : this->projectile_targets_)
 	{
 		++id;
-		const CollisionObjectType type = to_collision_type(object->tag());
-		if (is_structure(type) && !is_structure_ramp(type) &&
-			type != CollisionObjectType::structure_fixed_slab && object->shape() != nullptr &&
+		const Structure* structure = Collider::of(*object).structure();
+		if (structure != nullptr && structure->flat() && object->shape() != nullptr &&
 			!passable_gate(object, team))
 		{
 			supports.push_back({ object->shape()->bounding_box(),
-				type == CollisionObjectType::structure_jump_through,
-				dynamic_cast<const PaintableObject*>(object) != nullptr, id,
-				dynamic_cast<const TranslatingStructurePaintable*>(object) != nullptr });
+				structure->jump_through(), structure->paintable() != nullptr, id,
+				structure->mover() != nullptr });
 		}
 	}
 	return supports;
@@ -890,7 +886,7 @@ LevelEndInfo Level::level_end_info() const
 	{
 		// Scoring is a role: a paintable support can retain jump-through
 		// collision without losing its held area or player contribution.
-		PaintableObject* paintable_object = dynamic_cast<PaintableObject*>(object);
+		PaintableObject* paintable_object = Collider::of(*object).paintable();
 		if (paintable_object == nullptr)
 		{
 			if (to_collision_type(object->tag()) == CollisionObjectType::structure_paintable)
@@ -939,7 +935,7 @@ std::vector<PaintSurfaceSample> Level::paint_surfaces() const
     std::size_t source_index = 0;
     for (const CollisionObject* object : this->scene_->collision_objects())
     {
-        const PaintableObject* paintable = dynamic_cast<const PaintableObject*>(object);
+        const PaintableObject* paintable = Collider::of(*object).paintable();
         if (paintable == nullptr)
         {
             if (to_collision_type(object->tag()) == CollisionObjectType::structure_paintable)

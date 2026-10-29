@@ -253,15 +253,15 @@ const Shape* TranslatingStructurePaintable::shape() const
 {
     return &this->world_rectangle_;
 }
-void TranslatingStructurePaintable::on_contact(const CollisionObject& other,
+void TranslatingStructurePaintable::on_projectile_contact(const Projectile& source,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
-    const CollisionLayer layer = other.layer();
+    const CollisionLayer layer = source.layer();
     if (layer != collision_layers::PROJECTILE_TEAM_A &&
         layer != collision_layers::PROJECTILE_TEAM_B) { return; }
-    const Projectile& source = dynamic_cast<const Projectile&>(other);
-    if (this->motion_id_ != 0 && source.projectile_type() == ProjectileType::rolling &&
-        source.moving_paint_completed(this->motion_id_)) { return; }
+    // Only a roller completes moving paint ahead of its endpoint contact; any
+    // other projectile answers false.
+    if (this->motion_id_ != 0 && source.moving_paint_completed(this->motion_id_)) { return; }
     RectangleF splash = source.shape()->bounding_box();
     const float offset = this->translation().x;
     if (offset != 0.0f) { splash.x -= offset; }

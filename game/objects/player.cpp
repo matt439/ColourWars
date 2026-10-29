@@ -3,8 +3,8 @@
 #include "game/objects/player.h"
 #include "game/objects/projectile.h"
 #include "game/objects/paint_audio.h"
-#include "game/objects/structure_paintable.h"
-#include "game/objects/fixed_slab_paintable.h"
+#include "game/objects/structure.h"
+#include "game/objects/fixed_slab_geometry.h"
 
 #include "engine/collision/resolve.h"
 
@@ -191,40 +191,38 @@ const RectangleF* Player::collision_rectangle() const
 	return &this->rectangle_;
 }
 
-void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
+void Player::touch(Collider& receiver, const Vector2F& normal, float penetration) const
+{
+    receiver.on_player_contact(*this, normal, penetration);
+}
+
+void Player::on_structure_contact(const Structure& other, const Vector2F& normal,
     float penetration)
 {
-    const CollisionObjectType other_type = to_collision_type(other.tag());
-
-    if (is_projectile(other_type))
-    {
-        this->on_projectile_contact(other_type, other);
-        return;
-    }
-
-    if (!is_structure(other_type))
-    {
-        // The collision mask must exclude all other types.
-        throw std::runtime_error(
-            "Player contacted an object its mask should have excluded");
-    }
-
-    if (other_type == CollisionObjectType::structure_jump_through)
+    if (other.jump_through())
     {
         this->on_jump_through_contact(other);
         return;
     }
-    if (other_type == CollisionObjectType::structure_fixed_slab)
+    if (const FixedSlabGeometry* slab = other.slab_geometry())
     {
-        this->on_fixed_slab_contact(dynamic_cast<const FixedSlabPaintable&>(other), normal, penetration);
+        this->on_fixed_slab_contact(other, *slab, normal, penetration);
         return;
     }
-    if (is_structure_ramp(other_type))
+    if (other.ramp())
     {
-        this->on_ramp_contact(other_type, other, normal, penetration);
+        this->on_ramp_contact(other, normal, penetration);
         return;
     }
-    this->on_structure_contact(other, normal, penetration);
+    this->on_solid_contact(other, normal, penetration);
+}
+
+void Player::on_player_contact(const Player& /*other*/, const Vector2F& /*normal*/,
+    float /*penetration*/)
+{
+    // The collision mask must exclude all other types.
+    throw std::runtime_error(
+        "Player contacted an object its mask should have excluded");
 }
 void Player::end_contacts(std::span<const Contact> contacts,
     std::span<const HorizontalSupportRef> supports)
@@ -289,26 +287,27 @@ void Player::end_contacts(std::span<const Contact> contacts,
             other = contact.a;
             normal = -contact.normal;
         }
-        if (other != nullptr && normal.y > 0.0f && std::abs(normal.y) >= std::abs(normal.x))
+        // A player's contacts are with structures and projectiles only.
+        const Structure* surface = other != nullptr ? Collider::of(*other).structure() : nullptr;
+        if (surface != nullptr && normal.y > 0.0f && std::abs(normal.y) >= std::abs(normal.x))
         {
-            if (const auto* paintable = dynamic_cast<const StructurePaintable*>(other))
+            if (surface->holds_flat_top_paint())
             {
-                this->paint_supports_.push_back(paintable);
+                this->paint_supports_.push_back(surface);
             }
         }
         // At either endpoint the initial manifold can be horizontal before
         // adjacent ground removes downward movement: entering uphill at the
         // toe, or downhill at the high crest. Recognize that exact endpoint
         // from the final grounded pose, regardless of pair dispatch order.
-        if (other != nullptr && this->supported_this_tick_ &&
+        if (surface != nullptr && this->supported_this_tick_ &&
             this->move_state() == PlayerMoveState::on_ground &&
             !this->hit_ceiling_this_tick_ && this->state_ == PlayerState::alive && this->health_ > 0.0f)
         {
-            const CollisionObjectType type = to_collision_type(other->tag());
-            if (is_structure_ramp(type))
+            if (surface->ramp())
             {
-                const RectangleF ramp = other->shape()->bounding_box();
-                const bool rises_right = type == CollisionObjectType::structure_ramp_right;
+                const RectangleF ramp = surface->shape()->bounding_box();
+                const bool rises_right = surface->ramp_rises_right();
                 const float toe = rises_right ? ramp.left() : ramp.right();
                 const float corner = rises_right ? this->rectangle_.right() : this->rectangle_.left();
                 const bool uphill = rises_right ? this->movement_requested_x_ > 0.0f :
@@ -324,18 +323,17 @@ void Player::end_contacts(std::span<const Contact> contacts,
                     coordinate_at(crest_corner, crest, this->rectangle_.width);
                 if (at_toe || at_crest)
                 {
-                    this->ramp_support_ = RampSupport{ ramp, type };
+                    this->ramp_support_ = RampSupport{ ramp, rises_right };
                     this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right :
                         PlayerMoveState::on_ramp_left);
                     this->support_position_ = at_toe ? Vector2F(toe, ramp.bottom()) :
                         Vector2F(crest, ramp.top());
                 }
             }
-            else if (type == CollisionObjectType::structure_fixed_slab)
+            else if (const FixedSlabGeometry* slab = surface->slab_geometry())
             {
-                const auto& slab = dynamic_cast<const FixedSlabPaintable&>(*other);
-                const Vector2F start = slab.geometry().top_start();
-                const Vector2F end = slab.geometry().top_end();
+                const Vector2F start = slab->top_start();
+                const Vector2F end = slab->top_end();
                 const bool rises_right = end.y < start.y;
                 const Vector2F toe = rises_right ? start : end;
                 const Vector2F crest = rises_right ? end : start;
@@ -354,7 +352,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
                     this->rectangle_.left() <= crest.x && this->rectangle_.right() >= crest.x;
                 if (at_toe || at_crest)
                 {
-                    this->remember_fixed_slab_support(slab);
+                    this->remember_fixed_slab_support(*surface, *slab);
                     this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right :
                         PlayerMoveState::on_ramp_left);
                     this->support_position_ = at_toe ? toe : crest;
@@ -501,10 +499,9 @@ void Player::end_contacts(std::span<const Contact> contacts,
     this->resolved_flat_supports_.clear();
 }
 
-void Player::remember_flat_support(const CollisionObject& other)
+void Player::remember_flat_support(const Structure& other)
 {
-    if (const auto* support = dynamic_cast<const Structure*>(&other))
-    { this->resolved_flat_supports_.push_back(support); }
+    this->resolved_flat_supports_.push_back(&other);
 }
 
 void Player::clear_carrier() noexcept
@@ -563,11 +560,7 @@ void Player::choose_carrier(std::span<const Contact> contacts,
     float best_overlap = -1.0f;
     for (const HorizontalSupportRef& candidate : supports)
     {
-        if (candidate.surface == nullptr) { continue; }
-        const CollisionObjectType type = to_collision_type(candidate.surface->tag());
-        if (type != CollisionObjectType::structure &&
-            type != CollisionObjectType::structure_paintable &&
-            type != CollisionObjectType::structure_jump_through) { continue; }
+        if (candidate.surface == nullptr || !candidate.surface->flat()) { continue; }
         bool measured_top = false;
         for (const Contact& contact : contacts)
         {
@@ -622,7 +615,7 @@ PlayerTeam Player::gameplay_support_team() const
     PlayerTeam answer = PlayerTeam::none;
     for (std::size_t index = 0; index < this->paint_supports_.size(); ++index)
     {
-        const StructurePaintable* support = this->paint_supports_[index];
+        const Structure* support = this->paint_supports_[index];
         bool duplicate = false;
         for (std::size_t previous = 0; previous < index; ++previous)
         { duplicate |= this->paint_supports_[previous] == support; }
@@ -692,7 +685,7 @@ std::optional<Player::PaintedSupport> Player::painted_support() const
             }
         }
     }
-    for (const StructurePaintable* support : this->paint_supports_)
+    for (const Structure* support : this->paint_supports_)
     {
         const RectangleF surface = support->shape()->bounding_box();
         const float left = std::max(this->rectangle_.left(), surface.left());
@@ -717,7 +710,7 @@ std::optional<Player::PaintedSupport> Player::painted_support() const
     return std::nullopt;
 }
 
-void Player::on_structure_contact(const CollisionObject& other,
+void Player::on_solid_contact(const Structure& other,
     const Vector2F& normal, float penetration)
 {
     if (this->projected_fixed_slab_support_ && normal.y < 0.0f &&
@@ -757,8 +750,7 @@ void Player::on_structure_contact(const CollisionObject& other,
             this->support_position_ = *support;
             this->supported_this_tick_ = true;
             this->hit_ceiling_this_tick_ = true;
-            this->set_move_state(this->ramp_support_->type ==
-                CollisionObjectType::structure_ramp_right ?
+            this->set_move_state(this->ramp_support_->rises_right ?
                 PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
             return;
         }
@@ -781,9 +773,9 @@ void Player::on_structure_contact(const CollisionObject& other,
         if (normal.y > 0.0f)
         {
             this->supported_this_tick_ = true;
-            if (const auto* paintable = dynamic_cast<const StructurePaintable*>(&other))
+            if (other.holds_flat_top_paint())
             {
-                this->paint_supports_.push_back(paintable);
+                this->paint_supports_.push_back(&other);
             }
         }
         else
@@ -799,16 +791,17 @@ void Player::on_structure_contact(const CollisionObject& other,
         this->set_velocity_x(0.0f);
     }
 }
-void Player::on_ramp_contact(CollisionObjectType other_type,
-    const CollisionObject& other, const Vector2F& normal, float penetration)
+void Player::on_ramp_contact(const Structure& other,
+    const Vector2F& normal, float penetration)
 {
     // A ramp's vertical face and flat underside resolve as walls; only its
     // hypotenuse needs slope handling.
     if (normal.y <= 0.0f)
     {
-        this->on_structure_contact(other, normal, penetration);
+        this->on_solid_contact(other, normal, penetration);
         return;
     }
+    const bool rises_right = other.ramp_rises_right();
 
     // Separate vertically on slopes; separation along the normal would slide
     // the player downhill and prevent climbing.
@@ -817,8 +810,8 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
 
     this->fixed_slab_support_.reset();
     this->projected_fixed_slab_support_ = false;
-    this->set_move_state(other_type == CollisionObjectType::structure_ramp_left ?
-        PlayerMoveState::on_ramp_left : PlayerMoveState::on_ramp_right);
+    this->set_move_state(rises_right ?
+        PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
     this->supported_this_tick_ = true;
 
     this->support_impact_speed_ = std::max(this->support_impact_speed_,
@@ -826,8 +819,8 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
     // On a slope the lower supporting corner touches the surface; the centre
     // of the player's bottom edge floats above it.
     const RectangleF surface = other.shape()->bounding_box();
-    this->ramp_support_ = RampSupport{ surface, other_type };
-    const float support_x = other_type == CollisionObjectType::structure_ramp_right ?
+    this->ramp_support_ = RampSupport{ surface, rises_right };
+    const float support_x = rises_right ?
         this->rectangle_.right() : this->rectangle_.left();
     this->support_position_ = { std::clamp(support_x, surface.left(), surface.right()),
         this->rectangle_.bottom() };
@@ -835,35 +828,35 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
     colourwars::MovingObject::set_velocity_y(0.0f);
 }
 
-void Player::remember_fixed_slab_support(const FixedSlabPaintable& slab)
+void Player::remember_fixed_slab_support(const Structure& slab, const FixedSlabGeometry& geometry)
 {
     this->ramp_support_.reset();
     this->projected_ramp_support_ = false;
     this->fixed_slab_support_ = FixedSlabSupport{
-        slab.geometry().top_start(), slab.geometry().top_end(), &slab };
+        geometry.top_start(), geometry.top_end(), &slab };
     this->clear_carrier();
 }
 
-void Player::on_fixed_slab_contact(const FixedSlabPaintable& slab,
+void Player::on_fixed_slab_contact(const Structure& slab, const FixedSlabGeometry& geometry,
     const Vector2F& normal, float penetration)
 {
-    const Vector2F inward = slab.geometry().inward_normal();
+    const Vector2F inward = geometry.inward_normal();
     const float alignment = normal.x * inward.x + normal.y * inward.y;
     // SAT may select world Y at a top endpoint. Both that normal and the
     // slab's top normal qualify; either end cap and the underside do not.
     const bool top_contact = normal.y > 0.0f &&
         std::abs(normal.y) >= std::abs(normal.x) &&
         alignment >= inward.y - 4.0f * std::numeric_limits<float>::epsilon();
-    const Vector2F start = slab.geometry().top_start();
-    const Vector2F end = slab.geometry().top_end();
+    const Vector2F start = geometry.top_start();
+    const Vector2F end = geometry.top_end();
     if (!top_contact || this->rectangle_.right() < start.x || this->rectangle_.left() > end.x)
     {
-        this->on_structure_contact(slab, normal, penetration);
+        this->on_solid_contact(slab, normal, penetration);
         return;
     }
 
     this->rectangle_.offset(separation_along(normal, penetration, Vector2F::DIRECTION_DOWN));
-    this->remember_fixed_slab_support(slab);
+    this->remember_fixed_slab_support(slab, geometry);
     const bool rises_right = end.y < start.y;
     this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
     this->supported_this_tick_ = true;
@@ -894,7 +887,7 @@ std::optional<Vector2F> Player::ramp_support_at(const RectangleF& body) const
     {
         return std::nullopt;
     }
-    const bool rises_right = ramp.type == CollisionObjectType::structure_ramp_right;
+    const bool rises_right = ramp.rises_right;
     const float x = std::clamp(rises_right ? body.right() : body.left(),
         ramp.bounds.left(), ramp.bounds.right());
     const float along = (x - ramp.bounds.left()) / ramp.bounds.width;
@@ -902,7 +895,7 @@ std::optional<Vector2F> Player::ramp_support_at(const RectangleF& body) const
         ramp.bounds.top() + along * ramp.bounds.height);
 }
 
-void Player::on_jump_through_contact(const CollisionObject& other)
+void Player::on_jump_through_contact(const Structure& other)
 {
     // Land only while moving down (+y) from above the platform on the previous tick.
     const bool moving_down = this->velocity().y > 0.0f;
@@ -929,8 +922,8 @@ void Player::update_weapon_position() const
 {
     this->primary_->set_player_center(this->center());
 }
-void Player::on_projectile_contact(CollisionObjectType other_type,
-    const CollisionObject& source)
+void Player::on_projectile_contact(const Projectile& source,
+    const Vector2F& /*normal*/, float /*penetration*/)
 {
     // The projectile side is unchanged: paint still lands.
     if (this->damage_immune_)
@@ -940,7 +933,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
 
     // Damage belongs to the projectile's tuning record.
     const float damage = this->tuning_->projectile(
-        to_projectile_type(other_type)).details.player_damage *
+        source.projectile_type()).details.player_damage *
         this->tuning_->handicap(this->handicap_).damage_taken;
     const bool vulnerable = this->state_ == PlayerState::alive && this->health_ > 0.0f;
     this->health_ -= damage;
@@ -954,12 +947,11 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
         // Capture the fatal contact now: the dead state arrives next update.
         // Later hits cannot replace credit. This metadata changes no damage,
         // contact, feedback, timer, or random-number decision.
-        const auto* projectile = dynamic_cast<const Projectile*>(&source);
         const CollisionLayer enemy_layer = this->team_ == PlayerTeam::a ?
             collision_layers::PROJECTILE_TEAM_B : this->team_ == PlayerTeam::b ?
             collision_layers::PROJECTILE_TEAM_A : CollisionLayer{ 0 };
-        const int owner = projectile != nullptr ? projectile->player_num() : -1;
-        if (projectile != nullptr && enemy_layer != 0 && source.layer() == enemy_layer &&
+        const int owner = source.player_num();
+        if (enemy_layer != 0 && source.layer() == enemy_layer &&
             owner >= 0 && owner < paint_owners::count)
         {
             ++this->lethal_projectiles_.enemy_by_owner[static_cast<size_t>(owner)];

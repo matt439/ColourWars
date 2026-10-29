@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/projectile.h"
 #include "game/objects/translating_structure_paintable.h"
-#include "game/objects/fixed_slab_paintable.h"
+#include "game/objects/fixed_slab_geometry.h"
 #include "game/objects/paint_audio.h"
 #include "engine/collision/narrow_phase.h"
 #include <array>
@@ -215,17 +215,20 @@ void Projectile::resolve_movement_contacts(
     std::span<CollisionObject* const> objects)
 {
     if (this->for_deletion_ || !this->first_update_done_) { return; }
-    if (this->type_ == ProjectileType::rolling)
-    {
-        if (this->moving_contact_ready_)
-        { this->resolve_rolling_translating_contacts(objects); }
-        this->moving_contact_ready_ = false;
-        return;
-    }
+    this->resolve_travel(objects);
+    // Level supplies one complete target span, once, for this actual update.
+    this->moving_contact_ready_ = false;
+}
+
+void Projectile::resolve_travel(std::span<CollisionObject* const> objects)
+{
     if (!is_swept(this->type_)) { return; }
     const bool translating = std::any_of(objects.begin(), objects.end(),
         [](const CollisionObject* object)
-        { return dynamic_cast<const TranslatingStructurePaintable*>(object) != nullptr; });
+        {
+            const Structure* structure = Collider::of(*object).structure();
+            return structure != nullptr && structure->mover() != nullptr;
+        });
     if (translating)
     {
         this->resolve_translating_contacts(this->previous_rectangle_,
@@ -237,8 +240,6 @@ void Projectile::resolve_movement_contacts(
         this->resolve_sweep(this->previous_rectangle_,
             this->shape()->bounding_box(), objects, false);
     }
-    // Level supplies one complete target span, once, for this actual update.
-    this->moving_contact_ready_ = false;
 }
 
 bool Projectile::moving_paint_completed(HorizontalMotionId id) const
@@ -259,7 +260,8 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
         if (object->for_deletion() || !layers_collide(this->layer(), this->mask(),
             object->layer(), object->mask())) { continue; }
         const bool structure = object->layer() == collision_layers::STRUCTURE;
-        auto* moving = dynamic_cast<TranslatingStructurePaintable*>(object);
+        Structure* surface = Collider::of(*object).structure();
+        TranslatingStructurePaintable* moving = surface != nullptr ? surface->mover() : nullptr;
         if (moving != nullptr)
         {
             if (!moving_ready) { continue; }
@@ -287,9 +289,9 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
             }
             continue;
         }
-        if (const auto* slab = dynamic_cast<const FixedSlabPaintable*>(object))
+        if (const FixedSlabGeometry* slab = surface != nullptr ? surface->slab_geometry() : nullptr)
         {
-            const auto hit = slab->geometry().sweep(start, finish);
+            const auto hit = slab->sweep(start, finish);
             if (hit && hit->positive_overlap && (hit->entry < closest_entry ||
                 (hit->entry == closest_entry && obstruction != nullptr &&
                     obstruction->layer() != collision_layers::STRUCTURE)))
@@ -333,7 +335,8 @@ void Projectile::resolve_rolling_translating_contacts(std::span<CollisionObject*
     const RectangleF volume = this->shape()->bounding_box(); // POST-launch published volume.
     for (CollisionObject* object : objects)
     {
-        auto* moving = dynamic_cast<TranslatingStructurePaintable*>(object);
+        Structure* surface = Collider::of(*object).structure();
+        TranslatingStructurePaintable* moving = surface != nullptr ? surface->mover() : nullptr;
         if (moving == nullptr || object->for_deletion() ||
             !layers_collide(this->layer(), this->mask(), object->layer(), object->mask()) ||
             this->moving_paint_completed(moving->motion_id())) { continue; }
@@ -387,7 +390,7 @@ void Projectile::resolve_sweep(const RectangleF& start,
         // extra launch hit. Masks retain ramp pass-through, friendly-fire
         // exclusion and dead players' empty collision mask.
         const bool structure = object->layer() == collision_layers::STRUCTURE;
-        if ((launch && this->type_ == ProjectileType::rolling && !structure) ||
+        if ((launch && !this->launch_hits_players() && !structure) ||
             object->for_deletion() ||
             !layers_collide(this->layer(), this->mask(),
                 object->layer(), object->mask()))
@@ -444,22 +447,24 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
     // The legacy rectangle participants still compute their original float
     // intervals; slab intervals retain double precision through ordering.
     CollisionObject* obstruction = nullptr;
-    FixedSlabPaintable* winning_slab = nullptr;
+    CollisionObject* winning_slab = nullptr;
+    const FixedSlabGeometry* winning_geometry = nullptr;
     FixedSlabSweep winning_hit;
     double closest = 1.0;
     for (CollisionObject* object : objects)
     {
         const bool structure = object->layer() == collision_layers::STRUCTURE;
-        if ((launch && this->type_ == ProjectileType::rolling && !structure) ||
+        if ((launch && !this->launch_hits_players() && !structure) ||
             object->for_deletion() || !layers_collide(this->layer(), this->mask(), object->layer(), object->mask()))
         { continue; }
-        auto* slab = dynamic_cast<FixedSlabPaintable*>(object);
+        const Structure* surface = Collider::of(*object).structure();
+        const FixedSlabGeometry* slab = surface != nullptr ? surface->slab_geometry() : nullptr;
         std::optional<double> entry;
         std::optional<FixedSlabSweep> hit;
         if (slab != nullptr)
         {
-            if (launch && launch_leaves_slab(start, finish, slab->geometry())) { continue; }
-            hit = slab->geometry().sweep(start, finish);
+            if (launch && launch_leaves_slab(start, finish, *slab)) { continue; }
+            hit = slab->sweep(start, finish);
             if (hit && hit->positive_overlap) { entry = hit->entry; }
         }
         else
@@ -473,7 +478,8 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
         {
             closest = *entry;
             obstruction = object;
-            winning_slab = slab;
+            winning_slab = slab != nullptr ? object : nullptr;
+            winning_geometry = slab;
             if (hit) { winning_hit = *hit; }
         }
     }
@@ -497,9 +503,9 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
             between(start.width, finish.width), between(start.height, finish.height));
     };
     RectangleF response = at(winning_hit.entry + std::min(inset, (winning_hit.exit - winning_hit.entry) / 2.0));
-    if (!winning_slab->geometry().overlaps(response))
+    if (!winning_geometry->overlaps(response))
     { response = at((winning_hit.entry + winning_hit.exit) / 2.0); }
-    if (!winning_slab->geometry().overlaps(response))
+    if (!winning_geometry->overlaps(response))
     { throw std::runtime_error("Fixed slab impact has no representable overlapping response rectangle"); }
     this->set_rectangle(response);
     const auto contact = narrow_phase(*winning_slab->shape(), *this->shape());
@@ -509,45 +515,25 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
     this->on_contact(*winning_slab, -normal, penetration);
 }
 
-void Projectile::on_contact(const CollisionObject& other,
+void Projectile::on_structure_contact(const Structure& other,
     const Vector2F& normal, float /*penetration*/)
 {
     this->geometry_contact_ |= other.layer() == collision_layers::STRUCTURE;
-    if (!this->for_deletion_ && other.layer() == collision_layers::STRUCTURE &&
-        this->type_ != ProjectileType::rolling)
+    if (!this->for_deletion_ && other.layer() == collision_layers::STRUCTURE)
     {
-        // The collision normal points from the shot into cover. Anchor the
-        // cue on that cover's actual face, with tangential position clamped
-        // to the face (including corner hits and very thin walls).
-        const RectangleF cover = other.shape()->bounding_box();
+        // The cover says where on its face the shot stopped.
         const Vector2F center = this->shape()->bounding_box().center();
-        Vector2F point(std::clamp(center.x, cover.left(), cover.right()),
-            std::clamp(center.y, cover.top(), cover.bottom()));
-        if (const auto* slab = dynamic_cast<const FixedSlabPaintable*>(&other))
-        {
-            const auto& geometry = slab->geometry();
-            Vector2F local = geometry.to_local(center);
-            local.x = std::clamp(local.x, 0.0f, geometry.length());
-            local.y = std::clamp(local.y, 0.0f, FixedSlabGeometry::normal_thickness);
-            const float along = normal.dot(geometry.tangent());
-            const float across = normal.dot(geometry.inward_normal());
-            if (std::abs(along) > std::abs(across)) { local.x = along > 0.0f ? 0.0f : geometry.length(); }
-            else { local.y = across > 0.0f ? 0.0f : FixedSlabGeometry::normal_thickness; }
-            point = geometry.to_world(local);
-        }
-        else if (std::abs(normal.x) >= std::abs(normal.y))
-        {
-            point.x = normal.x > 0.0f ? cover.left() : cover.right();
-        }
-        else
-        {
-            point.y = normal.y > 0.0f ? cover.top() : cover.bottom();
-        }
         this->blocked_contact_ = BlockedShotContact{
-            point, -normal, this->team_colour_, this->player_num_ };
+            other.cover_point(center, normal), -normal, this->team_colour_, this->player_num_ };
     }
     // Flying projectiles die on contact with flat geometry or enemy players.
-    // Rollers override this to process every contact in their one-step volume.
+    // Rollers override both to process every contact in their one-step volume.
+    this->set_for_deletion(true);
+}
+
+void Projectile::on_player_contact(const Player& /*other*/,
+    const Vector2F& /*normal*/, float /*penetration*/)
+{
     this->set_for_deletion(true);
 }
 
@@ -575,7 +561,7 @@ void Projectile::flush_paint_audio(PaintAudio& audio)
     // A roller touching bare geometry is still active and can reach exposed
     // paint in its ordinary sweep. Only retiring flying paint makes a dud.
     if (this->painted_contact_ ||
-        (this->geometry_contact_ && this->for_deletion() && this->type_ != ProjectileType::rolling))
+        (this->geometry_contact_ && this->for_deletion() && this->duds_on_bare_cover()))
     {
         audio.contact(this->type_, this->player_num_,
             this->painted_contact_, this->captured_contact_);

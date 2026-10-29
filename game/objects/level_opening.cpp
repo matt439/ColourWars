@@ -14,7 +14,8 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	this->admit_horizontal_structures();
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
-		if (auto* gate = dynamic_cast<TeamGateStructurePaintable*>(object))
+		Structure* structure = Collider::of(*object).structure();
+		if (TeamGateStructurePaintable* gate = structure != nullptr ? structure->gate() : nullptr)
 		{
 			this->team_gates_.push_back(gate);
 			this->team_gates_view_.push_back(gate);
@@ -22,7 +23,7 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	}
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
-		if (!is_projectile(to_collision_type(object->tag())))
+		if (Collider::of(*object).projectile() == nullptr)
 		{
 			this->projectile_targets_.push_back(object);
 		}
