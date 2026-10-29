@@ -1578,6 +1578,38 @@ and audio; it does not block implementing the remaining game.
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.
 
+### Finish-review detail A/B script (`POL#43`)
+
+**Open, not started (filed 2026-10-29).** Step 2 of the finish review above
+("individual details disabled") has no repeatable form. `presentation.json` has
+ten `enabled` flags: `hud.cursor_marker`, `hud.teammate_marker`,
+`player_identity`, `combat_feedback`, `blocked_shot`, `idle_drip`,
+`weapon_feedback`, `movement_feedback`, `tool_motion` and `figure.quiet`. Only
+`hud.*` and `movement_feedback` are live under `tune`; the rest take a rebuild
+([debug-console.md, live tuning scopes](debug-console.md#live-tuning)).
+`scripts/debug/review_feedback_ab.cfg` already does the same thing for one
+detail at one stage.
+
+Scope: `scripts/debug/review_finish_details.cfg` (plus any pass/shot helpers)
+takes seeded four-player Crossfeed frames at fixed update counts with every
+detail on, then repeats those frames once per flag with that flag off, using
+`tune ... off restart` wherever the scope needs it, and ends with
+`tune.reset presentation` and the seed, bots and screenshot folder put back as
+`review_feedback_ab` does. First step: copy the `review_feedback_ab` structure,
+switch it to `stage crossfeed` with four paint bots, and choose frames where
+drips, feedback and markers are visible.
+
+Acceptance: `ColourWars.exe +exec review_finish_details +quit` on a Debug build
+writes one all-on PNG set and one set per flag; the log's `checksum` line
+for each frame is identical across every variant, so the comparison is shown
+to differ only in presentation, not assumed to. Afterwards `tune.diff
+presentation` is empty. A check in `scripts/check-debug-console.ps1`, or one
+like it, runs the script and compares those checksums.
+
+It does not decide which details stay, are refined or cut. That judgement is
+the attended finish review (`POL#24`), and this script only prepares its
+material.
+
 ## 8. Further improvements to prototype
 
 The following candidates extend the plan after another source review on
@@ -1608,6 +1640,36 @@ The marquee follows the last polled position, so it can trail the hardware
 cursor by about a frame while the mouse moves fast. **Remaining (`DECISION`):**
 judge it in play over pale, dark and heavily painted scenes at 1/2/4P,
 including that trail; size and colours are provisional.
+
+### Cursor-marker acceptance case (`POL#44`)
+
+**Open, not started (filed 2026-10-29).** The marquee has no automated check:
+nothing under `scripts/` mentions `cursor_marker`. Its visibility rule is
+`Level::cursor_marker_visible` (`game/objects/level_draw.cpp:172-193`): enabled,
+mouse focused, pointer inside the window, at least one non-bot
+keyboard-and-mouse seat. Its geometry is `draw_cursor_marker` (`:195-219`),
+which rounds widths and half-size to whole pixels at height/1080 scale.
+`game/presentation_read_match.cpp:136-153` refuses sizes above 96, widths above
+8, less than half the marquee open, translucent or equal ink/paper. Both
+`Level` members are private (`game/objects/level.h:597-598`, after `private:`
+at `:270`).
+
+Scope: make `cursor_marker_visible` public without changing it, and move the
+three frame rectangles into a pure function or accessor that
+`draw_cursor_marker` then uses, so drawing is unchanged. Add a
+`cursor_marker` CPU case to `scripts/run-acceptance.ps1`. First step: build the
+case on the `World` fixture in `scripts/acceptance/teammate_markers.cpp:40-60`,
+which already holds a `labrador::Mouse`, presentation and level builder.
+
+Acceptance: the case checks visible/hidden for each condition (disabled,
+unfocused, pointer outside on each edge, only bots or only pad seats, a
+keyboard-and-mouse seat in any participant slot); that every frame edge is a
+whole pixel and the hollow centre stays open at 720, 1080 and 1440 lines; and
+that each presentation refusal throws. It creates no device and passes under
+`-Preset x64-debug` and `x64-release`.
+
+It does not decide the marquee's look, size, colours or the one-frame trail;
+that stays the `POL#39` `DECISION`.
 
 ### Help players read the tool and the fight
 

@@ -3,7 +3,231 @@
 This is the live owner for `HYG` rows in [TODO](../TODO.md). The author asked
 for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
-arena/tuning order.
+arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
+`CI#5`; `CI#1`, the foreground debug-console check, stays with
+[the debug console](debug-console.md#foreground-checks-ci1).
+
+## Open shortlist (2026-10-29)
+
+The author approved adding every proposal from the 2026-10-29 verified
+brainstorm to the index. Each entry below is **open, not started**. Evidence
+was re-read against the tree on that date; refresh line numbers before
+starting. None of them closes a human gate, and any listening, feel, art or
+attended-play judgment it touches stays a `DECISION` row.
+
+### Unreadable save preservation (`HYG#22`)
+
+**Open, not started.** A save that exists but will not parse is silently
+replaced. `Save::load_save_data` catches the whole-file failure and keeps
+`SaveData()` with no message ([save.cpp](../game/save.cpp) lines 433-441), and
+the next match start writes that default state over the file:
+`GameLevel` calls `remember_match_setup_and_save` on every match start
+([game_states.cpp](../game/states/game_states.cpp) lines 237-239), which always
+writes. A recorded round writes again (`record_result_and_save`, save.cpp
+lines 568-579). The engine's `read_json_file` throws on open, read and parse
+failures alike (`external/labrador/engine/assets/json.cpp` lines 66-89). The
+existing protection is per section only: `load_from_json` resets one malformed
+section (save.cpp lines 367-379), which the `match_records` case's
+`check_section_isolation` covers; nothing covers a file that fails as a whole.
+
+Scope: when an existing save fails to load, copy it beside itself under a name
+that is never reused or overwritten, best effort, then print one stderr line
+naming both paths before keeping defaults. A failed copy prints its own line
+and changes nothing else. The missing-file and legacy-save paths are
+unchanged. In the same change, correct the save-layout record in
+[the roadmap](feature-roadmap.md#stage-records-and-the-sectioned-save-gap62),
+which still says `"save_version": 3` and lists versions up to 3, against
+[save.h](../game/save.h) lines 33-44: version 5, versions 4 (`"profiles"`) and
+5 (`"last_match.stage_rule"`) listed, `profiles` nested, and the display and
+play preferences flat.
+
+First step: add the failing case to an isolated-save acceptance case
+(`match_records` or `settings`) before touching `Save`.
+
+Acceptance, CPU only: an invalid-JSON save and a truncated one each leave
+defaults, one stderr line, and a byte-identical side copy; a
+second corrupt load does not overwrite the first copy; a later
+`save_to_file` writes the real path and leaves the copy. Both presets pass the
+default acceptance suite.
+
+Not decided here: any in-game notice or dialog for a reset save, and whether
+side copies are ever pruned.
+
+### Participant parameter names in `Level` (`HYG#26`)
+
+**Open, not started.** `HYG#8` corrected the comments about participants and
+panes but no identifiers (see [its record](#source-comment-contract-audit-hyg8)).
+Several [level.h](../game/objects/level.h) parameters are still named `view`
+while they index roster participants in `players_`: `player` (line 181),
+`view_camera` through `player_identity_bounds_for` (lines 199-210) and
+`place_player`, `respawn_player`, `kill_player` (lines 239-242), whose comment
+at lines 230-232 has to explain that "`view` here indexes roster participants".
+`participant_for_view` (line 184) and `teammate_markers` (line 215) really take
+panes. In the definitions, `Level::view_camera` reads `players_.at(view)` and
+then derives `pane` from it ([level.cpp](../game/objects/level.cpp) line 681),
+and `draw_player_overlay` passes a participant into `aim_marker_visible`
+([level_draw.cpp](../game/objects/level_draw.cpp) lines 61-71).
+
+Scope: one rename-only commit. Parameters that index participants become
+`participant` in declarations and definitions; `view` stays only where a human
+pane is indexed; the lines 230-232 comment loses its caveat. No signature
+type, order, layout or behaviour change, and no caller edits beyond local
+variable names that would otherwise mislead.
+
+First step: list every `int view` parameter in `game/objects/level*.h/.cpp`
+with its first use, classified participant or pane.
+
+Acceptance: a token diff that changes identifiers and comments only; both
+presets build under `/W4 /WX`; the default acceptance suite passes, including
+`player_identity`, `teammate_markers` and `bot_roster`.
+
+Not decided here: any rename outside `Level`, or of the public accessors
+`view_count`, `participant_for_view` and `view_for_participant`.
+
+### Stale README and AGENTS structure facts (`HYG#27`)
+
+**Open, not started.** Two structural descriptions have drifted.
+[README.md](../README.md) lines 176-177 give `game/` as ~34k lines with ~14k of
+Debug tools and `editor/` as ~2k; tracked `.cpp`/`.h` files measured on
+2026-10-29 are about 69k in `game/`, 15.7k in `game/debug/` and 5.5k in
+`editor/`, counted with blank lines and comments. README lines 35-38 list the
+explicit-only stages but omit the Turbulence Ferry and Gate Trials, both
+`"include_in_random": false`
+([ferry](../game/content/levels/turbulence_ferry_trial.json) line 543,
+[gate](../game/content/levels/turbulence_gate_trial.json) line 507).
+[AGENTS.md](../AGENTS.md) says the engine has two audio backends, but the
+pinned engine offers `xaudio2`, `webaudio` and `null`
+(`external/labrador/engine/CMakeLists.txt` line 325), and a separate
+`LABRADOR_INPUT_BACKEND` axis, `xinput` or `web` (line 368), which AGENTS.md
+does not mention.
+
+Scope: correct those README lines and the AGENTS.md backend paragraph to what
+the pinned engine and the tree say, without new prose about the web build.
+Keep the counting rule stated or rounded so the figures do not need a refresh
+for every slice. The AGENTS.md edit is project instruction text, so the author
+approves it at commit time; the README edit can land without it.
+
+First step: recount with the same rule as the source-size snapshot below and
+re-read the backend `STRINGS` lines at the current pin.
+
+Acceptance: each corrected figure and list matches a command recorded in the
+commit message; the CI change-detection checks still classify the commit as
+docs-only.
+
+Not decided here: the AGENTS.md wording (the author's), and whether README
+keeps line counts at all.
+
+### Compile gate for opt-in probes (`CI#2`)
+
+**Open, not started.** CI compiles only what it runs. The fourteen opt-in
+acceptance cases (`bot_trials` through `turbulence_slab_tools` in
+`$availableCases`, [run-acceptance.ps1](../scripts/run-acceptance.ps1) line 22)
+are outside the default list (line 33), and the CI step passes no `-Cases`
+([ci.yml](../.github/workflows/ci.yml) line 135); the workflow has no schedule
+(lines 6-10). `check-painter.ps1` and `check-frame-pacing.ps1` are not in CI
+at all. The painter has no `-CompileOnly` switch, while its compile already
+splits on `COLOURWARS_PAINTER_SCRIPTED_PADS`
+([check-painter.ps1](../scripts/check-painter.ps1) lines 392-407); frame
+pacing already has one (`check-frame-pacing.ps1` lines 6 and 194). Probes kept
+off CI drift: the 2026-10-28 painter run found stale fixtures nobody had
+noticed (the MattPC paragraph under
+[Player profiles](feature-roadmap.md#player-profiles-road21)). Those were runtime
+failures; this gate catches only the compile-breaking kind.
+
+Scope: a CI step, in both presets, after the existing build, that runs
+`run-acceptance.ps1 -SkipBuild -CompileOnly -Cases` over the fourteen opt-in
+cases, a new `check-painter.ps1 -CompileOnly` in both reader variants (normal
+and scripted pads), and `check-frame-pacing.ps1 -CompileOnly`. No probe
+executes and no GPU or window is used. `balance_runner` stays Debug-only.
+
+First step: add `-CompileOnly` to `check-painter.ps1`, stopping after the
+compiler returns, and qualify it in the existing painter selection checker.
+
+Acceptance: locally in both presets, the new step compiles all sixteen
+targets and fails when one opt-in source is broken in a scratch copy; the
+selection checkers pass in PowerShell 5.1 and pwsh. Hosted CI stays
+unconfirmed until the author authorizes a push.
+
+Not decided here: running any opt-in case in CI, a scheduled workflow, or a
+GPU runner.
+
+### Registration and failure-reporting checks in CI (`CI#3`)
+
+**Open, not started.** `check-stage-registration.ps1` and
+`check-failure-reporting.ps1` both take `-SkipBuild` but neither is in
+[ci.yml](../.github/workflows/ci.yml). Their owners document only local runs
+([level-editor.md](level-editor.md) lines 1438-1439,
+[failure-reporting.md](failure-reporting.md#verification) lines 81-82), and
+no doc says why they are left out; `CI#1` is the only recorded exclusion.
+Hosted focus has surprised local assumptions before
+([level-editor.md](level-editor.md) line 434, runs 290 and 291).
+
+Scope: run each with `-SkipBuild` in both presets and record duration, any
+focus or foreground dependence, and whether every dialog is dismissed without
+input. Then either add CI steps that upload their JSON/log evidence, or write
+the exclusion reason into each owner doc.
+
+First step: the four local timed runs, with receipts under
+`out/validation/`.
+
+Acceptance: the measurements are recorded here; then either the steps exist
+with uploads and pass locally, or both owner docs state their exclusion.
+Hosted results wait for an authorized push.
+
+Not decided here: an attended or foreground runner model (that is `CI#1`).
+
+### Acceptance timing summary (`CI#4`)
+
+**Open, not started.** `run-acceptance.ps1` measures each case only as a
+combined `Seconds` it prints (lines 322-333), and its `$longestFirst`
+scheduling order says it comes "from CI timings" (lines 337-341) without
+recorded data. The Debug pull-request exclusions rest on prose figures
+([ci.yml](../.github/workflows/ci.yml) lines 128-131), and CI uploads nothing
+from the acceptance run.
+
+Scope: write `acceptance-summary.json` beside the run's evidence with each
+case's compile seconds, run seconds and outcome, sorted longest first, and
+upload it from both CI jobs. No change to case selection or order in this
+row.
+
+First step: time compile and run separately inside the per-case script block,
+then emit the summary after the report loop, including on failure.
+
+Acceptance: a local `-Parallel 4 -Cases` run and a `-CompileOnly` run each
+produce a valid summary with every selected case; the selection and process
+checkers pass in both shells.
+
+Not decided here: re-ordering `$longestFirst` or changing the Debug
+pull-request exclusions; those follow from the data in a later change.
+
+### Local Markdown link check (`CI#5`)
+
+**Open, not started.** Nothing checks relative links. `scripts/ci/` holds only
+`lint.py` and its tests, run by the always-on lint job
+([ci.yml](../.github/workflows/ci.yml) lines 21-36). A survey of tracked
+Markdown outside the engine on 2026-10-29 found nine unresolved local targets,
+two of them real: [polish-foundation.md](polish-foundation.md) line 94 and
+[polish-refine.md](polish-refine.md) line 131 link
+`polish-movement-course.md#retained-route-trials`, a heading now titled
+"Route trials (2026-10-20 provisional profile)" (line 208). The rest are
+evidence under `out/`, sources a historical document says were retired
+(`polish-style-kit.md`), and files with `#` in their names
+(`game/audio/paint_exe/PROVENANCE.md`).
+
+Scope: `scripts/ci/check_doc_links.py` with unit tests, run in the lint job
+over tracked Markdown outside `external/`. It resolves files and GitHub
+heading anchors; it allows targets under `out/`, documents that declare
+themselves historical, and `#` in file names. Repoint the two anchors in the
+same change.
+
+First step: the checker and tests against fixtures, then a clean run on the
+tree.
+
+Acceptance: `python3 -m unittest discover -s scripts/ci -p test_*.py` passes,
+including a broken-anchor fixture; the checker reports nothing on the tree
+after the two repoints; a docs-only change still skips the Windows jobs.
+
+Not decided here: checking external URLs, or links inside `external/labrador`.
 
 ## Startup-check evidence paths (`HYG#21`)
 

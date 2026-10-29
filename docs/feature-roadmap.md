@@ -1241,6 +1241,31 @@ comparison and usefulness remain the author's gate. Physical-pad checks were
 not run. Mover painting and pane-clamped labels are implemented above; values
 remain provisional and `ROAD#10` is `DECISION`.
 
+#### Fixed scored slabs for bots (`ROAD#38`)
+
+**Open, not started (filed 2026-10-29).** Bots treat the fixed scored slabs as
+solid boxes. `Level::bot_supports` leaves out `structure_fixed_slab`
+(`game/objects/level.cpp:797-798`), `Level::bot_ramps` takes only ramps
+(`:810-822`), and the traversal sweeps keep slab bounds as conservative
+barriers (`game/ai/match_bot_navigation.cpp:47`, `match_bot_ramp.cpp:48`). The
+records above leave slabs unqualified. Only the explicit-only
+`turbulence_slab_trial` has fixed slabs; its route cases drive the public player
+(`turbulence_slab_routes`), and no bot case runs there, while the mover, gate
+and Turbulence arenas each have one.
+
+Measure first. A `bot_slab_routes` case on `turbulence_slab_trial`, built like
+`bot_mover_routes`, counts slab-grounded steps, slab-top paint and crossover
+arrivals per tool and difficulty, against the same counts on
+`turbulence_mover_trial`. Only if the slab counts are near zero, add a
+slab-aware standing segment in `game/ai`, as `clear_ramp_path` already treats a
+ramp's known hypotenuse.
+
+Acceptance: the case passes in both presets with its counts recorded under
+`out/validation/road38/`. If the segment lands, slab counts rise and the
+existing bot route cases and bot trial CSVs stay byte-identical, since no other
+stage has a fixed slab. This does not put slabs into Turbulence (`POL#21`),
+change difficulty values or close the attended `ROAD#10` gate.
+
 ### Balanced random teams
 
 **GAP#1.5 - implemented (2026-10-15).** In team setup, any joined player may
@@ -1326,6 +1351,32 @@ validation fits every level's text under every Weapon Select label.
 having and the values feel fair against Easy/Normal/Hard bots. The author
 picked one Boost for health and refill over health-only, refill-only or
 two-way levels; the values remain provisional until that play.
+
+#### Boost on paint underfoot (`ROAD#39`)
+
+**Open, not started (filed 2026-10-29).** `Player::ammo_regen_multiplier`
+multiplies the underfoot multiplier by the level's `paint_refill`
+(`game/objects/player.cpp:662-666`), which is what "multiplies paint underfoot
+rather than replacing it" above means. The `handicap` case checks that product
+only off paint (`scripts/acceptance/handicap.cpp:203-204`), and
+`paint_underfoot` checks its multipliers only at Off. Paint underfoot ships
+disabled (`tuning.json` `paint_underfoot.enabled: false`, `POL#36` trial
+amounts), so nothing exercises the combination. The bot observation takes
+`paint_refill` from the handicap (`game/ai/match_bot_driver.cpp:170`) and the
+finishing-window refill estimate uses it (`game/ai/match_bot.cpp:94-101`).
+
+Checks only. On a test tuning copy with underfoot enabled, assert at every
+level that own and enemy paint give their multiplier times `paint_refill`
+bit-exact (enemy 0 stays 0 at +2), that off paint and a dead player give
+`paint_refill` alone, and that a boosted bot's observation carries its level's
+`paint_refill`. The first step is a fixture in the `handicap` case that builds
+the world from that copy.
+
+Acceptance: `handicap` and `paint_underfoot` pass in both presets, Off stays
+bit-exact, and no tuning, content or game source changes. This does not decide
+whether paint underfoot ships, whether the Boost values are fair (the author's
+attended play above), or whether the bot's estimate should count paint
+underfoot.
 
 ## First increment: explicit joining and reconnect pause
 
@@ -1450,6 +1501,37 @@ uses it for the existing startup smoke check. A clean Windows machine still
 needs a separate deployment check. The engine pin and source are unchanged.
 The original validation predates replacement audio; current migration checks
 are recorded in [audio inventory §9](audio-inventory.md#9-runtime-migration-and-remaining-integration).
+
+### Windows Sandbox run of the Release ZIP (`ROAD#37`)
+
+**Open, not started (filed 2026-10-29).** Labrador's `PI-14` (master
+`docs/product/BACKLOG.md:294`, at `b96bad6`) records a 2026-10-28 Windows
+Sandbox run of this repository's CI Release ZIP (ColourWars `26a249d`, engine
+`1e60fb2` = v0.2.0): Windows 11 Enterprise 10.0.26100, no Visual C++ runtime in
+System32, no Visual Studio, configured by the engine's
+`tools/consumer_check/sandbox.py` with a scripted run. The sandbox's GPU was
+the host's RTX 5080 behind a paravirtual driver, so the game drew rather than
+refusing. Synthetic keys reached a keyboard-seat match and its pause menu, and
+closing the window exited 0. The entry says the record belongs in ColourWars,
+and the engine's `PI-14` row (master `TODO.md:163`) lists that as one of three
+things left. Its limits (`BACKLOG.md:2102`): a sandbox proves the loader and
+runtime requirements on a clean OS, not a target GPU. Release has no WARP
+fallback, so `--vgpu Disable` gives the missing-adapter refusal. Not checked:
+a match on a physical pad, the Radeon iGPU, a non-paravirtual GPU.
+
+First, copy that record here with its limits. Then add a driver under
+`scripts/` that writes a `.wsb` (extracted ZIP read-only, results folder
+writable, networking off) and a logon command. The command starts
+`ColourWars.exe` with `LOCALAPPDATA` in the results folder, closes it with
+`WM_CLOSE` as `check-startup.ps1` does, and writes a receipt: ZIP SHA-256, exit
+code, the game's log, Windows version, System32 runtime presence and display
+adapters. The engine's script runs `--smoke-test`, which this game does not
+have.
+
+Acceptance: the generator's output is checked on the host without starting a
+sandbox, and one run on this machine (`WindowsSandbox.exe` is present) leaves
+a receipt whose hash matches the ZIP. This is not a clean physical PC or a
+target GPU: `ROAD#1` stays `DECISION`, and no CI job is added.
 
 ## Fourth increment: pause controls/settings
 
@@ -1809,9 +1891,12 @@ Known limits, recorded so a later gap list does not file them again. The first
 now has a row.
 
 - **XInput only.** DualShock, DualSense and Switch Pro pads work only through
-  Steam Input or a wrapper. The engine's reader seam is one function wide
-  (`engine/input/gamepad_reader.h`), so a GameInput backend is Labrador work and
-  would need an exhibit before it is a report. `ROAD#2` observes the limit
+  Steam Input or a wrapper. The engine's reader seam
+  (`engine/input/gamepad_reader.h`) is a concrete class chosen at build time:
+  `sample`, `read`, `suspend` and `resume`, with XInput and browser backends at
+  the pin. Labrador master (`cadc962`, untagged; rechecked 2026-10-29 at
+  `b96bad6`) also sends vibration through it. A GameInput backend is still
+  Labrador work and would need an exhibit before it is a report. `ROAD#2` observes the limit
   (item 6 above). The author asked for it to be tracked on 2026-10-27
   (`ROAD#23`, [comparable-game gaps](#comparable-game-gaps-2026-10-27)).
 - **One keyboard seat.** That seat aims with the mouse, so a second keyboard
@@ -2247,6 +2332,33 @@ above:
 Promote a bounded slice only once its owner records those choices and its
 acceptance. Neither adds a new physics/scoring requirement to an accepted
 arena while `POL#21` remains a geometry decision.
+
+#### Vertical-lift contract draft (`ROAD#28`)
+
+**Open, not started (filed 2026-10-29).** The step is a written draft in this
+section, not code. The capability stays unscoped until the owner accepts it.
+The draft has three parts:
+
+1. **Inventory.** Every horizontal-only site with its file:line, starting from
+   `HorizontalCarryStep` (`game/objects/horizontal_motion.h:71`), the relative
+   displacement refusals (`game/objects/level_horizontal_motion.cpp:302-305`),
+   the capability note "not a lift or a rotating body"
+   (`game/objects/translating_structure_paintable.h:23-24`), the player's
+   carrier step (`game/objects/player.h:170`), `game/horizontal_motion_contract.h`,
+   the projectile sweeps, the translated shadow, the editor envelope, the
+   replay's `horizontal_motion` fields (`game/debug/replay.cpp`) and the match
+   fingerprint (`game/debug/match_fingerprint.cpp`).
+2. **Engineering answers that follow existing practice.** Refuse a crush, as
+   the gate holds open while its team is inside rather than pushing them out
+   ([Team gate](#team-gate-road15-second-slice)). Carry a rider relative to its
+   support's identity, as the x carry does now. Bump the replay format version
+   (it reads 3 and the current one).
+3. **Gameplay calls as options for the author.** Speed, travel, what drives a
+   lift, whether its surface scores, and which trial carries it.
+
+Acceptance: every inventory row resolves at the commit that records it, each
+engineering answer names its precedent, and no code, tuning or content changes.
+The draft does not choose a trial or touch Turbulence's geometry (`POL#21`).
 
 ### Paint-object trial play (`ROAD#30`)
 
@@ -3726,3 +3838,30 @@ supported policy, separately from simulation and any interpolation work.
 Inspect the current engine API and master before proposing a client setting or
 report. Define its persistence and visible acceptance on the intended refresh
 rates before implementation; this row does not supply a ready engine change.
+
+### Presentation-rate inspection slice (`GAP#L9`)
+
+**Open, not started (filed 2026-10-29).** The inspection the boundary above
+asks for, recorded against the pin (v0.2.0) and Labrador master (`b96bad6`)
+before any setting or report:
+
+- D3D11 calls `Present(1, 0)` (`engine/render/d3d11/device_resources.cpp:395`)
+  and reports `requested_swap_interval = 1` (`d3d11/renderer.cpp:70` at the
+  pin, `:50` on master). D3D12 is the same
+  (`d3d12/device_resources.cpp:511`). Vulkan sets
+  `VK_PRESENT_MODE_FIFO_KHR` only (`vulkan/device_resources.cpp:1157` at the
+  pin, `:1178` on master).
+- `ApplicationOptions` has `target_fps` (`engine/app/application.h:66` at the
+  pin, `:69` on master) and no vsync or present-interval option on either.
+- The game sets `target_fps = SIMULATION_HZ` (`game/main.cpp:52`), and nothing
+  in `game/` or `scripts/` calls `Application::step_position()`
+  (`application.h:295` at the pin), so the client does no interpolation.
+
+Then add one Debug `overlay.perf` receipt (`game/debug/view_commands.cpp:55`)
+on this machine's display, which reports 59 Hz, so the 60 Hz step against a
+59 Hz present is measured rather than assumed. With both recorded, set the row
+`DEFERRED` with its condition, or split an engine report from a client setting.
+
+Acceptance: each cited line resolves at the stated revision, and the receipt
+and its frame/update times are under `out/validation/gapl9/`. No code changes.
+This chooses no refresh-rate policy, setting or persistence.

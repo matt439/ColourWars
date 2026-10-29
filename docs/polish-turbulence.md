@@ -181,6 +181,41 @@ threatens, the warning/escape interval and the approach needed to gain it.
 Reject geometry that lets one centre holder cover both departures and their
 retreat at once. The samples will not prove universal spawn safety.
 
+### Authored review stations (`POL#40`)
+
+**Open, not started; recorded 2026-10-29.** The stations named above exist
+only in this brief. None of the six `turbulence*.json` files has a `stations`
+key, while Crossfeed, Close Quarters, Press Tower and the Movement Course do, so
+Debug `goto` reaches only `spawn_a`/`spawn_b` on every Turbulence variant. An
+attended `POL#21` comparison therefore starts by walking to each position by
+hand, and the variants have no shared names to compare at.
+
+Scope: author mirrored stations in `turbulence_blockout` and the mover, gate,
+ferry and slab trials, using the [station format](level-format.md#stations-and-validation-limits)
+(lowercase names, top-left points, inside the bounds; they create no geometry
+and do not affect play). Use one name list with suffix `_a`/`_b`: each home
+exit, each upper receiver, both crossover ends and the lower centre cover in
+every variant, plus each mover's endpoints in the three trials that have
+movers. A position that a variant's added object occupies moves to the nearest
+clear standing point under the same name. Add `scripts/debug/turbulence_station_tour.cfg`
+on the pattern of `station_tour.cfg`, taking the stage as its first statement
+so one script tours any variant. The preserved `turbulence.json` is out of scope.
+
+First step: list the blockout's station points from its existing route and
+spawn geometry, reflected by body width as the spawn rule above requires, and
+check them against each trial's objects before editing any file.
+
+Acceptance: every edited stage loads at startup and in the `stage_selection`,
+`level_format` and `terrain` cases in both presets; the tour runs under
+`+exec` on each variant and writes one screenshot per station with the player
+supported at rest. The loaded stage's semantic hash covers the whole document
+(`replay.h:27`), so stations change it: re-record any replay kept against these
+stages, and leave the dated receipts above as written. Should `ED#23` land
+first, the editor's station check must also accept the saved files.
+
+Not decided here: geometry, spawn safety or which variant `POL#21` keeps.
+Stations are review positions, not a pressure or balance claim.
+
 ## Regional and face paint budget
 
 These are initial **design allocations of exposed scored area**, totalling
@@ -1058,3 +1093,38 @@ attended balance remain open.
 Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.
+
+### Shipping-bot routes and team trials (`POL#42`)
+
+**Open, not started; recorded 2026-10-29.** The shipping bots have unequal
+evidence across the Turbulence family. `bot_turbulence_routes.cpp:100` sets
+the preserved `turbulence` stage, not the blockout. The mover and gate trials
+have their own route cases (`bot_mover_routes.cpp:38`, `bot_gate_routes.cpp:45`).
+The blockout and slab trial have none. The natural-spawn team matrix in
+`bot_team_trials.cpp:516` covers Crossfeed, Close Quarters, King of the Hill and
+the preserved Turbulence, so no current variant has bot-held paint from
+ordinary spawns.
+
+Scope: a shipping-bot route case on `turbulence_blockout` (home departures,
+the lower route, the fixed crossover and the return, both teams and all five
+tools, on the `bot_turbulence_routes` pattern), and `turbulence_blockout` plus
+`turbulence_mover_trial` added to the team matrix. The matrix gives a stage
+partition only to Crossfeed (`bot_team_trials.cpp:113`); let the blockout use
+its existing `balance_regions` bands and keep geographic thirds for the mover
+trial until `TOOL#3` supplies its own. Report completion, takeoffs, arrival updates and
+held paint per team so the two stages compare like for like. The slab trial
+waits on `ROAD#38`, since bots currently treat its fixed slabs as solid boxes.
+Region bands for the four trials and the five-tool matrix are `TOOL#3` in
+[gameplay tuning](gameplay-tuning.md).
+
+First step: run the existing team matrix with the two stages added and record
+whether the bots complete any crossing before writing the new route case.
+
+Acceptance: both new cases pass in Release, the route case also in Debug, and
+the measured rows are recorded under this heading with their receipts. A route
+the bots cannot complete is a recorded result with its stop point, not a
+failure to hide by changing geometry or bot tuning.
+
+Not decided here: arena selection, weapon balance or bot difficulty. These are
+descriptive evidence for `POL#21` and `POL#27`; bots are not a stand-in for
+attended play.

@@ -242,3 +242,54 @@ separate construction steps and interchangeable representations.
 Keep the guide and contracts in sync when changing an extension point. This
 example needs clear, working interfaces and observable specialization; it does
 not need artificial inheritance or every design pattern to fill a checklist.
+
+## Open
+
+### Guide drift since the last pass (`OOP#1`)
+
+Open, not started; recorded 2026-10-29. The guide above still describes the
+code it was written against, and the code has moved:
+
+- The projectile-kind paragraph says `PROJECTILE_COUNT` "currently ends at
+  `ProjectileType::ball + 1`". [tuning.h](../game/tuning.h) (lines 429-430) now
+  sizes it from a `ProjectileType::count` sentinel, and
+  [projectile_type.h](../game/objects/projectile_type.h) (lines 11-13) asks for
+  new kinds before that sentinel. The step is "add before `count`", not "update
+  the count".
+- Four bases the guide never names: `TeamGateStructurePaintable` and
+  `TranslatingStructurePaintable` are `final` specializations of
+  `StructurePaintable`
+  ([team gate](../game/objects/team_gate_structure_paintable.h) line 19,
+  [translating](../game/objects/translating_structure_paintable.h) line 27).
+  `FixedSlabPaintable` ([fixed_slab_paintable.h](../game/objects/fixed_slab_paintable.h)
+  line 9) takes `Structure + PaintableObject` directly rather than deriving
+  from `StructurePaintable`, which is the multiple-inheritance row's best
+  second exhibit. `CrudeDrawing` ([crude_drawing.h](../game/objects/crude_drawing.h)
+  line 12) is a protected-constructor base over `TextureObject` with nine
+  `final` leaves (`CountdownArt`, `FigureActing`, `FigureAttachments`,
+  `Monitor`, `PlayerBadge`, `RevealArt`, `ScreenCursor`, `Silhouette`,
+  `TeammateMarker`).
+- There is a weapon checklist but no "add a scored paint object" one, though
+  scoring depends on a contract spread across `PaintableObject`, Level's
+  `dynamic_cast` enrollment ([level.cpp](../game/objects/level.cpp) around
+  lines 803, 895 and 944) and the builders.
+
+Scope: this file only. Fix the projectile-kind step; add the four bases to the
+concept table and the ownership chain where they belong; add a short
+scored-paint-object checklist in the style of the weapon one. Describe the
+classes as they are; do not flatten or reshape any hierarchy to make the
+guide tidier.
+
+First step: re-read each named header and its builder registration, then
+correct the `PROJECTILE_COUNT` sentence.
+
+Acceptance: every class, enumerator and file the guide names exists at the
+linked path (a grep over the guide's links and backticked identifiers finds
+each); no sentence describes a count or registration the code no longer has;
+the new checklist's steps match what `FixedSlabPaintable` and one
+`StructurePaintable` leaf actually needed. No build, gamepad or author time is
+required.
+
+Not decided here: whether any of these hierarchies should change. That is a
+code question, not a guide one, and AGENTS.md already rules out reshaping the
+game toward the engine's style.

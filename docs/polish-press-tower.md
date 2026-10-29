@@ -347,11 +347,60 @@ comfort, competitive balance, listening, physical-device or performance
 acceptance. Press Tower remains explicit-only and excluded from Random;
 `POL#31` and the support-art question below remain open.
 
+### Shipping-bot routes and team trials (`POL#41`)
+
+Open, not started (filed 2026-10-29). The scripted routes above prove the
+geometry can be crossed; nothing yet shows whether the shipping bot crosses it.
+[bot_arena_routes.cpp](../scripts/acceptance/bot_arena_routes.cpp) names five
+routes at lines 32-43, on Crossfeed, King of the Hill and Turbulence, and none
+on Press Tower. [bot_team_trials.cpp](../scripts/acceptance/bot_team_trials.cpp)
+runs its stage loop at line 516 over `crossfeed`, `close_quarters`,
+`king_of_the_hill` and `turbulence`, also without `press_tower`. The five-tool
+report above (line 241) already says Skirmish has no line of sight or route
+planner, so final paint cannot show whether a bot reached the summit.
+
+Scope, descriptive only:
+
+- **Routes.** Add Press Tower routes to the actual-driver route case for both
+  teams, all five tools and Easy/Normal/Hard: R2 (`floor_yard_a` → `press_bed`
+  → `floor_yard_b`), R3 (`catwalk_a` → `stair_3_a` → `shoulder_a`), R4
+  (`press_bed` → `frame_a` → `shoulder_a`) and a summit leg onto
+  `press_head`, mirrored for B. R2 is a walk with zero takeoffs, so its pass
+  rule cannot be the case's current "at least one jump" rule.
+- **Team trials.** Add Press Tower to the team loop with the existing
+  `x_band` partition from `balance_regions` (`metrics.cpp:221-226`, where the
+  `crown` band is X 1640-1960), not geographic thirds. Per bot, record landed
+  (route contacts), summit (steps grounded on `press_head` or `press_crown`),
+  left-home and died counts.
+- **Limits.** A route a bot cannot finish is recorded as a measured limit with
+  its trace. It does not become a bot change, a geometry change or a weakened
+  assertion. The existing 150-route and 200-trial contracts and the existing
+  stages' CSV rows stay byte-identical: Press Tower is appended after them and
+  counted on its own line, with its own totals.
+
+First step: add the R2/R3/R4/summit route records and a separate Press Tower
+tally to `bot_arena_routes.cpp`, run `-Cases bot_arena_routes` on both
+presets, and diff the existing `MEASURE` lines against a run from before the
+change.
+
+Acceptance: `scripts/run-acceptance.ps1 -Cases bot_arena_routes,bot_team_trials`
+passes on x64-debug and x64-release; the existing stages' output and CSV rows
+match the previous run byte for byte; Press Tower prints per-route,
+per-difficulty and per-team landed/summit/left/died counts; and this section
+records the first results with any unfinished route named as a limit.
+
+It does not decide whether the summit is worth holding, whether the crown
+halves are fiddly or whether spawn pressure is fair. Those remain `POL#31`,
+attended. It does not decide Easy/Normal/Hard values (`ROAD#10`), and it does
+not move Press Tower into Random.
+
 ## Open
 
 - Attended play on both sides and 1-4P (`POL#31`), including spawn pressure, the summit's
   value and the summit halves' feel. If the halves read as fiddly, narrow the
   crown to 24 (halves 148) and re-run the sightline and live-fire checks.
+- Shipping-bot routes and team trials (`POL#41`, above): descriptive evidence
+  for `POL#31`, not a substitute for it.
 - Support art for the brief, above.
 - Spawn margins depend on the gantry ending at X 1000; shortening it to 940
   opens a standing summit line to X 405. Any geometry edit re-runs the checks.

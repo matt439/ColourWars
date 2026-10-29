@@ -1053,6 +1053,110 @@ Builds used the installed-dependency offline workflow above, restoring both
 manifest-install cache settings to `ON` before runtime checks. No engine or
 vendored RapidJSON source changed. The attended `ED#5` gate remains open.
 
+## Station and copy backlog (2026-10-29)
+
+A verified source brainstorm on 2026-10-29 found these editor gaps. None needs
+a pad or the author, and none settles a layout, route or attended result: those
+stay with `ED#5` and the stage's own `DECISION` rows. `ED#25` follows `ED#24`
+and `ED#26` follows `ED#23`.
+
+### Station validation in the editor (`ED#23`)
+
+**Open, not started.** `level_json::validate_document`
+([level_json.cpp](../editor/level_json.cpp), lines 409-493) checks bounds,
+spawns, objects, slabs, movers and gates, but not `stations`. The game refuses
+a bad station at startup in `LevelLoadedInfo::validate_stations` and
+`validate_lesson` ([level_loaded_info.cpp](../game/objects/level_loaded_info.cpp),
+lines 253-327): name spelling, reserved and repeated names, out-of-bounds
+containment, and lesson area size, camera containment and station containment.
+So shrinking `out_of_bounds` past Press Tower's `crown` station at (1774, 620)
+saves a stage the game will not load.
+
+Scope: move the engine-free station and lesson-geometry rules into a shared
+header beside `user_stage_contract.h` and `team_gate_contract.h`, call it from
+both the game loader and `validate_document`, and keep the game's messages.
+Drawable-text and font checks on lesson words stay in the game, which owns the
+fonts. First step: a failing editor document check that shrinks Press Tower's
+`out_of_bounds` past `crown` and expects the edit to be refused with undo
+history intact. Acceptance: that check passes in Debug and Release; the
+`level_format` consumer case still admits every registered level and the
+template, and its station fixtures produce the same refusals through the shared
+rules. It does not decide where any station goes; hand-authored review stations
+(`POL#40`) should land on top of it.
+
+### Mirror copy across the arena centre (`ED#24`)
+
+**Open, not started.** The command list in [editor.h](../editor/editor.h)
+(lines 20-26) has no mirror command, and `LevelDocument::duplicate`
+([level_document.cpp](../editor/level_document.cpp), lines 808-865) only
+offsets the copy. Mirrored arenas are checked after the fact by three copies of
+the same `mirror()` helper in acceptance (`press_tower/fixtures.cpp` lines
+51-55, `crossfeed/` and `cq_blockout/fixtures.h` line 42).
+
+Scope: **Edit > Mirror copy** (Ctrl+Shift+D, currently unassigned) adds one
+validated, undoable copy reflected across the `out_of_bounds` centre: X becomes
+left + right - x - width, ramp handedness and left/right paint faces swap, slab
+rise flips, cycle movers reflect their whole path and add 0.5 to phase, spawn A
+maps to spawn B, and a trailing `_a` name becomes `_b`. Paint ferries are
+refused in this slice. On the Mover Trial (left + right = 4000) the rule maps
+`mover_a` at x 600 with travel 320 and width 320 to x 2760, phase 0.5, which is
+the shipped `mover_b`. First step: document checks that mirror each object kind
+from a shipped stage and compare with its authored partner. Acceptance: those
+checks and a refused-ferry check pass in both builds, with one undo step per
+copy. It does not decide whether any stage should be symmetric.
+
+### Symmetry report in the blockout aids (`ED#25`)
+
+**Open, not started; after `ED#24`.** The [blockout aids](#blockout-aids)
+summary reports total and selected scoring area
+([editor_canvas.cpp](../editor/editor_canvas.cpp), lines 331-332, using
+`scoring_area` from [blockout_aids.h](../editor/blockout_aids.h), lines 37-42)
+but not whether the two halves match. Press Tower checks mirror partners by
+geometry only in acceptance (`press_tower/geometry_checks.cpp`, lines
+385-397).
+
+Scope: add a symmetry line to the summary that lists objects without a mirror
+partner under the `ED#24` rule and the left and right scoring areas, splitting
+centre-straddling objects by region. The Ferry Trial's two ferries both use
+`"team_a_heads": "right"` (`turbulence_ferry_trial.json`, lines 494 and 523);
+report that as a known authored asymmetry rather than a defect. First step: a
+document check on Press Tower expecting no unmatched objects and equal halves.
+Acceptance: that check plus one on a deliberately unmatched copy pass in both
+builds. It reports only; fairness and side-swap acceptance stay play review.
+
+### Station editing (`ED#26`)
+
+**Open, not started; after `ED#23`.** `EntryKind`
+([level_document.h](../editor/level_document.h), line 15) has no station kind,
+and the editor mentions stations only in `template.json`. Stations are kept
+but can be neither seen nor moved, so a layout edit can strand one silently.
+
+Scope: an `EntryKind::station` listed in Level Contents, drawn as a marker with
+its name, added from the palette and edited through a `name` inspector row and
+drag, all validated by the `ED#23` shared rules. Spawn entries already show the
+pattern (`entries()` and the spawn branch of add, `level_document.cpp` lines
+420-426 and 707-711). Lesson blocks remain preserved metadata with no
+controls. First step: document checks that add, rename, move, duplicate and
+delete a station with undo, and refuse a reserved or repeated name. Acceptance:
+those checks and a lesson round trip on the Movement Course pass in both
+builds. It does not place any station.
+
+### Copy and paste between documents (`ED#27`)
+
+**Open, not started.** Neither [editor.h](../editor/editor.h) (lines 20-26) nor
+the accelerator table in [editor_window.cpp](../editor/editor_window.cpp)
+(lines 157-164) has Copy or Paste; `duplicate` copies only within one
+document.
+
+Scope: **Edit > Copy** puts one selected object on the clipboard as
+`CF_UNICODETEXT` JSON, and **Edit > Paste** appends it to the open document as
+one undo step through full validation, refusing anything that does not
+validate. The inspector's edit field keeps its own Ctrl+C and Ctrl+V. First
+step: a document-level paste of a copied object into a second stage, including
+refusal of malformed text and of an object that would break validation.
+Acceptance: those checks and a hidden-window clipboard round trip pass in both
+builds. It does not add multi-selection.
+
 ## Acceptance checks
 
 `ED#5` is `DECISION`: the remaining GUI and saved-stage gameplay checks need an

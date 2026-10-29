@@ -1093,3 +1093,43 @@ runs are `final-debug/x64-debug/9005e062a2a14253b062c97cada46919` and
 `final-release/x64-release/5232a20aff7244ac853e8c0cb87472c5`. These checks
 establish requests, ownership and flow; optional detail/mix assessment remains
 POL#23, listening remains ROAD#3 and visual transitions/loading remain GAP#5.1.
+
+### Looping music after device recovery (`ROAD#36`)
+
+**Open, not started (recorded 2026-10-29).** Labrador `2b3b97b` (on engine
+`master`, not in the pinned `v0.2.0`) retries a lost XAudio2 output, and its
+contract (`engine/audio/audio_device.h:147-151` there) says recovery "stops
+persistent voices; their handles remain valid, and the game may play them
+again". It sends no event. The pinned header (`audio_device.h:146-150`) still
+leaves a lost device unhandled, so this changes nothing until the pin passes
+that commit.
+
+After that bump, both music owners treat an outside stop as a finished voice.
+`ScreenMusic::update` returns unless the effect is playing
+(`game/states/screen_music.cpp:27`), `resume` revives only a paused one
+(42-45), and `finished` counts any stopped voice as done (57). `Level::update_music`
+and `Level::resume_music` have the same playing/paused guards
+(`game/objects/level_audio.cpp:112-123`, 133-139); the arena loop is started
+only once, at the countdown (`game/objects/level.cpp:263`). A recovered device
+would leave menu or arena music silent for the rest of that screen or match.
+
+Scope: the two looping music owners only. When the effect is stopped while
+looping, not leaving and not ending, the owner plays it again from zero gain
+and fades in with `music_mix.fade_in`. A finished one-shot, the results coda,
+a completed exit, a muted or missing bank, and suspension stay as they are; the
+screen-music "no stopped-voice resurrection" guarantee keeps holding for those.
+Room tone, redraw, weapon and results-fill loops can be stopped the same way
+and are not covered here.
+
+First step: a `story_audio` recorder case that stops each music effect directly
+through its sound bank (standing in for recovery) on the menu, in the countdown,
+in live play and under a pause page, then advances one positive update.
+
+Acceptance: that case shows one fresh looping play per outside stop and none
+for a leaving `ScreenMusic`, an ending arena loop, the Movement Course or the
+silent bank; existing screen-music and arena-mix checks still pass in Debug
+and Release. No device, speaker or gamepad is needed.
+
+Not decided here: whether the restart should resume position instead of
+starting over (the engine contract gives none), and how it sounds, which stays
+with `ROAD#3`.

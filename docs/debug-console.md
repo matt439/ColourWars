@@ -1187,6 +1187,15 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the ten stations, into `screens\station-tour-<time>\` |
 | `bots_4p` | four paint bots on Close Quarters, seed 7, 20 match seconds at x4, then a paused screenshot with the paint overlay and the checksum, into `screens\bots-4p-<time>\` |
 | `feedback_ab_pass`, `feedback_ab_shot` | helpers of `review_feedback_ab` |
+| `jump_baseline` | live-tunes the 2026-10-08 historical jump on the Movement Course (held 207 high, 1.02 s airborne, tap 95) |
+| `jump_low`, `jump_mid`, `jump_snappy` | live-tune the three `POL#3` jump candidates on the Movement Course; each header gives its height, airtime and tap |
+| `crossfeed_baseline` | Crossfeed comparison P0: the 2026-10-08 movement and original tool supply and lifetime |
+| `crossfeed_movement`, `crossfeed_lower` | Crossfeed P1 and P2: an experimental lower jump with the original (P1) or coupled (P2) tool supply and lifetime; neither clears existing 200-unit climbs |
+| `crossfeed_coupled` | Crossfeed P3: the provisional global compatibility movement and coupled tools |
+
+The jump and Crossfeed scripts change tuning live and globally, and do not put
+it back: `tune.reset tuning` restores the loaded defaults, and `tune.save
+tuning` is the only thing that writes them.
 
 The acceptance case follows every shipped script from the top-level ones
 through each `exec` with the arguments it passes, and checks every statement's
@@ -1888,6 +1897,9 @@ as the game. In Release:
 
 ## Not done
 
+Each item with an open-work row names it; the first two are deliberate and have
+none.
+
 - **Loops, conditions and variables in scripts** - deliberately. A script is
   data (which frames, which stations); anything that needs logic is a command.
 - **A live console over the menus**, and **binds in the menus**: menus have no
@@ -1899,13 +1911,89 @@ as the game. In Release:
   would be this client's own and is not built.
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
   and inserting keys in `tune.save`: the fifty-eight listed colour fields above are
-  implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
+  implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1) (`DBG#1`).
 - **Replays across builds or machines**, across step sizes, and across rounds
-  (a recording stops at the end of the round).
-- **Loaded-stage replay fingerprint qualification**: the guard is implemented;
-  the scoped [local replay checks](#loaded-stage-replay-fingerprint-dbg8) are pending.
+  (a recording stops at the end of the round) (`DBG#2`).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
-  this machine has no pad; both are covered on the CPU side.
+  this machine has no pad; both are covered on the CPU side (`DBG#7`).
+- **Roster statements** for a seat's team, shipping-bot difficulty and Boost
+  ([`DBG#17`](#roster-statements-for-bots-teams-and-boost-dbg17)).
+- **An arena review screenshot pack** beyond the Movement Course and Close
+  Quarters scripts ([`DBG#18`](#arena-review-screenshot-pack-dbg18)).
+
+## Roster statements for bots, teams and Boost (`DBG#17`)
+
+**Open, not started (filed 2026-10-29).** A developer start can choose the
+stage, the seat count, weapons and the Debug behaviour bots, but not three
+things the shipping setup already has: a seat's team, a shipping bot at
+Easy/Normal/Hard, and per-seat Boost 0/1/2. `MatchRequest`
+(`game/debug/match_plan.h:14-35`) has no controller, difficulty or team field;
+the planner assigns teams by seat parity
+(`game/debug/match_plan.cpp:132-136`); and `bot` accepts only the six Debug
+behaviours (`game/debug/bot.cpp:60-64`). Within `game/debug/`,
+`set_player_bot` and `set_player_handicap` are reached only when a version-4
+replay is read back (`replay.cpp:690`, `:754`), so every attended bot or Boost
+session (`ROAD#10`, `ROAD#5`) starts by walking the menus.
+
+**Scope.** Launch and console statements that set, per seat, the team side, a
+shipping bot with its difficulty, and Boost, applied by `MatchPlanner` through
+the existing `MenuLevelSettings` setters. The spelling must not clash with
+`bot <seat> <behaviour>`, which keeps its meaning: a Debug behaviour bot drives
+a seat's input, a shipping bot is the seat's controller. The rules the replay
+codec already enforces hold here too: P1 stays human, a bot seat has no device,
+and a human seat's difficulty is Normal. A match planned this way records and
+plays back through format 4 unchanged. Ship `review_bots_boost.cfg`, a seeded
+four-seat match with mixed difficulties and Boost, in the
+[shipped scripts](#scripts) table.
+
+**First step.** Choose the spelling (for example a `seat`-scoped statement or
+separate `team`/`boost` commands; neither name is a command today) and add the
+fields to `MatchRequest`, with planner checks for the refusals above.
+
+**Acceptance.** The `debug_console` case resolves plans that set each field,
+refuses a bot P1, a device on a bot seat and an out-of-range Boost, and keeps
+existing `players`/`bot` plans byte-identical. A seeded match planned with every
+field records, replays with matching checksums and reads back the same roster.
+`exec.list` and the shipped-script walk accept the new script. Release still
+carries none of the console's RTTI names. No pad or attended play is needed.
+
+**Not decided here.** This is preparation only. Whether Easy/Normal/Hard are
+useful (`ROAD#10`) and whether Boost +1/+2 are fair (`ROAD#5`) stay DECISION;
+no difficulty, Boost or team default changes.
+
+## Arena review screenshot pack (`DBG#18`)
+
+**Open, not started (filed 2026-10-29).** The shipped scripts photograph the
+Movement Course (`station_tour`, `review_feedback_ab`) and Close Quarters
+(`bots_4p`); nothing in `scripts/debug/` covers Press Tower or Turbulence.
+Every explicit-only stage is reachable with `+stage`, since
+`include_in_random` (`game/objects/stage.h:16`) only filters Random, and the
+Turbulence owner still asks for native 1/2/3/4-pane clean and heavy captures
+([polish-turbulence.md](polish-turbulence.md), lines 1047-1050).
+
+**Scope.** A parameterised `review_arena.cfg` and one thin wrapper per stage:
+Press Tower, the shipping Turbulence, its blockout and four trials
+(`turbulence_blockout`, `_mover_trial`, `_slab_trial`, `_ferry_trial`,
+`_gate_trial`), and the original King of the Hill and Close Quarters. Each takes
+seeded paint-bot frames at 1, 2 and 4 players, a clean frame at GO and a heavy
+one after a fixed number of match seconds, with `checksum` before each shot,
+into `screens\review-<stage>-<time>\`, then puts back the bots, seed, folder
+and timescale as `bots_4p` does. One player has no idle seat, so the 1P heavy
+frame needs its own paint source (`bot 1 paint` on the keyboard seat). Where a
+stage has stations the pack uses `goto`; Turbulence gets them only once
+`POL#40` lands, and until then its frames are spawn-framed.
+
+**First step.** Write `review_arena.cfg` against Press Tower, which already has
+stations, from the `bots_4p` pattern, then add the wrappers.
+
+**Acceptance.** The `debug_console` case's shipped-script walk accepts every
+new script, stage and station. Each wrapper run with `+quit` writes its PNGs and
+logs checksums; two runs with the same seed log the same checksums. No pad is
+needed; the run notes go in each arena's owner doc.
+
+**Not decided here.** The pictures are evidence for review, not acceptance:
+readability, composition and arena approval stay with the arena owners and their
+DECISION rows.
 
 ## Loaded-stage replay fingerprint (`DBG#8`)
 

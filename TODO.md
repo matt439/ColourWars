@@ -46,13 +46,15 @@ UI artwork uses the approved gameplay style and remains outside the current bloc
 Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
 when they don't compete with it.
 
-**Independent implementation (2026-10-28).** Select bounded work from the
-[maintenance](docs/code-hygiene.md#follow-up-shortlist-2026-10-28) and
-[authoring](docs/level-editor.md#authoring-follow-up-shortlist-2026-10-28)
-shortlists while attended reviews wait. Refresh them for the next concrete
-software qualification or usability gap after each completed slice.
-This does not change the arena/tuning order above. Vertical lifts and growing
-sponges have separate `UNSCOPED` rows (`ROAD#28`, `ROAD#29`); they do not count
+**Independent implementation (2026-10-29).** The 2026-10-28 shortlists are
+complete. Pick OPEN rows while attended reviews wait, in this order:
+`DBG#17` (roster statements every attended session uses), `POL#40` with `ED#23`
+(Turbulence stations, validated by the editor), `TOOL#2` (shipping bots in the
+headless runner), `POL#41` (Press Tower bot routes); then the rest by section,
+the next-bump preparation (`HYG#23`-`HYG#25`) before any Labrador minor tag.
+After each slice, record the next concrete gap in its owner.
+This does not change the arena/tuning order above. `ROAD#28`'s OPEN step is a
+contract draft only; vertical lifts and growing sponges (`ROAD#29`) do not count
 as ready work. Functional trial cues do not widen the deferred production-art pass.
 
 **Bots (`ROAD#10`):** Easy/Normal/Hard setup and the shipping driver are integrated,
@@ -94,9 +96,8 @@ comparison and physical-pad check; values remain provisional.
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
-- **Report filing:** the guarded resize request and example (`ENG#23`) are
-  prepared and locally qualified, alongside the vibration-output draft (`ENG#25`)
-  and the registry-removal draft (`ENG#26`). Filing needs separate author authorization.
+- **Report filing:** the registry-removal draft (`ENG#26`) needs separate author
+  authorization. `ENG#23` and `ENG#25` are answered on engine master and need no filing.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -125,6 +126,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#19` | DECISION | LOW | S | Built: menu solo practice on the Movement Course is untimed, with station lessons and a pause Tool row. Watch a fresh player use it, then keep or cut it and settle the lesson wording. [Workshop](docs/polish-movement-course.md#practice-workshop). |
 | `POL#38` | DECISION | MED | S | Implemented: HUD tag, figure tank and a once-per-descent cue before exhaustion. Listen to the provisional `tool.drip` cue in the 1/2/4P mix (with `POL#23`) and check tag/tank readability muted at 4P. [Record](docs/polish-weapon-feedback.md#low-paint-advance-warning-pol38). |
 | `POL#39` | DECISION | MED | S | A hollow marquee now marks the mouse pointer in matches. Judge it in play over pale, dark and painted scenes at 1/2/4P, including its one-frame trail. [Record](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
+| `POL#43` | OPEN | LOW | M | Finish-review detail A/B: `review_finish_details.cfg` takes seeded 4P Crossfeed frames with every detail on, then once per presentation `enabled` flag off (ten flags, restart where the scope needs it), and ends with `tune.reset presentation`. Equal checksums across variants are checked, not assumed. Prepares `POL#24` and accepts nothing. [Finish-review A/B](docs/polish-plan.md#finish-review-detail-ab-script-pol43) |
+| `POL#44` | OPEN | LOW | S | `cursor_marker` CPU acceptance case: make `Level::cursor_marker_visible` public (access only) and draw from a pure frame-rectangle accessor. Check each visibility condition, whole-pixel frames with an open centre at 720/1080/1440, and every presentation refusal. The look stays the `POL#39` DECISION. [Cursor-marker case](docs/polish-plan.md#cursor-marker-acceptance-case-pol44) |
 
 ## Levels and the editor
 
@@ -138,6 +141,14 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
 | `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
+| `POL#40` | OPEN | MED | M | Author mirrored `_a`/`_b` review stations (home exits, upper receivers, crossover ends, lower cover, mover endpoints) in turbulence_blockout and the mover, gate, ferry and slab trials, plus a stage-agnostic `turbulence_station_tour.cfg`; re-record replays against these stages. Does not choose geometry. [Stations](docs/polish-turbulence.md#authored-review-stations-pol40) |
+| `POL#42` | OPEN | MED | M | Shipping-bot route case on turbulence_blockout and natural-spawn team trials on the blockout and mover trial, so the variants compare like for like. Evidence for `POL#21`/`POL#27`, not a selection; the slab trial waits on `ROAD#38`. [Bot evidence](docs/polish-turbulence.md#shipping-bot-routes-and-team-trials-pol42) |
+| `ED#23` | OPEN | MED | S | The editor never checks `stations`, so shrinking out_of_bounds past Press Tower's `crown` saves a stage the game refuses. Share the engine-free station/lesson rules between the game loader and `validate_document`; start with that failing check. [Station validation](docs/level-editor.md#station-validation-in-the-editor-ed23). |
+| `ED#24` | OPEN | MED | M | Add Edit > Mirror copy (Ctrl+Shift+D): one validated undo step reflected across the out_of_bounds centre, swapping ramp handedness and faces, flipping slab rise, mirroring movers with phase +0.5, mapping spawn A to B and `_a` to `_b`; ferries refused. [Mirror copy](docs/level-editor.md#mirror-copy-across-the-arena-centre-ed24). |
+| `ED#25` | OPEN | LOW | M | After `ED#24`: add a symmetry line to the blockout-aids summary listing unmatched mirror partners and left/right scoring area, splitting centre-straddling objects; the Ferry Trial heading is a known authored asymmetry. Reports only. [Symmetry report](docs/level-editor.md#symmetry-report-in-the-blockout-aids-ed25). |
+| `ED#26` | OPEN | LOW | M | After `ED#23`: show and edit stations in the editor (`EntryKind::station`, named marker, palette entry, validated `name` row and drag, using the shared rules). Lesson blocks stay preserved metadata; places no station. [Station editing](docs/level-editor.md#station-editing-ed26). |
+| `ED#27` | OPEN | LOW | M | Add Edit > Copy and Paste of one object between documents through `CF_UNICODETEXT` JSON, appended as one undo step with full validation; the inspector field keeps its own Ctrl+C/V. No multi-selection. [Copy and paste](docs/level-editor.md#copy-and-paste-between-documents-ed27). |
+| `POL#41` | OPEN | MED | M | Press Tower has no shipping-bot routes or team trials. Add R2/R3/R4/summit routes and a team-trial pass for both teams, five tools and Easy/Normal/Hard, recording landed, summit, left-home and died counts. Unfinished routes are recorded as limits, and existing rows stay byte-identical. [Scope](docs/polish-press-tower.md#shipping-bot-routes-and-team-trials-pol41) |
 
 ## Audio replacement
 
@@ -149,6 +160,7 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 |---|---|---|---|---|
 | `POL#23` | DECISION | HIGH | L | Listen to the in-game 1/2/4-player mix and decide whether optional detail earns a cue; world detail follows the reference arena. [Remaining work](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration). |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains (now Music/SFX sound-group volumes, report 6), mute, suspension, resumed loops, the multiplayer mix, a lost output device; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
+| `ROAD#36` | OPEN | LOW | S | After the pin passes Labrador `2b3b97b`, device recovery stops persistent voices without an event, and ScreenMusic and the arena loop treat that as finished, leaving music silent. Replay a looping, not-leaving music voice stopped from outside; prove it with a `story_audio` case that stops the effect directly. Listening stays ROAD#3. [Audio inventory](docs/audio-inventory.md#looping-music-after-device-recovery-road36) |
 
 ## Acceptance and release
 
@@ -164,6 +176,7 @@ here.
 | `POL#24` | DECISION | MED | M | The finish review and fresh-player observations on the Crossfeed reference match, including its spawn pressure and 1-4P clean/heavy readability; the gate before production widens. [Process](docs/polish-plan.md#7-acceptance-and-delivery). |
 | `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
 | `GAP#7.6` | DEFERRED | LOW | S | Replace the stock `directx.ico` in the later UI/release-art pass using the approved style; the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
+| `ROAD#37` | OPEN | LOW | M | Record Labrador `PI-14`'s 2026-10-28 Windows Sandbox run of the Release ZIP here with its limits, then add a `.wsb` driver that writes a receipt (ZIP hash, exit code, log). Not a clean physical PC; `ROAD#1` stays DECISION. [Scope](docs/feature-roadmap.md#windows-sandbox-run-of-the-release-zip-road37) |
 
 ## Game gaps
 
@@ -182,8 +195,10 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#10` | DECISION | HIGH | M | Compare Easy/Normal/Hard usefulness in attended play and check physical pads. Mover painting and pane-clamped labels are implemented; difficulty values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
 | `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
-| `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
+| `GAP#L9` | OPEN | LOW | S | Record the inspection at the pin and Labrador master: `Present(1, 0)` and Vulkan FIFO, `target_fps` only, no client `step_position()` caller; add an `overlay.perf` receipt at this display's 59 Hz. Then set DEFERRED with its condition or split the row. No refresh-rate policy choice. [Slice](docs/feature-roadmap.md#presentation-rate-inspection-slice-gapl9) |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
+| `ROAD#38` | OPEN | MED | L | Bots treat fixed scored slabs as solid boxes. Measure first: a `bot_slab_routes` case on `turbulence_slab_trial` counts slab-grounded steps, slab-top paint and crossover arrivals against the mover trial; add a slab-aware standing segment only if the counts are near zero. [Scope](docs/feature-roadmap.md#fixed-scored-slabs-for-bots-road38) |
+| `ROAD#39` | OPEN | LOW | S | Cover Boost on paint underfoot on a test tuning copy: own and enemy multipliers times `paint_refill` at every level (0 stays 0), off-paint and dead cases, and a boosted bot's observed `paint_refill`. Off stays bit-exact; no tuning change. [Scope](docs/feature-roadmap.md#boost-on-paint-underfoot-road39) |
 
 ## Comparable-game gaps
 
@@ -197,7 +212,7 @@ excluded modes.
 | `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#28` | UNSCOPED | MED | XL | Vertical lifts need vertical carry, ceiling/crush, admission and sweep contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
+| `ROAD#28` | OPEN | MED | M | Vertical lifts need carry, ceiling/crush, admission and sweep contracts. The step is a contract draft: a file:line inventory of horizontal-only sites, engineering answers following existing practice, gameplay calls as author options. The capability stays unscoped until the owner accepts the draft. [Draft](docs/feature-roadmap.md#vertical-lift-contract-draft-road28) |
 | `ROAD#29` | UNSCOPED | MED | XL | Growing sponges need occupied resize, changing-area scoring and paint-credit contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#30` | DECISION | MED | M | Play the Ferry/Gate Trials from both sides at 1-4P; judge route value, held-open clarity and provisional values. Arena selection remains `POL#21`. [Scope](docs/feature-roadmap.md#paint-object-trial-play-road30). |
 | `ROAD#16` | DECISION | LOW | S | User stages and scan details are implemented. Left: attended saved-stage play, Random opt-in and hint-only marker choices, and provisional scan-details wording. [Owner](docs/feature-roadmap.md#user-stages-road16). |
@@ -223,16 +238,17 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The three live drafts remain unfiled. Minimal engine-focused reports with
+`GAP#F*`. `ENG#23` and `ENG#25` are answered on untagged master and wait on the next
+minor tag; `ENG#26` remains an unfiled draft. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with another report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); runtime install facts (PI-11; report 15); listener/voice cap (report 6); mouse-button names; audio-device loss, display-awake owner, a non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `ENG#25` | DECISION | LOW | S | Prepared vibration-output draft and qualified isolated XInput exhibit; author authorization and a fresh upstream recheck are required to file. Current task forbids filing. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit). |
-| `ENG#26` | DECISION | LOW | S | Drafted: `Registry` cannot forget a name, so a user-stage rescan leaves a vanished stage's definition registered. Upstream recheck and author authorization are needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit). |
-| `ENG#23` | DECISION | LOW | S | Prepared guarded resize request/exhibit; author authorization to file remains. Current task forbids filing. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit). |
+| `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with a report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); install facts (PI-11; report 15); listener/voice cap (report 6); mouse-button names; display-awake owner; non-XInput reader. Device loss answered on master (`2b3b97b`). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#25` | BLOCKED | LOW | S | Answered, narrowed, on untagged master by `cadc962` (`Gamepads::vibrate`; not in v0.2.0); no filing needed. Waits on the next Labrador minor tag, then replace the native XInput transport and close the report. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit) |
+| `ENG#26` | DECISION | LOW | S | Rechecked 2026-10-29 at master `b96bad6`: `Registry` still cannot remove a name (`3a14f11` changed comments only). The ask narrows to forgetting the name, since `add(name, nullptr)` already empties a slot. Author authorization is needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit) |
+| `ENG#23` | BLOCKED | LOW | S | Answered on untagged engine master by `42bc478` (not in v0.2.0); filing no longer needed. Waits on the next Labrador minor tag, then delete `SettingsProbeActivationGuard` and its five uses and close the report. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
@@ -246,6 +262,8 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 | `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
+| `DBG#17` | OPEN | MED | M | Add launch and console roster statements for a seat's team, a shipping bot at Easy/Normal/Hard and Boost 0/1/2, spelled so they don't clash with `bot <seat> <behaviour>`. Keep P1 human and bot seats deviceless, round-trip through replay format 4, ship `review_bots_boost.cfg`. Preparation only; `ROAD#10` and `ROAD#5` stay DECISION. [Scope](docs/debug-console.md#roster-statements-for-bots-teams-and-boost-dbg17) |
+| `DBG#18` | OPEN | LOW | S | Arena review screenshot pack: `review_arena.cfg` plus wrappers for Press Tower, Turbulence with its blockout and four trials, King of the Hill and Close Quarters. Seeded paint-bot clean and heavy frames at 1/2/4P with checksums into `screens\review-*`. 1P heavy uses `bot 1 paint`; Turbulence uses `goto` after `POL#40`. [Scope](docs/debug-console.md#arena-review-screenshot-pack-dbg18) |
 
 ## Tooling, CI and docs
 
@@ -254,6 +272,42 @@ flow and a console over the menus are deliberately not done and get no rows.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
+| `TOOL#2` | OPEN | MED | M | Add the shipping `MatchBotDriver` to the headless runner as a `match` policy with per-seat `-Difficulty`, then record a side-swapped Easy-v-Normal, Normal-v-Hard and Easy-v-Hard ladder on Crossfeed and Press Tower at five seeds, changing no tuning. [Shipping bots in the runner](docs/gameplay-tuning.md#shipping-bots-in-the-headless-runner-tool2-2026-10-29) |
+| `TOOL#3` | OPEN | MED | M | After `TOOL#2`: give the four Turbulence trials the blockout's region bands, then rerun the 25-pair x 5-seed five-tool matrix at Hard on Crossfeed, Press Tower and the Turbulence family, and file per-band held paint as descriptive evidence for `POL#21`/`POL#27`. [Turbulence bands and rerun](docs/gameplay-tuning.md#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29) |
+| `CI#2` | OPEN | MED | M | Add a CI compile gate in both presets: `run-acceptance -SkipBuild -CompileOnly` over the 14 opt-in cases, a new `check-painter -CompileOnly` (both pad readers) and `check-frame-pacing -CompileOnly`; no probe or GPU. Hosted run waits for an authorized push. [Owner](docs/code-hygiene.md#compile-gate-for-opt-in-probes-ci2) |
+| `CI#3` | OPEN | LOW | M | Time `check-stage-registration` and `check-failure-reporting` with `-SkipBuild` in both presets (duration, focus, dialogs), then add CI steps with evidence upload or record each exclusion in its owner doc. [Owner](docs/code-hygiene.md#registration-and-failure-reporting-checks-in-ci-ci3) |
+| `CI#4` | OPEN | LOW | S | Have `run-acceptance` write `acceptance-summary.json` (per-case compile and run seconds, outcome, longest first) and upload it from CI, so `$longestFirst` and the Debug PR exclusions rest on data. [Owner](docs/code-hygiene.md#acceptance-timing-summary-ci4) |
+| `CI#5` | OPEN | LOW | S | Add `scripts/ci/check_doc_links.py` with tests to the always-on lint job (allowing `out/`, historical docs, `#` in file names) and repoint the two broken `#retained-route-trials` anchors. [Owner](docs/code-hygiene.md#local-markdown-link-check-ci5) |
+
+## Code hygiene and maintenance
+
+**Owner:** [docs/code-hygiene.md](docs/code-hygiene.md), its [Open shortlist (2026-10-29)](docs/code-hygiene.md#open-shortlist-2026-10-29) and, for the next-bump preparation, the [engine-report ledger](docs/review/engine-reports.md).
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `HYG#23` | OPEN | LOW | S | Delete the `_comment` key from manifest.json's sound_bank group: engine master (`e166dcc`) refuses unknown manifest keys, so the next pin bump would stop startup. README's Audio section already says it; keep the silent missing-bank fallback. [Next bump](docs/review/engine-reports.md#remove-the-manifests-_comment-key-hyg23) |
+| `HYG#24` | OPEN | MED | M | Trial-build against engine master in a scratch worktree (pin stays) and record each break class with error counts: mattmath namespace and MattMath.lib script paths, constant renames, removed members, the RectangleI include, removed types, /utf-8. [Next bump](docs/review/engine-reports.md#trial-build-against-engine-master-hyg24) |
+| `HYG#25` | OPEN | MED | L | After `HYG#24`: copy the seven types `730dd99` deletes (MovingObject, SoundBankObject, AnimationObject, CameraTools, RotationOrigin, TextDropShadow, UiTextDropShadow) into game/, shape unchanged; record the rungs that move. Never flatten. [Next bump](docs/review/engine-reports.md#carry-the-seven-removed-engine-types-into-the-client-hyg25) |
+| `HYG#22` | OPEN | MED | S | An existing save that fails to parse is silently replaced by defaults and overwritten at the next match start; copy it aside (never overwritten) with one stderr line, and correct the roadmap's save-layout record (version 5, `profiles` nested). [Owner](docs/code-hygiene.md#unreadable-save-preservation-hyg22) |
+| `HYG#26` | OPEN | LOW | S | Rename-only commit: `Level` parameters named `view` that index roster participants become `participant`; `view` stays only where a human pane is indexed. No behaviour change. [Owner](docs/code-hygiene.md#participant-parameter-names-in-level-hyg26) |
+| `HYG#27` | OPEN | LOW | S | Refresh README's line counts and explicit-only stage list (Ferry and Gate Trials), and AGENTS.md's backend paragraph (three audio backends, the input-backend axis); the AGENTS.md wording needs the author's approval at commit. [Owner](docs/code-hygiene.md#stale-readme-and-agents-structure-facts-hyg27) |
+
+## The OOP showcase
+
+**Owner:** [docs/oop-guide.md](docs/oop-guide.md). These describe the hierarchies as they are; never flatten them (AGENTS.md).
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `OOP#1` | OPEN | MED | M | Bring the guide up to date: new projectile kinds go before the `ProjectileType::count` sentinel; add `TeamGateStructurePaintable`, `TranslatingStructurePaintable`, `FixedSlabPaintable` (Structure + PaintableObject) and the `CrudeDrawing` family; add an "add a scored paint object" checklist. Describe the classes as they are; don't flatten them. [Guide drift](docs/oop-guide.md#guide-drift-since-the-last-pass-oop1) |
+
+## Design process
+
+**Owner:** [docs/design-process.md](docs/design-process.md): personas, user stories and journeys, opened 2026-10-29 at the author's request.
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `DES#1` | OPEN | MED | M | Draft 3-6 personas, user stories with acceptance criteria, and journeys (first launch, a returning group's evening, solo practice, user stages), each citing existing docs/code or marked a hypothesis and mapped to what serves it. The author's acceptance follows as a DECISION. [Draft](docs/design-process.md#draft-personas-stories-and-journeys-des1) |
+| `DES#2` | BLOCKED | LOW | M | Waits on `DES#1`: trace stories to features, rows and acceptance cases; file unserved stories as candidates in their owners and list features no story explains. [Traceability](docs/design-process.md#traceability-and-gap-pass-des2) |
 
 ## Areas with no open rows
 
@@ -261,12 +315,10 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
-| Code hygiene and maintenance | [code-hygiene.md](docs/code-hygiene.md) | a scoped maintenance or usability finding |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
-| Closed engine reports (1–22) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
+| Closed engine reports (1–22, 24) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
-| The OOP showcase | [oop-guide.md](docs/oop-guide.md) | a base class or weapon contract the guide no longer describes |
 | Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1 | only the author reversing the decision |
 | Startup content validation | gap audit 8.1, `game/content_validation.cpp` | a content kind added without validation |
 | Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
@@ -304,7 +356,7 @@ the owner; a second copy here goes stale unnoticed.
 audit's own section number (`GAP#4.2`, `GAP#D3`, `GAP#F8`), ledger rows the report number
 (`ENG#23`); the rest are `PREFIX#n` by owner: `STORY` backstory, `POL` polish plan, `ED` level
 editor, `ROAD` feature roadmap, `DBG` developer console, `HYG` code hygiene,
-`DOC`/`CI`/`TOOL` the named file.
+`OOP` OOP guide, `DES` design process, `DOC`/`CI`/`TOOL` the named file.
 
 **`status`**, a closed list:
 - `OPEN`: ready to work.

@@ -519,3 +519,76 @@ This completes the finite `TOOL#1` scope. `POL#27` and `POL#31` remain attended
 decisions; the report neither authorizes retuning nor accepts a new bot opponent.
 `POL#36` remains its separately selected paint-underfoot prototype, using a future
 explicit switch-off comparison; no such mechanic was enabled in this baseline.
+
+## Shipping bots in the headless runner (`TOOL#2`, 2026-10-29)
+
+**Open, not started.** The runner measures only Debug policies:
+`scripts/run-balance.ps1:9` accepts `idle`, `walk`, `jump`, `chase`, `paint` and
+`skirmish`, and nothing under `scripts/acceptance/balance_runner*` references
+`MatchBotDriver` (`game/ai/match_bot_driver.h:12`), the Release-capable driver
+the shipping Easy/Normal/Hard opponents use. The
+[ROAD#10 record](feature-roadmap.md#ai-bot-players-road10) says twice
+(around lines 701 and 776) that its trials are not evidence of relative
+difficulty strength, and `scripts/acceptance/bot_combat_trials.cpp:44-45` gives
+both opposed bots the same difficulty, so no measurement yet sets one difficulty
+against another over a whole match.
+
+Scope: add a `match` policy to the runner and launcher, driven by the real
+`MatchBotDriver` built from a `MenuLevelSettings` roster, with a per-seat
+`-Difficulty easy|normal|hard`. Existing policies, the schema-2 main CSV, the
+region/face companion and gameplay tuning stay unchanged; a new policy column, if
+needed, is an appended schema version as schema 2 was. Then record one
+descriptive ladder, Easy v Normal, Normal v Hard and Easy v Hard, each with
+sides swapped, on `crossfeed` and `press_tower` at the first report's seeds
+(0, 1, 17, 42, 2026), 2P, 60 seconds, one fixed tool pair.
+
+First step: a `balance_runner` self-check that one seeded `match` row repeats
+byte for byte and that each seat's `MatchBotDriver::bot(participant)` reports the
+requested difficulty.
+
+Acceptance: `run-acceptance.ps1 -Preset x64-debug -Cases balance_runner,skirmish_bot`
+passes; the earlier Paint and Skirmish golden controls keep their CSV bytes; the
+ladder's rows, medians and literal ranges are recorded here with receipts under
+`out/validation/`. No pad, device or author is needed.
+
+Not decided here: whether the difficulties are spaced well, whether any bot is
+fit to ship, and any tuning change. Those stay `ROAD#10` and `POL#27` attended
+decisions. A side-swapped ladder at five chosen seeds is descriptive, not a
+strength ranking with confidence.
+
+## Turbulence bands and Hard five-tool rerun (`TOOL#3`, 2026-10-29)
+
+**Open, not started; after `TOOL#2`.** Region bands exist only for `crossfeed`,
+`press_tower` and `turbulence_blockout`
+(`scripts/acceptance/balance_regions/metrics.cpp:209-238`); every other stage
+falls back to one `whole_arena` band. The first five-tool report covers the two
+arenas only ([slice 3](#headless-balance-runner-tool1-2026-10-25)) and used
+Skirmish, which has no line-of-sight, route or ballistic-intercept solver (see
+[Skirmish measurement bot](#skirmish-measurement-bot) and the report's limits).
+The [Turbulence brief](polish-turbulence.md#static-qualification-and-next-slice)
+still lists reconciling paint and sampled five-tool pressure with side and
+loadout swaps as remaining.
+
+Scope: give the four Turbulence trials (`turbulence_mover_trial`,
+`turbulence_gate_trial`, `turbulence_ferry_trial`, `turbulence_slab_trial`) the
+blockout's five X bands, after a check that each stage's `level_bounds` matches
+the blockout's (all five currently share the 4200 x 1900 out-of-bounds rectangle).
+The full `turbulence` candidate is 6200 wide and keeps `whole_arena` until its
+own bands are scoped. Then rerun the 25 ordered pairs x five seeds matrix with
+`TOOL#2`'s `match` policy at Hard on both sides, on Crossfeed, Press Tower, the
+blockout and the four trials, and record per-band final held paint in the
+arena owners. A stage the match policy cannot route is reported with that limit,
+not dropped.
+
+First step: extend `stage_partition` and the `balance_regions` case so each
+trial resolves to `x_band`, with a check that the bands cover each arena exactly.
+
+Acceptance: `balance_regions` and `balance_runner` pass in Debug; the existing
+three partitions are unchanged; the matrix completes with receipts under
+`out/validation/`, and its summaries are filed as descriptive evidence in
+[Crossfeed](polish-crossfeed.md), [Press Tower](polish-press-tower.md) and
+[Turbulence](polish-turbulence.md), each stating that the bands are final held
+area, not route use, and naming the policy's limits.
+
+Not decided here: arena acceptance, route or geometry changes and tool tuning.
+Those stay `POL#21`, `POL#27` and `POL#31` attended decisions.
