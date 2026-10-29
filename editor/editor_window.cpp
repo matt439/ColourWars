@@ -842,13 +842,14 @@ namespace colourwars_editor
         if (!selection_) { return; }
         const std::wstring text = wide(document_.copy_text(*selection_));
         const std::size_t bytes = (text.size() + 1) * sizeof(wchar_t);
+        // Open first: a busy clipboard throws before anything is allocated.
+        OpenedClipboard clipboard(window_);
         HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, bytes);
         if (!memory) { throw std::runtime_error("Not enough memory to copy the object."); }
         void* target = GlobalLock(memory);
         if (!target) { GlobalFree(memory); throw std::runtime_error("Not enough memory to copy the object."); }
         std::memcpy(target, text.c_str(), bytes);
         GlobalUnlock(memory);
-        OpenedClipboard clipboard(window_);
         if (!EmptyClipboard() || !SetClipboardData(CF_UNICODETEXT, memory))
         {
             GlobalFree(memory);
