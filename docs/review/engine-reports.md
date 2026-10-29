@@ -1962,7 +1962,7 @@ Breaks by class, measured:
 
 - **`mattmath` namespace and `LabradorMath`:** the first error in 132 game
   translation units. `MattMath.lib` is named in six scripts:
-  `run-acceptance.ps1:173`, `check-display-awake.ps1`, `check-frame-pacing.ps1`,
+  `run-acceptance.ps1:222`, `check-display-awake.ps1`, `check-frame-pacing.ps1`,
   `check-movement-feedback.ps1`, `check-paint-fx.ps1` and `check-painter.ps1`.
   Each refuses to start without that library.
 - **Constant renames:** 255 sites in 91 files in `game/` (pass 2) and 355 in

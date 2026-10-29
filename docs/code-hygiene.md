@@ -216,11 +216,12 @@ from the first case scheduled, and one entry per selected case with
 longest first. Outcomes are `passed`, `compiled` (`-CompileOnly`),
 `compile-failed`, `run-failed` (including a timeout), `cancelled`,
 `runner-failed`, and `not-run` for a case the run never reached, such as
-those after a serial failure. The file is deleted once the build preflight
-passes and rewritten in the runner's `finally`, so a failed or interrupted run
-still leaves a fresh summary and never a stale one; a run that stops in
-selection or tool preflight writes none, which keeps the selection checker's
-no-artifact rule. The per-case console line now also shows the compile/run
+those after a serial failure; a serial case stopped mid-run is `cancelled`.
+An old file is deleted as soon as case selection passes, and a new one is
+written in the runner's `finally` once cases are scheduled, so a failed or
+interrupted run leaves a fresh summary and one that stops in tool checks or
+the build leaves none, never a stale one. Nothing is created before then,
+which keeps the selection checker's no-artifact rule. The per-case console line now also shows the compile/run
 split. [ci.yml](../.github/workflows/ci.yml) uploads it after consumer
 acceptance in both jobs, `if: always()`, as `acceptance-summary-<preset>`.
 

@@ -91,6 +91,10 @@ $evidence = if ($OutputDirectory) {
     Join-Path $repo "out/acceptance/$Preset"
 }
 [System.IO.Directory]::CreateDirectory($evidence) | Out-Null
+# A timing summary never outlives the run that follows it, even one that stops
+# in tool checks or the build; a fresh one is written once cases are scheduled.
+$staleSummary = Join-Path $evidence 'acceptance-summary.json'
+if (Test-Path -LiteralPath $staleSummary -PathType Leaf) { Remove-Item -LiteralPath $staleSummary -Force }
 
 foreach ($command in 'cmake', 'cl') {
     if (-not (Get-Command $command -ErrorAction SilentlyContinue)) {
@@ -116,7 +120,8 @@ function Write-AcceptanceSummary {
         } else {
             $compile = 0.0
             $run = 0.0
-            $outcome = if ($runnerFailures.ContainsKey($case)) { 'runner-failed' } else { 'not-run' }
+            $outcome = if ($runnerFailures.ContainsKey($case)) { 'runner-failed' }
+                elseif ($interruptedCases.ContainsKey($case)) { 'cancelled' } else { 'not-run' }
         }
         [pscustomobject][ordered]@{
             case = $case
@@ -311,12 +316,12 @@ try {
         }
     }
 
-    # acceptance-summary.json is rewritten by every run that reaches this
-    # point, even a failed or interrupted one, so a stale one never survives.
-    $summaryPath = Join-Path $evidence 'acceptance-summary.json'
-    if (Test-Path -LiteralPath $summaryPath) { Remove-Item -LiteralPath $summaryPath -Force }
+    # acceptance-summary.json is written by every run that reaches this
+    # point, even a failed or interrupted one.
+    $summaryPath = $staleSummary
     $timedResults = @{}
     $runnerFailures = @{}
+    $interruptedCases = @{}
     $summaryWatch = [System.Diagnostics.Stopwatch]::StartNew()
     $summaryStarted = [DateTime]::UtcNow
 
@@ -473,8 +478,14 @@ try {
         try {
             if ($spec.Utf8) { [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false) }
             & $report (& $runCase $spec $CompileOnly.IsPresent)
+        } catch {
+            $runnerFailures[$spec.Case] = "$_"
+            throw
         } finally {
             [Console]::OutputEncoding = $previousNativeEncoding
+            # Stopped mid-case (Ctrl+C runs no catch): reached, not completed.
+            if (-not $timedResults.ContainsKey($spec.Case) -and
+                -not $runnerFailures.ContainsKey($spec.Case)) { $interruptedCases[$spec.Case] = $true }
         }
     }
     if ($failures.Count -gt 0) {
@@ -484,19 +495,22 @@ try {
     Write-Host "PASS $operation ($Preset). Evidence: $evidence"
 }
 finally {
-    if ($null -ne $summaryPath) {
-        try {
-            Write-AcceptanceSummary
-        } catch {
-            Write-Warning "Could not write $($summaryPath): $_"
-        }
-    }
     try {
-        $caseCancellation.Cancel()
-        if ($null -ne $probeControl) { $probeControl.Dispose() }
+        if ($null -ne $summaryPath) {
+            try {
+                Write-AcceptanceSummary
+            } catch {
+                Write-Warning "Could not write $($summaryPath): $_"
+            }
+        }
     } finally {
-        $caseCancellation.Dispose()
-        $env:PATH = $previousPath
-        Pop-Location
+        try {
+            $caseCancellation.Cancel()
+            if ($null -ne $probeControl) { $probeControl.Dispose() }
+        } finally {
+            $caseCancellation.Dispose()
+            $env:PATH = $previousPath
+            Pop-Location
+        }
     }
 }
