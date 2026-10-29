@@ -270,13 +270,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `CI#3` | OPEN | LOW | M | Time `check-stage-registration` and `check-failure-reporting` with `-SkipBuild` in both presets (duration, focus, dialogs), then add CI steps with evidence upload or record each exclusion in its owner doc. [Owner](docs/code-hygiene.md#registration-and-failure-reporting-checks-in-ci-ci3) |
 | `CI#4` | OPEN | LOW | S | Have `run-acceptance` write `acceptance-summary.json` (per-case compile and run seconds, outcome, longest first) and upload it from CI, so `$longestFirst` and the Debug PR exclusions rest on data. [Owner](docs/code-hygiene.md#acceptance-timing-summary-ci4) |
 
-## Code hygiene and maintenance
-
-**Owner:** [docs/code-hygiene.md](docs/code-hygiene.md), its [Open shortlist (2026-10-29)](docs/code-hygiene.md#open-shortlist-2026-10-29) and, for the next-bump preparation, the [engine-report ledger](docs/review/engine-reports.md).
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-
 ## The OOP showcase
 
 **Owner:** [docs/oop-guide.md](docs/oop-guide.md). These describe the hierarchies as they are; never flatten them (AGENTS.md).
@@ -301,6 +294,7 @@ A new row for one of these gets its section back.
 | area | owner | a row returns with |
 |---|---|---|
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
+| Code hygiene (`HYG#1`–`HYG#27`) | [code-hygiene.md](docs/code-hygiene.md) and, for the next-bump preparation, the [engine-report ledger](docs/review/engine-reports.md) | a new source split, comment audit or maintenance slice the author approves |
 | Closed engine reports (1–22, 24) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |

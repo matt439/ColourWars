@@ -86,7 +86,8 @@ in declaration and definition: `player`, `view_camera`, `idle_drip`,
 lost its "`view` here indexes roster participants" caveat. Three loop and
 buffer locals that walked `players_` under the name `view` (the death snapshot
 in `update_level_logic`, `refresh_identity_texts` and `apply_player_inputs`'s
-`by_view`) became `participant`/`by_participant`.
+`by_view`) became `participant`/`by_participant`; a review follow-up renamed
+the fourth, the figure-act loop in `level_intro.cpp`'s `update_acting`.
 
 `view` is kept where it really is a human pane: `participant_for_view`,
 `teammate_markers`, `hud_scale`, `update_teammate_markers`' loop and the pane
@@ -96,8 +97,10 @@ cosmetic camera for that participant's pane, and its public name was out of
 scope.
 
 Verified: the diff changes identifiers and one comment only; both presets
-build under `/W4 /WX`; Debug acceptance for the cases that reach these members
-passed (see the commit message for the list).
+build under `/W4 /WX`; the review follow-up ran the default acceptance suite,
+which passes in Debug (73 cases) and Release. Release's `moving_structure`
+first failed on a temp folder left by an earlier run with the same process id
+and passed on rerun.
 
 Not decided here: any rename outside `Level`, or of the public accessors
 `view_count`, `participant_for_view` and `view_for_participant`.

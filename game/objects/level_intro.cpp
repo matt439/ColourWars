@@ -612,19 +612,19 @@ void Level::update_acting(float dt)
 
 	const OpeningPresentation& look = this->presentation_->opening();
 	this->acts_.assign(this->players_.size(), FigureAct::none);
-	for (size_t view = 0; view < this->players_.size(); ++view)
+	for (size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
-		Player* player = this->players_[view];
+		Player* player = this->players_[participant];
 		FigureAct mine = act;
 		if (mine == FigureAct::celebrate && this->winner_ != PlayerTeam::none &&
 			player->team() != this->winner_)
 		{
 			mine = FigureAct::slump;
 		}
-		this->acts_[view] = mine;
+		this->acts_[participant] = mine;
 
 		// Each figure out of step with the others.
-		const float time = this->act_time_ + static_cast<float>(view) * 0.37f;
+		const float time = this->act_time_ + static_cast<float>(participant) * 0.37f;
 		const float height = player->rectangle().height;
 		FigurePose pose;
 		pose.whole = this->reveal_showing();
