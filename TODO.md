@@ -270,14 +270,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `CI#3` | OPEN | LOW | M | Time `check-stage-registration` and `check-failure-reporting` with `-SkipBuild` in both presets (duration, focus, dialogs), then add CI steps with evidence upload or record each exclusion in its owner doc. [Owner](docs/code-hygiene.md#registration-and-failure-reporting-checks-in-ci-ci3) |
 | `CI#4` | OPEN | LOW | S | Have `run-acceptance` write `acceptance-summary.json` (per-case compile and run seconds, outcome, longest first) and upload it from CI, so `$longestFirst` and the Debug PR exclusions rest on data. [Owner](docs/code-hygiene.md#acceptance-timing-summary-ci4) |
 
-## The OOP showcase
-
-**Owner:** [docs/oop-guide.md](docs/oop-guide.md). These describe the hierarchies as they are; never flatten them (AGENTS.md).
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `OOP#1` | OPEN | MED | M | Bring the guide up to date: new projectile kinds go before the `ProjectileType::count` sentinel; add `TeamGateStructurePaintable`, `TranslatingStructurePaintable`, `FixedSlabPaintable` (Structure + PaintableObject) and the `CrudeDrawing` family; add an "add a scored paint object" checklist. Describe the classes as they are; don't flatten them. [Guide drift](docs/oop-guide.md#guide-drift-since-the-last-pass-oop1) |
-
 ## Design process
 
 **Owner:** [docs/design-process.md](docs/design-process.md): personas, user stories and journeys, opened 2026-10-29 at the author's request.
@@ -302,6 +294,7 @@ A new row for one of these gets its section back.
 | Startup content validation | gap audit 8.1, `game/content_validation.cpp` | a content kind added without validation |
 | Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
 | Code TODO/FIXME markers | `game/`, `editor/`, `scripts/`, `cmake/` | a new marker, which should be a row here instead |
+| OOP showcase (`OOP#1`) | [oop-guide.md](docs/oop-guide.md) | a new hierarchy, extension point or registration the guide no longer describes; never a request to flatten one |
 | Movement Course icon (`ED#6`, retired) | [level-editor.md](docs/level-editor.md#movement-course-icon-ed6-retired) | an accepted screen actually displays stage icons; current Stage Select uses a live preview |
 
 ---
