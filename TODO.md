@@ -192,7 +192,6 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#L9` | DEFERRED | LOW | S | Inspection and 59.951 Hz `overlay.perf` receipt recorded; no present-interval option at the pin or master. Resume when the author wants a decoupled rate or `POL#25` reproduces the once-a-second long interval: engine report first. [Slice](docs/feature-roadmap.md#presentation-rate-inspection-slice-gapl9) |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
 | `ROAD#38` | OPEN | MED | L | Bots treat fixed scored slabs as solid boxes. Measure first: a `bot_slab_routes` case on `turbulence_slab_trial` counts slab-grounded steps, slab-top paint and crossover arrivals against the mover trial; add a slab-aware standing segment only if the counts are near zero. [Scope](docs/feature-roadmap.md#fixed-scored-slabs-for-bots-road38) |
-| `ROAD#39` | OPEN | LOW | S | Cover Boost on paint underfoot on a test tuning copy: own and enemy multipliers times `paint_refill` at every level (0 stays 0), off-paint and dead cases, and a boosted bot's observed `paint_refill`. Off stays bit-exact; no tuning change. [Scope](docs/feature-roadmap.md#boost-on-paint-underfoot-road39) |
 
 ## Comparable-game gaps
 

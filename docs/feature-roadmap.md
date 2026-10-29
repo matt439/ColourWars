@@ -1346,7 +1346,8 @@ an unknown level is refused.
 
 **Validation.** The `handicap` case checks the tuning shape and refusals,
 the roster field, the Weapon Select copy and prompts, bit-exact damage at
-every level (Off unchanged), the refill multiplier and respawn retention;
+every level (Off unchanged), the refill multiplier and respawn retention,
+and Boost on paint underfoot (below);
 `remembered_setup` round-trips and recovers handicaps. Presentation
 validation fits every level's text under every Weapon Select label.
 
@@ -1361,29 +1362,39 @@ Normal +1 and Hard bots, and `seat <n> bot|boost|team` sets any other roster
 
 #### Boost on paint underfoot (`ROAD#39`)
 
-**Open, not started (filed 2026-10-29).** `Player::ammo_regen_multiplier`
+**Covered (2026-10-29); checks only.** `Player::ammo_regen_multiplier`
 multiplies the underfoot multiplier by the level's `paint_refill`
-(`game/objects/player.cpp:662-666`), which is what "multiplies paint underfoot
-rather than replacing it" above means. The `handicap` case checks that product
-only off paint (`scripts/acceptance/handicap.cpp:203-204`), and
-`paint_underfoot` checks its multipliers only at Off. Paint underfoot ships
-disabled (`tuning.json` `paint_underfoot.enabled: false`, `POL#36` trial
-amounts), so nothing exercises the combination. The bot observation takes
-`paint_refill` from the handicap (`game/ai/match_bot_driver.cpp:170`) and the
-finishing-window refill estimate uses it (`game/ai/match_bot.cpp:94-101`).
+(`game/objects/player.cpp`), which is what "multiplies paint underfoot rather
+than replacing it" above means. Paint underfoot ships disabled (`tuning.json`
+`paint_underfoot.enabled: false`, `POL#36` trial amounts), so the `handicap`
+case now exercises the combination on a test tuning copy, through the
+`paint_underfoot` case's fixture (`scripts/acceptance/paint_underfoot/fixtures.h`):
 
-Checks only. On a test tuning copy with underfoot enabled, assert at every
-level that own and enemy paint give their multiplier times `paint_refill`
-bit-exact (enemy 0 stays 0 at +2), that off paint and a dead player give
-`paint_refill` alone, and that a boosted bot's observation carries its level's
-`paint_refill`. The first step is a fixture in the `handicap` case that builds
-the world from that copy.
+- **Shipped tuning (Off):** on unpainted, own and enemy floor, every level's
+  multiplier is that level's `paint_refill` alone, bit for bit.
+- **Enabled copy, at the shipped trial amounts:** standing on actual floor
+  paint, with the support consumed through real contacts, own paint gives
+  `own_ammo_regen_multiplier` × `paint_refill` and enemy paint gives
+  `enemy_ammo_regen_multiplier` × `paint_refill` bit-exact at every level;
+  enemy 0 stays positive zero at +2, and Off on own paint equals the own
+  multiplier unchanged. Unpainted floor, a fatally hit player and a dead
+  player on own or enemy paint give `paint_refill` alone.
+- **The bot's observation:** a Hard sprayer bot placed riding Team A's mover
+  on `turbulence_mover_trial`, driven by the actual `MatchBotDriver` at
+  Level's input boundary, opens a ride finishing window whose budget counts
+  the refill at the observation's `paint_refill`
+  (`MatchBot::open_finish`). Its first refilling window lasts 158, 138 and
+  125 steps at Off, +1 and +2, under the shipped tuning and the enabled copy
+  alike; the case requires each length to match its own level's
+  `paint_refill` and no other level's, so the driver must observe the seat's
+  Boost.
 
-Acceptance: `handicap` and `paint_underfoot` pass in both presets, Off stays
-bit-exact, and no tuning, content or game source changes. This does not decide
-whether paint underfoot ships, whether the Boost values are fair (the author's
-attended play above), or whether the bot's estimate should count paint
-underfoot.
+Validation: `handicap` and `paint_underfoot` pass in Debug and Release. No
+tuning, content or game source changed. This does not decide whether paint
+underfoot ships, whether the Boost values are fair (the author's attended
+play above, `ROAD#5`), or whether the bot's refill estimate should count
+paint underfoot; the observation still carries the handicap's `paint_refill`
+alone, as `MatchBotObservation` documents.
 
 ## First increment: explicit joining and reconnect pause
 
