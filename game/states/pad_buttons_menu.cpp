@@ -26,8 +26,8 @@ void PadButtonsMenu::init()
 	this->build_panel(style);
 	const auto& copy = this->text().pad_buttons;
 	this->add_text("heading", copy.heading, style.heading_font, look.heading_position);
-	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
-		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
+	const Vector2F value_limit(
+		menu_geometry::settings_action_width(look, this->calculate_widget_position(1, 0).x),
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
 	const auto row = [&](const char* name, const std::wstring& label, int index, OptionRow::Adjust adjust)
 	{
@@ -60,7 +60,7 @@ void PadButtonsMenu::init()
 		const Vector2F position = this->calculate_widget_position(0, index);
 		UiText* widget = this->add_text(name, label, style.item_font, position);
 		fit_text(*widget, RectangleF(position, Vector2F(
-			look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - position.x,
+			menu_geometry::settings_action_width(look, position.x),
 			look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
 		this->focus_.add(widget, std::move(activate));
 	};

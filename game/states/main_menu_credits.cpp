@@ -4,7 +4,6 @@
 
 using namespace labrador;
 using namespace mattmath;
-using namespace menu_consts;
 
 MainMenuCredits::MainMenuCredits(MenuContext* context) : MainMenuPage(context)
 {
@@ -42,7 +41,7 @@ void MainMenuCredits::init()
 
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), this->render_resources(),
+		menu_geometry::design_area(), this->render_resources(),
 		CrudeDrawing::premultiplied(look.home_background_colour));
 	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::credits),
 		style.heading_font, look.credits_heading_position,
@@ -54,14 +53,14 @@ void MainMenuCredits::init()
 		style.item_font, look.credits_back_position, this->render_resources(),
 		look.art.focus_ink);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.credits_box_size) / 2.0f,
-			look.credits_box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
+		menu_geometry::footer_paper(look.credits_box_size, style.footer_y), this->render_resources(),
+		&style, &look.art, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	// Keep every authored credit visible above Back and inside the paper face.
 	const RectangleF body = this->body_->bounds();
-	const float available_width = this->paper_->rectangle().right() - look.art.shadow_offset -
-		look.art.focus_padding.x - look.credits_position.x;
+	const float available_width = menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) -
+		look.credits_position.x;
 	const float available_height = look.credits_back_position.y - look.art.focus_padding.y -
 		look.credits_position.y;
 	float scale = 1.0f;

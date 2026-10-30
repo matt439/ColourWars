@@ -47,7 +47,7 @@ The `game/` root mixes several concerns:
 
 | Concern | Files (examples) |
 |---|---|
-| Configuration and content checks | `tuning*`, `presentation*`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `drawable_text`, `text_wrap` |
+| Configuration and content checks | `tuning*`, `presentation*`, `menu_geometry` (the menu design size and every page rectangle, shared by the pages, the reader and the validators), `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `drawable_text`, `text_wrap` |
 | Persistence | `save*`, `save_section.h`, `settings_session`, `match_records`, `last_match_setup`, `player_profiles`, `play_settings.h` |
 | Input | `action_bindings`, `input_bindings`, `input_slots.h`, `player_control.h`, `controls_text` |
 | Rumble and display | `rumble*`, `rumble_xinput.cpp`, `display_awake` |

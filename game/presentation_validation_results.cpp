@@ -8,6 +8,7 @@
 #include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
+#include "game/menu_geometry.h"
 #include "game/player_profiles.h"
 #include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
@@ -38,7 +39,8 @@ void Presentation::Validation::validate_results_text(const StageGeometry& stage_
 	const auto& results_panel = stage_geometry.results_panel;
 	// Session selects one of these plain, unscaled labels for End's first
 	// action. Retain the same paper, padding and row rule as its other actions.
-	const Vector2F end_top = (Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f;
+	const RectangleF end_paper = menu_geometry::screen_paper(end.box_size);
+	const Vector2F end_top = end_paper.position();
 	const Vector2F end_bottom = end_top + end.box_size;
 	for (const auto& field : { std::pair("rematch", &this->presentation_.menu_text_.end.rematch),
 		std::pair("play_series_again", &this->presentation_.menu_text_.end.play_series_again),
@@ -66,7 +68,7 @@ void Presentation::Validation::validate_results_text(const StageGeometry& stage_
 	{
 		const std::string key = std::string("menu_text.results.") + role;
 		const Vector2F size = fixed_menu_size(key, text, font);
-		const RectangleF bounds((1920.0f - size.x) / 2.0f, y, size.x, size.y);
+		const RectangleF bounds(menu_geometry::centred_x(size.x), y, size.x, size.y);
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !results_panel.contains(bounds))
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
@@ -122,7 +124,7 @@ void Presentation::Validation::validate_results_text(const StageGeometry& stage_
 		round_literals + L"0123456789", round_where);
 	const Font& round_font = *render.font(render.resolve_sprite_font(this->presentation_.menu_.heading_font));
 	const Vector2F round_size = round_heading_size(round_font, this->presentation_.menu_text_.results.round_heading, round_where);
-	const RectangleF round_bounds((1920.0f - round_size.x) / 2.0f, results.heading_y, round_size.x, round_size.y);
+	const RectangleF round_bounds(menu_geometry::centred_x(round_size.x), results.heading_y, round_size.x, round_size.y);
 	if (!std::isfinite(round_bounds.x) || !std::isfinite(round_bounds.y) || !results_panel.contains(round_bounds))
 	{
 		throw std::runtime_error(round_where + " must fit unscaled inside the Results paper for every positive int round.");
@@ -149,8 +151,7 @@ void Presentation::Validation::validate_results_text(const StageGeometry& stage_
 			throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.results." + field.first + ": " + error.what());
 		}
 	}
-	const Vector2F results_fill_position((1920.0f - results.fill_box_size.x) / 2.0f,
-		results_panel.y + results.fill_box_y_offset);
+	const Vector2F results_fill_position = menu_geometry::results_fill_box(results).position();
 	const Vector2F percentage_a_position = results_fill_position + results.team_fill_border;
 	const Vector2F percentage_b_top_right = results_fill_position + Vector2F(results.fill_box_size.x, 0.0f) +
 		Vector2F(-results.team_fill_border.x, results.team_fill_border.y);

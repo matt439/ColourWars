@@ -5,7 +5,6 @@
 #include "game/states/player_label.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 #pragma region MainMenuTeamSelect
@@ -325,9 +324,7 @@ void MainMenuTeamSelect::init()
 	this->input()->reset_actions();
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
-	this->setup_art_ = look.art;
-	this->setup_art_.focus_padding = look.setup_focus_padding;
-	this->setup_art_.shadow_offset = look.setup_shadow_offset;
+	this->setup_art_ = menu_geometry::setup_art(look);
 	this->row_art_ = this->setup_art_;
 	this->row_art_.paper = this->setup_art_.focus_fill;
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
@@ -348,12 +345,11 @@ void MainMenuTeamSelect::init()
 		"background",
 		style.sprite_sheet,
 		style.fill_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		menu_geometry::design_area(),
 		this->render_resources(),
 		CrudeDrawing::premultiplied(look.home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.team_box_size) / 2.0f,
-			look.team_box_size),
+		menu_geometry::footer_paper(look.team_box_size, style.footer_y),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_);
 
 	this->texture_container_->add_child(this->background_.get());
@@ -469,9 +465,7 @@ void MainMenuTeamSelect::init()
 void MainMenuTeamSelect::check_paper_geometry() const
 {
 	const RectangleF panel = this->paper_->rectangle();
-	const float edge = this->setup_art_.keyline_width * 3.0f;
-	const RectangleF inside(panel.position() + Vector2F(edge),
-		panel.size() - Vector2F(edge * 2.0f + this->setup_art_.shadow_offset));
+	const RectangleF inside = menu_geometry::paper_interior(panel, this->setup_art_);
 	const auto check = [&](const RectangleF& bounds, const char* role)
 	{
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||

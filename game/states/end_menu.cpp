@@ -5,7 +5,6 @@
 #include "game/series_stage_rule.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 EndMenuPage::EndMenuPage(MenuContext* context) :
@@ -87,7 +86,7 @@ void EndMenuInitial::init()
 		look.art.ink);
 
 	this->heading_->set_position(Vector2F(
-		this->calculate_center_position(this->heading_->bounds().width, DESIGN_RESOLUTION.x),
+		menu_geometry::centred_x(this->heading_->bounds().width),
 		look.heading_y));
 
 	this->change_teams_ = std::make_unique<UiText>(
@@ -139,10 +138,9 @@ void EndMenuInitial::init()
 		look.art.ink);
 
 	this->box_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF(Vector2F::ZERO, look.box_size), this->render_resources(),
+		menu_geometry::screen_paper(look.box_size), this->render_resources(),
 		&style, &look.art, &this->focus_, this->restart_.get(),
 		&this->focus_motion_, &this->settings_session()->play_settings());
-	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");

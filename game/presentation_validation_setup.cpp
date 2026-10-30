@@ -8,6 +8,7 @@
 #include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
+#include "game/menu_geometry.h"
 #include "game/player_profiles.h"
 #include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
@@ -35,16 +36,14 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 {
 	const MainMenuPresentation& main = this->presentation_.main_menu_;
 	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
-	const auto& setup_edge = setup.setup_edge;
 	const auto& confirmation_paper = setup.confirmation_paper;
 	const auto& display_art = setup.display_art;
 	const auto& options_art = setup.options_art;
 	// Preserve the existing diagnostics when a shared font or shadow also
 	// invalidates an earlier page, then check Team's additional paper bounds.
-	const RectangleF team_paper((Vector2F(1920.0f, this->presentation_.menu_.footer_y) - main.team_box_size) / 2.0f,
-		main.team_box_size);
-	const RectangleF team_inside(team_paper.position() + Vector2F(setup_edge),
-		team_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
+	const RectangleF team_inside = menu_geometry::paper_interior(
+		menu_geometry::footer_paper(main.team_box_size, this->presentation_.menu_.footer_y),
+		menu_geometry::setup_art(main));
 	const auto check_team_text = [&](const char* key, const std::wstring& words, const std::string& font,
 		const Vector2F& position, const Vector2F& shadow)
 	{
@@ -72,10 +71,9 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 		throw std::runtime_error(this->presentation_.source_path_ +
 			": menu_text.connection.teams_required at main_menu.team_select.warning_position must follow the Team Select heading.");
 	}
-	const RectangleF weapon_paper((Vector2F(1920.0f, this->presentation_.menu_.footer_y) - main.weapon_box_size) / 2.0f,
-		main.weapon_box_size);
-	const RectangleF weapon_inside(weapon_paper.position() + Vector2F(setup_edge),
-		weapon_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
+	const RectangleF weapon_inside = menu_geometry::paper_interior(
+		menu_geometry::footer_paper(main.weapon_box_size, this->presentation_.menu_.footer_y),
+		menu_geometry::setup_art(main));
 	const Vector2F weapon_heading_size = render.measure_text(render.resolve_sprite_font(this->presentation_.menu_.heading_font),
 		this->presentation_.menu_text_.heading(MenuHeading::weapons));
 	const RectangleF weapon_heading = RectangleF::union_of(
@@ -88,10 +86,9 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 		throw std::runtime_error(this->presentation_.source_path_ +
 			": menu_text.headings.weapons must fit main_menu.weapon_box_size including its retained shadow bounds.");
 	}
-	const RectangleF stage_paper((Vector2F(1920.0f, this->presentation_.menu_.footer_y) - main.stage_box_size) / 2.0f,
-		main.stage_box_size);
-	const RectangleF stage_inside(stage_paper.position() + Vector2F(setup_edge),
-		stage_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
+	const RectangleF stage_inside = menu_geometry::paper_interior(
+		menu_geometry::footer_paper(main.stage_box_size, this->presentation_.menu_.footer_y),
+		menu_geometry::setup_art(main));
 	const std::wstring& stage_heading_words = this->presentation_.menu_text_.heading(MenuHeading::arena);
 	// Loser's pick (ROAD#20) puts the picking team's heading in its place.
 	const auto check_stage_heading = [&](const std::string& key, const std::wstring& words)
@@ -117,7 +114,7 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 	// Exit label rendered once more in the actual heading font.
 	const Vector2F exit_heading_size = fixed_menu_size("menu_text.items.exit",
 		this->presentation_.menu_text_.item(MenuItem::exit), this->presentation_.menu_.heading_font);
-	const RectangleF exit_heading((1920.0f - exit_heading_size.x) / 2.0f, pause.heading_y,
+	const RectangleF exit_heading(menu_geometry::centred_x(exit_heading_size.x), pause.heading_y,
 		exit_heading_size.x, exit_heading_size.y);
 	if (!std::isfinite(exit_heading.x) || !std::isfinite(exit_heading.y) ||
 		!confirmation_paper.contains(exit_heading) || exit_heading.bottom() > pause.status_y)
@@ -127,7 +124,7 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 	}
 	const Vector2F display_heading_size = fixed_menu_size("menu_text.headings.options",
 		this->presentation_.menu_text_.heading(MenuHeading::options), this->presentation_.menu_.heading_font);
-	const RectangleF display_heading((1920.0f - display_heading_size.x) / 2.0f, pause.heading_y,
+	const RectangleF display_heading(menu_geometry::centred_x(display_heading_size.x), pause.heading_y,
 		display_heading_size.x, display_heading_size.y);
 	if (!std::isfinite(display_heading.x) || !std::isfinite(display_heading.y) ||
 		!confirmation_paper.contains(display_heading) || display_heading.bottom() > pause.status_y)
@@ -143,7 +140,7 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 	{
 		const std::string key = "menu_text.display_trial_countdown";
 		const Vector2F size = fixed_menu_size(key, this->presentation_.menu_text_.display_countdown(seconds), this->presentation_.menu_.detail_font);
-		const RectangleF bounds((1920.0f - size.x) / 2.0f, countdown_y, size.x, size.y);
+		const RectangleF bounds(menu_geometry::centred_x(size.x), countdown_y, size.x, size.y);
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !confirmation_paper.contains(bounds) ||
 			bounds.y < revert_card.bottom())
 		{

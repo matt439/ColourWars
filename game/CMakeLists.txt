@@ -28,6 +28,7 @@ add_library(colourwars_game STATIC
     last_match_setup.cpp
     match_records.cpp
     match_setup.cpp
+    menu_geometry.cpp
     presentation.cpp
     presentation_menu_text.cpp
     presentation_read_match.cpp

@@ -46,11 +46,10 @@ void SettingsPanelPage::build_panel(const MenuStyle& style)
 	this->set_widget_position(look.layout.position);
 	this->set_widget_spacing(look.layout.spacing);
 	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
-		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), this->render_resources(),
+		menu_geometry::design_area(), this->render_resources(),
 		CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
-	this->paper_ = std::make_unique<MenuPaperArtwork>(RectangleF(
-		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
-		look.box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
+	this->paper_ = std::make_unique<MenuPaperArtwork>(menu_geometry::footer_paper(look.box_size, style.footer_y),
+		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->texture_container_ = std::make_unique<UiContainer>("textures");
 	this->texture_container_->add_child(this->background_.get());
@@ -89,7 +88,7 @@ RectangleF SettingsPanelPage::status_limit(const MenuStyle& style) const
 {
 	const ControlsSettingsPresentation& look = this->panel_look();
 	return RectangleF(look.status_position, Vector2F(
-		this->paper_->rectangle().right() - look.art.shadow_offset - look.art.focus_padding.x - look.status_position.x,
+		menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) - look.status_position.x,
 		style.footer_y - look.status_position.y));
 }
 

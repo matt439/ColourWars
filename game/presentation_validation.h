@@ -23,7 +23,6 @@ struct Presentation::Validation
     struct SetupGeometry
     {
         MenuPaperArtPresentation options_art, display_art;
-        float setup_edge;
         RectangleF setup_inside, confirmation_paper;
     };
     struct StageGeometry
@@ -71,8 +70,8 @@ struct Presentation::Validation
 	void check_menu_line(const std::string& key, const std::wstring& text,
 		const std::string& font, const Vector2F& position, float bottom, const Vector2F& shadow) const;
 	Vector2F check_menu_item(MenuItem item, const std::string& font, const Vector2F& position,
-		const Vector2F& paper_size, float row_spacing, const std::optional<float>& label_width,
-		const MenuPaperArtPresentation& art, float content_height, bool uniform_fit = false) const;
+		const RectangleF& paper, float row_spacing, const std::optional<float>& label_width,
+		const MenuPaperArtPresentation& art, bool uniform_fit = false) const;
 	RectangleF check_setup_paper(const RectangleF& setup_inside, const std::string& key, const std::wstring& words,
 		const std::string& font, const Vector2F& position, const Vector2F& shadow,
 		bool action, float row_spacing) const;

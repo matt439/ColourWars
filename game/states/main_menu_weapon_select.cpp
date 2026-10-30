@@ -5,7 +5,6 @@
 #include "game/states/player_label.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 #pragma region MainMenuWeaponSelect
@@ -248,9 +247,7 @@ void MainMenuWeaponSelect::init()
 	this->weapon_descriptions_ = this->look().weapon_descriptions;
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
-	this->paper_art_ = look.art;
-	this->paper_art_.focus_padding = look.setup_focus_padding;
-	this->paper_art_.shadow_offset = look.setup_shadow_offset;
+	this->paper_art_ = menu_geometry::setup_art(look);
 	this->icon_art_ = this->paper_art_;
 	this->icon_art_.keyline_width = style.rule_height;
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
@@ -275,12 +272,11 @@ void MainMenuWeaponSelect::init()
 		"background",
 		style.sprite_sheet,
 		style.fill_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		menu_geometry::design_area(),
 		this->render_resources(),
 		CrudeDrawing::premultiplied(look.home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.weapon_box_size) / 2.0f,
-			look.weapon_box_size),
+		menu_geometry::footer_paper(look.weapon_box_size, style.footer_y),
 		this->render_resources(), &style, &this->paper_art_, &this->focus_);
 
 	this->texture_container_->add_child(this->background_.get());
@@ -399,9 +395,7 @@ const std::wstring& MainMenuWeaponSelect::weapon_description(WeaponType type) co
 void MainMenuWeaponSelect::check_paper_geometry() const
 {
 	const RectangleF panel = this->paper_->rectangle();
-	const float edge = this->paper_art_.keyline_width * 3.0f;
-	const RectangleF inside(panel.position() + Vector2F(edge),
-		panel.size() - Vector2F(edge * 2.0f + this->paper_art_.shadow_offset));
+	const RectangleF inside = menu_geometry::paper_interior(panel, this->paper_art_);
 	const auto check = [&](const RectangleF& bounds, const char* role)
 	{
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||

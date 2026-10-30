@@ -11,7 +11,6 @@
 
 using namespace labrador;
 using namespace mattmath;
-using namespace menu_consts;
 
 namespace
 {
@@ -41,10 +40,8 @@ MainMenuDisplayConfirmation::MainMenuDisplayConfirmation(MenuContext* context,
 	{
 		throw std::invalid_argument("Display confirmation owner must be a valid roster input slot.");
 	}
-	this->look_.art.focus_padding =
-		context->data()->presentation()->main_menu().setup_focus_padding;
-	this->look_.art.shadow_offset =
-		context->data()->presentation()->main_menu().setup_shadow_offset;
+	this->look_.art = menu_geometry::display_art(this->look_,
+		context->data()->presentation()->main_menu());
 }
 
 MainMenuDisplayConfirmation::~MainMenuDisplayConfirmation()
@@ -66,20 +63,20 @@ void MainMenuDisplayConfirmation::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet,
-		style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), this->render_resources(),
+		style.fill_frame, menu_geometry::design_area(), this->render_resources(),
 		CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size),
+		menu_geometry::screen_paper(look.box_size),
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::options),
 		style.heading_font, Vector2F(0.0f, look.heading_y), this->render_resources(), look.art.ink);
 	this->heading_->set_position(Vector2F(
-		this->calculate_center_position(this->heading_->bounds().width, DESIGN_RESOLUTION.x), look.heading_y));
+		menu_geometry::centred_x(this->heading_->bounds().width), look.heading_y));
 	this->question_ = std::make_unique<UiText>("question", this->text().confirmations.display,
 		style.detail_font, Vector2F(0.0f, look.status_y), this->render_resources(), look.art.ink);
 	this->question_->set_position(Vector2F(
-		this->calculate_center_position(this->question_->bounds().width, DESIGN_RESOLUTION.x), look.status_y));
+		menu_geometry::centred_x(this->question_->bounds().width), look.status_y));
 	this->keep_ = std::make_unique<UiText>("keep", this->text().item(MenuItem::keep), style.item_font,
 		this->calculate_widget_position(0, 0), this->render_resources(), look.art.ink);
 	this->revert_ = std::make_unique<UiText>("revert", this->text().item(MenuItem::revert), style.item_font,
@@ -165,7 +162,7 @@ void MainMenuDisplayConfirmation::refresh_countdown()
 	this->countdown_->set_text(this->text().display_countdown(seconds));
 	this->shown_seconds_ = seconds;
 	this->countdown_->set_position(Vector2F(
-		this->calculate_center_position(this->countdown_->bounds().width, DESIGN_RESOLUTION.x),
+		menu_geometry::centred_x(this->countdown_->bounds().width),
 		this->calculate_widget_position(0, 2).y));
 }
 

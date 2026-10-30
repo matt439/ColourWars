@@ -8,6 +8,7 @@
 #include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
+#include "game/menu_geometry.h"
 #include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
 #include "game/states/ui_player_badge.h"
@@ -30,6 +31,7 @@ using namespace labrador;
 using namespace mattmath;
 using namespace content_value;
 using namespace presentation_read;
+using menu_consts::DESIGN_RESOLUTION;
 
 namespace
 {
@@ -146,14 +148,14 @@ namespace presentation_read
 		style.layout.size = read_positive_vector(layout, "size");
 		style.layout.spacing = read_vector(layout, "spacing");
 		if (style.layout.position.x < 0.0f || style.layout.position.y < 0.0f ||
-			style.layout.position.x + style.layout.size.x > 1920.0f ||
-			style.layout.position.y + style.layout.size.y > 1080.0f)
+			style.layout.position.x + style.layout.size.x > DESIGN_RESOLUTION.x ||
+			style.layout.position.y + style.layout.size.y > DESIGN_RESOLUTION.y)
 		{
 			throw std::runtime_error(layout.where() +
 				": 'position' and 'size' must place the first widget inside the (1920,1080) menu design.");
 		}
 		if (style.layout.spacing.x < 0.0f || style.layout.spacing.y < 0.0f ||
-			style.layout.spacing.x > 1920.0f || style.layout.spacing.y > 1080.0f)
+			style.layout.spacing.x > DESIGN_RESOLUTION.x || style.layout.spacing.y > DESIGN_RESOLUTION.y)
 		{
 			throw std::runtime_error(layout.where() +
 				": 'spacing' must be nonnegative and at most (1920,1080).");
@@ -232,17 +234,18 @@ namespace presentation_read
 	MainMenuPresentation read_main_menu(const JsonValue& root, float content_height)
 	{
 		const JsonValue json = root.object("main_menu");
-		if (!std::isfinite(content_height) || content_height <= 40.0f || content_height > 1080.0f)
+		if (!std::isfinite(content_height) || content_height <= menu_geometry::paper_footer_margin ||
+			content_height > DESIGN_RESOLUTION.y)
 		{
 			throw std::runtime_error(json.where() +
 				": menu_style.chrome.footer_y must be finite, greater than 40 and at most 1080.");
 		}
 
 		MainMenuPresentation menu;
-		const auto panel_size = [&](const char* key, float max_width = 1760.0f)
+		const auto panel_size = [&](const char* key, float max_width = menu_geometry::paper_max_width)
 		{
 			const Vector2F size = read_positive_vector(json, key);
-			if (size.x > max_width || size.y > content_height - 40.0f)
+			if (size.x > max_width || size.y > content_height - menu_geometry::paper_footer_margin)
 			{
 				throw std::runtime_error(json.where() + ": '" + key +
 					"' must be at most " + std::to_string(static_cast<int>(max_width)) +
@@ -255,9 +258,9 @@ namespace presentation_read
 		menu.options_box_size = panel_size("options_box_size");
 		menu.credits_box_size = panel_size("credits_box_size");
 		menu.setup_box_size = panel_size("setup_box_size");
-		menu.team_box_size = panel_size("team_box_size", 1840.0f);
-		menu.weapon_box_size = panel_size("weapon_box_size", 1840.0f);
-		menu.stage_box_size = panel_size("stage_box_size", 1840.0f);
+		menu.team_box_size = panel_size("team_box_size", menu_geometry::setup_paper_max_width);
+		menu.weapon_box_size = panel_size("weapon_box_size", menu_geometry::setup_paper_max_width);
+		menu.stage_box_size = panel_size("stage_box_size", menu_geometry::setup_paper_max_width);
 		menu.art = read_menu_paper(json, Vector2F(
 			std::min({ menu.title_box_size.x, menu.home_box_size.x,
 				menu.options_box_size.x, menu.credits_box_size.x, menu.setup_box_size.x, menu.team_box_size.x,
@@ -287,7 +290,7 @@ namespace presentation_read
 		const auto position = [&](const char* key)
 		{
 			const Vector2F value = read_vector(json, key);
-			if (value.x < 0.0f || value.x > 1920.0f || value.y < 0.0f || value.y > 1080.0f)
+			if (value.x < 0.0f || value.x > DESIGN_RESOLUTION.x || value.y < 0.0f || value.y > DESIGN_RESOLUTION.y)
 			{
 				throw std::runtime_error(json.where() + ": '" + key +
 					"' must be nonnegative and inside the (1920,1080) menu design.");
@@ -297,7 +300,7 @@ namespace presentation_read
 		// A height in the (1920,1080) menu design.
 		const auto title_height = [&](const char* key)
 		{
-			return read_number_in(json, key, 0.0f, 1080.0f);
+			return read_number_in(json, key, 0.0f, DESIGN_RESOLUTION.y);
 		};
 		const JsonValue backdrop = json.object("backdrop");
 		menu.backdrop_sheet = backdrop.string("sheet");
@@ -336,13 +339,15 @@ namespace presentation_read
 		menu.options_spacing = read_positive_vector(json, "options_spacing");
 		menu.display_trial_seconds = read_number_in(json, "display_trial_seconds", 1.0f, 60.0f);
 		menu.home_spacing = read_positive_vector(json, "home_spacing");
-		MenuPaperArtPresentation options_art = menu.art;
-		options_art.focus_padding = menu.setup_focus_padding;
-		options_art.shadow_offset = menu.setup_shadow_offset;
-		const float edge = menu.art.keyline_width * 3.0f;
-		const float title_top = (content_height - menu.title_box_size.y) / 2.0f + edge;
-		const float title_bottom = (content_height + menu.title_box_size.y) / 2.0f -
-			menu.art.shadow_offset - edge;
+		const MenuPaperArtPresentation options_art = menu_geometry::setup_art(menu);
+		// Authored points must lie inside their paper's face, as the pages draw it.
+		const auto interior = [&](const Vector2F& size, const MenuPaperArtPresentation& art)
+		{
+			return menu_geometry::paper_interior(menu_geometry::footer_paper(size, content_height), art);
+		};
+		const RectangleF title_inside = interior(menu.title_box_size, menu.art);
+		const float title_top = title_inside.y;
+		const float title_bottom = title_inside.bottom();
 		if (menu.title_y <= title_top ||
 			menu.title_subtitle_y <= menu.title_y ||
 			menu.title_start_y <= menu.title_subtitle_y ||
@@ -354,17 +359,16 @@ namespace presentation_read
 				": title_y < title_subtitle_y < title_start_y < "
 				"title_no_pad_y < build_id_y must fit vertically inside title_box_size.");
 		}
-		const Vector2F home_top = (Vector2F(1920.0f, content_height) - menu.home_box_size) / 2.0f +
-			Vector2F(edge);
-		const Vector2F home_bottom = (Vector2F(1920.0f, content_height) + menu.home_box_size) / 2.0f -
-			Vector2F(menu.art.shadow_offset + edge);
+		const RectangleF home_inside = interior(menu.home_box_size, menu.art);
+		const Vector2F home_top = home_inside.position();
+		const Vector2F home_bottom = home_inside.bottom_right();
 		if (menu.home_position.x <= home_top.x || menu.home_position.x >= home_bottom.x ||
 			menu.home_subtitle_position.x <= home_top.x || menu.home_subtitle_position.x >= home_bottom.x ||
 			menu.home_position.y <= home_top.y ||
 			menu.home_subtitle_position.y <= menu.home_position.y ||
 			menu.home_subtitle_position.y >= menu.home_position.y + menu.home_spacing.y * 2.0f ||
 			menu.home_position.y + menu.home_spacing.y * 5.0f >= home_bottom.y ||
-			menu.home_spacing.x > 1920.0f)
+			menu.home_spacing.x > DESIGN_RESOLUTION.x)
 		{
 			throw std::runtime_error(json.where() +
 				": home_position, home_subtitle_position and home_spacing must place the heading, "
@@ -380,37 +384,36 @@ namespace presentation_read
 			credits.where() + ": text");
 
 		const auto inside_panel = [&](const Vector2F& point, const Vector2F& size,
-			const char* key, const JsonValue& owner, float shadow_offset)
+			const char* key, const JsonValue& owner, const MenuPaperArtPresentation& art)
 		{
-			const Vector2F top = (Vector2F(1920.0f, content_height) - size) / 2.0f + Vector2F(edge);
-			const Vector2F bottom = (Vector2F(1920.0f, content_height) + size) / 2.0f -
-				Vector2F(shadow_offset + edge);
-			if (point.x <= top.x || point.x >= bottom.x || point.y <= top.y || point.y >= bottom.y)
+			const RectangleF inside = interior(size, art);
+			if (point.x <= inside.x || point.x >= inside.right() ||
+				point.y <= inside.y || point.y >= inside.bottom())
 			{
 				throw std::runtime_error(owner.where() + ": '" + key + "' must fit inside its box_size.");
 			}
 		};
-		inside_panel(menu.options_heading_position, menu.options_box_size, "options_heading_position", json, options_art.shadow_offset);
-		inside_panel(menu.options_position, menu.options_box_size, "options_position", json, options_art.shadow_offset);
-		inside_panel(menu.options_status_position, menu.options_box_size, "options_status_position", json, options_art.shadow_offset);
+		inside_panel(menu.options_heading_position, menu.options_box_size, "options_heading_position", json, options_art);
+		inside_panel(menu.options_position, menu.options_box_size, "options_position", json, options_art);
+		inside_panel(menu.options_status_position, menu.options_box_size, "options_status_position", json, options_art);
 		if (!std::isfinite(menu.options_value_x) ||
 			menu.options_value_x <= menu.options_position.x + options_art.focus_padding.x ||
-			menu.options_value_x >= (1920.0f + menu.options_box_size.x) / 2.0f -
-				options_art.shadow_offset - options_art.focus_padding.x)
+			menu.options_value_x >= menu_geometry::paper_text_right(
+				menu_geometry::footer_paper(menu.options_box_size, content_height), options_art))
 		{
 			throw std::runtime_error(json.where() + ": options_value_x must follow the label inside options_box_size.");
 		}
 		if (menu.options_heading_position.y >= menu.options_position.y ||
 			menu.options_position.y + menu.options_spacing.y * 6.0f >= menu.options_status_position.y ||
 			menu.options_spacing.y <= options_art.focus_padding.y * 2.0f ||
-			menu.options_spacing.x > 1920.0f)
+			menu.options_spacing.x > DESIGN_RESOLUTION.x)
 		{
 			throw std::runtime_error(json.where() + ": options_heading_position, options_position, options_spacing and "
 				"options_status_position must order the heading, seven rows and status inside options_box_size.");
 		}
-		inside_panel(menu.credits_heading_position, menu.credits_box_size, "heading_position", credits, menu.art.shadow_offset);
-		inside_panel(menu.credits_position, menu.credits_box_size, "position", credits, menu.art.shadow_offset);
-		inside_panel(menu.credits_back_position, menu.credits_box_size, "back_position", credits, menu.art.shadow_offset);
+		inside_panel(menu.credits_heading_position, menu.credits_box_size, "heading_position", credits, menu.art);
+		inside_panel(menu.credits_position, menu.credits_box_size, "position", credits, menu.art);
+		inside_panel(menu.credits_back_position, menu.credits_box_size, "back_position", credits, menu.art);
 		if (menu.credits_heading_position.y >= menu.credits_position.y ||
 			menu.credits_position.y >= menu.credits_back_position.y)
 		{
@@ -432,7 +435,7 @@ namespace presentation_read
 		menu.team_select.spacing = read_positive_vector(team_select, "spacing");
 		menu.team_select.size = read_positive_vector(team_select, "size");
 		menu.team_warning_position = read_vector(team_select, "warning_position");
-		if (menu.team_warning_position.x < 0.0f || menu.team_warning_position.x > 1920.0f ||
+		if (menu.team_warning_position.x < 0.0f || menu.team_warning_position.x > DESIGN_RESOLUTION.x ||
 			menu.team_warning_position.y < 0.0f || menu.team_warning_position.y > content_height)
 		{
 			throw std::runtime_error(team_select.where() +
@@ -491,7 +494,7 @@ namespace presentation_read
 		menu.stage_select.preview_size = read_positive_vector(stage, "preview_size");
 		menu.stage_select.name_position = read_vector_unchecked(stage, "name_position");
 		menu.stage_select.navigation_position = read_vector_unchecked(stage, "navigation_position");
-		menu.stage_select.record_y = read_number_in(stage, "record_y", 0.0f, 1080.0f);
+		menu.stage_select.record_y = read_number_in(stage, "record_y", 0.0f, DESIGN_RESOLUTION.y);
 		menu.stage_select.record_font = stage.string("record_font");
 		menu.stage_select.briefing = read_layout(stage, "briefing");
 		menu.stage_select.briefing.size = read_positive_vector(stage.object("briefing"), "size");
@@ -597,7 +600,8 @@ namespace presentation_read
 		const JsonValue json = root.object("controls_settings");
 		ControlsSettingsPresentation menu;
 		menu.box_size = read_positive_vector(json, "box_size");
-		if (menu.box_size.x > 1760.0f || menu.box_size.y > content_height - 40.0f)
+		if (menu.box_size.x > menu_geometry::paper_max_width ||
+			menu.box_size.y > content_height - menu_geometry::paper_footer_margin)
 		{
 			throw std::runtime_error(json.where() +
 				": box_size must be at most 1760 wide and leave 20 pixels above and below within menu_style.chrome.footer_y.");
@@ -614,10 +618,10 @@ namespace presentation_read
 		menu.item_font = json.identifier("item_font");
 		menu.help_font = json.identifier("help_font");
 		menu.volume_preview_sound = read_sound(json.object("sounds"), "volume_preview");
-		const float edge = menu.art.keyline_width * 3.0f;
-		const Vector2F top = (Vector2F(1920.0f, content_height) - menu.box_size) / 2.0f + Vector2F(edge);
-		const Vector2F bottom = (Vector2F(1920.0f, content_height) + menu.box_size) / 2.0f -
-			Vector2F(menu.art.shadow_offset + edge);
+		const RectangleF paper = menu_geometry::footer_paper(menu.box_size, content_height);
+		const RectangleF inside = menu_geometry::paper_interior(paper, menu.art);
+		const Vector2F top = inside.position();
+		const Vector2F bottom = inside.bottom_right();
 		const auto inside_panel = [&](const Vector2F& point, const char* key)
 		{
 			if (point.x <= top.x || point.x >= bottom.x || point.y <= top.y || point.y >= bottom.y)
@@ -628,8 +632,7 @@ namespace presentation_read
 		inside_panel(menu.heading_position, "heading_position");
 		inside_panel(menu.controls_position, "controls_position");
 		inside_panel(menu.status_position, "status_position");
-		if (menu.status_position.x >= (1920.0f + menu.box_size.x) / 2.0f -
-			menu.art.shadow_offset - menu.art.focus_padding.x)
+		if (menu.status_position.x >= menu_geometry::paper_text_right(paper, menu.art))
 		{
 			throw std::runtime_error(json.where() + ": status_position must leave positive text width inside box_size and art.focus_padding.");
 		}
@@ -735,7 +738,8 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": 'resume_countdown' must be at most 3 seconds.");
 		}
 		menu.box_size = read_positive_vector(json, "box_size");
-		if (menu.box_size.x > 1600.0f || menu.box_size.y > 900.0f)
+		if (menu.box_size.x > menu_geometry::overlay_paper_max.x ||
+			menu.box_size.y > menu_geometry::overlay_paper_max.y)
 		{
 			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
 		}
@@ -750,7 +754,8 @@ namespace presentation_read
 		}
 		menu.heading_y = read_positive(json, "heading_y");
 		menu.status_y = read_positive(json, "status_y");
-		if (menu.heading_y > 900.0f || menu.status_y > 900.0f || menu.status_y <= menu.heading_y)
+		if (menu.heading_y > menu_geometry::overlay_max_y || menu.status_y > menu_geometry::overlay_max_y ||
+			menu.status_y <= menu.heading_y)
 		{
 			throw std::runtime_error(json.where() + ": heading_y < status_y <= 900 required.");
 		}
@@ -770,11 +775,12 @@ namespace presentation_read
 		EndMenuPresentation menu;
 		menu.box_size = read_positive_vector(json, "box_size");
 		menu.heading_y = read_positive(json, "heading_y");
-		if (menu.heading_y > 900.0f)
+		if (menu.heading_y > menu_geometry::overlay_max_y)
 		{
 			throw std::runtime_error(json.where() + ": heading_y must be at most 900.");
 		}
-		if (menu.box_size.x > 1600.0f || menu.box_size.y > 900.0f)
+		if (menu.box_size.x > menu_geometry::overlay_paper_max.x ||
+			menu.box_size.y > menu_geometry::overlay_paper_max.y)
 		{
 			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
 		}
@@ -790,7 +796,8 @@ namespace presentation_read
 
 		ResultsMenuPresentation menu;
 		menu.box_size = read_positive_vector(json, "box_size");
-		if (menu.box_size.x > 1600.0f || menu.box_size.y > 900.0f)
+		if (menu.box_size.x > menu_geometry::overlay_paper_max.x ||
+			menu.box_size.y > menu_geometry::overlay_paper_max.y)
 		{
 			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
 		}
@@ -798,7 +805,7 @@ namespace presentation_read
 		const auto read_y = [&](const char* key)
 		{
 			const float value = read_positive(json, key);
-			if (value > 900.0f)
+			if (value > menu_geometry::overlay_max_y)
 			{
 				throw std::runtime_error(json.where() + ": " + key + " must be at most 900.");
 			}
@@ -826,7 +833,7 @@ namespace presentation_read
 
 		const JsonValue fill = json.object("fill");
 		menu.fill_box_size = read_positive_vector(fill, "box_size");
-		menu.fill_box_y_offset = read_number_in(fill, "box_y_offset", 0.0f, 900.0f);
+		menu.fill_box_y_offset = read_number_in(fill, "box_y_offset", 0.0f, menu_geometry::overlay_max_y);
 		menu.team_fill_border = read_positive_vector(fill, "border");
 		menu.track_colour = read_colour(fill, "track_colour");
 		if (menu.track_colour.a != 1.0f || menu.track_colour == menu.art.ink)

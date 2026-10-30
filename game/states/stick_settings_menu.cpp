@@ -123,8 +123,8 @@ void StickSettingsMenu::init()
 	this->preview_ = std::make_unique<StickResponsePreview>(this->render_resources(), &style, &look);
 	this->texture_container_->add_child(this->preview_.get());
 	this->add_text("heading", this->text().heading(MenuHeading::pad_sticks), style.heading_font, look.heading_position);
-	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
-		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
+	const Vector2F value_limit(
+		menu_geometry::settings_action_width(look, this->calculate_widget_position(1, 0).x),
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
 	const auto row = [&](const char* name, const std::wstring& label, int index, OptionRow::Adjust adjust)
 	{
@@ -191,7 +191,7 @@ void StickSettingsMenu::init()
 		this->calculate_widget_position(0, 7));
 	const RectangleF apply_bounds = apply->bounds();
 	apply->set_scale(std::min({ 1.0f,
-		(look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - apply_bounds.x) / apply_bounds.width,
+		menu_geometry::settings_action_width(look, apply_bounds.x) / apply_bounds.width,
 		(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / apply_bounds.height }));
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(this->add_text("back", this->text().item(MenuItem::back), style.item_font,
@@ -222,8 +222,8 @@ void StickSettingsMenu::set_status(const std::wstring& text, bool warning)
 	this->status_->set_text(text);
 	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
 	this->status_->set_colour(warning ? this->presentation().main_menu().options_warning_colour : look.art.focus_ink);
-	const float available = this->paper_->rectangle().right() - look.art.shadow_offset -
-		look.art.focus_padding.x - look.status_position.x;
+	const float available = menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) -
+		look.status_position.x;
 	this->status_->set_scale(1.0f);
 	this->status_->set_scale(std::min(1.0f, available / this->status_->bounds().width));
 }

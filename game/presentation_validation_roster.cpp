@@ -8,6 +8,7 @@
 #include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
+#include "game/menu_geometry.h"
 #include "game/player_profiles.h"
 #include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
@@ -162,7 +163,7 @@ Presentation::Validation::LabelRows Presentation::Validation::validate_roster_la
 			heading ? this->presentation_.menu_.heading_font : this->presentation_.menu_.detail_font);
 		// Pause uses plain UiText, centered on the full-design paper. It has
 		// neither Main's footer centering nor retained text-shadow bounds.
-		const RectangleF bounds((1920.0f - size.x) / 2.0f,
+		const RectangleF bounds(menu_geometry::centred_x(size.x),
 			heading ? pause.heading_y : pause.status_y, size.x, size.y);
 		const float bottom = heading ? pause.status_y : pause.layout.position.y - pause.art.focus_padding.y;
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !std::isfinite(bottom) ||
@@ -423,7 +424,7 @@ Presentation::Validation::LabelRows Presentation::Validation::validate_roster_la
 		{
 			if (count == 0) { return; }
 			const Vector2F size = label_size(missing_key, words, this->presentation_.menu_.detail_font);
-			const RectangleF bounds((1920.0f - size.x) / 2.0f, pause.status_y, size.x, size.y);
+			const RectangleF bounds(menu_geometry::centred_x(size.x), pause.status_y, size.x, size.y);
 			check_label_bounds(missing_key, bounds, confirmation_paper);
 			if (!std::isfinite(pause.layout.position.y) || !std::isfinite(pause.art.focus_padding.y) ||
 				bounds.bottom() > pause.layout.position.y - pause.art.focus_padding.y)

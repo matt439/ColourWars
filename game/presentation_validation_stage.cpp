@@ -8,6 +8,7 @@
 #include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
+#include "game/menu_geometry.h"
 #include "game/player_profiles.h"
 #include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
@@ -30,6 +31,7 @@ using namespace mattmath;
 using namespace content_value;
 using namespace presentation_read;
 using namespace presentation_validation;
+using menu_consts::DESIGN_RESOLUTION;
 
 Presentation::Validation::StageGeometry Presentation::Validation::validate_stage_text()
 {
@@ -65,7 +67,7 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 		!std::isfinite(fitted_random_name.x) || !std::isfinite(fitted_random_name.y) ||
 		!std::isfinite(fitted_random_name.width) || !std::isfinite(fitted_random_name.height) ||
 		fitted_random_name.width <= 0.0f || fitted_random_name.height <= 0.0f ||
-		!RectangleF(0.0f, 0.0f, 1920.0f, name_bottom).contains(fitted_random_name))
+		!RectangleF(0.0f, 0.0f, DESIGN_RESOLUTION.x, name_bottom).contains(fitted_random_name))
 	{
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + random_name_key +
 			" must fit its stage-name design area above the preview edge including its scaled shadow.");
@@ -90,7 +92,7 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 			!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
 			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
 			bounds.width <= 0.0f || bounds.height <= 0.0f || !stage_briefing.contains(bounds) ||
-			!RectangleF(0.0f, 0.0f, 1920.0f, 1080.0f).contains(bounds) || bounds.bottom() > stage_hint_top)
+			!menu_geometry::design_area().contains(bounds) || bounds.bottom() > stage_hint_top)
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 				" must fit unscaled inside the briefing panel and design area before the authored hint row origin, including its shadow.");
@@ -123,9 +125,10 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 		}
 	}
 	const ResultsMenuPresentation& results = this->presentation_.results_menu_;
-	const RectangleF results_panel((Vector2F(1920.0f, 1080.0f) - results.box_size) / 2.0f, results.box_size);
-	const float results_fill_right = (1920.0f + results.fill_box_size.x) / 2.0f;
-	const float results_fill_bottom = results_panel.y + results.fill_box_y_offset + results.fill_box_size.y;
+	const RectangleF results_panel = menu_geometry::screen_paper(results.box_size);
+	const RectangleF results_fill = menu_geometry::results_fill_box(results);
+	const float results_fill_right = results_fill.right();
+	const float results_fill_bottom = results_fill.bottom();
 	const RectangleF contribution_heading(results.contribution_position, fixed_menu_size(
 		"menu_text.results.contribution_heading", this->presentation_.menu_text_.results.contribution_heading,
 		results.contribution_font));
@@ -157,7 +160,7 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 	if (!std::isfinite(stage_detail_shadow.x) || !std::isfinite(stage_detail_shadow.y) ||
 		!std::isfinite(this->presentation_.menu_.footer_y) || !finite_stage_rectangle(navigation_bounds) ||
 		!finite_stage_rectangle(preview_edge) || !finite_stage_rectangle(stage_briefing) ||
-		!RectangleF(0.0f, 0.0f, 1920.0f, 1080.0f).contains(navigation_bounds) ||
+		!menu_geometry::design_area().contains(navigation_bounds) ||
 		navigation_bounds.bottom() > this->presentation_.menu_.footer_y ||
 		stage_rectangles_overlap(navigation_bounds, preview_edge) ||
 		stage_rectangles_overlap(navigation_bounds, stage_briefing))
@@ -184,7 +187,7 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 		const RectangleF bounds = RectangleF::union_of(RectangleF(stage_hint_position, fitted_size),
 			RectangleF(stage_hint_position + stage_detail_shadow * scale, fitted_size));
 		if (!std::isfinite(scale) || scale <= 0.0f || !finite_stage_rectangle(bounds) ||
-			!stage_briefing.contains(bounds) || !RectangleF(0.0f, 0.0f, 1920.0f, 1080.0f).contains(bounds) ||
+			!stage_briefing.contains(bounds) || !menu_geometry::design_area().contains(bounds) ||
 			bounds.bottom() > this->presentation_.menu_.footer_y)
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +

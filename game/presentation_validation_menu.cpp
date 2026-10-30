@@ -8,6 +8,7 @@
 #include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
+#include "game/menu_geometry.h"
 #include "game/player_profiles.h"
 #include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
@@ -30,6 +31,7 @@ using namespace mattmath;
 using namespace content_value;
 using namespace presentation_read;
 using namespace presentation_validation;
+using menu_consts::DESIGN_RESOLUTION;
 
 Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_actions()
 {
@@ -82,18 +84,16 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	{
 		check_menu_line(std::string("menu_text.prompts.") + menu_prompt_keys[index],
 			this->presentation_.menu_text_.prompts[index], this->presentation_.prompt_bar_.font, this->presentation_.prompt_bar_.position,
-			1080.0f, this->presentation_.prompt_bar_.shadow_offset);
+			DESIGN_RESOLUTION.y, this->presentation_.prompt_bar_.shadow_offset);
 	}
 	const MainMenuPresentation& main = this->presentation_.main_menu_;
-	MenuPaperArtPresentation options_art = main.art;
-	options_art.focus_padding = main.setup_focus_padding;
-	options_art.shadow_offset = main.setup_shadow_offset;
+	const MenuPaperArtPresentation options_art = menu_geometry::setup_art(main);
 	const MenuItem home_items[]{ MenuItem::play, MenuItem::options, MenuItem::credits, MenuItem::exit };
 	for (size_t index = 0; index < std::size(home_items); ++index)
 	{
 		check_menu_item(home_items[index], this->presentation_.menu_.item_font, main.home_position +
 			Vector2F(0.0f, main.home_spacing.y * static_cast<float>(index + 2)),
-			main.home_box_size, main.home_spacing.y, std::nullopt, main.art, this->presentation_.menu_.footer_y);
+			menu_geometry::footer_paper(main.home_box_size, this->presentation_.menu_.footer_y), main.home_spacing.y, std::nullopt, main.art);
 	}
 	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette,
 		MenuItem::controls_audio, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
@@ -104,14 +104,13 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 		const std::optional<float> label_width = index < 3 ?
 			std::optional<float>(main.options_value_x - position.x - options_art.focus_padding.x) : std::nullopt;
 		check_menu_item(options_items[index], this->presentation_.menu_.item_font, position,
-			main.options_box_size, main.options_spacing.y, label_width, options_art, this->presentation_.menu_.footer_y);
+			menu_geometry::footer_paper(main.options_box_size, this->presentation_.menu_.footer_y), main.options_spacing.y, label_width, options_art);
 	}
-	check_menu_item(MenuItem::back, this->presentation_.menu_.item_font, main.credits_back_position, main.credits_box_size, 0.0f, std::nullopt,
-		main.art, this->presentation_.menu_.footer_y);
+	check_menu_item(MenuItem::back, this->presentation_.menu_.item_font, main.credits_back_position,
+		menu_geometry::footer_paper(main.credits_box_size, this->presentation_.menu_.footer_y), 0.0f, std::nullopt,
+		main.art);
 	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
-	MenuPaperArtPresentation display_art = pause.art;
-	display_art.focus_padding = main.setup_focus_padding;
-	display_art.shadow_offset = main.setup_shadow_offset;
+	const MenuPaperArtPresentation display_art = menu_geometry::display_art(pause, main);
 	if (!std::isfinite(pause.layout.spacing.y) || pause.layout.spacing.y <= 0.0f)
 	{
 		throw std::runtime_error(this->presentation_.source_path_ +
@@ -122,16 +121,16 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	{
 		check_menu_item(pause_items[index], this->presentation_.menu_.item_font, pause.layout.position +
 			Vector2F(0.0f, pause.layout.spacing.y * static_cast<float>(index)),
-			pause.box_size, pause.layout.spacing.y, std::nullopt, pause.art, 1080.0f);
+			menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
 	}
-	check_menu_item(MenuItem::yes, this->presentation_.menu_.item_font, pause.layout.position, pause.box_size, pause.layout.spacing.y,
-		std::nullopt, pause.art, 1080.0f);
+	check_menu_item(MenuItem::yes, this->presentation_.menu_.item_font, pause.layout.position,
+		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
 	check_menu_item(MenuItem::no, this->presentation_.menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
-		pause.box_size, pause.layout.spacing.y, std::nullopt, pause.art, 1080.0f);
-	check_menu_item(MenuItem::keep, this->presentation_.menu_.item_font, pause.layout.position, pause.box_size, pause.layout.spacing.y,
-		std::nullopt, display_art, 1080.0f);
+		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
+	check_menu_item(MenuItem::keep, this->presentation_.menu_.item_font, pause.layout.position,
+		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, display_art);
 	check_menu_item(MenuItem::revert, this->presentation_.menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
-		pause.box_size, pause.layout.spacing.y, std::nullopt, display_art, 1080.0f);
+		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, display_art);
 	const EndMenuPresentation& end = this->presentation_.end_menu_;
 	if (!std::isfinite(end.layout.spacing.y) || end.layout.spacing.y <= 0.0f)
 	{
@@ -141,8 +140,8 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	// Watch Replay is row 1 when the round has one, and the setup actions
 	// follow it; without one they move up a row.
 	check_menu_item(MenuItem::watch_replay, this->presentation_.menu_.item_font, end.layout.position +
-		Vector2F(0.0f, end.layout.spacing.y), end.box_size, end.layout.spacing.y, std::nullopt,
-		end.art, 1080.0f);
+		Vector2F(0.0f, end.layout.spacing.y), menu_geometry::screen_paper(end.box_size), end.layout.spacing.y, std::nullopt,
+		end.art);
 	const MenuItem end_items[]{ MenuItem::change_teams, MenuItem::change_weapons, MenuItem::change_level };
 	for (size_t index = 0; index < std::size(end_items); ++index)
 	{
@@ -150,7 +149,7 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 		{
 			check_menu_item(end_items[index], this->presentation_.menu_.item_font, end.layout.position +
 				Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(row)),
-				end.box_size, end.layout.spacing.y, std::nullopt, end.art, 1080.0f);
+				menu_geometry::screen_paper(end.box_size), end.layout.spacing.y, std::nullopt, end.art);
 		}
 	}
 	// Exit is row 3 between a series' rounds and row 4 otherwise, a row lower
@@ -160,7 +159,7 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	{
 		check_menu_item(MenuItem::exit_to_main_menu, this->presentation_.menu_.item_font, end.layout.position +
 			Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(row)),
-			end.box_size, end.layout.spacing.y, std::nullopt, end.art, 1080.0f);
+			menu_geometry::screen_paper(end.box_size), end.layout.spacing.y, std::nullopt, end.art);
 	}
 	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
 	const auto check_controls_item = [&](MenuItem item, int row, bool fitted_label)
@@ -170,10 +169,10 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 		const bool fitted_action = item == MenuItem::keyboard_jump || item == MenuItem::pad_buttons ||
 			item == MenuItem::profiles || item == MenuItem::apply;
 		const std::optional<float> label_width = fitted_action ?
-			std::optional<float>(controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset - position.x) :
+			std::optional<float>(menu_geometry::settings_action_width(controls, position.x)) :
 			(fitted_label ? std::optional<float>(controls.layout.spacing.x - controls.art.focus_padding.x) : std::nullopt);
 		const Vector2F size = check_menu_item(item, controls.item_font, position,
-			controls.box_size, controls.layout.spacing.y, label_width, controls.art, this->presentation_.menu_.footer_y, fitted_action);
+			menu_geometry::footer_paper(controls.box_size, this->presentation_.menu_.footer_y), controls.layout.spacing.y, label_width, controls.art, fitted_action);
 		if (position.x + size.x + controls.art.focus_padding.x > controls.controls_position.x)
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.items." +
@@ -199,11 +198,9 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	}
 	check_controls_item(MenuItem::apply, 3, false);
 	check_controls_item(MenuItem::back, 4, false);
-	const RectangleF setup_paper((Vector2F(1920.0f, this->presentation_.menu_.footer_y) - main.setup_box_size) / 2.0f,
-		main.setup_box_size);
-	const float setup_edge = main.art.keyline_width * 3.0f;
-	const RectangleF setup_inside(setup_paper.position() + Vector2F(setup_edge),
-		setup_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
+	const RectangleF setup_inside = menu_geometry::paper_interior(
+		menu_geometry::footer_paper(main.setup_box_size, this->presentation_.menu_.footer_y),
+		menu_geometry::setup_art(main));
 	float setup_heading_bottom = 0.0f;
 	for (const MenuHeading role : { MenuHeading::mode, MenuHeading::players })
 	{
@@ -288,7 +285,7 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 		throw std::runtime_error(this->presentation_.source_path_ +
 			": menu_text.solo_practice_hint must stay clear of the Mode rows' complete focus cards and shade.");
 	}
-	const RectangleF confirmation_paper((Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f, pause.box_size);
+	const RectangleF confirmation_paper = menu_geometry::screen_paper(pause.box_size);
 	RectangleF first_confirmation_action(pause.layout.position,
 		fixed_menu_size("menu_text.items.yes", this->presentation_.menu_text_.item(MenuItem::yes), this->presentation_.menu_.item_font));
 	first_confirmation_action.inflate(pause.art.focus_padding);
@@ -298,7 +295,7 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 		const Vector2F size = fixed_menu_size(key, text, this->presentation_.menu_.detail_font);
 		// Confirmation questions remain plain, unscaled and centered on the
 		// full-design Pause paper rather than the footer-centered menu paper.
-		const RectangleF bounds((1920.0f - size.x) / 2.0f, pause.status_y, size.x, size.y);
+		const RectangleF bounds(menu_geometry::centred_x(size.x), pause.status_y, size.x, size.y);
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !confirmation_paper.contains(bounds) ||
 			bounds.bottom() > action_top)
 		{
@@ -310,14 +307,14 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	check_confirmation("quit", this->presentation_.menu_text_.confirmations.quit, first_confirmation_action.y);
 	check_confirmation("exit", this->presentation_.menu_text_.confirmations.exit, first_confirmation_action.y);
 	check_confirmation("display", this->presentation_.menu_text_.confirmations.display, pause.layout.position.y - display_art.focus_padding.y);
-	const RectangleF end_paper((Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f, end.box_size);
+	const RectangleF end_paper = menu_geometry::screen_paper(end.box_size);
 	// The first continuation row starts here regardless of its Session label.
 	const float first_end_action_top = end.layout.position.y - end.art.focus_padding.y;
 	const auto check_end_heading = [&](const char* role, const std::wstring& text)
 	{
 		const std::string key = std::string("menu_text.end.") + role;
 		const Vector2F size = fixed_menu_size(key, text, this->presentation_.menu_.heading_font);
-		const RectangleF bounds((1920.0f - size.x) / 2.0f, end.heading_y, size.x, size.y);
+		const RectangleF bounds(menu_geometry::centred_x(size.x), end.heading_y, size.x, size.y);
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !std::isfinite(first_end_action_top) ||
 			!end_paper.contains(bounds) || bounds.bottom() > first_end_action_top)
 		{
@@ -329,7 +326,7 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	check_end_heading("round_complete", this->presentation_.menu_text_.end.round_complete);
 	check_end_heading("series_complete", this->presentation_.menu_text_.end.series_complete);
 
-	return { options_art, display_art, setup_edge, setup_inside, confirmation_paper };
+	return { options_art, display_art, setup_inside, confirmation_paper };
 }
 
 Presentation::Validation::ControlsGeometry Presentation::Validation::validate_controls_text(const SetupGeometry& setup)
@@ -338,8 +335,9 @@ Presentation::Validation::ControlsGeometry Presentation::Validation::validate_co
 	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
 	const MenuValueText& values = this->presentation_.menu_text_.values;
 	const auto& options_art = setup.options_art;
-	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
-		options_art.shadow_offset - options_art.focus_padding.x - main.options_value_x,
+	const Vector2F options_value_limit(menu_geometry::paper_text_right(
+		menu_geometry::footer_paper(main.options_box_size, this->presentation_.menu_.footer_y), options_art) -
+		main.options_value_x,
 		main.options_spacing.y - options_art.focus_padding.y * 2.0f);
 	check_value("on", values.on, this->presentation_.menu_.item_font, options_value_position(1), options_value_limit,
 		main.options_box_size, options_art, main.options_spacing.y, false);
@@ -347,8 +345,8 @@ Presentation::Validation::ControlsGeometry Presentation::Validation::validate_co
 		main.options_box_size, options_art, main.options_spacing.y, false);
 	check_value("random", values.random, this->presentation_.menu_.item_font, options_value_position(2), options_value_limit,
 		main.options_box_size, options_art, main.options_spacing.y, false);
-	const Vector2F controls_value_limit(controls.controls_position.x - controls.art.focus_padding.x * 2.0f -
-		controls.art.shadow_offset - controls.layout.position.x - controls.layout.spacing.x,
+	const Vector2F controls_value_limit(
+		menu_geometry::settings_action_width(controls, controls.layout.position.x + controls.layout.spacing.x),
 		controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
 	// Rumble occupies Stick row 3; Controls toggles occupy rows 6 through 8.
 	for (const int row : { 3, 6, 7, 8 })
@@ -364,7 +362,7 @@ Presentation::Validation::ControlsGeometry Presentation::Validation::validate_co
 		const std::string& font, float y, const Vector2F& padding)
 	{
 		const Vector2F size = fixed_menu_size(key, text, font);
-		const RectangleF bounds((1920.0f - size.x) / 2.0f, y, size.x, size.y);
+		const RectangleF bounds(menu_geometry::centred_x(size.x), y, size.x, size.y);
 		check_fixed_paper(key, bounds, main.title_box_size, padding);
 		return bounds;
 	};
@@ -469,8 +467,8 @@ Presentation::Validation::ControlsGeometry Presentation::Validation::validate_co
 		if (row)
 		{
 			// KeyboardJumpMenu fits its action labels uniformly in both axes.
-			const Vector2F available(controls.controls_position.x - controls.art.focus_padding.x * 2.0f -
-				controls.art.shadow_offset - position.x, controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
+			const Vector2F available(menu_geometry::settings_action_width(controls, position.x),
+				controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
 			const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
 			if (!std::isfinite(scale) || scale <= 0.0f)
 			{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must retain finite positive fitted action bounds."); }
@@ -520,7 +518,7 @@ Presentation::Validation::ControlsGeometry Presentation::Validation::validate_co
 		if (row)
 		{
 			const Vector2F available(option_label ? controls.layout.spacing.x - controls.art.focus_padding.x :
-				controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset - position.x,
+				menu_geometry::settings_action_width(controls, position.x),
 				controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
 			const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
 			if (!std::isfinite(scale) || scale <= 0.0f)
@@ -565,7 +563,7 @@ Presentation::Validation::ControlsGeometry Presentation::Validation::validate_co
 		if (row)
 		{
 			const Vector2F available(option_label ? controls.layout.spacing.x - controls.art.focus_padding.x :
-				controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset - position.x,
+				menu_geometry::settings_action_width(controls, position.x),
 				controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
 			const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
 			if (!std::isfinite(scale) || scale <= 0.0f)
@@ -646,8 +644,8 @@ Presentation::Validation::ControlsGeometry Presentation::Validation::validate_co
 			message_key.starts_with("profiles.") ?
 			"menu_text." : "menu_text.status.") + message.key;
 		const Vector2F raw = fixed_menu_size(key, message.text, font);
-		const float available = (1920.0f + paper_size.x) / 2.0f - art.shadow_offset -
-			art.focus_padding.x - position.x;
+		const float available = menu_geometry::paper_text_right(
+			menu_geometry::footer_paper(paper_size, this->presentation_.menu_.footer_y), art) - position.x;
 		if (!std::isfinite(available) || available <= 0.0f)
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must leave finite positive status width.");

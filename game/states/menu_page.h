@@ -14,12 +14,7 @@
 #include "engine/render/render_resources.h"
 #include "engine/render/sprite_frame.h"
 #include "game/debug/debug_targets.h"
-
-namespace menu_consts
-{
-	// Menu geometry stays in these design units; ui_camera() maps it to the window.
-	inline const mattmath::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
-}
+#include "game/menu_geometry.h"
 
 // A menu wave resolved once, with the volume presentation.json gives it.
 struct MenuSound

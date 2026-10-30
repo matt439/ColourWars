@@ -330,6 +330,59 @@ that owns the design size, and have the reader, the validator and the pages call
 it; move `DESIGN_RESOLUTION` out of `states/menu_page.h`. Split presentation
 validation by page rather than by size where the shared geometry allows.
 
+**The module, done 2026-10-30.** [menu_geometry.h](../game/menu_geometry.h) at
+the `game/` root owns `menu_consts::DESIGN_RESOLUTION` (moved unchanged;
+`menu_page.h` includes it, so no probe changed) and the reader's caps by name
+(`paper_max_width` 1760, `setup_paper_max_width` 1840, `scan_paper_max_width`
+1880, `paper_footer_margin` 40, `overlay_max_y` 900, `overlay_paper_max`
+1600x900). Its functions are the page rectangles: `design_area`, `centred` and
+`centred_x`, `footer_paper` (centred above `footer_y`), `screen_paper` (centred
+on the design: Exit, Display, Pause, End, Results), `paper_interior` (inside
+three keylines and the shade), `paper_text_right`, `footer_band` and
+`footer_rule`, `setup_art` and `display_art`, `settings_action_width` and
+`results_fill_box`. The reader, every presentation validator,
+`menu_content_validation`, `stage_scan_diagnostics` and the pages call them; no
+bare 1920, 1080 or cap literal is left in the reader or validators except in
+message text. `MenuPage::calculate_center_position` forwards to `centred`;
+Pause, End and Results build their paper at `screen_paper` instead of moving it
+with `set_position_at_center`, the same rectangle exactly; `stage_preview`
+frames its camera on `design_area`; `Validation::check_menu_item` takes the
+paper rectangle instead of a size and a content height. Where the reader or a
+validator associated a sum differently from the page (interior bottoms, right
+edges, the Results fill's right edge, the controls value width), it now uses the
+page's form, which can move a limit by one ulp for fractional data and changes
+nothing for today's whole-number values. Diagnostic order and text are
+unchanged. Both presets build under `/W4 /WX`; the full default acceptance list
+passed in Release (74) and in Debug without the four slow cases, `menu_text`
+passed in Debug and `check-painter.ps1 -CompileOnly` compiled in Release.
+
+**Drift the shared geometry exposed.** Mapping every formula found places where
+the three sides disagree; the module keeps each as it was, so these are separate
+changes:
+
+- D1, a visible question for the author: every page draws the footer band from
+  `footer_y` (960) to the bottom, including over a match, while Pause and End
+  papers (900 tall, centred on the design) reach y 990 and Results (860) 970,
+  so the band covers their bottom 30 and 10 pixels. Nothing relates those boxes
+  to `footer_y`. Whether that is intended is the author's call (`POL#45`).
+- D2: the Pad sticks validator still checks rows pad, move, aim, rumble, apply
+  at 4 and back at 5, but the page has nine rows (Back at 8), so its status
+  overlap check tests the wrong card.
+- D3: End row 0's labels are fitted to the whole paper, ignoring the shade that
+  every other End row subtracts.
+- D4: the practice Pause layout (five rows at 0.8 spacing, the Tool label) is not
+  validated.
+- D5: three meanings of "inside the paper" (interior, face, whole box) are used
+  for the same kind of check on different pages.
+- D6-D10: Display's setup shade checked only for Keep/Revert; the setup shade
+  never checked against a setup box; `footer_y` range-checked in `main_menu`'s
+  reader but read by the controls reader too; Credits' fit checked only on the
+  page; static stage navigation and hints missing checks the numbered ones get.
+
+Left: correct D2-D4 and D6-D10 in the validator, then the order-preserving split
+by page (keep the nine phase functions in `Validation::validate` as the owners of
+order, move each phase's per-page blocks into per-page files).
+
 ### Presentation includes and the content layer (`HYG#38`)
 
 Trim the 24-line include block copied into 13 `presentation*.cpp` files to what
