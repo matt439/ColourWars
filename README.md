@@ -3,6 +3,31 @@
 A local split-screen paint-shooter for up to four players. Two teams, one
 arena, and a scoreboard that counts painted surface rather than kills.
 
+## Play
+
+You don't need Git, Visual Studio or a terminal to play.
+
+1. Download `ColourWars-windows-x64.zip` from the
+   [latest release](https://github.com/matt439/ColourWars/releases/latest).
+   Until the first release is out, a signed-in GitHub account can take the
+   `ColourWars-windows-x64` artifact from a passing
+   [CI run](https://github.com/matt439/ColourWars/actions/workflows/ci.yml?query=branch%3Amaster+is%3Asuccess)
+   (it comes wrapped in a second ZIP), or use `build.cmd` (see [Building](#building)).
+2. Right-click the ZIP and choose **Extract All**. Running the game from
+   inside the ZIP doesn't work.
+3. Open the extracted folder, then the `ColourWars-windows-x64` folder inside
+   it, and run `ColourWars.exe`. If Windows says
+   "Windows protected your PC", choose **More info**, then **Run anyway**: the
+   game isn't signed with a publisher certificate.
+
+It needs Windows 10 or 11 (64-bit) and a Direct3D 11 graphics card, which nearly
+every PC from the last ten years has. Nothing needs installing. Play with
+Xbox-style controllers, or one player on keyboard and mouse. On your own,
+practise solo or fill the empty seats with bots: on Join Players, Player 1
+picks a seat with Up/Down and makes it a bot with Left/Right.
+`HOW-TO-PLAY.txt` in the ZIP has the controls, where settings are saved and how
+to remove the game. Building from source is under [Building](#building).
+
 The arena is a picture left unsaved in a paint program: everything in it is
 grey, and the palette has one empty slot. Each match opens full screen on the
 monitor of the person at the computer, who previews one team's colour over
@@ -217,6 +242,16 @@ DirectX Tool Kit is in `vcpkg.json` and is fetched at configure time.
 
 ### Configure and build
 
+The quickest way is `build.cmd` at the repository root. Double-click it and it
+fetches the engine submodule if it's missing, finds Visual Studio, uses its
+bundled vcpkg when `VCPKG_ROOT` isn't set, then builds Release and starts the
+game. From a prompt, `build.cmd -Preset x64-debug` builds Debug and
+`build.cmd -Package` also makes the Release ZIP. It installs nothing: if Visual
+Studio or one of its components is missing, it says which one. See
+[scripts/build.ps1](scripts/build.ps1).
+
+By hand, from an x64 Developer prompt with `VCPKG_ROOT` set:
+
 ```
 cmake --preset x64-debug          # or x64-release
 cmake --build --preset x64-debug
@@ -343,11 +378,13 @@ committing to produce a package labelled with that commit. The release version
 is `project(VERSION)` in the root `CMakeLists.txt`; it is CPack's package version,
 heads `build-info.txt` and is stamped into `ColourWars.exe` (Properties >
 Details). CI keeps each passing Release ZIP as the `ColourWars-windows-x64` run
-artifact.
+artifact. A `v*` tag on `master` that matches `project(VERSION)` (`v0.1.0` for
+`0.1.0`) runs full CI, and its `publish` job attaches that run's checked ZIP to a
+new GitHub Release.
 
 Only the assets listed in [cmake/runtime_assets.cmake](cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.
-The ZIP includes licence notices, the seven compiled fonts, six sprite sheets,
+The ZIP includes licence notices, the player guide `HOW-TO-PLAY.txt`, the seven compiled fonts, six sprite sheets,
 the eight arenas (including Crossfeed, Press Tower and the explicit static/mover/slab
 Turbulence Yard comparisons) and Movement Course, tuning,
 presentation, the replacement sound-bank definition and validated `paint_exe.xwb`,

@@ -140,6 +140,8 @@ class ChangeChecks(unittest.TestCase):
         for event_name, event in (
                 ("push", {"before": "0" * 40, "after": after}),
                 ("push", {"before": "f" * 40, "after": after}),
+                ("push", {"ref": "refs/tags/v0.1.0", "before": self.initial,
+                          "after": after}),
                 ("workflow_dispatch", {}),
                 ("schedule", {})):
             with self.subTest(event_name=event_name, event=event):
@@ -203,7 +205,8 @@ class ChangeChecks(unittest.TestCase):
                 ("workflow_dispatch", {}),
                 ("push", {"after": "0" * 40}),
                 ("push", {"after": "f" * 40}),
-                ("push", {"after": "not a commit"})):
+                ("push", {"after": "not a commit"}),
+                ("push", {"ref": "refs/tags/v0.1.0", "after": self.initial})):
             with self.subTest(event_name=event_name, event=event):
                 self.assertFalse(already_tested(event_name, event, cwd=self.repo,
                                                 passed=lambda tree: True))

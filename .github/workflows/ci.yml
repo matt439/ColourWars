@@ -6,6 +6,8 @@ name: build
 on:
   push:
     branches: [master, 'review-*']
+    # A version tag builds in full and publishes its Release ZIP (job publish).
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -272,6 +274,7 @@ jobs:
           }) { throw "Development files or unreviewed audio leaked into the package" }
           foreach ($required in 'ColourWars.exe', 'DirectXTK.dll', 'xaudio2_9redist.dll',
             'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'build-info.txt',
+            'HOW-TO-PLAY.txt',
             'sounds/paint_exe.json', 'sounds/paint_exe.xwb',
             'licenses/paint_exe/PROVENANCE.md', 'licenses/paint_exe/CC0-1.0.txt',
             'licenses/paint_exe/runtime-bank.json', 'licenses/fonts/Lato-OFL.txt',
@@ -363,6 +366,47 @@ jobs:
           name: startup-${{ matrix.preset }}
           path: out/validation/startup
           if-no-files-found: ignore
+
+  # A v* tag on master publishes the ZIP its own run built, inspected and
+  # started. The tag must name the packaged version, so v0.1.0 needs
+  # project(VERSION 0.1.0); bump CMakeLists.txt before tagging.
+  publish:
+    needs: windows
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: The tag is on master and names the packaged version
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/master ||
+            { echo "::error::$GITHUB_REF_NAME is not on master"; exit 1; }
+          version=$(sed -n 's/^project(ColourWars VERSION \([0-9.]*\) .*/\1/p' CMakeLists.txt)
+          [ "v$version" = "$GITHUB_REF_NAME" ] ||
+            { echo "::error::Tag $GITHUB_REF_NAME does not match project(VERSION $version)"; exit 1; }
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ColourWars-windows-x64
+
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<'EOF'
+          **To play:** download `ColourWars-windows-x64.zip` below, right-click it and choose
+          **Extract All**, then run `ColourWars.exe` from the `ColourWars-windows-x64` folder inside. Windows 10/11
+          x64 with a Direct3D 11 graphics card; nothing else needs installing. Windows may
+          say "Windows protected your PC" because the game is unsigned: choose **More info**,
+          then **Run anyway**. `HOW-TO-PLAY.txt` in the ZIP has the rest.
+          EOF
+          gh release create "$GITHUB_REF_NAME" ColourWars-windows-x64.zip \
+            --verify-tag --title "ColourWars $GITHUB_REF_NAME" \
+            --notes-file notes.md --generate-notes
 
   # Only after both Windows jobs passed on the commit they checked out (a pull
   # request's test merge): its tree is what a later push may skip on.

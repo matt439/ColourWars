@@ -186,7 +186,7 @@ here.
 | `ROAD#2` | DECISION | MED | M | Physical-pad sessions: 2P and 4P on every stage and weapon; join, unplug/replug (also into another slot, reclaimed with Start), pause, focus, fullscreen/resize, series draws, rematch, relaunch; a long soak past the display timers; one non-XInput pad. Needs pads. |
 | `POL#24` | DECISION | MED | M | The finish review and fresh-player observations on the Crossfeed reference match, including its spawn pressure and 1-4P clean/heavy readability; the gate before production widens. [Process](docs/polish-plan.md#7-acceptance-and-delivery). |
 | `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
-| `GAP#7.6` | DEFERRED | LOW | S | Replace the stock `directx.ico` in the later UI/release-art pass using the approved style; the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
+| `GAP#7.6` | DEFERRED | LOW | S | Replace the stock `directx.ico` in the later UI/release-art pass using the approved style; the first tag is the author's. VERSIONINFO, the ZIP, the build stamp, the CI ZIP artifact and the tag-triggered `publish` job are done. |
 
 ## Game gaps
 

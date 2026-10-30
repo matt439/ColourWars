@@ -1,0 +1,70 @@
+ColourWars - how to play
+========================
+
+A split-screen paint-shooter for up to four players. Two teams, one arena;
+the team that has painted more of it when the clock runs out wins.
+
+
+Starting the game
+-----------------
+
+1. Extract the whole ZIP first. In Explorer, right-click the ZIP and choose
+   "Extract All...". Running ColourWars.exe from inside the ZIP does not work:
+   the game needs the files beside it.
+
+2. Open the extracted folder, then the ColourWars-windows-x64 folder inside
+   it, and double-click ColourWars.exe. You can put that folder anywhere, for
+   example Documents or the desktop. Nothing needs installing.
+
+3. Windows may say "Windows protected your PC". The game is not signed with a
+   publisher certificate, so Windows does not recognise it yet. Choose
+   "More info", then "Run anyway". It only asks once for each copy.
+
+Needs Windows 10 or 11 (64-bit) and a graphics card or chip that supports
+Direct3D 11, which nearly every PC from the last ten years has. It does not
+run over Remote Desktop or in most virtual machines.
+
+
+Playing
+-------
+
+Play > Single Match (or Best of 3 / Best of 5) > choose how many players.
+The device you choose with becomes Player 1.
+
+On Join Players, everyone else presses A on their pad (Enter for keyboard
+and mouse) to take a seat. No friends around? Player 1 can move to an empty
+seat with Up/Down and press Left/Right to turn it into a bot (Easy, Normal or
+Hard). For solo practice, choose Single Match, then 1 player.
+
+Up to four players: one may use the keyboard and mouse, the others need
+Xbox-style (XInput) controllers.
+
+                      Gamepad              Keyboard and mouse
+  Move                Left stick           A / D
+  Jump                A or left trigger    Space
+  Aim                 Right stick          Mouse
+  Shoot               Right trigger        Left mouse button
+  Drop through        Left stick down      S or Down
+  Pause               Start                Escape
+
+Menus: left stick or D-pad / arrow keys to move, A / Enter to choose,
+B / Escape to go back. Controls, volume, window size and full screen are
+under Options. To quit, choose Exit on the main menu.
+
+
+Settings, your own stages and removing the game
+-----------------------------------------------
+
+Settings are saved in %LOCALAPPDATA%\ColourWars (paste that into Explorer's
+address bar). Stages you build go in a "stages" folder there; create it
+if it is not there yet.
+
+To update, extract the new ZIP and delete the old folder; your settings stay.
+To remove the game, delete its folder, and %LOCALAPPDATA%\ColourWars if you
+also want your settings gone.
+
+If the game stops with an error, the message box says why, and a short
+report is written to %LOCALAPPDATA%\ColourWars\last-error.log.
+
+Source code, the level editor and full documentation:
+https://github.com/matt439/ColourWars

@@ -203,7 +203,9 @@ named `passed-tree-<tree>` for the tree they built, and a push whose commit has
 that exact tree skips the Windows jobs. A merge of a branch already up to date
 with `master` is that tree; a `master` that moved past the branch, a conflict
 resolved in the merge, a direct push or a failed lookup builds in full, as do
-manual runs. Change detection and its regression checks live in `scripts/ci/`.
+manual runs and `v*` tag pushes. A tag on `master` whose name matches
+`project(VERSION)` then publishes that run's checked Release ZIP as a GitHub
+Release (the `publish` job); the first tag is the author's call. Change detection and its regression checks live in `scripts/ci/`.
 
 Full CI builds both presets, compiles without running the opt-in probes
 (the sixteen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with

@@ -8,6 +8,12 @@ location. [AGENTS.md](../AGENTS.md#tests) and
 [the README](../README.md#consumer-acceptance) describe the acceptance rules in
 full.
 
+## Building
+
+| Script | What |
+|---|---|
+| [build.ps1](build.ps1), [../build.cmd](../build.cmd) | builds a preset from a plain shell or a double-click: fetches the submodule, finds Visual Studio with vswhere, loads vcvars64, falls back to its bundled vcpkg (`-Preset`, `-Package`, `-Run`) |
+
 ## Acceptance
 
 | Script | What |
