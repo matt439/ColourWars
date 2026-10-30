@@ -5,6 +5,8 @@ import os
 from pathlib import PurePosixPath
 import re
 import subprocess
+import urllib.parse
+import urllib.request
 
 
 PACKAGED_DOCS = {"README.md", "game/audio/paint_exe/PROVENANCE.md"}
@@ -67,15 +69,79 @@ def check_changes(event_name, event, cwd=None):
     return bool(paths) and all(is_doc(path) for path in paths)
 
 
+def github(path, **query):
+    request = urllib.request.Request(
+        f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}"
+        f"/{path}?{urllib.parse.urlencode(query)}",
+        headers={"Accept": "application/vnd.github+json",
+                 "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}"})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.load(response)
+
+
+def tree_passed(tree):
+    """Whether a pull_request run of this workflow built tree and passed.
+
+    The record job uploads passed-tree-<tree> only after both Windows jobs
+    passed on the commit they checked out, so its name is the evidence.
+    """
+    # GITHUB_WORKFLOW_REF is owner/repo/.github/workflows/ci.yml@ref.
+    workflow = os.environ["GITHUB_WORKFLOW_REF"].split("@")[0].split("/", 2)[2]
+    name = f"passed-tree-{tree}"
+    for artifact in github("actions/artifacts", name=name)["artifacts"]:
+        if artifact["name"] != name or artifact["expired"]:
+            continue
+        run = github(f"actions/runs/{artifact['workflow_run']['id']}")
+        if (run["event"] == "pull_request" and run["path"] == workflow
+                and run["conclusion"] == "success"):
+            return True
+    return False
+
+
+def head_tree(cwd=None):
+    return git("rev-parse", "HEAD^{tree}", cwd=cwd).decode("ascii").strip()
+
+
+def already_tested(event_name, event, cwd=None, passed=tree_passed):
+    """Whether a push carries a tree that a pull request's CI already passed.
+
+    A merge commit of a branch that contains the old tip is the branch's own
+    tree, which its pull request built. Anything else is a new tree.
+    """
+    if event_name != "push":
+        return False
+    after = event.get("after", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", after) or set(after) == {"0"}:
+        return False
+    try:
+        tree = git("rev-parse", f"{after}^{{tree}}", cwd=cwd).decode("ascii").strip()
+    except subprocess.CalledProcessError:
+        return False
+    # An unanswered query must never suppress the build.
+    try:
+        return passed(tree)
+    except Exception as error:
+        print(f"Pull request records unavailable ({error}); running full CI.")
+        return False
+
+
 def main():
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as source:
         event = json.load(source)
-    docs_only = check_changes(os.environ["GITHUB_EVENT_NAME"], event)
-    value = str(docs_only).lower()
+    event_name = os.environ["GITHUB_EVENT_NAME"]
+    docs_only = check_changes(event_name, event)
+    tested = not docs_only and already_tested(event_name, event)
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-        output.write(f"docs_only={value}\n")
-    print("Documentation-only changes: lint passed; Windows jobs skipped."
-          if docs_only else "Lint passed; running full Windows CI.")
+        output.write(f"skip_windows={str(docs_only or tested).lower()}\n")
+        # The tree the Windows jobs will check out, for the record job.
+        output.write(f"tree={head_tree()}\n")
+    if docs_only:
+        print("Documentation-only changes: lint passed; Windows jobs skipped.")
+    elif tested:
+        print("A pull request's CI already passed this exact tree: "
+              "lint passed; Windows jobs skipped.")
+    else:
+        print("Lint passed; running full Windows CI.")
 
 
 if __name__ == "__main__":

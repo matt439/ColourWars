@@ -197,22 +197,27 @@ heading anchors in tracked Markdown outside `external/` resolve
 (`scripts/ci/check_doc_links.py`). Pushes and pull requests that change
 only Markdown or image/video files under `docs/images/` skip the Windows jobs.
 Deleting a packaged Markdown file still runs full CI, as do code, scripts, schemas,
-runtime assets and submodule changes. Manual runs always run full CI. Change
-detection and its regression checks live in `scripts/ci/`.
+runtime assets and submodule changes. A pull request's run is the only full run
+its change gets: when both Windows jobs pass, a `record` job uploads an artifact
+named `passed-tree-<tree>` for the tree they built, and a push whose commit has
+that exact tree skips the Windows jobs. A merge of a branch already up to date
+with `master` is that tree; a `master` that moved past the branch, a conflict
+resolved in the merge, a direct push or a failed lookup builds in full, as do
+manual runs. Change detection and its regression checks live in `scripts/ci/`.
 
 Full CI builds both presets, compiles without running the opt-in probes
 (the sixteen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
 both pad readers and, in Debug, `check-frame-pacing.ps1 -CompileOnly`), runs
 consumer acceptance and checks startup.
 Acceptance runs four cases at a
-time (`-Parallel 4`); on pull requests the Debug job leaves out `crossfeed`,
-`press_tower`, `menu_text` and `debug_console` (`-SkipSlowDebug`), which take
-minutes each under Debug's checked iterators (with them, Debug acceptance
-alone took 27 minutes). Release runs them on every pull request and a push to
-`master` runs the full Debug suite. Debug startup is required; Release
-may skip only the exact missing-hardware-adapter diagnostic because its engine
-build has no software fallback. Content failures, crashes and other startup
-errors fail CI. Release also builds and inspects the redistributable ZIP.
+time (`-Parallel 4`), and every event runs every case: `crossfeed`,
+`press_tower`, `menu_text` and `debug_console` take minutes each under Debug's
+checked iterators, and `-SkipSlowDebug` leaves them out of a local Debug run,
+but a pull request runs them because its merge is not built again. Debug
+startup is required; Release may skip only the exact missing-hardware-adapter
+diagnostic because its engine build has no software fallback. Content failures,
+crashes and other startup errors fail CI. Release also builds and inspects the
+redistributable ZIP.
 
 ## Audio: accepted replacement bank and optional fallback
 

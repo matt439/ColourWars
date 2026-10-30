@@ -9,9 +9,10 @@ on:
   pull_request:
   workflow_dispatch:
 
-# The jobs only read the repository and upload artifacts.
+# The jobs read the repository and this workflow's runs, and upload artifacts.
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,7 +22,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     outputs:
-      docs_only: ${{ steps.changes.outputs.docs_only }}
+      skip_windows: ${{ steps.changes.outputs.skip_windows }}
+      tree: ${{ steps.changes.outputs.tree }}
     steps:
       # Compare the whole push/PR without building the engine. The pinned
       # engine is checked out (not its own submodules) so the link check can
@@ -34,8 +36,13 @@ jobs:
       - name: Check CI change detection and the link checker
         run: python3 -m unittest discover -s scripts/ci -p test_*.py
 
+      # A pull request runs the whole suite once, and the record job names the
+      # tree it passed. A push of that same tree, such as the merge commit of a
+      # branch already up to date with master, is not built again.
       - name: Lint changes and select build jobs
         id: changes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/ci/lint.py
 
       # Relative links and heading anchors in tracked Markdown outside the engine.
@@ -44,7 +51,7 @@ jobs:
 
   windows:
     needs: lint
-    if: needs.lint.outputs.docs_only != 'true'
+    if: needs.lint.outputs.skip_windows != 'true'
     runs-on: windows-latest
 
     strategy:
@@ -156,18 +163,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      # Four cases at a time on the runner's four cores. Pull requests leave
-      # out the Debug simulations that take three to eight minutes each under
-      # checked iterators (-SkipSlowDebug: SlowInDebug in cases.psd1); Release
-      # still runs them on every pull request, and every push to master runs
-      # the full Debug suite.
+      # Four cases at a time on the runner's four cores. Every event runs the
+      # full suite, so a pull request's run is the one its merge relies on.
       - name: Consumer acceptance checks
         run: |
           call "%VCVARS%"
-          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 ${{ (matrix.preset == 'x64-debug' && github.event_name == 'pull_request') && '-SkipSlowDebug' || '' }}
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4
 
       # CI#4: per-case compile and run seconds, outcome, longest first. The
-      # data the scheduling order and the Debug exclusions above should rest on.
+      # data the scheduling order in cases.psd1 should rest on.
       - name: Upload acceptance timing summary
         if: always()
         uses: actions/upload-artifact@v4
@@ -359,3 +363,21 @@ jobs:
           name: startup-${{ matrix.preset }}
           path: out/validation/startup
           if-no-files-found: ignore
+
+  # Only after both Windows jobs passed on the commit they checked out (a pull
+  # request's test merge): its tree is what a later push may skip on.
+  record:
+    needs: [lint, windows]
+    if: github.event_name == 'pull_request' && needs.windows.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Name the passed tree
+        run: echo "${{ github.sha }}" > passed-commit.txt
+
+      - name: Record the passed tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: passed-tree-${{ needs.lint.outputs.tree }}
+          path: passed-commit.txt
+          if-no-files-found: error
+          retention-days: 90

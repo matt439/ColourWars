@@ -12,8 +12,8 @@
 #                folder, 'repo' the checkout. Omitted means @('game').
 #   StartRank    Started first, lowest rank first, when cases run in parallel:
 #                the slowest cases in CI timings (acceptance-summary.json).
-#   SlowInDebug  Left out by -SkipSlowDebug, which the Debug pull-request job
-#                passes: minutes each under Debug's checked iterators.
+#   SlowInDebug  Left out by -SkipSlowDebug for a quicker local Debug run:
+#                minutes each under Debug's checked iterators. CI runs them.
 #   Utf8Output   Its output is decoded as UTF-8; such a case runs serially.
 @{
 Cases = @(
