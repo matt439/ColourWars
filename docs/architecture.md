@@ -166,10 +166,16 @@ being assembled, the `MenuContext` and the menu music. `GameLevel` is one match
 or series, with a fresh `Level` for each round. Pages derive from `MenuPage`
 and share a `MenuContext` (the services, the menu input and the `MatchSetup`),
 owned by whichever state owns the screen; `GameLevel` builds its own for the
-pause, results and end pages.
+pause, results and end pages. Both states implement
+[`MenuOwner`](../game/states/menu_owner.h), the interface the context reaches
+its owner through: the owner's music clock and, for `GameMenu` alone, the
+player's stage folder.
 
 A page replaces another in its frame with `transition_to` and covers it with
-`push`. The shapes that occur:
+`push`. Inside the main menu's frame every replacement is a `MainMenuRoute`
+followed by `MainMenuPage::go_to` and built by `make_main_menu_page`;
+[main_menu_route.cpp](../game/states/main_menu_route.cpp) draws the setup flow
+as one graph. The shapes that occur:
 
 ```text
 [GameMenu]                                      only between a pop and a push

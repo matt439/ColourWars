@@ -426,7 +426,7 @@ namespace
 		const std::filesystem::path& scratch)
 	{
 		// A non-ASCII folder name: paths cross the engine as UTF-8.
-		const std::filesystem::path folder = fresh(scratch / L"stäges");
+		const std::filesystem::path folder = fresh(scratch / L"stÃ¤ges");
 		const rapidjson::Document base = read_document(content / "levels" / "close_quarters.json");
 
 		write_level(base, folder / "my_arena.json", [](rapidjson::Document& d)
@@ -620,11 +620,25 @@ namespace
 			"A rescan must not touch a shipped definition");
 		require(session.latest_scan().refused == third.refused, "Changed refusal details were not refreshed");
 
-		MenuContext menu(nullptr, nullptr, nullptr);
-		require(menu.stage_scan() == nullptr, "Unattached menu context gained scan details");
-		int rescans = 0;
-		menu.set_stage_rescan([&rescans] { ++rescans; });
-		menu.set_stage_scan([&session] { return &session.latest_scan(); });
+		const MenuContext ownerless(nullptr, nullptr, nullptr);
+		require(ownerless.stage_scan() == nullptr, "Unattached menu context gained scan details");
+		// The main menu's owner lends the folder; this one counts its rescans.
+		struct FolderOwner final : MenuOwner
+		{
+			explicit FolderOwner(UserStageFolder& stage_folder) : user_stages(&stage_folder) {}
+			UserStageFolder* user_stages;
+			int rescans = 0;
+			bool detached = false;
+			void update_menu_music(float) override {}
+			void rescan_stages() override { ++this->rescans; }
+			const UserStageScan* stage_scan() const override
+			{
+				return this->detached ? nullptr : &this->user_stages->latest_scan();
+			}
+		};
+		FolderOwner owner(session);
+		MenuContext menu(nullptr, nullptr, nullptr, &owner);
+		const int& rescans = owner.rescans;
 		require(menu.stage_scan() == &session.latest_scan() && menu.stage_scan()->refused == third.refused && rescans == 0,
 			"Reading scan details performed a rescan or lost the session result");
 		menu.rescan_stages();
@@ -643,8 +657,8 @@ namespace
 		const UserStageScan cleared = session.rescan();
 		require(cleared.accepted.empty() && cleared.refused.empty() && menu.stage_scan()->refused.empty() &&
 			names(shipped.stages) == manifest, "A clean rescan retained stale refusal details");
-		menu.set_stage_scan({});
-		require(menu.stage_scan() == nullptr, "Detaching scan details left a stale callback");
+		owner.detached = true;
+		require(menu.stage_scan() == nullptr, "Detaching scan details left a stale result");
 		// The whole list still passes what startup checks.
 		validate_shell_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
 			&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);

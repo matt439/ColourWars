@@ -62,7 +62,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreCompetitiveWinner()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };

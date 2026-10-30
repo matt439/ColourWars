@@ -33,7 +33,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreCues()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -56,7 +56,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     };
     const auto open = [&]
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({});
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {});
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }

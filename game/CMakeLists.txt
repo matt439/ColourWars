@@ -194,6 +194,7 @@ add_library(colourwars_game STATIC
     states/main_menu_exit.cpp
     states/main_menu_options.cpp
     states/main_menu_players.cpp
+    states/main_menu_route.cpp
     states/main_menu_stage_select.cpp
     states/main_menu_team_select.cpp
     states/main_menu_weapon_select.cpp

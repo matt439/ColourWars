@@ -2,8 +2,8 @@
 #include "game/states/menu_context.h"
 
 MenuContext::MenuContext(GameData* data, MenuInput* input,
-	MatchSetup* level_settings) :
-	data_(data), input_(input), level_settings_(level_settings)
+	MatchSetup* level_settings, MenuOwner* owner) :
+	data_(data), input_(input), level_settings_(level_settings), owner_(owner)
 {
 
 }
@@ -23,56 +23,46 @@ MatchSetup* MenuContext::level_settings() const
 	return this->level_settings_;
 }
 
+MenuOwner* MenuContext::owner() const
+{
+	return this->owner_;
+}
+
+void MenuContext::set_owner(MenuOwner* owner)
+{
+	this->owner_ = owner;
+}
+
 void MenuContext::reset_connection_audio()
 {
 	this->connection_audio_ = std::make_unique<ConnectionAudio>(this->data_->audio_resources(),
 		*this->data_->presentation());
 }
 
-void MenuContext::set_music_update(std::function<void(float)> update)
-{
-	this->music_update_ = std::move(update);
-}
-
 void MenuContext::update_music(float dt)
 {
-	if (this->music_update_) { this->music_update_(dt); }
-}
-
-void MenuContext::set_music_suspend(std::function<void()> suspend)
-{
-	this->music_suspend_ = std::move(suspend);
+	if (this->owner_ != nullptr) { this->owner_->update_menu_music(dt); }
 }
 
 void MenuContext::suspend_music()
 {
-	if (this->music_suspend_) { this->music_suspend_(); }
-}
-
-void MenuContext::set_stage_rescan(std::function<void()> rescan)
-{
-	this->stage_rescan_ = std::move(rescan);
+	if (this->owner_ != nullptr) { this->owner_->suspend_menu_music(); }
 }
 
 void MenuContext::rescan_stages()
 {
-	if (this->stage_rescan_) { this->stage_rescan_(); }
-}
-
-void MenuContext::set_stage_scan(std::function<const UserStageScan*()> scan)
-{
-	this->stage_scan_ = std::move(scan);
+	if (this->owner_ != nullptr) { this->owner_->rescan_stages(); }
 }
 
 const UserStageScan* MenuContext::stage_scan() const
 {
-	return this->stage_scan_ ? this->stage_scan_() : nullptr;
+	return this->owner_ != nullptr ? this->owner_->stage_scan() : nullptr;
 }
 
 void MenuContext::finish_with_music(std::function<void()> finish)
 {
 	if (this->music_exit_) { return; }
-	if (!this->music_update_) { finish(); return; }
+	if (this->owner_ == nullptr) { finish(); return; }
 	this->music_exit_ = std::move(finish);
 	// Begin at the current gain; a muted, missing or drained voice can leave
 	// immediately, without making the player wait for inaudible music.

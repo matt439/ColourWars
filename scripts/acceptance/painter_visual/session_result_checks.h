@@ -62,7 +62,7 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreSessionResult()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };

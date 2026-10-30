@@ -370,9 +370,35 @@ Debug executable.
 
 ### Menu owner and navigation (`HYG#44`)
 
-Replace `MenuContext`'s five `std::function` slots with a small `MenuOwner`
-interface that `GameMenu` and `GameLevel` implement, and route main-menu
-transitions through one place so the setup flow reads as one graph.
+**Done 2026-10-30.** `MenuContext` borrows a `MenuOwner`
+([game/states/menu_owner.h](../game/states/menu_owner.h)) in place of its four
+owner slots: `update_menu_music`, and `suspend_menu_music`, `rescan_stages` and
+`stage_scan` with do-nothing defaults. `GameMenu` and `GameLevel` implement it
+privately and pass themselves to their context; `GameLevel` answers only the
+music clock, so a match still lends no stage folder. A context with no owner (the
+probes, the developer tools' detached context) stays silent and finishes a page
+exit at once, as an unset music slot did. The fifth slot, the pending page exit,
+stays a one-shot `std::function`: it is the page's continuation, not the owner's.
+Every page change inside the main menu's frame is now a `MainMenuRoute` followed
+by `MainMenuPage::go_to`, and `make_main_menu_page` in
+[game/states/main_menu_route.cpp](../game/states/main_menu_route.cpp), which
+replaces `GameMenu::build_page` and draws the setup flow as one graph, is the one
+place those pages are built. `MainMenuScreen` gained `join`; the End menu's
+between-rounds re-picks build through the same factory. Probes that set slots
+use stand-in owners: small local ones in `story_audio` and `user_stages`, and
+`ScriptedMenuOwner` in
+[scripted_menu_owner.h](../scripts/acceptance/painter_visual/scripted_menu_owner.h)
+for the painter checks, attached through `MenuContext::set_owner`. Both presets
+build under `/W4 /WX`. The full default acceptance list passed in Release (74
+cases) and in Debug without the four slow cases, except `bot_runtime` and
+`moving_structure`, which did not compile against uncommitted `ReplayFile`
+changes already in the working tree and touched by nothing here.
+`check-painter.ps1 -CompileOnly` compiled in Release (in Debug only
+`practice_replay_checks.h` failed, on the same `ReplayFile` changes), the
+Release `-HomeExitOnly`, `-HomeReturnFocusOnly`, `-StageScanOnly`,
+`-StagePaperOnly`, `-EndMenuOnly`, `-EndContinuationOnly`,
+`-JoinStageMotionOnly` and `-RememberedSetupOnly` matrices passed, and
+`check-startup.ps1` passed on the Debug executable.
 
 ### Device-to-command in one place (`HYG#45`)
 

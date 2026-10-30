@@ -313,12 +313,19 @@ namespace
 		require(immediate == 1 && !standalone.music_exit_pending(),
 			"A standalone page without a music owner did not finish immediately once");
 
-		MenuContext context(nullptr, nullptr, nullptr);
-		int updates = 0;
-		float elapsed = -1.0f;
-		int suspended = 0;
-		context.set_music_update([&](float dt) { ++updates; elapsed = dt; });
-		context.set_music_suspend([&] { ++suspended; });
+		struct CountingOwner final : MenuOwner
+		{
+			int updates = 0;
+			float elapsed = -1.0f;
+			int suspended = 0;
+			void update_menu_music(float dt) override { ++this->updates; this->elapsed = dt; }
+			void suspend_menu_music() override { ++this->suspended; }
+		};
+		CountingOwner owner;
+		MenuContext context(nullptr, nullptr, nullptr, &owner);
+		const int& updates = owner.updates;
+		const float& elapsed = owner.elapsed;
+		const int& suspended = owner.suspended;
 		int completed = 0;
 		context.finish_with_music([&]
 		{

@@ -20,6 +20,8 @@
 
 enum class DisplayTrialResult;
 
+// Every page of the main menu's frame. A MainMenuRoute names one of them and
+// make_main_menu_page builds it; main_menu_route.cpp draws the whole graph.
 enum class MainMenuScreen
 {
 	title,
@@ -28,10 +30,13 @@ enum class MainMenuScreen
 	credits,
 	mode_select,
 	player_count,
+	join,
 	team_select,
 	weapon_select,
 	stage_select
 };
+
+struct MainMenuRoute;
 
 // A page in the main menu's frame: Title, Home, Credits, Options and Mode
 // Select directly, and the roster pages through RosterSetupPage.
@@ -48,6 +53,10 @@ public:
 protected:
 	void update_page(float dt) override = 0;
 	const MainMenuPresentation& look() const;
+
+	// Replaces this page with the route's page. Every page change inside the
+	// main menu's frame goes through here (main_menu_route.cpp).
+	void go_to(const MainMenuRoute& route);
 
 	// Available input slots, including keyboard/mouse.
 	std::vector<int> connected_slots() const;
@@ -530,3 +539,27 @@ private:
 	void cycle_stages(labrador::Direction direction);
 	void set_level_settings() const;
 };
+
+// One edge of the setup flow: the page to show next and what it opens with.
+// GameMenu opens its frame with one, MainMenuPage::go_to follows one and the
+// End menu re-picks between rounds with one.
+struct MainMenuRoute
+{
+	// Most edges name only the page, so a screen converts to its route.
+	MainMenuRoute(MainMenuScreen screen);
+	// Back from Options or Credits, onto the row that opened them.
+	static MainMenuRoute home(MainMenuHome::InitialFocus focus);
+	// Weapon or Stage Select re-picking for an unfinished series (ROAD#20);
+	// an empty `between_rounds` is ordinary setup. `picker` as for
+	// MainMenuStageSelect.
+	static MainMenuRoute re_pick(MainMenuScreen screen, std::optional<Session> between_rounds,
+		PlayerTeam picker = PlayerTeam::none);
+
+	MainMenuScreen screen = MainMenuScreen::title;
+	MainMenuHome::InitialFocus home_focus = MainMenuHome::InitialFocus::play;
+	std::optional<Session> between_rounds;
+	PlayerTeam picker = PlayerTeam::none;
+};
+
+// The one place a main-menu page is built for a route.
+std::unique_ptr<MainMenuPage> make_main_menu_page(MenuContext* context, const MainMenuRoute& route);

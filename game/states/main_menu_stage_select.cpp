@@ -59,9 +59,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 				}
 				else
 				{
-					this->context()->transition_to(
-						std::make_unique<MainMenuWeaponSelect>(
-							this->menu_context()));
+					this->go_to(MainMenuScreen::weapon_select);
 				}
 				return;
 			}

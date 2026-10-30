@@ -49,15 +49,11 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 				}
 				else if (this->player_count() == 1)
 				{
-					this->context()->transition_to(
-						std::make_unique<MainMenuModeSelect>(
-							this->menu_context()));
+					this->go_to(MainMenuScreen::mode_select);
 				}
 				else
 				{
-					this->context()->transition_to(
-						std::make_unique<MainMenuTeamSelect>(
-							this->menu_context()));
+					this->go_to(MainMenuScreen::team_select);
 				}
 				return;
 			}
@@ -114,8 +110,7 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 			}
 		}
 		this->set_level_settings();
-		this->context()->transition_to(
-			std::make_unique<MainMenuStageSelect>(this->menu_context(), this->between_rounds()));
+		this->go_to(MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->between_rounds()));
 		return;
 	}
 	this->update_weapon_select_visuals();

@@ -64,7 +64,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     {
         StateContext& stack; MenuContext& context; Presentation& look; Presentation original;
         ~RestoreStageSummary()
-        { this->context.cancel_music_exit(); this->context.set_music_update({}); this->stack.clear(); painter_scripted_pads::states = {}; this->look = this->original; }
+        { this->context.cancel_music_exit(); script_menu_music(this->context, {}); this->stack.clear(); painter_scripted_pads::states = {}; this->look = this->original; }
     } restore{ stack, context, presentation, original };
     constexpr std::array<int, 4> slots{ 4, 3, 0, 2 };
     constexpr std::array<WeaponType, 4> tools{ WeaponType::bucket, WeaponType::sniper, WeaponType::sprayer, WeaponType::mister };
@@ -96,7 +96,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     };
     const auto open = [&](const SummaryCase& fixture)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({}); stack.notify_activation(true);
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {}); stack.notify_activation(true);
         app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; settings = MatchSetup(); settings.set_player_count(fixture.players);

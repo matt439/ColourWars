@@ -18,7 +18,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreEndHeadings()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -52,7 +52,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     std::optional<EndMenuAction> choice; int results = 0;
     const auto open = [&](const HeadingProbeCase& fixture)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({});
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {});
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
@@ -198,7 +198,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         require(retained.pixels == end_menu_frame(app).pixels,
             "Live End heading/font replacement or focus movement changed an existing page");
         compare("retained-old", fixture, old, old_words);
-        int music_updates = 0; context.set_music_update([&](float) { ++music_updates; });
+        int music_updates = 0; script_menu_music(context, [&](float) { ++music_updates; });
         tap(Key::enter);
         require(context.music_exit_pending() && !choice && results == 0 && stack.depth() == 2 && music_updates == 1,
             "End heading continuation bypassed its owner-controlled music exit");

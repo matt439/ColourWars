@@ -182,8 +182,7 @@ bool RosterSetupPage::wait_for_players(
 				}
 				else
 				{
-					this->context()->transition_to(
-						std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+					this->go_to(MainMenuScreen::player_count);
 				}
 				break;
 			}
@@ -213,8 +212,7 @@ void MainMenuTitle::update_page(float /*dt*/)
 		if (inputs[i].action == MenuInputAction::proceed)
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->menu_context()));
+			this->go_to(MainMenuScreen::home);
 			return;
 		}
 	}
@@ -285,8 +283,7 @@ void MainMenuHome::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuTitle>(this->menu_context()));
+			this->go_to(MainMenuScreen::title);
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -348,20 +345,17 @@ void MainMenuHome::init()
 	this->focus_.add(this->play_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::mode_select);
 		});
 	this->focus_.add(this->options_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuOptions>(this->menu_context()));
+			this->go_to(MainMenuScreen::options);
 		});
 	this->focus_.add(this->credits_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuCredits>(this->menu_context()));
+			this->go_to(MainMenuScreen::credits);
 		});
 	this->focus_.add(this->exit_.get(), [this]
 		{
@@ -534,8 +528,7 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->menu_context()));
+			this->go_to(MainMenuScreen::home);
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -679,8 +672,7 @@ void MainMenuModeSelect::init()
 		{
 			this->level_settings()->set_best_of(best_of);
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+			this->go_to(MainMenuScreen::player_count);
 		};
 	this->focus_.add(this->standard_.get(), [choose] { choose(1); });
 	this->focus_.add(this->best_of_three_.get(), [choose] { choose(3); });
@@ -699,8 +691,7 @@ void MainMenuModeSelect::init()
 	this->focus_.add(this->back_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuHome>(this->menu_context()));
+			this->go_to(MainMenuScreen::home);
 		});
 	if (this->level_settings()->best_of() == 3)
 	{

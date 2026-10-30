@@ -28,8 +28,7 @@ void MainMenuPlayerCount::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::mode_select);
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -182,8 +181,7 @@ void MainMenuPlayerCount::init()
 	this->focus_.add(this->back_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::mode_select);
 		});
 
 }
@@ -207,8 +205,7 @@ void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 	{
 		settings->set_player_team(0, PlayerTeam::a);
 	}
-	this->context()->transition_to(
-		std::make_unique<MainMenuJoin>(this->menu_context()));
+	this->go_to(MainMenuScreen::join);
 }
 
 #pragma endregion MainMenuPlayerCount
@@ -453,8 +450,7 @@ void MainMenuJoin::update_page(float /*dt*/)
 			if (player == 0 || !players[0].connected)
 			{
 				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+				this->go_to(MainMenuScreen::player_count);
 				return;
 			}
 			if (settings->release_input_slot(slot))
@@ -496,13 +492,11 @@ void MainMenuJoin::update_page(float /*dt*/)
 		this->play_wave(this->confirm_sound_);
 		if (this->player_count() == 1)
 		{
-			this->context()->transition_to(
-				std::make_unique<MainMenuWeaponSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::weapon_select);
 		}
 		else
 		{
-			this->context()->transition_to(
-				std::make_unique<MainMenuTeamSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::team_select);
 		}
 		return;
 	}

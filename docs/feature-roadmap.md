@@ -2961,10 +2961,10 @@ copy of Close Quarters from an isolated profile.
 - **A rescan without a restart.** `UserStageFolder` (`game/stage_loading.h`)
   owns the folder for the session. `wWinMain` declares it above the
   `Application`, attaches it after the manifest and runs the startup scan
-  through it. `GameMenu` takes it as an optional second argument and lends it
-  to its `MenuContext` as a rescan hook. `MainMenuStageSelect::init` calls the
-  hook as the page opens from the main menu. A match's `MenuContext` never
-  has the hook, and the page also skips it between rounds, so the list holds
+  through it. `GameMenu` takes it as an optional second argument and answers
+  `MenuOwner::rescan_stages` with it. `MainMenuStageSelect::init` calls the
+  rescan as the page opens from the main menu. A match's owner, `GameLevel`,
+  has none to lend, and the page also skips it between rounds, so the list holds
   still while a match or series could be using it. A rescan builds the new
   list beside the live one: the manifest stages unchanged, then the folder's
   stages in file-name order. Each new or edited file is checked as at

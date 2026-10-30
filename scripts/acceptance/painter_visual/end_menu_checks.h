@@ -89,7 +89,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
     int results = 0;
     const auto open = [&](const EndMenuProbeCase& fixture)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({});
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {});
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter,
             Key::space, Key::escape }) { app.keyboard()->on_key_up(key); }
@@ -283,7 +283,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
             // typed action must wait on that seam without accepting input or
             // rebasing text; this does not claim hardware/listening coverage.
             int music_updates = 0;
-            context.set_music_update([&](float) { ++music_updates; });
+            script_menu_music(context, [&](float) { ++music_updates; });
             tap(Key::enter);
             require(context.music_exit_pending() && !choice && stack.depth() == 2 && music_updates == 1,
                 "End action bypassed or failed to start its owner-controlled music exit");

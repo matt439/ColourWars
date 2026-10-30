@@ -20,7 +20,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         StateContext& stack; MenuContext& context;
         ~ClearJoinStageMotion()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); painter_scripted_pads::states = {};
         }
     } clear{ stack, context };
@@ -145,7 +145,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     };
     const auto open = [&](bool stage, bool complete = false, int initiating_slot = input_slots::keyboard_and_mouse)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({}); stack.notify_activation(true);
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {}); stack.notify_activation(true);
         app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key value : { Key::enter, Key::escape, Key::left, Key::right }) { app.keyboard()->on_key_up(value); }
         painter_scripted_pads::states = {};
@@ -326,7 +326,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         hold(slots[0], GamepadButton::a, false); tick(); tick();
         require(outgoing_random.pixels == frame().pixels && same_plan(settings, provisional) && !context.music_exit_pending(),
             "Interrupted Stage confirmation accepted its stale release");
-        int music_updates = 0; context.set_music_update([&](float) { ++music_updates; });
+        int music_updates = 0; script_menu_music(context, [&](float) { ++music_updates; });
         hold(slots[0], GamepadButton::a, true); tick();
         std::srand(4937); std::ignore = std::rand(); const int after_pick = std::rand(); std::srand(4937);
         hold(slots[0], GamepadButton::a, false); tick();
@@ -346,7 +346,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         tap(slots[0], GamepadButton::a); const Frame rapid_lock = frame();
         play.reduce_effects = true; const Frame rapid_lock_rest = frame(); play.reduce_effects = false;
         changed("stage-rapid-lock", rapid_lock, rapid_lock_rest, { stage_accent() });
-        context.set_music_update([](float) {});
+        script_menu_music(context, [](float) {});
         std::srand(4937); std::ignore = std::rand(); const int after_rapid_pick = std::rand(); std::srand(4937);
         tap(slots[0], GamepadButton::a);
         require(std::rand() == after_rapid_pick && settings.stage() == "close_quarters" && context.music_exit_pending() &&

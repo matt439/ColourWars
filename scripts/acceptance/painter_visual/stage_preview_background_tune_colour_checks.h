@@ -105,7 +105,7 @@ public:
     }
     void open(bool random = false)
     {
-        stack_.clear(); context_.cancel_music_exit(); context_.set_music_update({});
+        stack_.clear(); context_.cancel_music_exit(); script_menu_music(context_, {});
         stack_.notify_activation(true); app_.keyboard()->set_focused(true); app_.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app_.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; poll(); poll(); input_.reset_actions();
@@ -188,7 +188,7 @@ public:
     }
     void close()
     {
-        if (closed_) { return; } context_.cancel_music_exit(); context_.set_music_update({}); stack_.clear();
+        if (closed_) { return; } context_.cancel_music_exit(); script_menu_music(context_, {}); stack_.clear();
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app_.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = initial_pads_; app_.keyboard()->set_focused(initial_keyboard_.focused);
         app_.mouse()->set_focused(initial_mouse_focus_); stack_.notify_activation(initial_activation_); poll(); poll(); closed_ = true;

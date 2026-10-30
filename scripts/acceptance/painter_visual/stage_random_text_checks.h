@@ -87,7 +87,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreStageRandom()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -115,7 +115,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     };
     const auto open = [&](bool course = false)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({});
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {});
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
@@ -362,7 +362,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     require(frame().pixels == locked.pixels && same_plan(settings, before) && stack.depth() == 2 &&
         !context.music_exit_pending(), "Interrupted Enter started a locked Random selection");
     compare("interrupted-locked-release", original, legacy, true, true, 2);
-    int music_updates = 0; context.set_music_update([&](float) { ++music_updates; });
+    int music_updates = 0; script_menu_music(context, [&](float) { ++music_updates; });
     app.keyboard()->on_key_down(Key::enter); tick();
     require(same_plan(settings, before) && !context.music_exit_pending(), "Random started before its fresh second release");
     std::srand(4937); std::ignore = std::rand(); const int after_pick = std::rand(); std::srand(4937);

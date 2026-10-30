@@ -17,7 +17,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     struct ClearHomeExit
     {
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
-        ~ClearHomeExit() { this->context.cancel_music_exit(); this->context.set_music_update({}); this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; }
+        ~ClearHomeExit() { this->context.cancel_music_exit(); script_menu_music(this->context, {}); this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; }
     } clear{ stack, context, presentation, original };
     const HWND window = static_cast<HWND>(app.window()); const int keyboard = input_slots::keyboard_and_mouse;
     const float settled = std::max(style.motion.focus_duration, style.motion.press_duration) + 0.01f;
@@ -60,7 +60,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     };
     const auto open = [&](bool connect_pad = false)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update([&](float elapsed) { if (elapsed == 0.0f) { ++begin_exits; } });
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, [&](float elapsed) { if (elapsed == 0.0f) { ++begin_exits; } });
         begin_exits = 0; active = nullptr; stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = connect_pad;
@@ -221,7 +221,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     require(records.good(), "Home Exit evidence write failed");
     // Last: the real no-music-update/muted path closes only this hidden window.
     confirm(); tap(GamepadButton::dpad_up); tick(settled); compare("final-deliberate-yes", true);
-    context.set_music_update({}); tap(GamepadButton::a);
+    script_menu_music(context, {}); tap(GamepadButton::a);
     require(IsWindow(window) == FALSE && !context.music_exit_pending() && begin_exits == 0,
         "Deliberate Home Exit Yes did not immediately close its own hidden window without a music clock");
     std::cout << "PASS Home Exit independent six-size confirmation paper/text; safe retained-Home return, repeat/rearm/reconnect/multiple-device safety, reduction/lifecycle/frozen RNG, one pending music begin and deliberate muted hidden-window quit\n";

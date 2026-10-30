@@ -68,7 +68,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreResultPercentage()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };

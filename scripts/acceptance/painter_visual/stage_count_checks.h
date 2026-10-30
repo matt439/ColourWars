@@ -88,7 +88,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     struct RestoreStageCounts
     {
         StateContext& stack; MenuContext& context; Presentation& look; Presentation original;
-        ~RestoreStageCounts() { this->context.cancel_music_exit(); this->context.set_music_update({}); this->stack.clear(); this->look = this->original; }
+        ~RestoreStageCounts() { this->context.cancel_music_exit(); script_menu_music(this->context, {}); this->stack.clear(); this->look = this->original; }
     } restore{ stack, context, presentation, original };
     int ticks = 0, comparisons = 0, rows = 0, captures = 0;
     const auto unchanged = [&]
@@ -111,7 +111,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     };
     const auto open = [&](const StageList& list, const char* stage)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({}); stages = list;
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {}); stages = list;
         presentation.validate_stage_counts(*app.render_resources(), stages.size(), random_stage_indices(stages).size());
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down }) { app.keyboard()->on_key_up(key); }

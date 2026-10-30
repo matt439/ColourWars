@@ -26,22 +26,7 @@ void GameMenu::init()
 		*this->match_setup_ = remembered->restore(*this->data()->stages());
 	}
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
-		this->menu_input_.get(), this->match_setup_.get());
-	this->menu_context_->set_music_update([this](float dt) { this->update_music(dt); });
-	this->menu_context_->set_music_suspend([this]
-	{
-		if (this->music_) { this->music_->suspend(); }
-	});
-	// Only this frame lends the rescan: a match's frame never sets it, so the
-	// stage list holds still under a running match or series.
-	if (this->user_stages_ != nullptr)
-	{
-		this->menu_context_->set_stage_rescan([folder = this->user_stages_] { folder->rescan(); });
-		this->menu_context_->set_stage_scan([folder = this->user_stages_]
-		{
-			return &folder->latest_scan();
-		});
-	}
+		this->menu_input_.get(), this->match_setup_.get(), static_cast<MenuOwner*>(this));
 
 	this->open_menu(MainMenuScreen::title);
 }
@@ -66,36 +51,8 @@ void GameMenu::open_menu(MainMenuScreen screen)
 	if (!this->context()->active()) { this->music_->suspend(); }
 	this->menu_input_->reset_actions();
 	// The frame retains provenance while pages replace each other during setup.
-	this->context()->push<MatchStart>(this->build_page(screen),
+	this->context()->push<MatchStart>(make_main_menu_page(this->menu_context_.get(), screen),
 		[this](const MatchStart& start) { this->start_match(start); });
-}
-
-std::unique_ptr<MainMenuPage> GameMenu::build_page(MainMenuScreen screen) const
-{
-	MenuContext* context = this->menu_context_.get();
-
-	switch (screen)
-	{
-	case MainMenuScreen::home:
-		return std::make_unique<MainMenuHome>(context);
-	case MainMenuScreen::options:
-		return std::make_unique<MainMenuOptions>(context);
-	case MainMenuScreen::credits:
-		return std::make_unique<MainMenuCredits>(context);
-	case MainMenuScreen::mode_select:
-		return std::make_unique<MainMenuModeSelect>(context);
-	case MainMenuScreen::player_count:
-		return std::make_unique<MainMenuPlayerCount>(context);
-	case MainMenuScreen::team_select:
-		return std::make_unique<MainMenuTeamSelect>(context);
-	case MainMenuScreen::weapon_select:
-		return std::make_unique<MainMenuWeaponSelect>(context);
-	case MainMenuScreen::stage_select:
-		return std::make_unique<MainMenuStageSelect>(context);
-	case MainMenuScreen::title:
-	default:
-		return std::make_unique<MainMenuTitle>(context);
-	}
 }
 
 void GameMenu::start_match(MatchStart start)
@@ -114,7 +71,7 @@ void GameMenu::on_deactivated()
 	if (this->music_) { this->music_->suspend(); }
 }
 
-void GameMenu::update_music(float dt)
+void GameMenu::update_menu_music(float dt)
 {
 	if (!this->music_ || !this->context()->active()) { return; }
 	// Only a normal page tick restores playback. Focus returning underneath a
@@ -126,6 +83,23 @@ void GameMenu::update_music(float dt)
 	{
 		this->menu_context_->complete_music_exit();
 	}
+}
+
+void GameMenu::suspend_menu_music()
+{
+	if (this->music_) { this->music_->suspend(); }
+}
+
+// Only this frame lends the rescan: a match's frame has none, so the stage
+// list holds still under a running match or series.
+void GameMenu::rescan_stages()
+{
+	if (this->user_stages_ != nullptr) { this->user_stages_->rescan(); }
+}
+
+const UserStageScan* GameMenu::stage_scan() const
+{
+	return this->user_stages_ != nullptr ? &this->user_stages_->latest_scan() : nullptr;
 }
 
 void GameMenu::on_match_ended(const EndMenuAction& action)
@@ -196,11 +170,7 @@ void GameLevel::init()
 		this->data()->keyboard(), this->data()->tuning());
 
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
-		this->menu_input_.get(), &this->settings_);
-	this->menu_context_->set_music_update([this](float dt)
-	{
-		this->update_music(dt);
-	});
+		this->menu_input_.get(), &this->settings_, static_cast<MenuOwner*>(this));
 
 	this->level_builder_ = std::make_unique<LevelBuilder>(
 		this->data()->viewport_manager(),
@@ -530,6 +500,11 @@ void GameLevel::draw(Renderer& renderer) const
 	}
 	if (this->replay_phase_ != ReplayPhase::none) { this->level_->draw_replay_banner(renderer); }
 	this->data()->debug().draw_status(renderer);
+}
+
+void GameLevel::update_menu_music(float dt)
+{
+	this->update_music(dt);
 }
 
 void GameLevel::update_music(float dt)

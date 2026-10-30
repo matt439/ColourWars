@@ -112,6 +112,7 @@ using namespace mattmath;
 namespace
 {
 #include "scripts/acceptance/painter_visual/painter_fixtures.h"
+#include "scripts/acceptance/painter_visual/scripted_menu_owner.h"
 #include "scripts/acceptance/painter_visual/action_combat_checks.h"
 #include "scripts/acceptance/painter_visual/tool_checks.h"
 #include "scripts/acceptance/painter_visual/blocked_shot_checks.h"

@@ -30,7 +30,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     struct ClearStagePaper
     {
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
-        ~ClearStagePaper() { this->context.cancel_music_exit(); this->context.set_music_update({}); this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; }
+        ~ClearStagePaper() { this->context.cancel_music_exit(); script_menu_music(this->context, {}); this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; }
     } clear{ stack, context, presentation, original };
     const std::array<int, 4> slots{ input_slots::keyboard_and_mouse, 3, 0, 2 };
     const std::array<WeaponType, 4> tools{ WeaponType::sprayer, WeaponType::sniper, WeaponType::roller, WeaponType::bucket };
@@ -55,7 +55,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     };
     const auto open = [&](int count, int best_of = 1, int selected = 0)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({}); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {}); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; for (int player = 1; player < count; ++player) { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
@@ -192,7 +192,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
             for (int selected = 0; selected <= static_cast<int>(stages.size()); ++selected)
             {
                 open(count, best_of, selected == static_cast<int>(stages.size()) ? 0 : selected); if (selected == static_cast<int>(stages.size())) { browse(false); tick(settled); }
-                lock(true); tick(settled); const Frame outgoing = compare("before-start"); int music_updates = 0; context.set_music_update([&](float) { ++music_updates; });
+                lock(true); tick(settled); const Frame outgoing = compare("before-start"); int music_updates = 0; script_menu_music(context, [&](float) { ++music_updates; });
                 std::srand(4937); const auto candidates = eligible(); committed = selected == static_cast<int>(stages.size()) ? stages[candidates[static_cast<size_t>(std::rand()) % candidates.size()]].name : stages[static_cast<size_t>(selected)].name;
                 const int after = std::rand(); std::srand(4937); tap(count - 1, GamepadButton::a);
                 require(std::rand() == after && settings.stage() == committed && context.music_exit_pending() && stack.depth() == 2 && music_updates == 1 && outgoing.pixels == frame().pixels, "Stage paper final start changed its RNG budget, outgoing page or state boundary");
@@ -218,7 +218,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         lock(true); compare("lock-press", 0, motion.press_fraction, true); tick(settled); lock(false); compare("unlock-press", 0, motion.press_fraction); stack.notify_activation(false); compare("deactivated"); stack.notify_activation(true); tick();
         browse(true); stack.push(std::make_unique<MainMenuCredits>(&context)); stack.pop(); compare("cover-return"); tick(); browse(false); active->debug_reset_input(slots[0]); compare("developer-reset");
         play.reduce_effects = true; browse(true); const Frame quiet = compare("reduced-input"); tick(settled); require(quiet.pixels == frame().pixels, "Reduced Stage input restarted its accent"); play.reduce_effects = false;
-        open(4, 3); browse(false); lock(true); compare("rapid-lock", motion.arrow_travel, motion.press_fraction); context.set_music_update([](float) {});
+        open(4, 3); browse(false); lock(true); compare("rapid-lock", motion.arrow_travel, motion.press_fraction); script_menu_music(context, [](float) {});
         std::srand(4937); const auto candidates = eligible(); committed = stages[candidates[static_cast<size_t>(std::rand()) % candidates.size()]].name; const int after = std::rand(); std::srand(4937); tap(0, GamepadButton::a);
         require(std::rand() == after && context.music_exit_pending(), "Rapid Stage paper final start changed Random RNG or failed to latch"); const Frame pending = compare("rapid-final-random", 0, 0, true);
         static_cast<WindowNotify&>(app).on_deactivated(); tick(); static_cast<WindowNotify&>(app).on_activated(); tick(); tap(0, GamepadButton::dpad_left); tap(1, GamepadButton::b); tap(0, GamepadButton::a); tick(settled);

@@ -73,8 +73,7 @@ void MainMenuOptions::close()
 	}
 	else
 	{
-		this->context()->transition_to(std::make_unique<MainMenuHome>(
-			this->menu_context(), MainMenuHome::InitialFocus::options));
+		this->go_to(MainMenuRoute::home(MainMenuHome::InitialFocus::options));
 	}
 }
 

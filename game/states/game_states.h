@@ -17,6 +17,7 @@
 #include "game/states/resume_audio.h"
 #include "game/states/results_audio.h"
 #include "game/states/match_start.h"
+#include "game/states/menu_owner.h"
 #include "game/display_awake.h"
 #include "game/rumble_sink.h"
 #include "game/round_tape.h"
@@ -35,8 +36,9 @@
 
 class UserStageFolder;
 
-// Owns shared menu state and routes between setup pages and matches.
-class GameMenu final : public labrador::State
+// Owns shared menu state and routes between setup pages and matches. Its
+// pages reach its music and the player's stage folder as their MenuOwner.
+class GameMenu final : public labrador::State, private MenuOwner
 {
 public:
 	// `user_stages`, when given, is rescanned as Stage Select opens from the
@@ -54,10 +56,14 @@ private:
 	std::unique_ptr<MatchSetup> match_setup_ = nullptr;
 	std::unique_ptr<MenuContext> menu_context_ = nullptr;
 	std::unique_ptr<ScreenMusic> music_;
-	void update_music(float dt);
+
+	// MenuOwner, for the pages above this frame.
+	void update_menu_music(float dt) override;
+	void suspend_menu_music() override;
+	void rescan_stages() override;
+	const UserStageScan* stage_scan() const override;
 
 	void open_menu(MainMenuScreen screen);
-	std::unique_ptr<MainMenuPage> build_page(MainMenuScreen screen) const;
 
 	void start_match(MatchStart start);
 	void on_match_ended(const EndMenuAction& action);
@@ -66,8 +72,9 @@ private:
 
 // A match or series, with a fresh Level for each round. The developer tools
 // reach it only through DebugMatchTarget, from hooks at the top of update()
-// and around each match step.
-class GameLevel final : public labrador::State, private DebugMatchTarget
+// and around each match step; the menus above it, as their MenuOwner.
+class GameLevel final : public labrador::State, private DebugMatchTarget,
+	private MenuOwner
 {
 public:
 	GameLevel(GameData* game_data, const MatchSetup& settings,
@@ -166,6 +173,9 @@ private:
 	// active and the debug clock is not paused. Arena music may remain ducked.
 	bool audio_may_play() const;
 	void update_music(float dt);
+	// MenuOwner: a page above the match ticks the match's music. GameLevel
+	// lends no suspend and no stage folder.
+	void update_menu_music(float dt) override;
 	void stop_rumble() const noexcept;
 	void sync_rumble();
 	void drain_rumble(float dt);

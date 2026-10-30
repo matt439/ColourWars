@@ -174,13 +174,13 @@ void EndMenuInitial::init()
 			this->play_wave(this->confirm_sound_);
 			if (tools)
 			{
-				this->context()->transition_to(std::make_unique<MainMenuWeaponSelect>(
-					this->menu_context(), this->session_));
+				this->context()->transition_to(make_main_menu_page(this->menu_context(),
+					MainMenuRoute::re_pick(MainMenuScreen::weapon_select, this->session_)));
 			}
 			else
 			{
-				this->context()->transition_to(std::make_unique<MainMenuStageSelect>(
-					this->menu_context(), this->session_));
+				this->context()->transition_to(make_main_menu_page(this->menu_context(),
+					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_)));
 			}
 		};
 
@@ -199,8 +199,8 @@ void EndMenuInitial::init()
 		this->focus_.add(this->restart_.get(), [this, picker]
 			{
 				this->play_wave(this->confirm_sound_);
-				this->context()->transition_to(std::make_unique<MainMenuStageSelect>(
-					this->menu_context(), this->session_, picker));
+				this->context()->transition_to(make_main_menu_page(this->menu_context(),
+					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_, picker)));
 			});
 	}
 	if (this->replay_)

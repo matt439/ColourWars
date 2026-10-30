@@ -52,8 +52,8 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     settings.set_screen_layout(ScreenLayout::one_player); settings.set_stage("movement_course");
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer); settings.set_duration(73.0f);
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
-    context.set_stage_rescan([&] { folder.rescan(); ++scans; });
-    context.set_stage_scan([&]() -> const UserStageScan* { return &folder.latest_scan(); });
+    script_stage_rescan(context, [&] { folder.rescan(); ++scans; });
+    script_stage_scan(context, [&]() -> const UserStageScan* { return &folder.latest_scan(); });
     struct ClearStageScanStates { StateContext& stack; ~ClearStageScanStates() { this->stack.clear(); } } clear{ stack };
     int updates = 0, level_updates = 0, reads = 0, frames = 0, crops = 0, rows = 0, comparisons = 0;
     const auto tick = [&]
@@ -210,10 +210,10 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     }
     prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context, Session(3))); tick(); tap(Key::down);
     require(stack.depth() == 2 && scans == before_scans, "Between-round Stage Select scanned or exposed diagnostics");
-    context.set_stage_scan({}); context.set_stage_rescan({}); prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tap(Key::down);
+    script_stage_scan(context, {}); script_stage_rescan(context, {}); prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tap(Key::down);
     require(stack.depth() == 2 && scans == before_scans, "An unattached scan context opened diagnostics or scanned");
-    context.set_stage_rescan([&] { folder.rescan(); ++scans; });
-    context.set_stage_scan([&]() -> const UserStageScan* { return &folder.latest_scan(); });
+    script_stage_rescan(context, [&] { folder.rescan(); ++scans; });
+    script_stage_scan(context, [&]() -> const UserStageScan* { return &folder.latest_scan(); });
     const auto reopen = [&]() { prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); };
     write(broken_path, "{}"); reopen(); require(folder.latest_scan().refused.size() == 1 && folder.latest_scan().refused[0] != first_refusal,
         "Changing a broken stage did not refresh its latest reason");

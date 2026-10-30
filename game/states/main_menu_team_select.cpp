@@ -52,9 +52,7 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 			if (can_leave)
 			{
 				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuPlayerCount>(
-						this->menu_context()));
+				this->go_to(MainMenuScreen::player_count);
 				return;
 			}
 			if (this->confirmations_[i] == ConfirmationState::confirmed)
@@ -125,9 +123,7 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 	if (this->all_players_confirmed())
 	{
 		this->set_level_settings();
-		this->context()->transition_to(
-			std::make_unique<MainMenuWeaponSelect>(
-				this->menu_context()));
+		this->go_to(MainMenuScreen::weapon_select);
 		return;
 	}
 	this->update_team_select_visuals();
