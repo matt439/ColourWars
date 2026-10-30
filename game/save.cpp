@@ -389,15 +389,18 @@ SaveData Save::load_from_json(const char* json_path) const
     }
 
     auto data = SaveData();
-    // One malformed section resets only itself.
+    // One malformed section resets only itself, and says so: the next write
+    // replaces what it held with the defaults.
     for (const SaveSection* section : save_sections())
     {
         try
         {
             section->read(root, data);
         }
-        catch (const std::runtime_error&)
+        catch (const std::runtime_error& error)
         {
+            fprintf(stderr, "save: %s section \"%s\" could not be read (%s); "
+                "it starts from defaults.\n", json_path, section->key(), error.what());
             section->reset(data);
         }
     }

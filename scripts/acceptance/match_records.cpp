@@ -399,6 +399,29 @@ namespace
 		return text;
 	}
 
+	// A malformed section still resets alone, but now says so: one stderr line
+	// naming the save, the section's key and the reader's error. Sections that
+	// recover field by field throw nothing and print nothing.
+	void check_section_reset_report(const IsolatedSaveDirectory& directory)
+	{
+		directory.write("{\"save_version\":1," + flat_preferences + ",\"records\":7}");
+		Save broken_records;
+		const std::string errors = captured_stderr(directory, [&] { broken_records.load_save_file(); });
+		require(broken_records.records().stages().empty(), "A corrupt records section produced records");
+		require_flat_preferences(broken_records, "A corrupt records section reset a preference");
+		require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
+			errors.find("save_data.json") != std::string::npos &&
+			errors.find("section \"records\" could not be read (") != std::string::npos &&
+			errors.find("); it starts from defaults.") != std::string::npos,
+			"A reset section did not print one stderr line naming the save, its key and the error");
+
+		directory.write("{\"save_version\":1,\"resolution\":true,\"fullscreen\":3,"
+			"\"team_palette\":[],\"aim_sensitivity\":\"x\",\"pad_sticks\":7,\"view_shake\":null}");
+		Save broken_fields;
+		const std::string quiet = captured_stderr(directory, [&] { broken_fields.load_save_file(); });
+		require(quiet.empty(), "Fields that recover one by one reported a section reset");
+	}
+
 	// A save that fails as a whole keeps its defaults, as before, but is first
 	// copied aside under a name never reused, so the next write cannot lose it.
 	void check_unreadable_save(const IsolatedSaveDirectory& directory)
@@ -449,6 +472,7 @@ int main()
 		check_versions(directory);
 		check_section_isolation(directory);
 		check_round_trip(directory);
+		check_section_reset_report(directory);
 		check_unreadable_save(directory);
 		std::cout << "PASS match records: display-precision bests, side/draw/practice tallies, "
 			"results line, version 0/1/newer saves, per-section and per-entry recovery, "

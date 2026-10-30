@@ -504,9 +504,40 @@ compiled, and `check-startup.ps1` passed on the Debug executable.
 
 ### Save and the active profile (`HYG#48`)
 
-Move profile wearing and the effective overlay out of `Save` into a session
-object that borrows it, print a section's key and error before resetting a
-malformed section, and say in `save_section.h` how versions are meant to migrate.
+**Done 2026-10-30.** [`SettingsSession`](../game/settings_session.h) now owns
+what belongs to the run: which pad wears which profile and the effective play
+settings and input bindings, the save's with each worn profile laid over its
+pad, rebuilt in place so borrowed references stay current. It borrows the
+`Save`; `wWinMain` declares it beside the save and `GameData` lends it as
+`settings_session()`, a seventh pointer. Every reader of the settings in effect
+and the Controls, Pad buttons, Profiles and setup pages moved to it, as did the
+writes that take effective values (`set_play_settings_and_save`,
+`set_input_bindings_and_save`), wearing, adding a profile from a pad, deleting
+one (the wearers follow the shift) and carrying Boosts back. The `Save` keeps
+the file: `saved_play_settings` and `saved_input_bindings` (each pad as
+itself), the profile list, rename and Boost, and memory-only setters the
+session writes through once. Write order, checks and the effective
+references' identity are unchanged, and the file format is not touched. A
+malformed section now prints one stderr line naming the save, the section's
+key and the reader's error before it resets; sections that recover field by
+field print nothing. [save_section.h](../game/save_section.h) states the
+migration rule: no migration pass, each section reads every older layout in
+place, a version only adds, a key whose meaning changes gets a new name, and
+no section reads `"save_version"`. `match_records` gained
+`check_section_reset_report`; probes that build a `GameData` hold a session
+beside their `Save`, and those that test the file alone read the `saved_`
+accessors. The architecture overview, the OOP guide and the roadmap follow.
+Both presets build under `/W4 /WX`. In a clean worktree of the tip plus this
+change, the full default acceptance list passed in Release (74 cases) and in
+Debug without the four slow cases (71), and `debug_console` and `menu_text`
+passed in Debug. A first `input_bindings` run failed on a probe that reassigns
+its `Save` under a live session; those probes now reload through the session.
+`moving_structure` once refused a stale temporary receipt folder whose name
+reused the process id and passed on a rerun. The opt-in and painter compile
+gates compiled in both presets, `check-frame-pacing.ps1 -CompileOnly`
+compiled in Debug, the Release `-ControlsMenuOnly`, `-KeyboardJumpOnly`,
+`-OptionsDefaultsOnly` and `-StickSettingsOnly` painter matrices passed, and
+`check-startup.ps1` passed on the Debug executable.
 
 ### `const` means draw-safe (`HYG#49`)
 

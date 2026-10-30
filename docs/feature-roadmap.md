@@ -3248,8 +3248,10 @@ save that holds it is built from sections and carries a version key.
 
 **Save layout.** `Save` reads and writes a list of `SaveSection` objects
 (`game/save_section.h`) against one root object; each section's read is caught
-on its own, so a malformed section falls back to its defaults and leaves the
-others intact. The display and play preferences stay flat root keys exactly as
+on its own, so a malformed section falls back to its defaults, printing one
+stderr line with its key and the error, and leaves the others intact. There is
+no migration pass: each section reads every older layout in place, as
+[save_section.h](../game/save_section.h) sets out. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
 `"save_version": 5` is written first (version 1 introduced records, version 2
 remembered setup, version 3 independent input bindings, version 4
