@@ -198,13 +198,15 @@ reachable on a machine with no pad.
 The [2026-10-30 architecture review](2026-10-30-architecture-review.md#engine-reports-owed)
 found six places where the engine's API forced the answer this repository has,
 and working its `HYG#49` found a seventh (33).
-Each is numbered here so TODO can point at it; none is drafted yet. Drafting
-means checking engine master first (the rule above), writing the exhibit and
-the ask in the shape of reports 23-26, and then waiting for authorization to file.
+Each is numbered here so TODO can point at it. All seven were drafted on
+2026-10-30 against engine master `47be5a3`, below report 26, each fact-checked
+by a second reader. 31 and 32 are already answered on untagged master and need
+no filing; they wait on the next minor tag like 23 and 25. 27-30 and 33 are
+drafts that wait for the author's authorization to file.
 
 | # | Report | Exhibit at `96c65373` |
 |---|---|---|
-| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp` and `painter_visual.cpp`; this replaces the "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which said no exhibit existed |
+| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp` and `painter_visual.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
 | 28 | Public types removed without a deprecation release, after report 7's procedure | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | `Scene` gives no typed access to short-lived objects and no retirement notice | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:113`, `scripts/check-startup.ps1:225` and `:248` |
@@ -389,6 +391,637 @@ unreachable definitions in `game/stage_catalog.h` and the roadmap's note
 about stale entries. `StageCatalog::remove_user_stages` would remove the
 names that left the list, so the registry would agree with it. This is a
 local draft, not a filed issue.
+
+---
+
+## 27. No headless or recording pad backend - **draft with link-seam exhibit**
+
+**Checked against upstream master `47be5a3` (2026-10-30): still unanswered.**
+`LABRADOR_INPUT_BACKEND` accepts only `xinput` and `web`
+(`engine/CMakeLists.txt:360-379`), and `engine/input/` has only those two
+backend folders. Render and audio each have a `null` backend that records what
+it was asked to do. Input has none. `GamepadReader`
+(`engine/input/gamepad_reader.h`) is still one concrete class with a private
+`Impl`, and its implementation is chosen at build time. `Gamepads` takes only
+that class (`engine/input/gamepads.h:36`). The engine's backlog has hit the same
+wall from the sample side. The OCA-45 notes in `docs/product/STORIES.md` say,
+of `samples/minimal`, that `Gamepads` "is built only over the real backend's
+GamepadReader ... so a headless test is not available without new seams".
+SM-40 (closed 2026-10-27) and G125 add a headless test of the XInput
+*translation*, `gamepad_state_from_xinput`. They do not add a reader a consumer
+can script. The engine's own `InputTests` build the real reader and use empty
+slots only (`tests/input/vibration_tests.cpp:279-280`). A search of the
+repository's issues and PRs for `GamepadReader` found nothing relevant.
+
+This is not the "XInput is the only pad reader" entry under
+[What is deliberately not here](#what-is-deliberately-not-here). That entry is
+about pad coverage: a GameInput backend for DualSense, DualShock or Switch Pro,
+under `ROAD#2`. It stays, and its "no exhibit" still holds for that subject.
+This report is about a test seam. It has an exhibit, in four places.
+
+### Exhibit
+
+Four acceptance probes need to set a slot's state without a pad, a window or
+XInput. Each one does it by redefining every `labrador::GamepadReader` member,
+`Impl` included, in its own translation unit. The probe's object file then wins
+over `LabradorEngine.lib`'s `xinput/gamepad_reader.obj` at link time:
+
+- [action_bindings.cpp:18-36](../../scripts/acceptance/action_bindings.cpp) feeds `action_test_pads::states` through `sample()` and keeps a `suspended` flag.
+- [input_bindings.cpp:9-23](../../scripts/acceptance/input_bindings.cpp) does the same thing with `binding_test_pads::states`.
+- [keyboard_jump_capture.cpp:23-34](../../scripts/acceptance/keyboard_jump_capture.cpp) defines a reader whose slots are always empty, only so a `Gamepads` can be built.
+- [painter_visual.cpp:77-109](../../scripts/acceptance/painter_visual.cpp) uses `painter_scripted_pads::states` under `COLOURWARS_PAINTER_SCRIPTED_PADS`. `scripts/check-painter.ps1:409` passes that define only for the scripted-pad variants, so the other painter binaries keep XInput.
+
+### What happens
+
+This substitution depends on the engine's private layout and on link order, not
+on any API. It also breaks whenever the seam grows. On master,
+`GamepadReader` has two more members, `vibrate` and `stop_vibration` (PI-21,
+`cadc962`), and `Gamepads::vibrate`/`stop_vibration` call them
+(`engine/input/gamepads.cpp:111`, `:119`). At the next pin bump, each of the
+four blocks has to define them as well. If a block misses one, the linker
+should pull the XInput object to resolve it, and that object defines the other
+members a second time. This is inferred from the source; nothing has been built.
+Every consumer that wants to drive `Gamepads` in a test meets the same problem.
+
+Reproduction: in a test target that links `LabradorEngine` (xinput), try to put
+`GamepadState{ .connected = true, ... }` into slot 0 of a `Gamepads` without a
+physical pad. No public way exists. The only route is to define
+`labrador::GamepadReader` yourself, as the four files above do.
+
+### The ask
+
+A pad reader that a consumer's test can link next to the normal engine build
+and set per slot. A test must be able to set what `read(slot)` answers, and it
+must see `suspend`/`resume` and any vibration requests. It must also not need a
+second engine build, because the probes link the same `LabradorEngine` as the
+game. A `null` reader that records what it was asked, like the render and audio
+ones, would do, but only if it ships beside the normal backend and not in its
+place through a configure-time choice. A scripted reader in its own library, or
+a constructor seam on `Gamepads`, would also do. The spelling and the mechanism
+are the engine's call.
+
+### What an answer lets this repository delete
+
+All four `namespace labrador` blocks. The three state arrays they read
+(`action_test_pads`, `binding_test_pads`, `painter_scripted_pads`) become calls
+to the engine's setter. This repository would also no longer have to edit four
+probes whenever `GamepadReader` gains a member. The PI-21 bump will be the first
+time that is needed. `COLOURWARS_PAINTER_SCRIPTED_PADS` can stay if it still
+selects scripted pads over physical ones.
+
+This is a local draft, not a filed issue. Filing it needs separate author
+authorization and a fresh check of upstream master.
+
+---
+
+## 28. Public types and members removed with an engine-only caller count - **draft with carried-copy exhibit**
+
+**The row's original ask, a deprecation release, is already answered on the pin
+and on master: it is declined by written policy. This report narrows to the
+count.** Upstream checked 2026-10-30 against engine `origin/master` `47be5a3`
+(2026-10-30). The only tags are `v0.1.0` and `v0.2.0`, so both removals below
+sit under `## Unreleased` in `CHANGES.md` (`:78`). `c369e8b` (2026-10-13,
+*Version releases now, and say how a public name leaves*) was already in the
+pin `1e60fb2`. On master, `PHILOSOPHY.md:835-840` says a name leaves through a
+`CHANGES.md` entry carried by the next tag, and that "Before 1.0 there is no
+alias and no `[[deprecated]]`" (`:837`). `CHANGES.md:47` says "There is no
+deprecation machinery". Engine story `OCA-69` (gap `G19`) is checked done in
+`docs/product/BACKLOG.md:117`. So this report does not ask for a deprecation
+release.
+
+The same section also states the rule two removals did not follow. Report 7's
+answer (`343433c`, 2026-08-15) added the requirement that a caller count say
+which repositories it counted (`PHILOSOPHY.md:810-819`). `c369e8b` extended it
+at `:820-833`, and both are in the pin. Under the extended rule, the commit
+that removes a public name names a count over three places: the engine, the
+paint-shooter's `master`, and the public repositories pinning the engine. The
+same passage says "having no caller is never the reason a name goes" (`:827`)
+and "a name with no caller and no cost stays" (`:830`).
+
+- `730dd99` (2026-10-27, *Remove engine types nothing uses*) deletes
+  `MovingObject`, `RotationOrigin`, `SoundBankObject`, `AnimationObject`,
+  `CameraTools`, `TextDropShadow` and `UiTextDropShadow`. Its message counts
+  only "the engine, the samples, the bench or the tools". Its entry
+  (`CHANGES.md:320-339`) gives no cost argument. At `:333` it says "There is
+  no replacement. A game that used one should copy the class from the
+  previous release".
+- `fdfc24e` (2026-10-27, *Remove public members that nothing calls or
+  tests*) removes 28 members. Its count covers "the engine, the samples, the
+  tests or the benchmark" (`CHANGES.md:259-278`). Unlike `730dd99`, it gives
+  a cost: each member is "a promise the engine keeps without evidence that it
+  holds", with "no test, which a public primitive needs". It also gives a
+  migration. Only the count is missing here.
+
+Neither count names the paint-shooter's `master`, and that branch held callers
+of both. At `7c0b7aba`, `master` on the removal date, `player.h`,
+`projectile.h`, `figure_clothing.h`, `paint_tile.h` and `debug_menu_page.h`
+derived from `labrador::` copies of the removed types. `level.cpp` and
+`level_intro.cpp` called `Camera::calculate_intermediate_camera`. No later
+master commit revisits either removal. `gh issue list -R matt439/Labrador
+--state all` returned no issues at all.
+
+**Exhibit (HEAD `f5303302`, branch `arch-review-3`; the carried copies arrived
+in `cc0a2fff`, 2026-10-29, and are not on `master` yet).**
+[game/carried/](../../game/carried/) holds 13 files and 1,028 lines copied
+from `v0.2.0` into `namespace colourwars`. Each file has a provenance note
+(`game/carried/moving_object.h:3`). The copies are hierarchy rungs, not
+helpers. Fifteen class heads outside `game/carried/` name a carried type as a
+base:
+
+- `player.h:106-109` (`MovingObject`, `AnimationObject` and `SoundBankObject`)
+- `projectile.h:27-28`, `menu_page.h:34`, `level.h:85`, `weapon.h:48`
+- `figure_clothing.h:10`, `paint_tile.h:29`, `screen_music.h:10`
+- `connection_audio.h:10`, `resume_audio.h:8`, `match_voices.h:14`
+- `movement_audio.h:20`, `paint_audio.h:11`
+- `prompt_bar.h:13` and `wrapped_text_drop_shadow.h:13`
+
+Outside `game/carried/`, 41 files include a carried header. 94 source files
+name a carried type as `colourwars::`, and 56 of them name
+`colourwars::UiTextDropShadow`.
+
+The repository still builds against the pin, where `fdfc24e`'s members exist.
+Each of these calls becomes a source break at the bump:
+
+- `Camera::calculate_intermediate_camera`: `game/objects/level.cpp:396`,
+  `:627` and `level_intro.cpp:246`
+- `RectangleF::set_position_y_from_bottom`: `player.cpp:910`, `:1308` and
+  `:1317`
+- `RectangleF::from_top_left_bottom_right`: `level_object_builder.cpp:117`
+- `UiTexture::set_position_from_top_right_origin`:
+  `game/states/results_menu.cpp:445`
+- acceptance, all `from_top_left_bottom_right`:
+  - `scripts/acceptance/cq_blockout/fixtures.cpp:79`
+  - `crossfeed/fixtures.cpp:79`
+  - `press_tower/fire_checks.cpp:38`
+  - `press_tower/fixtures.cpp:100`
+  - `terrain.cpp:110`
+  - `painter_visual/surface_finish_checks.h:114`
+
+  The last one is missing from the removed-member list under
+  [Trial-build against engine master (`HYG#24`)](#trial-build-against-engine-master-hyg24),
+  and that list's line numbers are stale (for example, `level.cpp:384` there
+  is `:396` now).
+
+**Reproduction.**
+
+1. On engine master, run `git show 730dd99 -s` and `git show fdfc24e -s`.
+2. Compare each count with `PHILOSOPHY.md:820-833` on the same revision.
+3. Take any client that builds at `v0.2.0` and derives from
+   `labrador::SoundBankObject` or calls `Camera::calculate_intermediate_camera`.
+   A three-line class and one call are enough. Build it against master. It
+   fails to compile.
+
+Neither commit nor its `CHANGES.md` entry says whether a counted client held
+the name. `730dd99` also gives no reason beyond having no caller, which `:827`
+says is never the reason a name goes.
+
+**The ask.** Before the tag that carries `730dd99` and `fdfc24e`, bring both
+under the engine's own rule.
+
+- For both entries, add the three-place count: what the engine, the
+  paint-shooter's `master` and pinning public repositories each held.
+- For `730dd99`, also either state the cost of keeping each type (T1, T2, T4
+  or T5), or restore the types whose only stated reason was having no caller.
+
+Which names go, and whether any come back, are engine decisions. An alias or a
+`[[deprecated]]` period is not asked for, because `PHILOSOPHY.md:837` declines
+both before 1.0.
+
+**What an answer lets this repository delete.**
+
+- If the types come back: `game/carried/`, its includes in 41 files, and the
+  `colourwars::` qualifiers in 94. The rungs go back on `labrador::` at the
+  same depth.
+- If the members come back: the local replacements the bump would otherwise
+  need at the 8 game and 6 acceptance sites above.
+- If the entries are only amended: nothing in code changes. The carried copies
+  are then the documented migration, and this report closes as answered.
+
+This is a local draft, not a filed issue. Filing needs separate author
+authorization and a fresh upstream recheck.
+
+Ledger table row, refreshed:
+
+| 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 (`343433c`) as extended by `c369e8b` (`PHILOSOPHY.md:810-833`); the deprecation-release ask is declined by policy (`PHILOSOPHY.md:837`) | `game/carried/` (13 files; 15 class heads derive from it), plus the `fdfc24e` call sites `game/objects/level.cpp:396`, `:627`, `level_intro.cpp:246`, `level_object_builder.cpp:117`, `player.cpp:910`, `:1308`, `:1317` and `game/states/results_menu.cpp:445`, at `f5303302` |
+
+---
+
+## 29. `Scene` gives no typed access to short-lived objects and no retirement notice - **draft with scene-walk exhibit (narrowed: may not be owed)**
+
+**Checked 2026-10-30 against engine master `47be5a3` (2026-10-30): unanswered as asked, but the premise does not hold.**
+Between the pin (`1e60fb2`, `v0.2.0`) and master, `engine/scene/scene.h` and
+`engine/collision/collision_object.h` changed only cosmetically: include order,
+`Camera::default_camera`, and unqualified `RectangleF`/`Shape`/`Vector2F`.
+`Scene::add<T>` returns the object's own type ("the object's own type rather than
+the list's"). That pointer "stops being valid when the object leaves the
+scene". An object leaves through `remove()`, which the caller asks for, or
+through retirement. Retirement is checkable from public state. `end_tick()`
+(`engine/scene/scene.cpp:150-177` on master) clears the contacts. It then calls the
+object's virtual `set_for_deletion(true)` on every collision object that is
+`!in_bounds()`, and erases exactly those whose `for_deletion()` is true.
+`for_deletion()` and `Scene::in_bounds()` are both public. Between `resolve()`
+and `end_tick()`, a caller can therefore tell which kept pointers are about to die.
+The engine's backlog calls `set_for_deletion` "a collidable's retirement hook"
+(`docs/product/BACKLOG.md:154`, G49/OCA-59, done). On master, `scene.h` also
+states the engine's position on the phase this report wants. Under "PHASE 3 is
+the game's, and it has no function on this class", it declines a per-object
+virtual as the frame-loop tax T8 refuses, and prescribes "a loop over the objects
+it already holds pointers to, between resolve() and end_tick()". The
+`collision_objects()` comment says the game's own questions are "a walk, once,
+not a virtual on the object". `CHANGES.md` records the stable-erase order of
+retirement. No story, decision or plan covers typed access or a destroy-time
+notice. A read-only `gh` issue search on `matt439/Labrador` found no match.
+Filing needs separate author authorization. Read the next section before you
+ask for it.
+
+### What happens
+
+A projectile is the scene's commonest object and the shortest-lived. The game
+creates it as a `std::unique_ptr<Projectile>` and gives it to `Scene::add`,
+which returns a `Projectile*`. The game discards that pointer. Every tick it
+reaches the projectiles again by walking `collision_objects()`, which yields
+`CollisionObject*`, and recovering the game type from each element. It drains
+each projectile's pending output (paint audio, a blocked-shot cue) in a second
+such walk before `end_tick()`.
+
+None of this is forced by the engine. The game could keep `add`'s typed
+pointers in a list of its own and, in the documented PHASE 3 loop, drain and
+drop each one for which `for_deletion() || !scene.in_bounds(*p)`. Pointers that
+`add` returned this tick are still pending and are not swept until the next
+`end_tick()`. That is the pattern `Level` already uses for long-lived objects
+(`projectile_targets_`, `game/objects/level.h:351-353`). What the engine does
+not give is a single guarantee, stated as such, that this predicate *is* the
+retire set. Today a client relies on reading `end_tick()`'s order (bounds
+sweep, then retirement on `for_deletion()`) together with `set_bounds`'s and
+`add`'s comments.
+
+### Exhibit (client HEAD `f5303302`)
+
+- [`game/objects/level.cpp`](../../game/objects/level.cpp) `:555-569`
+  (`update_players`) gives each new projectile to `scene_->add` at `:566` and
+  discards the `Projectile*` it returns.
+- `:571-582` (`resolve_projectile_movement`) walks every collision object to
+  find the projectiles before contacts. The role query through `Collider::of`
+  is at `:577`.
+- `:454-464` (in `update_level_logic`, after `scene_->resolve()` at `:453`)
+  walks every collision object again through `Collider::of`. It drains each
+  projectile's paint audio and blocked contact before `end_tick()` at
+  `:485-487`.
+  [`game/objects/player.h`](../../game/objects/player.h) `:148-149` records the
+  same flush-before-retire rule for shots that retire inside the weapon update.
+- `:821-832` (`count_projectiles`) walks a third time, testing each tag
+  (`:826`, no cast), to count what a kept list's size would already say.
+- [`Collider::of`](../../game/objects/collider.cpp) `:9-19` is one
+  `dynamic_cast` from `labrador::CollisionObject` to the game's base type.
+  Since `HYG#42` (2026-10-30), the two role-query walks above pay it once per
+  object, for every structure and player as well as each projectile. That cost
+  comes from walking rather than keeping `add`'s typed return. The contact path
+  pays the same cast in `Collider::on_contact`, but that is report 33's
+  neighbourhood (`on_contact` hands over a `CollisionObject`), not this one.
+  [`collider.h`](../../game/objects/collider.h) `:25-28` names this report.
+
+### Reproduction
+
+This needs no game assets. Derive `Shot` from `CollisionObject`, overriding
+`for_deletion`/`set_for_deletion` to record the flag, and set it after one
+update. Give one to a `Scene` with `add` and keep the returned `Shot*`. Before
+each `end_tick()`, test `shot->for_deletion() || !scene.in_bounds(*shot)`. The
+test is true on exactly the tick whose `end_tick()` destroys the shot. So a
+typed pointer *can* be kept safely today, but only by restating the scene's
+retirement rule in client code.
+
+### The ask
+
+Narrowed to what the engine owns. A document-only answer would close it.
+
+1. **State the retire set as a contract**: between `resolve()` and
+   `end_tick()`, a collision object will be retired by that `end_tick()` if and
+   only if `for_deletion()` is true or `in_bounds()` is false (after the
+   object's own `set_for_deletion(true)` answer). Then a client keeping `add`'s
+   pointers may rely on it. Optionally, expose it as one query (for example a
+   `Scene` member answering "retires at this `end_tick()`") so the rule lives in
+   one place. The spelling is the engine's call.
+
+A destroy-time callback or a scene-kept per-type view is deliberately not
+asked. Master's PHASE 3 comment already declines the first under T8. The
+second would have the engine index game types that `add`'s typed return
+already lets the client keep.
+
+### What an answer lets this repository delete
+
+Nothing that cannot be deleted now. With or without (1), `Level` can keep a
+typed list of live projectiles, filled from `add`'s return and pruned in the
+PHASE 3 loop by the predicate above. That removes the three walks at `:454-464`,
+`:571-582` and `:821-832`, the per-object cross-cast the first two pay, and the
+tag test in `count_projectiles`. (1) only makes the pruning rule an engine
+promise rather than a reading of `end_tick()`. `Collider::of` would remain for
+the contact's other party (report 33). Its comment's pointer to this report
+can then go. Because the exhibit is the game's choice and not forced by the API,
+the author may prefer to withdraw this row and do the client-side change
+instead. This is a local draft, not a filed issue.
+
+---
+
+## 30. A device-unavailable startup failure can be classified only by its message text - **draft with string-match exhibit**
+
+**Checked against upstream master `47be5a3` (2026-10-30): still unanswered.**
+That is 214 commits past the pin `1e60fb2` (`v0.2.0`). The Direct3D 11 backend
+still refuses a machine with no hardware adapter by throwing a plain
+`std::runtime_error("No Direct3D hardware device found")` in Release
+(`engine/render/d3d11/device_resources.cpp:161-165` on master; `:164` at the
+pin). The other backends' equivalent refusals are also plain
+`std::runtime_error`s, each with different text:
+- `engine/render/d3d12/device_resources.cpp:226`: `No Direct3D 12 hardware device found`
+- `engine/render/vulkan/device_resources.cpp:560`: `This machine has a Vulkan loader but no Vulkan device. ...`
+- `engine/render/vulkan/device_resources.cpp:667` (`:647` at the pin): `No Vulkan device on this machine can run this backend:` plus one line per device
+- the OpenGL backend's driver refusals in `engine/render/gl/wgl_context.cpp`, each with its own message
+
+No exception type, error code or category marks "no usable device". The one
+engine exception subclass on this path, `com_exception`
+(`engine/render/throw_if_failed.h:50`), carries a COM `HRESULT` for any failed
+call, and its own comment says a catch site cannot tell one from another.
+`Renderer::device_info()` (`engine/render/SEAM.md:85-88`) classifies a device
+as hardware, software or null only after one has been created. The engine's
+own release guide (`website/src/content/docs/docs/guides/windows-release.mdx:199-212`)
+tabulates the refusals by their message text, so the text is the only
+interface there is. Nothing in master's `CHANGES.md`, `docs/product/BACKLOG.md`
+or `docs/design` plans a typed refusal. `GAP-REGISTER.md:2741` mentions the
+D3D11 refusal only as a raw string the sample shows in a message box. Two
+read-only `gh` issue listings on Labrador (all states, and a search for
+"device") exited 0 with no rows. Filing still needs separate author
+authorization.
+
+**Exhibit** (client at `f5303302`). This repository has to tell one startup
+failure apart from the rest, in two places:
+
+- [`FatalReport::capture`](../../game/fatal_report.cpp) at `:117-120` compares
+  `what()` with `std::strcmp` against `"No Direct3D hardware device found"`. On
+  a match it records `cause_0_reason=no_hardware_device` in `last-error.log`.
+  `scripts/acceptance/fatal_report.cpp:108-112` pins that match.
+- [`check-startup.ps1`](../../scripts/check-startup.ps1) at `:225` and `:248`
+  lets a Release run skip on a CI host with no adapter only if stderr is exactly
+  `startup failure: No Direct3D hardware device found`.
+  `scripts/sandbox/logon.ps1` holds the same literal at `:192` and compares
+  against it at `:208` and `:238`. The literal is also in
+  [docs/failure-reporting.md](../failure-reporting.md) (`:34-38`).
+
+**What happens.** The classification depends on English prose that the engine
+is free to reword, and nothing tells the client when it does. If the wording
+changes, the reason quietly disappears from the failure record and the
+missing-adapter skip becomes a CI failure. Switching backend has the same
+effect. A `d3d12` build refuses with `No Direct3D 12 hardware device found`,
+and a Vulkan build refuses with one of two other messages, so none of them is
+recognised. Release has no WARP fallback by design (T6), so this refusal is the
+failure a player without a usable GPU will actually see. That makes it the one
+a client most needs to recognise.
+
+**The ask.** Let a consumer recognise "no usable graphics device", whatever
+the backend, without reading the message text. For example, each backend's
+device-creation refusal could throw a distinct exception type or carry a
+`std::error_code` in an engine category. The `what()` text can stay as it is.
+The spelling, and whether a missing audio device shares the same type, are
+engine decisions.
+
+**What an answer lets this repository delete.** The `strcmp` at
+`game/fatal_report.cpp:117` goes, and a type or code test replaces it. The
+exact-text checks at `scripts/check-startup.ps1:225` and `:248` and
+`scripts/sandbox/logon.ps1:208` and `:238` also go. In their place the scripts
+would read the `cause_0_reason` that `last-error.log` already records, which
+neither script checks today. The acceptance check would test the reason instead
+of the literal. This is a local draft, not a filed issue.
+
+---
+
+## 31. `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent - **draft with optional-read exhibit**
+
+**Answered on untagged master (checked 2026-10-30 at `47be5a3`, 214 commits
+past the pin).** `e166dcc` (2026-10-29, *Reject unknown manifest and
+sprite-sheet keys*) adds `std::vector<std::string> JsonValue::keys() const` to
+`engine/assets/json.h`. It copies an object's member names in stored order,
+duplicates included, and throws unless the node is an object. This is engine
+story `PI-20`, split out of
+[report 12](#12-json-is-read-only-path-only-and-opaque--split-3af746b) on
+2026-10-22. The engine's `docs/product/BACKLOG.md` now ticks it, and
+`docs/2026-10-29-strict-asset-keys.md` plus `CHANGES.md` (Unreleased) record
+it. The engine's own refusal, `asset_details::reject_unknown_keys` in
+`engine/assets/json_object_keys.h`, stays private to the manifest and
+sprite-sheet loaders. The backlog says plainly that "game-owned JSON remain
+unrestricted". Which fields a game file accepts is the game's to say. Report
+12's split already made that decision. `e166dcc` is not in `v0.2.0`
+(`1e60fb2`), so the pin does not have `keys()`. A `gh` issue search of
+`matt439/Labrador` for this found nothing. **No filing is needed.** At the
+first minor tag that carries `keys()`, spend it as described below, then
+close this report. The text below is the draft as prepared.
+
+Found by the [2026-10-30 architecture review](2026-10-30-architecture-review.md#engine-reports-owed).
+The exhibit is cited at HEAD `f5303302`.
+
+### Exhibit
+
+`GameTuning` reads every optional field of `tuning.json` with `has()` and
+then a typed accessor, because that is all the pin's `JsonValue` offers. The
+reads are at:
+
+- `game/tuning.cpp:109`: `frame_time`
+- `:455`: `paint_underfoot`
+- `:471`: `enemy_blocks_health_regen`
+- `:478` and `:756`: `paint_underfoot` again, for validation
+- `:585`: `loop_sounds`
+- `:648`: `add_player_velocity`
+- `:663`: the optional feedback sounds `stop`, `ready`, `lift`, `settle` and `low`
+- `:702`: `diffusion`
+
+The only guard is in acceptance. `check_tune_consumed`
+(`scripts/acceptance/debug_console/tune_document_checks.cpp:319`) uses the
+client's own span scanner, `JsonSpanDocument`, to replace each number and
+boolean leaf of the shipped `tuning.json` and `presentation.json` with a
+string, one leaf at a time. It reparses each candidate and requires the
+loader to throw and name the key. It skips string leaves and any path with a
+`_`-prefixed segment, so a misspelt key whose leaves are all strings passes.
+The check is compiled only under `COLOURWARS_DEV_TOOLS`
+(`tune_document_checks.cpp:4`), so it runs only in Debug. It runs there inside
+the `debug_console` case, which is declared `SlowInDebug`
+(`scripts/acceptance/cases.psd1:74-78`). It checks the shipped file at test
+time, not the file the game loads at startup, and it is quadratic in the
+file's size.
+
+### Reproduction
+
+This synthetic example uses the pin's `JsonValue`:
+
+```cpp
+const auto doc = labrador::parse_json(
+    R"({"player":{"paint_undrfoot":{"enabled":true}}})", "tuning.json");
+const labrador::JsonValue player = doc.root().object("player");
+const bool on = player.has("paint_underfoot");   // false: misspelt key ignored
+```
+
+Actual: the loader takes the default (here the effect is off), and nothing
+reports the key it never read. Expected: the loader can refuse with
+`'tuning.json': player has unknown key 'paint_undrfoot'`. With the pin, it
+cannot list `player`'s members to find this out.
+
+### The ask
+
+A way to list an object's member names, so a client loader can refuse names
+outside its own field list. Master's `keys()` is exactly that. This report does
+not ask for two related things: making the engine's private
+`reject_unknown_keys` public, and any record of which members were read. Either
+would need an exhibit of its own, made after the client has spent `keys()` and
+has its own copy of that helper to show.
+
+### What an answer lets this repository delete
+
+After the bump, each `tuning.json` object reader can check its own members
+against its field list with `keys()`, at load time and in every build. The
+optional `has()` reads stay, because leaving a field out is still allowed; a
+misspelling becomes a load failure. `check_tune_consumed` could then shrink to
+the part `keys()` does not cover: proving that each listed field really
+changes the loaded value. Whether that part is worth its Debug cost is the
+bump's decision, as report 12 already said of `PI-20`. `JsonSpanDocument` and
+`TuneDocument` stay, because report 12's decline of spans still stands.
+
+Filing would need separate author authorization and a fresh upstream recheck.
+Because master already answers this report, no filing is planned.
+
+---
+
+## 32. Word wrap by measured width is client code - **draft with text-wrap exhibit**
+
+**Answered on untagged master (checked 2026-10-30 at `47be5a3`).**
+`80024e5` (2026-10-29, *Wrap translated text with the font's measured glyph
+layout*) closes engine story OCA-77. It adds `Font::wrap(std::wstring_view
+text, float width)` (`engine/render/font.h:149` on master) and the handle
+query `RenderResources::wrap_text(FontHandle, std::wstring_view, float)`
+(`engine/render/render_resources.h:260`). Each returns an owned copy of the
+text. Selected U+0020 spaces become LF, and the lines are measured with the
+same glyph walk `measure` uses. Existing line feeds are kept. Words are never
+split, and a word wider than the width on its own is let through. The width is
+in unscaled font texels and must be finite and positive. Engine `CHANGES.md`
+does not list the change. `80024e5` is not in `v0.2.0` and no tag carries it,
+so the pin does not have it. A read-only search of the engine's issues for
+"wrap" found nothing. The same search over pull requests finds only #44, the
+weighing that split out OCA-77. No filing is needed. At the first minor tag
+that carries it, delete as below and close this report. The text below is the
+draft as prepared.
+
+**The premise this corrects.** OCA-77 was weighed on 2026-10-24. It is still
+recorded on master in `docs/product/STORIES.md` (OCA-77, Notes) as:
+
+> No caller in either client wraps by width: ColourWars' debug console cuts at
+> a column count derived from a monospaced advance, deliberately.
+
+`docs/product/BACKLOG.md`'s closed OCA-77 row says the same: "no caller in
+either client wraps by width yet: the one wrap there is a debug console
+cutting at a column count on purpose". That was not true when it was written.
+This repository had wrapped by measured width since `e1e17178` (2026-10-17).
+The story then gave OCA-42's translated strings as the first caller. The
+answer doesn't depend on which caller came first, so this asks for nothing.
+The engine may want to correct the note the next time it touches the story.
+
+### Exhibit
+
+The exhibit is at HEAD `25af4d16`.
+
+- [`game/text_wrap.h`](../../game/text_wrap.h):28-32 declares
+  `text_wrap::wrap(render, font, text, max_width, scale)`. Its body in
+  `game/text_wrap.cpp`:39-99 does a greedy wrap. For each authored line it
+  builds the next candidate line and measures it with
+  `RenderResources::measure_text` (`:11-15`). It breaks before the next word
+  when the candidate's measured width times `scale` would be greater than
+  `max_width`.
+- [`WrappedTextDropShadow`](../../game/states/wrapped_text_drop_shadow.h) is the
+  caller. It wraps in its constructor (`wrapped_text_drop_shadow.cpp:13-18`,
+  because the base constructor measures), in `set_text` (`:44-49`) and in
+  `set_scale` (`:51-56`). It is built for the weapon description at
+  `game/states/main_menu_weapon_select.cpp:363`.
+- `text_wrap::check_fits` (`text_wrap.h:37-42`, `text_wrap.cpp:101-130`)
+  refuses at load time any word wider than the width. It is called from
+  `game/content_validation.cpp:172`. The `text_wrap` acceptance case
+  (`scripts/acceptance/text_wrap.cpp`) checks both against the engine's own
+  measurement.
+
+### What happens
+
+At the pin, a client whose text must fit a panel has `measure_text` and
+nothing else. So it carries its own break loop, re-measuring a growing prefix
+once per word. It also carries its own rules for authored line feeds, spaces at
+a break and words that do not fit. Two clients would carry two loops that
+disagree at the edges.
+
+### The ask
+
+That the font that measures a string can also break it to a width, measured by
+the same walk. Master's `Font::wrap`/`RenderResources::wrap_text` is that
+answer. No further ask.
+
+### What an answer lets this repository delete
+
+- `text_wrap::wrap` (`text_wrap.h:23-32`, `text_wrap.cpp:78-99`) and its helper
+  `wrap_line` (`text_wrap.cpp:39-75`). `WrappedTextDropShadow` would call
+  `render_resources_->wrap_text(font, text, max_width / scale)`, because the
+  engine's width is unscaled and the client's is the drawn width.
+- The wrap half of the `text_wrap` acceptance case, re-pointed at the engine
+  call.
+
+These stay:
+
+- `check_fits` and its load-time diagnostic, with the helpers it uses
+  (`measured_width`, `require_width`, `narrow`). The engine lets an overlong
+  word through, and refusing it with the content key's name is client policy.
+- `WrappedTextDropShadow` itself, which keeps the authored text.
+
+**Edge differences to requalify, not to report.** At a break, the client drops
+the whole run of spaces. The engine replaces one selected space and documents
+that repeated or leading spaces "can become empty lines at narrow widths".
+Today's weapon descriptions use one space between words, so the output should
+match. The painter's weapon-paper check and `text_wrap` confirm that when the
+pin moves. Filing would need separate author authorization, but none is needed
+while master answers it.
+
+---
+
+## 33. `on_contact` hands the other party over `const` - **draft with const_cast exhibit**
+
+**Drafted 2026-10-30. Upstream checked the same day at master `47be5a3` (2026-10-30): not raised or planned upstream.** On master, `CollisionObject::on_contact` (`engine/collision/collision_object.h:49-50`) is still `on_contact(const CollisionObject& other, const Vector2F& normal, float penetration)`. The pin `1e60fb2` (`v0.2.0`) has the same parameter. Since the pin, only `e0536cc` (constant spelling) and `afac4a9` (2026-10-27, which moved the math library into `namespace labrador`, so `mattmath::Vector2F` became `Vector2F`) have touched `collision_object.h`, `contacts.h` or `contacts.cpp`. Neither changes `other`. Master's `CHANGES.md`, `docs/product/BACKLOG.md` and `docs/product/STORIES.md` mention neither `on_contact` nor a mutable other party. Master's other `on_contact` mentions don't plan such a change either: `docs/api-teachability.md:143`, `docs/product/JOURNEYS.md:91`, `docs/review/all-findings.md:3750`, the rtcd notes on pair-once and NaN normals, and the website guides (`guides/your-collision.mdx:88,187,435`, `concepts/game.mdx`, `concepts/tick.mdx`). A `gh` search of `matt439/Labrador` issues for `on_contact` and `const_cast` returned nothing. This is a local draft, not a filed issue. Line numbers in this repository are at ColourWars `f5303302`.
+
+### Exhibit
+
+The one `const_cast` in `game/` is in [`Projectile::answer_paint_contact`](../../game/objects/projectile_contacts.cpp). It is declared at `game/objects/projectile.h:94` and defined at `game/objects/projectile_contacts.cpp:540-544`, with the cast at `:543`:
+
+```cpp
+void Projectile::answer_paint_contact(const Projectile& toucher,
+    bool painted, bool captured)
+{
+    const_cast<Projectile&>(toucher).note_paint_contact(painted, captured);
+}
+```
+
+Before `HYG#49` (`de2b6195`, 2026-10-30), the same answer reached `mutable` flags through a `const` `note_paint_contact`. That commit made the game's rule "const means draw-safe" and removed every `mutable` member. That left this cast as the one place where the game breaks the rule on purpose.
+
+### What happens
+
+A paint shot hits a paintable surface. Only the surface knows the outcome: whether it painted any tiles, and whether it took any from the other team. `StructurePaintable::on_projectile_contact` (`game/objects/structure_paintable.cpp:140`, answer at `:243`) and `FixedSlabPaintable::on_projectile_contact` (`game/objects/fixed_slab_paintable.cpp:191`, answer at `:210`) work that out while they paint. The projectile needs the outcome for two things. It decides its impact sound in `Projectile::flush_paint_audio` (`projectile_contacts.cpp:565`), which runs only once the contact batch is complete (`projectile.h:85-86`). It also decides whether to draw a blocked-shot mark in `take_blocked_contact` (`:556`).
+
+The game's contacts reach the engine through `Level` -> `scene_->resolve()` (`game/objects/level.cpp:453`) -> `dispatch_contacts`. That calls `on_contact` once on each party (`engine/collision/contacts.cpp:112-115` on master, `:113-116` at the pin). Each side receives the other as `const CollisionObject&`. The projectile's own half, `Projectile::on_structure_contact` (`projectile_contacts.cpp:518-528`), can see that it hit geometry, but not what the surface painted. The surface keeps no per-shot result, and only its own half sees the outcome while it paints. So the answer has to cross to the projectile inside that call, and the signature only allows that through a cast.
+
+The write is defined, because every projectile is owned non-const by its scene or by a probe. The caller holds both parties mutably too. `Contact::a`/`b` are non-const `CollisionObject*` (`engine/collision/contacts.h:21-22`), and the game's own sweeps call both halves on non-const objects (`projectile_contacts.cpp:438-439`, `:514-515`). The pair is mutable up to the call and becomes `const` only at the virtual's signature.
+
+**Reproduction.** Take any two `CollisionObject`s where the response to a contact changes both parties and only one party can compute it, for example a surface that absorbs a shot and tells the shot how much it absorbed. The responding party is handed `const CollisionObject& other`. The contact gives it no defined way to change `other`. What is left is a `const_cast`, `mutable` state on `other`'s class, or a side channel outside the contact (the answer queued by identity and settled by the game after `resolve`).
+
+### The ask
+
+A defined way for a contact response to change the other party, through the contact itself. It might be a non-const `other` in `on_contact`, or a separate hook for responses that reach across the pair. Whether that is a signature change, an overload or a contact object, and how it fits the "each is told exactly once" rule (`collision_object.h:39-41`), are engine decisions. The ask is only that a game can answer a contact on both sides without a `const_cast`, `mutable` state, or a side channel of its own.
+
+### What an answer lets this repository delete
+
+- `Projectile::answer_paint_contact` and its `const_cast`. The two surface callers would call `note_paint_contact` on the other party directly.
+- The paragraph at `projectile.h:88-93`.
+- The exception named in `Collider::on_contact`'s comment (`game/objects/collider.cpp:24-26`).
+
+After that, the game has no `const_cast` and no `mutable`.
+
+Filing requires separate author authorization. This draft does not file, comment on or open anything upstream.
 
 ---
 

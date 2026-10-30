@@ -48,8 +48,8 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: the
-[Architecture review](#architecture-review) rows (`HYG#37`-`HYG#51`) and the
-owed reports `ENG#27`-`ENG#33` are `OPEN`, in the order listed there. Before them,
+[Architecture review](#architecture-review) rows (`HYG#37`-`HYG#51`) are `OPEN`,
+in the order listed there; its owed reports `ENG#27`-`ENG#33` are drafted. Before them,
 the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
 owner with a concrete local next step, as the rules below require.
@@ -102,8 +102,9 @@ comparison and physical-pad check; values remain provisional.
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
-- **Report filing:** the registry-removal draft (`ENG#26`) needs separate author
-  authorization. `ENG#23` and `ENG#25` are answered on engine master and need no filing.
+- **Report filing:** the registry-removal draft (`ENG#26`) and the architecture-review
+  drafts (`ENG#27`-`ENG#30`, `ENG#33`) need separate author authorization. `ENG#23`,
+  `ENG#25`, `ENG#31` and `ENG#32` are answered on engine master and need no filing.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -244,8 +245,8 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. `ENG#23` and `ENG#25` are answered on untagged master and wait on the next
-minor tag; `ENG#26` remains an unfiled draft. Minimal engine-focused reports with
+`GAP#F*`. `ENG#23`, `ENG#25`, `ENG#31` and `ENG#32` are answered on untagged master and
+wait on the next minor tag; `ENG#26` to `ENG#30` and `ENG#33` are unfiled drafts. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
@@ -255,7 +256,8 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#25` | BLOCKED | LOW | S | Answered, narrowed, on untagged master by `cadc962` (`Gamepads::vibrate`; not in v0.2.0); no filing needed. Waits on the next Labrador minor tag, then replace the native XInput transport and close the report. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit) |
 | `ENG#26` | DECISION | LOW | S | Rechecked 2026-10-29 at master `b96bad6`: `Registry` still cannot remove a name (`3a14f11` changed comments only). The ask narrows to forgetting the name, since `add(name, nullptr)` already empties a slot. Author authorization is needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit) |
 | `ENG#23` | BLOCKED | LOW | S | Answered on untagged engine master by `42bc478` (not in v0.2.0); filing no longer needed. Waits on the next Labrador minor tag, then delete `SettingsProbeActivationGuard` and its five uses and close the report. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit) |
-| `ENG#27`-`ENG#33` | OPEN | LOW | M | Seven reports owed by the architecture review and `HYG#49`: headless pad backend, removal without deprecation, typed `Scene` access, typed startup failure, unread JSON keys, word wrap, a contact's `const` other party. Recheck master, then draft each. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
+| `ENG#27`-`ENG#30`, `ENG#33` | DECISION | LOW | S | Drafted 2026-10-30 against master `47be5a3`, each fact-checked: headless pad backend, removal without deprecation, typed `Scene` access, typed startup failure, a contact's `const` other party. Author authorization is needed to file. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
+| `ENG#31`, `ENG#32` | BLOCKED | LOW | S | Answered on untagged master: `JsonValue::keys()` (`e166dcc`) and `Font::wrap` (`80024e5`), neither in v0.2.0; no filing needed. Waits on the next Labrador minor tag, then spend each as its report says. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
