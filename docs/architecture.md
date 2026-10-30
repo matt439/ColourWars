@@ -102,7 +102,7 @@ Where it does not hold yet:
   `match_bot_driver.h`. A world-query interface for the bots is part of
   `HYG#40`.
 - The root is not a layer of its own: `game_data.h` includes `objects/` headers,
-  `action_bindings.h` includes `states/menu_input_action.h`, and thirteen
+  `action_bindings.h` includes `states/menu_input_action.h`, and ten
   presentation sources include `states/ui_player_badge.h` (`HYG#38`).
 - Nothing enforces the contract headers' independence; an include check is
   part of `HYG#51`. The engine's `check_engine_includes` target only stops the

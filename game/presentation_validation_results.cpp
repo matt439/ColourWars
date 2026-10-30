@@ -1,67 +1,157 @@
 #include "game/pch.h"
+
+// Presentation validation for the Results page. The phase functions in
+// presentation_validation.cpp call these in diagnostic order.
 #include "game/presentation_validation.h"
-#include "game/build_info.h"
-#include "game/content_value.h"
-
-#include "engine/assets/json.h"
-#include "engine/render/text_encoding.h"
-#include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
-#include "game/input_slots.h"
 #include "game/menu_geometry.h"
-#include "game/player_profiles.h"
-#include "game/objects/player_badge.h"
-#include "game/resource_validation.h"
-#include "game/controls_text.h"
 #include "game/states/ui_player_badge.h"
-#include "game/text_wrap.h"
-#include "engine/render/sprite_geometry.h"
 
+#include <array>
 #include <cmath>
 #include <initializer_list>
-#include <limits>
-#include <optional>
-#include <sstream>
 #include <stdexcept>
-#include <string_view>
+#include <string>
 #include <utility>
 
 using namespace labrador;
 using namespace mattmath;
-using namespace content_value;
 using namespace presentation_read;
 using namespace presentation_validation;
 
-void Presentation::Validation::validate_results_text(const StageGeometry& stage_geometry)
+// Phase 2: the Results panel and its record lines. Leaves the panel, the score
+// bar's edges and the contribution heading in the geometry.
+void Presentation::Validation::validate_results_records(StageGeometry& geometry) const
 {
-	const EndMenuPresentation& end = this->presentation_.end_menu_;
 	const ResultsMenuPresentation& results = this->presentation_.results_menu_;
-	const auto& results_panel = stage_geometry.results_panel;
-	// Session selects one of these plain, unscaled labels for End's first
-	// action. Retain the same paper face, padding and row rule as its other
-	// actions: the face stops short of the shade at its right and bottom.
-	const RectangleF end_paper = menu_geometry::screen_paper(end.box_size);
-	const Vector2F end_top = end_paper.position();
-	const Vector2F end_bottom = end_top + end_paper.size() - Vector2F(end.art.shadow_offset);
-	for (const auto& field : { std::pair("rematch", &this->presentation_.menu_text_.end.rematch),
-		std::pair("play_series_again", &this->presentation_.menu_text_.end.play_series_again),
-		std::pair("replay_draw", &this->presentation_.menu_text_.end.replay_draw),
-		std::pair("next_round", &this->presentation_.menu_text_.end.next_round) })
+	const RectangleF results_panel = menu_geometry::screen_paper(results.box_size);
+	const RectangleF results_fill = menu_geometry::results_fill_box(results);
+	const float results_fill_right = results_fill.right();
+	const float results_fill_bottom = results_fill.bottom();
+	const RectangleF contribution_heading(results.contribution_position, fixed_menu_size(
+		"menu_text.results.contribution_heading", this->presentation_.menu_text_.results.contribution_heading,
+		results.contribution_font));
+	for (const std::wstring* label : { &this->presentation_.menu_text_.records.new_best, &this->presentation_.menu_text_.records.stage_best })
 	{
-		const std::string key = std::string("menu_text.end.") + field.first;
-		const Vector2F size = fixed_menu_size(key, *field.second, this->presentation_.menu_.item_font);
-		const Vector2F position = end.layout.position;
-		const Vector2F padding = end.art.focus_padding;
-		if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
-			position.x - padding.x < end_top.x || position.y - padding.y < end_top.y ||
-			position.x + size.x + padding.x > end_bottom.x ||
-			position.y + size.y + padding.y > end_bottom.y ||
-			size.y + padding.y * 2.0f > end.layout.spacing.y)
+		const Vector2F size = fixed_menu_size("menu_text.records", *label + L" 100.0%", results.contribution_font);
+		const RectangleF bounds(Vector2F(results_fill_right - size.x, results.record_y), size);
+		if (!results_panel.contains(bounds) || bounds.y < results_fill_bottom ||
+			bounds.bottom() > results.proceed_y || bounds.x <= contribution_heading.right())
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
-				" must fit its paper and row including focus padding.");
+			throw std::runtime_error(this->presentation_.source_path_ +
+				": results_menu.record_y and menu_text.records must fit the panel below the score bar, "
+				"above the prompt and to the right of the contribution heading.");
 		}
 	}
+	geometry.results_panel = results_panel;
+	geometry.results_fill_right = results_fill_right;
+	geometry.results_fill_bottom = results_fill_bottom;
+	geometry.contribution_heading = contribution_heading;
+}
+
+// Phase 7: every contribution row and award line.
+void Presentation::Validation::validate_results_contributions(const StageGeometry& stage_geometry) const
+{
+	const ResultsMenuPresentation& results = this->presentation_.results_menu_;
+	const auto& results_panel = stage_geometry.results_panel;
+	const auto& results_fill_right = stage_geometry.results_fill_right;
+	const auto& contribution_heading = stage_geometry.contribution_heading;
+	const std::string results_key = "menu_text.labels.roster_row at Results";
+	const Font& contribution_font = *render.font(render.resolve_sprite_font(results.contribution_font));
+	std::ignore = label_size(results_key, L"0123456789.%", results.contribution_font);
+	struct PercentageSuffix
+	{
+		std::wstring words;
+		std::array<const Glyph*, 6> glyphs = {};
+	};
+	std::array<PercentageSuffix, 1001> percentages;
+	for (size_t tenth = 0; tenth < percentages.size(); ++tenth)
+	{
+		PercentageSuffix& suffix = percentages[tenth];
+		// These are the legal one-decimal outputs, not rounded float samples:
+		// LevelEndInfo's formatter truncates std::to_wstring at one decimal.
+		suffix.words = std::to_wstring(tenth / 10) + L"." + std::to_wstring(tenth % 10) + L"%";
+		for (size_t character = 0; character < suffix.words.size(); ++character)
+		{
+			suffix.glyphs[character] = &contribution_font.drawn(static_cast<char32_t>(suffix.words[character]));
+		}
+	}
+	LabelRows results_rows;
+	for (int player = 0; player < 4; ++player)
+	{
+		const Vector2F position = results.contribution_position + Vector2F(0.0f,
+			results.contribution_spacing * static_cast<float>(player + 1));
+		for (int slot = 0; slot < (player == 0 ? input_slots::count : label_choices); ++slot)
+		{
+			const std::string key = label_key(slot) + " at Results";
+			RectangleF envelope;
+			bool first = true;
+			for (const std::wstring* team : { &this->presentation_.menu_text_.results.contribution_team_a,
+				&this->presentation_.menu_text_.results.contribution_team_b })
+			{
+				const std::string team_key = key + " with menu_text.results." +
+					(team == &this->presentation_.menu_text_.results.contribution_team_a ? "contribution_team_a" : "contribution_team_b");
+				const std::string where = this->presentation_.source_path_ + ": " + team_key;
+				const std::wstring prefix = label_words(player, slot) + *team;
+				std::ignore = label_size(team_key, prefix, results.contribution_font);
+				LabelPen prefix_pen;
+				append_label_text(prefix_pen, contribution_font, prefix, where);
+				for (const PercentageSuffix& suffix : percentages)
+				{
+					// Walk each fixed prefix once, then append each cached suffix in
+					// Font's sequential FLOAT order. Regrouped sums would change
+					// rounding for some finite bearings at an inclusive fit edge.
+					LabelPen pen = prefix_pen;
+					for (size_t character = 0; character < suffix.words.size(); ++character)
+					{
+						append_label_glyph(pen, *suffix.glyphs[character], suffix.words[character],
+							contribution_font.line_spacing(), where);
+					}
+					// Results explicitly uses zero shadow. Include each actual badge
+					// position: shorter lines can put its top above a taller line's.
+					const RectangleF text(position, pen.extent);
+					const RectangleF row = RectangleF::union_of(text, UiPlayerBadge::before(text, this->presentation_.player_identity_));
+					check_label_bounds(team_key, row, results_panel);
+					envelope = first ? row : RectangleF::union_of(envelope, row);
+					first = false;
+				}
+			}
+			results_rows[static_cast<size_t>(player)][static_cast<size_t>(slot)] = envelope;
+		}
+	}
+	check_roster_rows(results_rows, contribution_heading.bottom(), results.proceed_y,
+		"Results with menu_text.results.contribution_team_a and menu_text.results.contribution_team_b");
+	// An award sits at the right of a contribution row, right-aligned to the
+	// score bar. The page leaves out one that would meet its own row's text,
+	// so the rows above stay the only bound on how long a label may be.
+	for (const auto& [award, key] : { std::pair{ MatchAward::paint_laid, "award_paint_laid" },
+		std::pair{ MatchAward::recaptured, "award_recaptured" },
+		std::pair{ MatchAward::airtime, "award_airtime" },
+		std::pair{ MatchAward::splats, "award_splats" } })
+	{
+		const std::string award_key = std::string("menu_text.results.") + key;
+		const Vector2F size = fixed_menu_size(award_key,
+			this->presentation_.menu_text_.results.award_line(award), results.contribution_font);
+		for (int player = 0; player < 4; ++player)
+		{
+			const RectangleF bounds(Vector2F(results_fill_right - size.x,
+				results.contribution_position.y +
+					results.contribution_spacing * static_cast<float>(player + 1)), size);
+			if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+				!results_panel.contains(bounds) || bounds.bottom() > results.proceed_y)
+			{
+				throw std::runtime_error(this->presentation_.source_path_ + ": " + award_key +
+					" must fit the Results panel at the end of every contribution row, above the prompt.");
+			}
+		}
+	}
+}
+
+// Phase 9: Results' headings, Session lines and percentages.
+void Presentation::Validation::validate_results_lines(const StageGeometry& stage_geometry) const
+{
+	const ResultsMenuPresentation& results = this->presentation_.results_menu_;
+	const auto& results_panel = stage_geometry.results_panel;
 	// Results uses zero-offset transparent text shadows. Center the actual
 	// unscaled text bounds on the full-height paper, as its widgets do.
 	const auto check_results_centered = [&](const char* role, const std::wstring& text,
@@ -187,4 +277,5 @@ void Presentation::Validation::validate_results_text(const StageGeometry& stage_
 			this->presentation_.opening_.percent_font);
 		std::ignore = fixed_menu_size("menu_text.results.team_b_percentage at monitor", team_b,
 			this->presentation_.opening_.percent_font);
-	}}
+	}
+}

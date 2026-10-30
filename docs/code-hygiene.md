@@ -407,17 +407,70 @@ check stays at the top of `read_main_menu`, so its order and text are unchanged;
 D8 needed no move, since `read_main_menu` runs before `read_controls_settings`
 in `presentation.cpp`, so the controls reader only ever sees a checked value.
 
-Left: the order-preserving split by page (keep the nine phase functions in
-`Validation::validate` as the owners of order, move each phase's per-page blocks
-into per-page files).
+**The split by page, done 2026-10-31.** `Validation::validate` and its phase
+functions stay the only owners of diagnostic order: the eight that check pages
+now live in [presentation_validation.cpp](../game/presentation_validation.cpp)
+as lists of calls, and `validate_artwork_resources` (phase 4, assets, no page)
+keeps its walk in `presentation_validation_assets.cpp`. Each call is one page's
+block from that phase, moved verbatim into a private `Validation` member in its
+page's file and called where the block stood, so every input throws in the same
+order. A page spans phases, so a file holds several steps:
+
+- `presentation_validation_menu.cpp`: what every page shares and the pages with
+  no other file. The chrome (menu resources, brand, headings, prompts; phase 1),
+  Home's actions and Credits (1), the Title page and Home's subtitle (3), and
+  the status-line helpers `padded_back`, `check_status` and
+  `status_back_cards`, which measures the Options, Controls, Pad Buttons and
+  Sticks Back cards together before any status line, as before.
+- `presentation_validation_options.cpp`: actions (1), values and status lines
+  (3), palette timing (5), resolution values (8).
+- `presentation_validation_settings.cpp`: Controls and Sticks actions through
+  `check_controls_item` (1); toggles, Controls help, Keyboard Jump, Pad Buttons,
+  Profiles, Sticks help and each page's status lines, with `check_help_fit` (3);
+  stick readouts (6); the Sticks pad value (7); percentages and the Sticks
+  `shared` template (8).
+- `presentation_validation_pause.cpp`: Pause and practice Pause, Exit's Yes and
+  No, Display's Keep and Revert, and the four questions (1); Exit's heading and
+  Display's heading, countdown and paper (5); connection lines and missing
+  lists (6).
+- `presentation_validation_end.cpp`: actions and headings (1), Session labels
+  (9).
+- `presentation_validation_setup.cpp`: Mode and Player Count rows and the Join
+  heading (1); Team and Weapon headings and papers (5); bot labels, Join rows
+  and the Team and Weapon label rows, one player at a time across both pages
+  as before (6); Mode's duration templates (8).
+- `presentation_validation_stage.cpp`: briefing, records, then Random counter
+  and hints (2, either side of Results' step); heading (5); summaries and the
+  expanded card (8). The count checks stay in
+  `presentation_validation_catalog.cpp`.
+- `presentation_validation_results.cpp`: panel and records (2), contributions
+  and awards (7), headings, Session lines and percentages (9).
+
+`presentation_validation_roster.cpp` is gone; its blocks went to setup, pause,
+settings and results. The steps take the `SetupGeometry`, `StageGeometry` and
+`ControlsGeometry` they need; the phase-2 and phase-5 steps fill their fields
+of the geometry by reference, and the later Stage Select step reads the
+briefing rows the earlier one left. Three lambdas that several pages' steps
+shared became members (`check_controls_item`, `check_help_fit`, which now takes
+the help area, and `check_status` with its `padded_back`); one loop over the
+Mode duration templates and the Sticks `shared` template became two loops in
+the same order. The Results contribution rows, which phase 6 used to declare
+and phase 7 fill, are now a local of the Results step, so neither phase passes
+them. The four rewritten files and the four new ones include only
+what they use. Both presets build under `/W4 /WX`; in Release `menu_text`,
+`menu_presentation`, `weapon_catalog`, `story_audio`, `stage_selection`,
+`display_trial`, `practice_workshop`, `stick_settings`, `menu_navigation`,
+`series_stage_rule`, `user_stages`, `movement`, `turbulence_blockout` and
+`debug_console` passed. `HYG#37` is complete.
 
 ### Presentation includes and the content layer (`HYG#38`)
 
-Trim the 24-line include block copied into 13 `presentation*.cpp` files to what
-each uses, so `build_info.h` and the `states/` badge header appear only where
-referenced. Move the badge geometry the roster validator needs beside
-`PlayerIdentityPresentation`, and stop `presentation.h` dragging the menu
-records into gameplay objects.
+Trim the 24-line include block copied into eight `presentation*.cpp` files to
+what each uses (`HYG#37`'s page files already include only theirs), so
+`build_info.h` and the `states/` badge header appear only where referenced.
+Move the badge geometry the roster-label checks (setup and results) need
+beside `PlayerIdentityPresentation`, and stop `presentation.h` dragging the
+menu records into gameplay objects.
 
 ### An explicit match random stream (`HYG#39`)
 

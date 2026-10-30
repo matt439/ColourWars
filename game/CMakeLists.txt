@@ -36,10 +36,13 @@ add_library(colourwars_game STATIC
     presentation_validation.cpp
     presentation_validation_assets.cpp
     presentation_validation_catalog.cpp
+    presentation_validation_end.cpp
     presentation_validation_menu.cpp
     presentation_validation_metrics.cpp
+    presentation_validation_options.cpp
+    presentation_validation_pause.cpp
     presentation_validation_results.cpp
-    presentation_validation_roster.cpp
+    presentation_validation_settings.cpp
     presentation_validation_setup.cpp
     presentation_validation_stage.cpp
     presentation_validation_text.cpp
