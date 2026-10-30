@@ -415,14 +415,6 @@ bool Save::file_exists(const std::string& path)
 }
 void Save::load_save_file()
 {
-    this->load_save_data();
-    // Profiles may have changed underneath; every pad starts as itself.
-    this->worn_.fill(-1);
-    this->refresh_effective();
-}
-
-void Save::load_save_data()
-{
     const std::string path = save_file_path();
 
     if (!file_exists(path))

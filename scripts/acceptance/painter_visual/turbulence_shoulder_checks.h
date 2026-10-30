@@ -260,7 +260,7 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         capture_phase("before-descent"); drive(1320); capture_phase("mid-ramp-stop"); drive(1060); capture_phase("upper-flat-stop");
     }
     {
-        Save saved; GameData data; data.set_application(&app); data.set_save(&saved); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_shoulder_trial" }); data.set_stage_catalog(&stage_catalog);
+        Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_shoulder_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation); const auto& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size); StagePreview preview("explicit-shoulder-preview", box, &data); preview.set_stage("turbulence_shoulder_trial");
         const auto fullscreen = app.viewport_manager()->fullscreen_viewport(); const auto menu = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), fullscreen);

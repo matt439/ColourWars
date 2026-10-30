@@ -50,11 +50,11 @@ void MenuPage::update(float dt)
 	}
 	this->focus_motion_.observe(this->motion_focus());
 	this->focus_motion_.update(this->context()->active() ? dt : 0.0f,
-		this->save()->play_settings().reduce_effects);
+		this->settings_session()->play_settings().reduce_effects);
 	for (MenuFocusMotion* motion : this->selection_motion_)
 	{
 		motion->update(this->context()->active() ? dt : 0.0f,
-			this->save()->play_settings().reduce_effects);
+			this->settings_session()->play_settings().reduce_effects);
 	}
 	if (!this->context()->active()) { this->reset_menu_motion(); }
 	const bool leaving = this->menu_context()->music_exit_pending();
@@ -127,7 +127,7 @@ Activation MenuPage::activate_focus()
 
 void MenuPage::press_focus()
 {
-	if (!this->context()->active() || this->save()->play_settings().reduce_effects)
+	if (!this->context()->active() || this->settings_session()->play_settings().reduce_effects)
 	{
 		this->focus_motion_.reset();
 		return;
@@ -304,6 +304,10 @@ ResolutionManager* MenuPage::resolution_manager() const
 Save* MenuPage::save() const
 {
 	return this->data()->save();
+}
+SettingsSession* MenuPage::settings_session() const
+{
+	return this->data()->settings_session();
 }
 RenderResources* MenuPage::render_resources() const
 {

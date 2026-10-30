@@ -14,13 +14,13 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     replacement.validate_resources(*app.render_resources(), *app.audio_resources());
     const NestedSaveProfile isolated(output / "stick-readout-profile");
     const auto save_path = output / "stick-readout-profile/ColourWars/save_data.json";
-    Save preferences; PlaySettings play = preferences.play_settings();
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play = preferences_session.play_settings();
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     for (auto& stick : play.sticks) { stick = { 20, 50 }; }
     play.sticks[3] = { -1, -1 };
     require(tuning.input().movement_deadzone == 0.5f && play.aim_deadzone() == 0.5f,
         "The independent inherited-deadzone fixture needs the authored/default 50 percent cutoffs");
-    require(preferences.set_play_settings_and_save(play), "Cannot seed the private stick readout profile");
+    require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private stick readout profile");
     const auto bytes = [&]
     {
         std::ifstream file(save_path, std::ios::binary);
@@ -28,7 +28,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(4);
     require(settings.claim_input_slot(3), "Cannot specify the readout fixture's retained sparse roster");
@@ -46,7 +46,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto unchanged = [&]
     {
         require(bytes() == saved, "A stick readout refresh or pending preview wrote the save");
-        const PlaySettings& actual = preferences.play_settings();
+        const PlaySettings& actual = preferences_session.play_settings();
         for (size_t slot = 0; slot < play.sticks.size(); ++slot)
         {
             require(actual.sticks[slot].movement_deadzone == play.sticks[slot].movement_deadzone &&
@@ -165,11 +165,11 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     // ROAD35: paused previews sample a recovered device using the retained logical profile.
     {
         const SaveData saved_data = preferences.save_data();
-        const InputBindings effective_bindings = preferences.input_bindings();
+        const InputBindings effective_bindings = preferences_session.input_bindings();
         require(saved_data.records.stages().empty() && !saved_data.last_match,
             "The private recovery fixture starts without records or a remembered match");
         std::array<int, input_slots::pad_count> worn{};
-        for (int slot = 0; slot < input_slots::pad_count; ++slot) { worn[slot] = preferences.worn_profile(slot); }
+        for (int slot = 0; slot < input_slots::pad_count; ++slot) { worn[slot] = preferences_session.worn_profile(slot); }
         const auto same_play = [](const PlaySettings& a, const PlaySettings& b)
         {
             if (a.aim_sensitivity != b.aim_sensitivity || a.music_volume != b.music_volume || a.sfx_volume != b.sfx_volume ||
@@ -200,12 +200,12 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             unchanged(); const SaveData actual = preferences.save_data();
             require(actual.resolution == saved_data.resolution && actual.fullscreen == saved_data.fullscreen &&
                 actual.team_palette == saved_data.team_palette && same_play(actual.play, saved_data.play) &&
-                same_play(preferences.play_settings(), play) && actual.input_bindings == saved_data.input_bindings &&
-                preferences.input_bindings() == effective_bindings && actual.profiles == saved_data.profiles &&
+                same_play(preferences_session.play_settings(), play) && actual.input_bindings == saved_data.input_bindings &&
+                preferences_session.input_bindings() == effective_bindings && actual.profiles == saved_data.profiles &&
                 actual.records.stages().empty() && !actual.last_match,
                 "Recovery readouts preserve every active and stored private preference");
             for (int slot = 0; slot < input_slots::pad_count; ++slot)
-                { require(preferences.worn_profile(slot) == worn[slot], "Recovery readouts changed a worn profile"); }
+                { require(preferences_session.worn_profile(slot) == worn[slot], "Recovery readouts changed a worn profile"); }
             for (const auto& [actual_settings, expected] :
                 { std::pair{ &settings, &retained }, std::pair{ &recovered, &expected_settings } })
             {

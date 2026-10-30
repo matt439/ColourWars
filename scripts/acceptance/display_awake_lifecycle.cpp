@@ -106,8 +106,8 @@ namespace
         // destructor, including the final live GameLevel during app shutdown.
         StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();
         GameTuning tuning((content / "tuning.json").string().c_str()); Presentation presentation((content / "presentation.json").string().c_str());
-        Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
-        GameData data; data.set_save(&preferences); data.set_stage_catalog(&catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+        Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
+        GameData data; data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_stage_catalog(&catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
         MatchSetup settings; settings.set_player_count(1); settings.set_stage("movement_course"); settings.set_duration(60.0f);
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_screen_layout(ScreenLayout::one_player);
         settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer);

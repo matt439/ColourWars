@@ -56,7 +56,7 @@ void MainMenuCredits::init()
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.credits_box_size) / 2.0f,
 			look.credits_box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	// Keep every authored credit visible above Back and inside the paper face.
 	const RectangleF body = this->body_->bounds();

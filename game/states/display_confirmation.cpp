@@ -71,7 +71,7 @@ void MainMenuDisplayConfirmation::init()
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size),
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::options),
 		style.heading_font, Vector2F(0.0f, look.heading_y), this->render_resources(), look.art.ink);
 	this->heading_->set_position(Vector2F(

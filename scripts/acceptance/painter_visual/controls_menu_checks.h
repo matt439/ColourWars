@@ -27,14 +27,14 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(stream.good(), "Controls/audio did not create its isolated save");
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         false, TeamColourPair::blue_yellow), "Cannot seed the isolated Controls/audio save");
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     DebugDirector director(&tuning, &presentation);
@@ -386,10 +386,10 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     tap(Key::down); tap(Key::enter);
     require(play.aim_sensitivity == 3 && !play.view_shake && !play.aim_marker && play.reduce_effects &&
         play.music_volume == 0 && play.sfx_volume == 0, "Actual Controls/audio Apply lost pending settings");
-    Save reloaded; reloaded.load_save_file();
-    require(reloaded.play_settings().aim_sensitivity == 3 && !reloaded.play_settings().view_shake &&
-        !reloaded.play_settings().aim_marker && reloaded.play_settings().reduce_effects &&
-        reloaded.play_settings().music_volume == 0 && reloaded.play_settings().sfx_volume == 0 &&
+    Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+    require(reloaded_session.play_settings().aim_sensitivity == 3 && !reloaded_session.play_settings().view_shake &&
+        !reloaded_session.play_settings().aim_marker && reloaded_session.play_settings().reduce_effects &&
+        reloaded_session.play_settings().music_volume == 0 && reloaded_session.play_settings().sfx_volume == 0 &&
         reloaded.resolution() == ScreenResolution::s_1920_1080 &&
         reloaded.team_palette() == TeamColourPair::blue_yellow,
         "Controls/audio Apply failed reload or replaced display preferences");

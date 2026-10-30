@@ -48,7 +48,7 @@ The `game/` root mixes several concerns:
 | Concern | Files (examples) |
 |---|---|
 | Configuration and content checks | `tuning*`, `presentation*`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `drawable_text`, `text_wrap` |
-| Persistence | `save*`, `save_section.h`, `match_records`, `last_match_setup`, `player_profiles`, `play_settings.h` |
+| Persistence | `save*`, `save_section.h`, `settings_session`, `match_records`, `last_match_setup`, `player_profiles`, `play_settings.h` |
 | Input | `action_bindings`, `input_bindings`, `input_slots.h`, `player_control.h`, `controls_text` |
 | Rumble and display | `rumble*`, `rumble_xinput.cpp`, `display_awake` |
 | Sound | `sound_groups`, `sound_reference.h` |
@@ -141,13 +141,21 @@ deprecation release is report `ENG#28` in the
 
 ## Services: `GameData`
 
-[game/game_data.h](../game/game_data.h) is a bag of six borrowed pointers:
-the engine `Application`, this game's `Save`, the `StageCatalog`, the tuning,
-the presentation and the developer `DebugDirector` (inert in Release, and
-`DebugDirector::inert()` when unset). Everything else that looks like a
-service (`ThreadPool`, `Gamepads`, `RenderResources`, ...) is a forward to the
-`Application`. `wWinMain` in [game/main.cpp](../game/main.cpp) declares all six
-before the `Application`, so they outlive every state that borrows them.
+[game/game_data.h](../game/game_data.h) is a bag of seven borrowed pointers:
+the engine `Application`, this game's `Save`, its `SettingsSession`, the
+`StageCatalog`, the tuning, the presentation and the developer `DebugDirector`
+(inert in Release, and `DebugDirector::inert()` when unset). Everything else
+that looks like a service (`ThreadPool`, `Gamepads`, `RenderResources`, ...) is
+a forward to the `Application`. `wWinMain` in [game/main.cpp](../game/main.cpp)
+declares all seven before the `Application`, so they outlive every state that
+borrows them.
+
+The `Save` ([game/save.h](../game/save.h)) is what the file holds, each pad slot
+as itself. The [`SettingsSession`](../game/settings_session.h) borrows it and
+owns what belongs to the run: which pad wears which player profile, and the
+settings in effect, the save's with each worn profile laid over its pad. Every
+reader of play settings or input bindings reads the session's, and the Controls
+pages write through it, so a worn pad's edits reach its profile.
 
 [game/stage_catalog.h](../game/stage_catalog.h) owns the ordered stage list
 and the level registry and is their only writer: the manifest's `"level"` kind

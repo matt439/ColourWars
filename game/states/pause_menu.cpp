@@ -283,7 +283,7 @@ void PauseMenuInitial::init()
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
 		&style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);
@@ -462,7 +462,7 @@ void PauseMenuConfirmation::init()
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
 		&style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);

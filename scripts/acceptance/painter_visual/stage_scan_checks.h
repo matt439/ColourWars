@@ -22,7 +22,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const NestedSaveProfile isolated(output / "stage-scan-profile");
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();
     catalog.add(read_stage_definition(path_to_utf8(content / "levels/movement_course.json"), "movement_course"));
@@ -44,7 +44,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         folder.latest_scan().refused.size() == 1 && stages.size() == 2 && stages.back().user,
         "One broken optional stage prevented the good stage from joining");
     const std::string first_refusal = folder.latest_scan().refused[0];
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation); data.set_stage_catalog(&catalog);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);

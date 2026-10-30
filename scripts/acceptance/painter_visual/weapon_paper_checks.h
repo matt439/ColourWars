@@ -35,9 +35,9 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         require(actual.name == expected.name && actual.frame == expected.frame && actual.paint_frame == expected.paint_frame && actual.supply_strip == expected.supply_strip &&
             original.main_menu().weapon_descriptions[i] == descriptions[i], "Shipped Weapon paper catalog or description drifted from its independent literals");
     }
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app; MenuPage* active = nullptr;
     struct ClearWeaponPaper { StateContext& stack; Presentation& presentation; Presentation original; ~ClearWeaponPaper() { this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; } } clear{ stack, presentation, original };

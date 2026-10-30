@@ -110,7 +110,7 @@ void DebugDirectorImpl::sync_background_audio(bool active)
 	}
 	else if (active && this->background_audio_muted_)
 	{
-		sound_groups::apply(audio, this->data_->save()->play_settings());
+		sound_groups::apply(audio, this->data_->settings_session()->play_settings());
 		this->background_audio_muted_ = false;
 	}
 }

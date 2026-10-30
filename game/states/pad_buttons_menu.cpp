@@ -10,7 +10,7 @@ PadButtonsMenu::PadButtonsMenu(MenuContext* context, int player) : SettingsPanel
 void PadButtonsMenu::init()
 {
 	this->input()->reset_actions();
-	this->selection_ = this->save()->input_bindings();
+	this->selection_ = this->settings_session()->input_bindings();
 	if (input_slots::is_pad(this->opening_slot())) { this->slot_ = this->opening_slot(); }
 	else
 	{
@@ -87,10 +87,10 @@ void PadButtonsMenu::refresh_values()
 {
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
-		if (!this->edited_[slot]) { this->selection_.pads[slot] = this->save()->input_bindings().pads[slot]; }
+		if (!this->edited_[slot]) { this->selection_.pads[slot] = this->settings_session()->input_bindings().pads[slot]; }
 	}
 	// A pad wearing a profile edits the profile, so the row names it.
-	const int worn = this->save()->worn_profile(this->slot_);
+	const int worn = this->settings_session()->worn_profile(this->slot_);
 	this->pad_->set_value(this->text().worn_profile_label(this->text().device_label(this->slot_),
 		worn < 0 ? std::string_view() : std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)));
 	const PadProfile& profile = this->pending_profile();
@@ -139,12 +139,12 @@ void PadButtonsMenu::reset_pending()
 
 void PadButtonsMenu::apply_settings()
 {
-	InputBindings applied = this->save()->input_bindings();
+	InputBindings applied = this->settings_session()->input_bindings();
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		if (this->edited_[slot]) { applied.pads[slot] = this->selection_.pads[slot]; }
 	}
-	const bool saved = this->save()->set_input_bindings_and_save(applied);
+	const bool saved = this->settings_session()->set_input_bindings_and_save(applied);
 	if (saved) { this->edited_.fill(false); }
 	this->refresh_values();
 	this->play_wave(this->confirm_sound_);

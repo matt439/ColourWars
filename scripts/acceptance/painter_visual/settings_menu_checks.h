@@ -26,18 +26,18 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         require(stream.good(), "Interactive settings did not create its isolated save");
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     // Since ROAD#21, play_settings() is the effective view over the stored
     // settings, so the silent seed goes through the stored path; the live view
     // below only toggles what the page reads this run.
-    PlaySettings silent = preferences.play_settings(); silent.music_volume = silent.sfx_volume = 0;
-    require(preferences.set_play_settings_and_save(silent), "Could not seed isolated silent play settings");
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    PlaySettings silent = preferences_session.play_settings(); silent.music_volume = silent.sfx_volume = 0;
+    require(preferences_session.set_play_settings_and_save(silent), "Could not seed isolated silent play settings");
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         false, TeamColourPair::blue_yellow), "Could not seed isolated display settings");
     GameData data;
     data.set_application(&app);
-    data.set_save(&preferences);
+    data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
@@ -462,9 +462,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     require(preferences.resolution() == ScreenResolution::s_1280_720 &&
         preferences.team_palette() == TeamColourPair::random && !preferences.fullscreen() && !app.fullscreen(),
         "Actual Options Apply lost its selected display preferences");
-    Save restored; restored.load_save_file();
+    Save restored; SettingsSession restored_session(restored); restored_session.load_save_file();
     require(restored.resolution() == preferences.resolution() && restored.team_palette() == preferences.team_palette() &&
-        restored.fullscreen() == preferences.fullscreen() && restored.play_settings().music_volume == 0,
+        restored.fullscreen() == preferences.fullscreen() && restored_session.play_settings().music_volume == 0,
         "Actual Options Apply failed to preserve the isolated settings after reload");
     const Frame applied = capture("options", "applied", options_panel, row_label(apply_row));
     contrast(applied, text_bounds(presentation.prompt_bar().font,

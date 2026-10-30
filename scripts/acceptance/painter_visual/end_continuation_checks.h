@@ -36,9 +36,9 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         scores[index] = cases[index].session.score_string(original.menu_text().results); results_text[index] = cases[index].session.result_string(original.menu_text().results);
     }
     const NestedSaveProfile profile(output / "end-continuation-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed End continuation's private Play preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed End continuation's private Play preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "end-continuation-profile/ColourWars/save_data.json", std::ios::binary);
@@ -46,7 +46,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.set_best_of(3); settings.set_duration(73.0f);
@@ -75,7 +75,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
                 cases[index].session.score_string(original.menu_text().results) == scores[index] && cases[index].session.result_string(original.menu_text().results) == results_text[index],
                 "End continuation presentation or actions changed the Session ledger");
         }
-        const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& play = preferences_session.play_settings();
         require(settings.player_count() == 2 && settings.best_of() == 3 && settings.duration() == 73.0f &&
             settings.stage() == "movement_course" && settings.screen_layout() == ScreenLayout::two_player &&
             players.size() == 2 && players[0].num == input_slots::keyboard_and_mouse && players[1].num == -1 &&

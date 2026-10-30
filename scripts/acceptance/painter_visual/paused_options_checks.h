@@ -159,7 +159,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     const std::filesystem::path blocked(save_path.wstring() + L".tmp");
     const HWND window = static_cast<HWND>(app.window());
     const SettingsProbeActivationGuard activation(window);
-    Save preferences; PlaySettings expected; expected.aim_sensitivity = 5;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings expected; expected.aim_sensitivity = 5;
     expected.music_volume = expected.sfx_volume = 0; expected.view_shake = expected.aim_marker = false;
     for (size_t slot = 0; slot < expected.sticks.size(); ++slot)
     {
@@ -168,7 +168,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     }
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     StateContext& stack = app;
     struct Cleanup
@@ -195,7 +195,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()); };
     const auto preserved = [&]
     {
-        const auto& p = preferences.play_settings();
+        const auto& p = preferences_session.play_settings();
         require(p.aim_sensitivity == expected.aim_sensitivity && p.music_volume == expected.music_volume &&
             p.sfx_volume == expected.sfx_volume && p.view_shake == expected.view_shake && p.aim_marker == expected.aim_marker &&
             p.reduce_effects == expected.reduce_effects, "Paused Options replaced shared play preferences");
@@ -249,7 +249,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     {
         stack.clear(); presentation = original; players = count; owner = device = count == 1 ? keyboard : 3;
         resize({ 1280, 720 }); app.set_fullscreen(false); hide();
-        const_cast<PlaySettings&>(preferences.play_settings()) = expected;
+        const_cast<PlaySettings&>(preferences_session.play_settings()) = expected;
         require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720, false, TeamColourPair::blue_yellow), "Cannot seed paused Options profile");
         for (Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::escape, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {};
@@ -319,8 +319,8 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     go(0); hold(device, GamepadButton::dpad_down, true); tick(); row = 1;
     const Frame moving = resume_stack_frame(app); hold(device, GamepadButton::dpad_down, false); tick();
     const Frame moving_again = resume_stack_frame(app); require(moving.pixels == moving_again.pixels, "Draw advanced paused Options focus motion");
-    expected.reduce_effects = true; const_cast<PlaySettings&>(preferences.play_settings()).reduce_effects = true;
-    compare("immediate-reduction"); expected.reduce_effects = false; const_cast<PlaySettings&>(preferences.play_settings()).reduce_effects = false;
+    expected.reduce_effects = true; const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = true;
+    compare("immediate-reduction"); expected.reduce_effects = false; const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = false;
     tick(settled); const Frame resting = compare("motion-settled");
     require(moving.pixels != resting.pixels, "Paused Options focus had no authored motion response");
     const auto delta = foreground_delta_bounds(moving, resting);
@@ -391,10 +391,10 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         for (int i = 0; i < 3; ++i) { tap(GamepadButton::dpad_down); } tap(GamepadButton::a); expected.view_shake = !expected.view_shake; preserved();
         tap(GamepadButton::b); require(stack.depth() == 4 && options.pixels == resume_stack_frame(app).pixels, "Controls return lost retained Options focus");
         compare("controls-sticks-merged"); check_world();
-        expected.reduce_effects = true; const_cast<PlaySettings&>(preferences.play_settings()).reduce_effects = true;
+        expected.reduce_effects = true; const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = true;
         go(2); const Frame quiet = compare("reduced", true); tick(0.0f); tick(-0.25f); tick(settled);
         require(quiet.pixels == resume_stack_frame(app).pixels, "Reduced Options retained motion");
-        expected.reduce_effects = false; const_cast<PlaySettings&>(preferences.play_settings()).reduce_effects = false;
+        expected.reduce_effects = false; const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = false;
         stack.notify_activation(false); tick(2.0f); stack.notify_activation(true); tick(); compare("activation-return"); check_world();
         // Only the deliberate typed Pause Resume begins its countdown.
         tap(GamepadButton::b); require(stack.depth() == 3 && game->resume_remaining() == 0.0f, "Options Back resumed match");
@@ -428,7 +428,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         "Failed paused Keep lost active candidate or durable old preferences"); status = original.menu_text().status.options_save_failed; warning = true;
     resize({1280,720}); compare("keep-save-failed", true); check_world();
     require(std::filesystem::remove(blocked), "Cannot remove controlled paused Keep refusal"); tap(GamepadButton::a); status = original.menu_text().status.options_saved; warning = false;
-    compare("keep-save-recovered", true); Save loaded; loaded.load_save_file();
+    compare("keep-save-recovered", true); Save loaded; SettingsSession loaded_session(loaded); loaded_session.load_save_file();
     require(loaded.resolution() == ScreenResolution::s_1920_1080 && loaded.team_palette() == TeamColourPair::random, "Paused Keep recovery failed reload"); preserved(); check_world();
     // Public developer hooks reject match replacement and unwind only this child.
     tap(GamepadButton::b); MenuInput direct_input(app.gamepads(), app.keyboard(), &tuning); MenuContext direct_context(&data, &direct_input, &plan);

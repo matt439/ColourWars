@@ -214,7 +214,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
     }
     // StagePreview builds the shipped, unpainted initial ferry independently.
-    Save preview_save; GameData data; data.set_application(&app); data.set_save(&preview_save); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "turbulence_ferry_trial" }); data.set_stage_catalog(&stage_catalog);
+    Save preview_save; SettingsSession preview_save_session(preview_save); GameData data; data.set_application(&app); data.set_save(&preview_save); data.set_settings_session(&preview_save_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "turbulence_ferry_trial" }); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation); StagePreview preview("ferry-preview", preview_box, &data);
     preview.set_stage("turbulence_ferry_trial");
     const LevelObjectBuilder preview_builder(app.render_resources(), app.audio_resources(), &preferences,

@@ -423,10 +423,10 @@ int wmain(int argc, wchar_t** argv)
         StageList stages;
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
-        Save saved_preferences;
-        saved_preferences.load_save_file();
-        require(!saved_preferences.play_settings().aim_marker, "Isolated visual save did not preserve aim_marker=false");
-        PlaySettings preferences = saved_preferences.play_settings();
+        Save saved_preferences; SettingsSession saved_preferences_session(saved_preferences);
+        saved_preferences_session.load_save_file();
+        require(!saved_preferences_session.play_settings().aim_marker, "Isolated visual save did not preserve aim_marker=false");
+        PlaySettings preferences = saved_preferences_session.play_settings();
         preferences.music_volume = 0;
         preferences.sfx_volume = 0;
         // Existing comparisons isolate their own visual feature. The marker

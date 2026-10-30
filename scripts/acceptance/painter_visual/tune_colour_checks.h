@@ -96,7 +96,7 @@ void tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages;
     for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence" })
@@ -104,7 +104,7 @@ void tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const auto* info = levels.get(name);
         stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
     }
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     DebugDirectorImpl& impl = *director.impl();

@@ -11,6 +11,7 @@
 #include "game/tuning.h"
 #include "game/states/game_states.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/simulation.h"
 #include "game/sound_groups.h"
 #include "game/stage_catalog.h"
@@ -41,6 +42,8 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 
 		Save save;
 		save.load_save_file();
+		// This run's settings: the save's, with any worn profiles laid over them.
+		SettingsSession settings_session(save);
 
 		ApplicationOptions options;
 		options.window_class_name = L"ColourWarsWindowClass";
@@ -102,7 +105,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// own: a broken one is refused with one stderr line and startup goes on.
 		user_stages.attach(path_from_utf8(user_stage_directory()),
 			UserStageChecks{ &tuning, &presentation, app.render_resources(),
-				app.audio_resources(), &save.play_settings() },
+				app.audio_resources(), &settings_session.play_settings() },
 			app.audio_resources(), &stage_catalog);
 		user_stages.scan();
 
@@ -111,15 +114,16 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		phase = FailurePhase::validation;
 		validate_shell_content(tuning, presentation, app.render_resources(),
 			app.audio_resources(), stage_catalog.level_infos(), stage_catalog.stages(),
-			save.play_settings());
+			settings_session.play_settings());
 		// The saved Music and SFX volumes are group volumes from here on;
 		// the Controls page pushes a change through the same call.
 		sound_groups::assign(*app.audio_resources(), tuning, presentation,
 			stage_catalog.level_infos(), stage_catalog.stages());
-		sound_groups::apply(*app.audio_resources(), save.play_settings());
+		sound_groups::apply(*app.audio_resources(), settings_session.play_settings());
 
 		data.set_application(&app);
 		data.set_save(&save);
+		data.set_settings_session(&settings_session);
 		data.set_stage_catalog(&stage_catalog);
 		data.set_tuning(&tuning);
 		data.set_presentation(&presentation);

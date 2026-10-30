@@ -133,7 +133,7 @@ void MainMenuPlayerCount::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
 			look.setup_box_size),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -232,7 +232,7 @@ void MainMenuJoin::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
 			look.setup_box_size),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->paper_.get());
@@ -258,7 +258,7 @@ void MainMenuJoin::init()
 			"join_accent_" + std::to_string(player),
 			RectangleF(row.x - style.focus_padding.x, row.y,
 				std::max(0.0f, style.focus_padding.x), row.height),
-			this->render_resources(), &style, &motion->motion, &this->save()->play_settings());
+			this->render_resources(), &style, &motion->motion, &this->settings_session()->play_settings());
 		motion->accent->set_colour(this->setup_art_.focus_ink);
 		this->texture_container_->add_child(motion->accent.get());
 		this->join_motion_.push_back(std::move(motion));
@@ -303,7 +303,7 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		JoinMotionRow& motion = *this->join_motion_[player];
 		// A reserved pad's reconnect note takes the place of its profile's name.
 		const int worn = players[player].controller == PlayerController::human && connected ?
-			this->save()->worn_profile(players[player].num) : -1;
+			this->settings_session()->worn_profile(players[player].num) : -1;
 		const std::wstring label = this->text().worn_profile_label(
 			player_label(*this->level_settings(), player, this->text()), worn < 0 ? std::string_view() :
 			std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)) +
@@ -400,7 +400,7 @@ void RosterSetupPage::take_profile_boost(int slot)
 {
 	// A seat starts from the Boost its pad's profile carries; Weapon Select
 	// can still change it, and the match carries the choice back.
-	const int worn = this->save()->worn_profile(slot);
+	const int worn = this->settings_session()->worn_profile(slot);
 	const int player = this->level_settings()->player_index_for_slot(slot);
 	if (worn >= 0 && player >= 0)
 	{
@@ -477,8 +477,8 @@ void MainMenuJoin::update_page(float /*dt*/)
 		else if (inputs[slot].action == MenuInputAction::shuffle && player >= 0 && input_slots::is_pad(slot))
 		{
 			// A joined pad steps through the profiles it may wear, then none.
-			const int next = this->save()->next_wearable_profile(slot, 1);
-			if (next != this->save()->worn_profile(slot) && this->save()->wear_profile(slot, next))
+			const int next = this->settings_session()->next_wearable_profile(slot, 1);
+			if (next != this->settings_session()->worn_profile(slot) && this->settings_session()->wear_profile(slot, next))
 			{
 				this->take_profile_boost(slot);
 				roster_changed = true;

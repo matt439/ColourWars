@@ -3,6 +3,7 @@
 #include "game/input_slots.h"
 #include "game/last_match_setup.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/match_setup.h"
 #include "scripts/acceptance/support/probe.h"
 
@@ -59,15 +60,15 @@ void check_handicap_remembered_setup(const std::filesystem::path& save_path)
     const LastMatchSetup captured = LastMatchSetup::capture(original);
     require(captured.players[0].handicap == 0 && captured.players[1].handicap == 2 &&
         captured.players[2].handicap == 1, "Capture lost a seat's handicap");
-    Save save;
+    Save save; SettingsSession save_session(save);
     require(save.remember_match_setup_and_save(captured), "Cannot persist a handicapped setup");
     const auto document = labrador::read_json_file(save_path.string().c_str());
     const auto players = document.root().object("last_match").array("players");
     require(!players.at(0).has("handicap") && players.at(1).integer("handicap") == 2 &&
         players.at(2).integer("handicap") == 1,
         "A seat without a handicap wrote one, or a handicapped seat lost it");
-    Save reloaded;
-    reloaded.load_save_file();
+    Save reloaded; SettingsSession reloaded_session(reloaded);
+    reloaded_session.load_save_file();
     require(reloaded.last_match_setup().has_value(), "Handicapped setup did not reload");
     const MatchSetup restored = reloaded.last_match_setup()->restore(handicap_stages);
     for (int seat = 0; seat < 3; ++seat)
@@ -85,9 +86,9 @@ void check_handicap_remembered_setup(const std::filesystem::path& save_path)
         write_section(save_path, std::string("{\"players\":[{\"team\":\"a\",\"weapon\":\"roller\",\"handicap\":") + bad +
             "},{\"team\":\"b\",\"weapon\":\"bucket\",\"controller\":\"bot\",\"difficulty\":\"hard\",\"handicap\":2}]," +
             "\"stage\":\"arena\",\"layout\":\"one_player\",\"best_of\":3}");
-        Save recovered;
-        recovered.load_save_file();
-        require(recovered.last_match_setup() && recovered.play_settings().music_volume == 41,
+        Save recovered; SettingsSession recovered_session(recovered);
+        recovered_session.load_save_file();
+        require(recovered.last_match_setup() && recovered_session.play_settings().music_volume == 41,
             "A malformed handicap discarded the setup or independent preferences");
         const LastMatchSetup& setup = *recovered.last_match_setup();
         require(setup.players[0].handicap == 0 && setup.players[1].handicap == 2 &&
@@ -96,8 +97,8 @@ void check_handicap_remembered_setup(const std::filesystem::path& save_path)
     }
     write_section(save_path, "{\"players\":[{\"team\":\"a\",\"weapon\":\"roller\"},{\"team\":\"b\",\"weapon\":\"bucket\"}],"
         "\"stage\":\"arena\",\"layout\":\"two_player\",\"best_of\":1}");
-    Save legacy;
-    legacy.load_save_file();
+    Save legacy; SettingsSession legacy_session(legacy);
+    legacy_session.load_save_file();
     require(legacy.last_match_setup() && legacy.last_match_setup()->players[0].handicap == 0 &&
         legacy.last_match_setup()->players[1].handicap == 0, "A save from before handicaps gained one");
 

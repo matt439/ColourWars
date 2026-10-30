@@ -97,7 +97,7 @@ Constructors establish usable objects. `Session` rejects unsupported series
 lengths; builders supply complete object dependencies; tuning and resource
 names are checked before gameplay. Borrowed services and tuning must remain
 valid for every object using them. In [main.cpp](../game/main.cpp), Save, the
-stage catalog, tuning, presentation and GameData are declared before
+settings session, the stage catalog, tuning, presentation and GameData are declared before
 Application, so Application's states are destroyed first. `unique_ptr` members
 clean up owned subobjects if later construction throws.
 

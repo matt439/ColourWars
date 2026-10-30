@@ -141,7 +141,7 @@ void EndMenuInitial::init()
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size), this->render_resources(),
 		&style, &look.art, &this->focus_, this->restart_.get(),
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->texture_container_ = std::make_unique<UiContainer>(

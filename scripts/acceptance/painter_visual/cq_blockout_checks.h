@@ -221,7 +221,7 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
             0, level->player(0).player_num(), level->player(0).rectangle().position(), camera, crop, true);
     }
     {
-        Save saved; GameData data; data.set_application(&app); data.set_save(&saved);
+        Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session);
         const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
         const StageSelectPresentation& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size);

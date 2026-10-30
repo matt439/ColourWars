@@ -413,7 +413,7 @@ void MainMenuTeamSelect::init()
 			look.team_select_sheet,
 			this->team_select_frames_[0],
 			RectangleF(this->calculate_widget_position(2, i + 2), this->look().team_select.size),
-			this->render_resources(), &widgets->motion, &this->save()->play_settings());
+			this->render_resources(), &widgets->motion, &this->settings_session()->play_settings());
 
 		auto move = Vector2F(this->look().team_select.size.x, 0.0f);
 
@@ -423,7 +423,7 @@ void MainMenuTeamSelect::init()
 			this->team_select_frames_[1],
 			RectangleF(widgets->player_a->rectangle().position() + move,
 				this->look().team_select.size),
-			this->render_resources(), &widgets->motion, &this->save()->play_settings());
+			this->render_resources(), &widgets->motion, &this->settings_session()->play_settings());
 
 		widgets->player_b = std::make_unique<MenuChoiceIcon>(
 			name + "_b",
@@ -431,7 +431,7 @@ void MainMenuTeamSelect::init()
 			this->team_select_frames_[2],
 			RectangleF(widgets->player_center->rectangle().position() + move,
 				this->look().team_select.size),
-			this->render_resources(), &widgets->motion, &this->save()->play_settings());
+			this->render_resources(), &widgets->motion, &this->settings_session()->play_settings());
 		RectangleF row = RectangleF::union_of(widgets->player->bounds(), widgets->badge->bounds());
 		row = RectangleF::union_of(row, widgets->player_a->bounds());
 		row = RectangleF::union_of(row, widgets->player_center->bounds());

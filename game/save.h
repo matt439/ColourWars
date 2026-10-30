@@ -44,6 +44,8 @@ public:
 	static constexpr int version = 5;
 
 	Save() = default;
+	// Reads the file, or a legacy one, or keeps the defaults. A SettingsSession
+	// borrowing this Save rereads through its own load_save_file instead.
 	void load_save_file();
 	// A failed write leaves the active preferences intact and returns false.
 	// Interactive callers report that outcome in their own settings screen.
@@ -55,48 +57,43 @@ public:
 	labrador::ScreenResolution resolution() const;
 	bool fullscreen() const;
 	TeamColourPair team_palette() const;
-	// The effective preferences: a pad slot wearing a profile shows that
-	// profile's sticks, rumble, comfort switches and buttons in place of its
-	// own. The reference stays valid, and current, for the Save's lifetime.
-	const PlaySettings& play_settings() const;
-	// Takes effective preferences. A worn slot's per-pad values go to its
-	// profile; the slot's own values stay as they were.
-	bool set_play_settings_and_save(const PlaySettings& settings);
-	const InputBindings& input_bindings() const;
-	// Like play preferences, a valid choice becomes active before the write;
-	// failure keeps it active and leaves the previous disk file intact. A
-	// worn slot's buttons go to its profile.
-	bool set_input_bindings_and_save(const InputBindings& bindings);
 
-	// Player profiles (ROAD#21). Which pad wears which profile is for this
-	// run only and is never written: a pad starts each launch as itself.
+	// What the file holds: each pad slot's own play settings and buttons,
+	// whatever it wears. The settings in effect, with worn profiles laid over
+	// them, are SettingsSession's; read those unless the file is the point.
+	const PlaySettings& saved_play_settings() const;
+	const InputBindings& saved_input_bindings() const;
+	// Throws invalid_argument outside the supported ranges; otherwise returns
+	// `settings` with each stick deadzone normalized.
+	static PlaySettings checked_play_settings(const PlaySettings& settings);
+	// The setters without "_and_save" change memory only and are for
+	// SettingsSession, which writes once it has made every change.
+	// Throws as checked_play_settings and stores the checked value.
+	void set_play_settings(const PlaySettings& settings);
+	// Throws as InputBindings::validate.
+	void set_input_bindings(const InputBindings& bindings);
+
+	// Player profiles (ROAD#21). Which pad wears which profile is the run's,
+	// and SettingsSession's; the Save holds only the list.
 	const PlayerProfiles& profiles() const;
-	// The profile `slot` wears, or -1. Non-pad slots wear none.
-	int worn_profile(int slot) const;
-	// The pad slot wearing `profile`, or -1.
-	int profile_wearer(int profile) const;
-	// -1 takes the profile off. One profile is worn by one pad at a time, so
-	// a profile another pad wears is refused (false); so are non-pad slots
-	// and unknown profiles. Returns true when the slot now wears `profile`.
-	bool wear_profile(int slot, int profile);
-	// The next profile `slot` may wear after its current one, stepping by +1
-	// or -1 through "none" (-1) and skipping profiles other pads wear.
-	int next_wearable_profile(int slot, int step) const;
-	// Adds a profile named `name` carrying `slot`'s effective settings (the
-	// defaults for a non-pad slot). Throws invalid_argument for a bad or
-	// taken name, or when full. Returns the new index; the write's outcome
-	// goes to `saved`, and the profile stays for this run either way.
-	int add_profile_and_save(const std::string& name, int slot, bool& saved);
+	// Normalizes the name. Throws invalid_argument for a bad or taken name,
+	// or when full, before changing anything. Returns the new index; the
+	// write's outcome goes to `saved`, and the profile stays either way.
+	int add_profile_and_save(PlayerProfile profile, bool& saved);
 	// Throws invalid_argument for an unknown index or a bad or taken name.
 	bool rename_profile_and_save(int profile, const std::string& name);
 	// Throws invalid_argument outside handicaps::valid or for an unknown index.
 	bool set_profile_boost_and_save(int profile, int boost);
-	// The pad wearing it goes back to its own settings; later wearers'
-	// indices shift down with the list. Throws for an unknown index.
+	void set_profile_boost(int profile, int boost);
+	// A profile's stick, rumble and comfort settings, and its buttons. Throw
+	// invalid_argument for an unknown index.
+	void set_profile_controls(int profile, const StickSettings& sticks, bool rumble,
+		const SeatComfort& comfort);
+	void set_profile_buttons(int profile, const PadProfile& buttons);
+	// Later profiles' indices shift down. Throws for an unknown index. While
+	// a SettingsSession borrows this Save, delete through it so the pads
+	// wearing profiles follow the shift.
 	bool delete_profile_and_save(int profile);
-	// Copies each worn pad's chosen Boost into its profile, writing only
-	// when one changed. `boosts` is per pad slot; -1 leaves a slot alone.
-	bool remember_profile_boosts_and_save(const std::array<int, input_slots::pad_count>& boosts);
 	const MatchRecords& records() const;
 	// Counts one finished match on `stage` and writes the save. A failed
 	// write keeps the record for this run and reports it on stderr only.
@@ -108,13 +105,7 @@ public:
 	bool remember_match_setup_and_save(const LastMatchSetup& setup);
 private:
 	SaveData save_data_ = SaveData();
-	std::array<int, input_slots::pad_count> worn_{ -1, -1, -1, -1 };
-	// save_data_ with the worn profiles laid over their slots. Rebuilt in
-	// place, never replaced, because matches and pages borrow them.
-	PlaySettings play_;
-	InputBindings bindings_;
-	void refresh_effective();
-	void load_save_data();
+	PlayerProfile& profile_at(int profile);
 	SaveData load_from_json(const char* json_path) const;
 	bool write_save_file(const SaveData& data) const;
 

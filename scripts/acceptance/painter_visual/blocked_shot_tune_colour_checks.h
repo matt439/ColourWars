@@ -295,20 +295,20 @@ void blocked_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& lev
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
     play.aim_sensitivity = 4; play.view_shake = false; play.aim_marker = true; play.reduce_effects = true;
     play.sticks[2].movement_deadzone = 25; play.sticks[2].aim_deadzone = 70;
-    require(preferences.set_play_settings_and_save(play) && preferences.set_display_settings_and_save(
+    require(preferences_session.set_play_settings_and_save(play) && preferences.set_display_settings_and_save(
         ScreenResolution::s_1280_720, false, TeamColourPair::blue_orange), "Cannot seed private blocked tune preferences");
     const auto save_path = root / "profile/ColourWars/save_data.json";
     const std::string saved_preferences = tune_colour_bytes(save_path);
     const auto preference_values = [&]
     {
-        const PlaySettings& active = preferences.play_settings();
+        const PlaySettings& active = preferences_session.play_settings();
         std::vector<int> values{ static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
             static_cast<int>(preferences.team_palette()), active.aim_sensitivity, active.music_volume,
             active.sfx_volume, active.view_shake ? 1 : 0, active.aim_marker ? 1 : 0,
-            active.reduce_effects ? 1 : 0, static_cast<int>(preferences.input_bindings().keyboard_jump) };
+            active.reduce_effects ? 1 : 0, static_cast<int>(preferences_session.input_bindings().keyboard_jump) };
         for (const StickSettings& stick : active.sticks)
         { values.push_back(stick.movement_deadzone); values.push_back(stick.aim_deadzone); }
         return values;
@@ -320,7 +320,7 @@ void blocked_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& lev
         const auto* info = levels.get(name);
         stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
     }
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
     impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");

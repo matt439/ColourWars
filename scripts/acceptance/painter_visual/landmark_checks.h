@@ -244,10 +244,10 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
     { const auto path = landmark_omission_copy(content, output, stage); auto info = std::make_unique<LevelLoadedInfo>(path.string().c_str()); info->validate(); omitted.add(stage.name, std::move(info)); }
     LevelBuilder without(app.viewport_manager(), app.render_resources(), app.audio_resources(), &preferences, &omitted, &tuning,
         &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner());
-    Save saved; PlaySettings preview_preferences = saved.play_settings(); preview_preferences.reduce_effects = false;
+    Save saved; SettingsSession saved_session(saved); PlaySettings preview_preferences = saved_session.play_settings(); preview_preferences.reduce_effects = false;
     preview_preferences.music_volume = preview_preferences.sfx_volume = 0;
-    require(saved.set_play_settings_and_save(preview_preferences), "Cannot isolate actual StagePreview preferences");
-    GameData data; data.set_application(&app); data.set_save(&saved); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    require(saved_session.set_play_settings_and_save(preview_preferences), "Cannot isolate actual StagePreview preferences");
+    GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     for (const auto& stage : landmark_stages)
     {
         const auto* info = levels.get(stage.name); const TeamColour colours{};

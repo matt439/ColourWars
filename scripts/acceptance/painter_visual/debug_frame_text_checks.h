@@ -12,7 +12,7 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
         ~RestoreLayout() { this->viewports.set_layout(this->layout); }
     } restore_layout{ *app.viewport_manager(), app.viewport_manager()->layout() };
     LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
-        &data.save()->play_settings(), data.level_infos(), data.tuning(), &presentation,
+        &data.settings_session()->play_settings(), data.level_infos(), data.tuning(), &presentation,
         app.resolution_manager(), app.thread_pool(), app.partitioner());
     auto& look = const_cast<DebugOverlayPresentation&>(presentation.debug_overlay());
     const auto font = app.render_resources()->resolve_sprite_font(look.font);

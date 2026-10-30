@@ -5,12 +5,12 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     // The series below finishes rounds, which write stage records.
     const NestedSaveProfile profile(output / "team-setup-profile");
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
     MatchSetup settings;
@@ -430,7 +430,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(course != nullptr && course->versus_played == 2 && course->draws == 2 &&
         !course->best_win_percentage && course->practice_played == 0,
         "Actual series rounds were not recorded once each on their stage");
-    Save reloaded; reloaded.load_save_file();
+    Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
     const StageRecord* saved = reloaded.records().find("movement_course");
     require(saved != nullptr && saved->versus_played == 2 && saved->draws == 2,
         "Actual series records did not reach the isolated save");

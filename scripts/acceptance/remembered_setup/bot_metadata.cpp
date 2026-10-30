@@ -3,6 +3,7 @@
 #include "game/input_slots.h"
 #include "game/last_match_setup.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/match_setup.h"
 #include "scripts/acceptance/support/probe.h"
 
@@ -82,7 +83,7 @@ namespace
                     require(original.input_roster_complete(), "Mixed fixture did not complete its human claims");
                     const LastMatchSetup captured = LastMatchSetup::capture(original);
                     captured.validate();
-                    Save save;
+                    Save save; SettingsSession save_session(save);
                     require(save.remember_match_setup_and_save(captured), "Cannot persist mixed remembered setup");
                     const auto document = labrador::read_json_file(path.string().c_str());
                     const auto section = document.root().object("last_match");
@@ -90,8 +91,8 @@ namespace
                         section.array("players").size() == static_cast<size_t>(count) &&
                         section.integer("best_of") == (count == 1 ? 1 : 5),
                         "Saved mixed roster confused participants, human views or versus series");
-                    Save reloaded;
-                    reloaded.load_save_file();
+                    Save reloaded; SettingsSession reloaded_session(reloaded);
+                    reloaded_session.load_save_file();
                     require(reloaded.last_match_setup().has_value(), "Mixed saved roster did not reload");
                     const auto restored = reloaded.last_match_setup()->restore(stages);
                     require(restored.player_count() == count && restored.human_count() == static_cast<int>(humans) &&
@@ -134,8 +135,8 @@ namespace
             write(path, "{\"players\":[{\"team\":\"a\",\"weapon\":\"roller\"," + host +
                 "},{\"team\":\"b\",\"weapon\":\"bucket\"," + second +
                 "}],\"stage\":\"arena\",\"layout\":\"four_player\",\"best_of\":3}");
-            Save save; save.load_save_file();
-            require(save.last_match_setup() && save.play_settings().music_volume == 37,
+            Save save; SettingsSession save_session(save); save_session.load_save_file();
+            require(save.last_match_setup() && save_session.play_settings().music_volume == 37,
                 "Malformed bot metadata discarded setup or independent preferences");
             return *save.last_match_setup();
         };
@@ -162,7 +163,7 @@ namespace
         require(missing_difficulty.players[1].controller == PlayerController::bot &&
             missing_difficulty.players[1].difficulty == BotDifficulty::normal && missing_difficulty.layout == layouts[0],
             "Missing bot difficulty did not default independently to Normal");
-        Save save; save.load_save_file();
+        Save save; SettingsSession save_session(save); save_session.load_save_file();
         const std::string before = bytes(path);
         const auto invalid = [&](LastMatchSetup candidate)
         {

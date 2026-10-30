@@ -341,7 +341,7 @@ void MainMenuWeaponSelect::init()
 			this->render_resources(),
 			this->look().weapon_select.unselected, &this->menu_style(),
 			this->weapon_select_art_.sheet, this->weapon_select_art_.fill_frame,
-			&widgets->motion, &this->save()->play_settings(), &this->icon_art_);
+			&widgets->motion, &this->settings_session()->play_settings(), &this->icon_art_);
 		widgets->weapon_icon->set_sprite_frame(
 			choice.frame, choice.paint_frame, choice.supply_strip);
 		widgets->weapon_icon->set_paint_colour(preview_colours.team_colour(

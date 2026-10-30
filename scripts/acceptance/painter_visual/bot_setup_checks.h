@@ -8,14 +8,14 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     {
         const auto profile_root = output / "host-profile-boost-profile";
         const NestedSaveProfile host_profile(profile_root);
-        Save host_preferences;
+        Save host_preferences; SettingsSession host_preferences_session(host_preferences);
         PlaySettings quiet;
         quiet.music_volume = quiet.sfx_volume = 0; quiet.reduce_effects = true;
-        require(host_preferences.set_play_settings_and_save(quiet), "ROAD34 could not seed private quiet preferences");
+        require(host_preferences_session.set_play_settings_and_save(quiet), "ROAD34 could not seed private quiet preferences");
         bool saved = false;
-        const int host_id = host_preferences.add_profile_and_save("HOST", 0, saved);
+        const int host_id = host_preferences_session.add_profile_and_save("HOST", 0, saved);
         require(saved, "ROAD34 could not create its private host profile");
-        const int guest_id = host_preferences.add_profile_and_save("GUEST", 3, saved);
+        const int guest_id = host_preferences_session.add_profile_and_save("GUEST", 3, saved);
         require(saved && host_preferences.set_profile_boost_and_save(guest_id, 2),
             "ROAD34 could not create its private guest profile");
         const auto save_path = profile_root / "ColourWars/save_data.json";
@@ -28,7 +28,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
             return text;
         };
         StageList host_stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-        GameData host_data; host_data.set_application(&app); host_data.set_save(&host_preferences);
+        GameData host_data; host_data.set_application(&app); host_data.set_save(&host_preferences); host_data.set_settings_session(&host_preferences_session);
         const StageCatalog host_stage_catalog = acceptance::catalog_of(levels, host_stages, { "movement_course" }); host_data.set_stage_catalog(&host_stage_catalog);
         host_data.set_tuning(&tuning); host_data.set_presentation(&presentation);
         MenuInput host_input(app.gamepads(), app.keyboard(), &tuning);
@@ -89,8 +89,8 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         const auto host_source_unchanged = [&]
         {
             return profile_bytes() == before_host_ui && host_preferences.profiles() == profiles_before_host_ui &&
-                host_preferences.play_settings().music_volume == 0 && host_preferences.play_settings().sfx_volume == 0 &&
-                host_preferences.play_settings().reduce_effects;
+                host_preferences_session.play_settings().music_volume == 0 && host_preferences_session.play_settings().sfx_volume == 0 &&
+                host_preferences_session.play_settings().reduce_effects;
         };
         const auto host_observe = [&](const char* phase, int expected_host, int expected_guest)
         {
@@ -133,13 +133,13 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
             for (const Key key : host_keys) app.keyboard()->on_key_up(key);
             painter_scripted_pads::states = {};
             for (int pad = 0; pad < input_slots::pad_count; ++pad)
-                require(host_preferences.wear_profile(pad, -1), "ROAD34 could not clear a private profile wearer");
+                require(host_preferences_session.wear_profile(pad, -1), "ROAD34 could not clear a private profile wearer");
             require(host_preferences.set_profile_boost_and_save(host_id, boost), "ROAD34 could not seed a private Boost");
-            if (wearing) require(host_preferences.wear_profile(slot, host_id), "ROAD34 could not wear the host profile");
+            if (wearing) require(host_preferences_session.wear_profile(slot, host_id), "ROAD34 could not wear the host profile");
             else if (slot == input_slots::keyboard_and_mouse)
-                require(host_preferences.wear_profile(0, host_id), "ROAD34 could not seed its unrelated-pad control");
+                require(host_preferences_session.wear_profile(0, host_id), "ROAD34 could not seed its unrelated-pad control");
             current_host = slot; current_guest = slot == 3 ? 0 : 3; current_profile_boost = boost;
-            if (guest_wearing) require(host_preferences.wear_profile(current_guest, guest_id), "ROAD34 could not wear the guest profile");
+            if (guest_wearing) require(host_preferences_session.wear_profile(current_guest, guest_id), "ROAD34 could not wear the guest profile");
             if (input_slots::is_pad(slot)) painter_scripted_pads::states[static_cast<size_t>(slot)].connected = true;
             if (count == 2) painter_scripted_pads::states[static_cast<size_t>(current_guest)].connected = true;
             app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
@@ -200,18 +200,18 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         // Save API boundary only: no match is built or started by this matrix.
         PlayerProfiles expected_profiles = profiles_before_host_ui;
         expected_profiles.list[static_cast<size_t>(host_id)].boost = 2;
-        const InputBindings before_bindings = host_preferences.input_bindings();
+        const InputBindings before_bindings = host_preferences_session.input_bindings();
         std::array<int, input_slots::pad_count> carry{ -1, -1, -1, -1 };
         carry[0] = host_settings.player_handicap(0); carry[3] = host_settings.player_handicap(1);
-        require(host_preferences.remember_profile_boosts_and_save(carry), "ROAD34 private Save API carry-back failed");
+        require(host_preferences_session.remember_profile_boosts_and_save(carry), "ROAD34 private Save API carry-back failed");
         require(host_preferences.profiles() == expected_profiles && profile_bytes() != before_host_ui,
             "ROAD34 Save API carry-back changed more than the selected profile Boost or did not persist it");
-        Save reloaded; reloaded.load_save_file(); // The verified private file already exists; no legacy fallback is read.
-        require(reloaded.profiles() == expected_profiles && reloaded.input_bindings() == before_bindings &&
-            reloaded.play_settings().music_volume == 0 && reloaded.play_settings().sfx_volume == 0 &&
-            reloaded.play_settings().reduce_effects, "ROAD34 private carry-back did not reopen with its original settings");
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); // The verified private file already exists; no legacy fallback is read.
+        require(reloaded.profiles() == expected_profiles && reloaded_session.input_bindings() == before_bindings &&
+            reloaded_session.play_settings().music_volume == 0 && reloaded_session.play_settings().sfx_volume == 0 &&
+            reloaded_session.play_settings().reduce_effects, "ROAD34 private carry-back did not reopen with its original settings");
         for (int pad = 0; pad < input_slots::pad_count; ++pad)
-            require(reloaded.worn_profile(pad) == -1, "ROAD34 runtime profile wearing leaked into the save");
+            require(reloaded_session.worn_profile(pad) == -1, "ROAD34 runtime profile wearing leaked into the save");
         host_records << "save-api-carry-back,0,2,1,2,2,2,2,0,1\n";
         host_records.flush(); require(host_records.good(), "ROAD34 could not retain its Save API boundary observation");
         std::cout << "PASS host profile Boost: 16 actual Player Count/Join/Weapon paths, Pad0/Pad3 Off/+1/+2 and 1/2P, "
@@ -220,11 +220,11 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     }
 
     const NestedSaveProfile profile(output / "bot-setup-profile");
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);

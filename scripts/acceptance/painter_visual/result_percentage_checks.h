@@ -48,9 +48,9 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     std::array<std::vector<int>, 3> frozen_ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { frozen_ledgers[index] = ledger(cases[index].session); }
     const NestedSaveProfile profile(output / "result-percentage-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed result percentage's private preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed result percentage's private preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "result-percentage-profile/ColourWars/save_data.json", std::ios::binary);
@@ -58,7 +58,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_duration(73.0f); settings.set_stage("movement_course");
@@ -77,7 +77,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     const ResultCase* active = nullptr;
     const auto saved_unchanged = [&]
     {
-        const auto& play = preferences.play_settings();
+        const auto& play = preferences_session.play_settings();
         require(play.music_volume == 0 && play.sfx_volume == 0 && play.aim_sensitivity == 4 && !play.view_shake &&
             play.aim_marker && play.reduce_effects && preferences.resolution() == ScreenResolution::s_1920_1080 &&
             !preferences.fullscreen() && preferences.team_palette() == TeamColourPair::random &&
@@ -430,7 +430,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
 
     // Simulation here is intentional fixture setup, independently counted from
     // StateContext. No GameLevel or save/record callback owns these three Levels.
-    const PlaySettings level_play = preferences.play_settings();
+    const PlaySettings level_play = preferences_session.play_settings();
     LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(), &level_play,
         &levels, &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner());
     std::array<std::unique_ptr<Level>, 3> monitor_levels;

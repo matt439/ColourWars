@@ -13,11 +13,11 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     ItemLabels defaults = original.menu_text().items;
     for (size_t index = 0; index < legacy.size(); ++index) { defaults[index] = legacy[index]; }
     defaults[static_cast<size_t>(MenuItem::restore_defaults)] = L"Restore defaults";
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
     MatchSetup settings;

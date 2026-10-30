@@ -2708,8 +2708,9 @@ falls back for the rest, and an entry with no usable name, or a name already
 taken, is dropped.
 
 A pad wears at most one profile and a profile is worn by at most one pad. While
-a pad wears one, the pad-slot settings every reader already uses (`Save::play_settings`,
-`Save::input_bindings`) show the profile's values for that slot. Pad sticks and
+a pad wears one, the pad-slot settings every reader already uses (now
+`SettingsSession::play_settings` and `input_bindings`, which `HYG#48` moved out of
+`Save`) show the profile's values for that slot. Pad sticks and
 Pad buttons edit the worn profile rather than the slot, and their Pad row
 names it. The slot's own settings stay saved underneath and come back when the
 profile comes off. Wearing lasts for the run and is not saved, because a pad
@@ -3635,7 +3636,7 @@ untouched pad behaves exactly as before: A / LT Jump, RT Shoot, Start Pause.
 
 One control does one action per pad: a profile with an unbound action, an
 alternate equal to its primary, or a control used twice is invalid, and
-`Save::set_input_bindings_and_save` refuses it before mutation. Movement, aim and
+`SettingsSession::set_input_bindings_and_save` refuses it before mutation. Movement, aim and
 the stick-down drop stay on the sticks. Menus keep A/B/X/Start and the intro skip
 keeps A/B/Start whatever the profile says, as Jump's face choice did before. A
 trigger keeps its strict live threshold: the shoot threshold when it shoots, the

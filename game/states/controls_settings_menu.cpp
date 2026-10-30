@@ -21,7 +21,7 @@ ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int player) :
 void ControlsSettingsMenu::init()
 {
 	this->input()->reset_actions();
-	this->selection_ = this->save()->play_settings();
+	this->selection_ = this->settings_session()->play_settings();
 	const ControlsSettingsPresentation& look = this->panel_look();
 	const MenuStyle style = this->panel_style();
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
@@ -150,7 +150,7 @@ void ControlsSettingsMenu::refresh_help()
 	// MenuPage captured this copy when it was constructed. Refresh only the
 	// effective keys, retaining the page's authored template, font and geometry.
 	this->controls_->set_text(controls_text::controls_help(this->text().help.controls,
-		this->save()->input_bindings()));
+		this->settings_session()->input_bindings()));
 	this->controls_->set_scale(1.0f);
 	const RectangleF bounds = this->controls_->bounds();
 	this->controls_->set_scale(std::min({ 1.0f, this->controls_limit_.width / bounds.width,
@@ -190,13 +190,13 @@ void ControlsSettingsMenu::refresh_values()
 void ControlsSettingsMenu::apply_settings()
 {
 	// The child commits pad profiles independently of these shared preferences.
-	this->selection_.sticks = this->save()->play_settings().sticks;
-	this->selection_.pad_rumble = this->save()->play_settings().pad_rumble;
-	this->selection_.pad_comfort = this->save()->play_settings().pad_comfort;
-	const bool saved = this->save()->set_play_settings_and_save(this->selection_);
+	this->selection_.sticks = this->settings_session()->play_settings().sticks;
+	this->selection_.pad_rumble = this->settings_session()->play_settings().pad_rumble;
+	this->selection_.pad_comfort = this->settings_session()->play_settings().pad_comfort;
+	const bool saved = this->settings_session()->set_play_settings_and_save(this->selection_);
 	// The settings in memory changed whether or not the file did. The groups
 	// reach every playing and paused voice, so a music fade carries on.
-	sound_groups::apply(*this->data()->audio_resources(), this->save()->play_settings());
+	sound_groups::apply(*this->data()->audio_resources(), this->settings_session()->play_settings());
 	this->play_wave(this->confirm_sound_);
 	this->set_status(saved ? this->text().status.controls_saved :
 		this->text().status.active_save_failed,

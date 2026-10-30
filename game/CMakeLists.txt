@@ -48,6 +48,7 @@ add_library(colourwars_game STATIC
     save_profiles.cpp
     series_stage_rule.cpp
     session.cpp
+    settings_session.cpp
     sound_groups.cpp
     stage_catalog.cpp
     stage_loading.cpp

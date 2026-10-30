@@ -30,7 +30,7 @@ namespace
 	{
 		validate_shell_content(tuning, presentation, context.render_resources(),
 			context.audio_resources(), *context.level_infos(), *context.stages(),
-			context.save()->play_settings());
+			context.settings_session()->play_settings());
 	}
 }
 

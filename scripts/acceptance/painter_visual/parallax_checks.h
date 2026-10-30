@@ -351,7 +351,7 @@ void parallax_preview(Application& app, Registry<LevelLoadedInfo>& levels, const
     const std::filesystem::path& output, size_t& rendered)
 {
     const NestedSaveProfile profile(output / "parallax-preview-profile");
-    Save saved; GameData data; data.set_application(&app); data.set_save(&saved); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog);
+    Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     StagePreview preview("parallax-static-preview", { 960, 270, 960, 540 }, &data); preview.set_stage(stage.name);
     Renderer& renderer = *app.renderer();

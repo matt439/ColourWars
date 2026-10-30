@@ -9,11 +9,11 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const NestedSaveProfile isolated(profile);
     const auto path = profile / "ColourWars/save_data.json";
     const auto blocked = std::filesystem::path(path.wstring() + L".tmp");
-    Save preferences; PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
-    require(preferences.set_play_settings_and_save(quiet), "Cannot quiet private Pad Jump preferences");
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
+    require(preferences_session.set_play_settings_and_save(quiet), "Cannot quiet private Pad Jump preferences");
     InputBindings initial; initial.keyboard_jump = Key::j;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
 #if COLOURWARS_DEV_TOOLS
@@ -148,16 +148,16 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         {
             for (int choice = 0; choice < static_cast<int>(choices.size()); ++choice)
             {
-                require(preferences.set_input_bindings_and_save(initial), "Cannot reset private per-slot page choices");
+                require(preferences_session.set_input_bindings_and_save(initial), "Cannot reset private per-slot page choices");
                 open(slot); const std::string saved = bytes(); tap(Key::down); move(Key::right, choice);
-                require(jump_of(page->pending_profile()) == choices[choice] && preferences.input_bindings() == initial && bytes() == saved,
+                require(jump_of(page->pending_profile()) == choices[choice] && preferences_session.input_bindings() == initial && bytes() == saved,
                     "Pad Buttons selector applied before Apply or used the roster index");
                 copy_check(choice == 0 ? "entry" : "pending", slot, PadControl::a, choices[choice], copy.pending_status);
                 move(Key::down, 7); tap(Key::enter);
                 InputBindings expected = initial; expected.pads[slot][PadAction::jump].primary = choices[choice];
-                Save reloaded; reloaded.load_save_file(); ++reloads;
-                require(preferences.input_bindings() == expected && reloaded.input_bindings() == expected &&
-                    reloaded.play_settings().music_volume == 0 && reloaded.play_settings().sfx_volume == 0,
+                Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); ++reloads;
+                require(preferences_session.input_bindings() == expected && reloaded_session.input_bindings() == expected &&
+                    reloaded_session.play_settings().music_volume == 0 && reloaded_session.play_settings().sfx_volume == 0,
                     "Actual Pad Jump Apply/reload changed another slot, keyboard or audio");
                 copy_check("applied", slot, choices[choice], choices[choice], copy.saved_status);
                 tap(Key::escape); require(stack.depth() == 1, "Pad Jump Back did not close only its own page");
@@ -166,45 +166,45 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     }
     // Two pending slots survive selector changes; unrelated active choices
     // changed while this page was open are merged from the latest save.
-    require(preferences.set_input_bindings_and_save(initial), "Cannot prepare Pad Jump merge fixture"); open(-1);
+    require(preferences_session.set_input_bindings_and_save(initial), "Cannot prepare Pad Jump merge fixture"); open(-1);
     tap(Key::down); move(Key::right, 2); tap(Key::up); tap(Key::right); tap(Key::down); tap(Key::right);
-    InputBindings external = preferences.input_bindings(); external.keyboard_jump = Key::k;
+    InputBindings external = preferences_session.input_bindings(); external.keyboard_jump = Key::k;
     external.pads[3][PadAction::jump].primary = PadControl::y;
-    require(preferences.set_input_bindings_and_save(external), "Cannot seed independent newer binding preferences");
+    require(preferences_session.set_input_bindings_and_save(external), "Cannot seed independent newer binding preferences");
     move(Key::down, 7); tap(Key::enter);
-    require(preferences.input_bindings().keyboard_jump == Key::k && preferences.input_bindings() ==
+    require(preferences_session.input_bindings().keyboard_jump == Key::k && preferences_session.input_bindings() ==
         with_jumps(external, { PadControl::x, PadControl::b, PadControl::a, PadControl::y }),
         "Pad Buttons Apply replaced a newer keyboard/unedited slot or lost an edited slot");
     tap(Key::up); tap(Key::enter); // Reset selected Pad2 only, still pending.
-    require(page->pending_profile() == PadProfile{} && jump_of(preferences.input_bindings().pads[1]) == PadControl::b,
+    require(page->pending_profile() == PadProfile{} && jump_of(preferences_session.input_bindings().pads[1]) == PadControl::b,
         "Reset applied immediately instead of proposing the default profile for the selected pad");
     const std::string before_back = bytes(); tap(Key::escape);
-    require(bytes() == before_back && jump_of(preferences.input_bindings().pads[1]) == PadControl::b,
+    require(bytes() == before_back && jump_of(preferences_session.input_bindings().pads[1]) == PadControl::b,
         "Back persisted a reset proposal");
     // Shoot left from RT skips LT, which Jump already uses, and lands on RB.
-    require(preferences.set_input_bindings_and_save(initial), "Cannot prepare Pad Buttons conflict fixture"); open(0);
+    require(preferences_session.set_input_bindings_and_save(initial), "Cannot prepare Pad Buttons conflict fixture"); open(0);
     move(Key::down, 3); tap(Key::left);
     require(page->pending_profile()[PadAction::shoot].primary == PadControl::right_shoulder &&
-        page->pending_profile()[PadAction::jump] == PadProfile{}[PadAction::jump] && preferences.input_bindings() == initial,
+        page->pending_profile()[PadAction::jump] == PadProfile{}[PadAction::jump] && preferences_session.input_bindings() == initial,
         "Choosing a control in use did not skip it, or changed Jump or the save before Apply");
     copy_check("conflict", 0, PadControl::a, PadControl::a, copy.conflict_status, true);
     move(Key::down, 5); tap(Key::enter);
     {
-        Save reloaded; reloaded.load_save_file(); ++reloads;
-        require(reloaded.input_bindings().pads[0][PadAction::shoot].primary == PadControl::right_shoulder &&
-            reloaded.input_bindings().pads[1] == PadProfile{}, "Rebound Shoot did not apply and reload for only its pad");
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); ++reloads;
+        require(reloaded_session.input_bindings().pads[0][PadAction::shoot].primary == PadControl::right_shoulder &&
+            reloaded_session.input_bindings().pads[1] == PadProfile{}, "Rebound Shoot did not apply and reload for only its pad");
     }
     tap(Key::escape);
     // One controlled file refusal, followed by the same actual Apply widget.
-    require(preferences.set_input_bindings_and_save(initial), "Cannot prepare Pad Jump failed write"); open(-1);
+    require(preferences_session.set_input_bindings_and_save(initial), "Cannot prepare Pad Jump failed write"); open(-1);
     tap(Key::down); tap(Key::right); move(Key::down, 7); const std::string old = bytes();
     require(std::filesystem::create_directory(blocked), "Cannot block private Pad Jump temporary write");
-    tap(Key::enter); require(jump_of(preferences.input_bindings().pads[0]) == PadControl::b && bytes() == old,
+    tap(Key::enter); require(jump_of(preferences_session.input_bindings().pads[0]) == PadControl::b && bytes() == old,
         "Failed Pad Buttons write rolled back active choice or changed old JSON");
     copy_check("failed-write", 0, PadControl::b, PadControl::b, original.menu_text().status.active_save_failed, true);
     require(std::filesystem::remove(blocked), "Cannot clear private Pad Jump temporary-write refusal");
-    tap(Key::enter); Save retry; retry.load_save_file(); ++reloads;
-    require(jump_of(retry.input_bindings().pads[0]) == PadControl::b, "Actual Pad Buttons Apply could not retry persistence");
+    tap(Key::enter); Save retry; SettingsSession retry_session(retry); retry_session.load_save_file(); ++reloads;
+    require(jump_of(retry_session.input_bindings().pads[0]) == PadControl::b, "Actual Pad Buttons Apply could not retry persistence");
     tap(Key::escape);
     // The real Controls entry opens its third action, with parent edits pending.
     stack.clear(); painter_scripted_pads::states = {}; neutral(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
@@ -216,14 +216,14 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     tap(Key::escape);
     tick(); // The resumed parent must observe neutral before fresh direction input.
     move(Key::down, 7); tap(Key::enter);
-    require(preferences.play_settings().music_volume == 10 && jump_of(preferences.input_bindings().pads[0]) == PadControl::b,
+    require(preferences_session.play_settings().music_volume == 10 && jump_of(preferences_session.input_bindings().pads[0]) == PadControl::b,
         "Parent Controls Apply lost pending audio or independently applied pad choices");
     presentation = original;
 
     // A nonowner cannot drive a connected owner's page. Default selection
     // follows the physical owner even when an earlier slot is connected.
-    InputBindings owned_preferences = preferences.input_bindings(); owned_preferences.pads[3][PadAction::jump].primary = PadControl::b;
-    require(preferences.set_input_bindings_and_save(owned_preferences), "Cannot prepare selected-B menu Back control");
+    InputBindings owned_preferences = preferences_session.input_bindings(); owned_preferences.pads[3][PadAction::jump].primary = PadControl::b;
+    require(preferences_session.set_input_bindings_and_save(owned_preferences), "Cannot prepare selected-B menu Back control");
     open(1, 3); painter_scripted_pads::states[3].connected = true; tick(); tick();
     const int owned_slot = page->selected_slot(); const PadProfile owned_pending = page->pending_profile(); const std::string owned_bytes = bytes();
     tap_pad(1, GamepadButton::dpad_down); tap_pad(1, GamepadButton::dpad_right); tap_pad(1, GamepadButton::a);
@@ -233,10 +233,10 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     tap_pad(3, GamepadButton::b); require(stack.depth() == 1, "Menu B stopped being Back after pad Jump preferences changed");
 
     int paused_reminders = 0, mixed_reminders = 0;
-    require(preferences.set_play_settings_and_save(quiet), "Cannot quiet private Pad Jump reminder matches");
+    require(preferences_session.set_play_settings_and_save(quiet), "Cannot quiet private Pad Jump reminder matches");
     for (Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
     {
-        require(preferences.set_input_bindings_and_save(initial), "Cannot reset paused Pad Jump bindings");
+        require(preferences_session.set_input_bindings_and_save(initial), "Cannot reset paused Pad Jump bindings");
         size_to(size); stack.clear(); stack.notify_activation(true); painter_scripted_pads::states = {};
         painter_scripted_pads::states[3].connected = true; neutral();
         settings.set_stage("movement_course"); settings.set_duration(60.0f); settings.set_player_count(1);
@@ -264,8 +264,8 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 #endif
         tap_pad(3, GamepadButton::dpad_down); move_pad(3, GamepadButton::dpad_right, 2);
         move_pad(3, GamepadButton::dpad_down, 7); tap_pad(3, GamepadButton::a); tick();
-        require(jump_of(preferences.input_bindings().pads[3]) == PadControl::x &&
-            jump_of(preferences.input_bindings().pads[0]) == PadControl::a,
+        require(jump_of(preferences_session.input_bindings().pads[3]) == PadControl::x &&
+            jump_of(preferences_session.input_bindings().pads[0]) == PadControl::a,
             "Paused Pad Jump defaulted to a player/view index instead of physical owner slot3");
         const Frame changed = draw_game();
         const RectangleF card = game->level().gamepad_controls_card_bounds();
@@ -277,7 +277,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const RectangleI crop = countdown_crop_bounds(card);
         require(foreground_crop(before, crop, 0).pixels != foreground_crop(changed, crop, 0).pixels &&
             changed.pixels == draw_game().pixels, "Paused pad mapping produced no native text delta or unstable redraw");
-        require(preferences.set_input_bindings_and_save(initial), "Cannot reverse only the private paused pad mapping");
+        require(preferences_session.set_input_bindings_and_save(initial), "Cannot reverse only the private paused pad mapping");
         const Frame reversed = draw_game();
         const RectangleI reversed_crop = countdown_crop_bounds(game->level().gamepad_controls_card_bounds());
         require(foreground_crop(reversed, reversed_crop, 0).pixels == foreground_crop(before, reversed_crop, 0).pixels &&
@@ -294,15 +294,15 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         ++paused_reminders; stack.clear();
 
         const InputBindings mixed = with_jumps(initial, choices);
-        require(preferences.set_input_bindings_and_save(mixed), "Cannot seed mixed four-pad reminder choices");
+        require(preferences_session.set_input_bindings_and_save(mixed), "Cannot seed mixed four-pad reminder choices");
         struct RestorePadReminderLayout
         {
             ViewportManager& viewports; ScreenLayout layout;
             ~RestorePadReminderLayout() { this->viewports.set_layout(this->layout); }
         } layout{ *app.viewport_manager(), app.viewport_manager()->layout() };
         LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
-            &preferences.play_settings(), &levels, &tuning, &presentation,
-            app.resolution_manager(), app.thread_pool(), app.partitioner(), &preferences.input_bindings());
+            &preferences_session.play_settings(), &levels, &tuning, &presentation,
+            app.resolution_manager(), app.thread_pool(), app.partitioner(), &preferences_session.input_bindings());
         auto level = build(app, builder, 4, TeamColourPair::blue_yellow);
         const Frame four = render(*level, *app.renderer());
         for (const std::wstring_view line : { L"Pad 4: Y / LT Jump, RT Shoot, Start Pause", L"Pad 2: B / LT Jump, RT Shoot, Start Pause",
@@ -343,7 +343,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     header.settings.set_player_team(0, PlayerTeam::a); header.settings.set_player_team(1, PlayerTeam::b);
     header.settings.set_player_weapon(0, WeaponType::sprayer); header.settings.set_player_weapon(1, WeaponType::sprayer);
     const InputBindings recording_bindings = with_jumps(initial, { PadControl::a, PadControl::b, PadControl::a, PadControl::y });
-    require(preferences.set_input_bindings_and_save(recording_bindings), "Cannot save actual recording pad choices");
+    require(preferences_session.set_input_bindings_and_save(recording_bindings), "Cannot save actual recording pad choices");
     const auto snapshots = [&](int step)
     {
         painter_scripted_pads::states = {};
@@ -369,14 +369,14 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         app.viewport_manager()->set_layout(setup.screen_layout());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
-            &preferences.play_settings(), &levels, &replay_tuning, &presentation,
-            app.resolution_manager(), app.thread_pool(), app.partitioner(), &preferences.input_bindings());
+            &preferences_session.play_settings(), &levels, &replay_tuning, &presentation,
+            app.resolution_manager(), app.thread_pool(), app.partitioner(), &preferences_session.input_bindings());
         std::srand(seed);
         return builder.build_level(setup, TeamColourPair::blue_yellow, OpeningMode::off);
     };
     snapshots(-1); snapshots(-1); neutral();
     PlayerInput mapped(app.gamepads(), app.keyboard(), app.mouse(), &replay_tuning,
-        &preferences.play_settings(), &preferences.input_bindings());
+        &preferences_session.play_settings(), &preferences_session.input_bindings());
     auto recorded = fresh(header.settings, *header.seed);
     const auto initial_print = MatchFingerprint::of(*recorded, 0);
     constexpr int replay_length = 360;
@@ -411,9 +411,9 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         decoded.checkpoints.size() == 6 && decoded.settings.player_settings()[0].num == 3 &&
         decoded.settings.player_settings()[1].num == 1, "Mapped tape lost decoded setup, six checkpoints or complete seat streams");
     const InputBindings playback_bindings = with_jumps(initial, { PadControl::a, PadControl::x, PadControl::a, PadControl::b });
-    require(preferences.set_input_bindings_and_save(playback_bindings), "Cannot persist changed replay-time face choices");
-    Save replay_save; replay_save.load_save_file();
-    require(replay_save.input_bindings() == playback_bindings && playback_bindings != recording_bindings,
+    require(preferences_session.set_input_bindings_and_save(playback_bindings), "Cannot persist changed replay-time face choices");
+    Save replay_save; SettingsSession replay_save_session(replay_save); replay_save_session.load_save_file();
+    require(replay_save_session.input_bindings() == playback_bindings && playback_bindings != recording_bindings,
         "Replay remapping control did not persist different face choices");
     snapshots(-1); snapshots(-1);
     auto playback = fresh(decoded.settings, *decoded.seed);

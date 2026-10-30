@@ -21,7 +21,7 @@ void ProfilesMenu::init()
 	this->input()->reset_actions();
 	this->pressing_slot_ = this->opening_slot();
 	// Open on the profile the opening pad wears, else the first.
-	this->profile_ = this->save()->worn_profile(this->opening_slot());
+	this->profile_ = this->settings_session()->worn_profile(this->opening_slot());
 	if (this->profile_ < 0 && !this->save()->profiles().list.empty()) { this->profile_ = 0; }
 	const ControlsSettingsPresentation& look = this->panel_look();
 	const MenuStyle style = this->panel_style();
@@ -131,7 +131,7 @@ void ProfilesMenu::refresh_values()
 		this->name_row_->set_value(widened(profile.name));
 	}
 	this->boost_row_->set_value(this->text().handicap_label(profile.boost));
-	const int wearer = this->save()->profile_wearer(this->profile_);
+	const int wearer = this->settings_session()->profile_wearer(this->profile_);
 	this->wearer_row_->set_value(wearer < 0 ? copy.nobody : this->text().device_label(wearer));
 }
 
@@ -160,14 +160,14 @@ void ProfilesMenu::change_wearer(Direction direction)
 	if (this->profile_ < 0) { return; }
 	// Nobody, then Pad 1-4. Moving a profile takes it off its old pad; the
 	// new pad takes off whatever it wore.
-	const int wearer = this->save()->profile_wearer(this->profile_);
+	const int wearer = this->settings_session()->profile_wearer(this->profile_);
 	const int next = std::clamp(wearer + (direction == Direction::right ? 1 : -1), -1, input_slots::pad_count - 1);
 	if (next == wearer) { return; }
-	if (wearer >= 0) { this->save()->wear_profile(wearer, -1); }
+	if (wearer >= 0) { this->settings_session()->wear_profile(wearer, -1); }
 	if (next >= 0)
 	{
-		this->save()->wear_profile(next, -1);
-		this->save()->wear_profile(next, this->profile_);
+		this->settings_session()->wear_profile(next, -1);
+		this->settings_session()->wear_profile(next, this->profile_);
 	}
 	this->refresh_values();
 	this->set_status(this->text().profiles.idle_status);
@@ -182,7 +182,7 @@ void ProfilesMenu::add_profile()
 		return;
 	}
 	bool saved = false;
-	this->profile_ = this->save()->add_profile_and_save(this->save()->profiles().next_free_name(),
+	this->profile_ = this->settings_session()->add_profile_and_save(this->save()->profiles().next_free_name(),
 		this->pressing_slot_, saved);
 	this->refresh_values();
 	this->report_save(saved, this->text().profiles.saved_status);
@@ -202,7 +202,7 @@ void ProfilesMenu::delete_profile()
 		return;
 	}
 	this->delete_armed_ = false;
-	const bool saved = this->save()->delete_profile_and_save(this->profile_);
+	const bool saved = this->settings_session()->delete_profile_and_save(this->profile_);
 	this->play_wave(this->confirm_sound_);
 	this->refresh_values();
 	if (this->profile_ < 0) { this->focus_.set_focused(0, this->new_); }

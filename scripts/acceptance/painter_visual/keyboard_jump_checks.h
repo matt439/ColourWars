@@ -8,15 +8,15 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const NestedSaveProfile isolated(output / "keyboard-jump-profile");
     const auto save_path = output / "keyboard-jump-profile" / "ColourWars" / "save_data.json";
     const auto blocked_path = std::filesystem::path(save_path.wstring() + L".tmp");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings quiet;
     quiet.music_volume = quiet.sfx_volume = 0;
-    require(preferences.set_play_settings_and_save(quiet), "Cannot seed the private Jump play preferences");
+    require(preferences_session.set_play_settings_and_save(quiet), "Cannot seed the private Jump play preferences");
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         false, TeamColourPair::blue_yellow), "Cannot seed the private Jump display preferences");
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     DebugDirector director(&tuning, &presentation);
     data.set_debug(&director);
@@ -245,8 +245,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto reload = [&](Key key, int music)
     {
-        Save reloaded; reloaded.load_save_file(); ++reloads;
-        require(reloaded.input_bindings().keyboard_jump == key && reloaded.play_settings().music_volume == music &&
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); ++reloads;
+        require(reloaded_session.input_bindings().keyboard_jump == key && reloaded_session.play_settings().music_volume == music &&
             reloaded.resolution() == ScreenResolution::s_1920_1080 &&
             reloaded.team_palette() == TeamColourPair::blue_yellow,
             "Jump Apply/retry lost its key, unrelated preferences or private-save reload");
@@ -254,8 +254,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto& copy = original.menu_text().keyboard_jump;
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
     {
-        require(preferences.set_input_bindings_and_save(InputBindings{}), "Cannot reset private Jump key");
-        require(preferences.set_play_settings_and_save(quiet), "Cannot reset private Jump volumes");
+        require(preferences_session.set_input_bindings_and_save(InputBindings{}), "Cannot reset private Jump key");
+        require(preferences_session.set_play_settings_and_save(quiet), "Cannot reset private Jump volumes");
         size_to(size); open_controls();
         // Parent audio is pending when its independent child is entered.
         move(Key::down, 4); tap(Key::right); move(Key::up, 3); child();
@@ -275,14 +275,14 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             substitute(copy.capture_release, L"{key}", L"J"), false, Key::space, Key::space);
         // Re-reading this input frame cannot complete a second gesture.
         stack.update(0.0f); ++updates;
-        require(preferences.input_bindings().keyboard_jump == Key::space && bytes() == unapplied,
+        require(preferences_session.input_bindings().keyboard_jump == Key::space && bytes() == unapplied,
             "Held/repeated-frame capture activated or saved Jump");
         app.keyboard()->on_key_up(Key::j); tick(); tick();
         copy_check("pending-j", original, help_copy(copy, Key::space, Key::j), copy.pending_status,
             false, Key::space, Key::j);
         move(Key::down, 6); tap(Key::enter); tick();
         require(stack.depth() == 2 && bytes() == unapplied &&
-            preferences.input_bindings().keyboard_jump == Key::space,
+            preferences_session.input_bindings().keyboard_jump == Key::space,
             "Keyboard Jump Back saved its pending key or closed its parent");
         child(); // Controls retained its Keyboard Keys focus and pending audio.
         move(Key::down, 2); tap(Key::enter); tick();
@@ -314,7 +314,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         copy_check("focus-cancel", original, help_copy(copy, Key::space, Key::space), copy.capture_cancelled,
             true, Key::space, Key::space);
         tap(Key::j); tick();
-        require(bytes() == unapplied && preferences.input_bindings().keyboard_jump == Key::space,
+        require(bytes() == unapplied && preferences_session.input_bindings().keyboard_jump == Key::space,
             "A new focus-safe capture gesture activated before Apply");
         // Reset is pending; it does not change the active key or disk.
         move(Key::down, 4); tap(Key::enter);
@@ -322,8 +322,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             false, Key::space, Key::space);
         move(Key::up, 4); tap(Key::enter); tick(); tap(Key::j); tick();
         move(Key::down, 5); tap(Key::enter); tick();
-        require(preferences.input_bindings().keyboard_jump == Key::j &&
-            preferences.play_settings().music_volume == 0, "Child Apply changed pending parent audio");
+        require(preferences_session.input_bindings().keyboard_jump == Key::j &&
+            preferences_session.play_settings().music_volume == 0, "Child Apply changed pending parent audio");
         reload(Key::j, 0);
         copy_check("applied-j", original, help_copy(copy, Key::j, Key::j), copy.saved_status,
             false, Key::j, Key::j);
@@ -351,7 +351,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         copy_check("parent-refreshed-j", original, parent_help, original.menu_text().status.controls_pending,
             false, Key::j, Key::j);
         move(Key::down, 8); tap(Key::enter); tick();
-        require(preferences.play_settings().music_volume == 10 && preferences.input_bindings().keyboard_jump == Key::j,
+        require(preferences_session.play_settings().music_volume == 10 && preferences_session.input_bindings().keyboard_jump == Key::j,
             "Parent Apply lost its pending audio or independently applied Jump key");
         reload(Key::j, 10);
         move(Key::up, 8); child();
@@ -361,7 +361,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const std::string before_failure = bytes();
         require(std::filesystem::create_directory(blocked_path), "Cannot refuse private Jump temporary write");
         tap(Key::enter); tick();
-        require(preferences.input_bindings().keyboard_jump == Key::k && bytes() == before_failure,
+        require(preferences_session.input_bindings().keyboard_jump == Key::k && bytes() == before_failure,
             "Failed Jump write lost the active choice or replaced the old JSON");
         reload(Key::j, 10);
         copy_check("save-failed-k", original, help_copy(copy, Key::k, Key::k),
@@ -380,7 +380,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         move(Key::down, 2); tap(Key::enter); tick(); tap(Key::space); tick();
         const std::string before_space_apply = bytes();
         move(Key::down, 5); tick(); tick();
-        require(preferences.input_bindings().keyboard_jump == Key::k && bytes() == before_space_apply,
+        require(preferences_session.input_bindings().keyboard_jump == Key::k && bytes() == before_space_apply,
             "Space capture leaked its release into Apply");
         copy_check("space-awaits-confirm", original, help_copy(copy, Key::k, Key::space), copy.pending_status,
             false, Key::k, Key::space);
@@ -396,22 +396,22 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         move(Key::up, 3); tap(Key::enter); tick(); tap(Key::a); tick();
         InputBindings moved; moved.keyboard_move_left = Key::j; moved.keyboard_jump = Key::a;
         moved.keyboard_shoot = { Key::none, MouseButton::right }; moved.keyboard_pause = Key::p;
-        require(preferences.input_bindings().keyboard_jump == Key::space && preferences.input_bindings().keyboard_move_left == Key::a,
+        require(preferences_session.input_bindings().keyboard_jump == Key::space && preferences_session.input_bindings().keyboard_move_left == Key::a,
             "Pending Keyboard Keys captures activated before Apply");
         copy_check("moved-values", original, help_copy(copy, Key::space, Key::a), copy.pending_status,
             false, Key::space, Key::a, true, moved, 2);
         move(Key::down, 5); tap(Key::enter); tick();
         {
-            Save reloaded; reloaded.load_save_file(); ++reloads;
-            require(same_keyboard(reloaded.input_bindings(), moved) && same_keyboard(preferences.input_bindings(), moved) &&
-                reloaded.input_bindings().pads == InputBindings{}.pads && reloaded.play_settings().music_volume == 10,
+            Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); ++reloads;
+            require(same_keyboard(reloaded_session.input_bindings(), moved) && same_keyboard(preferences_session.input_bindings(), moved) &&
+                reloaded_session.input_bindings().pads == InputBindings{}.pads && reloaded_session.play_settings().music_volume == 10,
                 "Keyboard Keys Apply lost a moved action, pad profiles or unrelated preferences");
         }
         // Reset all keys, then Apply, restores the shipped keys.
         move(Key::up, 1); tap(Key::enter); move(Key::down, 1); tap(Key::enter); tick(); reload(Key::space, 10);
         {
-            Save reloaded; reloaded.load_save_file();
-            require(same_keyboard(reloaded.input_bindings(), InputBindings{}), "Reset all keys did not restore every default");
+            Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+            require(same_keyboard(reloaded_session.input_bindings(), InputBindings{}), "Reset all keys did not restore every default");
         }
         stack.clear();
     }
@@ -419,10 +419,10 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     // Actual GameLevel -> Pause -> Options -> Controls -> Jump, during the
     // initial countdown. The covered Level never receives a simulation tick.
     // GameLevel::draw must refresh the key even at the same resolution.
-    require(preferences.set_play_settings_and_save(quiet), "Cannot quiet the private paused reminder match");
+    require(preferences_session.set_play_settings_and_save(quiet), "Cannot quiet the private paused reminder match");
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
     {
-        require(preferences.set_input_bindings_and_save(InputBindings{}), "Cannot seed paused Jump reminder");
+        require(preferences_session.set_input_bindings_and_save(InputBindings{}), "Cannot seed paused Jump reminder");
         size_to(size); stack.clear(); stack.notify_activation(true); neutral();
         settings.set_stage("movement_course"); settings.set_duration(60.0f); settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_screen_layout(ScreenLayout::one_player);
@@ -476,7 +476,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         save(foreground_crop(changed, pixels), output / (stem + ".ppm"));
         // Reverse only the key, still without Level::update; captured layout
         // restores the exact old reminder despite the live geometry edit.
-        require(preferences.set_input_bindings_and_save(InputBindings{}), "Cannot reverse paused Jump key");
+        require(preferences_session.set_input_bindings_and_save(InputBindings{}), "Cannot reverse paused Jump key");
         const Frame reversed = draw_game();
         const RectangleI restored = countdown_crop_bounds(game->level().keyboard_controls_card_bounds());
         require(foreground_crop(before, restored, 0).pixels == foreground_crop(reversed, restored, 0).pixels &&

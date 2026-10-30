@@ -38,7 +38,7 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     require(bank->audible(), "Menu-music hardware flow requires the accepted real sound bank");
     const auto music = bank->resolve_effect(presentation.main_menu().music.name);
     const auto arena = bank->resolve_effect("music.close_quarters");
-    auto& play = const_cast<PlaySettings&>(data.save()->play_settings());
+    auto& play = const_cast<PlaySettings&>(data.settings_session()->play_settings());
     struct RestoreVolume
     {
         PlaySettings& play;
@@ -210,7 +210,7 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
     const SoundBank* bank = app.audio_resources()->sound_bank(presentation.menu().sound_bank);
     require(bank->audible(), "Results-music hardware flow requires the accepted real sound bank");
     const auto music = bank->resolve_effect(presentation.results_menu().music.name);
-    auto& play = const_cast<PlaySettings&>(data.save()->play_settings());
+    auto& play = const_cast<PlaySettings&>(data.settings_session()->play_settings());
     struct RestoreVolume
     {
         PlaySettings& play;

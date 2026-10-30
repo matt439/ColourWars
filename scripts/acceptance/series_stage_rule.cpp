@@ -3,6 +3,7 @@
 #include "game/session.h"
 #include "game/last_match_setup.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/presentation.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/main_menu.h"
@@ -254,8 +255,8 @@ namespace
     std::optional<LastMatchSetup> load(const IsolatedSaveDirectory& directory, const std::string& json)
     {
         directory.write(json);
-        Save save;
-        save.load_save_file();
+        Save save; SettingsSession save_session(save);
+        save_session.load_save_file();
         return save.last_match_setup();
     }
 
@@ -274,8 +275,8 @@ namespace
             require(captured.stage_rule == rule, "Capture lost the series stage rule");
             std::filesystem::remove(directory.save_path());
             {
-                Save save;
-                save.load_save_file();
+                Save save; SettingsSession save_session(save);
+                save_session.load_save_file();
                 require(save.remember_match_setup_and_save(captured), "Cannot save the remembered setup");
             }
             const std::string bytes = directory.contents();
@@ -285,8 +286,8 @@ namespace
                     series_stage_rule_key(rule) + "\"") != std::string::npos),
                 "The rule was not written only when it differs from Same");
             require(bytes.rfind("{\"save_version\":5,", 0) == 0, "The save did not write version 5");
-            Save reloaded;
-            reloaded.load_save_file();
+            Save reloaded; SettingsSession reloaded_session(reloaded);
+            reloaded_session.load_save_file();
             require(reloaded.last_match_setup() && reloaded.last_match_setup()->stage_rule == rule,
                 "The remembered rule did not survive the file");
             const MatchSetup restored = reloaded.last_match_setup()->restore(stages);

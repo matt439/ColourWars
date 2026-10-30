@@ -76,9 +76,9 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     require(random_stage_indices(stages) == std::vector<size_t>{ 1 },
         "Random stage text fixture must exclude Movement Course and include the real arena");
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;

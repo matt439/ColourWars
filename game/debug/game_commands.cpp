@@ -404,7 +404,7 @@ DebugStatus DebugDirectorImpl::reload_content()
 		auto presentation = std::make_unique<Presentation>(presentation_path.c_str());
 		validate_shell_content(*tuning, *presentation, this->data_->render_resources(),
 			this->data_->audio_resources(), *this->data_->level_infos(),
-			*this->data_->stages(), this->data_->save()->play_settings());
+			*this->data_->stages(), this->data_->settings_session()->play_settings());
 		// A sound the candidate names for the first time joins its group now.
 		sound_groups::assign(*this->data_->audio_resources(), *tuning, *presentation,
 			*this->data_->level_infos(), *this->data_->stages());

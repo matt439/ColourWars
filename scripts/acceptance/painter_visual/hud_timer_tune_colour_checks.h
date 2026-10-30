@@ -544,12 +544,12 @@ void hud_timer_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
     const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     struct RestoreTimer { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestoreTimer() { t = old_t; p = old_p; } }
         restore{ tuning, presentation, tuning, presentation };
-    Save preferences; const auto original_preferences = preferences.save_data();
+    Save preferences; SettingsSession preferences_session(preferences); const auto original_preferences = preferences.save_data();
     const auto preference_values = [&]()
     {
-        auto value = limb_preference_values(preferences.play_settings());
+        auto value = limb_preference_values(preferences_session.play_settings());
         value.insert(value.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), static_cast<int>(preferences.input_bindings().keyboard_jump) });
+            static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) });
         return value;
     };
     const auto original_values = preference_values(); StageList stages;
@@ -558,7 +558,7 @@ void hud_timer_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
         const auto* info = levels.get(name); require(info != nullptr, "Timer fixture requires shipped stage metadata");
         stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
     }
-    GameData data; data.set_application(&app); data.set_save(&preferences); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);

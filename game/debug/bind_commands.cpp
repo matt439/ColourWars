@@ -228,7 +228,7 @@ void DebugDirectorImpl::register_bind_commands()
 			}
 			// Every effective keyboard key warns, not only the seven defaults.
 			const InputBindings keys = this->data_ != nullptr && this->data_->save() != nullptr ?
-				this->data_->save()->input_bindings() : InputBindings{};
+				this->data_->settings_session()->input_bindings() : InputBindings{};
 			bool effective_key = false;
 			for (std::size_t index = 0; index < keyboard_action_count; ++index)
 			{

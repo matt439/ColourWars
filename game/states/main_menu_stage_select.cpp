@@ -397,7 +397,7 @@ void MainMenuStageSelect::init()
 		resources, &style, &this->briefing_art_, &this->focus_);
 	this->briefing_accent_ = std::make_unique<MenuStageAccent>("briefing_accent",
 		RectangleF(briefing.position(), Vector2F(briefing.width, style.accent_width)),
-		resources, &style, &this->stage_motion_, &this->save()->play_settings(),
+		resources, &style, &this->stage_motion_, &this->settings_session()->play_settings(),
 		std::max(0.0f, look.briefing_padding.y - style.accent_width));
 	this->briefing_accent_->set_colour(this->paper_art_.ink);
 	this->stage_motion_.observe(this->briefing_accent_.get());

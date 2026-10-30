@@ -71,9 +71,9 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     const StageList excluded{ mixed[0] }, one_eligible{ mixed[0], mixed[1] };
     require(random_stage_indices(mixed) == std::vector<size_t>({ 1, 2, 3 }) && random_stage_indices(excluded).empty() &&
         random_stage_indices(one_eligible) == std::vector<size_t>{ 1 }, "Count fixture lists do not have the independent 0/1/3 eligible counts");
-    const NestedSaveProfile isolated(output / "stage-count-profile"); Save preferences;
-    PlaySettings play = preferences.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(play), "Cannot seed the quiet private Stage count profile");
+    const NestedSaveProfile isolated(output / "stage-count-profile"); Save preferences; SettingsSession preferences_session(preferences);
+    PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    require(preferences_session.set_play_settings_and_save(play), "Cannot seed the quiet private Stage count profile");
     for (const auto& stage : mixed)
     {
         StageRecord record; record.stage = stage.name; record.practice_played = 2147483647; record.best_coverage_percentage = 62.5f;
@@ -83,7 +83,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     const auto bytes = [&]
     { std::ifstream file(output / "stage-count-profile/ColourWars/save_data.json", std::ios::binary); require(file.good(), "Cannot read the private Stage count save"); return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()); };
     const std::string saved = bytes(); StageList stages;
-    GameData data; data.set_application(&app); data.set_save(&preferences); StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected; MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreStageCounts
     {

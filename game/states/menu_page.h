@@ -95,6 +95,7 @@ protected:
 	MenuInput* input() const;
 	labrador::ResolutionManager* resolution_manager() const;
 	Save* save() const;
+	SettingsSession* settings_session() const;
 	labrador::RenderResources* render_resources() const;
 	const labrador::AudioResources* audio_resources() const;
 	labrador::ViewportManager* viewport_manager() const;

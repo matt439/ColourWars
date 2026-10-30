@@ -5,6 +5,7 @@
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/stage_catalog.h"
 #include "game/presentation.h"
 #include "game/tuning.h"
@@ -20,13 +21,17 @@ public:
 
     void set_application(labrador::Application* application);
     void set_save(Save* save);
+    void set_settings_session(SettingsSession* settings_session);
     void set_stage_catalog(const StageCatalog* stage_catalog);
     void set_tuning(const GameTuning* tuning);
     void set_presentation(const Presentation* presentation);
     void set_debug(DebugDirector* debug);
 
-    // Game-owned services.
+    // Game-owned services. The save is what the file holds; the settings in
+    // effect this run, with worn profiles laid over their pads, and which pad
+    // wears which profile, are the settings session's.
     Save* save() const;
+    SettingsSession* settings_session() const;
 
     // The stage list and the level definitions behind it, written only by
     // the manifest load and UserStageFolder. User-stage rescans occur only
@@ -65,6 +70,7 @@ public:
 private:
     labrador::Application* application_ = nullptr;
     Save* save_ = nullptr;
+    SettingsSession* settings_session_ = nullptr;
 
     const StageCatalog* stage_catalog_ = nullptr;
     const GameTuning* tuning_ = nullptr;

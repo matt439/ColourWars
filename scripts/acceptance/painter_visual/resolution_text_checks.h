@@ -7,11 +7,11 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const MatchTuning original_match = tuning.match();
     require(!app.fullscreen(), "Resolution text probe requires its ordinary hidden windowed application");
     const NestedSaveProfile profile(output / "resolution-profile");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play; play.music_volume = play.sfx_volume = 0;
     play.aim_sensitivity = 4; play.view_shake = false; play.reduce_effects = true;
-    const_cast<PlaySettings&>(preferences.play_settings()) = play;
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    const_cast<PlaySettings&>(preferences_session.play_settings()) = play;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
     MatchSetup settings; settings.set_player_count(2); settings.set_best_of(3);
@@ -45,7 +45,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     };
     const auto unchanged = [&]
     {
-        const auto players = settings.player_settings(); const auto& active = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& active = preferences_session.play_settings();
         require(settings.player_count() == 2 && settings.best_of() == 3 && settings.duration() == 73.0f &&
             settings.stage() == "movement_course" && settings.screen_layout() == ScreenLayout::two_player &&
             players.size() == 2 && players[0].num == input_slots::keyboard_and_mouse && players[1].num == -1 &&

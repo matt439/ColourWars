@@ -7,15 +7,15 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     static_cast<void>(canvas);
     const NestedSaveProfile profile(output / "rumble-owner-profile");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
-    require(preferences.set_play_settings_and_save(quiet), "Cannot seed private rumble owner settings");
+    require(preferences_session.set_play_settings_and_save(quiet), "Cannot seed private rumble owner settings");
     GameTuning local = tuning;
     // A longer local hit keeps a positive witness active across each boundary;
     // these are fixture values, not a claim about the authored physical feel.
     const_cast<RumbleProfile&>(local.rumble())[static_cast<size_t>(RumbleEvent::hit)].duration_seconds = 0.5f;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&local); data.set_presentation(&presentation);
     DebugDirector director(&local, &presentation); data.set_debug(&director);
 #if COLOURWARS_DEV_TOOLS
@@ -140,12 +140,12 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const size_t keyboard_begin = motors.count; hit(2);
     require(zero() && !nonzero_since(keyboard_begin), "Keyboard damage reached a motor"); note("keyboard-suppressed");
     positive(0, 3);
-    PlaySettings disabled = preferences.play_settings(); disabled.pad_rumble[3] = false;
-    require(preferences.set_play_settings_and_save(disabled), "Cannot disable private rumble slot"); tick(0.0f);
+    PlaySettings disabled = preferences_session.play_settings(); disabled.pad_rumble[3] = false;
+    require(preferences_session.set_play_settings_and_save(disabled), "Cannot disable private rumble slot"); tick(0.0f);
     require(zero(), "Live Off did not immediately stop its pad");
     const size_t off_begin = motors.count; hit(0);
     require(!nonzero_since(off_begin), "Disabled slot emitted a pulse");
-    disabled.pad_rumble[3] = true; require(preferences.set_play_settings_and_save(disabled), "Cannot restore private rumble slot");
+    disabled.pad_rumble[3] = true; require(preferences_session.set_play_settings_and_save(disabled), "Cannot restore private rumble slot");
     tick(0.0f); require(zero(), "Re-enable resumed stale events"); note("live-off-on");
 
     positive(0, 3); pad(GamepadButton::start);

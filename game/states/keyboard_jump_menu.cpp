@@ -19,7 +19,7 @@ KeyboardJumpMenu::~KeyboardJumpMenu()
 void KeyboardJumpMenu::init()
 {
 	this->input()->reset_actions();
-	this->selection_ = this->save()->input_bindings();
+	this->selection_ = this->settings_session()->input_bindings();
 	const ControlsSettingsPresentation& look = this->panel_look();
 	const MenuStyle style = this->panel_style();
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, style.disabled });
@@ -206,13 +206,13 @@ void KeyboardJumpMenu::update_capture()
 void KeyboardJumpMenu::apply()
 {
 	// Merge only the keyboard choices, so newer pad profiles survive.
-	InputBindings current = this->save()->input_bindings();
+	InputBindings current = this->settings_session()->input_bindings();
 	for (size_t index = 0; index < keyboard_action_count; ++index)
 	{
 		const KeyboardAction action = static_cast<KeyboardAction>(index);
 		set_keyboard_control(current, action, keyboard_control(this->selection_, action));
 	}
-	const bool saved = this->save()->set_input_bindings_and_save(current);
+	const bool saved = this->settings_session()->set_input_bindings_and_save(current);
 	this->refresh_values();
 	this->play_wave(this->confirm_sound_);
 	this->set_status(saved ? this->text().keyboard_jump.saved_status :

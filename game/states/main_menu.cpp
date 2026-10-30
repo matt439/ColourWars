@@ -251,7 +251,7 @@ void MainMenuTitle::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.title_box_size) / 2.0f,
 			look.title_box_size),
 		this->render_resources(), &style, &look.art, &this->focus_, this->start_.get(),
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -328,7 +328,7 @@ void MainMenuHome::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f,
 			look.home_box_size),
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -648,7 +648,7 @@ void MainMenuModeSelect::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
 			look.setup_box_size),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->refresh_duration();
 	this->refresh_stage_rule();
 

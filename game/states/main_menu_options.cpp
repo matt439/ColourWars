@@ -313,7 +313,7 @@ void MainMenuOptions::init()
 
 	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings(), &this->options_art_);
+		&this->focus_motion_, &this->settings_session()->play_settings(), &this->options_art_);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");

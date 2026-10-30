@@ -32,7 +32,7 @@ void GameLevel::start_replay()
 	// bank's music, so it goes before the replay's starts.
 	this->level_.reset();
 	// The hidden steps start voices too; nothing is heard until the shown ones.
-	PlaySettings silent = this->data()->save()->play_settings();
+	PlaySettings silent = this->data()->settings_session()->play_settings();
 	silent.music_volume = 0;
 	silent.sfx_volume = 0;
 	sound_groups::apply(*this->data()->audio_resources(), silent);
@@ -86,7 +86,7 @@ bool GameLevel::update_replay(float dt)
 		if (this->replay_player_->step() >= this->replay_first_)
 		{
 			this->replay_phase_ = ReplayPhase::playing;
-			sound_groups::apply(*this->data()->audio_resources(), this->data()->save()->play_settings());
+			sound_groups::apply(*this->data()->audio_resources(), this->data()->settings_session()->play_settings());
 			this->level_->emphasise_players();
 		}
 		// The budget was spent on the replay, not on time the round must catch up.
@@ -117,7 +117,7 @@ void GameLevel::finish_replay()
 	this->end_replay();
 	// Back to the End menu, with the results' coda again.
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
-		&this->data()->save()->play_settings(), *this->data()->presentation());
+		&this->data()->settings_session()->play_settings(), *this->data()->presentation());
 	if (this->data()->debug().match_audio_paused() || !this->context()->active())
 	{
 		this->results_audio_->suspend();
@@ -131,7 +131,7 @@ void GameLevel::end_replay()
 	if (this->replay_phase_ == ReplayPhase::none) { return; }
 	this->replay_phase_ = ReplayPhase::none;
 	this->replay_player_.reset();
-	sound_groups::apply(*this->data()->audio_resources(), this->data()->save()->play_settings());
+	sound_groups::apply(*this->data()->audio_resources(), this->data()->settings_session()->play_settings());
 }
 
 void GameLevel::suspend_level()

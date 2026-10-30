@@ -12,6 +12,11 @@ void GameData::set_save(Save* save)
 	this->save_ = save;
 }
 
+void GameData::set_settings_session(SettingsSession* settings_session)
+{
+	this->settings_session_ = settings_session;
+}
+
 void GameData::set_stage_catalog(const StageCatalog* stage_catalog)
 {
 	this->stage_catalog_ = stage_catalog;
@@ -45,6 +50,11 @@ Application* GameData::application() const
 Save* GameData::save() const
 {
 	return this->save_;
+}
+
+SettingsSession* GameData::settings_session() const
+{
+	return this->settings_session_;
 }
 
 const StageCatalog* GameData::stage_catalog() const

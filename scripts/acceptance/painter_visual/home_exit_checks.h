@@ -8,9 +8,9 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     require(original.menu_text().confirmations.exit == L"Exit ColourWars?" &&
         original.menu_text().item(MenuItem::exit) == L"Exit" && original.menu_text().item(MenuItem::yes) == L"Yes" &&
         original.menu_text().item(MenuItem::no) == L"No", "Home Exit copy drifted from independent literals");
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;

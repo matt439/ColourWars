@@ -104,7 +104,7 @@ StickSettingsMenu::~StickSettingsMenu() = default;
 void StickSettingsMenu::init()
 {
 	this->input()->reset_actions();
-	this->selection_ = this->save()->play_settings();
+	this->selection_ = this->settings_session()->play_settings();
 	this->rumble_edited_.fill(false);
 	this->comfort_edited_.fill(false);
 	if (input_slots::is_pad(this->opening_slot())) { this->slot_ = this->opening_slot(); }
@@ -231,7 +231,7 @@ void StickSettingsMenu::set_status(const std::wstring& text, bool warning)
 void StickSettingsMenu::refresh_values()
 {
 	// A pad wearing a profile edits the profile, so the row names it.
-	const int worn = this->save()->worn_profile(this->slot_);
+	const int worn = this->settings_session()->worn_profile(this->slot_);
 	this->pad_->set_value(this->text().worn_profile_label(this->text().device_label(this->slot_),
 		worn < 0 ? std::string_view() : std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)));
 	this->movement_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.movement_deadzone(this->slot_,
@@ -303,14 +303,14 @@ void StickSettingsMenu::refresh_preview()
 void StickSettingsMenu::apply_settings()
 {
 	// Other preference pages may have pending edits; commit only this page's scope.
-	PlaySettings applied = this->save()->play_settings();
+	PlaySettings applied = this->settings_session()->play_settings();
 	applied.sticks = this->selection_.sticks;
 	for (size_t slot = 0; slot < this->rumble_edited_.size(); ++slot)
 	{
 		if (this->rumble_edited_[slot]) { applied.pad_rumble[slot] = this->selection_.pad_rumble[slot]; }
 		if (this->comfort_edited_[slot]) { applied.pad_comfort[slot] = this->selection_.pad_comfort[slot]; }
 	}
-	const bool saved = this->save()->set_play_settings_and_save(applied);
+	const bool saved = this->settings_session()->set_play_settings_and_save(applied);
 	this->selection_.pad_rumble = applied.pad_rumble;
 	this->selection_.pad_comfort = applied.pad_comfort;
 	this->rumble_edited_.fill(false);

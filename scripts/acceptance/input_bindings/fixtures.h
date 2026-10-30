@@ -3,6 +3,7 @@
 #include "game/input_bindings.h"
 #include "game/input_slots.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/objects/player_input.h"
 #include "game/states/menu_input.h"
 #include "engine/input/gamepad_reader.h"

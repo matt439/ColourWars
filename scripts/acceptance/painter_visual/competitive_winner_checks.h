@@ -42,9 +42,9 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     std::array<std::vector<int>, 4> ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { ledgers[index] = ledger(cases[index].session); }
     const NestedSaveProfile profile(output / "competitive-winner-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed competitive winner's private preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed competitive winner's private preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "competitive-winner-profile/ColourWars/save_data.json", std::ios::binary);
@@ -52,7 +52,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_duration(73.0f); settings.set_stage("movement_course");
@@ -84,7 +84,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
                 fixture.info.team_a_area + fixture.info.team_b_area == (fixture.players == 1 ? 72.0f : 100.0f),
                 "Competitive winner changed a frozen branch, ledger, solo coverage or input-owner credit");
         }
-        const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& play = preferences_session.play_settings();
         require(settings.player_count() == active_players && settings.best_of() == active_best_of &&
             settings.duration() == 73.0f && settings.stage() == "movement_course" &&
             settings.screen_layout() == (active_players == 1 ? ScreenLayout::one_player : ScreenLayout::two_player) &&

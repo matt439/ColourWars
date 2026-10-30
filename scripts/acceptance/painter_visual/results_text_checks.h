@@ -23,9 +23,9 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     RecordOutcome record; record.recorded = record.new_best = true; record.value = record.best = 68.4f;
 
     const NestedSaveProfile profile(output / "results-text-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed Results text's private preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed Results text's private preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "results-text-profile/ColourWars/save_data.json", std::ios::binary);
@@ -33,7 +33,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.set_best_of(3); settings.set_duration(73.0f);
@@ -54,7 +54,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     size_t updates = 0, readbacks = 0, rows = 0, crops = 0, openings = 0, pops = 0, font_controls = 0;
     const auto unchanged = [&]
     {
-        const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& play = preferences_session.play_settings();
         require(ledger(single) == single_ledger && ledger(series) == series_ledger &&
             single.score_string(original.menu_text().results) == L"Wins: A 1 - B 0  |  First to 1" && single.result_string(original.menu_text().results) == L"Team A wins the series!" &&
             series.score_string(original.menu_text().results) == L"Wins: A 1 - B 0  |  First to 2" && series.result_string(original.menu_text().results) == L"Draw - no win awarded" &&

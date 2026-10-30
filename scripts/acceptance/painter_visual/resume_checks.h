@@ -6,16 +6,16 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
 {
     // Finished matches write stage records into this matrix's own profile.
     const NestedSaveProfile profile(output / "resume-profile");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     // Keep this fixture's preferences in memory; only stage records are saved.
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     play.aim_marker = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     GameData data;
     data.set_application(&app);
-    data.set_save(&preferences);
+    data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" });
     data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning);

@@ -42,13 +42,13 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     const auto save_path = root / "ColourWars/save_data.json";
     const auto completed = output / "remembered-setup-writer.complete";
     require(!reader || std::filesystem::is_regular_file(completed), "The separate reader needs a completed writer process");
-    std::unique_ptr<Save> preferences = std::make_unique<Save>();
-    preferences->load_save_file();
+    std::unique_ptr<Save> preferences = std::make_unique<Save>(); SettingsSession preferences_session(*preferences);
+    preferences_session.load_save_file();
     if (!reader)
     {
-        PlaySettings play = preferences->play_settings();
+        PlaySettings play = preferences_session.play_settings();
         play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-        require(preferences->set_play_settings_and_save(play), "Cannot seed private remembered-setup preferences");
+        require(preferences_session.set_play_settings_and_save(play), "Cannot seed private remembered-setup preferences");
     }
     StageList stages;
     for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course" })
@@ -56,7 +56,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         const auto* info = levels.get(name);
         stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
     }
-    GameData data; data.set_application(&app); data.set_save(preferences.get());
+    GameData data; data.set_application(&app); data.set_save(preferences.get()); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
 #if COLOURWARS_DEV_TOOLS
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
@@ -213,7 +213,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         require(expected.input_roster_complete() && expected.human_count() == 1 &&
             expected.bot_count() == 1, "Remembered bot needs a spare controller");
         tap(4, GamepadButton::a); compare(3, expected, "bot-restored-teams", true);
-        Save retained; retained.load_save_file();
+        Save retained; SettingsSession retained_session(retained); retained_session.load_save_file();
         require(remembered_setup_bytes(save_path) == bot_save && preferences->last_match_setup() &&
             remembered_setup_matches(*preferences->last_match_setup(), mixed) && retained.last_match_setup() &&
             remembered_setup_matches(*retained.last_match_setup(), mixed),
@@ -349,7 +349,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         "A normal menu launch with a bot controlling an explicitly claimed seat overwrote user setup");
     note("normal-menu-explicit-bot-excluded", chosen, true); stack.clear();
 #endif
-    Save reloaded; reloaded.load_save_file();
+    Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
     require(reloaded.last_match_setup() && remembered_setup_matches(*reloaded.last_match_setup(), chosen),
         "A fresh Save object did not reload the final user choices after all exclusions");
     { std::ofstream done(completed); done << committed << '\n'; require(done.good(), "Cannot retain writer completion evidence"); }

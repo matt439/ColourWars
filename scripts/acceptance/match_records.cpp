@@ -107,7 +107,7 @@ namespace
 
 	void require_flat_preferences(const Save& save, const char* message)
 	{
-		const PlaySettings& play = save.play_settings();
+		const PlaySettings& play = save.saved_play_settings();
 		require(save.resolution() == labrador::ScreenResolution::s_1280_720 &&
 			save.fullscreen() && save.team_palette() == TeamColourPair::blue_yellow &&
 			play.aim_sensitivity == 4 && play.music_volume == 20 && play.sfx_volume == 80 &&
@@ -302,7 +302,7 @@ namespace
 			arena->practice_played == 2 && arena->best_coverage_percentage == 12.5f,
 			"Corrupt preferences reset the records section");
 		require(broken_preferences.resolution() == SaveData{}.resolution &&
-			broken_preferences.play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity,
+			broken_preferences.saved_play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity,
 			"Corrupt preferences did not use their defaults");
 
 		// Malformed entries are skipped one by one; values are bounded.
@@ -414,7 +414,7 @@ namespace
 			auto save = std::make_unique<Save>();
 			const std::string errors = captured_stderr(directory, [&] { save->load_save_file(); });
 			require(save->resolution() == SaveData{}.resolution &&
-				save->play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity &&
+				save->saved_play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity &&
 				save->records().stages().empty(), "An unreadable save did not leave the defaults");
 			require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
 				errors.find("save_data.json") != std::string::npos &&

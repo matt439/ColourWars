@@ -51,7 +51,7 @@ void SettingsPanelPage::build_panel(const MenuStyle& style)
 	this->paper_ = std::make_unique<MenuPaperArtwork>(RectangleF(
 		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
 		look.box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->texture_container_ = std::make_unique<UiContainer>("textures");
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->paper_.get());

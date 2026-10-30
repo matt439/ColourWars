@@ -46,7 +46,7 @@ void GameMenu::open_menu(MainMenuScreen screen)
 {
 	const Presentation& look = *this->data()->presentation();
 	this->music_ = std::make_unique<ScreenMusic>(look.menu().sound_bank,
-		this->data()->audio_resources(), &this->data()->save()->play_settings(),
+		this->data()->audio_resources(), &this->data()->settings_session()->play_settings(),
 		look.main_menu().music, look.music_mix(), true);
 	if (!this->context()->active()) { this->music_->suspend(); }
 	this->menu_input_->reset_actions();
@@ -162,8 +162,8 @@ void GameLevel::init()
 		this->data()->gamepads(),
 		this->data()->keyboard(),
 		this->data()->mouse(),
-		this->data()->tuning(), &this->data()->save()->play_settings(),
-		&this->data()->save()->input_bindings());
+		this->data()->tuning(), &this->data()->settings_session()->play_settings(),
+		&this->data()->settings_session()->input_bindings());
 	this->seat_commands_ = std::make_unique<SeatCommandBuilder>(
 		this->data()->mouse(), this->data()->viewport_manager());
 
@@ -178,14 +178,14 @@ void GameLevel::init()
 		this->data()->viewport_manager(),
 		this->data()->render_resources(),
 		this->data()->audio_resources(),
-		&this->data()->save()->play_settings(),
+		&this->data()->settings_session()->play_settings(),
 		this->data()->level_infos(),
 		this->data()->tuning(),
 		this->data()->presentation(),
 		this->data()->resolution_manager(),
 		this->data()->thread_pool(),
 		this->data()->partitioner(),
-		&this->data()->save()->input_bindings());
+		&this->data()->settings_session()->input_bindings());
 
 	// Content reloaded from the menus is swapped in by the first build.
 	this->data()->debug().attach_match(*this);
@@ -206,7 +206,7 @@ void GameLevel::init()
 				boosts[static_cast<size_t>(seat.num)] = seat.handicap;
 			}
 		}
-		std::ignore = this->data()->save()->remember_profile_boosts_and_save(boosts);
+		std::ignore = this->data()->settings_session()->remember_profile_boosts_and_save(boosts);
 		std::ignore = this->data()->save()->remember_match_setup_and_save(
 			LastMatchSetup::capture(this->settings_));
 		// This synchronous save is part of entering the match, not elapsed play.
@@ -683,7 +683,7 @@ void GameLevel::open_results_menu()
 		record = this->data()->save()->record_result_and_save(this->settings_.stage(), result);
 	}
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
-		&this->data()->save()->play_settings(), *this->data()->presentation());
+		&this->data()->settings_session()->play_settings(), *this->data()->presentation());
 	if (this->data()->debug().match_audio_paused()) { this->results_audio_->suspend(); }
 	this->menu_input_->reset_actions();
 	this->context()->push(

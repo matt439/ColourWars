@@ -69,13 +69,13 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     } isolated(profile);
     const auto save_path = profile / "ColourWars" / "save_data.json";
     const auto blocked = std::filesystem::path(save_path.wstring() + L".tmp");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     const auto reset = [&]
     {
         // Save lends out an effective copy of its stored play settings, so a
         // reset goes through the setter: both copies, and the file, start over.
         PlaySettings play; play.music_volume = play.sfx_volume = 0;
-        require(preferences.set_play_settings_and_save(play) &&
+        require(preferences_session.set_play_settings_and_save(play) &&
             preferences.set_display_settings_and_save(ScreenResolution::s_1280_720,
             false, TeamColourPair::blue_yellow), "Cannot seed the isolated status save");
     };
@@ -86,7 +86,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
     reset();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
@@ -307,10 +307,10 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             failure(page); require(saved_bytes() == committed, "Retained failed status replaced previous JSON");
             compare("retained-failed", page, 2, snapshot, words, true);
             apply(page); compare("retained-recovered", page, 1, snapshot, words);
-            Save reloaded; reloaded.load_save_file();
+            Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
             require(reloaded.resolution() == preferences.resolution() && reloaded.team_palette() == preferences.team_palette() &&
-                reloaded.play_settings().music_volume == preferences.play_settings().music_volume &&
-                reloaded.play_settings().sticks[0].movement_deadzone == preferences.play_settings().sticks[0].movement_deadzone,
+                reloaded_session.play_settings().music_volume == preferences_session.play_settings().music_volume &&
+                reloaded_session.play_settings().sticks[0].movement_deadzone == preferences_session.play_settings().sticks[0].movement_deadzone,
                 "Retained status callbacks lost independently reloaded preferences");
             // Reopen adopts the current source and both discard routes remain write-free.
             for (bool escape : { false, true })
@@ -330,13 +330,13 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Status parent failed to open a newer child");
         stage(2); compare("new-child-pending", 2, 0, next, next_words, true); apply(2);
         compare("new-child-saved", 2, 1, next, next_words);
-        const int cutoff = preferences.play_settings().sticks[0].movement_deadzone;
+        const int cutoff = preferences_session.play_settings().sticks[0].movement_deadzone;
         tap(Key::down); tap(Key::enter); tick(); require(stack.depth() == 2, "Status child Back lost its suspended parent");
         compare("old-parent-after-child", 1, 0, old, old_words, true);
         for (int row = 0; row < 9; ++row) { tap(Key::down); }
         apply(1); compare("old-parent-saved-after-child", 1, 1, old, old_words);
-        Save reloaded; reloaded.load_save_file();
-        require(reloaded.play_settings().music_volume == 10 && reloaded.play_settings().sticks[0].movement_deadzone == cutoff,
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+        require(reloaded_session.play_settings().music_volume == 10 && reloaded_session.play_settings().sticks[0].movement_deadzone == cutoff,
             "Retained parent status Apply lost its newer child's committed pad profile");
     }
     require(records.good(), "Save-status evidence write failed");
