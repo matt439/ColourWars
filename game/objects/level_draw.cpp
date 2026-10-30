@@ -171,13 +171,12 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 
 bool Level::cursor_marker_visible() const
 {
-	if (!this->presentation_->hud().cursor_marker.enabled || this->mouse_ == nullptr || !this->mouse_->focused())
+	if (!this->presentation_->hud().cursor_marker.enabled || !this->pointer_)
 	{
 		return false;
 	}
 	const Vector2F size = this->resolution_manager_->resolution_vec();
-	const Vector2F at(static_cast<float>(this->mouse_->state().position.x),
-		static_cast<float>(this->mouse_->state().position.y));
+	const Vector2F at = *this->pointer_;
 	if (at.x < 0.0f || at.y < 0.0f || at.x >= size.x || at.y >= size.y) { return false; }
 	for (int participant = 0; participant < this->player_count(); ++participant)
 	{
@@ -207,10 +206,14 @@ std::array<CursorMarkerFrame, 3> Level::cursor_marker_frames(
 	return { frame(0.0f, ink, look.ink), frame(ink, paper, look.paper), frame(ink + paper, ink, look.ink) };
 }
 
+void Level::set_pointer(std::optional<Vector2F> window_point)
+{
+	this->pointer_ = window_point;
+}
+
 void Level::draw_cursor_marker(DrawList& list) const
 {
-	const Vector2F at(static_cast<float>(this->mouse_->state().position.x),
-		static_cast<float>(this->mouse_->state().position.y));
+	const Vector2F at = *this->pointer_;
 	const SpriteSheet* sheet = this->render_resources_->sprite_sheet(this->overlay_sheet_);
 	list.set_filter(TextureFilter::point);
 	for (const CursorMarkerFrame& frame : cursor_marker_frames(this->presentation_->hud().cursor_marker,

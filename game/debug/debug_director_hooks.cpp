@@ -330,14 +330,14 @@ void DebugDirectorImpl::push_seat_labels(DebugMatchTarget& match)
 	match.debug_set_seat_labels(this->seat_labels(match));
 }
 
-void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs) const
+void DebugDirectorImpl::filter_match_inputs(std::vector<SlotInput>& inputs) const
 {
 	for (int slot = 0; slot < input_slots::pad_count &&
 		slot < static_cast<int>(inputs.size()); ++slot)
 	{
 		if (this->chord_.suppressing(slot))
 		{
-			PlayerInputData& input = inputs[static_cast<std::size_t>(slot)];
+			SlotInput& input = inputs[static_cast<std::size_t>(slot)];
 			input.toggle_debug = false;
 			input.toggle_pause_menu = false;
 			input.skip_intro = false;
@@ -346,12 +346,12 @@ void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs
 	// The live console has the keyboard: the keyboard seat stands still (no
 	// move, jump, drop, shot, F1 or pause) while it is open and on the frame
 	// it closed, whose Escape release is that seat's pause key. Mouse aim is
-	// read by the level directly and still follows the cursor. Raw reads are
+	// resolved after this, as seat commands are built, and still follows the cursor. Raw reads are
 	// never consumed, so which reader sees the keys is this client's policy.
 	const std::size_t keyboard = static_cast<std::size_t>(input_slots::keyboard_and_mouse);
 	if ((this->live_open_ || this->blank_keyboard_once_) && keyboard < inputs.size())
 	{
-		PlayerInputData idle;
+		SlotInput idle;
 		idle.connected = inputs[keyboard].connected;
 		inputs[keyboard] = idle;
 	}
@@ -549,7 +549,7 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt, b
 	return true;
 }
 
-int DebugDirectorImpl::match_steps(const std::vector<PlayerInputData>& inputs, float dt)
+int DebugDirectorImpl::match_steps(const std::vector<SlotInput>& inputs, float dt)
 {
 	this->last_dt_bits_ = std::bit_cast<std::uint32_t>(dt);
 	this->step_dt_ = dt;

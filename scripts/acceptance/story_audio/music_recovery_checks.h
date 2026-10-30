@@ -181,7 +181,7 @@ namespace
 		AudioResources missing;
 		missing.add_sound_bank(bank, SoundBank::silent());
 		LevelBuilder builder(&world.viewports, &world.render, &missing, &world.preferences, &world.levels,
-			&world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner, &world.mouse);
+			&world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner);
 		const auto silent_calls = recorded_sounds(world.device).size();
 		{
 			auto silent = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::off);

@@ -309,7 +309,7 @@ namespace moving_structure_acceptance
                 std::vector<std::unique_ptr<labrador::GameObject>>{}, world.palette,
                 bounds_, bounds_, bounds_, &tuning, &world.presentation, L"Moving capability fixture",
                 "paint_exe", "", 0.0f, "", 0.0f, &resolution, &viewports, &world.render,
-                &world.audio, &world.preferences, &mouse, std::vector<LevelStation>{}, opening, 120.0f);
+                &world.audio, &world.preferences, std::vector<LevelStation>{}, opening, 120.0f);
         }
         void tick(const std::vector<PlayerInputData>& actions = {}, float seconds = dt,
             SeatInputFilter* next = nullptr)

@@ -143,13 +143,13 @@
                     require(level->place_player(view, Vector2F(1200.0f + 200.0f * static_cast<float>(view), 1275)),
                         "could not place the quiet fixture on the recovery floor");
                 }
-                for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+                for (int tick = 0; tick < 60; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                 const std::string prefix = std::to_string(count) + "p-quiet-" + TeamColourTools::palette_key(palette);
                 const IdleDrip* drip = level->idle_drip(0);
                 require(drip != nullptr, "quiet fixture has no sprayer drip");
                 const auto advance_until = [&](const auto& condition, const char* message)
                 {
-                    for (int tick = 0; tick < 900 && !condition(); ++tick) { level->update(inputs, dt); }
+                    for (int tick = 0; tick < 900 && !condition(); ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                     require(condition(), message);
                     require(level->state() == LevelState::active, "quiet fixture exhausted its real match clock");
                 };
@@ -185,7 +185,7 @@
                     "settled sprayer never released a falling cosmetic drop");
                 phase("fall");
                 const float drop_y = drip->drops()[0].position.y;
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
                 require(drip->drops().empty() || drip->drops()[0].position.y > drop_y,
                     "released idle drop did not fall downwards");
                 advance_until([&] { return level->player(0).quiet_character().state().blinking; },
@@ -195,10 +195,10 @@
                 advance_until([&] { return drip->attached() && drip->bead_age() >= look.grow_time * 0.5f; },
                     "idle bead did not return for the interruption check");
                 for (auto& input : inputs) { input.x_movement = -1.0f; }
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
                 require(!drip->attached(), "starting movement did not remove the attached idle bead");
                 phase("interrupted");
-                for (int tick = 0; tick < 6; ++tick) { level->update(inputs, dt); }
+                for (int tick = 0; tick < 6; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                 phase("lean-left");
             }
         }
@@ -234,14 +234,14 @@
                             Vector2F(1200.0f + 200.0f * static_cast<float>(view), 1275)),
                             "could not place the wet-tool fixture on the recovery floor");
                     }
-                    for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+                    for (int tick = 0; tick < 60; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                     const IdleDrip* drip = level->idle_drip(0);
                     require(drip != nullptr, "wet-tool fixture omitted its Scene-owned drip");
                     const std::string prefix = std::to_string(count) + "p-quiet-" + tool.second + '-' +
                         TeamColourTools::palette_key(palette);
                     const auto advance_until = [&](const auto& condition, const char* message)
                     {
-                        for (int tick = 0; tick < 900 && !condition(); ++tick) { level->update(inputs, dt); }
+                        for (int tick = 0; tick < 900 && !condition(); ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                         require(condition(), message);
                         require(level->state() == LevelState::active, "wet-tool fixture exhausted its real match clock");
                     };
@@ -309,7 +309,7 @@
                             input.shoot_angle = angle;
                             input.shoot_direction = Vector2F::unit_vec_from_angle(angle);
                         }
-                        level->update(inputs, dt);
+                        level->update(acceptance::slot_seats(*level, inputs), dt);
                         require(drip->attached() && drip->bead_age() > age,
                             "continuous wet-tool aim replaced or released the attached bead");
                         for (int view = 0; view < count; ++view)
@@ -332,11 +332,11 @@
                     phase("fall");
                     reduced("fall");
                     const float drop_y = drip->drops()[0].position.y;
-                    level->update(inputs, dt);
+                    level->update(acceptance::slot_seats(*level, inputs), dt);
                     require(drip->drops().empty() || drip->drops()[0].position.y > drop_y,
                         "released wet-tool drop did not fall downwards");
                     for (auto& input : inputs) { input.x_movement = -1.0f; }
-                    level->update(inputs, dt);
+                    level->update(acceptance::slot_seats(*level, inputs), dt);
                     require(!drip->attached(), "wet-tool movement did not interrupt its bead");
                     for (auto& input : inputs)
                     {

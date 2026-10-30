@@ -96,15 +96,17 @@ void Level::resume()
 	this->resume_player_sounds();
 }
 
-void Level::prepare_resume(const std::vector<PlayerInputData>& inputs)
+void Level::prepare_resume(const std::vector<PlayerInputData>& seats)
 {
-	for (Player* player : this->players_)
+	for (size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
+		Player* player = this->players_[participant];
 		player->primary_weapon().stop_sounds();
+		// A seat no device drives (a bot, an unclaimed human) keeps its arming.
 		const int slot = player->player_num();
-		if (slot >= 0 && static_cast<size_t>(slot) < inputs.size())
+		if (slot >= 0 && slot < input_slots::count && participant < seats.size())
 		{
-			player->observe_jump_release(inputs[slot].jump_held || inputs[slot].jump_pressed);
+			player->observe_jump_release(seats[participant].jump_held || seats[participant].jump_pressed);
 		}
 	}
 }

@@ -83,7 +83,7 @@ namespace moving_structure_acceptance
         info->validate_content(objects, world.render, world.audio);
         levels.add(settings.stage(), std::move(info));
         LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences,
-            &levels, &tuning, &world.presentation, &resolution, nullptr, &partitioner, &mouse);
+            &levels, &tuning, &world.presentation, &resolution, nullptr, &partitioner);
         std::srand(seed);
         level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
     }

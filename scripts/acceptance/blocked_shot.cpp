@@ -25,6 +25,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include "scripts/acceptance/support/slot_seats.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -87,7 +88,7 @@ namespace
             this->levels.add("movement_course", std::move(info));
             this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render,
                 &this->audio, &this->preferences, &this->levels, &this->tuning,
-                &this->presentation, &this->resolution, nullptr, &this->partitioner, &this->mouse);
+                &this->presentation, &this->resolution, nullptr, &this->partitioner);
         }
 
         auto shots(ProjectileType type = ProjectileType::jet,
@@ -433,7 +434,7 @@ namespace
 
     void activate(Level& level, const std::vector<PlayerInputData>& inputs)
     {
-        for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { level.update(inputs, dt); }
+        for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { level.update(acceptance::slot_seats(level, inputs), dt); }
         require(level.state() == LevelState::active, "Blocked-shot fixture did not reach active play");
     }
 
@@ -449,7 +450,7 @@ namespace
         inputs[3] = aimed(true, PI);
         for (int tick = 0; tick < 90 && level->blocked_shot_feedback().cues().empty(); ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(!level->blocked_shot_feedback().cues().empty(),
             "Level did not flush a flying bare-wall contact before Scene retirement");
@@ -461,14 +462,14 @@ namespace
         for (int repeat = 0; repeat < 10; ++repeat)
         {
             level->refresh_layout();
-            level->update(inputs, 0.0f);
-            level->update(inputs, -1.0f);
+            level->update(acceptance::slot_seats(*level, inputs), 0.0f);
+            level->update(acceptance::slot_seats(*level, inputs), -1.0f);
         }
         require(observation(level->blocked_shot_feedback()) == frozen &&
             level->blocked_shot_feedback().repeat_remaining(3) == budget,
             "Pause or frozen layout refresh advanced blocked-shot state");
         level->resume();
-        for (int tick = 0; tick < 180 && level->state() == LevelState::active; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 180 && level->state() == LevelState::active; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         require(level->state() != LevelState::active && level->blocked_shot_feedback().cues().empty(),
             "Time-up retained active-play obstruction cues");
         level.reset();
@@ -491,7 +492,7 @@ namespace
         std::vector<Record> result;
         for (int tick = 0; tick < 180; ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
             const auto score = level->level_end_info();
             const auto& player = level->player(0);
             result.emplace_back(player.rectangle(), player.velocity(), player.health(),

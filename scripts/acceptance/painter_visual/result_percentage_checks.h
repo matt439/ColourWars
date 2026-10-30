@@ -432,12 +432,12 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     // StateContext. No GameLevel or save/record callback owns these three Levels.
     const PlaySettings level_play = preferences.play_settings();
     LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(), &level_play,
-        &levels, &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+        &levels, &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner());
     std::array<std::unique_ptr<Level>, 3> monitor_levels;
     const auto level_tick = [&](Level& level, const std::vector<PlayerInputData>& inputs, float elapsed)
     {
         require(level_updates < 240, "Result percentage exceeded its separate Level-update budget");
-        ++level_updates; level.update(inputs, elapsed);
+        ++level_updates; level.update(acceptance::slot_seats(level, inputs), elapsed);
     };
     const auto build_monitor = [&]
     {
@@ -450,7 +450,11 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         auto level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::full); ++level_builds;
         resize(app, *level, { 1280, 720 }); const size_t before = level_updates;
         constexpr float simulation_dt = 1.0f / 60.0f; auto inputs = neutral_inputs();
-        inputs[3].skip_intro = true; level_tick(*level, inputs, simulation_dt); inputs[3].skip_intro = false;
+        {
+            require(level_updates < 240, "Result percentage exceeded its separate Level-update budget");
+            auto skip = acceptance::slot_inputs(inputs); skip[3].skip_intro = true;
+            ++level_updates; acceptance::update_from_slots(*level, skip, simulation_dt);
+        }
         require(level->state() == LevelState::start_countdown, "Public monitor skip missed the countdown");
         level_tick(*level, inputs, tuning.match().countdown - simulation_dt * 0.5f);
         require(level->state() == LevelState::start_countdown, "Near-boundary monitor countdown advanced the world early");

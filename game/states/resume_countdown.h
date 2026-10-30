@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/input_slots.h"
-#include "game/objects/player_input_data.h"
+#include "game/objects/slot_input.h"
 #include <array>
 #include <vector>
 
@@ -20,7 +20,7 @@ public:
 	// Movement and aim remain deliberate inputs. Actions held over the final
 	// count need a release before another press/shot/drop; a fresh pause may
 	// interrupt the count. Call once per sampled tick, before advance().
-	void filter_inputs(std::vector<PlayerInputData>& inputs);
+	void filter_inputs(std::vector<SlotInput>& inputs);
 
 private:
 	struct HeldActions

@@ -34,7 +34,7 @@ std::vector<float> limb_input_values(const PlayerInputData& p)
 {
     return {p.x_movement,p.jump_pressed?1.0f:0.0f,p.jump_held?1.0f:0.0f,p.shoot_angle,p.shoot_direction.x,p.shoot_direction.y,
         p.shoot_direction_requested?1.0f:0.0f,p.primary_shoot?1.0f:0.0f,p.drop_through?1.0f:0.0f,p.toggle_debug?1.0f:0.0f,
-        p.toggle_pause_menu?1.0f:0.0f,p.pause_held?1.0f:0.0f,p.skip_intro?1.0f:0.0f,p.connected?1.0f:0.0f,
+        p.connected?1.0f:0.0f,
         p.left_analog_stick.x,p.left_analog_stick.y,p.right_analog_stick.x,p.right_analog_stick.y};
 }
 std::vector<float> limb_tool_values(const Weapon& tool)

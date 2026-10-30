@@ -9,6 +9,7 @@
 #include "game/objects/level.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/objects/seat_commands.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"
@@ -40,6 +41,7 @@ namespace debug_console_acceptance
 		labrador::Mouse mouse;
 		labrador::Partitioner partitioner;
 		std::unique_ptr<LevelBuilder> builder;
+		SeatCommandBuilder seat_commands{ &mouse, &viewports };
 
 		CpuWorld(const std::filesystem::path& content, const GameTuning& tuning,
 			const Presentation& presentation)
@@ -73,7 +75,7 @@ namespace debug_console_acceptance
 				{ "close_quarters", "Close Quarters", "icon", true } };
 			this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render, &this->audio,
 				&this->preferences, &this->levels, &tuning, &presentation, &this->resolution, nullptr,
-				&this->partitioner, &this->mouse);
+				&this->partitioner);
 		}
 	};
 
@@ -117,10 +119,13 @@ namespace debug_console_acceptance
 		void debug_adopt(const MatchSetup& plan, bool) override { this->settings = plan; }
 		void debug_leave() override {}
 		// GameLevel::step_match's place, without its recorder and rumble.
-		void step(const std::vector<PlayerInputData>& inputs, float dt,
+		void step(const std::vector<SlotInput>& inputs, float dt,
 			SeatInputFilter* seats)
 		{
-			this->level->update(inputs, dt, seats);
+			this->level->refresh_layout();
+			const SeatCommands commands = this->world_.seat_commands.build(*this->level, inputs);
+			if (commands.skip_intro) { this->level->request_intro_skip(); }
+			this->level->update(commands.seats, dt, seats);
 		}
 		bool debug_level_finished() const override { return this->level->state() == LevelState::finished; }
 		const Level* debug_level() const override { return this->level.get(); }
@@ -186,10 +191,10 @@ namespace debug_console_acceptance
 	};
 
 	// The keyboard seat's own scripted input (the bots drive the rest).
-	inline std::vector<PlayerInputData> keyboard_step(int step)
+	inline std::vector<SlotInput> keyboard_step(int step)
 	{
-		std::vector<PlayerInputData> inputs(input_slots::count);
-		PlayerInputData& keys = inputs[static_cast<std::size_t>(input_slots::keyboard_and_mouse)];
+		std::vector<SlotInput> inputs(input_slots::count);
+		SlotInput& keys = inputs[static_cast<std::size_t>(input_slots::keyboard_and_mouse)];
 		keys.connected = true;
 		keys.x_movement = (step / 90) % 3 == 0 ? 1.0f : (step / 90) % 3 == 1 ? -1.0f : 0.0f;
 		keys.jump_held = step % 75 < 12;

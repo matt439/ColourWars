@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
+#include "engine/input/mouse.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/probe.h"
@@ -70,7 +71,7 @@ namespace
             this->levels.add("movement_course", std::move(info));
             this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render,
                 &this->audio, &this->preferences, &this->levels, &this->tuning,
-                &this->presentation, &this->resolution, nullptr, &this->partitioner, &this->mouse);
+                &this->presentation, &this->resolution, nullptr, &this->partitioner);
         }
 
         CursorMarkerPresentation& look()
@@ -117,12 +118,16 @@ namespace
             return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         }
 
-        // The pointer as the window would report it, after the frame boundary.
-        void point(bool focused, const Vector2I& at)
+        // The pointer as the window would report it, after the frame boundary,
+        // handed to the level as GameLevel::draw hands it.
+        void point(Level& level, bool focused, const Vector2I& at)
         {
             this->mouse.set_focused(focused);
             this->mouse.on_move(at);
             this->mouse.poll();
+            level.set_pointer(this->mouse.focused() ? std::optional<Vector2F>(Vector2F(
+                static_cast<float>(this->mouse.state().position.x),
+                static_cast<float>(this->mouse.state().position.y))) : std::nullopt);
         }
     };
 
@@ -168,24 +173,24 @@ namespace
             {
                 const std::string where = at + " " + describe(plan);
                 auto level = world.build(plan);
-                world.point(true, middle);
+                world.point(*level, true, middle);
                 expect(*level, true, where + " centred");
                 // The window's own corner pixels are inside.
                 for (const Vector2I inside : { Vector2I(0, 0), Vector2I(w - 1, 0), Vector2I(0, h - 1), Vector2I(w - 1, h - 1) })
                 {
-                    world.point(true, inside);
+                    world.point(*level, true, inside);
                     expect(*level, true, where + " at a corner pixel");
                 }
                 // One pixel past each edge is outside.
                 for (const Vector2I outside : { Vector2I(-1, middle.y), Vector2I(w, middle.y),
                     Vector2I(middle.x, -1), Vector2I(middle.x, h) })
                 {
-                    world.point(true, outside);
+                    world.point(*level, true, outside);
                     expect(*level, false, where + " past an edge");
                 }
-                world.point(false, middle);
+                world.point(*level, false, middle);
                 expect(*level, false, where + " unfocused");
-                world.point(true, middle);
+                world.point(*level, true, middle);
                 world.look().enabled = false;
                 expect(*level, false, where + " disabled");
                 world.look().enabled = true;
@@ -200,14 +205,14 @@ namespace
                 { Seat::pad, Seat::bot, Seat::pad } })
             {
                 auto level = world.build(plan);
-                world.point(true, middle);
+                world.point(*level, true, middle);
                 expect(*level, false, at + " " + describe(plan) + " without a keyboard/mouse seat");
             }
         }
-        // A Level built with no mouse at all never shows the marquee.
+        // A Level never told where the pointer is never shows the marquee.
         world.resolution.set_resolution(ScreenResolution::s_1920_1080);
         LevelBuilder mouseless(&world.viewports, &world.render, &world.audio, &world.preferences,
-            &world.levels, &world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner, nullptr);
+            &world.levels, &world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner);
         MatchSetup settings;
         settings.set_stage("movement_course");
         settings.set_player_count(1);

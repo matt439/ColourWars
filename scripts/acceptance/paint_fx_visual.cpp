@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include "scripts/acceptance/support/slot_seats.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -626,7 +627,7 @@ int wmain(int argc, wchar_t** argv)
         presentation.validate_resources(*app.render_resources(), *app.audio_resources());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
             &preferences, &levels, &tuning, &presentation, app.resolution_manager(),
-            app.thread_pool(), app.partitioner(), app.mouse());
+            app.thread_pool(), app.partitioner());
         const Canvas canvas(app.render_resources());
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
         {
@@ -645,11 +646,11 @@ int wmain(int argc, wchar_t** argv)
                     input.shoot_direction_requested = true;
                 }
                 for (int tick = 0; tick < 600 && match->state() != LevelState::active; ++tick)
-                    match->update(inputs, dt);
+                    match->update(acceptance::slot_seats(*match, inputs), dt);
                 require(match->state() == LevelState::active, "real four-player match did not become active");
-                for (int tick = 0; tick < 60; ++tick) { match->update(inputs, dt); }
+                for (int tick = 0; tick < 60; ++tick) { match->update(acceptance::slot_seats(*match, inputs), dt); }
                 for (auto& input : inputs) { input.primary_shoot = true; }
-                for (int tick = 0; tick < 5; ++tick) { match->update(inputs, dt); }
+                for (int tick = 0; tick < 5; ++tick) { match->update(acceptance::slot_seats(*match, inputs), dt); }
                 const float scale = match->player(0).camera().scale;
                 require(std::fabs(scale - static_cast<float>(size.y) / 1080) < 0.0001f,
                     "matrix no longer matches the authored gameplay camera scale");

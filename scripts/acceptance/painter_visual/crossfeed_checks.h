@@ -114,7 +114,7 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
         info.zoom_out_start_bounds_rectangle(), info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation,
         std::wstring(display.begin(), display.end()), info.sound_bank_name(), info.music_name(), info.music_volume(),
         info.end_sting_name(), info.end_sting_volume(), app.resolution_manager(), app.viewport_manager(),
-        app.render_resources(), app.audio_resources(), &preferences, app.mouse(), info.stations(), opening, duration);
+        app.render_resources(), app.audio_resources(), &preferences, info.stations(), opening, duration);
     require(fixture.level->player_count() == count, "Crossfeed native Level changed its requested player count");
     for (int view = 0; view < count; ++view)
     { require(fixture.level->player(view).player_num() == slots[static_cast<size_t>(view)], "Crossfeed native roster changed its view/input mapping"); }
@@ -236,7 +236,7 @@ void crossfeed_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     {
         require(++updates <= 8000, "Crossfeed native matrix exceeded its bounded Level update budget");
         if (moving) { ++input_steps; }
-        fixture.level->update(inputs, dt);
+        fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt);
     };
     const auto capture = [&](CrossfeedFixture& fixture, const std::string& stem, const char* phase, bool heavy, bool ending)
     {

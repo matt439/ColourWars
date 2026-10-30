@@ -164,6 +164,8 @@ void GameLevel::init()
 		this->data()->mouse(),
 		this->data()->tuning(), &this->data()->save()->play_settings(),
 		&this->data()->save()->input_bindings());
+	this->seat_commands_ = std::make_unique<SeatCommandBuilder>(
+		this->data()->mouse(), this->data()->viewport_manager());
 
 	this->menu_input_ = std::make_unique<MenuInput>(
 		this->data()->gamepads(),
@@ -183,7 +185,7 @@ void GameLevel::init()
 		this->data()->resolution_manager(),
 		this->data()->thread_pool(),
 		this->data()->partitioner(),
-		this->data()->mouse(), &this->data()->save()->input_bindings());
+		&this->data()->save()->input_bindings());
 
 	// Content reloaded from the menus is swapped in by the first build.
 	this->data()->debug().attach_match(*this);
@@ -386,7 +388,7 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	std::vector<PlayerInputData> player_inputs;
+	std::vector<SlotInput> player_inputs;
 	if (this->context()->active())
 	{
 		player_inputs = this->player_input_->player_inputs(this->settings_.pad_devices());
@@ -445,8 +447,9 @@ void GameLevel::update(float dt)
 		if (this->resume_countdown_.advance(dt))
 		{
 			this->resume_audio_->stop();
-			this->tape_.record_resume(player_inputs);
-			this->level_->prepare_resume(player_inputs);
+			const SeatCommands resumed = this->seat_commands(player_inputs);
+			this->tape_.record_resume(resumed.seats);
+			this->level_->prepare_resume(resumed.seats);
 			this->level_->emphasise_players();
 			if (this->audio_may_play()) { this->level_->resume(); }
 		}
@@ -472,7 +475,7 @@ void GameLevel::update(float dt)
 	debug.end_match_steps(*this, steps);
 }
 
-void GameLevel::step_match(const std::vector<PlayerInputData>& inputs, float dt,
+void GameLevel::step_match(const std::vector<SlotInput>& inputs, float dt,
 	SeatInputFilter* seats)
 {
 	this->data()->debug().sync_background_audio(this->context()->active());
@@ -480,15 +483,32 @@ void GameLevel::step_match(const std::vector<PlayerInputData>& inputs, float dt,
 	// The recorder always forwards the Debug filter; timed rounds also tape
 	// each step's final input. Untimed practice keeps no shipping tape.
 	this->tape_recorder_.prepare(seats, dt);
-	this->level_->update(inputs, dt, &this->tape_recorder_);
+	const SeatCommands commands = this->seat_commands(inputs);
+	if (commands.skip_intro) { this->level_->request_intro_skip(); }
+	this->level_->update(commands.seats, dt, &this->tape_recorder_);
 	if (!this->context()->active()) { this->level_->pause_audio(); }
 	this->drain_rumble(dt);
+}
+
+SeatCommands GameLevel::seat_commands(const std::vector<SlotInput>& inputs)
+{
+	this->level_->refresh_layout();
+	return this->seat_commands_->build(*this->level_, inputs);
 }
 
 void GameLevel::draw(Renderer& renderer) const
 {
 	// The perf overlay's frame starts here. Inert in Release.
 	this->data()->debug().begin_match_draw();
+	// The cursor marker follows the pointer as this frame shows it.
+	const labrador::Mouse& mouse = *this->data()->mouse();
+	std::optional<mattmath::Vector2F> pointer;
+	if (mouse.focused())
+	{
+		pointer = mattmath::Vector2F(static_cast<float>(mouse.state().position.x),
+			static_cast<float>(mouse.state().position.y));
+	}
+	this->level_->set_pointer(pointer);
 	// A covered match does not update, but its window can still resize. Prepare
 	// its presentation on this thread before Scene::draw starts any workers.
 	this->level_->refresh_layout();
@@ -720,7 +740,7 @@ void GameLevel::leave_match(EndMenuAction action) const
 }
 
 int GameLevel::check_for_pause_input(
-	const std::vector<PlayerInputData>& player_inputs) const
+	const std::vector<SlotInput>& player_inputs) const
 {
 	for (int i = 0; i < static_cast<int>(player_inputs.size()); i++)
 	{

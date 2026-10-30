@@ -82,7 +82,7 @@ namespace balance_runner
                 this->presentation_.validate_resources(this->render_, this->audio_);
                 this->builder_ = std::make_unique<LevelBuilder>(&this->viewports_, &this->render_, &this->audio_,
                     &this->preferences_, &this->levels_, &this->tuning_, &this->presentation_,
-                    &this->resolution_, nullptr, &this->partitioner_, &this->mouse_);
+                    &this->resolution_, nullptr, &this->partitioner_);
             }
 
             bool has_stage(const std::string& stage) const { return this->stages_.contains(stage); }

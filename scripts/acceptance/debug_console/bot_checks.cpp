@@ -44,7 +44,7 @@ namespace debug_console_acceptance
 		for (int step = 0; step < steps; ++step)
 		{
 			const PlayerInputData input = bot->think(scripted_view(step));
-			require(input.connected && !input.toggle_pause_menu && !input.toggle_debug,
+			require(input.connected && !input.toggle_debug,
 				behaviour + ": a bot is connected and never opens a menu or the F1 overlay");
 			require(!input.jump_pressed || (input.jump_held && !held),
 				behaviour + ": jump_pressed only on the step a hold begins");
@@ -92,7 +92,7 @@ namespace debug_console_acceptance
 			"bot all drives the dummies and bot 1 the keyboard seat: " + impl.status_strip());
 		require(director.drives_slot(input_slots::keyboard_and_mouse) && !director.drives_slot(0),
 			"A bot on the keyboard seat drives its slot");
-		std::vector<PlayerInputData> inputs(input_slots::count);
+		std::vector<SlotInput> inputs(input_slots::count);
 		update_match(director, match, inputs, 1.0f / 60.0f);
 		require(match.last_filter != nullptr, "With bots, the update gets a seat filter");
 		require(impl.execute("bot 1 off").ok && impl.status_strip().find("BOTS 3x paint") != std::string::npos,

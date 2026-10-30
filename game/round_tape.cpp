@@ -81,10 +81,10 @@ void RoundTape::record_suspend()
 	this->gaps_.push_back({ this->steps(), false, {} });
 }
 
-void RoundTape::record_resume(const std::vector<PlayerInputData>& slots)
+void RoundTape::record_resume(const std::vector<PlayerInputData>& seats)
 {
 	if (!this->started_ || this->spoiled_) { return; }
-	this->gaps_.push_back({ this->steps(), true, slots });
+	this->gaps_.push_back({ this->steps(), true, seats });
 }
 
 void RoundTape::apply_gaps(Level& level, int step) const
@@ -94,7 +94,7 @@ void RoundTape::apply_gaps(Level& level, int step) const
 		if (gap.step != step) { continue; }
 		if (gap.resume)
 		{
-			level.prepare_resume(gap.slots);
+			level.prepare_resume(gap.seats);
 		}
 		else
 		{

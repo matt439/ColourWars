@@ -270,12 +270,11 @@ namespace
 		const GameTuning shortened = variants.tuning([&](rapidjson::Document& json)
 			{ json["match"]["zoom_out"].SetFloat(mix.fade_out * 0.25f); });
 		LevelBuilder builder(&world.viewports, &world.render, &world.audio, &world.preferences, &world.levels,
-			&shortened, &world.presentation, &world.resolution, nullptr, &world.partitioner, &world.mouse);
+			&shortened, &world.presentation, &world.resolution, nullptr, &world.partitioner);
 		world.begin = recorded_sounds(world.device).size();
 		auto short_level = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::full);
-		auto skip = world.idle;
-		skip.at(static_cast<size_t>(short_level->player(0).player_num())).skip_intro = true;
-		short_level->update(skip, 0.001f);
+		short_level->request_intro_skip();
+		short_level->update(world.idle, 0.001f);
 		short_level->update(world.idle, 0.001f);
 		short_level->update_music(mix.fade_in);
 		for (int tick = 0; tick < 1000 && short_level->state() != LevelState::zoom_out; ++tick)
@@ -314,7 +313,7 @@ namespace
 		AudioResources missing;
 		missing.add_sound_bank("paint_exe", SoundBank::silent());
 		LevelBuilder builder(&world.viewports, &world.render, &missing, &world.preferences, &world.levels,
-			&world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner, &world.mouse);
+			&world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner);
 		const auto silent_calls = recorded_sounds(world.device).size();
 		{
 			auto silent = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::off);

@@ -72,6 +72,7 @@
 #include <rapidjson/writer.h>
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/slot_seats.h"
 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 // This focused probe supplies the concrete input backend at the link seam.
@@ -462,7 +463,7 @@ int wmain(int argc, wchar_t** argv)
         presentation.validate_resources(*app.render_resources(), *app.audio_resources());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(),
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
-            app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+            app.resolution_manager(), app.thread_pool(), app.partitioner());
         const Canvas canvas(app.render_resources());
         if (result_percentage_only)
         {
@@ -1222,7 +1223,7 @@ int wmain(int argc, wchar_t** argv)
             marker_audio.add_sound_bank("paint_exe", SoundBank::silent());
             LevelBuilder marker_builder(app.viewport_manager(), app.render_resources(),
                 &marker_audio, &preferences, &levels, &tuning, &presentation,
-                app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+                app.resolution_manager(), app.thread_pool(), app.partitioner());
             marker_matrix(app, marker_builder, canvas, tuning, preferences, output);
         }
         presentation.set_movement_feedback_enabled(true);
@@ -1247,7 +1248,7 @@ int wmain(int argc, wchar_t** argv)
                         input.shoot_angle = std::atan2(std::sin(angle), std::cos(angle));
                         input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
                     }
-                    level->update(inputs, dt);
+                    level->update(acceptance::slot_seats(*level, inputs), dt);
                 }
                 for (int view = 0; view < count; ++view)
                 {
@@ -1292,7 +1293,7 @@ int wmain(int argc, wchar_t** argv)
                     input.shoot_angle = angle;
                     input.shoot_direction = Vector2F::unit_vec_from_angle(angle);
                 }
-                for (int tick = 0; tick < 8; ++tick) { teammates->update(teammate_inputs, dt); }
+                for (int tick = 0; tick < 8; ++tick) { teammates->update(acceptance::slot_seats(*teammates, teammate_inputs), dt); }
                 for (int view = 0; view < 4; ++view)
                 {
                     require(teammates->player(view).team() == PlayerTeam::a &&
@@ -1316,7 +1317,7 @@ int wmain(int argc, wchar_t** argv)
         require(before_pose == observation(*level), "story pose changed simulation state");
         player.set_pose({});
         require(level->kill_player(0), "could not request elimination");
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         require(player.state() == PlayerState::dead, "elimination did not enter death");
         const Camera whole_camera = player.camera();
         player.set_pose({ Vector2F::ZERO, 0, false, true });
@@ -1326,7 +1327,7 @@ int wmain(int argc, wchar_t** argv)
         for (int tick = 0; tick < 60 && (player.animation_state() == PlayerAnimationState::elimination ||
             player.combat_feedback().elimination_remaining() > 0.0f); ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(player.animation_state() == PlayerAnimationState::idle &&
             player.combat_feedback().elimination_remaining() == 0.0f,
@@ -1343,7 +1344,7 @@ int wmain(int argc, wchar_t** argv)
         capture(app, *level, canvas, output, "1p-death", records, false);
         const float outline_at = (presentation.respawn_redraw().draw_from +
             presentation.respawn_redraw().fill_at) * 0.5f;
-        while (player.state() == PlayerState::dead && player.respawn_progress() < outline_at) { level->update(inputs, dt); }
+        while (player.state() == PlayerState::dead && player.respawn_progress() < outline_at) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         require(player.state() == PlayerState::dead, "outline phase missed the respawn wait");
         capture(app, *level, canvas, output, "1p-redraw-outline", records);
         player.set_pose({ Vector2F::ZERO, 0.0f, false, true });
@@ -1351,11 +1352,11 @@ int wmain(int argc, wchar_t** argv)
         player.set_pose({});
         while (player.state() == PlayerState::dead && player.respawn_progress() < presentation.respawn_redraw().fill_at)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(player.state() == PlayerState::dead, "filled phase missed the respawn wait");
         capture(app, *level, canvas, output, "1p-redraw-filled", records);
-        for (int tick = 0; tick < 600 && player.state() == PlayerState::dead; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 600 && player.state() == PlayerState::dead; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         require(player.state() == PlayerState::alive, "redraw did not respawn within 600 ticks");
         capture(app, *level, canvas, output, "1p-respawn", records);
         resume_matrix(app, levels, tuning, presentation, content, output);

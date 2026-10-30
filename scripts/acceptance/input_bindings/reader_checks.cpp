@@ -6,7 +6,7 @@
 namespace input_bindings_acceptance
 {
     constexpr std::array<PadControl, 4> faces{ PadControl::a, PadControl::b, PadControl::x, PadControl::y };
-    bool same_input(const PlayerInputData& a, const PlayerInputData& b)
+    bool same_input(const SlotInput& a, const SlotInput& b)
     {
         return a.connected == b.connected && a.x_movement == b.x_movement && a.jump_pressed == b.jump_pressed &&
             a.jump_held == b.jump_held && a.shoot_angle == b.shoot_angle && a.shoot_direction == b.shoot_direction &&

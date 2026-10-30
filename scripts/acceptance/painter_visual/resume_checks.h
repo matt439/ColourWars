@@ -150,6 +150,11 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         pause();
         resume();
         const auto frozen = resume_observation(level);
+        // The pointer GameLevel::draw hands the level, so this raw render and
+        // the one after the captures below show the same cursor marker.
+        const MouseState& pointer = app.mouse()->state();
+        level.set_pointer(app.mouse()->focused() ? std::optional<Vector2F>(Vector2F(
+            static_cast<float>(pointer.position.x), static_cast<float>(pointer.position.y))) : std::nullopt);
         const Frame frozen_world = render(level, *app.renderer());
         record("begin");
         tick(0.0f); tick(-1.0f);

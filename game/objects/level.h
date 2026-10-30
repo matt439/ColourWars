@@ -9,7 +9,6 @@
 #include "game/objects/player_input.h"
 #include "game/objects/player.h"
 #include "engine/render/resolution_manager.h"
-#include "engine/input/mouse.h"
 #include "engine/render/viewport_manager.h"
 #include "game/objects/debug_text.h"
 #include "game/objects/player_camera.h"
@@ -43,6 +42,7 @@
 #include "game/objects/music_envelope.h"
 #include "game/match_setup.h"
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string_view>
 
@@ -101,7 +101,6 @@ public:
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
-		const labrador::Mouse* mouse,
 		std::vector<LevelStation> stations,
 		OpeningMode opening, std::optional<float> duration = std::nullopt,
 		const InputBindings* input_bindings = nullptr,
@@ -130,17 +129,25 @@ public:
 	void resume_music() const;
 	// Complete the count-in without a simulation tick. Neutral jump input
 	// rearms the next press; old fire loops must not return before a new shot.
-	void prepare_resume(const std::vector<PlayerInputData>& inputs);
+	// `seats` is one command per participant, as update takes them.
+	void prepare_resume(const std::vector<PlayerInputData>& seats);
 	// Pauses the same voices without touching any player: for a frozen
 	// simulation that no menu covers (the Debug clock's pause).
 	void pause_audio() const;
 
-	// `seats`, when given, sees and may replace every participant's final input
-	// after the shipping bots, unless it replaces their inputs. GameLevel passes
-	// the shipping recorder in both builds, optionally wrapping a Debug filter;
-	// instant replay supplies a tape player instead.
-	void update(const std::vector<PlayerInputData>& player_inputs, float dt,
+	// `commands` holds one command per participant, in roster order: device
+	// slots already mapped and keyboard/mouse aim resolved (SeatCommandBuilder).
+	// A participant past its end gets neutral input. `seats`, when given, sees
+	// and may replace every participant's final input after the shipping bots,
+	// unless it replaces their inputs. GameLevel passes the shipping recorder
+	// in both builds, optionally wrapping a Debug filter; instant replay
+	// supplies a tape player instead.
+	void update(const std::vector<PlayerInputData>& commands, float dt,
 		SeatInputFilter* seats = nullptr);
+	// Skip the intro on the next update, as A, B or Start does: honoured only
+	// by an update that steps (dt > 0) while the opening or its countdown plays,
+	// and dropped at the end of that update either way.
+	void request_intro_skip();
 	// Feedback intents, retaining each Player's stable input slot. Drain once after
 	// a completed tick, including blocked bot/replay/keyboard events; this never
 	// changes simulation/RNG state. A lifecycle stop may explicitly discard them.
@@ -228,6 +235,9 @@ public:
 	// POL#39: the marquee around the mouse pointer. Shown while enabled, the
 	// mouse is focused inside the window and a human seat uses keyboard/mouse.
 	bool cursor_marker_visible() const;
+	// Where the focused mouse pointer is, in window pixels, or none while the
+	// mouse is unfocused. The shell sets it before each draw; none until then.
+	void set_pointer(std::optional<mattmath::Vector2F> window_point);
 	// Its frames (outer ink, paper rim, inner ink) centred on window pixel
 	// `at` in a window `window_height` lines tall, rounded to whole pixels.
 	static std::array<CursorMarkerFrame, 3> cursor_marker_frames(
@@ -429,8 +439,10 @@ private:
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
 	const labrador::ViewportManager* viewport_manager_ = nullptr;
 
-	// Borrowed mouse state for camera-dependent aiming; see resolve_mouse_aim.
-	const labrador::Mouse* mouse_ = nullptr;
+	// See set_pointer; read only by the cursor marker.
+	std::optional<mattmath::Vector2F> pointer_;
+	// See request_intro_skip.
+	bool intro_skip_requested_ = false;
 
 	// Practice lessons and one prepared card per lesson, so a draw only
 	// chooses among them. Laid out in window pixels by centre_lesson_cards.
@@ -553,32 +565,25 @@ private:
 	bool intro_showing() const;
 	float push_ratio() const;
 	mattmath::RectangleF intro_screen() const;
-	bool skip_requested(const std::vector<PlayerInputData>& player_inputs) const;
+	bool skip_requested() const;
 	void colour_players(bool team_a, bool team_b);
 	void skip_intro();
 	void set_room_tone(bool playing);
-	void update_opening(const std::vector<PlayerInputData>& player_inputs, float dt);
+	void update_opening(float dt);
 	void add_intro_views();
 	void draw_intro(labrador::Renderer& renderer) const;
 
 	// Advance the match state; update() refreshes views after every path returns.
-	void update_state(const std::vector<PlayerInputData>& player_inputs,
+	void update_state(const std::vector<PlayerInputData>& commands,
 		float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal = nullptr);
 
-	void update_level_logic(const std::vector<PlayerInputData>& player_inputs,
+	void update_level_logic(const std::vector<PlayerInputData>& commands,
 		float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal = nullptr);
 
-	// Apply input by each player's device slot, not by their position in
-	// players_, then let the bot driver and `seats` (if any) replace it per participant.
+	// Give each participant its command, then let the bot driver and `seats`
+	// (if any) replace it per participant.
 	void apply_player_inputs(
-		const std::vector<PlayerInputData>& player_inputs, SeatInputFilter* seats);
-
-	// Fill keyboard/mouse aim using this player's camera and human pane. view_index
-	// is the human pane, independent of participant and physical slot.
-	// The camera uses positive uniform scale, so normalizing the screen-space
-	// direction gives the same aim direction as normalizing in world space.
-	void resolve_mouse_aim(Player* player, size_t view_index,
-		PlayerInputData& input) const;
+		const std::vector<PlayerInputData>& commands, SeatInputFilter* seats);
 
 	// Update player cameras and submit projectiles produced by their weapons.
 	void update_players(float dt);

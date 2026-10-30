@@ -73,6 +73,11 @@ namespace debug_console_acceptance
 			replay_codec::same(decoded, input), "An input encodes and decodes bit-exactly (-0.0, denormals)");
 		require(!replay_codec::decode("zz|0|0", decoded) && !replay_codec::decode("80|0|0|0|0|0|0|0|q", decoded),
 			"Malformed inputs do not decode");
+		// Files from before seats lost their pause and intro-skip signals still
+		// read; those two flags are dropped and never written again.
+		require(replay_codec::decode("1c0|0|0|0|0|0|0|0|0", decoded) && decoded.connected &&
+			replay_codec::encode(decoded).rfind("80|", 0) == 0,
+			"A recorded seat's old pause and skip flags read and are dropped");
 
 		std::vector<PlayerInputData> stream(5, input);
 		stream.push_back(PlayerInputData());

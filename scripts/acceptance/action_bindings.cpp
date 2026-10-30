@@ -245,10 +245,10 @@ namespace
 		pad(asymmetric_pad, asymmetric_pad, asymmetric);
 	}
 
-	PlayerInputData legacy_player(const GamepadState& now, const GamepadState& before,
+	SlotInput legacy_player(const GamepadState& now, const GamepadState& before,
 		const GameTuning& tuning, const PlaySettings& preferences, int slot)
 	{
-		PlayerInputData result;
+		SlotInput result;
 		if (!now.connected) { return result; }
 		result.connected = true;
 		const auto jump = legacy_pad_action(GameAction::jump, now, before, tuning.input());
@@ -274,9 +274,9 @@ namespace
 		result.left_analog_stick = now.left_stick; result.right_analog_stick = now.right_stick;
 		return result;
 	}
-	PlayerInputData legacy_player(const KeyboardState& now, const KeyboardState& before, const MouseState& mouse)
+	SlotInput legacy_player(const KeyboardState& now, const KeyboardState& before, const MouseState& mouse)
 	{
-		PlayerInputData result; result.connected = true;
+		SlotInput result; result.connected = true;
 		result.x_movement = (held(now, Key::d) ? 1.0f : 0.0f) - (held(now, Key::a) ? 1.0f : 0.0f);
 		const auto jump = legacy_desktop(GameAction::jump, now, before, {}, {});
 		result.jump_held = jump.held; result.jump_pressed = jump.pressed;
@@ -288,7 +288,7 @@ namespace
 		result.skip_intro = legacy_desktop(GameAction::skip_intro, now, before, {}, {}).released;
 		return result;
 	}
-	void same_player(const PlayerInputData& a, const PlayerInputData& b, const std::string& where)
+	void same_player(const SlotInput& a, const SlotInput& b, const std::string& where)
 	{
 		require(a.connected == b.connected && near_value(a.x_movement, b.x_movement) && a.jump_held == b.jump_held &&
 			a.jump_pressed == b.jump_pressed && a.primary_shoot == b.primary_shoot && a.drop_through == b.drop_through &&
@@ -335,7 +335,7 @@ namespace
 		GamepadReader reader; Gamepads pads{ &reader }; Keyboard keyboard; Mouse mouse;
 		GameTuning tuning; PlaySettings preferences; InputBindings input_bindings;
 		PlayerInput players; MenuInput menu; LegacyMenu legacy;
-		std::vector<PlayerInputData> gameplay; std::vector<ProcessedMenuInput> menus;
+		std::vector<SlotInput> gameplay; std::vector<ProcessedMenuInput> menus;
 		explicit Harness(const char* directory) : tuning((std::filesystem::path(directory) / "tuning.json").string().c_str()),
 			players(&pads, &keyboard, &mouse, &tuning, &preferences, &input_bindings), menu(&pads, &keyboard, &tuning)
 		{

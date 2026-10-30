@@ -136,7 +136,7 @@ namespace debug_console_acceptance
 			return paint;
 		}
 		// GameLevel::step_match's place: one step of the match.
-		void step(const std::vector<PlayerInputData>& inputs, float,
+		void step(const std::vector<SlotInput>& inputs, float,
 			SeatInputFilter* seats)
 		{
 			++this->updates;
@@ -195,7 +195,7 @@ namespace debug_console_acceptance
 	// many steps run and with which developer filter, and the match takes each.
 	template <class Match>
 	void update_match(DebugDirector& director, Match& match,
-		const std::vector<PlayerInputData>& inputs, float dt)
+		const std::vector<SlotInput>& inputs, float dt)
 	{
 		const int steps = director.match_steps(inputs, dt);
 		for (int run = 0; run < steps; ++run)

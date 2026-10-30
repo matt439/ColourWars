@@ -57,10 +57,10 @@ namespace debug_console_acceptance
 			"A match started from the menus is not rebuilt from menu-time settings");
 
 		const std::size_t kbm = static_cast<std::size_t>(input_slots::keyboard_and_mouse);
-		std::vector<PlayerInputData> tap(input_slots::count);
+		std::vector<SlotInput> tap(input_slots::count);
 		tap[kbm].jump_pressed = true;
 		tap[kbm].jump_held = true;
-		const std::vector<PlayerInputData> none(input_slots::count);
+		const std::vector<SlotInput> none(input_slots::count);
 
 		// Timescale 1: one update, the edge delivered.
 		update_match(director, match, tap, dt);

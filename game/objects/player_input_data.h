@@ -2,6 +2,11 @@
 
 #include "engine/math/vector2f.h"
 
+// One seat's command for one logic step: what its player does. Level::update
+// takes one per participant, in roster order, already mapped from its device
+// slot with keyboard/mouse aim resolved (SeatCommandBuilder); bots, round tapes
+// and Debug replays write and record this and nothing else. What a device slot
+// also says to the shell - pause, the intro skip - is SlotInput's.
 struct PlayerInputData
 {
 	float x_movement = 0.0f;
@@ -15,13 +20,8 @@ struct PlayerInputData
 	// Held request to drop through a platform, independent of input device.
 	bool drop_through = false;
 
+	// The seat's own F1 / Back overlay: Player flips it on the steps it runs.
 	bool toggle_debug = false;
-	bool toggle_pause_menu = false;
-	// Start or Escape down: lets a press begun over the intro be told apart
-	// from a fresh one when it is released (latch_intro_pause).
-	bool pause_held = false;
-	// A, B or Start released (Space, Escape or Enter): skips the intro.
-	bool skip_intro = false;
 
 	// False for a disconnected slot, whose actions are neutral. Players remain
 	// bound to device slots for the match; a pad back in a different slot

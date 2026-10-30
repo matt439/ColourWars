@@ -325,13 +325,13 @@ namespace debug_console_acceptance
 		require(clock.timescale() == DebugClock::max_timescale, "Timescale is clamped");
 		clock.set_timescale(1.0f);
 
-		std::vector<PlayerInputData> inputs(input_slots::count);
+		std::vector<SlotInput> inputs(input_slots::count);
 		inputs[4].jump_pressed = true;
 		inputs[4].jump_held = true;
 		inputs[4].toggle_debug = true;
 		inputs[4].toggle_pause_menu = true;
 		inputs[4].x_movement = 1.0f;
-		const std::vector<PlayerInputData> later = DebugClock::without_edges(inputs);
+		const std::vector<SlotInput> later = DebugClock::without_edges(inputs);
 		require(!later[4].jump_pressed && !later[4].toggle_debug,
 			"Later runs of a step drop the latched press edges");
 		require(later[4].jump_held && later[4].x_movement == 1.0f && later[4].toggle_pause_menu,

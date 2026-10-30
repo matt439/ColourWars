@@ -196,7 +196,7 @@ namespace fixed_slab_acceptance
             Partitioner partitioner;
             auto settings = setup(count); viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
-                &world.tuning, &world.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);
             std::srand(260026u);
             const auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
             require(level->player_count() == count, "Public slab load lost a roster seat");

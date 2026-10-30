@@ -35,8 +35,7 @@ namespace
 
 	void ordinary(const PlayerInputData& input)
 	{
-		require(input.connected && !input.toggle_pause_menu && !input.pause_held &&
-			!input.toggle_debug && !input.skip_intro, "A shipping bot emitted a menu/debug action or disconnected");
+		require(input.connected && !input.toggle_debug, "A shipping bot emitted a menu/debug action or disconnected");
 		require(std::isfinite(input.x_movement) && input.x_movement >= -1.0f && input.x_movement <= 1.0f &&
 			std::isfinite(input.shoot_angle) && std::isfinite(input.shoot_direction.x) &&
 			std::isfinite(input.shoot_direction.y), "A shipping bot emitted invalid ordinary input");

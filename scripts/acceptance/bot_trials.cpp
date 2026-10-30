@@ -37,7 +37,7 @@ namespace
             std::srand(trial_seed);
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
-                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
             return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         }
         paint_surfaces_acceptance::World assets;
@@ -175,7 +175,7 @@ namespace
                 "Trial ran outside its finite active-step budget");
             require(tape.steps.back().size() == 2, "Final-input trial lost a roster participant");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Trial bot emitted a menu/pause/debug action");
             const Player& bot = level->player(1);
             require(bot.primary_weapon().type() == trial.tool && bot.player_num() == -1,

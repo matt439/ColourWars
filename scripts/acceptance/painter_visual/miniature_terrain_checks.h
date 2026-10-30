@@ -640,7 +640,7 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
                 }
             };
             const auto advance = [&](float seconds)
-            { for (int tick = 0; tick < static_cast<int>(std::ceil(seconds / dt)); ++tick) { level->update(inputs, dt); } };
+            { for (int tick = 0; tick < static_cast<int>(std::ceil(seconds / dt)); ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); } };
             if (count == 4)
             {
                 sample("opening");
@@ -648,16 +648,16 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
                 require(level->state() == LevelState::opening, "miniature story missed its monitor preview");
                 sample("preview");
             }
-            for (int tick = 0; tick < 2400 && level->state() == LevelState::opening; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 2400 && level->state() == LevelState::opening; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::start_countdown, "miniature story missed the countdown"); sample("countdown");
             advance(std::max(0.0f, tuning.match().countdown - tuning.match().opening.push * 0.5f));
             if (count == 4) { sample("push"); }
-            for (int tick = 0; tick < 1200 && level->state() != LevelState::active; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 1200 && level->state() != LevelState::active; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::active, "miniature story did not reach ordinary gameplay"); sample("active");
-            for (int tick = 0; tick < 1200 && level->state() == LevelState::active; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 1200 && level->state() == LevelState::active; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::zoom_out, "miniature story missed pullback");
             advance(tuning.match().zoom_out * 0.5f); sample("pullback");
-            for (int tick = 0; tick < 1200 && level->state() == LevelState::zoom_out; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 1200 && level->state() == LevelState::zoom_out; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::overview, "miniature story did not reach overview"); sample("overview");
         }
     }

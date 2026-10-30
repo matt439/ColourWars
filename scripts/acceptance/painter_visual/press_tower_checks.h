@@ -53,10 +53,10 @@ void press_tower_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         if (heavy) { heavy_min = std::min(heavy_min, initial.second); }
         const auto inputs = neutral_inputs();
         for (int tick = 0; tick < 600 && fixture.level->state() != LevelState::active; ++tick)
-        { fixture.level->update(inputs, dt); ++updates; }
+        { fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt); ++updates; }
         require(fixture.level->state() == LevelState::active, "Press Tower native fixture did not enter active play");
         // Retire the countdown's GO artwork before inspecting the standing bands.
-        for (int tick = 0; tick < 90; ++tick) { fixture.level->update(inputs, dt); ++updates; }
+        for (int tick = 0; tick < 90; ++tick) { fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt); ++updates; }
         for (size_t phase = 0; phase < phases.size(); ++phase)
         {
             for (int view = 0; view < 4; ++view)
@@ -64,7 +64,7 @@ void press_tower_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 require(fixture.level->place_player(view, stations[phase][static_cast<size_t>(view)]),
                     "Press Tower controlled station placement failed");
             }
-            for (int tick = 0; tick < 6; ++tick) { fixture.level->update(inputs, dt); ++updates; }
+            for (int tick = 0; tick < 6; ++tick) { fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt); ++updates; }
             require(fixture.level->state() == LevelState::active, "Press Tower inspection left live gameplay");
             const auto ownership = crossfeed_ownership(fixture);
             require(heavy ? ownership.second > 0.99f : ownership.second == 0.0f,

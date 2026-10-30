@@ -394,12 +394,12 @@
 		match.settings.set_duration(60.0f);
 		test.director.attach_match(match);
 		match.build();
-		const std::vector<PlayerInputData> idle(input_slots::count);
+		const std::vector<SlotInput> idle(input_slots::count);
 		const float dt = 1.0f / 60.0f;
 		int preparation_updates = 0;
 		while (preparation_updates < 1200 && match.level->state() != LevelState::active)
 		{
-			match.level->update(idle, dt);
+			match.step(idle, dt, nullptr);
 			++preparation_updates;
 		}
 		require(match.level->state() == LevelState::active && match.level->kill_player(0),
@@ -408,7 +408,7 @@
 		while (preparation_updates < 2400 &&
 			(player.state() != PlayerState::dead || player.respawn_progress() < middle))
 		{
-			match.level->update(idle, dt);
+			match.step(idle, dt, nullptr);
 			++preparation_updates;
 		}
 		require(player.state() == PlayerState::dead && player.respawn_timer() > 0.0f &&

@@ -140,6 +140,7 @@ add_library(colourwars_game STATIC
     objects/player_camera.cpp
     objects/view_shake.cpp
     objects/player_input.cpp
+    objects/seat_commands.cpp
     objects/projectile.cpp
     objects/projectile_contacts.cpp
     objects/projectile_ball.cpp

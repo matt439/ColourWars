@@ -160,7 +160,7 @@ namespace
                 "Blockout-route trial escaped its finite active-step budget");
             require(tape.steps.back().size() == 2, "Blockout-route trial lost a roster participant");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Blockout-route bot emitted a device/menu/pause action");
             require(tape.steps.back()[0].x_movement == 0.0f && !tape.steps.back()[0].primary_shoot,
                 "Blockout-route driver changed the stationary human's input");

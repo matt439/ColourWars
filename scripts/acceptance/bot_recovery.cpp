@@ -39,7 +39,7 @@ namespace
                 view.velocity.x = step % 2 == 0 ? 120.0f : -120.0f;
             }
             const PlayerInputData input = bot.think(view);
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held,
+            require(input.connected,
                 "Recovery emitted an unavailable device/menu action");
             moved_right = moved_right || input.x_movement > 0.0f;
             if (input.x_movement < 0.0f)

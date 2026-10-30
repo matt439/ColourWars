@@ -50,8 +50,8 @@ public:
 	// Recording. `seats` is one logic step's final inputs, in roster order.
 	void record_step(const std::vector<PlayerInputData>& seats, float dt);
 	void record_suspend();
-	// The physical, slot-indexed inputs Level::prepare_resume read.
-	void record_resume(const std::vector<PlayerInputData>& slots);
+	// The seat commands Level::prepare_resume read, in roster order.
+	void record_resume(const std::vector<PlayerInputData>& seats);
 
 	// Playback: what happened to the level between step - 1 and `step`.
 	void apply_gaps(Level& level, int step) const;
@@ -61,7 +61,7 @@ private:
 	{
 		int step = 0;
 		bool resume = false;
-		std::vector<PlayerInputData> slots;
+		std::vector<PlayerInputData> seats;
 	};
 
 	unsigned int seed_ = 0;

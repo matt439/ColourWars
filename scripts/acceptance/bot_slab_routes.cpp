@@ -159,7 +159,7 @@ namespace
             level->update(physical, dt, &tape);
             require(level->state() == LevelState::active, "Slab-route trial escaped its finite active-step budget");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Slab-route bot emitted a device/menu/pause action");
             const Player& bot = level->player(1);
             require(bot.player_num() == -1 && bot.primary_weapon().type() == trial.tool &&

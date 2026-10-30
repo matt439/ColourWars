@@ -124,10 +124,10 @@ void surface_finish_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
                 auto fixture = crossfeed_fixture(app, info, tuning, presentation, preferences, count, heavy, 30.0f, contacts, stage);
                 const auto inputs = neutral_inputs();
                 for (int tick = 0; tick < 600 && fixture.level->state() != LevelState::active; ++tick)
-                { fixture.level->update(inputs, dt); ++updates; }
+                { fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt); ++updates; }
                 require(fixture.level->state() == LevelState::active, "Surface native arena did not reach active play");
                 // Retire the countdown's GO artwork before inspecting terrain.
-                for (int tick = 0; tick < 90; ++tick) { fixture.level->update(inputs, dt); ++updates; }
+                for (int tick = 0; tick < 90; ++tick) { fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt); ++updates; }
                 std::vector<Vector2F> stations;
                 for (const RectangleF& target : targets)
                 {
@@ -151,7 +151,7 @@ void surface_finish_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
                     require(fixture.level->place_player(view, stations[static_cast<size_t>(view) * stations.size() / static_cast<size_t>(count)]),
                         "Surface native controlled station placement failed");
                 }
-                for (int tick = 0; tick < 6; ++tick) { fixture.level->update(inputs, dt); ++updates; }
+                for (int tick = 0; tick < 6; ++tick) { fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt); ++updates; }
                 const Frame frame = crossfeed_frozen(app, fixture, readbacks);
                 const std::string stem = "surface-finish-" + std::string(stage) + '-' + std::to_string(count) +
                     "p-" + (heavy ? "heavy" : "clean");

@@ -243,7 +243,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
     for (const auto& stage : landmark_stages)
     { const auto path = landmark_omission_copy(content, output, stage); auto info = std::make_unique<LevelLoadedInfo>(path.string().c_str()); info->validate(); omitted.add(stage.name, std::move(info)); }
     LevelBuilder without(app.viewport_manager(), app.render_resources(), app.audio_resources(), &preferences, &omitted, &tuning,
-        &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+        &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner());
     Save saved; PlaySettings preview_preferences = saved.play_settings(); preview_preferences.reduce_effects = false;
     preview_preferences.music_volume = preview_preferences.sfx_volume = 0;
     require(saved.set_play_settings_and_save(preview_preferences), "Cannot isolate actual StagePreview preferences");
@@ -289,7 +289,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
             const auto step = [&]
             {
                 require(++ticks <= 16000, "Landmark story exceeded its hard update bound");
-                std::srand(6203 + ticks); actual->update(inputs, dt); std::srand(6203 + ticks); missing->update(inputs, dt);
+                std::srand(6203 + ticks); actual->update(acceptance::slot_seats(*actual, inputs), dt); std::srand(6203 + ticks); missing->update(acceptance::slot_seats(*missing, inputs), dt);
             };
             const auto sample = [&](const char* phase)
             {

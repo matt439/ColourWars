@@ -101,7 +101,7 @@ namespace
                 "Navigation trial escaped its finite active-step budget");
             require(tape.steps.back().size() == 2, "Navigation trial lost a roster participant");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Navigation bot emitted a device/menu/pause action");
             require(tape.steps.back()[0].x_movement == 0.0f && !tape.steps.back()[0].primary_shoot,
                 "Navigation driver changed the stationary human's input");

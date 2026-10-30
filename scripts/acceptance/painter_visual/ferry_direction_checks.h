@@ -46,7 +46,7 @@ FerryDirectionFixture ferry_direction_level(Application& app, const LevelLoadedI
         info.zoom_out_start_bounds_rectangle(), info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation,
         L"Ferry direction inspection", info.sound_bank_name(), info.music_name(), info.music_volume(),
         info.end_sting_name(), info.end_sting_volume(), app.resolution_manager(), app.viewport_manager(),
-        app.render_resources(), app.audio_resources(), &preferences, app.mouse(), info.stations(), OpeningMode::off,
+        app.render_resources(), app.audio_resources(), &preferences, info.stations(), OpeningMode::off,
         settings.duration(), nullptr, &settings);
     return { std::move(level), ferry };
 }
@@ -124,7 +124,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             std::srand(227); auto fixture = ferry_direction_level(app, left ? left_info : right_info,
                 tuning, presentation, preferences, count, left); ++builds;
             Level& level = *fixture.level; auto& ferry = *fixture.ferry; const auto inputs = neutral_inputs();
-            const auto step = [&]() { level.update(inputs, dt); require(++updates <= 5000, "Ferry native update budget exceeded"); };
+            const auto step = [&]() { level.update(acceptance::slot_seats(level, inputs), dt); require(++updates <= 5000, "Ferry native update budget exceeded"); };
             for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { step(); }
             require(level.state() == LevelState::active, "Ferry native countdown did not finish");
             require(level.place_player(0, { ferry.bounds().center().x, ferry.bounds().top() - level.player(0).rectangle().height }),

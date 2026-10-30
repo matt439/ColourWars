@@ -10,6 +10,7 @@
 #include "game/states/main_menu.h"
 #include "game/states/end_menu.h"
 #include "game/objects/player_input.h"
+#include "game/objects/seat_commands.h"
 #include "game/objects/seat_input_filter.h"
 #include "game/input_slots.h"
 #include "game/debug/debug_targets.h"
@@ -113,6 +114,9 @@ private:
 	std::unique_ptr<Level> level_ = nullptr;
 	std::unique_ptr<LevelBuilder> level_builder_ = nullptr;
 	std::unique_ptr<PlayerInput> player_input_ = nullptr;
+	// Device slots to seats, mouse aim included: the only reader of the
+	// mouse for a match's simulation.
+	std::unique_ptr<SeatCommandBuilder> seat_commands_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
 
 	// The end-of-round instant replay (ROAD#19, game_level_replay.cpp). Each
@@ -136,13 +140,17 @@ private:
 	// Every suspend of the live round, so the tape has it.
 	void suspend_level();
 
-	// One step of the live round: one Level::update on `inputs`, through the
-	// shipping tape recorder, with rumble and background audio kept in step.
-	// update() runs it once a frame; in Debug, the director's clock may run it
-	// 0..4 times and hand it a developer seat filter (bots, record, play),
-	// which the recorder forwards. `seats` is always null in Release.
-	void step_match(const std::vector<PlayerInputData>& inputs, float dt,
+	// One step of the live round: one Level::update on the seat commands built
+	// from the slot `inputs`, through the shipping tape recorder, with rumble
+	// and background audio kept in step. update() runs it once a frame; in
+	// Debug, the director's clock may run it 0..4 times and hand it a
+	// developer seat filter (bots, record, play), which the recorder forwards.
+	// `seats` is always null in Release.
+	void step_match(const std::vector<SlotInput>& inputs, float dt,
 		SeatInputFilter* seats);
+	// The level's seat commands for slot `inputs`, its layout refreshed first
+	// so a resized window's cameras are the ones the mouse aims through.
+	SeatCommands seat_commands(const std::vector<SlotInput>& inputs);
 
 	bool covered_ = false;
 	bool pause_menu_open_ = false;
@@ -218,7 +226,7 @@ private:
 	// Returns the input slot of a participant requesting pause, or -1.
 	// Unclaimed devices cannot open the pause menu.
 	int check_for_pause_input(
-		const std::vector<PlayerInputData>& player_inputs) const;
+		const std::vector<SlotInput>& player_inputs) const;
 	GameData* data() const;
 
 	// Last member: acquire after earlier members and clear on member unwind.

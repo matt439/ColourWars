@@ -121,18 +121,10 @@ RectangleF Level::intro_screen() const
 		lerp(this->monitor_->glass(window), window, this->glass_push()));
 }
 
-bool Level::skip_requested(const std::vector<PlayerInputData>& player_inputs) const
+bool Level::skip_requested() const
 {
-	// Anyone in the match, by the device slot their input arrives on.
-	for (const Player* player : this->players_)
-	{
-		const size_t slot = static_cast<size_t>(player->player_num());
-		if (slot < player_inputs.size() && player_inputs[slot].skip_intro)
-		{
-			return true;
-		}
-	}
-	return false;
+	// Anyone in the match: SeatCommandBuilder reads each participant's slot.
+	return this->intro_skip_requested_;
 }
 
 void Level::colour_players(bool team_a, bool team_b)
@@ -180,9 +172,9 @@ void Level::skip_intro()
 	this->colour_players(true, true);
 }
 
-void Level::update_opening(const std::vector<PlayerInputData>& player_inputs, float dt)
+void Level::update_opening(float dt)
 {
-	if (this->skip_requested(player_inputs))
+	if (this->skip_requested())
 	{
 		this->skip_intro();
 		return;

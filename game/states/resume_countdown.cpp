@@ -29,13 +29,13 @@ bool ResumeCountdown::advance(float dt)
 	return !this->active();
 }
 
-void ResumeCountdown::filter_inputs(std::vector<PlayerInputData>& inputs)
+void ResumeCountdown::filter_inputs(std::vector<SlotInput>& inputs)
 {
 	const bool counting = this->active();
 	const size_t slots = std::min(inputs.size(), this->held_.size());
 	for (size_t slot = 0; slot < slots; ++slot)
 	{
-		PlayerInputData& input = inputs[slot];
+		SlotInput& input = inputs[slot];
 		HeldActions& held = this->held_[slot];
 		const bool jump = input.jump_held || input.jump_pressed;
 		const bool fire = input.primary_shoot;

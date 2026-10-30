@@ -180,7 +180,7 @@ namespace
             for (int seat = 0; seat < level->player_count(); ++seat)
             {
                 const PlayerInputData& input = inputs[static_cast<std::size_t>(seat)];
-                require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+                require(input.connected && !input.toggle_debug,
                     "Combat trial emitted a menu/pause/device action");
                 require(level->player(seat).primary_weapon().type() == trial.tool,
                     "Combat trial changed a participant's tool");

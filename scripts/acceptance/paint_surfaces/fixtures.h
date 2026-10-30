@@ -60,7 +60,7 @@ namespace paint_surfaces_acceptance
                 levels_.add(stage, std::move(info));
             }
             builder_ = std::make_unique<LevelBuilder>(&viewports_, &render, &audio, &preferences,
-                &levels_, &tuning, &presentation, &resolution_, nullptr, &partitioner_, &mouse_);
+                &levels_, &tuning, &presentation, &resolution_, nullptr, &partitioner_);
         }
         std::unique_ptr<StructurePaintable> surface(const mattmath::RectangleF& rectangle,
             const PaintableFaces& faces, std::span<const mattmath::RectangleF> obstacles = {})

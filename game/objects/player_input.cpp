@@ -42,7 +42,7 @@ const ActionBindings& PlayerInput::effective_pad_bindings(int slot) const
 	return this->pad_bindings_[slot];
 }
 
-PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot) const
+SlotInput PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot) const
 {
 	const GamepadState& pad = gamepads.state(device);
 	const GamepadState& before = gamepads.previous_state(device);
@@ -52,7 +52,7 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int device, int
 		return game_action(bindings, name, pad, before, this->tuning_->input());
 	};
 
-	PlayerInputData result;
+	SlotInput result;
 	result.connected = true;
 
 	// Jump uses this slot's chosen controls (A / LT by default). Suppress press
@@ -94,7 +94,7 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int device, int
 	return result;
 }
 
-PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
+SlotInput PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 	const Mouse& mouse) const
 {
 	const ActionBindings& bindings = this->effective_bindings();
@@ -103,7 +103,7 @@ PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 		return game_action(bindings, name, keyboard.state(), keyboard.previous_state(),
 			mouse.state(), mouse.previous_state());
 	};
-	PlayerInputData result;
+	SlotInput result;
 	result.connected = true;
 
 	// Opposing movement keys cancel.
@@ -126,25 +126,26 @@ PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 	result.toggle_debug = action(GameAction::debug).released;
 	result.skip_intro = action(GameAction::skip_intro).released;
 
-	// Level fills mouse aim after converting the player centre to screen coordinates.
+	// SeatCommandBuilder fills mouse aim after converting the player centre to
+	// screen coordinates.
 
 	// Leave raw stick positions zero; the debug overlay should not invent stick input.
 
 	return result;
 }
 
-std::vector<PlayerInputData> PlayerInput::player_inputs() const
+std::vector<SlotInput> PlayerInput::player_inputs() const
 {
 	std::array<int, input_slots::pad_count> own{};
 	for (int slot = 0; slot < input_slots::pad_count; ++slot) { own[slot] = slot; }
 	return this->player_inputs(own);
 }
 
-std::vector<PlayerInputData> PlayerInput::player_inputs(
+std::vector<SlotInput> PlayerInput::player_inputs(
 	const std::array<int, input_slots::pad_count>& devices) const
 {
 	this->input_bindings_->validate();
-	std::vector<PlayerInputData> result(input_slots::count);
+	std::vector<SlotInput> result(input_slots::count);
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		const int device = input_slots::is_pad(devices[slot]) ? devices[slot] : slot;

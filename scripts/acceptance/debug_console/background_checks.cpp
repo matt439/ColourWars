@@ -44,8 +44,8 @@ namespace debug_console_acceptance
 		{
 			return std::tuple{ input.x_movement, input.jump_pressed, input.jump_held, input.shoot_angle,
 				input.shoot_direction.x, input.shoot_direction.y, input.shoot_direction_requested,
-				input.primary_shoot, input.drop_through, input.toggle_debug, input.toggle_pause_menu,
-				input.pause_held, input.skip_intro, input.connected, input.left_analog_stick.x,
+				input.primary_shoot, input.drop_through, input.toggle_debug, input.connected,
+				input.left_analog_stick.x,
 				input.left_analog_stick.y, input.right_analog_stick.x, input.right_analog_stick.y };
 		}
 
@@ -101,7 +101,6 @@ namespace debug_console_acceptance
 			physical.shoot_angle = 1.25f;
 			physical.shoot_direction = { 0.6f, -0.8f };
 			physical.primary_shoot = physical.drop_through = physical.toggle_debug = true;
-			physical.toggle_pause_menu = physical.pause_held = physical.skip_intro = true;
 			physical.left_analog_stick = { 0.25f, -0.5f };
 			physical.right_analog_stick = { -0.5f, 0.75f };
 			std::vector<PlayerInputData> adversarial(2, physical);
@@ -114,7 +113,7 @@ namespace debug_console_acceptance
 			test.director.attach_match(match);
 			const DetachMatch detach{ test.director, match };
 			const float dt = 1.0f / 60.0f;
-			const std::vector<PlayerInputData> slots(input_slots::count);
+			const std::vector<SlotInput> slots(input_slots::count);
 			update_match(test.director, match, slots, dt);
 			require(match.last_filter == nullptr, "Default-off active input must retain its original filter path");
 			test.impl.set_background_probe([] { return DebugBackgroundState{ true, false, false }; });
@@ -163,7 +162,7 @@ namespace debug_console_acceptance
 			test.impl.set_background_probe([] { return DebugBackgroundState{ true, false, false }; });
 			require(test.impl.execute("script.background 1").ok, "The edge fixture opts into visible background work");
 			const float dt = 1.0f / 60.0f;
-			const std::vector<PlayerInputData> neutral(input_slots::count);
+			const std::vector<SlotInput> neutral(input_slots::count);
 			auto tap = neutral;
 			auto& keyboard = tap[static_cast<std::size_t>(input_slots::keyboard_and_mouse)];
 			keyboard.jump_pressed = keyboard.toggle_debug = keyboard.skip_intro = true;

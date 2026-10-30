@@ -192,12 +192,12 @@
                     Vector2F(1200.0f + 200.0f * static_cast<float>(view), 1275)),
                     "could not place the reduce-effects idle fixture on the recovery floor");
             }
-            for (int tick = 0; tick < 60; ++tick) { quiet->update(inputs, dt); }
+            for (int tick = 0; tick < 60; ++tick) { quiet->update(acceptance::slot_seats(*quiet, inputs), dt); }
             const IdleDrip* drip = quiet->idle_drip(0);
             require(drip != nullptr, "reduce-effects idle fixture omitted its sprayer drip");
             const auto visible_bead = [&] { return drip->attached() &&
                 drip->bead_age() >= presentation.idle_drip().grow_time; };
-            for (int tick = 0; tick < 900 && !visible_bead(); ++tick) { quiet->update(inputs, dt); }
+            for (int tick = 0; tick < 900 && !visible_bead(); ++tick) { quiet->update(acceptance::slot_seats(*quiet, inputs), dt); }
             require(visible_bead(), "reduce-effects fixture never produced a mature idle bead");
             compare(*quiet, prefix + "-idle", false);
         }

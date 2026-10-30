@@ -140,7 +140,7 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
     const auto step = [&](Level& level)
     {
         require(++updates <= 1800, "CQ focused native inspection exceeded its bounded update budget");
-        level.update(inputs, dt);
+        level.update(acceptance::slot_seats(level, inputs), dt);
     };
     const auto active = [&](Level& level)
     {

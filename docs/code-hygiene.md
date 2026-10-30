@@ -402,10 +402,47 @@ Release `-HomeExitOnly`, `-HomeReturnFocusOnly`, `-StageScanOnly`,
 
 ### Device-to-command in one place (`HYG#45`)
 
-Move slot-to-seat mapping and mouse aim out of `Level` into a seat-command
-builder owned by `GameLevel`, so `Level::update` takes one command per
-participant and loses its `Mouse*`. Split `PlayerInputData` into the simulation
-command and per-slot shell signals, and derive the input defaults from one source.
+**Done 2026-10-30.** `SeatCommandBuilder`
+([game/objects/seat_commands.h](../game/objects/seat_commands.h)), owned by
+`GameLevel`, is now the one place device slots become seats: each participant
+takes its `player_num()` slot's command, a seat with no slot gets neutral input,
+and a keyboard/mouse seat's aim is resolved there through its pane and camera.
+`GameLevel` refreshes the level's layout before building, so a resized window's
+camera is the one aimed through, as when `Level::update` did it. `Level::update`,
+`prepare_resume` and the round tape's resume gap take one command per
+participant; `Level` lost its `Mouse*`, `resolve_mouse_aim` and the slot reads,
+and `LevelBuilder` its mouse argument. A participant's intro skip reaches the
+level as `request_intro_skip`, honoured by the next stepping update exactly
+where the slot check ran, and `GameLevel::draw` hands the cursor marker the
+pointer through `set_pointer`. `PlayerInputData` is the seat command; the pause
+and intro-skip signals moved to `SlotInput`
+([slot_input.h](../game/objects/slot_input.h)), which derives from it and is
+what `PlayerInput`, the pause latch, the resume count-in and the Debug clock and
+filters read. The seat's F1 overlay toggle stays in the command, since
+`Player` applies it and tapes replay it. Debug replays no longer write a seat's
+pause (64) and skip (256) flags, which no player ever read, and still read
+files that have them; the format stays version 4. The keyboard defaults are now
+stated once in `player_input_consts`, which `InputBindings` reads, and the pad
+defaults once in `PadProfile`: `fixed_action_bindings` holds only the controls no
+save changes, and `default_action_bindings` is `effective_action_bindings` of a
+default `InputBindings`. Probes that script a level by slot map through
+`acceptance::slot_seats` or `update_from_slots`
+([slot_seats.h](../scripts/acceptance/support/slot_seats.h)), which use the
+builder without a mouse; a temporary audit of every default case found the five
+whose slots differed from their seats. The architecture overview and the OOP
+guide follow. Both presets build under `/W4 /WX`. The full default acceptance
+list passed in Release (74 cases) and in Debug without the four slow cases (71),
+and `debug_console`, `crossfeed` and `press_tower` also passed in Debug. The Debug
+opt-in, painter and frame-pacing compile gates and the Release painter compile
+passed. In Release the `-Countdown`, `-ResultPercentage`, `-PracticeReplay`,
+`-Monitor`, `-Identity`, `-LimbTuneColours`, `-ProgramLevelVisibility`,
+`-Resume`, `-CqBlockout`, `-CursorTuneColours`, `-Hud`, `-Supply`, `-Closing`,
+`-Drift`, `-Quiet`, `-Crossfeed`, `-PressTower`, `-TurbulenceBlockout`,
+`-GatePermission`, `-FerryDirection`, `-SurfaceFinish`, `-RouteWarning`,
+`-Landmark`, `-MiniatureTerrain` and `-RevealTuneColours` painter matrices
+passed (the resume matrix now hands the level the pointer before its raw
+render, as `GameLevel::draw` does), and `check-startup.ps1` passed on the Debug
+executable.
 
 ### One owner for the level format (`HYG#46`)
 

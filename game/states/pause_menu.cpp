@@ -70,13 +70,13 @@ int reclaim_missing_seat(MatchSetup& settings,
 	return -1;
 }
 
-void latch_intro_pause(bool intro_playing, std::vector<PlayerInputData>& player_inputs,
+void latch_intro_pause(bool intro_playing, std::vector<SlotInput>& player_inputs,
 	std::array<bool, input_slots::count>& latched)
 {
 	const size_t slots = std::min(player_inputs.size(), latched.size());
 	for (size_t i = 0; i < slots; i++)
 	{
-		PlayerInputData& input = player_inputs[i];
+		SlotInput& input = player_inputs[i];
 		if (intro_playing && (input.pause_held || input.toggle_pause_menu))
 		{
 			latched[i] = true;

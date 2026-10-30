@@ -21,6 +21,7 @@
 #include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/slot_seats.h"
 
 #include <filesystem>
 #include <fstream>
@@ -174,7 +175,7 @@ namespace
 			sound_groups::apply(this->audio, this->preferences);
 			this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render, &this->audio,
 				&this->preferences, &this->levels, &this->tuning, &this->presentation, &this->resolution,
-				nullptr, &this->partitioner, &this->mouse);
+				nullptr, &this->partitioner);
 		}
 
 		void set_sfx_volume(int volume)
@@ -307,11 +308,11 @@ namespace
 			require(done(), "Match did not reach the expected audio boundary");
 		}
 
+		// What A, B or Start from player 0 asks of the level (SeatCommandBuilder).
 		void skip(float dt)
 		{
-			auto inputs = this->idle;
-			inputs[static_cast<size_t>(this->level->player(0).player_num())].skip_intro = true;
-			this->level->update(inputs, dt);
+			this->level->request_intro_skip();
+			this->level->update(this->idle, dt);
 		}
 	};
 

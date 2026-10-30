@@ -213,7 +213,7 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
             for (std::size_t paint = 0; paint < 2; ++paint)
             {
                 require(++updates <= 6000, "Mover native matrix exceeded its finite Level-update budget");
-                fixtures[paint].level->update(neutral, dt); check_fixture(paint);
+                fixtures[paint].level->update(acceptance::slot_seats(*fixtures[paint].level, neutral), dt); check_fixture(paint);
             }
         };
         for (int tick = 0; tick < 600 && fixtures[0].level->state() != LevelState::active; ++tick) { tick_pair(); }

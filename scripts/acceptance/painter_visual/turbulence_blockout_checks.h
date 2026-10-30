@@ -81,7 +81,7 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
     {
         require(++updates <= 8000, "Turbulence native matrix exceeded its finite Level-update budget");
         if (moving) { ++input_steps; }
-        fixture.level->update(inputs, dt);
+        fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt);
     };
     const auto capture = [&](CrossfeedFixture& fixture, const std::string& stem, const char* phase, bool heavy, bool ending)
     {

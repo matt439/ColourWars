@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/objects/player_input_data.h"
+#include "game/objects/slot_input.h"
 #include <vector>
 
 // Decides how many fixed-dt Level updates each engine step runs: the match is
@@ -32,13 +32,13 @@ public:
 
 	// Press edges seen on steps that ran no update are held and delivered on
 	// the next step that does, so a jump tapped in slow motion is not lost.
-	// Only jump_pressed and toggle_debug are latched: they are the only edges
-	// Level reads (the pause key is handled by GameLevel before the clock).
-	std::vector<PlayerInputData> latch(const std::vector<PlayerInputData>& inputs, int runs);
+	// Only jump_pressed, toggle_debug and skip_intro are latched: they are the
+	// only edges a step reads (the pause key is handled by GameLevel before the clock).
+	std::vector<SlotInput> latch(const std::vector<SlotInput>& inputs, int runs);
 
 	// The inputs for the second and later runs of one engine step: the same
 	// held state, with the latched edges cleared so no press applies twice.
-	static std::vector<PlayerInputData> without_edges(std::vector<PlayerInputData> inputs);
+	static std::vector<SlotInput> without_edges(std::vector<SlotInput> inputs);
 
 	// After a rebuild: no partial step or old edge carries into the new level.
 	void reset_accumulator();
@@ -53,5 +53,5 @@ private:
 	float accumulator_ = 0.0f;
 	bool paused_ = false;
 	int pending_steps_ = 0;
-	std::vector<PlayerInputData> held_edges_;
+	std::vector<SlotInput> held_edges_;
 };

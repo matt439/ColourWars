@@ -291,7 +291,7 @@ int main(int argc, char** argv)
 
 		// The chord, the overlays and the unwinding are inert: pad Back and
 		// Start keep F1 and pause, and no page is asked anything.
-		std::vector<PlayerInputData> inputs(input_slots::count);
+		std::vector<SlotInput> inputs(input_slots::count);
 		inputs[0].toggle_debug = true;
 		inputs[0].toggle_pause_menu = true;
 		director.filter_match_inputs(inputs);

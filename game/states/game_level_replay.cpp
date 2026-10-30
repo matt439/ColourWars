@@ -105,9 +105,10 @@ void GameLevel::step_replay()
 	const int step = this->replay_player_->step();
 	this->tape_.apply_gaps(*this->level_, step);
 	// Every seat's input comes from the tape; the devices are never read.
-	std::vector<PlayerInputData> devices(input_slots::count);
-	for (PlayerInputData& device : devices) { device.connected = true; }
-	this->level_->update(devices, this->tape_.dt(step), this->replay_player_.get());
+	std::vector<SlotInput> devices(input_slots::count);
+	for (SlotInput& device : devices) { device.connected = true; }
+	this->level_->update(this->seat_commands(devices).seats, this->tape_.dt(step),
+		this->replay_player_.get());
 	this->level_->clear_rumble_events();
 }
 

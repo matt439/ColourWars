@@ -35,7 +35,7 @@ namespace
         {
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
-                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
             // Random, so the palette draw is part of what the seed must repeat.
             return builder.build_level(settings, TeamColourPair::random, opening);
         }

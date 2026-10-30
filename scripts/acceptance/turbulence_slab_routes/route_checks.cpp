@@ -222,7 +222,7 @@ namespace turbulence_slab_routes_acceptance
                 if (decoded_settings != nullptr) { settings = *decoded_settings; }
                 viewports.set_layout(settings.screen_layout());
                 LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
-                    &world.tuning, &world.presentation, &resolution, nullptr, &partitioner, &mouse);
+                    &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);
                 std::srand(decoded_seed ? *decoded_seed : seed);
                 level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
                 owner = paint_owners::index(player().player_num(), 0);

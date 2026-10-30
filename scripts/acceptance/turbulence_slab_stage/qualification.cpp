@@ -158,7 +158,7 @@ namespace turbulence_slab_stage_acceptance
             ResolutionManager resolution; ViewportManager viewports{ &resolution }; Mouse mouse; Partitioner partitioner;
             const auto settings = setup(count); viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
-                &world.tuning, &world.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);
             std::srand(260026u);
             const auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
             require(level->player_count() == count && level->state() == LevelState::start_countdown,

@@ -3,7 +3,7 @@
 #include "game/debug/dev_tools.h"
 #include "game/debug/debug_targets.h"
 #include "game/objects/opening_mode.h"
-#include "game/objects/player_input_data.h"
+#include "game/objects/slot_input.h"
 #include "game/objects/seat_input_filter.h"
 #include "engine/input/keyboard.h"
 #include <memory>
@@ -15,12 +15,12 @@ class GameTuning;
 class Presentation;
 class DebugDirectorImpl;
 
-// One step of GameLevel's match: what that step's Level::update reads, and the
-// developer seat filter (bots, record, play) that sees and may replace each
-// seat's input, null when nothing drives a seat (always, in Release).
+// One step of GameLevel's match: the device slots its seat commands are built
+// from, and the developer seat filter (bots, record, play) that sees and may
+// replace each seat's input, null when nothing drives a seat (always, in Release).
 struct MatchStep
 {
-	const std::vector<PlayerInputData>* inputs = nullptr;
+	const std::vector<SlotInput>* inputs = nullptr;
 	SeatInputFilter* seats = nullptr;
 };
 
@@ -83,7 +83,7 @@ public:
 
 	// GameLevel::update, on the inputs it just read: clears the pad Back and
 	// Start release edges a debug-menu chord consumed (F1 overlay and pause).
-	void filter_match_inputs(std::vector<PlayerInputData>& inputs) const;
+	void filter_match_inputs(std::vector<SlotInput>& inputs) const;
 
 	// The top of GameLevel::update. Opens the console or the debug menu, takes
 	// a queued screenshot, runs the F-key binds and applies queued requests
@@ -95,7 +95,7 @@ public:
 	//
 	// How many steps this frame runs, latching `inputs` for them: the debug
 	// clock's 0..4 fixed-dt updates in Debug, one in Release.
-	int match_steps(const std::vector<PlayerInputData>& inputs, float dt);
+	int match_steps(const std::vector<SlotInput>& inputs, float dt);
 	// Before step `run`. False: the frame runs no more steps (a round that ends
 	// mid fast-forward stops there). Otherwise sets what the step reads: the
 	// latched inputs, their press edges on the first step only, and the seat
@@ -172,9 +172,9 @@ inline void DebugDirector::attach_match(DebugMatchTarget&) {}
 inline void DebugDirector::detach_match(const DebugMatchTarget&) {}
 inline void DebugDirector::before_level_build(DebugMatchTarget&) {}
 inline void DebugDirector::after_level_build(DebugMatchTarget&) {}
-inline void DebugDirector::filter_match_inputs(std::vector<PlayerInputData>&) const {}
+inline void DebugDirector::filter_match_inputs(std::vector<SlotInput>&) const {}
 inline bool DebugDirector::before_match_update(DebugMatchTarget&, float, bool) { return false; }
-inline int DebugDirector::match_steps(const std::vector<PlayerInputData>&, float) { return 1; }
+inline int DebugDirector::match_steps(const std::vector<SlotInput>&, float) { return 1; }
 inline bool DebugDirector::before_match_step(DebugMatchTarget&, int, MatchStep& step)
 {
 	step.seats = nullptr;

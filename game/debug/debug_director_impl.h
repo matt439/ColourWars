@@ -88,9 +88,9 @@ public:
 	void detach_match(const DebugMatchTarget& match);
 	void before_level_build(DebugMatchTarget& match);
 	void after_level_build(DebugMatchTarget& match);
-	void filter_match_inputs(std::vector<PlayerInputData>& inputs) const;
+	void filter_match_inputs(std::vector<SlotInput>& inputs) const;
 	bool before_match_update(DebugMatchTarget& match, float dt, bool active = true);
-	int match_steps(const std::vector<PlayerInputData>& inputs, float dt);
+	int match_steps(const std::vector<SlotInput>& inputs, float dt);
 	bool before_match_step(DebugMatchTarget& match, int run, MatchStep& step);
 	bool after_match_step(DebugMatchTarget& match);
 	void end_match_steps(DebugMatchTarget& match, int runs);
@@ -352,8 +352,8 @@ private:
 	// latched inputs, a later step's copy without their press edges, whether a
 	// replay was running into the current step, and when that step began.
 	float step_dt_ = 0.0f;
-	std::vector<PlayerInputData> latched_;
-	std::vector<PlayerInputData> later_step_;
+	std::vector<SlotInput> latched_;
+	std::vector<SlotInput> later_step_;
 	bool replay_was_running_ = false;
 	double step_began_ms_ = 0.0;
 	struct RecordRequest

@@ -303,7 +303,7 @@ void closing_story_matrix(Application& app, LevelBuilder& builder,
         auto inputs = neutral_inputs();
         for (int tick = 0; tick < 1800 && level->state() != LevelState::active; ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(level->state() == LevelState::active, "Closing story did not reach live play");
         if (painter >= 0)
@@ -315,7 +315,7 @@ void closing_story_matrix(Application& app, LevelBuilder& builder,
         }
         for (int tick = 0; tick < 1800 && level->state() != LevelState::overview; ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(level->state() == LevelState::overview, "Closing story did not reach reveal");
         const LevelEndInfo info = level->level_end_info();
@@ -327,13 +327,13 @@ void closing_story_matrix(Application& app, LevelBuilder& builder,
         const RevealTuning& reveal = tuning.match().reveal;
         const float click_at = reveal.walk_in + reveal.hover * 2.0f + reveal.decide;
         float age = 0.0f;
-        while (age + dt < click_at) { level->update(inputs, dt); age += dt; }
+        while (age + dt < click_at) { level->update(acceptance::slot_seats(*level, inputs), dt); age += dt; }
         reveal_live_card(app, *level, presentation, picture, false);
         monitor_frozen(app, *level, output, prefix + "before-click", records);
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         reveal_live_card(app, *level, presentation, picture, painter >= 0);
         monitor_frozen(app, *level, output, prefix + "click", records);
-        for (int tick = 0; tick < 20; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 20; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         reveal_live_card(app, *level, presentation, picture, painter >= 0);
         monitor_frozen(app, *level, output, prefix + "settled", records);
     }
@@ -342,7 +342,7 @@ void closing_story_matrix(Application& app, LevelBuilder& builder,
     auto inputs = neutral_inputs();
     for (int tick = 0; tick < 2400 && solo->state() != LevelState::overview; ++tick)
     {
-        solo->update(inputs, dt);
+        solo->update(acceptance::slot_seats(*solo, inputs), dt);
     }
     require(solo->state() == LevelState::overview && !solo->revealed(), "Solo closing fixture acquired a reveal");
     reveal_live_card(app, *solo, presentation, picture, false);

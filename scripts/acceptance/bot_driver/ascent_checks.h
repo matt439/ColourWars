@@ -33,8 +33,7 @@ namespace bot_ascent_acceptance
         for (int step = 0; step < reaction; ++step)
         {
             input = bot.think(view);
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held &&
-                !input.toggle_debug && !input.skip_intro,
+            require(input.connected && !input.toggle_debug,
                 "Ascent policy emitted a device/menu/debug action");
             if (step + 1 < reaction)
             {

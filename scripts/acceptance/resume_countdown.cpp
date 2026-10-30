@@ -9,9 +9,9 @@ namespace
 {
 	using acceptance::require;
 
-	std::vector<PlayerInputData> sampled()
+	std::vector<SlotInput> sampled()
 	{
-		return std::vector<PlayerInputData>(input_slots::count);
+		return std::vector<SlotInput>(input_slots::count);
 	}
 
 	void check_clock()
@@ -67,8 +67,8 @@ namespace
 		ResumeCountdown count;
 		count.begin(1.0f);
 		const size_t slot = input_slots::keyboard_and_mouse;
-		std::vector<PlayerInputData> inputs = sampled();
-		PlayerInputData& input = inputs[slot];
+		std::vector<SlotInput> inputs = sampled();
+		SlotInput& input = inputs[slot];
 		input.connected = true;
 		input.jump_pressed = input.jump_held = input.primary_shoot = input.drop_through = true;
 		input.x_movement = -0.75f;
@@ -118,7 +118,7 @@ namespace
 	{
 		ResumeCountdown count;
 		count.begin(1.0f);
-		std::vector<PlayerInputData> inputs = sampled();
+		std::vector<SlotInput> inputs = sampled();
 		inputs[2].pause_held = true;
 		count.filter_inputs(inputs);
 		count.advance(1.0f);
@@ -148,7 +148,7 @@ namespace
 
 		// Restart arms every device again, including slots not sampled yet.
 		count.begin(1.0f);
-		std::vector<PlayerInputData> absent;
+		std::vector<SlotInput> absent;
 		count.filter_inputs(absent);
 		inputs = sampled();
 		inputs[input_slots::keyboard_and_mouse].toggle_pause_menu = true;

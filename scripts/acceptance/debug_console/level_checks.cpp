@@ -46,13 +46,13 @@ namespace debug_console_acceptance
 		match.settings.set_duration(1.25f);
 		director.attach_match(match);
 
-		const std::vector<PlayerInputData> idle(input_slots::count);
+		const std::vector<SlotInput> idle(input_slots::count);
 		const auto ticks_while = [&](auto still)
 			{
 				int ticks = 0;
 				for (; ticks < 20000 && still(); ++ticks)
 				{
-					match.level->update(idle, dt);
+					match.step(idle, dt, nullptr);
 				}
 				return ticks;
 			};
@@ -94,15 +94,15 @@ namespace debug_console_acceptance
 
 		// A, B or Start from anyone in the match: straight to the split countdown.
 		match.build();
-		std::vector<PlayerInputData> skip(input_slots::count);
+		std::vector<SlotInput> skip(input_slots::count);
 		skip[static_cast<size_t>(match.level->player(0).player_num())].skip_intro = true;
-		match.level->update(skip, dt);
+		match.step(skip, dt, nullptr);
 		require(match.level->state() == LevelState::start_countdown &&
 			!match.level->intro_playing(), "A skip leaves the opening for the split countdown");
 		require(about(ticks_while([&] { return !match.level->match_started(); }),
 			tuning.match().countdown), "A skipped opening still counts down in full");
 		match.build();
-		skip.assign(input_slots::count, PlayerInputData());
+		skip.assign(input_slots::count, SlotInput());
 		for (int slot = 0; slot < input_slots::count; ++slot)
 		{
 			bool held = false;
@@ -112,7 +112,7 @@ namespace debug_console_acceptance
 			}
 			skip[static_cast<size_t>(slot)].skip_intro = !held;
 		}
-		match.level->update(skip, dt);
+		match.step(skip, dt, nullptr);
 		require(match.level->state() == LevelState::opening,
 			"A device nobody in the match holds does not skip");
 
@@ -120,16 +120,16 @@ namespace debug_console_acceptance
 		// must not then open pause (GameLevel's gate, here without a window).
 		{
 			std::array<bool, input_slots::count> latched{};
-			std::vector<PlayerInputData> pad(input_slots::count);
+			std::vector<SlotInput> pad(input_slots::count);
 			const auto frame = [&](bool held, bool released)
 				{
 					const size_t seat = static_cast<size_t>(match.level->player(0).player_num());
-					pad.assign(input_slots::count, PlayerInputData());
+					pad.assign(input_slots::count, SlotInput());
 					pad[seat].pause_held = held;
 					pad[seat].toggle_pause_menu = released;
 					pad[seat].skip_intro = released;
 					latch_intro_pause(match.level->intro_playing(), pad, latched);
-					match.level->update(pad, dt);
+					match.step(pad, dt, nullptr);
 					return pad[seat].toggle_pause_menu;
 				};
 			require(match.level->intro_playing() && !frame(true, false),
@@ -211,7 +211,7 @@ namespace debug_console_acceptance
 		require(match.level->station_label_count() == 0, "A level makes no labels until overlay.stations");
 		for (int step = 0; step < length; ++step)
 		{
-			match.level->update(keyboard_step(step), dt);
+			match.step(keyboard_step(step), dt, nullptr);
 		}
 		require(match.level->station_label_count() == 0, "Nor does a match without the overlay");
 		const MatchFingerprint reference = MatchFingerprint::of(*match.level, length);
@@ -257,7 +257,7 @@ namespace debug_console_acceptance
 				require(impl.execute("overlay.stations on").ok && level.station_label_count() == 12 && visible(),
 					"Turned on again, the same labels show and none are added");
 			}
-			match.level->update(keyboard_step(step), dt);
+			match.step(keyboard_step(step), dt, nullptr);
 		}
 		const MatchFingerprint shown = MatchFingerprint::of(level, length);
 		require(shown.hash == reference.hash,

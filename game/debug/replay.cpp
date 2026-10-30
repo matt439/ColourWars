@@ -324,11 +324,12 @@ namespace replay_codec
 {
 	std::string encode(const PlayerInputData& input)
 	{
+		// 64 and 256 were a seat's pause and intro-skip signals, which a seat
+		// no longer carries (SlotInput): never written, ignored when read.
 		const unsigned flags = (input.jump_pressed ? 1u : 0u) | (input.jump_held ? 2u : 0u) |
 			(input.shoot_direction_requested ? 4u : 0u) | (input.primary_shoot ? 8u : 0u) |
 			(input.drop_through ? 16u : 0u) | (input.toggle_debug ? 32u : 0u) |
-			(input.toggle_pause_menu ? 64u : 0u) | (input.connected ? 128u : 0u) |
-			(input.skip_intro ? 256u : 0u);
+			(input.connected ? 128u : 0u);
 		char buffer[8] = {};
 		std::snprintf(buffer, sizeof(buffer), "%02x", flags);
 		std::string text = buffer;
@@ -382,9 +383,7 @@ namespace replay_codec
 		input.primary_shoot = (flags & 8u) != 0;
 		input.drop_through = (flags & 16u) != 0;
 		input.toggle_debug = (flags & 32u) != 0;
-		input.toggle_pause_menu = (flags & 64u) != 0;
 		input.connected = (flags & 128u) != 0;
-		input.skip_intro = (flags & 256u) != 0;
 		input.x_movement = values[0];
 		input.shoot_direction = { values[1], values[2] };
 		input.shoot_angle = values[3];

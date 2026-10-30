@@ -46,7 +46,6 @@ Level::Level(std::unique_ptr<Scene> scene,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
-	const labrador::Mouse* mouse,
 	std::vector<LevelStation> stations,
 	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings,
 	const MatchSetup* roster, std::uint64_t bot_seed, std::vector<LevelLesson> lessons) :
@@ -58,7 +57,6 @@ Level::Level(std::unique_ptr<Scene> scene,
 	end_sting_volume_(end_sting_volume),
 	resolution_manager_(resolution_manager),
 	viewport_manager_(viewport_manager),
-	mouse_(mouse),
 	team_colours_(team_colours),
 	tuning_(tuning),
 	camera_bounds_(camera_bounds),
@@ -196,7 +194,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->build_opening_frame(render_resources);
 }
 
-void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
+void Level::update(const std::vector<PlayerInputData>& commands, float dt,
     SeatInputFilter* seats)
 {
     // All dynamic validation/allocation precedes layout, clocks and input/RNG.
@@ -211,12 +209,18 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 	this->simulation_dt_ = dt;
 	if (dt > 0.0f)
 	{
-		this->update_state(player_inputs, dt, seats, horizontal ? &*horizontal : nullptr);
+		this->update_state(commands, dt, seats, horizontal ? &*horizontal : nullptr);
 		this->update_acting(dt);
 	}
+	this->intro_skip_requested_ = false;
 
 	// Refresh on every path so views and overlays reflect the completed tick.
 	this->refresh_views();
+}
+
+void Level::request_intro_skip()
+{
+	this->intro_skip_requested_ = true;
 }
 
 std::vector<SlotRumbleEvents> Level::take_rumble_events()
@@ -236,15 +240,15 @@ void Level::clear_rumble_events() noexcept
 	for (Player* player : this->players_) { player->clear_rumble_events(); }
 }
 
-void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
+void Level::update_state(const std::vector<PlayerInputData>& commands,
 	float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal)
 {
 	if (this->state_ == LevelState::opening)
 	{
-		this->update_opening(player_inputs, dt);
+		this->update_opening(dt);
 		return;
 	}
-	if (this->intro_countdown_ && this->skip_requested(player_inputs))
+	if (this->intro_countdown_ && this->skip_requested())
 	{
 		this->skip_intro();
 	}
@@ -311,7 +315,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 	}
 	if (this->state_ == LevelState::active)
 	{
-		this->update_level_logic(player_inputs, dt, seats, horizontal);
+		this->update_level_logic(commands, dt, seats, horizontal);
 		this->update_active_lesson();
 		// Practice has no clock to run out; the player leaves from pause.
 		if (this->practice()) { return; }
@@ -413,7 +417,7 @@ float Level::zoom_out_camera_ratio() const
 	return 1.0f - (this->zoom_out_timer_ / duration);
 }
 
-void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs,
+void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal)
 {
 	std::array<bool, 4> was_dead{};
@@ -425,7 +429,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	// Run the scene phases in order, with game-specific work between them.
 	this->paint_audio_->update(dt);
 	this->blocked_shot_feedback_->update(dt);
-	this->apply_player_inputs(player_inputs, seats);
+	this->apply_player_inputs(commands, seats);
     if (horizontal != nullptr) { this->commit_horizontal_frame(*horizontal); }
 	// Before any of this step's movement or paint, so a gate follows the
 	// paint held before the step and its overlap test sees where players are.
@@ -486,56 +490,14 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	}
 }
 
-void Level::resolve_mouse_aim(Player* player, size_t view_index,
-	PlayerInputData& input) const
-{
-	if (!this->mouse_->focused())
-	{
-		// Without a valid cursor, leave aim unrequested rather than reuse a stale direction.
-		return;
-	}
-
-	const labrador::Viewport viewport =
-		this->viewport_manager_->player_viewport(static_cast<int>(view_index));
-
-	const Vector2F cursor(static_cast<float>(this->mouse_->state().position.x),
-		static_cast<float>(this->mouse_->state().position.y));
-	const Vector2F aim = PlayerCamera::mouse_direction(
-		player->center(), cursor, viewport, player->camera());
-
-	// A cursor exactly on the player requests no direction; do not normalize zero.
-	if (aim == Vector2F::ZERO)
-	{
-		return;
-	}
-
-	input.shoot_direction_requested = true;
-	input.shoot_direction = aim;
-	input.shoot_angle = input.shoot_direction.angle();
-}
-
 void Level::apply_player_inputs(
-	const std::vector<PlayerInputData>& player_inputs, SeatInputFilter* seats)
+	const std::vector<PlayerInputData>& commands, SeatInputFilter* seats)
 {
-	// One input per participant; an idle human dummy gets neutral input.
+	// One input per participant; a participant past the commands gets neutral input.
 	std::vector<PlayerInputData> by_participant(this->players_.size());
-	for (size_t i = 0; i < this->players_.size(); ++i)
-	{
-		Player* player = this->players_[i];
-		const int slot = player->player_num();
-
-		if (slot >= 0 && static_cast<size_t>(slot) < player_inputs.size())
-		{
-			by_participant[i] = player_inputs[slot];
-
-			// Copy the slot input to fill in this player's camera-dependent mouse aim.
-			if (input_slots::is_keyboard_and_mouse(slot))
-			{
-				this->resolve_mouse_aim(player,
-					static_cast<size_t>(this->view_for_participant(static_cast<int>(i))), by_participant[i]);
-			}
-		}
-	}
+	const size_t given = std::min(commands.size(), by_participant.size());
+	std::copy(commands.begin(), commands.begin() + static_cast<std::ptrdiff_t>(given),
+		by_participant.begin());
 
 	if (this->bot_driver_ != nullptr && (seats == nullptr || !seats->replaces_bot_inputs()))
 	{

@@ -67,7 +67,7 @@ namespace skirmish_acceptance
 					}
 				}
 				builder = std::make_unique<LevelBuilder>(&viewports, &render, &audio, &preferences,
-					&levels, &tuning, &presentation, &resolution, nullptr, &partitioner, &mouse);
+					&levels, &tuning, &presentation, &resolution, nullptr, &partitioner);
 			}
 
 			std::unique_ptr<Level> build(WeaponType tool)

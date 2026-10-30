@@ -73,7 +73,7 @@ void DebugDirector::after_level_build(DebugMatchTarget& match)
 	}
 }
 
-void DebugDirector::filter_match_inputs(std::vector<PlayerInputData>& inputs) const
+void DebugDirector::filter_match_inputs(std::vector<SlotInput>& inputs) const
 {
 	if (this->impl_ != nullptr)
 	{
@@ -86,7 +86,7 @@ bool DebugDirector::before_match_update(DebugMatchTarget& match, float dt, bool 
 	return this->impl_ != nullptr && this->impl_->before_match_update(match, dt, active);
 }
 
-int DebugDirector::match_steps(const std::vector<PlayerInputData>& inputs, float dt)
+int DebugDirector::match_steps(const std::vector<SlotInput>& inputs, float dt)
 {
 	return this->impl_ != nullptr ? this->impl_->match_steps(inputs, dt) : 1;
 }

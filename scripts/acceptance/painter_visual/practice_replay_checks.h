@@ -16,7 +16,7 @@ namespace practice_replay_acceptance
     struct EndReplayTag { using Type = void (GameLevel::*)(); friend Type member(EndReplayTag); };
     struct UpdateTag
     {
-        using Type = void (GameLevel::*)(const std::vector<PlayerInputData>&, float, SeatInputFilter*);
+        using Type = void (GameLevel::*)(const std::vector<SlotInput>&, float, SeatInputFilter*);
         friend Type member(UpdateTag);
     };
     template struct Access<TapeTag, &GameLevel::tape_>;
@@ -174,7 +174,7 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     // The actual Debug recorder sits downstream of the shipping filter, as in
     // GameLevel::update's step loop. This deliberately keeps the existing practice
     // Level: the user-facing record command rebuilds a developer/timed course.
-    const std::vector<PlayerInputData> neutral = neutral_inputs();
+    const std::vector<SlotInput> neutral = acceptance::slot_inputs(neutral_inputs());
     const Vector2F before_debug = game->level().player(0).rectangle().position();
     class Drive final : public SeatInputFilter
     {

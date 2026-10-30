@@ -107,7 +107,7 @@ namespace debug_background_acceptance
         return input.x_movement == 0.0f && !input.jump_pressed && !input.jump_held &&
             input.shoot_angle == 0.0f && input.shoot_direction == Vector2F::ZERO &&
             !input.shoot_direction_requested && !input.primary_shoot && !input.drop_through &&
-            !input.toggle_debug && !input.toggle_pause_menu && !input.pause_held && !input.skip_intro &&
+            !input.toggle_debug &&
             input.left_analog_stick == Vector2F::ZERO && input.right_analog_stick == Vector2F::ZERO;
     }
 }

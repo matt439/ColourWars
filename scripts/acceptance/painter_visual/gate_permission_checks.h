@@ -112,7 +112,7 @@ void gate_permission_matrix(Application& app, LevelBuilder& builder,
             settings.set_duration(120.0f); app.viewport_manager()->set_layout(settings.screen_layout());
             std::srand(226); auto level = builder.build_level(settings, palette, OpeningMode::off); ++builds;
             const auto inputs = neutral_inputs();
-            const auto step = [&]() { level->update(inputs, dt); require(++updates <= 5000, "Gate native update budget exceeded"); };
+            const auto step = [&]() { level->update(acceptance::slot_seats(*level, inputs), dt); require(++updates <= 5000, "Gate native update budget exceeded"); };
             for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick) { step(); }
             require(level->state() == LevelState::active && level->team_gates().size() == 1,
                 "Gate native fixture did not reach active play with its authored gate");

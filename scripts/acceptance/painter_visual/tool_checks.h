@@ -94,7 +94,7 @@
                 }
                 return true;
             };
-            for (int tick = 0; tick < 600 && !ready(); ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 600 && !ready(); ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(ready(), "weapon visual fixture did not become ready for its paid shot");
             for (int view = 0; view < count; ++view)
             {
@@ -171,7 +171,7 @@
             input.shoot_angle = -3.0f * PI / 4.0f + PI * 0.5f * static_cast<float>(view);
             input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
         }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         for (int event = 0; event < 3; ++event)
         {
             const char* name = event == 0 ? "muzzle" : event == 1 ? "empty" : "recovered";
@@ -231,9 +231,9 @@
             input.shoot_angle = right ? -PI / 4.0f : -3.0f * PI / 4.0f;
             input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
         }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         for (auto& input : inputs) { input.x_movement = 0; }
-        for (int tick = 0; tick < 25; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 25; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         const std::string prefix = std::to_string(count) + "p-tool-" + name + "-" +
             TeamColourTools::palette_key(palette) + (right ? "-right-" : "-left-");
         std::vector<Frame> idle_tools;
@@ -256,24 +256,24 @@
         };
         capture(app, *level, canvas, output, prefix + "idle", records);
         for (auto& input : inputs) { input.primary_shoot = true; }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         check_mechanisms();
         capture(app, *level, canvas, output, prefix + "paid-shot", records);
-        for (int tick = 0; tick < 5; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 5; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         check_mechanisms();
         capture(app, *level, canvas, output, prefix + "held-fire", records);
         for (auto& input : inputs) { input.primary_shoot = false; }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         capture(app, *level, canvas, output, prefix + "release", records);
         level->suspend();
         capture(app, *level, canvas, output, prefix + "paused", records);
         level->resume();
-        for (int tick = 0; tick < 8; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 8; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         check_mechanisms();
         capture(app, *level, canvas, output, prefix + "recovery", records);
         if (tool == WeaponType::sniper || tool == WeaponType::none)
         {
-            for (int tick = 0; tick < 30; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 30; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             check_mechanisms();
             capture(app, *level, canvas, output, prefix + "gauge-recovery", records);
         }
@@ -281,16 +281,16 @@
             tool == WeaponType::bucket || tool == WeaponType::none)
         {
             for (auto& input : inputs) { input.x_movement = right ? 1.0f : -1.0f; }
-            for (int tick = 0; tick < 12; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 12; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             check_mechanisms();
             capture(app, *level, canvas, output, prefix + "travel", records);
         }
         if (tool == WeaponType::roller)
         {
             for (auto& input : inputs) { input.jump_pressed = true; }
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
             for (auto& input : inputs) { input.jump_pressed = false; input.x_movement = 0; }
-            for (int tick = 0; tick < 3; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 3; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             check_mechanisms();
             capture(app, *level, canvas, output, prefix + "lift", records);
         }

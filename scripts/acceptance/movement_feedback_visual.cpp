@@ -22,6 +22,7 @@
 #define private public
 #include "game/objects/level_builder.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/slot_seats.h"
 #undef private
 
 using namespace labrador;
@@ -440,10 +441,10 @@ namespace
         }
         for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(level->state() == LevelState::active, "route countdown did not reach active play");
-        for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 60; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         resize(app, *level, { 1280, 720 });
 
         std::vector<RouteRunner> runners;
@@ -508,7 +509,7 @@ namespace
                     input.x_movement = runner.direction;
                 }
             }
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
 
             std::vector<bool> took_off(runners.size(), false);
             std::vector<bool> landed(runners.size(), false);
@@ -713,7 +714,7 @@ int wmain(int argc, wchar_t** argv)
         presentation.validate_resources(*app.render_resources(), *app.audio_resources());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(),
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
-            app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+            app.resolution_manager(), app.thread_pool(), app.partitioner());
         for (int count : { 1, 4 })
         {
             MatchSetup settings;
@@ -743,10 +744,10 @@ int wmain(int argc, wchar_t** argv)
             // spawn points. The limit deliberately refuses an unready scene.
             for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick)
             {
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
             }
             require(level->state() == LevelState::active, "countdown did not reach active play");
-            for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 60; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             for (const Player* player : level->players_)
             {
                 require(player->state() == PlayerState::alive && grounded(*player),
@@ -772,7 +773,7 @@ int wmain(int argc, wchar_t** argv)
                     input.jump_pressed = tick == 0;
                     input.jump_held = tick < 30;
                 }
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
                 for (const Player* player : level->players_)
                 {
                     require(player->state() == PlayerState::alive, "scripted jump killed a player");

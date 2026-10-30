@@ -278,7 +278,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             for (std::size_t paint = 0; paint < 2; ++paint)
             {
                 require(++updates <= 6000, "Slab native inspection exceeded its finite update budget");
-                pair[paint].level->update(input, dt); const auto owners = pair[paint].level->horizontal_structure_states();
+                pair[paint].level->update(acceptance::slot_seats(*pair[paint].level, input), dt); const auto owners = pair[paint].level->horizontal_structure_states();
                 require(turbulence_mover_paint_state(owners) == local_paint[paint], "Slab walking changed mover-local paint credit");
                 require(turbulence_slab_surface_state(pair[paint]) == slab_paint[paint], "Slab walking changed fixed local paint/credit/corners");
                 for (std::size_t side = 0; side < 2; ++side)
@@ -480,7 +480,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const auto tick = [&]()
         {
             require(++level_updates <= 1200 && ++updates <= 8000, "Slab short-match ending exceeded its finite update budget");
-            ++ending_updates; fixture.level->update(neutral, dt);
+            ++ending_updates; fixture.level->update(acceptance::slot_seats(*fixture.level, neutral), dt);
         };
         while (fixture.level->state() != LevelState::overview) { tick(); }
         const auto fullscreen = app.viewport_manager()->fullscreen_viewport();

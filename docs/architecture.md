@@ -154,7 +154,7 @@ It is the shell's bag, not the game's. `GameMenu`, `GameLevel`, `MenuContext`,
 `MenuPage`, `StagePreview` and the developer tools hold it. Gameplay objects do
 not: `GameLevel` unpacks it into `LevelBuilder`'s constructor (viewports,
 render and audio resources, play settings, level registry, tuning,
-presentation, resolution, thread pool, partitioner, mouse and input bindings),
+presentation, resolution, thread pool, partitioner and input bindings),
 and from there each object is constructed with only what it uses.
 
 ## The state stack
@@ -222,6 +222,10 @@ retirement, per-view render fan-out) are `labrador::Scene` in the engine, which
 `players_` is the stable roster participant, not the player's device slot
 (`player_num()`) or human pane. Bots have no device or pane, and
 `participant_for_view` and `view_for_participant` map between panes and seats.
+`Level::update` takes one command per participant: `GameLevel` reads a
+`SlotInput` per device slot, keeps the pause signals, and its
+[SeatCommandBuilder](../game/objects/seat_commands.h) maps slots to seats and
+resolves mouse aim, so the level never reads a device or the mouse.
 
 Construction goes through builders that read the level definition and the
 tuning and hand finished objects to the scene. `LevelBuilder` owns a

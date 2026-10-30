@@ -48,7 +48,7 @@ namespace bot_navigation_acceptance
             std::srand(seed);
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
-                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
             return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         }
 

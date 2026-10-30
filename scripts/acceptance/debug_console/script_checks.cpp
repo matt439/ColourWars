@@ -275,7 +275,7 @@ namespace debug_console_acceptance
 		match.settings = planned(1);
 		director.attach_match(match);
 		const auto hook = [&] { director.before_match_update(match, dt); };
-		const std::vector<PlayerInputData> none(input_slots::count);
+		const std::vector<SlotInput> none(input_slots::count);
 		const auto update = [&] { update_match(director, match, none, dt); };
 
 		require(impl.execute("exec waits a").ok, "exec typed at the console is accepted");

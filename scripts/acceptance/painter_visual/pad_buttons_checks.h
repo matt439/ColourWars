@@ -302,7 +302,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         } layout{ *app.viewport_manager(), app.viewport_manager()->layout() };
         LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
             &preferences.play_settings(), &levels, &tuning, &presentation,
-            app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse(), &preferences.input_bindings());
+            app.resolution_manager(), app.thread_pool(), app.partitioner(), &preferences.input_bindings());
         auto level = build(app, builder, 4, TeamColourPair::blue_yellow);
         const Frame four = render(*level, *app.renderer());
         for (const std::wstring_view line : { L"Pad 4: Y / LT Jump, RT Shoot, Start Pause", L"Pad 2: B / LT Jump, RT Shoot, Start Pause",
@@ -370,7 +370,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.viewport_manager()->set_layout(setup.screen_layout());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
             &preferences.play_settings(), &levels, &replay_tuning, &presentation,
-            app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse(), &preferences.input_bindings());
+            app.resolution_manager(), app.thread_pool(), app.partitioner(), &preferences.input_bindings());
         std::srand(seed);
         return builder.build_level(setup, TeamColourPair::blue_yellow, OpeningMode::off);
     };
@@ -394,7 +394,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(inputs[1].jump_held == first_held && inputs[1].jump_pressed == first_pressed &&
             inputs[3].jump_held == second_held && inputs[3].jump_pressed == second_pressed,
             "Actual recording reader differs from independent chosen-face/former-A/LT Jump oracle");
-        recorded->update(inputs, dt, &recorder);
+        acceptance::update_from_slots(*recorded, inputs, dt, &recorder);
         require(recorder.file().inputs.size() == 2 && recorder.file().inputs[0].size() == static_cast<size_t>(step + 1) &&
             replay_codec::same(recorder.file().inputs[0].back(), inputs[3]) &&
             replay_codec::same(recorder.file().inputs[1].back(), inputs[1]),
@@ -428,7 +428,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             live[3].jump_held != decoded.inputs[0][step].jump_held ||
             live[1].jump_pressed != decoded.inputs[1][step].jump_pressed || live[1].jump_held != decoded.inputs[1][step].jump_held;
         if (different) { ++raw_differences; }
-        playback->update(live, std::bit_cast<float>(decoded.dt_bits), &player);
+        acceptance::update_from_slots(*playback, live, std::bit_cast<float>(decoded.dt_bits), &player);
         const auto print = MatchFingerprint::of(*playback, step + 1);
         require(MatchFingerprint::difference(prints[step], print).empty() &&
             replay_codec::same(playback->player(0).input(), decoded.inputs[0][step]) &&

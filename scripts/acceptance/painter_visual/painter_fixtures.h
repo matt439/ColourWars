@@ -379,9 +379,9 @@
 
     void settle(Level& level, const std::vector<PlayerInputData>& inputs)
     {
-        for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { level.update(inputs, dt); }
+        for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { level.update(acceptance::slot_seats(level, inputs), dt); }
         require(level.state() == LevelState::active, "countdown did not reach active play");
-        for (int tick = 0; tick < 60; ++tick) { level.update(inputs, dt); }
+        for (int tick = 0; tick < 60; ++tick) { level.update(acceptance::slot_seats(level, inputs), dt); }
         for (int view = 0; view < level.player_count(); ++view)
         {
             require(level.player(view).state() == PlayerState::alive, "authored spawn did not settle alive");

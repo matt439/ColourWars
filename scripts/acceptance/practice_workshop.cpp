@@ -78,7 +78,7 @@ namespace
             this->resolution.set_resolution(Vector2F(1920.0f, 1080.0f));
             this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render,
                 &this->audio, &this->preferences, &this->levels, &this->tuning,
-                &this->presentation, &this->resolution, nullptr, &this->partitioner, &this->mouse);
+                &this->presentation, &this->resolution, nullptr, &this->partitioner);
         }
 
         const LevelLoadedInfo& course() const { return *this->levels.get("movement_course"); }

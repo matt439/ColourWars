@@ -31,7 +31,7 @@ namespace
         {
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
-                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
             return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         }
         paint_surfaces_acceptance::World assets;
@@ -209,7 +209,7 @@ namespace
             for (const int seat : { 1, 3 })
             {
                 const auto& input = observer.last[static_cast<size_t>(seat)];
-                require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+                require(input.connected && !input.toggle_debug,
                     "Shipping bot emitted a menu/pause/debug action or claimed a device");
                 drove |= input.primary_shoot || input.jump_pressed || input.x_movement != 0;
             }

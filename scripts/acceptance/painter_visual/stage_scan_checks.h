@@ -201,11 +201,11 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     tap(Key::enter); require(choice == MatchStart::menu && stack.depth() == 1 && settings.stage() == "my_course" && scans == before_scans,
         "The preserved good user stage did not reach the actual match-start callback");
     LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(), &play, &levels,
-        &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+        &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner());
     {
         std::srand(932); auto accepted = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         std::vector<PlayerInputData> neutral(input_slots::count); for (auto& action : neutral) { action.connected = true; }
-        for (int step = 0; step < 400 && accepted->state() != LevelState::active; ++step) { accepted->update(neutral, dt); ++level_updates; }
+        for (int step = 0; step < 400 && accepted->state() != LevelState::active; ++step) { accepted->update(acceptance::slot_seats(*accepted, neutral), dt); ++level_updates; }
         require(accepted->state() == LevelState::active && scans == before_scans, "A valid optional stage could not start without another scan");
     }
     prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context, Session(3))); tick(); tap(Key::down);

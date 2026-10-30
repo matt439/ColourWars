@@ -138,7 +138,7 @@ struct RouteWarningRecords
     void step(CrossfeedFixture& fixture, const std::vector<PlayerInputData>& inputs)
     {
         require(++updates <= 15000, "Route/warning leaf exceeded its Level update ceiling");
-        fixture.level->update(inputs, dt);
+        fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt);
     }
 
     void settle(CrossfeedFixture& fixture)

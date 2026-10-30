@@ -5,7 +5,7 @@
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
-#include "game/objects/player_input_data.h"
+#include "game/objects/slot_input.h"
 #include "game/input_slots.h"
 #include "game/objects/weapon_type.h"
 
@@ -39,7 +39,7 @@ int reclaim_missing_seat(MatchSetup& settings,
 // begins while the intro plays is latched for its device slot, and its
 // release clears toggle_pause_menu however late it comes: a skip held past
 // GO, or a Start held while another button skipped, never opens pause.
-void latch_intro_pause(bool intro_playing, std::vector<PlayerInputData>& player_inputs,
+void latch_intro_pause(bool intro_playing, std::vector<SlotInput>& player_inputs,
 	std::array<bool, input_slots::count>& latched);
 
 

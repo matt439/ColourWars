@@ -139,12 +139,16 @@ colour and one frame, so it is not used here.
 ## Follow one shot from input to score
 
 1. [PlayerInput::player_inputs](../game/objects/player_input.cpp) converts engine
-   device snapshots into `PlayerInputData`, indexed by input slot.
+   device snapshots into a `SlotInput` per input slot: a seat's command
+   (`PlayerInputData`) plus the pause and intro-skip signals only the shell reads.
    [GameLevel::update](../game/states/game_states.cpp) checks match-level input
-   such as pause and passes the snapshots to Level.
-2. [Level::apply_player_inputs](../game/objects/level.cpp) assigns each player's
-   snapshot. `resolve_mouse_aim` adds the camera-dependent aim direction for the
-   keyboard/mouse player. Player owns the resulting input for its update.
+   such as pause, then
+   [SeatCommandBuilder](../game/objects/seat_commands.cpp) maps each slot to the
+   participant playing from it and adds the camera-dependent aim direction for the
+   keyboard/mouse player.
+2. [Level::apply_player_inputs](../game/objects/level.cpp) hands each player its
+   command, after the bots and any seat filter have had theirs. Player owns the
+   resulting input for its update.
 3. [Player::update_weapon_and_get_projectiles](../game/objects/player.cpp)
    suppresses firing while dead and calls the owned Weapon. The weapon's shared
    firing workflow updates aim, timers, ammunition and sound, then creates

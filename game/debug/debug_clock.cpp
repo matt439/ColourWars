@@ -57,12 +57,12 @@ int DebugClock::updates_this_step()
 	return std::min(runs, max_runs);
 }
 
-std::vector<PlayerInputData> DebugClock::latch(
-	const std::vector<PlayerInputData>& inputs, int runs)
+std::vector<SlotInput> DebugClock::latch(
+	const std::vector<SlotInput>& inputs, int runs)
 {
 	if (this->held_edges_.size() != inputs.size())
 	{
-		this->held_edges_.assign(inputs.size(), PlayerInputData());
+		this->held_edges_.assign(inputs.size(), SlotInput());
 	}
 
 	if (runs <= 0)
@@ -76,20 +76,20 @@ std::vector<PlayerInputData> DebugClock::latch(
 		return inputs;
 	}
 
-	std::vector<PlayerInputData> result = inputs;
+	std::vector<SlotInput> result = inputs;
 	for (std::size_t i = 0; i < result.size(); ++i)
 	{
 		result[i].jump_pressed |= this->held_edges_[i].jump_pressed;
 		result[i].toggle_debug |= this->held_edges_[i].toggle_debug;
 		result[i].skip_intro |= this->held_edges_[i].skip_intro;
-		this->held_edges_[i] = PlayerInputData();
+		this->held_edges_[i] = SlotInput();
 	}
 	return result;
 }
 
-std::vector<PlayerInputData> DebugClock::without_edges(std::vector<PlayerInputData> inputs)
+std::vector<SlotInput> DebugClock::without_edges(std::vector<SlotInput> inputs)
 {
-	for (PlayerInputData& input : inputs)
+	for (SlotInput& input : inputs)
 	{
 		input.jump_pressed = false;
 		input.toggle_debug = false;

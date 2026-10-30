@@ -156,7 +156,7 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
             for (std::size_t paint = 0; paint < 2; ++paint)
             {
                 require(++updates <= 6000, "Shoulder native inspection exceeded its finite update budget");
-                pair[paint].level->update(input, dt); const auto owners = pair[paint].level->horizontal_structure_states();
+                pair[paint].level->update(acceptance::slot_seats(*pair[paint].level, input), dt); const auto owners = pair[paint].level->horizontal_structure_states();
                 require(turbulence_mover_paint_state(owners) == local_paint[paint], "Shoulder walking changed mover-local paint credit");
                 for (std::size_t side = 0; side < 2; ++side)
                 {

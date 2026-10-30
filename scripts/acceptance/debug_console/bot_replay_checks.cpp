@@ -200,7 +200,7 @@ namespace debug_console_acceptance
 		ReplayPlayer player("mixed", recorder.file());
 		for (std::size_t step = 0; step < 3; ++step)
 		{
-			for (PlayerInputData& input : seats) { input.toggle_pause_menu = true; input.primary_shoot = true; }
+			for (PlayerInputData& input : seats) { input.toggle_debug = true; input.primary_shoot = true; }
 			player.filter_seats(seats, level);
 			for (std::size_t seat = 0; seat < seats.size(); ++seat)
 			{
