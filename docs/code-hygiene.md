@@ -938,8 +938,10 @@ movement_course,ammo` run recorded `run-failed` then `not-run` with outcome
 `failed`. `check-acceptance-selection` and `check-acceptance-process` pass in
 both shells. A hosted run waits for an authorised push.
 
-Still open and not this row's: re-ordering `$longestFirst` and changing the
-Debug pull-request exclusions follow from the uploaded data in a later change.
+Still open and not this row's: re-ordering `$longestFirst` follows from the
+uploaded data in a later change. The Debug pull-request exclusions are gone:
+pull requests now run every case, because a merge that carries the tree a pull
+request passed is not built again.
 
 ### Local Markdown link check (`CI#5`)
 

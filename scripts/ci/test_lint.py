@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import unittest
 
-from lint import check_changes
+from lint import already_tested, check_changes
 
 
 class ChangeChecks(unittest.TestCase):
@@ -165,6 +165,53 @@ class ChangeChecks(unittest.TestCase):
         head = self.commit()
         with self.assertRaises(subprocess.CalledProcessError):
             self.pull_request(self.initial, head)
+
+    def tree(self, commit: str) -> str:
+        return self.git("rev-parse", f"{commit}^{{tree}}")
+
+    def reuses(self, after: str, passed) -> bool:
+        return already_tested("push", {"before": self.initial, "after": after},
+                              cwd=self.repo, passed=passed)
+
+    def test_only_a_tree_a_pull_request_passed_skips_the_build(self) -> None:
+        self.git("checkout", "-b", "feature")
+        self.write("game/example.cpp", "int example = 1;\n")
+        head = self.commit()
+        recorded = {self.tree(head)}
+        self.git("checkout", "main")
+        self.git("merge", "--no-ff", "--no-edit", "feature")
+        merged = self.git("rev-parse", "HEAD")
+        asked = []
+        self.assertTrue(self.reuses(merged, lambda tree: asked.append(tree) or True))
+        self.assertEqual(asked, [self.tree(head)])
+        self.assertTrue(self.reuses(merged, recorded.__contains__))
+        self.assertFalse(self.reuses(merged, set().__contains__))
+        # Changes made in or after the merge are a tree no run built.
+        self.write("game/amended.cpp", "int amended = 1;\n")
+        self.git("add", "--all")
+        self.git("commit", "--amend", "--no-edit")
+        self.assertFalse(self.reuses(self.git("rev-parse", "HEAD"), recorded.__contains__))
+        self.git("reset", "--hard", self.initial)
+        self.write("game/other.cpp", "int other = 1;\n")
+        self.commit()
+        self.git("merge", "--no-ff", "--no-edit", "feature")
+        self.assertFalse(self.reuses(self.git("rev-parse", "HEAD"), recorded.__contains__))
+
+    def test_other_events_and_unknown_commits_keep_full_ci(self) -> None:
+        for event_name, event in (
+                ("pull_request", {"after": self.initial}),
+                ("workflow_dispatch", {}),
+                ("push", {"after": "0" * 40}),
+                ("push", {"after": "f" * 40}),
+                ("push", {"after": "not a commit"})):
+            with self.subTest(event_name=event_name, event=event):
+                self.assertFalse(already_tested(event_name, event, cwd=self.repo,
+                                                passed=lambda tree: True))
+
+    def test_unanswered_record_query_keeps_full_ci(self) -> None:
+        def unavailable(tree: str) -> bool:
+            raise OSError("API unreachable")
+        self.assertFalse(self.reuses(self.initial, unavailable))
 
     def test_full_ci_fallbacks_still_lint_head(self) -> None:
         self.write("docs/latest.md", "Trailing whitespace. \n")
