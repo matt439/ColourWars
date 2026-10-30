@@ -29,10 +29,12 @@ namespace
     {
         ReplayFile file;
         file.build = "moving-manual-fixture"; file.dt_bits = bits(dt); file.seed = 17u;
-        file.settings.set_player_count(1); file.settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        file.settings.set_player_team(0, PlayerTeam::a); file.settings.set_player_weapon(0, WeaponType::sprayer);
-        file.settings.set_stage("manual-moving-fixture"); file.settings.set_duration(120.0f);
-        file.settings.set_screen_layout(labrador::ScreenLayout::one_player);
+        MatchSetup settings;
+        settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
+        settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer);
+        settings.set_stage("manual-moving-fixture"); settings.set_duration(120.0f);
+        settings.set_screen_layout(labrador::ScreenLayout::one_player);
+        file.tape.start(0, settings);
         return file;
     }
     std::unique_ptr<Fixture> ferry(World& world)
@@ -52,12 +54,13 @@ namespace
         return fixture;
     }
 
-    // Independent literal version-3 wire control, including the old zero shorthand.
-    // Version 4 adds roster metadata; the dynamic domain stays absent.
+    // Independent literal version-5 wire control; the dynamic domain stays absent.
+    // The version-3 literal (with the old zero shorthand) and version 4, which
+    // added roster metadata, are refused by version.
     void legacy_bytes(const std::filesystem::path& path)
     {
         ReplayFile file = header(); file.build = "legacy"; file.dt_bits = 0; file.seed.reset();
-        file.settings.set_duration(std::nullopt);
+        MatchSetup untimed = file.tape.settings(); untimed.set_duration(std::nullopt); file.tape.start(0, untimed);
         file.final_print.seats.emplace_back();
         const std::string expected =
             "{\n  \"version\": 3,\n  \"build\": \"legacy\",\n  \"dt\": \"0\",\n"
@@ -71,28 +74,39 @@ namespace
             "    \"total\": \"0\",\n    \"level_state\": 0,\n    \"seats\": [\n"
             "      { \"x\": \"0\", \"y\": \"0\", \"vx\": \"0\", \"vy\": \"0\", \"health\": \"0\", "
             "\"ammo\": \"0\", \"respawn\": \"0\", \"move_state\": 0, \"alive\": 0 }\n    ]\n  }\n}\n";
-        std::string current = expected;
-        current.replace(current.find("\"version\": 3"), 12, "\"version\": 4");
+        std::string version_4 = expected;
+        version_4.replace(version_4.find("\"version\": 3"), 12, "\"version\": 4");
         const std::string old_seat = "\"weapon\": \"sprayer\" }";
-        current.replace(current.find(old_seat), old_seat.size(),
+        version_4.replace(version_4.find(old_seat), old_seat.size(),
             "\"weapon\": \"sprayer\", \"controller\": \"human\", \"difficulty\": \"normal\" }");
-        file.write(path); require(read_text(path) == current, "Static version-4 replay bytes changed");
+        // Version 5 lists gaps in place of suspends and one input array per participant.
+        std::string current = version_4;
+        current.replace(current.find("\"version\": 4"), 12, "\"version\": 5");
+        const std::string old_tape = "\"suspends\": [],\n  \"inputs\": [\n  ],";
+        current.replace(current.find(old_tape), old_tape.size(), "\"gaps\": [],\n  \"inputs\": [\n    []\n  ],");
+        file.write(path); require(read_text(path) == current, "Static version-5 replay bytes changed");
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = 1; file.final_print.seats[0].step_paint_team = 2;
         std::string active = current;
         const std::string needle = "\"alive\": 0 }";
         active.replace(active.find(needle), needle.size(),
             "\"alive\": 0, \"paint_underfoot\": { \"support_team\": 1, \"step_team\": 2 } }");
-        file.write(path); require(read_text(path) == active, "POL36-only version-4 replay bytes changed");
+        file.write(path); require(read_text(path) == active, "POL36-only version-5 replay bytes changed");
         const auto decoded = ReplayFile::read(path);
         require(!decoded.final_print.horizontal_motion &&
             MatchFingerprint::difference(file.final_print, decoded.final_print).empty(),
-            "POL36-only legacy replay changed meaning");
-        // Legacy readers still accept their historical variable-width float hex.
-        write_text(path, expected);
-        const ReplayFile legacy = ReplayFile::read(path);
-        require(!legacy.final_print.horizontal_motion && legacy.settings.human_count() == 1 &&
-            legacy.settings.bot_count() == 0, "Static domain or bot appeared on version-3 legacy read");
+            "POL36-only static replay changed meaning");
+        write_text(path, current);
+        const ReplayFile static_read = ReplayFile::read(path);
+        require(!static_read.final_print.horizontal_motion && static_read.tape.settings().human_count() == 1 &&
+            static_read.tape.settings().bot_count() == 0, "Static domain or bot appeared on version-5 read");
+        // A replay holds only on the build that recorded it: older versions are refused, not read.
+        for (const auto& [text, version] : { std::pair{ expected, 3 }, std::pair{ version_4, 4 } })
+        {
+            write_text(path, text);
+            throws_with([&] { static_cast<void>(ReplayFile::read(path)); },
+                "format version " + std::to_string(version) + "; this build reads only 5");
+        }
     }
 
     std::uint64_t legacy_hash(const Level& level, int updates)
@@ -209,6 +223,7 @@ namespace
         malformed(path, original, [](auto& d) {
             auto& a=d["settings"]["seats"]; rapidjson::Value extra(a[0u],d.GetAllocator()); extra["slot"].SetInt(-1);
             a.PushBack(extra,d.GetAllocator()); d["settings"]["layout"].SetInt(1);
+            auto& i=d["inputs"]; rapidjson::Value seat(i[0u],d.GetAllocator()); i.PushBack(seat,d.GetAllocator());
         });
         malformed(path, original, [](auto& d) { auto& t=d["final"]["horizontal_motion"]["structures"][0u]["tiles"]; t[0u].Swap(t[1u]); });
         for (int owner : { (std::numeric_limits<int>::min)(), (std::numeric_limits<int>::max)() })
@@ -317,7 +332,7 @@ void check_replay(World& world)
     recorder.file().updates = length; recorder.file().final_print = observations.back(); recorder.file().write(path);
     const unsigned int terminal_random = static_cast<unsigned int>(std::rand());
     const auto decoded = ReplayFile::read(path);
-    require(decoded.updates == length && decoded.inputs.size() == 1 && decoded.inputs[0].size() == length &&
+    require(decoded.updates == length && decoded.inputs_by_seat().size() == 1 && decoded.inputs_by_seat()[0].size() == length &&
         decoded.checkpoints.size() == 4 && decoded.seed == 17u && decoded.dt_bits == bits(dt),
         "Manual actual-Level tape metadata/input/checkpoints are incomplete");
     auto playback = ferry(world); ReplayPlayer player("manual-moving", decoded);

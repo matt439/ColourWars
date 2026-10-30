@@ -145,8 +145,10 @@ public:
 
 	// Phase 3 ---------------------------------------------------------------
 
-	// GameLevel's hooks (DebugDirector::match_suspended, drives_slot).
+	// GameLevel's hooks (DebugDirector::match_suspended, match_resumed,
+	// drives_slot).
 	void match_suspended(DebugMatchTarget& match);
+	void match_resumed(DebugMatchTarget& match, const std::vector<PlayerInputData>& seats);
 	bool drives_slot(int slot) const;
 	OpeningMode opening_mode(OpeningMode chosen) const;
 
@@ -366,7 +368,6 @@ private:
 	std::optional<MatchFingerprint> last_print_;
 	std::unique_ptr<ReplayPlayer> play_armed_;
 	std::unique_ptr<ReplayPlayer> player_;
-	bool injecting_suspend_ = false;
 	std::optional<std::pair<bool, bool>> cheats_before_play_;
 	SeatInputFilter* seat_filter();
 	void before_level_update(DebugMatchTarget& match, float dt);

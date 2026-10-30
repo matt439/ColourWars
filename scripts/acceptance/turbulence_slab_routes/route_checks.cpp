@@ -501,12 +501,14 @@ namespace turbulence_slab_routes_acceptance
             header.seed = seed;
             header.tuning_hash = fnv1a(read(content / "tuning.json"));
             header.presentation_hash = fnv1a(read(content / "presentation.json"));
-            header.settings.set_stage(stage.stem().string()); header.settings.set_player_count(1);
-            header.settings.set_screen_layout(ScreenLayout::one_player);
-            header.settings.begin_input_claims(input_slots::keyboard_and_mouse);
-            header.settings.set_player_team(0, side_b ? PlayerTeam::b : PlayerTeam::a);
-            header.settings.set_player_weapon(0, WeaponType::roller);
-            auto original = std::make_unique<Trial>(world, stage, groups, side_b, &header.settings, &*header.seed);
+            MatchSetup roster;
+            roster.set_stage(stage.stem().string()); roster.set_player_count(1);
+            roster.set_screen_layout(ScreenLayout::one_player);
+            roster.begin_input_claims(input_slots::keyboard_and_mouse);
+            roster.set_player_team(0, side_b ? PlayerTeam::b : PlayerTeam::a);
+            roster.set_player_weapon(0, WeaponType::roller);
+            header.tape.start(0, roster);
+            auto original = std::make_unique<Trial>(world, stage, groups, side_b, &header.tape.settings(), &*header.seed);
             const Observation initial = observe(*original, 0);
             ReplayRecorder recorder(name, header, nullptr, maximum_scene_updates);
             std::vector<Observation> priming, recorded;
@@ -517,9 +519,9 @@ namespace turbulence_slab_routes_acceptance
             replay_trace(trace, "initial-cold", 0, 0, initial, *original);
             const auto tick = [&](float movement = 0.0f, bool fire = false, bool route = false)
             {
-                const std::size_t before = recorder.file().inputs.empty() ? 0 : recorder.file().inputs[0].size();
+                const auto before = static_cast<std::size_t>(recorder.file().tape.steps());
                 original->tick(movement, fire, route, &recorder);
-                const std::size_t after = recorder.file().inputs.empty() ? 0 : recorder.file().inputs[0].size();
+                const auto after = static_cast<std::size_t>(recorder.file().tape.steps());
                 if (after == before)
                 {
                     require(recorded.empty() && !original->level->match_started(),
@@ -529,7 +531,7 @@ namespace turbulence_slab_routes_acceptance
                 }
                 else
                 {
-                    require(after == before + 1 && recorder.file().inputs.size() == 1,
+                    require(after == before + 1 && recorder.file().tape.seats(static_cast<int>(before)).size() == 1,
                         "Production slab recorder did not receive exactly one seat input per active update");
                     recorded.push_back(observe(*original, static_cast<int>(after)));
                     replay_trace(trace, "record", original->updates, static_cast<int>(after), recorded.back(), *original);
@@ -595,27 +597,27 @@ namespace turbulence_slab_routes_acceptance
             const int priming_count = priming_receipt["unfiltered_updates"].GetInt();
             require(decoded.seed && decoded.build == header.build && decoded.dt_bits == header.dt_bits &&
                 decoded.tuning_hash == fnv1a(read(content / "tuning.json")) &&
-                decoded.presentation_hash == fnv1a(read(content / "presentation.json")) && !decoded.god && !decoded.infinite_ammo &&
-                decoded.suspends.empty() && decoded.updates == counts.input_updates && decoded.inputs.size() == 1 &&
-                decoded.inputs[0].size() == recorded.size() && decoded.checkpoints.size() == static_cast<std::size_t>(counts.checkpoints) &&
+                decoded.presentation_hash == fnv1a(read(content / "presentation.json")) && !decoded.tape.damage_immune() && !decoded.tape.infinite_ammo() &&
+                decoded.tape.gaps().empty() && decoded.updates == counts.input_updates && decoded.inputs_by_seat().size() == 1 &&
+                decoded.inputs_by_seat()[0].size() == recorded.size() && decoded.checkpoints.size() == static_cast<std::size_t>(counts.checkpoints) &&
                 priming_count == counts.priming_updates && priming_count + decoded.updates == counts.record_updates,
                 "Production slab tape or explicit priming lost rebuilding metadata/input counts");
-            require(decoded.settings.stage() == stage.stem().string() && decoded.settings.player_count() == 1 &&
-                decoded.settings.screen_layout() == header.settings.screen_layout() &&
-                decoded.settings.player_settings()[0].team == header.settings.player_settings()[0].team &&
-                decoded.settings.player_settings()[0].num == header.settings.player_settings()[0].num &&
-                decoded.settings.player_settings()[0].weapon == WeaponType::roller,
+            require(decoded.tape.settings().stage() == stage.stem().string() && decoded.tape.settings().player_count() == 1 &&
+                decoded.tape.settings().screen_layout() == header.tape.settings().screen_layout() &&
+                decoded.tape.settings().player_settings()[0].team == header.tape.settings().player_settings()[0].team &&
+                decoded.tape.settings().player_settings()[0].num == header.tape.settings().player_settings()[0].num &&
+                decoded.tape.settings().player_settings()[0].weapon == WeaponType::roller,
                 "Production slab tape lost the actual complete roster/setup");
             for (std::size_t update = 0; update < recorded.size(); ++update)
-            { require(replay_codec::same(recorder.file().inputs[0][update], decoded.inputs[0][update]), "Production slab input codec changed bits"); }
+            { require(replay_codec::same(recorder.file().tape.seats(static_cast<int>(update))[0], decoded.tape.seats(static_cast<int>(update))[0]), "Production slab input codec changed bits"); }
             check_codec_refusal(tape, evidence / (name + "-invalid-input.json"));
-            const fs::path rebuild_stage = evidence / (decoded.settings.stage() + ".json");
+            const fs::path rebuild_stage = evidence / (decoded.tape.settings().stage() + ".json");
             require(read(rebuild_stage) == stage_bytes && fnv1a(read(rebuild_stage)) ==
                 std::stoull(priming_receipt["source_stage_hash"].GetString(), nullptr, 16),
                 "Decoded public slab stage selection/source hash differs");
             const float seconds = float_from_bits(decoded.dt_bits);
             const auto rebuilt_groups = roles(parse(read(rebuild_stage)), geometry, side_b);
-            auto playback = std::make_unique<Trial>(world, rebuild_stage, rebuilt_groups, side_b, &decoded.settings, &*decoded.seed);
+            auto playback = std::make_unique<Trial>(world, rebuild_stage, rebuilt_groups, side_b, &decoded.tape.settings(), &*decoded.seed);
             same_observation(initial, *playback, 0, "Decoded cold slab rebuild differs before countdown");
             for (int update = 0; update < priming_count; ++update)
             {
@@ -632,7 +634,7 @@ namespace turbulence_slab_routes_acceptance
                 // ReplayPlayer can inject the recorded walk and paid trigger.
                 PlayerInputData effective;
                 playback->tick(0.0f, false, false, &player, seconds, &effective);
-                require(replay_codec::same(effective, decoded.inputs[0][static_cast<std::size_t>(update)]),
+                require(replay_codec::same(effective, decoded.tape.seats(update)[0]),
                     "Production ReplayPlayer did not inject the exact decoded seat input over the neutral baseline");
                 const auto& expected = recorded[static_cast<std::size_t>(update)];
                 same_observation(expected, *playback, update + 1,
@@ -664,9 +666,9 @@ namespace turbulence_slab_routes_acceptance
                 const auto corrupt_path = evidence / (name + "-wrong-checkpoint.json"); write_variant(corrupt_path, corrupt_json);
                 const auto corrupt = ReplayFile::read(corrupt_path);
                 ReplayPlayer mismatch(name + "-wrong-checkpoint", corrupt);
-                const auto control_stage = evidence / (corrupt.settings.stage() + ".json");
+                const auto control_stage = evidence / (corrupt.tape.settings().stage() + ".json");
                 const auto control_groups = roles(parse(read(control_stage)), geometry, side_b);
-                auto control = std::make_unique<Trial>(world, control_stage, control_groups, side_b, &corrupt.settings, &*corrupt.seed);
+                auto control = std::make_unique<Trial>(world, control_stage, control_groups, side_b, &corrupt.tape.settings(), &*corrupt.seed);
                 for (int update = 0; update < priming_count; ++update)
                 { control->tick(0.0f, false, false, nullptr, float_from_bits(corrupt.dt_bits)); }
                 const int checkpoint_update = corrupt.checkpoints[0].update;
@@ -674,7 +676,7 @@ namespace turbulence_slab_routes_acceptance
                 {
                     PlayerInputData effective;
                     control->tick(0.0f, false, false, &mismatch, float_from_bits(corrupt.dt_bits), &effective);
-                    require(replay_codec::same(effective, corrupt.inputs[0][static_cast<std::size_t>(update)]),
+                    require(replay_codec::same(effective, corrupt.tape.seats(update)[0]),
                         "Altered-checkpoint production ReplayPlayer lost its exact decoded input");
                     const auto actual = MatchFingerprint::of(*control->level, update + 1);
                     require(MatchFingerprint::difference(recorded[static_cast<std::size_t>(update)].print, actual).empty(),

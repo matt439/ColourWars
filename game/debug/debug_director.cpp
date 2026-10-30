@@ -143,6 +143,14 @@ void DebugDirector::match_suspended(DebugMatchTarget& match)
 	}
 }
 
+void DebugDirector::match_resumed(DebugMatchTarget& match, const std::vector<PlayerInputData>& seats)
+{
+	if (this->impl_ != nullptr)
+	{
+		this->impl_->match_resumed(match, seats);
+	}
+}
+
 bool DebugDirector::drives_slot(int slot) const
 {
 	return this->impl_ != nullptr && this->impl_->drives_slot(slot);

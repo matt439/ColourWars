@@ -178,9 +178,10 @@ namespace turbulence_movers_acceptance
             header.seed = side_b ? 440u : 439u; header.dt_bits = bits(dt);
             header.tuning_hash = fnv1a(read_text(context.content / "tuning.json"));
             header.presentation_hash = fnv1a(read_text(context.content / "presentation.json"));
-            header.settings = settings(1, side_b ? PlayerTeam::b : PlayerTeam::a);
-            header.settings.set_stage(stage.stem().string());
-            auto original = std::make_unique<Trial>(context, stage, header.settings, *header.seed);
+            auto roster = settings(1, side_b ? PlayerTeam::b : PlayerTeam::a);
+            roster.set_stage(stage.stem().string());
+            header.tape.start(0, roster);
+            auto original = std::make_unique<Trial>(context, stage, header.tape.settings(), *header.seed);
             const auto initial = MatchFingerprint::of(*original->level, 0);
             require(initial.horizontal_motion && initial.horizontal_motion->structures.size() == 2 &&
                 initial.horizontal_motion->structures[0].id == 1 && initial.horizontal_motion->structures[1].id == 2,
@@ -209,16 +210,16 @@ namespace turbulence_movers_acceptance
             require(decoded.seed && decoded.dt_bits == bits(dt) && decoded.build == header.build &&
                 decoded.tuning_hash == fnv1a(read_text(context.content / "tuning.json")) &&
                 decoded.presentation_hash == fnv1a(read_text(context.content / "presentation.json")) &&
-                !decoded.god && !decoded.infinite_ammo && decoded.inputs.size() == 1 &&
-                decoded.inputs[0].size() == static_cast<size_t>(decoded.updates) &&
+                !decoded.tape.damage_immune() && !decoded.tape.infinite_ammo() && decoded.inputs_by_seat().size() == 1 &&
+                decoded.inputs_by_seat()[0].size() == static_cast<size_t>(decoded.updates) &&
                 decoded.updates == static_cast<int>(recording.observations.size()) &&
                 decoded.checkpoints.size() == static_cast<size_t>(decoded.updates / ReplayFile::checkpoint_interval),
                 "Mover replay lost source setup/hashes, real input-filter calls or checkpoints");
             // Both file selection and complete roster/seed/dt come from decoded
             // tape data. The constructor reloads the saved editor JSON and uses
             // the public builder; no scene pointer or state is copied forward.
-            const auto rebuild_stage = context.evidence / (decoded.settings.stage() + ".json");
-            auto playback = std::make_unique<Trial>(context, rebuild_stage, decoded.settings, *decoded.seed);
+            const auto rebuild_stage = context.evidence / (decoded.tape.settings().stage() + ".json");
+            auto playback = std::make_unique<Trial>(context, rebuild_stage, decoded.tape.settings(), *decoded.seed);
             require(MatchFingerprint::difference(initial, MatchFingerprint::of(*playback->level, 0)).empty(),
                 "Fresh decoded-settings public build differs before source countdown");
             const auto replay_priming = prime(*playback);

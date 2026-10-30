@@ -28,13 +28,14 @@ namespace moving_structure_acceptance
             header.build = "public-loader-moving-fixture";
             header.dt_bits = bits(dt);
             header.seed = one_way ? 180u : 179u;
-            header.settings = loaded_settings();
-            header.settings.set_stage(one_way ? "public_moving_one_way" : "public_moving_solid");
-            const auto path = directory / (header.settings.stage() + ".json");
-            const auto tape_path = directory / (header.settings.stage() + "-replay.json");
-            const auto csv_path = directory / (header.settings.stage() + "-trace.csv");
+            auto settings = loaded_settings();
+            settings.set_stage(one_way ? "public_moving_one_way" : "public_moving_solid");
+            header.tape.start(0, settings);
+            const auto path = directory / (header.tape.settings().stage() + ".json");
+            const auto tape_path = directory / (header.tape.settings().stage() + "-replay.json");
+            const auto csv_path = directory / (header.tape.settings().stage() + "-trace.csv");
             write_loaded_stage(path, one_way);
-            auto original = std::make_unique<LoadedFixture>(world, path, header.settings, *header.seed);
+            auto original = std::make_unique<LoadedFixture>(world, path, header.tape.settings(), *header.seed);
             const auto initial = MatchFingerprint::of(*original->level, 0);
             require(initial.horizontal_motion && initial.horizontal_motion->structures.size() == 2 &&
                 initial.horizontal_motion->structures[0].id == 1 && initial.horizontal_motion->structures[1].id == 2 &&
@@ -91,12 +92,12 @@ namespace moving_structure_acceptance
 
             const ReplayFile decoded = ReplayFile::read(tape_path);
             require(decoded.seed && decoded.dt_bits == bits(dt) && decoded.updates == length &&
-                decoded.inputs.size() == 1 && decoded.inputs[0].size() == length && decoded.checkpoints.size() == 6,
+                decoded.inputs_by_seat().size() == 1 && decoded.inputs_by_seat()[0].size() == length && decoded.checkpoints.size() == 6,
                 "Public-loader tape lost its rebuilding setup, inputs or checkpoints");
             // Select the file and complete setup from the decoded tape, reread
             // that file into a new registry, and seed the real public builder.
-            const auto rebuild_path = directory / (decoded.settings.stage() + ".json");
-            auto playback = std::make_unique<LoadedFixture>(world, rebuild_path, decoded.settings, *decoded.seed);
+            const auto rebuild_path = directory / (decoded.tape.settings().stage() + ".json");
+            auto playback = std::make_unique<LoadedFixture>(world, rebuild_path, decoded.tape.settings(), *decoded.seed);
             require(MatchFingerprint::difference(initial, MatchFingerprint::of(*playback->level, 0)).empty(),
                 "Fresh decoded-settings public build differs before playback begins");
             ReplayPlayer player("public-loader-moving", decoded);

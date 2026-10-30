@@ -52,6 +52,50 @@ namespace debug_console_acceptance
 		}
 		return true;
 	}
+
+	bool same_gaps(const std::vector<RoundTape::Gap>& a, const std::vector<RoundTape::Gap>& b)
+	{
+		if (a.size() != b.size()) { return false; }
+		for (std::size_t i = 0; i < a.size(); ++i)
+		{
+			if (a[i].step != b[i].step || a[i].resume != b[i].resume ||
+				!same_inputs({ a[i].seats }, { b[i].seats }))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	// `tape`'s cheats, steps and gaps under another setup.
+	RoundTape retaped(const RoundTape& tape, const MatchSetup& settings)
+	{
+		RoundTape copy;
+		copy.start(tape.seed(), settings);
+		copy.set_cheats(tape.damage_immune(), tape.infinite_ammo());
+		std::size_t gap = 0;
+		for (int step = 0; step <= tape.steps(); ++step)
+		{
+			for (; gap < tape.gaps().size() && tape.gaps()[gap].step == step; ++gap)
+			{
+				if (tape.gaps()[gap].resume) { copy.record_resume(tape.gaps()[gap].seats); }
+				else { copy.record_suspend(); }
+			}
+			if (step < tape.steps()) { copy.record_step(tape.seats(step), tape.dt(step)); }
+		}
+		return copy;
+	}
+
+	// The distinct steps a suspend was recorded before, in order.
+	std::vector<int> suspend_steps(const RoundTape& tape)
+	{
+		std::vector<int> steps;
+		for (const RoundTape::Gap& gap : tape.gaps())
+		{
+			if (!gap.resume && (steps.empty() || steps.back() != gap.step)) { steps.push_back(gap.step); }
+		}
+		return steps;
+	}
 	}
 
 	void check_replay_codec()
@@ -136,14 +180,15 @@ namespace debug_console_acceptance
 			(L"colourwars_replay_codec_" + std::to_wstring(_getpid()));
 		const std::filesystem::path path = directory / L"round.json";
 		ReplayFile file;
-		require(!file.settings.duration(), "New setup follows the tuning duration");
+		MatchSetup setup;
+		require(!file.tape.settings().duration() && !setup.duration(), "New setup follows the tuning duration");
 		for (const float invalid : { 0.0f, -1.0f,
 			std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN() })
 		{
 			bool rejected = false;
-			try { file.settings.set_duration(invalid); }
+			try { setup.set_duration(invalid); }
 			catch (const std::invalid_argument&) { rejected = true; }
-			require(rejected && !file.settings.duration(), "Invalid durations cannot change setup");
+			require(rejected && !setup.duration(), "Invalid durations cannot change setup");
 		}
 		file.build = "test \"build\"";
 		file.dt_bits = std::bit_cast<std::uint32_t>(1.0f / 60.0f);
@@ -151,13 +196,23 @@ namespace debug_console_acceptance
 		file.tuning_hash = 0x0123456789abcdefull;
 		file.presentation_hash = 42;
 		file.tune_diff = { "tuning.player.gravity 2000.0 -> 2100.0" };
-		file.god = true;
-		file.settings = planned(3);
-		file.settings.set_duration(120.12345f);
-		file.settings.set_player_weapon(1, WeaponType::roller);
+		setup = planned(3);
+		setup.set_duration(120.12345f);
+		setup.set_player_weapon(1, WeaponType::roller);
+		file.tape.start(0, setup);
+		file.tape.set_cheats(true, false);
 		file.updates = 120;
-		file.suspends = { 0, 61 };
-		file.inputs = { stream, std::vector<PlayerInputData>(9), expanded };
+		file.tape.record_suspend();
+		for (std::size_t step = 0; step < stream.size(); ++step)
+		{
+			if (step == 6)
+			{
+				file.tape.record_suspend();
+				file.tape.record_resume({ input, PlayerInputData(), stream[5] });
+			}
+			file.tape.record_step({ stream[step], PlayerInputData(), expanded[step] }, 1.0f / 60.0f);
+		}
+		file.gap_updates = { 0, 40, 40 };
 		file.checkpoints = { { 60, 0xfeedfacecafebeefull }, { 120, 7 } };
 		file.final_print.updates = 120;
 		file.final_print.hash = 99;
@@ -167,9 +222,11 @@ namespace debug_console_acceptance
 		const ReplayFile read = ReplayFile::read(path);
 		require(read.build == file.build && read.dt_bits == file.dt_bits && read.seed == file.seed &&
 			read.tuning_hash == file.tuning_hash && read.presentation_hash == 42 &&
-			read.tune_diff == file.tune_diff && read.god && !read.infinite_ammo &&
-			read.updates == 120 && read.suspends == file.suspends &&
-			same_inputs(read.inputs, file.inputs) && read.checkpoints.size() == 2 &&
+			read.tune_diff == file.tune_diff && read.tape.damage_immune() && !read.tape.infinite_ammo() &&
+			read.updates == 120 && same_gaps(read.tape.gaps(), file.tape.gaps()) &&
+			read.gap_updates == file.gap_updates &&
+			read.tape.steps() == 9 && same_inputs(read.inputs_by_seat(), file.inputs_by_seat()) &&
+			read.checkpoints.size() == 2 &&
 			read.checkpoints[0].hash == 0xfeedfacecafebeefull &&
 			MatchFingerprint::difference(file.final_print, read.final_print).empty() &&
 			read.final_print.hash == 99, "A replay file round-trips");
@@ -189,28 +246,63 @@ namespace debug_console_acceptance
         file.final_print.seats[0].paint_underfoot = false;
         file.write(path);
         require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
-		const std::vector<SeatSetup> seats = read.settings.player_settings();
+		const std::vector<SeatSetup> seats = read.tape.settings().player_settings();
 		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
-			read.settings.stage() == "x" &&
-			read.settings.screen_layout() == labrador::ScreenLayout::three_player &&
-			read.settings.duration() == file.settings.duration(),
+			read.tape.settings().stage() == "x" &&
+			read.tape.settings().screen_layout() == labrador::ScreenLayout::three_player &&
+			read.tape.settings().duration() == file.tape.settings().duration(),
 			"The recorded settings rebuild verbatim");
 
 		std::string text;
 		std::string message;
-		for (const int rejected_version : { 2, 5 })
+		for (const int rejected_version : { 2, 3, 4, 6 })
 		{
 			file.write(path);
 			text = read_text(path);
-			text.replace(text.find("\"version\": 4"), 12,
+			text.replace(text.find("\"version\": 5"), 12,
 				"\"version\": " + std::to_string(rejected_version));
 			write_text(path, text);
 			message.clear();
 			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 			require(message.find("format version " + std::to_string(rejected_version) +
-				"; this build reads 3 and 4") != std::string::npos,
-				"A previous workshop recording or another format is refused: " + message);
+				"; this build reads only 5") != std::string::npos,
+				"A previous workshop recording, an older replay or another format is refused: " + message);
+		}
+		// Every participant's inputs cover every step.
+		file.write(path);
+		text = read_text(path);
+		const std::size_t inputs_key = text.find("\"inputs\": [");
+		const std::size_t first_entry = text.find('"', text.find("[", text.find("[", inputs_key) + 1) + 1);
+		text.insert(first_entry, "\"80|0|0|0|0|0|0|0|0\", ");
+		write_text(path, text);
+		message.clear();
+		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
+		require(message.find("seat 2 has 9 steps, seat 1 10") != std::string::npos,
+			"A replay whose seats differ in length is refused: " + message);
+		// Every step is taken at the file's dt.
+		{
+			ReplayFile uneven = file;
+			uneven.tape.start(0, file.tape.settings());
+			uneven.tape.record_step({ input, input, input }, 1.0f / 30.0f);
+			message.clear();
+			try { uneven.write(path); } catch (const std::exception& error) { message = error.what(); }
+			require(message.find("step 0 was taken at dt") != std::string::npos,
+				"A tape stepped at another dt is not written: " + message);
+		}
+		// Every gap has the Level update playback repeats it at, in order.
+		{
+			ReplayFile unplaced = file;
+			unplaced.gap_updates.pop_back();
+			message.clear();
+			try { unplaced.write(path); } catch (const std::exception& error) { message = error.what(); }
+			require(message.find("3 gaps but 2 gap updates") != std::string::npos,
+				"A gap without its update is not written: " + message);
+			unplaced.gap_updates = { 0, 40, 39 };
+			message.clear();
+			try { unplaced.write(path); } catch (const std::exception& error) { message = error.what(); }
+			require(message.find("gap 3's update 39") != std::string::npos,
+				"Gap updates out of order are not written: " + message);
 		}
 		write_text(path, "{ \"version\": 3, ");
 		message.clear();
@@ -374,8 +466,14 @@ namespace debug_console_acceptance
 		const std::filesystem::path saved = std::filesystem::path(labrador::widen(
 			directory_consts::replay_directory())) / L"cpu.json";
 		const ReplayFile file = ReplayFile::read(saved);
-		require(file.updates == length && file.checkpoints.size() == 10 && file.suspends == std::vector<int>{ 300 } &&
-			file.inputs.size() == 4 && file.seed == 7u && file.dt_bits == std::bit_cast<std::uint32_t>(dt),
+		// The tape counts the steps that took input; the countdown's updates
+		// before them took none.
+		const int countdown_updates = file.updates - file.tape.steps();
+		require(file.updates == length && file.checkpoints.size() == 10 && countdown_updates > 0 &&
+			suspend_steps(file.tape) == std::vector<int>{ 300 - countdown_updates } &&
+			file.suspended_at(300) && !file.suspended_at(300 - countdown_updates) &&
+			file.inputs_by_seat().size() == 4 &&
+			file.seed == 7u && file.dt_bits == std::bit_cast<std::uint32_t>(dt),
 			"The file holds 600 updates, 10 checkpoints, the suspend, four seats, the seed and dt");
 		require(file.final_print.team_a != 0 || file.final_print.team_b != 0, "The bots painted");
 		const LevelEndInfo held = match.level->level_end_info();
@@ -391,8 +489,9 @@ namespace debug_console_acceptance
 		require(bot_credit > 0.0f && std::fabs(credited - held.team_a_area - held.team_b_area) < 1.0f,
 			"Real bot projectiles credit device-less seats and account for all held paint");
 		// Recorded seats are post-filter: the keyboard seat as scripted, the bots' own.
-		require(file.inputs[0].size() == file.inputs[1].size() && file.inputs[1].size() > 300 &&
-			std::any_of(file.inputs[2].begin(), file.inputs[2].end(), [](const PlayerInputData& input)
+		const std::vector<std::vector<PlayerInputData>> recorded_inputs = file.inputs_by_seat();
+		require(recorded_inputs[0].size() == recorded_inputs[1].size() && recorded_inputs[1].size() > 300 &&
+			std::any_of(recorded_inputs[2].begin(), recorded_inputs[2].end(), [](const PlayerInputData& input)
 				{ return input.primary_shoot; }), "Every seat's input is recorded, the bots' included");
 
 		// Catalog tokens select private legacy tapes; this block never arms or updates a match.
@@ -466,7 +565,9 @@ namespace debug_console_acceptance
 				{
 					ReplayFile legacy = file;
 					legacy.stage_hash.reset();
-					legacy.settings.set_stage("dbg16_catalog_" + std::to_string(i));
+					MatchSetup staged = file.tape.settings();
+					staged.set_stage("dbg16_catalog_" + std::to_string(i));
+					legacy.tape = retaped(file.tape, staged);
 					legacy.write(replay_root / labrador::widen(tapes[i].first));
 				}
 				write_text(replay_root / L"ignored.JSON", "Wrong-case extension control");

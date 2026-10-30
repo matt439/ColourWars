@@ -4,6 +4,7 @@
 #include "game/objects/level_overlays.h"
 #include "game/objects/level_station.h"
 #include "game/match_setup.h"
+#include "game/round_tape.h"
 #include <string>
 #include <vector>
 
@@ -86,10 +87,11 @@ public:
 	// Pauses the level's voices while the debug clock is paused, the match is
 	// covered or the window is inactive; resumes them otherwise.
 	virtual void debug_sync_audio() = 0;
-	// Suspends the level as a covering menu does (its voices paused, every
-	// jump buffer cleared) with none of the screen's bookkeeping: playback
-	// repeats a recorded suspend where the recording had one.
-	virtual void debug_suspend_level() = 0;
+	// Applies one recorded gap to the level (RoundTape::apply_gap: a suspend
+	// clears every jump buffer, a resume re-reads the held jumps), with none
+	// of the screen's bookkeeping and no voice paused: playback repeats each
+	// where the recording had it.
+	virtual void debug_apply_gap(const RoundTape::Gap& gap) = 0;
 	// A session policy/native hard gate changed while focus may already be
 	// absent. Real GameLevel reconciles immediately; other targets need none.
 	virtual void debug_background_changed() {}

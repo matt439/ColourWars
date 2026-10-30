@@ -336,12 +336,14 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     ReplayFile header; header.build = "actual-pad-reader-public-loader";
     header.dt_bits = std::bit_cast<std::uint32_t>(dt); header.seed = 7337u;
     header.tuning_hash = fnv1a(tuning_buffer.GetString());
-    header.settings.set_stage("movement_course"); header.settings.set_duration(60.0f);
-    header.settings.set_player_count(2); header.settings.begin_input_claims(3);
-    require(header.settings.claim_input_slot(1), "Cannot build sparse reversed replay roster");
-    header.settings.set_screen_layout(ScreenLayout::two_player);
-    header.settings.set_player_team(0, PlayerTeam::a); header.settings.set_player_team(1, PlayerTeam::b);
-    header.settings.set_player_weapon(0, WeaponType::sprayer); header.settings.set_player_weapon(1, WeaponType::sprayer);
+    MatchSetup replay_setup;
+    replay_setup.set_stage("movement_course"); replay_setup.set_duration(60.0f);
+    replay_setup.set_player_count(2); replay_setup.begin_input_claims(3);
+    require(replay_setup.claim_input_slot(1), "Cannot build sparse reversed replay roster");
+    replay_setup.set_screen_layout(ScreenLayout::two_player);
+    replay_setup.set_player_team(0, PlayerTeam::a); replay_setup.set_player_team(1, PlayerTeam::b);
+    replay_setup.set_player_weapon(0, WeaponType::sprayer); replay_setup.set_player_weapon(1, WeaponType::sprayer);
+    header.tape.start(0, replay_setup);
     const InputBindings recording_bindings = with_jumps(initial, { PadControl::a, PadControl::b, PadControl::a, PadControl::y });
     require(preferences_session.set_input_bindings_and_save(recording_bindings), "Cannot save actual recording pad choices");
     const auto snapshots = [&](int step)
@@ -377,7 +379,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     snapshots(-1); snapshots(-1); neutral();
     PlayerInput mapped(app.gamepads(), app.keyboard(), app.mouse(), &replay_tuning,
         &preferences_session.play_settings(), &preferences_session.input_bindings());
-    auto recorded = fresh(header.settings, *header.seed);
+    auto recorded = fresh(header.tape.settings(), *header.seed);
     const auto initial_print = MatchFingerprint::of(*recorded, 0);
     constexpr int replay_length = 360;
     ReplayRecorder recorder("actual-pad-reader", header, nullptr, replay_length);
@@ -395,9 +397,10 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             inputs[3].jump_held == second_held && inputs[3].jump_pressed == second_pressed,
             "Actual recording reader differs from independent chosen-face/former-A/LT Jump oracle");
         acceptance::update_from_slots(*recorded, inputs, dt, &recorder);
-        require(recorder.file().inputs.size() == 2 && recorder.file().inputs[0].size() == static_cast<size_t>(step + 1) &&
-            replay_codec::same(recorder.file().inputs[0].back(), inputs[3]) &&
-            replay_codec::same(recorder.file().inputs[1].back(), inputs[1]),
+        const RoundTape& recording = recorder.file().tape;
+        require(recording.steps() == step + 1 && recording.seats(step).size() == 2 &&
+            replay_codec::same(recording.seats(step)[0], inputs[3]) &&
+            replay_codec::same(recording.seats(step)[1], inputs[1]),
             "Production recorder did not store actual reader outputs after sparse slot-to-seat mapping");
         prints.push_back(MatchFingerprint::of(*recorded, step + 1));
         if ((step + 1) % ReplayFile::checkpoint_interval == 0) { recorder.add_checkpoint(prints.back()); }
@@ -406,17 +409,18 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto tape = profile / "mapped-pad-replay.json"; recorder.file().write(tape);
     const unsigned int terminal_rng = static_cast<unsigned int>(std::rand()); recorded.reset();
     const ReplayFile decoded = ReplayFile::read(tape);
-    require(decoded.inputs.size() == 2 && decoded.inputs[0].size() == replay_length &&
-        decoded.inputs[1].size() == replay_length && decoded.updates == replay_length && decoded.seed &&
-        decoded.checkpoints.size() == 6 && decoded.settings.player_settings()[0].num == 3 &&
-        decoded.settings.player_settings()[1].num == 1, "Mapped tape lost decoded setup, six checkpoints or complete seat streams");
+    const auto decoded_inputs = decoded.inputs_by_seat();
+    require(decoded_inputs.size() == 2 && decoded_inputs[0].size() == replay_length &&
+        decoded_inputs[1].size() == replay_length && decoded.updates == replay_length && decoded.seed &&
+        decoded.checkpoints.size() == 6 && decoded.tape.settings().player_settings()[0].num == 3 &&
+        decoded.tape.settings().player_settings()[1].num == 1, "Mapped tape lost decoded setup, six checkpoints or complete seat streams");
     const InputBindings playback_bindings = with_jumps(initial, { PadControl::a, PadControl::x, PadControl::a, PadControl::b });
     require(preferences_session.set_input_bindings_and_save(playback_bindings), "Cannot persist changed replay-time face choices");
     Save replay_save; SettingsSession replay_save_session(replay_save); replay_save_session.load_save_file();
     require(replay_save_session.input_bindings() == playback_bindings && playback_bindings != recording_bindings,
         "Replay remapping control did not persist different face choices");
     snapshots(-1); snapshots(-1);
-    auto playback = fresh(decoded.settings, *decoded.seed);
+    auto playback = fresh(decoded.tape.settings(), *decoded.seed);
     require(MatchFingerprint::difference(initial_print, MatchFingerprint::of(*playback, 0)).empty(),
         "Fresh decoded-setup rebuild changed initial simulation when only saved bindings changed");
     ReplayPlayer player("actual-pad-reader", decoded);
@@ -424,23 +428,23 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     for (int step = 0; step < replay_length; ++step)
     {
         snapshots(step); const auto live = mapped.player_inputs();
-        const bool different = live[3].jump_pressed != decoded.inputs[0][step].jump_pressed ||
-            live[3].jump_held != decoded.inputs[0][step].jump_held ||
-            live[1].jump_pressed != decoded.inputs[1][step].jump_pressed || live[1].jump_held != decoded.inputs[1][step].jump_held;
+        const bool different = live[3].jump_pressed != decoded_inputs[0][step].jump_pressed ||
+            live[3].jump_held != decoded_inputs[0][step].jump_held ||
+            live[1].jump_pressed != decoded_inputs[1][step].jump_pressed || live[1].jump_held != decoded_inputs[1][step].jump_held;
         if (different) { ++raw_differences; }
         acceptance::update_from_slots(*playback, live, std::bit_cast<float>(decoded.dt_bits), &player);
         const auto print = MatchFingerprint::of(*playback, step + 1);
         require(MatchFingerprint::difference(prints[step], print).empty() &&
-            replay_codec::same(playback->player(0).input(), decoded.inputs[0][step]) &&
-            replay_codec::same(playback->player(1).input(), decoded.inputs[1][step]),
+            replay_codec::same(playback->player(0).input(), decoded_inputs[0][step]) &&
+            replay_codec::same(playback->player(1).input(), decoded_inputs[1][step]),
             "Changed live bindings altered a recorded seat input or an exact playback fingerprint");
         if ((step + 1) % ReplayFile::checkpoint_interval == 0)
         {
             require(decoded.checkpoints[checkpoint].update == step + 1 && decoded.checkpoints[checkpoint].hash == print.hash,
                 "Mapped-input playback checkpoint differs"); ++checkpoint;
         }
-        replay_trace << step + 1 << ',' << hex64(print.hash) << ',' << decoded.inputs[0][step].jump_pressed << ',' <<
-            decoded.inputs[1][step].jump_pressed << ',' << different << '\n';
+        replay_trace << step + 1 << ',' << hex64(print.hash) << ',' << decoded_inputs[0][step].jump_pressed << ',' <<
+            decoded_inputs[1][step].jump_pressed << ',' << different << '\n';
     }
     require(raw_differences > 60 && checkpoint == 6 && replay_trace.good() &&
         MatchFingerprint::difference(decoded.final_print, MatchFingerprint::of(*playback, replay_length)).empty() &&

@@ -91,16 +91,20 @@ void RoundTape::apply_gaps(Level& level, int step) const
 {
 	for (const Gap& gap : this->gaps_)
 	{
-		if (gap.step != step) { continue; }
-		if (gap.resume)
-		{
-			level.prepare_resume(gap.seats);
-		}
-		else
-		{
-			// Its jump buffers only: the replay's voices are not paused.
-			level.interrupt_players();
-		}
+		if (gap.step == step) { apply_gap(level, gap); }
+	}
+}
+
+void RoundTape::apply_gap(Level& level, const Gap& gap)
+{
+	if (gap.resume)
+	{
+		level.prepare_resume(gap.seats);
+	}
+	else
+	{
+		// Its jump buffers only: the replay's voices are not paused.
+		level.interrupt_players();
 	}
 }
 

@@ -245,10 +245,57 @@ passes.
 
 ### One record and replay model (`HYG#35`)
 
-Make `RoundTape` the in-memory capture and have the Debug `ReplayFile` serialise
-it plus its checkpoints, hashes and fingerprint, so `ReplayRecorder` and
-`ReplayPlayer` wrap the round-tape types. Existing `.replay` files may stop
-loading only if the format version says so.
+**Done 2026-10-30.** A Debug recording is now a
+[RoundTape](../game/round_tape.h): `ReplayFile` holds `tape` (setup, cheats,
+every step's inputs and dt, every suspend and resume) in place of its own
+`settings`, `god`, `infinite_ammo`, per-seat `inputs` and `suspends`, and adds
+only what checks a replay: the developer seed, content and stage hashes, tune
+diff, update count, checkpoints, final fingerprint and `gap_updates`, the Level
+update each gap was noted at. `ReplayRecorder` records through a
+`RoundTapeRecorder` (at the dt the director hands it each step) and
+`ReplayPlayer` plays through a `RoundTapePlayer`, keeping its neutral input once
+the tape is exhausted. `inputs_by_seat()` gives the old seat-major view the
+writer and the probes read.
+
+The gap models now agree. The Debug recorder used to note suspends only, so a
+replay never repeated what a resume does (re-read which jumps are still held)
+and a jump held across a pause could diverge. A new
+`DebugDirector::match_resumed` hook, called where `GameLevel` calls
+`Level::prepare_resume`, notes resumes with their seat commands, and playback
+repeats both through `RoundTape::apply_gap`
+(`DebugMatchControl::debug_apply_gap` replaces `debug_suspend_level`): the
+level's jump state only, no voice paused and resynced. Each gap is repeated at
+its recorded Level update, as format 4 did, not at its tape step, because tape
+steps count only the updates that read seats: the countdown sits at step 0 and
+the zoom-out and reveal at the last step, and a suspend there (which clears a
+mover's carrier, part of the fingerprint) would otherwise move. The adversarial
+review found that case after a first version keyed playback to tape steps.
+
+The file is **format 5**: one inputs array per participant, all the same
+length, every step at the file's dt (the writer refuses otherwise), and an
+ordered `gaps` list of `{ step, update }` with a resume's seat commands.
+Formats 3 and 4 are refused with the version message; a replay holds only on
+the build that recorded it (`DBG#2`). The tape's own seed is not written:
+`seed` remains the developer seed the round's seed is drawn from, which
+`HYG#39` replaces. [The debug console](debug-console.md#seed-record-and-play),
+the instant replay's "How" and the vertical-lift draft's replay row in
+[the roadmap](feature-roadmap.md) describe this.
+
+The probes followed the new shape. Checks that read legacy format 3 now check
+that 3 and 4 are refused; new checks refuse unequal seat lengths, a step at
+another dt and gap updates missing or out of order, and the codec round trip
+covers a resume. `practice_replay_checks.h` reads the new public
+`RoundTape::gaps()` instead of reaching the private member.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74 cases) and in Debug without the four slow cases (71), and
+`debug_console` passed in Debug (record/play on a real `Level` with a suspend
+at update 300 after the countdown). The sixteen opt-in cases compiled in Debug,
+`turbulence_slab_routes --replay` passed when run by hand with its private trial
+files, `check-painter.ps1 -CompileOnly` compiled in both presets, its
+`-PracticeReplayOnly`, `-RememberedSetupOnly`, `-KeyboardJumpOnly` and
+`-RumbleOnly` runs passed in Debug, `check-startup.ps1` passed on the Debug
+executable and `check_doc_links.py` passes.
 
 ### One owner for weapon and projectile names (`HYG#36`)
 

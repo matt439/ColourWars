@@ -15,15 +15,25 @@ class Level;
 // the two things between steps that change a player - a suspend clears every
 // jump buffer, and a resume re-reads which jumps are still held.
 //
-// The same contract as the Debug recordings (DBG#2): it holds on this build,
-// this machine and this step, within one round, because the simulation is
-// deterministic from the build. It never leaves memory, so that is all it
-// needs. Debug place/respawn/kill spoil the tape; a cheat change after the first
+// The Debug recordings (DBG#2) are the same tape, written to a file with
+// their checks (game/debug/replay.h), and hold under the same contract: on
+// this build, this machine and this step, within one round, because the
+// simulation is deterministic from the build. The shipping tape never leaves
+// memory, so that is all it needs. Debug place/respawn/kill spoil the tape; a cheat change after the first
 // recorded step also spoils it. Live tuning edits and suspends injected by Debug
 // playback are not observed; such a replay can diverge (docs/feature-roadmap.md, ROAD#19).
 class RoundTape
 {
 public:
+	// What happened to the level between two steps, before `step`.
+	struct Gap
+	{
+		int step = 0;
+		bool resume = false;
+		// A resume's seat commands, in roster order; empty for a suspend.
+		std::vector<PlayerInputData> seats;
+	};
+
 	// A fresh, empty tape for a level built from `settings` after std::srand(seed).
 	// The setup is copied: the End menu's re-pick pages may change the match's
 	// own before its Watch Replay is chosen.
@@ -34,6 +44,8 @@ public:
 	// stepped spoils the tape, since the steps before it ran without.
 	void set_cheats(bool damage_immune, bool infinite_ammo);
 
+	// Started and not spoiled: it is recording.
+	bool started() const { return this->started_ && !this->spoiled_; }
 	// Recorded and not spoiled.
 	bool playable() const;
 	unsigned int seed() const { return this->seed_; }
@@ -53,17 +65,15 @@ public:
 	// The seat commands Level::prepare_resume read, in roster order.
 	void record_resume(const std::vector<PlayerInputData>& seats);
 
+	// Every suspend and resume, in the order they happened.
+	const std::vector<Gap>& gaps() const { return this->gaps_; }
+
 	// Playback: what happened to the level between step - 1 and `step`.
 	void apply_gaps(Level& level, int step) const;
+	// What one gap did to the level.
+	static void apply_gap(Level& level, const Gap& gap);
 
 private:
-	struct Gap
-	{
-		int step = 0;
-		bool resume = false;
-		std::vector<PlayerInputData> seats;
-	};
-
 	unsigned int seed_ = 0;
 	MatchSetup settings_;
 	bool damage_immune_ = false;

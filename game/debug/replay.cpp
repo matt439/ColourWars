@@ -475,12 +475,54 @@ std::string replay_name(std::string_view requested)
 
 // ---------------------------------------------------------------------------
 
+std::vector<std::vector<PlayerInputData>> ReplayFile::inputs_by_seat() const
+{
+	std::vector<std::vector<PlayerInputData>> by_seat(this->tape.settings().player_settings().size());
+	for (int step = 0; step < this->tape.steps(); ++step)
+	{
+		const std::vector<PlayerInputData>& seats = this->tape.seats(step);
+		if (by_seat.size() < seats.size()) { by_seat.resize(seats.size()); }
+		for (std::size_t seat = 0; seat < seats.size(); ++seat)
+		{
+			by_seat[seat].push_back(seats[seat]);
+		}
+	}
+	return by_seat;
+}
+
+bool ReplayFile::suspended_at(int update) const
+{
+	const std::vector<RoundTape::Gap>& gaps = this->tape.gaps();
+	for (std::size_t i = 0; i < gaps.size() && i < this->gap_updates.size(); ++i)
+	{
+		if (!gaps[i].resume && this->gap_updates[i] == update) { return true; }
+	}
+	return false;
+}
+
 void ReplayFile::write(const std::filesystem::path& path) const
 {
-	validate_roster(this->settings, path);
+	const MatchSetup& roster = this->tape.settings();
+	validate_roster(roster, path);
     if (this->final_print.horizontal_motion)
-    { validate_motion(*this->final_print.horizontal_motion, this->settings.player_settings().size(),
+    { validate_motion(*this->final_print.horizontal_motion, roster.player_settings().size(),
         this->final_print.seats.size(), path); }
+	const std::size_t participants = roster.player_settings().size();
+	for (int step = 0; step < this->tape.steps(); ++step)
+	{
+		const std::uint32_t bits = std::bit_cast<std::uint32_t>(this->tape.dt(step));
+		if (bits != this->dt_bits)
+		{
+			fail(path, "step " + std::to_string(step) + " was taken at dt " + hex32(bits) +
+				", not " + hex32(this->dt_bits));
+		}
+		if (this->tape.seats(step).size() != participants)
+		{
+			fail(path, "step " + std::to_string(step) + " has " +
+				std::to_string(this->tape.seats(step).size()) + " seats, not the roster's " +
+				std::to_string(participants));
+		}
+	}
 
 	std::ostringstream out;
 	out << "{\n";
@@ -503,10 +545,9 @@ void ReplayFile::write(const std::filesystem::path& path) const
 		out << (i == 0 ? " " : ", ") << quoted(this->tune_diff[i]);
 	}
 	out << (this->tune_diff.empty() ? "],\n" : " ],\n");
-	out << "  \"cheats\": { \"god\": " << (this->god ? "true" : "false") <<
-		", \"infinite_ammo\": " << (this->infinite_ammo ? "true" : "false") << " },\n";
+	out << "  \"cheats\": { \"god\": " << (this->tape.damage_immune() ? "true" : "false") <<
+		", \"infinite_ammo\": " << (this->tape.infinite_ammo() ? "true" : "false") << " },\n";
 
-	const MatchSetup& roster = this->settings;
 	out << "  \"settings\": {\n";
 	out << "    \"stage\": " << quoted(roster.stage()) << ",\n";
 	out << "    \"best_of\": " << roster.best_of() << ",\n";
@@ -532,23 +573,49 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	out << "    ]\n  },\n";
 
 	out << "  \"updates\": " << this->updates << ",\n";
-	out << "  \"suspends\": [";
-	for (std::size_t i = 0; i < this->suspends.size(); ++i)
+	const std::vector<RoundTape::Gap>& gaps = this->tape.gaps();
+	if (this->gap_updates.size() != gaps.size())
 	{
-		out << (i == 0 ? " " : ", ") << quoted(std::to_string(this->suspends[i]));
+		fail(path, std::to_string(gaps.size()) + " gaps but " + std::to_string(this->gap_updates.size()) +
+			" gap updates");
 	}
-	out << (this->suspends.empty() ? "],\n" : " ],\n");
-
-	out << "  \"inputs\": [\n";
-	for (std::size_t seat = 0; seat < this->inputs.size(); ++seat)
+	for (std::size_t i = 0; i < gaps.size(); ++i)
 	{
-		const std::vector<std::string> entries = replay_codec::run_length(this->inputs[seat]);
+		if (this->gap_updates[i] < (i == 0 ? 0 : this->gap_updates[i - 1]))
+		{
+			fail(path, "gap " + std::to_string(i + 1) + "'s update " + std::to_string(this->gap_updates[i]) +
+				" is negative or before the gap ahead of it");
+		}
+	}
+	out << "  \"gaps\": [";
+	for (std::size_t i = 0; i < gaps.size(); ++i)
+	{
+		out << (i == 0 ? "\n" : ",\n") << "    { \"step\": " << gaps[i].step <<
+			", \"update\": " << this->gap_updates[i];
+		if (gaps[i].resume)
+		{
+			out << ", \"resume\": [";
+			for (std::size_t seat = 0; seat < gaps[i].seats.size(); ++seat)
+			{
+				out << (seat == 0 ? " " : ", ") << quoted(replay_codec::encode(gaps[i].seats[seat]));
+			}
+			out << (gaps[i].seats.empty() ? "]" : " ]");
+		}
+		out << " }";
+	}
+	out << (gaps.empty() ? "],\n" : "\n  ],\n");
+
+	const std::vector<std::vector<PlayerInputData>> inputs = this->inputs_by_seat();
+	out << "  \"inputs\": [\n";
+	for (std::size_t seat = 0; seat < inputs.size(); ++seat)
+	{
+		const std::vector<std::string> entries = replay_codec::run_length(inputs[seat]);
 		out << "    [";
 		for (std::size_t i = 0; i < entries.size(); ++i)
 		{
 			out << (i == 0 ? "\n      " : ",\n      ") << quoted(entries[i]);
 		}
-		out << (entries.empty() ? "]" : "\n    ]") << (seat + 1 < this->inputs.size() ? ",\n" : "\n");
+		out << (entries.empty() ? "]" : "\n    ]") << (seat + 1 < inputs.size() ? ",\n" : "\n");
 	}
 	out << "  ],\n";
 
@@ -616,10 +683,10 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	const labrador::JsonDocument document = labrador::read_json_file(utf8.c_str());
 	const labrador::JsonValue root = document.root();
 	const int version = root.integer("version");
-	if (version != 3 && version != format_version)
+	if (version != format_version)
 	{
-		fail(path, "format version " + std::to_string(version) + "; this build reads 3 and " +
-			std::to_string(format_version));
+		fail(path, "format version " + std::to_string(version) + "; this build reads only " +
+			std::to_string(format_version) + " (a replay holds only on the build that recorded it)");
 	}
 
 	ReplayFile file;
@@ -656,11 +723,11 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 		file.tune_diff.push_back(diff.at(i).as_string());
 	}
 	const labrador::JsonValue cheats = root.object("cheats");
-	file.god = cheats.boolean("god");
-	file.infinite_ammo = cheats.boolean("infinite_ammo");
+	const bool god = cheats.boolean("god");
+	const bool infinite_ammo = cheats.boolean("infinite_ammo");
 
 	// Controller kind is explicit: an unclaimed human or Debug dummy (-1)
-	// must never become a bot. Legacy version 3 has human seats only.
+	// must never become a bot.
 	const labrador::JsonValue setup = root.object("settings");
 	const labrador::JsonValue seats = setup.array("seats");
 	const int count = static_cast<int>(seats.size());
@@ -668,7 +735,7 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	{
 		fail(path, "it has " + std::to_string(count) + " seats; 1-4 expected");
 	}
-	MatchSetup& rebuilt = file.settings;
+	MatchSetup rebuilt;
 	rebuilt.set_player_count(count);
 	std::vector<int> slots;
 	for (int seat = 0; seat < count; ++seat)
@@ -676,22 +743,17 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 		const labrador::JsonValue entry = seats.at(static_cast<std::size_t>(seat));
 		const int slot = entry.integer("slot");
 		slots.push_back(slot);
-		if (version == 3 && (entry.has("controller") || entry.has("difficulty") || entry.has("handicap")))
-		{ fail(path, "version 3 cannot contain controller, difficulty or handicap metadata"); }
-		if (version == format_version)
+		const std::string controller = entry.identifier("controller");
+		const BotDifficulty difficulty = read_difficulty(entry, path);
+		if (controller == "bot")
 		{
-			const std::string controller = entry.identifier("controller");
-			const BotDifficulty difficulty = read_difficulty(entry, path);
-			if (controller == "bot")
-			{
-				if (seat == 0) { fail(path, "seat 1 must be human"); }
-				if (slot != -1) { fail(path, "a bot seat cannot have a device"); }
-				rebuilt.set_player_bot(seat, difficulty);
-			}
-			else if (controller != "human") { fail(path, "controller must be human or bot"); }
-			else if (difficulty != BotDifficulty::normal)
-			{ fail(path, "a human seat's difficulty must be normal"); }
+			if (seat == 0) { fail(path, "seat 1 must be human"); }
+			if (slot != -1) { fail(path, "a bot seat cannot have a device"); }
+			rebuilt.set_player_bot(seat, difficulty);
 		}
+		else if (controller != "human") { fail(path, "controller must be human or bot"); }
+		else if (difficulty != BotDifficulty::normal)
+		{ fail(path, "a human seat's difficulty must be normal"); }
 		if (slot < -1 || slot >= input_slots::count) { fail(path, "device slot is out of range"); }
 	}
 	if (slots.front() < 0)
@@ -745,7 +807,7 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 			fail(path, "seat " + std::to_string(seat + 1) + " has an unknown weapon");
 		}
 		rebuilt.set_player_weapon(seat, weapon);
-		// Absent is none, which keeps unhandicapped version-4 bytes unchanged.
+		// Absent is none.
 		if (entry.has("handicap"))
 		{
 			const int handicap = entry.integer("handicap");
@@ -761,22 +823,15 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	validate_roster(rebuilt, path);
 
 	file.updates = root.integer("updates");
-	// Array elements read only as strings (JsonValue::as_string): the
-	// update numbers are written as strings.
-	const labrador::JsonValue suspends = root.array("suspends");
-	for (std::size_t i = 0; i < suspends.size(); ++i)
-	{
-		const std::string text = suspends.at(i).as_string();
-		int update = 0;
-		const auto result = std::from_chars(text.data(), text.data() + text.size(), update);
-		if (result.ec != std::errc() || result.ptr != text.data() + text.size() || update < 0)
-		{
-			fail(path, "'suspends' holds '" + text + "', not an update number");
-		}
-		file.suspends.push_back(update);
-	}
 
+	const std::size_t participants = rebuilt.player_settings().size();
 	const labrador::JsonValue inputs = root.array("inputs");
+	if (inputs.size() != participants)
+	{
+		fail(path, "'inputs' has " + std::to_string(inputs.size()) + " seats, not the roster's " +
+			std::to_string(participants));
+	}
+	std::vector<std::vector<PlayerInputData>> by_seat;
 	for (std::size_t seat = 0; seat < inputs.size(); ++seat)
 	{
 		const labrador::JsonValue entries = inputs.at(seat);
@@ -787,12 +842,77 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 		}
 		try
 		{
-			file.inputs.push_back(replay_codec::expand(texts));
+			by_seat.push_back(replay_codec::expand(texts));
 		}
 		catch (const std::exception& e)
 		{
 			fail(path, "seat " + std::to_string(seat + 1) + ": " + e.what());
 		}
+		if (by_seat.back().size() != by_seat.front().size())
+		{
+			fail(path, "seat " + std::to_string(seat + 1) + " has " + std::to_string(by_seat.back().size()) +
+				" steps, seat 1 " + std::to_string(by_seat.front().size()));
+		}
+	}
+	const int steps = static_cast<int>(by_seat.front().size());
+
+	// The tape, rebuilt as it was recorded: each gap before the step it
+	// preceded, in order.
+	file.tape.start(0, rebuilt);
+	file.tape.set_cheats(god, infinite_ammo);
+	const float dt = std::bit_cast<float>(file.dt_bits);
+	const labrador::JsonValue gaps = root.array("gaps");
+	std::size_t gap = 0;
+	int previous = 0;
+	for (int step = 0; step <= steps; ++step)
+	{
+		for (; gap < gaps.size(); ++gap)
+		{
+			const labrador::JsonValue entry = gaps.at(gap);
+			const int at = entry.integer("step");
+			if (at < previous || at > steps)
+			{
+				fail(path, "gap " + std::to_string(gap + 1) + " is at step " + std::to_string(at) +
+					", out of order or past the last step");
+			}
+			previous = at;
+			if (at != step) { break; }
+			const int update = entry.integer("update");
+			if (update < (file.gap_updates.empty() ? 0 : file.gap_updates.back()))
+			{
+				fail(path, "gap " + std::to_string(gap + 1) + " is at update " + std::to_string(update) +
+					", negative or before the gap ahead of it");
+			}
+			file.gap_updates.push_back(update);
+			if (!entry.has("resume"))
+			{
+				file.tape.record_suspend();
+				continue;
+			}
+			const labrador::JsonValue resume = entry.array("resume");
+			if (resume.size() != participants)
+			{
+				fail(path, "gap " + std::to_string(gap + 1) + " resumes " + std::to_string(resume.size()) +
+					" seats, not the roster's " + std::to_string(participants));
+			}
+			std::vector<PlayerInputData> resumed(participants);
+			for (std::size_t seat = 0; seat < participants; ++seat)
+			{
+				const std::string text = resume.at(seat).as_string();
+				if (!replay_codec::decode(text, resumed[seat]))
+				{
+					fail(path, "gap " + std::to_string(gap + 1) + " holds '" + text + "', not an input");
+				}
+			}
+			file.tape.record_resume(resumed);
+		}
+		if (step == steps) { break; }
+		std::vector<PlayerInputData> row(participants);
+		for (std::size_t seat = 0; seat < participants; ++seat)
+		{
+			row[seat] = by_seat[seat][static_cast<std::size_t>(step)];
+		}
+		file.tape.record_step(row, dt);
 	}
 
 	const labrador::JsonValue checkpoints = root.array("checkpoints");
@@ -856,32 +976,32 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 
 ReplayRecorder::ReplayRecorder(std::string name, ReplayFile header, SeatInputFilter* inner,
 	int limit) :
-	name_(std::move(name)), file_(std::move(header)), inner_(inner), limit_(limit)
+	name_(std::move(name)), file_(std::move(header)), inner_(inner),
+	dt_(std::bit_cast<float>(file_.dt_bits)), limit_(limit)
 {
+	if (!this->file_.tape.started())
+	{
+		const MatchSetup settings = this->file_.tape.settings();
+		this->file_.tape.start(0, settings);
+	}
 }
 
 void ReplayRecorder::filter_seats(std::vector<PlayerInputData>& seats, const Level& level)
 {
-	if (this->inner_ != nullptr)
-	{
-		this->inner_->filter_seats(seats, level);
-	}
-	if (this->file_.inputs.size() < seats.size())
-	{
-		this->file_.inputs.resize(seats.size());
-	}
-	for (std::size_t seat = 0; seat < seats.size(); ++seat)
-	{
-		this->file_.inputs[seat].push_back(seats[seat]);
-	}
+	this->recorder_.prepare(this->inner_, this->dt_);
+	this->recorder_.filter_seats(seats, level);
 }
 
 void ReplayRecorder::note_suspend(int update)
 {
-	if (this->file_.suspends.empty() || this->file_.suspends.back() != update)
-	{
-		this->file_.suspends.push_back(update);
-	}
+	this->file_.tape.record_suspend();
+	this->file_.gap_updates.push_back(update);
+}
+
+void ReplayRecorder::note_resume(int update, const std::vector<PlayerInputData>& seats)
+{
+	this->file_.tape.record_resume(seats);
+	this->file_.gap_updates.push_back(update);
 }
 
 void ReplayRecorder::add_checkpoint(const MatchFingerprint& print)
@@ -894,22 +1014,15 @@ ReplayPlayer::ReplayPlayer(std::string name, ReplayFile file) :
 {
 }
 
-void ReplayPlayer::filter_seats(std::vector<PlayerInputData>& seats, const Level&)
+void ReplayPlayer::filter_seats(std::vector<PlayerInputData>& seats, const Level& level)
 {
-	for (std::size_t seat = 0; seat < seats.size(); ++seat)
+	if (this->player_.finished())
 	{
-		const bool recorded = seat < this->file_.inputs.size() &&
-			this->step_ < this->file_.inputs[seat].size();
 		PlayerInputData input;
 		input.connected = true;
-		seats[seat] = recorded ? this->file_.inputs[seat][this->step_] : input;
+		std::fill(seats.begin(), seats.end(), input);
+		return;
 	}
-	++this->step_;
-}
-
-bool ReplayPlayer::recorded_suspend(int update) const
-{
-	return std::find(this->file_.suspends.begin(), this->file_.suspends.end(), update) !=
-		this->file_.suspends.end();
+	this->player_.filter_seats(seats, level);
 }
 #endif

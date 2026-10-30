@@ -145,6 +145,7 @@ New captures and writes reject invalid metadata before changing the save.
 Debug replay format **4** records the same controller/difficulty metadata and
 human layout; its reader also accepts legacy human-only format 3. The version
 change prevents an older reader from silently treating a bot as a human dummy.
+(Since `HYG#35` the format is 5, which keeps this metadata and refuses 3 and 4.)
 Sparse human seats retain their roster indices. Recording still captures final
 per-participant inputs after its inner filter, and playback replaces those
 inputs; this is a codec/input-order check, not playable bot replay acceptance.
@@ -2488,7 +2489,7 @@ change a vertical mover would force there, not a design.
 | Bot riding | `game/ai/match_bot.cpp:83-120`, `:285-300`, `:437-460`; `game/ai/match_bot.h:117-134` | a ride is a feet-on-top match, and the bot paints/holds while carried sideways | the same match; deliberate lift routing is a later slice, as `ROAD#15` was for gates |
 | Match fingerprint | `game/debug/match_fingerprint.cpp:36-60`, `game/debug/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
 | Replay codec | `game/debug/replay.cpp:147-318` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
-| Replay version | `game/debug/replay.h:32`, `game/debug/replay.cpp:619-623` | writes 4, reads 3 and 4 | writes 5 (answer E5) |
+| Replay version | `game/debug/replay.h:45`, `game/debug/replay.cpp:686-690` | writes and reads 5 only (`HYG#35`) | writes 6 (answer E5) |
 | Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:450-600`, `level_editor/motion_checks.cpp` | horizontal fixtures | lift fixtures beside them |
 
 **2. Engineering answers, each following existing practice.**
@@ -2532,9 +2533,10 @@ change a vertical mover would force there, not a design.
   world queries; draws and the ferry cue already use the full vector
   (`translating_structure_paintable.cpp:111`, `:224`, `:230`).
 - **E5. Version the record.** The motion block's `schema` goes 1 → 2 with the
-  axis and travel, and `Replay::format_version` 4 → 5. The reader keeps 3 and 4.
-  *Precedent:* the 3 → 4 bump kept 3 readable (`replay.cpp:619-623`), and the
-  motion block already carries its own schema number.
+  axis and travel, and `ReplayFile::format_version` 5 → 6. The reader refuses
+  5, as the 4 → 5 bump (`HYG#35`) refused 3 and 4: a replay holds only on the
+  build that recorded it. *Precedent:* that bump, and the motion block already
+  carries its own schema number.
 - **E6. Budget the relative motion.** The lift's per-step travel joins the
   vertical relative-displacement bound beside the player's own speed, refused
   at admission like the horizontal one. *Precedent:*
@@ -2586,7 +2588,8 @@ round's own: the same human panes, HUDs, clock and paint. The arena music and
 the round's sounds play, and pads do not rumble. Watch it as often as you like.
 Untimed practice has no End menu and so no replay.
 
-**How.** It is the Debug record/play idea (`DBG#2`) in Release, held in memory.
+**How.** It is the Debug record/play model (`DBG#2`) in Release, held in memory:
+a Debug recording is the same `RoundTape` written to a file with its checks.
 Each round draws its own seed from the running `rand()` sequence just before
 it is built, and `RoundTape` (`game/round_tape.h`) keeps that seed, a copy of
 the setup (a re-pick page can change the match's own and then be backed out

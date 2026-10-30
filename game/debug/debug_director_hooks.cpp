@@ -208,8 +208,8 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 		{
 			this->cheats_before_play_ = std::make_pair(this->god_, this->infinite_ammo_);
 		}
-		this->god_ = file.god;
-		this->infinite_ammo_ = file.infinite_ammo;
+		this->god_ = file.tape.damage_immune();
+		this->infinite_ammo_ = file.tape.infinite_ammo();
 	}
 	else if (this->seed_)
 	{
@@ -568,6 +568,10 @@ bool DebugDirectorImpl::before_match_step(DebugMatchTarget& match, int run, Matc
 	}
 	this->replay_was_running_ = this->player_ != nullptr && !this->player_->finished;
 	this->before_level_update(match, this->step_dt_);
+	if (this->recorder_ != nullptr)
+	{
+		this->recorder_->set_dt(this->step_dt_);
+	}
 	if (run == 0)
 	{
 		step.inputs = &this->latched_;

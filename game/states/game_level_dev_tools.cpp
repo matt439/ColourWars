@@ -47,9 +47,9 @@ bool GameLevel::debug_level_finished() const
 	return this->level_->state() == LevelState::finished;
 }
 
-void GameLevel::debug_suspend_level()
+void GameLevel::debug_apply_gap(const RoundTape::Gap& gap)
 {
-	this->level_->suspend();
+	RoundTape::apply_gap(*this->level_, gap);
 }
 
 void GameLevel::debug_sync_audio()

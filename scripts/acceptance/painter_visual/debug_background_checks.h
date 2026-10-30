@@ -430,10 +430,11 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     require(!impl.recording() && impl.level_updates() == 420 && paid_shot,
         "Bounded inactive bot recording did not complete actual paid shots/420 updates");
     const ReplayFile tape = ReplayFile::read(output / "debug-background-profile" / "ColourWars" / "replays" / "background-bounded.json");
-    require(tape.updates == 420 && tape.inputs.size() == 3, "Inactive tape did not retain actual roster/update count");
-    for (size_t view = 1; view < tape.inputs.size(); ++view)
+    const auto tape_inputs = tape.inputs_by_seat();
+    require(tape.updates == 420 && tape_inputs.size() == 3, "Inactive tape did not retain actual roster/update count");
+    for (size_t view = 1; view < tape_inputs.size(); ++view)
     {
-        for (const PlayerInputData& input : tape.inputs[view])
+        for (const PlayerInputData& input : tape_inputs[view])
         {
             require(neutral(input) && input.connected, "Inactive recording retained physical actions or false occupied presence");
         }
