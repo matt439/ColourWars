@@ -335,10 +335,38 @@ change. `check-startup.ps1` passed on the Debug executable.
 
 ### Menu page bases named by role (`HYG#43`)
 
-Introduce a role-named settings-panel base (no `finish()`) for the five settings
-pages, with the shared panel scaffolding; keep `PauseMenuPage::finish` for the
-two pause pages. Split `MainMenuPage` into a thin base and a roster-setup base;
-delete hooks no page uses (`shows_brand`'s default, `animates_focus_backing`).
+**Done 2026-10-30.** The five settings pages (Controls / audio, Pad sticks,
+Keyboard keys, Pad buttons, Profiles) now derive from `SettingsPanelPage` in
+[game/states/settings_panel_page.h](../game/states/settings_panel_page.h)
+instead of `PauseMenuPage`. It has no `finish()`: its only way out is `close()`,
+which pops like Back, and its `debug_dismiss` closes (Keyboard keys still
+refuses during a capture). It holds the panel scaffolding the five had copied:
+the opening slot and its input (`opening_slot`, `opening_slot_input`, formerly
+the pause page's `pausing_player`), the panel style and look, `build_panel`
+(grid, background, paper card and both widget trees), `add_text`, `fit_text`,
+the status-line box, `covers_screen` and the paper's own focus card.
+`PauseMenuPage` and its `finish` now serve only `PauseMenuInitial` and
+`PauseMenuConfirmation`. `MainMenuPage` is a thin main-menu-frame base (its
+look, `connected_slots` and starting a debug match), and `RosterSetupPage`
+under it holds the roster machinery (seat sounds, the missing-controller wait,
+host row cursor, profile Boost, the between-rounds series) for Player Count,
+Join, Team, Weapon and Stage Select; Title, Home, Credits, Options and Mode
+Select no longer inherit it. `MenuPage` lost `shows_brand`, which all 18 pages
+overrode to false, with the brand drawing and font it guarded, and
+`animates_focus_backing`, which none overrode. `menu_text.brand` and
+`menu_style.chrome.brand_font` and `brand_position` stay in the format and in
+validation; the painter menu-text probe, whose test page was the only thing
+that drew the brand, no longer compares a brand crop. The OOP guide,
+architecture overview, AGENTS.md, debug-console and menu-presentation docs
+follow. Both presets build under `/W4 /WX`. Release ran the full default list
+in the working tree (74 passed). Debug ran in a scratch worktree holding only
+this change, since `HYG#35`'s uncommitted replay work stops some probes
+compiling in the working tree: 71 passed without the four slow cases, and
+`menu_text` and `debug_console` passed. There, `check-painter.ps1 -CompileOnly`
+compiled in both presets, and the Release `-MenuTextOnly`, `-KeyboardJumpOnly`,
+`-PausedOptionsOnly`, `-StickReadoutsOnly`, `-RumbleOnly` and
+`-OptionsDefaultsOnly` matrices passed. `check-startup.ps1` passed on the
+Debug executable.
 
 ### Menu owner and navigation (`HYG#44`)
 

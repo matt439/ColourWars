@@ -25,7 +25,6 @@ MenuPage::MenuPage(MenuContext* context) :
 	this->chrome_sheet_ = this->render_resources()->resolve_sprite_sheet(style.sprite_sheet);
 	this->chrome_pixel_ = this->render_resources()->sprite_sheet(this->chrome_sheet_)->
 		resolve_sprite_frame(style.fill_frame);
-	this->brand_font_ = this->render_resources()->resolve_sprite_font(style.brand_font);
 }
 
 void MenuPage::update(float dt)
@@ -366,30 +365,16 @@ void MenuPage::draw_chrome(DrawList& list) const
 	sheet->draw(list, this->chrome_pixel_, RectangleF(style.brand_position.x,
 		style.footer_y, menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f,
 		style.rule_height), style.panel_edge_colour);
-	list.set_filter(TextureFilter::linear);
-	if (this->shows_brand())
-	{
-		list.draw_text(this->brand_font_, this->text_.brand,
-			style.brand_position, style.unhighlight, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
-	}
 
 	// Use the focus group's result, so the backing follows keyboard, pad,
 	// disabled rows and compound option rows without duplicating navigation.
 	const UiWidget* focused = this->focus_.focused(0);
 	if (this->shows_focus_backing() && focused != nullptr && !focused->hidden())
 	{
-		list.set_filter(TextureFilter::point);
 		RectangleF panel = focused->bounds();
 		panel.inflate(style.focus_padding);
 		sheet->draw(list, this->chrome_pixel_, panel, style.focus_panel_colour);
-		// Move only the accent within its existing padding. Text, panel bounds
-		// and the focus group's navigation geometry keep their resting layout.
-		const bool animate = this->animates_focus_backing() &&
-			this->focus_.enabled(focused) && !this->save()->play_settings().reduce_effects;
-		const float inward = animate ? std::min(
-			style.accent_width * (this->focus_motion_.arrow_offset() + this->focus_motion_.press_fraction()),
-			std::max(0.0f, style.focus_padding.x - style.accent_width)) : 0.0f;
-		sheet->draw(list, this->chrome_pixel_, RectangleF(panel.x + inward, panel.y,
+		sheet->draw(list, this->chrome_pixel_, RectangleF(panel.x, panel.y,
 			style.accent_width, panel.height),
 			this->focus_.enabled(focused) ? style.highlight : style.disabled);
 	}

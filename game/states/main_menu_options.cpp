@@ -85,7 +85,7 @@ bool MainMenuOptions::debug_start_match(const MatchSetup& plan)
 
 bool MainMenuOptions::debug_dismiss(bool leaving_match)
 {
-	if (!this->pausing_slot_) { return MainMenuPage::debug_dismiss(leaving_match); }
+	if (!this->pausing_slot_) { return MenuPage::debug_dismiss(leaving_match); }
 	this->close();
 	return true;
 }

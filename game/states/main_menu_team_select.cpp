@@ -11,7 +11,7 @@ using namespace labrador;
 #pragma region MainMenuTeamSelect
 
 MainMenuTeamSelect::MainMenuTeamSelect(MenuContext* context) :
-	MainMenuPage(context), team_focus_(context->level_settings()->player_count())
+	RosterSetupPage(context), team_focus_(context->level_settings()->player_count())
 {
 
 }

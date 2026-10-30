@@ -17,7 +17,6 @@ public:
 	bool debug_dismiss(bool leaving_match) override;
 protected:
 	void update_page(float dt) override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	std::vector<std::string> refusals_;

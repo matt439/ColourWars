@@ -12,57 +12,22 @@ using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
 
-MainMenuPage::MainMenuPage(MenuContext* context, std::optional<Session> between_rounds) :
-	MenuPage(context), between_rounds_(std::move(between_rounds))
+MainMenuPage::MainMenuPage(MenuContext* context) :
+	MenuPage(context)
 {
-	const MainMenuPresentation& look = this->look();
-
-	this->error_sound_ = this->resolve_sound(look.error_sound);
-	this->ready_sound_ = this->resolve_sound(look.ready_sound);
-	this->unready_sound_ = this->resolve_wave(look.unready_sound.name);
 }
 
 bool MainMenuPage::debug_start_match(const MatchSetup& plan)
 {
-	// Between rounds this frame belongs to the match, which takes the plan.
-	if (this->between_rounds_) { return false; }
 	this->menu_context()->cancel_music_exit();
 	*this->level_settings() = plan;
 	this->context()->pop(MatchStart::developer);
 	return true;
 }
 
-bool MainMenuPage::debug_dismiss(bool leaving_match)
-{
-	if (!this->between_rounds_)
-	{
-		return MenuPage::debug_dismiss(leaving_match);
-	}
-	this->menu_context()->cancel_music_exit();
-	this->context()->pop(leaving_match ? EndMenuAction::exit : EndMenuAction::restart);
-	return true;
-}
-
-const std::optional<Session>& MainMenuPage::between_rounds() const
-{
-	return this->between_rounds_;
-}
-
-void MainMenuPage::return_to_round_menu()
-{
-	this->context()->transition_to(
-		std::make_unique<EndMenuInitial>(this->menu_context(), *this->between_rounds_));
-}
-
 const MainMenuPresentation& MainMenuPage::look() const
 {
 	return this->presentation().main_menu();
-}
-
-int MainMenuPage::player_count() const
-{ 
-	return this->level_settings()->
-		player_count();
 }
 
 std::vector<int> MainMenuPage::connected_slots() const
@@ -79,13 +44,57 @@ std::vector<int> MainMenuPage::connected_slots() const
 	return result;
 }
 
-void MainMenuPage::set_player_prompts(MenuPrompt prompts)
+RosterSetupPage::RosterSetupPage(MenuContext* context, std::optional<Session> between_rounds) :
+	MainMenuPage(context), between_rounds_(std::move(between_rounds))
+{
+	const MainMenuPresentation& look = this->look();
+
+	this->error_sound_ = this->resolve_sound(look.error_sound);
+	this->ready_sound_ = this->resolve_sound(look.ready_sound);
+	this->unready_sound_ = this->resolve_wave(look.unready_sound.name);
+}
+
+bool RosterSetupPage::debug_start_match(const MatchSetup& plan)
+{
+	if (this->between_rounds_) { return false; }
+	return MainMenuPage::debug_start_match(plan);
+}
+
+bool RosterSetupPage::debug_dismiss(bool leaving_match)
+{
+	if (!this->between_rounds_)
+	{
+		return MenuPage::debug_dismiss(leaving_match);
+	}
+	this->menu_context()->cancel_music_exit();
+	this->context()->pop(leaving_match ? EndMenuAction::exit : EndMenuAction::restart);
+	return true;
+}
+
+const std::optional<Session>& RosterSetupPage::between_rounds() const
+{
+	return this->between_rounds_;
+}
+
+void RosterSetupPage::return_to_round_menu()
+{
+	this->context()->transition_to(
+		std::make_unique<EndMenuInitial>(this->menu_context(), *this->between_rounds_));
+}
+
+int RosterSetupPage::player_count() const
+{
+	return this->level_settings()->
+		player_count();
+}
+
+void RosterSetupPage::set_player_prompts(MenuPrompt prompts)
 {
 	this->player_prompts_ = prompts;
 	this->set_prompts(prompts);
 }
 
-int MainMenuPage::next_host_row(int row, Direction direction, bool joining) const
+int RosterSetupPage::next_host_row(int row, Direction direction, bool joining) const
 {
 	if (direction != Direction::up && direction != Direction::down) { return row; }
 	const int step = direction == Direction::up ? -1 : 1;
@@ -102,7 +111,7 @@ int MainMenuPage::next_host_row(int row, Direction direction, bool joining) cons
 	return row;
 }
 
-void MainMenuPage::route_host_setup_input(std::vector<ProcessedMenuInput>& inputs, int& row)
+void RosterSetupPage::route_host_setup_input(std::vector<ProcessedMenuInput>& inputs, int& row)
 {
 	if (inputs.empty() || this->level_settings()->bot_count() == 0) { return; }
 	const ProcessedMenuInput host = inputs[0];
@@ -117,7 +126,7 @@ void MainMenuPage::route_host_setup_input(std::vector<ProcessedMenuInput>& input
 	inputs[static_cast<size_t>(row)] = host;
 }
 
-std::unique_ptr<UiTexture> MainMenuPage::make_host_cursor() const
+std::unique_ptr<UiTexture> RosterSetupPage::make_host_cursor() const
 {
 	const MenuStyle& style = this->menu_style();
 	return std::make_unique<UiTexture>("host_row", style.sprite_sheet, style.fill_frame,
@@ -125,7 +134,7 @@ std::unique_ptr<UiTexture> MainMenuPage::make_host_cursor() const
 		CrudeDrawing::premultiplied(this->look().art.focus_ink));
 }
 
-void MainMenuPage::place_host_cursor(UiTexture& cursor, const UiWidget& row) const
+void RosterSetupPage::place_host_cursor(UiTexture& cursor, const UiWidget& row) const
 {
 	const RectangleF bounds = row.bounds();
 	const MenuStyle& style = this->menu_style();
@@ -134,7 +143,7 @@ void MainMenuPage::place_host_cursor(UiTexture& cursor, const UiWidget& row) con
 	cursor.set_size(Vector2F(bounds.width, style.rule_height));
 }
 
-bool MainMenuPage::wait_for_players(
+bool RosterSetupPage::wait_for_players(
 	const std::vector<ProcessedMenuInput>& inputs)
 {
 	// Focus loss can temporarily hide every pad. It does not change the roster.

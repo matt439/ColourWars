@@ -190,6 +190,13 @@ A page replaces another in its frame with `transition_to` and covers it with
 In Debug, the console (`DebugConsoleState`) and the debug menu
 (`DebugMenuPage`) are pushed over whichever of these is on top.
 
+The page bases are named by role. `MainMenuPage` is a page in the main menu's
+frame, and `RosterSetupPage` under it adds the roster machinery that Player
+Count, Join, Team, Weapon and Stage Select share. `SettingsPanelPage` is the five
+settings panels, pushed with no result over Options or Pause, so their only way
+out is to pop. `PauseMenuPage` is the two pause pages, which return a
+`PauseMenuAction` through `finish`.
+
 A main-menu page finishes by popping its frame with a `MatchStart`, and
 `GameMenu` then pushes a `GameLevel` above itself, so a match never replaces
 the menu and returning from it lands on a screen that still exists. The
@@ -256,7 +263,7 @@ StructurePaintable -> Structure + PaintableObject
     Structure -> labrador::TextureObject + labrador::CollisionObject
 Player -> colourwars::MovingObject + labrador::CollisionObject
     + colourwars::AnimationObject + labrador::TextureObject
-MainMenuStageSelect -> MainMenuPage -> MenuPage
+MainMenuStageSelect -> RosterSetupPage -> MainMenuPage -> MenuPage
     -> labrador::State + colourwars::SoundBankObject + protected DebugPageTarget
 ```
 

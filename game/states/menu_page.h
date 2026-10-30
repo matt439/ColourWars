@@ -62,13 +62,8 @@ public:
 protected:
 	virtual void update_page(float dt) = 0;
 
-	// Whether the chrome draws the brand line at the top. The Debug menu
-	// says no: it opens over a running match, where the line would sit on
-	// the first pane's HUD.
-	virtual bool shows_brand() const { return true; }
 	// Pages with their own paper cards draw focus in their texture layer.
 	virtual bool shows_focus_backing() const { return true; }
-	virtual bool animates_focus_backing() const { return false; }
 	// Calibration pages reserve analogue sticks for their live response preview.
 	virtual bool accepts_stick_navigation() const { return true; }
 	// A physical-key capture owns input before developer shortcuts or queued
@@ -155,7 +150,6 @@ private:
 	void draw_chrome(labrador::DrawList& list) const;
 	labrador::RenderResources::SpriteSheetHandle chrome_sheet_;
 	labrador::SpriteSheet::frame_handle chrome_pixel_;
-	labrador::FontHandle brand_font_;
 	MenuContext* context_ = nullptr;
 	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;
 	MenuText text_;

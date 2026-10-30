@@ -34,7 +34,6 @@ public:
 
 protected:
 	void update_page(float dt) override;
-	bool shows_brand() const override { return false; }
 
 private:
 	DebugDirectorImpl* director_ = nullptr;

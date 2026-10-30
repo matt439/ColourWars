@@ -580,7 +580,7 @@ two fixed Stage Select mode labels:
 
 | JSON path | Required keys |
 |---|---|
-| `menu_text.brand` | One brand-line string |
+| `menu_text.brand` | One brand-line string, still checked; no page draws a brand line |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits`, `bot_team`, `bot_weapon` |
 | `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble` |

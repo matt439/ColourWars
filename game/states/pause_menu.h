@@ -53,7 +53,6 @@ public:
 	void init() override = 0;
 	void update_page(float dt) override = 0;
 protected:
-	bool shows_brand() const override { return false; }
 	const PauseMenuPresentation& look() const;
 
 	std::wstring player_number_text() const;

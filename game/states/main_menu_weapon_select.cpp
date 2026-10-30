@@ -12,7 +12,7 @@ using namespace labrador;
 
 MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context,
 	std::optional<Session> between_rounds) :
-	MainMenuPage(context, std::move(between_rounds))
+	RosterSetupPage(context, std::move(between_rounds))
 {
 
 }

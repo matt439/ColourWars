@@ -338,7 +338,8 @@ This code is full inheritance and virtual dispatch, several levels deep and
 multiple where it suits: `ProjectileMist → DiffusingProjectile → Projectile →
 MovingObject + AnimationObject + CollisionObject`, `WeaponBucket →
 RelativeVelocityWeapon → Weapon → TextureObject`, `MainMenuStageSelect →
-MainMenuPage → MenuPage → State + SoundBankObject + DebugPageTarget`,
+RosterSetupPage → MainMenuPage → MenuPage → State + SoundBankObject +
+DebugPageTarget`,
 `StructurePaintable → Structure + PaintableObject` (and `Structure →
 TextureObject + CollisionObject`). `Player` even holds two `DrawObject`
 subobjects, one through `AnimationObject` and one through `TextureObject`

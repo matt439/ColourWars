@@ -45,8 +45,6 @@ public:
 	void update_page(float dt) override;
 	// Proceeds as a confirm would; the match then opens the end menu.
 	bool debug_dismiss(bool leaving_match) override;
-protected:
-	bool shows_brand() const override { return false; }
 private:
 	Session session_;
 	bool revealed_ = false;

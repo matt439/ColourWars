@@ -14,7 +14,6 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
 void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
-    const std::wstring brand = L"C O L O U R W A R S   /   LOCAL PAINT BATTLES";
     constexpr std::array<const wchar_t*, 11> headings{ L"Make your mark.", L"Options", L"Credits",
         L"Controls / audio", L"Pad sticks", L"Number of Players", L"Join Players", L"Mode Select",
         L"Team Select", L"Weapon Select", L"Choose your arena" };
@@ -116,16 +115,14 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     struct TextReference
     {
         Frame frame;
-        std::array<RectangleF, 3> bounds;
+        std::array<RectangleF, 2> bounds;
     };
-    const auto reference = [&](const Presentation& snapshot, const std::wstring& expected_brand,
+    const auto reference = [&](const Presentation& snapshot,
         const std::wstring& heading, const std::wstring& prompt, bool stage, bool locked)
     {
         const MenuStyle& style = snapshot.menu(); const auto& footer = snapshot.prompt_bar();
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
         const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
-        const UiText brand_text("reference-brand", expected_brand, style.brand_font, style.brand_position,
-            app.render_resources(), style.unhighlight);
         const colourwars::UiTextDropShadow heading_text("reference-heading", heading, style.heading_font,
             style.layout.position, app.render_resources(), stage ? snapshot.main_menu().art.ink : style.heading_colour,
             stage ? Colour(0.0f, 0.0f, 0.0f, 0.0f) : style.shadow_colour,
@@ -151,7 +148,6 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
             menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height),
             style.panel_edge_colour);
         list.set_filter(TextureFilter::linear);
-        if (!stage) { brand_text.draw(list); }
         heading_text.draw(list);
         if (stage)
         {
@@ -169,16 +165,16 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
             stage_name.set_shadow_offset(style.item_shadow_offset * scale); stage_name.draw(list);
         }
         prompt_text.draw(list);
-        return TextReference{ read(renderer), { brand_text.bounds(), heading_text.bounds(), prompt_text.bounds() } };
+        return TextReference{ read(renderer), { heading_text.bounds(), prompt_text.bounds() } };
     };
     std::ofstream records(output / "menu-text.csv");
-    records << "case,width,height,full_frame,brand_heading_prompt_match\n";
+    records << "case,width,height,full_frame,heading_prompt_match\n";
     const auto compare = [&](const std::string& name, const Presentation& snapshot,
-        const std::wstring& expected_brand, const std::wstring& heading, const std::wstring& prompt,
+        const std::wstring& heading, const std::wstring& prompt,
         bool stage = false, bool locked = false)
     {
         const Frame actual = frame();
-        const TextReference expected = reference(snapshot, expected_brand, heading, prompt, stage, locked);
+        const TextReference expected = reference(snapshot, heading, prompt, stage, locked);
         const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         for (size_t index = 0; index < expected.bounds.size(); ++index)
@@ -190,7 +186,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
             const Frame expected_crop = foreground_crop(expected.frame, pixels, 0);
             if (actual_crop.pixels != expected_crop.pixels)
             {
-                const char* component = std::array<const char*, 3>{ "brand", "heading", "prompt" }[index];
+                const char* component = std::array<const char*, 2>{ "heading", "prompt" }[index];
                 const std::string stem = "menu-text-" + name + '-' + component + '-' +
                     std::to_string(actual.width) + 'x' + std::to_string(actual.height) + "-failure";
                 save(actual_crop, output / (stem + "-actual.ppm"));
@@ -200,10 +196,10 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
                     " stage=" << stage << " locked=" << locked << " crop=(" << pixels.x << ',' << pixels.y << ',' <<
                     pixels.width << ',' << pixels.height << ") local_delta=(" << delta.x << ',' << delta.y << ',' <<
                     delta.width << ',' << delta.height << ")\n";
-                throw std::runtime_error("Actual menu brand, heading or formatted prompt differs from the independent text fixture");
+                throw std::runtime_error("Actual menu heading or formatted prompt differs from the independent text fixture");
             }
             save(foreground_crop(actual, pixels, 0), output / ("menu-text-" + name + '-' +
-                std::array<const char*, 3>{ "brand", "heading", "prompt" }[index] + '-' +
+                std::array<const char*, 2>{ "heading", "prompt" }[index] + '-' +
                 std::to_string(actual.width) + 'x' + std::to_string(actual.height) + "-detail.ppm"));
         }
         require(stage || actual.pixels == expected.frame.pixels,
@@ -222,16 +218,16 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         for (size_t index = 0; index < headings.size(); ++index)
         {
             open_probe(static_cast<MenuHeading>(index));
-            compare("default-heading-" + std::to_string(index), original, brand, headings[index], prompts[1]);
+            compare("default-heading-" + std::to_string(index), original, headings[index], prompts[1]);
         }
         MenuTextProbe* probe = open_probe(MenuHeading::arena);
         for (size_t index = 0; index < prompts.size(); ++index)
         {
             probe->rebuild(static_cast<MenuPrompt>(index));
-            compare("default-prompt-" + std::to_string(index), original, brand, headings[10], prompts[index]);
+            compare("default-prompt-" + std::to_string(index), original, headings[10], prompts[index]);
         }
-        open_stage(); const Frame browse = compare("stage-browse", original, brand, headings[10], prompts[10], true);
-        tap(Key::enter); compare("stage-locked", original, brand, headings[10], prompts[11], true, true);
+        open_stage(); const Frame browse = compare("stage-browse", original, headings[10], prompts[10], true);
+        tap(Key::enter); compare("stage-locked", original, headings[10], prompts[11], true, true);
         tap(Key::escape); require(frame().pixels == browse.pixels,
             "Stage unlock did not restore the exact authored browse text and page");
     }
@@ -270,7 +266,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     place_fixture_options_caption(old);
     old.validate_resources(*app.render_resources(), *app.audio_resources());
     presentation = old; open_stage();
-    const Frame old_browse = compare("custom-open", old, L"OLD~ BRAND", L"OLD~ HEADING", L"OLD~ BROWSE", true);
+    const Frame old_browse = compare("custom-open", old, L"OLD~ HEADING", L"OLD~ BROWSE", true);
 
     // Borrow the loaded atlas through the public font seam, retaining its
     // original glyphs everywhere except '~'. No existing font or device changes.
@@ -308,22 +304,22 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     for (int repeat = 0; repeat < 2; ++repeat)
     {
         tap(Key::enter); compare("old-page-rebuild-locked-" + std::to_string(repeat), old,
-            L"OLD~ BRAND", L"OLD~ HEADING", L"OLD~ LOCKED", true, true);
+            L"OLD~ HEADING", L"OLD~ LOCKED", true, true);
         tap(Key::escape); compare("old-page-rebuild-browse-" + std::to_string(repeat), old,
-            L"OLD~ BRAND", L"OLD~ HEADING", L"OLD~ BROWSE", true);
+            L"OLD~ HEADING", L"OLD~ BROWSE", true);
         require(frame().pixels == old_browse.pixels,
             "Old page prompt rebuild used the replacement font, layout or text snapshot");
     }
     open_stage(); const Frame new_browse = compare("reopened-new-font", next,
-        L"NEW BRAND", L"NEW HEADING", L"NEW BROWSE", true);
+        L"NEW HEADING", L"NEW BROWSE", true);
     require(new_browse.pixels != old_browse.pixels, "Reopened page did not adopt new authored text/font/layout");
     presentation = original; tick();
     require(frame().pixels == new_browse.pixels, "Presentation reversal changed the reopened page snapshot");
     tap(Key::enter); compare("new-page-after-reversal", next,
-        L"NEW BRAND", L"NEW HEADING", L"NEW LOCKED", true, true);
+        L"NEW HEADING", L"NEW LOCKED", true, true);
     tap(Key::escape); require(frame().pixels == new_browse.pixels,
         "Prompt rebuild after reversal changed the new page's cached font or text");
-    open_stage(); compare("restored-default", original, brand, headings[10], prompts[10], true);
+    open_stage(); compare("restored-default", original, headings[10], prompts[10], true);
     require(settings.stage() == "movement_course" && settings.player_count() == 1 &&
         settings.player_settings()[0].num == input_slots::keyboard_and_mouse &&
         settings.player_weapon(0) == WeaponType::sprayer && settings.player_team(0) == PlayerTeam::a,
@@ -335,7 +331,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     stage_briefing_text_checks(app, levels, canvas, tuning, presentation, output);
     stage_cue_text_checks(app, levels, canvas, tuning, presentation, output);
     require(records.good(), "Menu text evidence write failed");
-    std::cout << "PASS shared menu text: independent brand, 11 headings and 17 formatted legends at 720p/1080p/QHD; "
+    std::cout << "PASS shared menu text: independent 11 headings and 17 formatted legends at 720p/1080p/QHD; "
         "actual arena lock/unlock; custom text/font/layout reopen and old-page snapshots through assignments, "
         "repeated prompt rebuilds and reversal with an old glyph absent from the new font; frozen draw RNG\n";
 }

@@ -1495,8 +1495,7 @@ as the game. In Release:
   `debug_directory()`; phase 4's `Level::seat_labels_` (always empty there),
   `set_seat_labels`, `opening_cards`, `projectile_count` and
   `collision_object_count`, `InterfaceGameplay`'s label overload (the slot
-  overload forwards to it), `MenuPage::shows_brand` (true for every Release
-  page), `debug_countdown_over`, `debug_set_seat_labels` and
+  overload forwards to it), `debug_countdown_over`, `debug_set_seat_labels` and
   `debug_screen_obstacles` with their `GameLevel` adapters, and
   `DebugDirector::begin_match_draw`, an inline no-op; the
   `SeatInputFilter` interface, also used by the shipping `MatchBotDriver`, and

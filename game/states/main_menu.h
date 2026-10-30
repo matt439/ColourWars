@@ -33,26 +33,45 @@ enum class MainMenuScreen
 	stage_select
 };
 
+// A page in the main menu's frame: Title, Home, Credits, Options and Mode
+// Select directly, and the roster pages through RosterSetupPage.
 class MainMenuPage : public MenuPage
 {
 public:
-	// A series between rounds reopens Weapon and Stage Select above its
-	// match, in the End menu's frame: Back returns to that menu and the
-	// Stage confirmation plays the next round (ROAD#20).
-	explicit MainMenuPage(MenuContext* context,
-		std::optional<Session> between_rounds = std::nullopt);
+	explicit MainMenuPage(MenuContext* context);
 	~MainMenuPage() override = default;
 	void init() override = 0;
 
 	// Main-menu frames start a match with the shared plan when they pop.
 	// Options also serves as a paused child and guards that route separately.
 	bool debug_start_match(const MatchSetup& plan) override;
-	// Between rounds these pages close like the End menu they replaced.
-	bool debug_dismiss(bool leaving_match) override;
 protected:
 	void update_page(float dt) override = 0;
 	const MainMenuPresentation& look() const;
 
+	// Available input slots, including keyboard/mouse.
+	std::vector<int> connected_slots() const;
+};
+
+// A page that builds the roster: Player Count, Join, and the per-seat Team,
+// Weapon and Stage Select. It owns the roster's shared machinery: the seats'
+// readiness sounds, the missing-controller wait, the host's row cursor over
+// bot seats and profile Boost.
+class RosterSetupPage : public MainMenuPage
+{
+public:
+	// A series between rounds reopens Weapon and Stage Select above its
+	// match, in the End menu's frame: Back returns to that menu and the
+	// Stage confirmation plays the next round (ROAD#20).
+	explicit RosterSetupPage(MenuContext* context,
+		std::optional<Session> between_rounds = std::nullopt);
+	~RosterSetupPage() override = default;
+
+	// Between rounds this frame belongs to the match, which takes the plan.
+	bool debug_start_match(const MatchSetup& plan) override;
+	// Between rounds these pages close like the End menu they replaced.
+	bool debug_dismiss(bool leaving_match) override;
+protected:
 	int player_count() const;
 
 	// Sets the seat `slot` joined to the Boost of the profile it wears.
@@ -62,9 +81,6 @@ protected:
 	const std::optional<Session>& between_rounds() const;
 	// Back to the End menu this page replaced; only between rounds.
 	void return_to_round_menu();
-
-	// Available input slots, including keyboard/mouse.
-	std::vector<int> connected_slots() const;
 
 	// Return true while the roster is missing a controller. Keep each player's
 	// row and offer reconnect or return to the count screen to choose again.
@@ -92,7 +108,6 @@ public:
 	explicit MainMenuTitle(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	std::unique_ptr<MenuPaperArtwork> paper_;
@@ -113,7 +128,6 @@ public:
 	explicit MainMenuHome(MenuContext* context, InitialFocus initial_focus = InitialFocus::play);
 	void update_page(float dt) override;
 	void init() override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	InitialFocus initial_focus_;
@@ -136,7 +150,6 @@ public:
 	void update_page(float dt) override;
 	bool debug_dismiss(bool leaving_match) override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	void cancel();
@@ -155,7 +168,6 @@ public:
 	explicit MainMenuCredits(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	std::unique_ptr<MenuPaperArtwork> paper_;
@@ -176,7 +188,6 @@ public:
 	bool covers_screen() const override { return this->pausing_slot_.has_value(); }
 	bool debug_start_match(const MatchSetup& plan) override;
 	bool debug_dismiss(bool leaving_match) override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	std::optional<int> pausing_slot_;
@@ -246,7 +257,6 @@ public:
 	static void check_stage_rule_row(const OptionRow& stage_rule_row,
 		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
@@ -276,14 +286,13 @@ private:
 	std::unique_ptr<colourwars::UiTextDropShadow> back_ = nullptr;
 };
 
-class MainMenuPlayerCount final : public MainMenuPage
+class MainMenuPlayerCount final : public RosterSetupPage
 {
 public:
 	explicit MainMenuPlayerCount(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
@@ -301,14 +310,13 @@ private:
 	void start_join(int players, labrador::ScreenLayout layout);
 };
 
-class MainMenuJoin final : public MainMenuPage
+class MainMenuJoin final : public RosterSetupPage
 {
 public:
 	explicit MainMenuJoin(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
@@ -334,14 +342,13 @@ private:
 	void change_host_row(labrador::Direction direction);
 };
 
-class MainMenuTeamSelect final : public MainMenuPage
+class MainMenuTeamSelect final : public RosterSetupPage
 {
 public:
 	explicit MainMenuTeamSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
@@ -400,7 +407,7 @@ private:
 	void check_paper_geometry() const;
 };
 
-class MainMenuWeaponSelect final : public MainMenuPage
+class MainMenuWeaponSelect final : public RosterSetupPage
 {
 public:
 	explicit MainMenuWeaponSelect(MenuContext* context,
@@ -408,7 +415,6 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation paper_art_;
@@ -457,7 +463,7 @@ private:
 	void check_paper_geometry() const;
 };
 
-class MainMenuStageSelect final : public MainMenuPage
+class MainMenuStageSelect final : public RosterSetupPage
 {
 public:
 	// `picker`: between rounds under Loser's pick, the team whose seats alone
@@ -469,7 +475,6 @@ public:
 	void init() override;
 	void on_resume() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation paper_art_;

@@ -11,7 +11,7 @@ using namespace labrador;
 #pragma region MainMenuPlayerCount
 
 MainMenuPlayerCount::MainMenuPlayerCount(MenuContext* context) :
-	MainMenuPage(context)
+	RosterSetupPage(context)
 {
 
 }
@@ -214,7 +214,7 @@ void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 #pragma endregion MainMenuPlayerCount
 
 #pragma region MainMenuJoin
-MainMenuJoin::MainMenuJoin(MenuContext* context) : MainMenuPage(context)
+MainMenuJoin::MainMenuJoin(MenuContext* context) : RosterSetupPage(context)
 {
 }
 
@@ -399,7 +399,7 @@ void MainMenuJoin::change_host_row(Direction direction)
 	this->play_wave(this->direction_sound_);
 }
 
-void MainMenuPage::take_profile_boost(int slot)
+void RosterSetupPage::take_profile_boost(int slot)
 {
 	// A seat starts from the Boost its pad's profile carries; Weapon Select
 	// can still change it, and the match carries the choice back.

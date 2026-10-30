@@ -19,7 +19,7 @@ using namespace labrador;
 
 MainMenuStageSelect::MainMenuStageSelect(MenuContext* context,
 	std::optional<Session> between_rounds, PlayerTeam picker) :
-	MainMenuPage(context, std::move(between_rounds)),
+	RosterSetupPage(context, std::move(between_rounds)),
 	picker_(this->between_rounds() ? picker : PlayerTeam::none),
 	stage_motion_(context->data()->presentation()->menu().motion)
 {
@@ -149,7 +149,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 
 void MainMenuStageSelect::on_resume()
 {
-	MainMenuPage::on_resume();
+	RosterSetupPage::on_resume();
 	this->input()->reset_actions();
 }
 
