@@ -17,6 +17,7 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 
 | Doc | What |
 |---|---|
+| [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) | the player's guide shipped at the root of the Release ZIP: extracting, SmartScreen, joining and bots, controls, settings, removal |
 | [debug-console.md](debug-console.md) | the Debug-only console, debug menu, launch arguments, live tuning, bots, record and play, scripts: the reference |
 | [debug-console-record.md](debug-console-record.md) | how each `DBG` row was done or why it waits, and `CI#1` |
 | [level-editor.md](level-editor.md) | `ColourWarsEditor.exe`, the desktop level editor |

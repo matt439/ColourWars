@@ -17,7 +17,14 @@ def git(*args, cwd=None):
     return subprocess.check_output(["git", *args], cwd=cwd)
 
 
+def is_tag(event):
+    """A tag push publishes a release, so it always builds in full."""
+    return event.get("ref", "").startswith("refs/tags/")
+
+
 def comparison(event_name, event, cwd):
+    if event_name == "push" and is_tag(event):
+        return None
     if event_name == "push":
         base, head = event.get("before", ""), event.get("after", "")
     elif event_name == "pull_request":
@@ -108,7 +115,7 @@ def already_tested(event_name, event, cwd=None, passed=tree_passed):
     A merge commit of a branch that contains the old tip is the branch's own
     tree, which its pull request built. Anything else is a new tree.
     """
-    if event_name != "push":
+    if event_name != "push" or is_tag(event):
         return False
     after = event.get("after", "")
     if not re.fullmatch(r"[0-9a-f]{40}", after) or set(after) == {"0"}:

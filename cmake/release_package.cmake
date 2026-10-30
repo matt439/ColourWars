@@ -44,7 +44,8 @@ foreach(asset IN LISTS COLOURWARS_RUNTIME_ASSETS)
 endforeach()
 install(FILES "${PROJECT_BINARY_DIR}/generated/build-info.txt"
     "${PROJECT_SOURCE_DIR}/LICENSE" "${PROJECT_SOURCE_DIR}/NOTICE"
-    "${PROJECT_SOURCE_DIR}/README.md" DESTINATION .)
+    "${PROJECT_SOURCE_DIR}/README.md"
+    "${PROJECT_SOURCE_DIR}/docs/HOW-TO-PLAY.txt" DESTINATION .)
 install(FILES
     "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/PROVENANCE.md"
     "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/sources.json"
