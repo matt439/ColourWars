@@ -57,6 +57,7 @@ its checks where it has one, and [acceptance/support/probe.h](acceptance/support
 |---|---|
 | [sandbox-release.ps1](sandbox-release.ps1), [sandbox/](sandbox/) | prepares, and optionally runs, a Windows Sandbox trial of the Release ZIP (`ROAD#37`) |
 | [check-sandbox-release.ps1](check-sandbox-release.ps1) | checks that generator's output on the host without starting a sandbox |
+| [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash and no developer-console RTTI (`CI#6`; CI's inspection step) |
 
 ## Content builds
 
@@ -71,5 +72,5 @@ its checks where it has one, and [acceptance/support/probe.h](acceptance/support
 | Folder | What |
 |---|---|
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
-| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the Markdown link check, and their tests |
+| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the Markdown link check, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
 | [perf/](perf/) | frame-pacing analysis and its test |

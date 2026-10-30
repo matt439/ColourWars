@@ -61,7 +61,7 @@ jobs:
       matrix:
         preset: [x64-debug, x64-release]
 
-    # Ninja builds need the MSVC environment supplied by vcvars64.bat.
+    # Ninja builds need the MSVC environment, which Set up MSVC exports once.
     defaults:
       run:
         shell: cmd
@@ -90,13 +90,14 @@ jobs:
           key: vcpkg-${{ steps.vcpkg.outputs.image }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: vcpkg-${{ steps.vcpkg.outputs.image }}-
 
-      - name: Find vcvars64
-        run: |
-          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do echo VCVARS=%%i\VC\Auxiliary\Build\vcvars64.bat>> %GITHUB_ENV%
+      # CI#6: vcvars64 runs once per job; what it sets reaches every later
+      # step through GITHUB_ENV.
+      - name: Set up MSVC
+        shell: pwsh
+        run: ./scripts/ci/export-msvc-environment.ps1
 
       - name: Configure
         run: |
-          call "%VCVARS%"
           cmake --preset ${{ matrix.preset }}
 
       - name: Audio publication and staging checks
@@ -106,7 +107,6 @@ jobs:
       # Building also runs Labrador's include-boundary check.
       - name: Build
         run: |
-          call "%VCVARS%"
           cmake --build --preset ${{ matrix.preset }}
 
       # CI#2: compile, but never run, the probes CI does not otherwise build:
@@ -115,7 +115,6 @@ jobs:
       # Debug-only like its harness, frame pacing. No probe, window or GPU is used.
       - name: Compile gate for opt-in probes
         run: |
-          call "%VCVARS%"
           pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -Parallel 4 -OutputDirectory out/validation/compile-gate/acceptance -OptIn
           if errorlevel 1 exit /b 1
           pwsh -NoProfile -File scripts/check-painter.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/painter
@@ -136,7 +135,6 @@ jobs:
       - name: Acceptance tooling preflight, ownership and deadlines
         if: matrix.preset == 'x64-debug'
         run: |
-          call "%VCVARS%"
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-acceptance-selection.ps1
           if errorlevel 1 exit /b 1
           pwsh -NoProfile -File scripts/check-acceptance-selection.ps1
@@ -169,7 +167,6 @@ jobs:
       # full suite, so a pull request's run is the one its merge relies on.
       - name: Consumer acceptance checks
         run: |
-          call "%VCVARS%"
           pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4
 
       # CI#4: per-case compile and run seconds, outcome, longest first. The
@@ -189,7 +186,6 @@ jobs:
         if: matrix.preset == 'x64-debug'
         timeout-minutes: 20
         run: |
-          call "%VCVARS%"
           pwsh -NoProfile -File scripts/check-movement-feedback.ps1 -Preset x64-debug -SkipBuild -AllowSoftwareAdapter
 
       # Keep structured diagnostics on failure without uploading the probe's
@@ -209,7 +205,6 @@ jobs:
 
       - name: Level editor acceptance
         run: |
-          call "%VCVARS%"
           cmake --build --preset ${{ matrix.preset }} --target ColourWarsEditor colourwars_editor_acceptance colourwars_editor_dpi_acceptance
           pwsh -NoProfile -File scripts/check-level-editor.ps1 -Preset ${{ matrix.preset }} -SkipBuild
 
@@ -219,7 +214,6 @@ jobs:
       - name: Stage registration integration
         timeout-minutes: 10
         run: |
-          call "%VCVARS%"
           cmake --build --preset ${{ matrix.preset }} --target ColourWarsRegisterStage
           if errorlevel 1 exit /b 1
           pwsh -NoProfile -File scripts/check-stage-registration.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/stage-registration
@@ -227,7 +221,6 @@ jobs:
       - name: Entry-point failure reporting
         timeout-minutes: 5
         run: |
-          call "%VCVARS%"
           pwsh -NoProfile -File scripts/check-failure-reporting.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/failure-reporting
 
       # Receipts and logs only: each registration run also holds a scratch
@@ -256,49 +249,13 @@ jobs:
       - name: Package Release
         if: matrix.preset == 'x64-release'
         run: |
-          call "%VCVARS%"
           cmake --build --preset x64-release --target package
 
+      # CI#6: the packaging rules are a script, runnable locally the same way.
       - name: Extract and inspect Release package
         if: matrix.preset == 'x64-release'
         shell: pwsh
-        run: |
-          $destination = Join-Path $env:RUNNER_TEMP "ColourWars-release"
-          Expand-Archive -LiteralPath "out/build/x64-release/packages/ColourWars-windows-x64.zip" -DestinationPath $destination
-          $package = Join-Path $destination "ColourWars-windows-x64"
-          $files = Get-ChildItem -LiteralPath $package -File -Recurse
-          if ($files | Where-Object {
-            $_.Extension -in '.wav', '.mp3', '.ogg', '.pdb' -or
-            ($_.Extension -eq '.xwb' -and $_.FullName -ne (Join-Path $package 'sounds/paint_exe.xwb')) -or
-            ($_.Extension -eq '.exe' -and $_.Name -ne 'ColourWars.exe')
-          }) { throw "Development files or unreviewed audio leaked into the package" }
-          foreach ($required in 'ColourWars.exe', 'DirectXTK.dll', 'xaudio2_9redist.dll',
-            'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'build-info.txt',
-            'HOW-TO-PLAY.txt',
-            'sounds/paint_exe.json', 'sounds/paint_exe.xwb',
-            'licenses/paint_exe/PROVENANCE.md', 'licenses/paint_exe/CC0-1.0.txt',
-            'licenses/paint_exe/runtime-bank.json', 'licenses/fonts/Lato-OFL.txt',
-            'licenses/fonts/BowlbyOne-OFL.txt', 'licenses/fonts/CourierPrime-OFL.txt') {
-            if (-not (Test-Path -LiteralPath (Join-Path $package $required))) {
-              throw "Package is missing $required"
-            }
-          }
-          $receipt = Get-Content -Raw scripts/audio/runtime-bank.json | ConvertFrom-Json
-          if ((Get-FileHash -LiteralPath (Join-Path $package 'sounds/paint_exe.xwb')).Hash -ine $receipt.sha256) {
-            throw 'Packaged bank differs from the accepted publication'
-          }
-          # The developer console is Debug-only. Its polymorphic classes would
-          # leave MSVC RTTI names in the binary if any of it were linked.
-          # Keep this list aligned with scripts/acceptance/debug_console.cpp.
-          $exe = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes(
-            (Join-Path $package 'ColourWars.exe')))
-          foreach ($name in '.?AVDebugConsoleState@@', '.?AVDebugRegistry@@', '.?AVLambdaCommand@@',
-              '.?AVDebugMenuPage@@', '.?AVNumberVariable@@',
-              '.?AVBot@@', '.?AVPaintBot@@', '.?AVBotDriver@@', '.?AVReplayRecorder@@',
-              '.?AVReplayPlayer@@', '.?AVTuneTarget@@', '.?AVTuningTarget@@',
-              '.?AVDebugBackgroundInput@@', '.?AVDebugWait@@', '.?AVUpdatesWait@@', '.?AVMatchWait@@') {
-            if ($exe.Contains($name)) { throw "Developer console code leaked into the package: $name" }
-          }
+        run: ./scripts/check-release-package.ps1 -OutputDirectory (Join-Path $env:RUNNER_TEMP 'ColourWars-release')
 
       # Debug supports WARP and must start. The pinned engine's Release refuses
       # software adapters: only its exact no-hardware diagnostic may be skipped.

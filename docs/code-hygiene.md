@@ -661,9 +661,24 @@ input, the engine-free shared contracts with an include check like the engine's
 
 ### Release package rules runnable locally (`CI#6`)
 
-Move the Release ZIP inspection out of `ci.yml` into
-`scripts/check-release-package.ps1`, which CI calls, and set up the MSVC
-environment once per job.
+**Done 2026-10-30.** The Release ZIP inspection is now
+[check-release-package.ps1](../scripts/check-release-package.ps1), the same
+rules unchanged: no development files or unreviewed audio, the sixteen required
+files, the bank's hash against `scripts/audio/runtime-bank.json` and none of the
+sixteen developer-console RTTI names. It extracts into `-OutputDirectory`
+(default `out/validation/release-package`, relative paths following the
+caller's location), replacing only the `ColourWars-windows-x64` folder it
+extracts, so it reruns locally after `--target package`. CI's inspection step
+calls it with `$RUNNER_TEMP/ColourWars-release`, the folder the startup steps
+already read. [export-msvc-environment.ps1](../scripts/ci/export-msvc-environment.ps1)
+replaces the job's `Find vcvars64` step: it runs `vcvars64.bat` once and writes
+every variable it adds or changes to `GITHUB_ENV`, so the ten `call
+"%VCVARS%"` lines are gone and every later step has the environment those
+steps built (including whatever `VCPKG_ROOT` vcvars leaves, as before). Locally
+the package check passed twice on a fresh Release ZIP (34 checks, 66 files) and
+refused a copy with a stray `.pdb`; the export script, run with
+`-EnvironmentFile`, wrote 42 variables including `INCLUDE`, `LIB` and `Path`.
+The hosted run is the first test of the CI wiring.
 
 ## Open shortlist (2026-10-29)
 
