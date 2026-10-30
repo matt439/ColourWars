@@ -382,10 +382,26 @@ void InputBindings::validate() const
 	for (const PadProfile& profile : this->pads) { profile.validate(); }
 }
 
+namespace
+{
+	// A pad profile's Jump, Shoot and Pause sources, over whatever was there.
+	void apply_pad_profile(ActionBindings& result, const PadProfile& profile)
+	{
+		const std::array<GameAction, pad_action_count> actions{ GameAction::jump, GameAction::shoot, GameAction::pause };
+		for (std::size_t index = 0; index < pad_action_count; ++index)
+		{
+			PadActionBinding binding;
+			add_source(binding, profile.actions[index].primary, static_cast<PadAction>(index));
+			add_source(binding, profile.actions[index].alternate, static_cast<PadAction>(index));
+			result.game_pad[static_cast<std::size_t>(actions[index])] = std::move(binding);
+		}
+	}
+}
+
 ActionBindings effective_action_bindings(const InputBindings& preferences)
 {
 	preferences.validate();
-	ActionBindings result = default_action_bindings();
+	ActionBindings result = fixed_action_bindings();
 	const auto desktop = [&result](GameAction action) -> DesktopActionBinding&
 	{
 		return result.game_desktop[static_cast<std::size_t>(action)];
@@ -400,22 +416,22 @@ ActionBindings effective_action_bindings(const InputBindings& preferences)
 	else { shoot.keys = { preferences.keyboard_shoot.key }; }
 	desktop(GameAction::pause).keys = { player_input_consts::pause_key };
 	if (preferences.keyboard_pause != Key::none) { desktop(GameAction::pause).keys.push_back(preferences.keyboard_pause); }
+	// A slot that has not chosen reads the default profile's controls.
+	apply_pad_profile(result, PadProfile());
 	return result;
 }
 
 ActionBindings effective_action_bindings(const InputBindings& preferences, int pad_slot)
 {
 	ActionBindings result = effective_action_bindings(preferences);
-	const PadProfile& profile = preferences.pads.at(static_cast<std::size_t>(pad_slot));
-	const std::array<GameAction, pad_action_count> actions{ GameAction::jump, GameAction::shoot, GameAction::pause };
-	for (std::size_t index = 0; index < pad_action_count; ++index)
-	{
-		PadActionBinding binding;
-		add_source(binding, profile.actions[index].primary, static_cast<PadAction>(index));
-		add_source(binding, profile.actions[index].alternate, static_cast<PadAction>(index));
-		result.game_pad[static_cast<std::size_t>(actions[index])] = std::move(binding);
-	}
+	apply_pad_profile(result, preferences.pads.at(static_cast<std::size_t>(pad_slot)));
 	return result;
+}
+
+const ActionBindings& default_action_bindings()
+{
+	static const ActionBindings bindings = effective_action_bindings(InputBindings());
+	return bindings;
 }
 
 PadProfile read_pad_profile(const JsonValue& entry)

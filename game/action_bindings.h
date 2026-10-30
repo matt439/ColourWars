@@ -11,6 +11,8 @@
 
 struct InputTuning;
 
+// The keyboard's default keys, stated once: InputBindings' defaults and the
+// fixed aliases below read them.
 namespace player_input_consts
 {
 	// Retained names also define the developer bind-warning policy.
@@ -90,6 +92,13 @@ struct ActionBindings
 	std::array<MenuDirectionBinding, menu_direction_count> directions;
 };
 
+// Only the controls no save changes: F1 / Back debug, the intro skip, the
+// menus, Escape pause and Down drop. The rebindable game actions (desktop
+// move, jump, shoot, drop and pause; pad jump, shoot and pause) are empty.
+const ActionBindings& fixed_action_bindings();
+// The fixed controls plus what a default InputBindings chooses
+// (effective_action_bindings(InputBindings{}), with the default PadProfile),
+// so the defaults a save starts from are stated only there.
 const ActionBindings& default_action_bindings();
 
 // Pure snapshot evaluations. Held is neutral without current focus/connection;

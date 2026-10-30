@@ -77,7 +77,7 @@ namespace
 	}
 }
 
-const ActionBindings& default_action_bindings()
+const ActionBindings& fixed_action_bindings()
 {
 	static const ActionBindings bindings = []
 	{
@@ -92,21 +92,12 @@ const ActionBindings& default_action_bindings()
 			return result.game_pad[static_cast<std::size_t>(action)];
 		};
 
-		desktop(GameAction::move_left).keys = { move_left_key };
-		desktop(GameAction::move_right).keys = { move_right_key };
-		desktop(GameAction::jump).keys = { jump_key };
-		desktop(GameAction::shoot).mouse_buttons = { shoot_button };
-		desktop(GameAction::drop).keys = { drop_key, drop_key_alternate };
+		// Escape and Down sit beside the keyboard's Pause and Drop choices.
+		desktop(GameAction::drop).keys = { drop_key_alternate };
 		desktop(GameAction::pause).keys = { pause_key };
 		desktop(GameAction::debug).keys = { debug_key };
 		desktop(GameAction::skip_intro).keys = { jump_key, pause_key, confirm_key };
 
-		pad(GameAction::jump).buttons = { GamepadButton::a };
-		pad(GameAction::jump).triggers =
-			{ { GamepadTrigger::left, ActionTriggerThreshold::jump } };
-		pad(GameAction::shoot).triggers =
-			{ { GamepadTrigger::right, ActionTriggerThreshold::shoot } };
-		pad(GameAction::pause).buttons = { GamepadButton::start };
 		pad(GameAction::debug).buttons = { GamepadButton::back };
 		pad(GameAction::skip_intro).buttons =
 			{ GamepadButton::a, GamepadButton::b, GamepadButton::start };
