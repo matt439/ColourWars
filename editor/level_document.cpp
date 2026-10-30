@@ -47,7 +47,7 @@ namespace colourwars_editor
                 {
                     fail("The selected bounds no longer exist.");
                 }
-                return member(member(document, "level_bounds"), bounds_names[entry.index]);
+                return member(member(document, key::level_bounds), bounds_names[entry.index]);
             default:
                 break;
             }
@@ -124,9 +124,9 @@ namespace colourwars_editor
 
         void move_shape(Json& object, const Rect& rectangle)
         {
-            if (string(object, "type") == "FixedSlabPaintable")
+            if (string(object, key::type) == object_type::fixed_slab_paintable)
             { move_slab(object, rectangle); return; }
-            if (string(object, "type") == "StructureRamp")
+            if (string(object, key::type) == object_type::structure_ramp)
             {
                 const Rect old = object_rectangle(object);
                 Json& triangle = member(object, "triangle");
@@ -192,7 +192,7 @@ namespace colourwars_editor
             {
                 return string(object, "name");
             }
-            return string(object, "type") + " " + std::to_string(index + 1);
+            return string(object, key::type) + " " + std::to_string(index + 1);
         }
 
         bool is_point(EntryKind kind)
@@ -524,7 +524,7 @@ namespace colourwars_editor
         if (grid <= 0) { fail("Grid spacing must be positive."); }
         if (entry.kind == EntryKind::level) { fail("Select geometry before aligning its origin."); }
         const Json& value = entry_json(impl_->document, entry);
-        const bool fixed_slab = entry.kind == EntryKind::collision && string(value, "type") == "FixedSlabPaintable";
+        const bool fixed_slab = entry.kind == EntryKind::collision && string(value, key::type) == object_type::fixed_slab_paintable;
         Rect aligned;
         if (fixed_slab)
         {
@@ -567,7 +567,7 @@ namespace colourwars_editor
     {
         if (entry.kind != EntryKind::collision) { return std::nullopt; }
         const Json& object = entry_json(impl_->document, entry);
-        if (string(object, "type") != "FixedSlabPaintable") { return std::nullopt; }
+        if (string(object, key::type) != object_type::fixed_slab_paintable) { return std::nullopt; }
         if (!preview) { return decode_slab(object).corners; }
         Document candidate;
         candidate.CopyFrom(object, candidate.GetAllocator());
@@ -649,11 +649,12 @@ namespace colourwars_editor
             // material is optional and open-ended in the inspector's string edit,
             // so name the values this collision tag accepts; an empty value is the
             // legacy stretched draw and applying one adds the field.
-            const std::string allowed = allowed_materials(string(value, "collision_type"));
+            const std::string allowed = level_format::allowed_materials(string(value, key::collision_type));
             const auto existing = std::find_if(result.begin(), result.end(),
                 [](const Property& property) { return property.path == "material"; });
             if (existing != result.end()) { existing->label = "material (" +
-                (string(value, "type") == "FixedSlabPaintable" ? "eraser" : allowed) + ")"; }
+                (string(value, key::type) == object_type::fixed_slab_paintable ?
+                std::string(level_format::fixed_slab_material) : allowed) + ")"; }
             else if (!allowed.empty())
             {
                 result.push_back({ "material", "material (" + allowed + ")", "", false, false });
@@ -791,9 +792,10 @@ namespace colourwars_editor
                 // and height are deliberately not authored for this fixed shape.
                 added.kind = EntryKind::collision;
                 value.AddMember("name", Json(type.c_str(), allocator), allocator);
-                value.AddMember("type", "FixedSlabPaintable", allocator);
-                value.AddMember("collision_type", "STRUCTURE_FIXED_SLAB", allocator);
-                value.AddMember("material", "eraser", allocator);
+                value.AddMember(rapidjson::StringRef(key::type), rapidjson::StringRef(object_type::fixed_slab_paintable), allocator);
+                value.AddMember(rapidjson::StringRef(key::collision_type), rapidjson::StringRef(
+                    level_format::collision_name(level_format::Collision::structure_fixed_slab)), allocator);
+                value.AddMember(rapidjson::StringRef(key::material), rapidjson::StringRef(level_format::fixed_slab_material), allocator);
                 Json slab(rapidjson::kObjectType);
                 slab.AddMember("x", rectangle.x, allocator); slab.AddMember("y", rectangle.y, allocator);
                 slab.AddMember("rise", Json(type == "FixedSlabRight" ? "right" : "left", allocator), allocator);
@@ -805,22 +807,22 @@ namespace colourwars_editor
             }
             else
             {
-                const bool visual = type == "Visual";
+                const bool visual = type == object_type::visual;
                 const bool ramp_right = type == "StructureRampRight";
                 const bool ramp_left = type == "StructureRampLeft";
                 const bool moving = type == "MovingPaintable" || type == "MovingJumpThrough";
                 const bool gate = type == "TeamGate";
-                const bool paintable = type == "StructurePaintable" || moving || gate;
+                const bool paintable = type == object_type::structure_paintable || moving || gate;
                 const bool jump = type == "StructureJumpThrough" || type == "MovingJumpThrough";
-                if (!visual && !ramp_right && !ramp_left && !paintable && !jump && type != "Structure")
+                if (!visual && !ramp_right && !ramp_left && !paintable && !jump && type != object_type::structure)
                 {
                     fail("Unknown object palette entry: " + type);
                 }
                 added.kind = visual ? EntryKind::decoration : EntryKind::collision;
-                const char* object_type = visual ? "Visual" : (ramp_left || ramp_right ?
-                    "StructureRamp" : (paintable ? "StructurePaintable" : "Structure"));
+                const char* record_type = visual ? object_type::visual : (ramp_left || ramp_right ?
+                    object_type::structure_ramp : (paintable ? object_type::structure_paintable : object_type::structure));
                 value.AddMember("name", Json(type.c_str(), allocator), allocator);
-                value.AddMember("type", Json(object_type, allocator), allocator);
+                value.AddMember("type", Json(record_type, allocator), allocator);
                 value.AddMember("sheet_name", "sprite_sheet_1", allocator);
                 value.AddMember("frame_name", Json(ramp_left || ramp_right ? "ramp_right_200_100" :
                     "square_white_4", allocator), allocator);
@@ -840,9 +842,10 @@ namespace colourwars_editor
                 else { value.AddMember("rectangle", rectangle_json(rectangle, allocator), allocator); }
                 if (!visual)
                 {
-                    const char* collision = ramp_right ? "STRUCTURE_RAMP_RIGHT" : (ramp_left ?
-                        "STRUCTURE_RAMP_LEFT" : (jump ? "STRUCTURE_JUMP_THROUGH" :
-                            (paintable ? "STRUCTURE_PAINTABLE" : "STRUCTURE")));
+                    using level_format::Collision;
+                    const char* collision = level_format::collision_name(ramp_right ? Collision::structure_ramp_right :
+                        (ramp_left ? Collision::structure_ramp_left : (jump ? Collision::structure_jump_through :
+                            (paintable ? Collision::structure_paintable : Collision::structure))));
                     value.AddMember("collision_type", Json(collision, allocator), allocator);
                     // Each kind starts drawn as its usual terrain-atlas material.
                     const char* material = ramp_left || ramp_right ? "set_square" :
@@ -912,7 +915,7 @@ namespace colourwars_editor
                     }
                     rectangle.y = copy.anchor.y;
                 }
-                else if (string(value, "type") == "FixedSlabPaintable")
+                else if (string(value, key::type) == object_type::fixed_slab_paintable)
                 {
                     // A 50/50 offset leaves mirrored 24-normal-thick slabs
                     // overlapped. Put this fixed shape below its whole body;
@@ -976,8 +979,8 @@ namespace colourwars_editor
         // collision type and the slab's rise, so those change with the shape.
         void mirror_object(Json& object, double sum, Allocator& allocator)
         {
-            const std::string type = string(object, "type");
-            if (type == "FixedSlabPaintable")
+            const std::string type = string(object, key::type);
+            if (type == object_type::fixed_slab_paintable)
             {
                 Json& slab = member(object, "slab");
                 const std::string rise = string(slab, "rise");
@@ -987,13 +990,22 @@ namespace colourwars_editor
                 set_number(slab, "y", number(slab, "y") + (rise == "right" ? -80.0 : 80.0));
                 set_text(slab, "rise", rise == "right" ? "left" : "right", allocator);
             }
-            else if (type == "StructureRamp")
+            else if (type == object_type::structure_ramp)
             {
                 Json& triangle = member(object, "triangle");
                 for (const char* x : { "x1", "x2", "x3" }) { set_number(triangle, x, sum - number(triangle, x)); }
                 const std::string collision = string(object, "collision_type");
-                if (collision == "STRUCTURE_RAMP_RIGHT") { set_text(object, "collision_type", "STRUCTURE_RAMP_LEFT", allocator); }
-                else if (collision == "STRUCTURE_RAMP_LEFT") { set_text(object, "collision_type", "STRUCTURE_RAMP_RIGHT", allocator); }
+                const std::optional<level_format::Collision> tag = level_format::collision_named(collision);
+                if (tag == level_format::Collision::structure_ramp_right)
+                {
+                    set_text(object, key::collision_type,
+                        level_format::collision_name(level_format::Collision::structure_ramp_left), allocator);
+                }
+                else if (tag == level_format::Collision::structure_ramp_left)
+                {
+                    set_text(object, key::collision_type,
+                        level_format::collision_name(level_format::Collision::structure_ramp_right), allocator);
+                }
             }
             else
             {
@@ -1390,7 +1402,7 @@ namespace colourwars_editor
                 {
                     const Json& object = objects[index];
                     const std::string where = object_label(object, index) + ": ";
-                    if (string(object, "type") == "FixedSlabPaintable")
+                    if (string(object, key::type) == object_type::fixed_slab_paintable)
                     {
                         const auto terrain = sheet_of("terrain");
                         if (terrain == catalog.sprite_frames.end())

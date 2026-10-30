@@ -82,7 +82,7 @@ private:
 	std::uint64_t semantic_hash_ = 0;
 
 	// The four bounds rectangles differ only in which key they sit under.
-	mattmath::RectangleF bounds_rectangle(const char* key) const;
+	mattmath::RectangleF bounds_rectangle(const char* bounds_key) const;
 
 	static std::vector<mattmath::Vector2F>
 		decode_team_spawns(const labrador::JsonValue& json);

@@ -115,7 +115,7 @@ in the same words, with no engine include:
 
 | Header | Holds |
 |---|---|
-| `level_format.h` | the level format version and its compatibility rule |
+| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, object and collision vocabulary, which tags each object type may carry, the material table and the fixed slab's refused fields; [level.schema.json](../game/level.schema.json) sits beside it |
 | `simulation.h` | `SIMULATION_HZ`, the fixed step written once |
 | `horizontal_motion_contract.h` | authored horizontal motion and its envelope arithmetic (uses `simulation.h`) |
 | `station_contract.h` | a level's review stations and their lessons |

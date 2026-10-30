@@ -37,13 +37,13 @@ namespace colourwars_editor
 
     motion::Rectangle motion_rectangle(const Json& object)
     {
-        if (string(object, "type") == "FixedSlabPaintable")
+        if (string(object, key::type) == object_type::fixed_slab_paintable)
         {
             const auto rectangle = decode_slab(object).bounds();
             return { static_cast<float>(rectangle.x), static_cast<float>(rectangle.y),
                 static_cast<float>(rectangle.width), static_cast<float>(rectangle.height) };
         }
-        if (string(object, "type") == "StructureRamp")
+        if (string(object, key::type) == object_type::structure_ramp)
         {
             const Json& triangle = member(object, "triangle");
             const std::array<float, 3> xs{ static_cast<float>(number(triangle, "x1")),
@@ -64,7 +64,7 @@ namespace colourwars_editor
 
     motion::Spec decode_horizontal_motion(const Json& object)
     {
-        if (string(object, "type") != "StructurePaintable")
+        if (string(object, key::type) != object_type::structure_paintable)
         { fail("motion belongs only on flat StructurePaintable entries."); }
         const Json& fields = member(object, "motion");
         if (string(fields, "type") != "horizontal") { fail("motion.type supports only horizontal."); }

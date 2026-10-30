@@ -374,7 +374,9 @@ scored slab needed.
    [projectile_contacts.cpp](../game/objects/projectile_contacts.cpp) read;
    the translating structure's relative sweep lives there too.
 7. Make it authorable and refused in the same words by game and editor: the
-   [level schema](level.schema.json) and [level format](level-format.md), the
+   format's vocabulary and tables in the engine-free
+   [level_format.h](../game/level_format.h), the
+   [level schema](../game/level.schema.json) and [level format](level-format.md), the
    editor's [level document](../editor/level_document.cpp) and
    [level JSON](../editor/level_json.cpp), and startup validation. The gate's
    rules sit in the engine-free [team_gate_contract.h](../game/team_gate_contract.h),

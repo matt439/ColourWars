@@ -20,7 +20,7 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 | [debug-console.md](debug-console.md) | the Debug-only console, debug menu, launch arguments, live tuning, bots, record and play, scripts: the reference |
 | [debug-console-record.md](debug-console-record.md) | how each `DBG` row was done or why it waits, and `CI#1` |
 | [level-editor.md](level-editor.md) | `ColourWarsEditor.exe`, the desktop level editor |
-| [level-format.md](level-format.md), [level.schema.json](level.schema.json) | the level file format and its schema |
+| [level-format.md](level-format.md), [level.schema.json](../game/level.schema.json) | the level file format and its schema |
 | [gameplay-tuning.md](gameplay-tuning.md) | `tuning.json`: what each block controls |
 | [menu-presentation.md](menu-presentation.md) | `presentation.json`'s menu geometry, artwork and text |
 

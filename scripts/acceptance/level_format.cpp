@@ -687,7 +687,7 @@ int main(int argc, char** argv)
         const std::filesystem::path repo(argv[2]);
         const auto scratch = std::filesystem::absolute(argv[0]).parent_path() / "level-format-fixtures";
         std::filesystem::create_directories(scratch);
-        const auto schema_json = read_document(repo / "docs/level.schema.json");
+        const auto schema_json = read_document(repo / "game/level.schema.json");
         const rapidjson::SchemaDocument schema(schema_json);
         RenderResources render;
         render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(

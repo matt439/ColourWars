@@ -1,5 +1,4 @@
 #include "editor/level_json.h"
-#include "game/level_format.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
 #include "game/station_contract.h"
@@ -13,6 +12,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -101,10 +101,10 @@ namespace colourwars_editor
 
         Rect object_rectangle(const Json& value)
         {
-            if (string(value, "type") == "FixedSlabPaintable") { return decode_slab(value).bounds(); }
-            if (string(value, "type") == "StructureRamp")
+            if (string(value, key::type) == object_type::fixed_slab_paintable) { return decode_slab(value).bounds(); }
+            if (string(value, key::type) == object_type::structure_ramp)
             {
-                const Json& triangle = member(value, "triangle");
+                const Json& triangle = member(value, key::triangle);
                 const std::array<double, 3> xs{ number(triangle, "x1"),
                     number(triangle, "x2"), number(triangle, "x3") };
                 const std::array<double, 3> ys{ number(triangle, "y1"),
@@ -113,54 +113,16 @@ namespace colourwars_editor
                 const auto [top, bottom] = std::minmax_element(ys.begin(), ys.end());
                 return { *left, *top, *right - *left, *bottom - *top };
             }
-            if (value.HasMember("rectangle"))
+            if (value.HasMember(key::rectangle))
             {
-                return plain_rectangle(value["rectangle"]);
+                return plain_rectangle(value[key::rectangle]);
             }
-            const Json& rectangle = member(value, "rectangle_tlbr");
+            const Json& rectangle = member(value, key::rectangle_tlbr);
             const double left = number(rectangle, "left");
             const double top = number(rectangle, "top");
             const Rect result{ left, top, number(rectangle, "right") - left,
                 number(rectangle, "bottom") - top };
             check_rectangle(result);
-            return result;
-        }
-
-        namespace
-        {
-            // Which atlas look each material is, and the only collision tags it
-            // may sit on: a jump-through is a ruler, a ramp a set square.
-            struct Material
-            {
-                std::string_view name;
-                std::string_view collision_types;
-            };
-
-            constexpr std::array<Material, 6> materials = { {
-                { "ground", " STRUCTURE STRUCTURE_PAINTABLE " },
-                { "pencil", " STRUCTURE_PAINTABLE " },
-                { "eraser", " STRUCTURE_PAINTABLE " },
-                { "paint_tin", " STRUCTURE_PAINTABLE " },
-                { "ruler", " STRUCTURE_JUMP_THROUGH " },
-                { "set_square", " STRUCTURE_RAMP_LEFT STRUCTURE_RAMP_RIGHT " } } };
-
-            bool sits_on(const Material& material, std::string_view collision_type)
-            {
-                return !collision_type.empty() && collision_type.find(' ') == std::string_view::npos &&
-                    material.collision_types.find(" " + std::string(collision_type) + " ") !=
-                        std::string_view::npos;
-            }
-        }
-
-        std::string allowed_materials(std::string_view collision_type)
-        {
-            std::string result;
-            for (const Material& material : materials)
-            {
-                if (!sits_on(material, collision_type)) { continue; }
-                if (!result.empty()) { result += ", "; }
-                result += material.name;
-            }
             return result;
         }
     }
@@ -213,18 +175,18 @@ namespace colourwars_editor
         // Optional. Absent keeps the legacy stretched sheet/frame draw.
         void validate_material(const Json& object, const std::string& collision_type)
         {
-            if (!object.HasMember("material")) { return; }
-            const std::string name = string(object, "material");
-            const auto match = std::find_if(materials.begin(), materials.end(),
-                [&](const Material& material) { return material.name == name; });
-            if (match == materials.end())
+            if (!object.HasMember(key::material)) { return; }
+            const std::string name = string(object, key::material);
+            const level_format::Material* match = level_format::material_named(name);
+            if (match == nullptr)
             {
                 fail("Unknown material '" + name +
                     "': use ground, pencil, eraser, paint_tin, ruler or set_square.");
             }
-            if (!sits_on(*match, collision_type))
+            const std::optional<level_format::Collision> collision = level_format::collision_named(collision_type);
+            if (!collision || !level_format::sits_on(*match, *collision))
             {
-                const std::string allowed = allowed_materials(collision_type);
+                const std::string allowed = level_format::allowed_materials(collision_type);
                 fail("Material '" + name + "' does not fit " + collision_type + " collision; " +
                     (allowed.empty() ? std::string("") : "use " + allowed + " or ") +
                     "remove the material.");
@@ -233,9 +195,9 @@ namespace colourwars_editor
 
         void validate_drift(const Json& object, bool collision)
         {
-            if (!object.HasMember("drift")) { return; }
+            if (!object.HasMember(key::drift)) { return; }
             if (collision) { fail("Only decorative Visual entries may drift."); }
-            const Json& drift = object["drift"];
+            const Json& drift = object[key::drift];
             if (!drift.IsObject()) { fail("drift must be an object."); }
             const double distance = number(drift, "distance");
             const double period = number(drift, "period");
@@ -258,20 +220,20 @@ namespace colourwars_editor
         // overlap a gate, which could close on it.
         void validate_gate_spawns(const Document& document, const std::filesystem::path& tuning)
         {
-            const Json& objects = array(document, "collision_objects");
+            const Json& objects = array(document, key::collision_objects);
             bool any = false;
-            for (const Json& object : objects.GetArray()) { any = any || object.HasMember("gate"); }
+            for (const Json& object : objects.GetArray()) { any = any || object.HasMember(key::gate); }
             if (!any) { return; }
             const MotionPlayerSize player = load_motion_player_size(tuning);
-            const Json& spawns = member(document, "spawn_locations");
+            const Json& spawns = member(document, key::spawn_locations);
             for (rapidjson::SizeType index = 0; index < objects.Size(); ++index)
             {
                 const Json& object = objects[index];
-                if (!object.HasMember("gate")) { continue; }
+                if (!object.HasMember(key::gate)) { continue; }
                 const Rect box = object_rectangle(object);
                 const team_gate_contract::Rectangle gate{ static_cast<float>(box.x), static_cast<float>(box.y),
                     static_cast<float>(box.width), static_cast<float>(box.height) };
-                for (const char* team : { "team_a", "team_b" })
+                for (const char* team : { key::team_a, key::team_b })
                 {
                     for (const Json& point : array(spawns, team).GetArray())
                     {
@@ -283,8 +245,8 @@ namespace colourwars_editor
                         catch (const std::invalid_argument& error)
                         {
                             std::string name = "collision_objects[" + std::to_string(index) + "]";
-                            if (object.HasMember("name") && object["name"].IsString())
-                            { name += " ('" + string(object, "name") + "')"; }
+                            if (object.HasMember(key::name) && object[key::name].IsString())
+                            { name += " ('" + string(object, key::name) + "')"; }
                             fail(name + ": gate: " + error.what());
                         }
                     }
@@ -298,8 +260,8 @@ namespace colourwars_editor
         // game alone owns the fonts that decide what can be drawn.
         void validate_stations(const Document& document, const Rect& arena)
         {
-            if (!document.HasMember("stations")) { return; }
-            const Json& stations = array(document, "stations");
+            if (!document.HasMember(key::stations)) { return; }
+            const Json& stations = array(document, key::stations);
             const auto contract_rectangle = [](const Rect& rectangle)
                 {
                     return station_contract::Rectangle{ static_cast<float>(rectangle.x),
@@ -308,14 +270,14 @@ namespace colourwars_editor
                 };
             const station_contract::Rectangle out_of_bounds = contract_rectangle(arena);
             const station_contract::Rectangle camera = contract_rectangle(
-                plain_rectangle(member(member(document, "level_bounds"), "camera_bounds")));
+                plain_rectangle(member(member(document, key::level_bounds), key::camera_bounds)));
             std::vector<std::string> seen;
             for (rapidjson::SizeType index = 0; index < stations.Size(); ++index)
             {
                 const Json& station = stations[index];
                 std::string where = "stations[" + std::to_string(index) + "]";
                 if (!station.IsObject()) { fail(where + " must be a JSON object."); }
-                const std::string name = string(station, "name");
+                const std::string name = string(station, key::name);
                 if (!name.empty()) { where += " ('" + name + "')"; }
                 const station_contract::Point point{ static_cast<float>(number(station, "x")),
                     static_cast<float>(number(station, "y")) };
@@ -325,8 +287,8 @@ namespace colourwars_editor
                     station_contract::validate_position(name, point, out_of_bounds);
                 }
                 catch (const std::invalid_argument& error) { fail(where + " " + error.what()); }
-                if (!station.HasMember("lesson")) { continue; }
-                const Json& lesson = member(station, "lesson");
+                if (!station.HasMember(key::lesson)) { continue; }
+                const Json& lesson = member(station, key::lesson);
                 try
                 {
                     // Read as numbers, not plain_rectangle, so a flat area gets the game's words.
@@ -348,26 +310,34 @@ namespace colourwars_editor
             }
         }
 
+        // The format's table of which tags an object type may carry.
+        bool carries(const std::string& type, const std::string& collision_type)
+        {
+            const std::optional<level_format::Collision> collision = level_format::collision_named(collision_type);
+            return collision && level_format::may_carry(type, *collision);
+        }
+
         void validate_object(const Json& object, bool collision)
         {
             if (!object.IsObject())
             {
                 fail("Every level object must be a JSON object.");
             }
-            const std::string type = string(object, "type");
-            if (object.HasMember("gate"))
+            const std::string type = string(object, key::type);
+            if (object.HasMember(key::gate))
             {
                 // The game's own rule, so the editor refuses exactly the gates
                 // the game refuses at load, in its words.
                 team_gate_contract::Record record;
-                if (!object["gate"].IsString()) { fail("gate: gate must be 'paint'"); }
-                record.gate = string(object, "gate");
-                record.structure_paintable = collision && type == "StructurePaintable";
-                record.moving = object.HasMember("motion");
+                if (!object[key::gate].IsString()) { fail("gate: gate must be 'paint'"); }
+                record.gate = string(object, key::gate);
+                record.structure_paintable = collision && type == object_type::structure_paintable;
+                record.moving = object.HasMember(key::motion);
                 if (record.structure_paintable)
                 {
-                    record.solid = string(object, "collision_type") == "STRUCTURE_PAINTABLE";
-                    const Json& faces = member(object, "paintable_faces");
+                    record.solid = level_format::collision_named(string(object, key::collision_type)) ==
+                        level_format::Collision::structure_paintable;
+                    const Json& faces = member(object, key::paintable_faces);
                     for (const char* face : { "left", "top", "right", "bottom" })
                     {
                         const Json& value = member(faces, face);
@@ -377,46 +347,47 @@ namespace colourwars_editor
                 try { team_gate_contract::decode(record); }
                 catch (const std::invalid_argument& error) { fail(std::string("gate: ") + error.what()); }
             }
-            if (type == "FixedSlabPaintable")
+            if (type == object_type::fixed_slab_paintable)
             {
                 if (!collision) { fail("A fixed slab is collision geometry, not decoration."); }
                 validate_slab(object);
                 return;
             }
-            if (object.HasMember("motion"))
+            if (object.HasMember(key::motion))
             {
                 try { decode_horizontal_motion(object); }
                 catch (const std::exception& error) { fail(std::string("motion: ") + error.what()); }
             }
-            if (string(object, "sheet_name").empty() || string(object, "frame_name").empty())
+            if (string(object, key::sheet_name).empty() || string(object, key::frame_name).empty())
             {
                 fail("Sprite sheet and frame names must not be empty.");
             }
-            if (!known_colour(string(object, "colour")))
+            if (!known_colour(string(object, key::colour)))
             {
                 fail("Scenery is grey: use a grey colour name such as GAINSBORO, or RRGGBB with three equal pairs.");
             }
             validate_drift(object, collision);
             if (!collision)
             {
-                if (type != "Visual")
+                if (type != object_type::visual)
                 {
                     fail("Decoration entries must use type Visual.");
                 }
                 check_rectangle(object_rectangle(object));
                 return;
             }
-            const std::string collision_type = string(object, "collision_type");
-            if (type == "StructureRamp")
+            const std::string collision_type = string(object, key::collision_type);
+            if (type == object_type::structure_ramp)
             {
-                if (collision_type != "STRUCTURE_RAMP_RIGHT" && collision_type != "STRUCTURE_RAMP_LEFT")
+                if (!carries(type, collision_type))
                 {
                     fail("A ramp needs STRUCTURE_RAMP_RIGHT or STRUCTURE_RAMP_LEFT collision.");
                 }
                 const Rect box = object_rectangle(object);
                 check_rectangle(box);
-                const Json& triangle = member(object, "triangle");
-                const bool right = collision_type == "STRUCTURE_RAMP_RIGHT";
+                const Json& triangle = member(object, key::triangle);
+                const bool right = level_format::collision_named(collision_type) ==
+                    level_format::Collision::structure_ramp_right;
                 std::array<bool, 3> corners{};
                 for (int index = 1; index <= 3; ++index)
                 {
@@ -434,20 +405,20 @@ namespace colourwars_editor
                 validate_material(object, collision_type);
                 return;
             }
-            if (type == "Structure")
+            if (type == object_type::structure)
             {
-                if (collision_type != "STRUCTURE" && collision_type != "STRUCTURE_JUMP_THROUGH")
+                if (!carries(type, collision_type))
                 {
                     fail("A Structure needs STRUCTURE or STRUCTURE_JUMP_THROUGH collision.");
                 }
             }
-            else if (type == "StructurePaintable")
+            else if (type == object_type::structure_paintable)
             {
-                if (collision_type != "STRUCTURE_PAINTABLE" && collision_type != "STRUCTURE_JUMP_THROUGH")
+                if (!carries(type, collision_type))
                 {
                     fail("A paintable structure needs STRUCTURE_PAINTABLE or STRUCTURE_JUMP_THROUGH collision.");
                 }
-                const Json& faces = member(object, "paintable_faces");
+                const Json& faces = member(object, key::paintable_faces);
                 for (const char* face : { "left", "top", "right", "bottom" })
                 {
                     if (!member(faces, face).IsBool())
@@ -469,9 +440,9 @@ namespace colourwars_editor
             if (!document.IsObject()) { fail("A level must be a JSON object."); }
             // Missing format is legacy version 1. Reject newer or malformed
             // versions before interpreting any fields in their vocabulary.
-            if (document.HasMember("format"))
+            if (document.HasMember(key::format))
             {
-                const Json& format = document["format"];
+                const Json& format = document[key::format];
                 if (!format.IsInt())
                 {
                     fail("format must be an integer; supported level format is " +
@@ -483,43 +454,43 @@ namespace colourwars_editor
                         "; supported format is " + std::to_string(level_format::current) + ".");
                 }
             }
-            validate_display_name(string(document, "display_name"));
-            if (document.HasMember("include_in_random") && !document["include_in_random"].IsBool())
+            validate_display_name(string(document, key::display_name));
+            if (document.HasMember(key::include_in_random) && !document[key::include_in_random].IsBool())
             {
                 fail("include_in_random must be true or false.");
             }
-            if (string(document, "icon_frame").empty()) { fail("The level needs an icon frame."); }
-            const Json& sound = member(document, "sound");
-            if (string(sound, "sound_bank_name").empty()) { fail("The level needs a sound bank."); }
+            if (string(document, key::icon_frame).empty()) { fail("The level needs an icon frame."); }
+            const Json& sound = member(document, key::sound);
+            if (string(sound, key::sound_bank_name).empty()) { fail("The level needs a sound bank."); }
             // Music is optional as a pair; a stage with neither is silent.
-            const bool named = sound.HasMember("music_name");
-            if (named != sound.HasMember("music_volume"))
+            const bool named = sound.HasMember(key::music_name);
+            if (named != sound.HasMember(key::music_volume))
             {
                 fail("Music name and music volume come together, or neither for a silent stage.");
             }
-            if (named && string(sound, "music_name").empty()) { fail("The music name must not be empty."); }
-            if (named && (number(sound, "music_volume") < 0.0 || number(sound, "music_volume") > 1.0))
+            if (named && string(sound, key::music_name).empty()) { fail("The music name must not be empty."); }
+            if (named && (number(sound, key::music_volume) < 0.0 || number(sound, key::music_volume) > 1.0))
             {
                 fail("music_volume must be 0..1.");
             }
-            const bool sting = sound.HasMember("end_sting_name");
-            if (sting != sound.HasMember("end_sting_volume"))
+            const bool sting = sound.HasMember(key::end_sting_name);
+            if (sting != sound.HasMember(key::end_sting_volume))
             {
                 fail("end_sting_name and end_sting_volume come together, or neither.");
             }
-            if (sting && string(sound, "end_sting_name").empty()) { fail("end_sting_name must not be empty."); }
-            if (sting && (number(sound, "end_sting_volume") < 0.0 || number(sound, "end_sting_volume") > 1.0))
+            if (sting && string(sound, key::end_sting_name).empty()) { fail("end_sting_name must not be empty."); }
+            if (sting && (number(sound, key::end_sting_volume) < 0.0 || number(sound, key::end_sting_volume) > 1.0))
             {
                 fail("end_sting_volume must be 0..1.");
             }
-            const Json& bounds = member(document, "level_bounds");
+            const Json& bounds = member(document, key::level_bounds);
             for (const char* name : bounds_names) { plain_rectangle(member(bounds, name)); }
-            const Rect arena = plain_rectangle(member(bounds, "out_of_bounds"));
-            const Json& spawns = member(document, "spawn_locations");
-            for (const char* team : { "team_a", "team_b" })
+            const Rect arena = plain_rectangle(member(bounds, key::out_of_bounds));
+            const Json& spawns = member(document, key::spawn_locations);
+            for (const char* team : { key::team_a, key::team_b })
             {
                 const Json& points = array(spawns, team);
-                if (points.Size() < 4) { fail(std::string(team) + " needs at least four spawn points."); }
+                if (points.Size() < level_format::min_team_spawns) { fail(std::string(team) + " needs at least four spawn points."); }
                 for (const Json& point : points.GetArray())
                 {
                     const double x = number(point, "x");
@@ -530,18 +501,17 @@ namespace colourwars_editor
                         fail(std::string(team) + " has a spawn outside the out-of-bounds rectangle.");
                     }
                     // The opening previews each team's colour over its own half.
-                    const double middle = arena.x + arena.width / 2.0;
-                    if ((std::string(team) == "team_a") != (x < middle))
+                    if (!level_format::on_own_half(std::string(team) == key::team_a, x, arena.x, arena.width))
                     {
                         fail("Team A spawns on the left half of the stage and team B on the right.");
                     }
                 }
             }
-            for (const Json& object : array(document, "collision_objects").GetArray())
+            for (const Json& object : array(document, key::collision_objects).GetArray())
             {
                 validate_object(object, true);
             }
-            for (const Json& object : array(document, "non_collision_objects").GetArray())
+            for (const Json& object : array(document, key::non_collision_objects).GetArray())
             {
                 validate_object(object, false);
             }

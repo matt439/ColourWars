@@ -136,9 +136,9 @@ namespace colourwars_editor
         std::vector<PaintPolygon> slabs;
         for (const level_json::Json& object : objects.GetArray())
         {
-            const std::string type = level_json::string(object, "type");
-            if (type == "FixedSlabPaintable") { slabs.push_back(decode_slab(object).paint_corners); continue; }
-            if (type != "Structure" && type != "StructurePaintable") continue;
+            const std::string type = level_json::string(object, level_json::key::type);
+            if (type == level_json::object_type::fixed_slab_paintable) { slabs.push_back(decode_slab(object).paint_corners); continue; }
+            if (type != level_json::object_type::structure && type != level_json::object_type::structure_paintable) continue;
             if (object.HasMember("motion")) continue;
             obstacles.push_back(paint_rectangle(object));
         }
@@ -147,7 +147,7 @@ namespace colourwars_editor
         {
             if (entry.kind != EntryKind::collision) continue;
             const level_json::Json& object = objects[static_cast<rapidjson::SizeType>(entry.index)];
-            if (level_json::string(object, "type") == "FixedSlabPaintable")
+            if (level_json::string(object, level_json::key::type) == level_json::object_type::fixed_slab_paintable)
             {
                 const auto slab = decode_slab(object);
                 const auto& faces = level_json::member(object, "paintable_faces");
@@ -173,7 +173,7 @@ namespace colourwars_editor
                 }
                 continue;
             }
-            if (level_json::string(object, "type") != "StructurePaintable") continue;
+            if (level_json::string(object, level_json::key::type) != level_json::object_type::structure_paintable) continue;
             const PaintFaceRectangle rect = paint_rectangle(object);
             const bool moving = object.HasMember("motion");
             float offset = 0.0f;

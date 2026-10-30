@@ -446,10 +446,37 @@ executable.
 
 ### One owner for the level format (`HYG#46`)
 
-Give the level format one engine-free owner for key names, the material and
-collision table and the contracts, used by both the game loader and the editor;
-move `level.schema.json` beside it. Consider reading a level once into a typed
-record, as tuning and presentation are.
+**Done 2026-10-30.** [game/level_format.h](../game/level_format.h), still
+engine-free and header-only, is now the level format's one owner: beside the
+version it holds the key names (`level_format::key`), the bounds keys, the
+object types (`object_type`), the collision tags as `level_format::Collision`
+with their spellings, which tags each object type may carry (`may_carry`), the
+material table (`materials`, `sits_on`, `allowed_materials`), the fixed slab's
+material and refused fields, the four-spawn minimum and the own-half spawn
+rule, and it names the station, gate, motion and slab contracts as the format's
+parts. The game reads it in `LevelLoadedInfo` (which `static_assert`s the spawn
+minimum against the pad count), `LevelObjectBuilder` (its tag table and
+per-type allowed lists are gone) and `TerrainMaterial::make`, which now only
+builds the look the table admits; the editor reads it in `level_json` (its
+copy of the material table and `allowed_materials` are gone), the slab,
+motion and blockout helpers, the document, the canvas and the mechanism
+guide. Each side keeps its own messages and check order, so no level is
+accepted or refused differently; the one wording change is that the editor
+now names a fixed slab's refused `slab` fields in the game's order when two
+are present. [level.schema.json](../game/level.schema.json) moved from `docs/`
+to beside it; the three schema checks and the live docs follow. Reading a
+level once into a typed record was considered and not done:
+`LevelLoadedInfo`'s reads go through `JsonValue`, which names the file and key
+path in every refusal, and its object entries must stay JSON for
+`LevelObjectBuilder`, the one path that both validates and builds them, so a
+record would add a second, unlocated reader rather than remove one. Both
+presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74 cases). In Debug without the four slow cases, 69 passed and
+`moving_structure` and `bot_runtime` did not compile against the uncommitted
+`ReplayFile` changes already in the working tree, which nothing here touches.
+`check-level-editor.ps1` passed in Debug and Release (a first Debug run failed
+the DPI probe's thread keyboard-state check once and passed on a rerun), and
+`check-startup.ps1` passed on the Debug executable.
 
 ### One stage catalog (`HYG#47`)
 

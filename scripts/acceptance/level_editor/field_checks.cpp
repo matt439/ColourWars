@@ -308,7 +308,7 @@ namespace level_editor_acceptance
         rapidjson::Value authored;
         authored.CopyFrom(drift, valid.GetAllocator());
         valid["non_collision_objects"][0].AddMember("drift", authored, valid.GetAllocator());
-        const rapidjson::Document schema_json = parse(contents(repo / "docs" / "level.schema.json"));
+        const rapidjson::Document schema_json = parse(contents(repo / "game" / "level.schema.json"));
         const rapidjson::SchemaDocument schema(schema_json);
         const auto schema_accepts = [&](const rapidjson::Document& value)
         {

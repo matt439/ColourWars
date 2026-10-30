@@ -1,6 +1,7 @@
 #include "editor/editor.h"
 #include "editor/paint_mechanism_guide.h"
 #include "editor/win32_text.h"
+#include "game/level_format.h"
 
 #include <windows.h>
 #include <windowsx.h>
@@ -174,10 +175,12 @@ namespace colourwars_editor
         }
         else
         {
-            const bool paintable = value("type") == "StructurePaintable";
-            const bool ramp = value("type") == "StructureRamp";
+            using level_format::Collision;
+            const bool paintable = value(level_format::key::type) == level_format::object_type::structure_paintable;
+            const bool ramp = value(level_format::key::type) == level_format::object_type::structure_ramp;
+            const std::optional<Collision> collision = level_format::collision_named(value(level_format::key::collision_type));
             COLORREF colour = paintable ? RGB(114, 133, 149) : RGB(156, 110, 77);
-            if (value("collision_type") == "STRUCTURE_JUMP_THROUGH") colour = RGB(187, 155, 106);
+            if (collision == Collision::structure_jump_through) colour = RGB(187, 155, 106);
             if (item.entry.kind == EntryKind::decoration)
             {
                 outline(dc, screen, RGB(91, 109, 127), 1, PS_DOT);
@@ -208,7 +211,7 @@ namespace colourwars_editor
             }
             else if (ramp)
             {
-                const bool left = value("collision_type") == "STRUCTURE_RAMP_LEFT";
+                const bool left = collision == Collision::structure_ramp_left;
                 POINT points[] = {{screen.left, screen.bottom}, {screen.right, screen.bottom},
                     {left ? screen.left : screen.right, screen.top}};
                 HBRUSH brush = CreateSolidBrush(colour);
@@ -423,11 +426,13 @@ namespace colourwars_editor
                     continue;
                 }
                 RECT rectangle = screen_rect(item->rectangle);
-                const auto type = item->values.find("type");
-                if (kind == EntryKind::collision && type != item->values.end() && type->second == "StructureRamp")
+                const auto type = item->values.find(level_format::key::type);
+                if (kind == EntryKind::collision && type != item->values.end() &&
+                    type->second == level_format::object_type::structure_ramp)
                 {
-                    const auto collision = item->values.find("collision_type");
-                    const bool left = collision != item->values.end() && collision->second == "STRUCTURE_RAMP_LEFT";
+                    const auto collision = item->values.find(level_format::key::collision_type);
+                    const bool left = collision != item->values.end() &&
+                        level_format::collision_named(collision->second) == level_format::Collision::structure_ramp_left;
                     const POINT points[] = {{rectangle.left, rectangle.bottom}, {rectangle.right, rectangle.bottom},
                         {left ? rectangle.left : rectangle.right, rectangle.top}};
                     const auto cross = [](POINT a, POINT b, POINT c) {

@@ -1,7 +1,9 @@
 #include "game/pch.h"
 #include "game/objects/terrain_material.h"
+#include "game/level_format.h"
 
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 
 using namespace labrador;
@@ -48,6 +50,21 @@ namespace
 		default: return "this collision type";
 		}
 	}
+
+	// The terrain tags a level record can carry; anything else carries no material.
+	std::optional<level_format::Collision> format_collision(CollisionObjectType type)
+	{
+		switch (type)
+		{
+		case CollisionObjectType::structure: return level_format::Collision::structure;
+		case CollisionObjectType::structure_jump_through: return level_format::Collision::structure_jump_through;
+		case CollisionObjectType::structure_paintable: return level_format::Collision::structure_paintable;
+		case CollisionObjectType::structure_fixed_slab: return level_format::Collision::structure_fixed_slab;
+		case CollisionObjectType::structure_ramp_left: return level_format::Collision::structure_ramp_left;
+		case CollisionObjectType::structure_ramp_right: return level_format::Collision::structure_ramp_right;
+		default: return std::nullopt;
+		}
+	}
 }
 
 const char* terrain_role_name(TerrainRole role)
@@ -66,7 +83,6 @@ std::unique_ptr<const TerrainMaterial> TerrainMaterial::make(const std::string& 
 	CollisionObjectType type, const Shape& shape, const TerrainFaces& faces,
 	float mirror_x, RenderResources* render_resources)
 {
-	const bool paintable = type == CollisionObjectType::structure_paintable;
 	const bool ramp = type == CollisionObjectType::structure_ramp_left ||
 		type == CollisionObjectType::structure_ramp_right;
 	const auto refuse = [&]() -> std::unique_ptr<const TerrainMaterial>
@@ -74,40 +90,38 @@ std::unique_ptr<const TerrainMaterial> TerrainMaterial::make(const std::string& 
 		throw std::invalid_argument("material '" + name + "' may not be used on " +
 			collision_type_label(type));
 	};
+	// Which material sits on which tag is the level format's table, shared
+	// with the editor; this only builds the look it names.
+	const level_format::Material* material = level_format::material_named(name);
+	if (material == nullptr)
+	{
+		if (ramp) { return refuse(); }
+		throw std::invalid_argument("'" + name + "' is not a terrain material");
+	}
+	const std::optional<level_format::Collision> collision = format_collision(type);
+	if (!collision || !level_format::sits_on(*material, *collision)) { return refuse(); }
 	if (name == "set_square")
 	{
-		if (!ramp) { return refuse(); }
 		return std::make_unique<SetSquareMaterial>(shape, faces, render_resources);
-	}
-	if (ramp)
-	{
-		return refuse();
 	}
 	const RectangleF rectangle = shape.bounding_box();
 	if (name == "ground")
 	{
-		if (type != CollisionObjectType::structure && !paintable) { return refuse(); }
 		return std::make_unique<GroundMaterial>(rectangle, faces, render_resources);
 	}
 	if (name == "ruler")
 	{
-		if (type != CollisionObjectType::structure_jump_through) { return refuse(); }
 		return std::make_unique<RulerMaterial>(rectangle, faces, render_resources);
 	}
-	if (name == "pencil" || name == "eraser" || name == "paint_tin")
+	if (name == "pencil")
 	{
-		if (!paintable) { return refuse(); }
-		if (name == "pencil")
-		{
-			return std::make_unique<PencilMaterial>(rectangle, faces, mirror_x, render_resources);
-		}
-		if (name == "eraser")
-		{
-			return std::make_unique<EraserMaterial>(rectangle, faces, render_resources);
-		}
-		return std::make_unique<PaintTinMaterial>(rectangle, faces, render_resources);
+		return std::make_unique<PencilMaterial>(rectangle, faces, mirror_x, render_resources);
 	}
-	throw std::invalid_argument("'" + name + "' is not a terrain material");
+	if (name == "eraser")
+	{
+		return std::make_unique<EraserMaterial>(rectangle, faces, render_resources);
+	}
+	return std::make_unique<PaintTinMaterial>(rectangle, faces, render_resources);
 }
 
 TerrainMaterial::TerrainMaterial(const std::string& name, RenderResources* render_resources) :

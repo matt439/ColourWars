@@ -103,7 +103,7 @@ namespace level_editor_acceptance
         reject_without_change(pairs, [&] { pairs.set_property(separate, "slab/y", "880"); },
             "A property edit intersected fixed slabs without preserving state");
 
-        rapidjson::SchemaDocument schema(parse(contents(repo / "docs/level.schema.json")));
+        rapidjson::SchemaDocument schema(parse(contents(repo / "game/level.schema.json")));
         rapidjson::SchemaValidator validator(schema);
         require(roundtrip.Accept(validator), "JSON schema refused a saved fixed slab");
         for (const char* unsupported : { "motion", "drift", "rotation", "rectangle", "rectangle_tlbr", "triangle" })

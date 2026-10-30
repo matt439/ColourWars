@@ -6,7 +6,11 @@ resources and supplies a closed grey room, a paintable floor and four spawns per
 team. It is an authoring example, outside the runtime asset list and manifest;
 copy it before editing. Its geometry is not an accepted arena design.
 
-[level.schema.json](level.schema.json) is a JSON Schema Draft-04 structural check,
+The format's key names, object and collision vocabulary and material table have
+one engine-free owner, [level_format.h](../game/level_format.h), which the game's
+loader and the editor both read; the stations, gates, movers and slabs keep their
+rules in the contracts it names.
+[level.schema.json](../game/level.schema.json), beside it, is a JSON Schema Draft-04 structural check,
 compatible with the repository's bundled RapidJSON `SchemaValidator`. The runtime
 still validates through [LevelLoadedInfo](../game/objects/level_loaded_info.cpp),
 [LevelObjectBuilder](../game/objects/level_object_builder.cpp) and loaded assets.
@@ -513,7 +517,7 @@ runtime validation in the authoring workflow even after a schema pass.
 
 ## Validation and authoring workflow
 
-Point a JSON editor at [level.schema.json](level.schema.json), then open the file
+Point a JSON editor at [level.schema.json](../game/level.schema.json), then open the file
 in ColourWarsEditor and save a copy. Register an intended runtime stage using
 the manifest and asset-list steps in [Play the level](level-editor.md#play-the-level).
 Rebuild and run it in the game: the schema does not resolve its assets, the

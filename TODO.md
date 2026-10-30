@@ -121,7 +121,6 @@ comparison and physical-pad check; values remain provisional.
 | `HYG#39` | OPEN | MED | M | Pass an explicit match random stream into the level build instead of seeding the global `rand()`. [Scope](docs/code-hygiene.md#an-explicit-match-random-stream-hyg39). |
 | `HYG#40` | OPEN | MED | XL | Compose `Level` from owned parts: grouped constructor inputs, extracted collaborators and a world-query interface for the bots. [Scope](docs/code-hygiene.md#level-composed-of-owned-parts-hyg40). |
 | `HYG#41` | OPEN | MED | M | Put `GameLevel`'s focus, pause and audio rules in one owned suspension object; pair its scopes with `init()`. [Scope](docs/code-hygiene.md#gamelevels-suspension-rules-in-one-object-hyg41). |
-| `HYG#46` | OPEN | MED | L | One engine-free owner of the level format for the game loader and the editor. [Scope](docs/code-hygiene.md#one-owner-for-the-level-format-hyg46). |
 | `HYG#47` | OPEN | LOW | M | A `StageCatalog` owning the stage list and the level registry as their only writer. [Scope](docs/code-hygiene.md#one-stage-catalog-hyg47). |
 | `HYG#48` | OPEN | LOW | M | Move profile wearing out of `Save` into a session object, and report a malformed section before resetting it. [Scope](docs/code-hygiene.md#save-and-the-active-profile-hyg48). |
 | `HYG#49` | OPEN | LOW | M | Make state-changing contact and sound methods non-const so `const` means draw-safe. [Scope](docs/code-hygiene.md#const-means-draw-safe-hyg49). |
