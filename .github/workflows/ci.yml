@@ -23,10 +23,13 @@ jobs:
     outputs:
       docs_only: ${{ steps.changes.outputs.docs_only }}
     steps:
-      # Compare the whole push/PR without fetching or building the engine.
+      # Compare the whole push/PR without building the engine. The pinned
+      # engine is checked out (not its own submodules) so the link check can
+      # reach the engine files the docs link to.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: true
 
       - name: Check CI change detection and the link checker
         run: python3 -m unittest discover -s scripts/ci -p test_*.py

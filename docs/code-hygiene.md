@@ -914,7 +914,10 @@ the tree's 1,352 local links, 433 with anchors, resolve.
 each allowance, a broken-anchor fixture, missing files, code spans and fences,
 the historical rule and the `external/` exclusion. All 24 tests in
 `scripts/ci` pass, and change selection is untouched, so a docs-only change
-still skips the Windows jobs. A hosted run waits for an authorised push.
+still skips the Windows jobs. The first hosted run (PR #26) failed on
+five links into `external/labrador` that resolve at the pinned engine but
+not in the lint job, which had never checked the submodule out; the lint
+checkout now takes the pinned engine (`submodules: true`, not recursive).
 
 The record as filed: nothing checked relative links. `scripts/ci/` holds only
 `lint.py` and its tests, run by the always-on lint job
