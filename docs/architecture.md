@@ -282,11 +282,13 @@ chains, with every base:
 ```text
 ProjectileMist -> DiffusingProjectile -> Projectile
     -> colourwars::MovingObject + colourwars::AnimationObject + labrador::CollisionObject
-WeaponBucket -> RelativeVelocityWeapon -> Weapon -> labrador::TextureObject
+WeaponBucket -> RelativeVelocityWeapon -> Weapon
+    -> labrador::TextureObject + colourwars::SoundBankObject
 StructurePaintable -> Structure + PaintableObject
     Structure -> labrador::TextureObject + labrador::CollisionObject
 Player -> colourwars::MovingObject + labrador::CollisionObject
     + colourwars::AnimationObject + labrador::TextureObject
+    + colourwars::SoundBankObject
 MainMenuStageSelect -> RosterSetupPage -> MainMenuPage -> MenuPage
     -> labrador::State + colourwars::SoundBankObject + protected DebugPageTarget
 ```

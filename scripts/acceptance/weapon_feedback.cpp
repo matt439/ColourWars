@@ -396,8 +396,10 @@ namespace
         Course course(world);
         course.fire();
         const auto paused = state(course.player->primary_weapon());
-        course.player->pause_sounds();
-        course.player->resume_sounds();
+        MatchVoices voices;
+        course.player->add_voices(voices);
+        voices.pause();
+        voices.resume();
         require(state(course.player->primary_weapon()) == paused,
             "Suspending and resuming sound changed the frozen weapon cue");
         course.player->place_at(Vector2F(80, -200));

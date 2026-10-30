@@ -569,9 +569,40 @@ in both presets, with `check-frame-pacing.ps1 -CompileOnly` in Debug.
 
 ### One audio idiom (`HYG#50`)
 
-Choose one way for objects to own sounds (the small audio components, or
-`SoundBankObject`) and have one match-level owner register looping voices, so
-pause, resume and teardown happen in one place rather than a virtual fan-out.
+**Done 2026-10-30.** Everything in `game/` that makes a noise now reaches its
+bank as the carried `SoundBankObject`. `Level`, `Player` and `Weapon` gained it
+as a base, and `MovementAudio` and `PaintAudio` derive from it, so no game
+object holds a raw `labrador::SoundBank*` any more; `MovementAudio` now takes
+the resources and the bank name. A sound that keeps playing and has to stop is
+a `MatchVoice` ([match_voices.h](../game/objects/match_voices.h)): a small
+`SoundBankObject` owning one effect instance, which does nothing when built
+without a name. `Level` holds its sixteen voices as `MatchVoice` members. Its
+constructor registers them, then each player's tool loop and redraw pen
+(`Player::add_voices`, `Weapon::add_voices`), in one `MatchVoices` list, in the
+order the hand-written lists used. `~Level`, `pause_audio` and `resume` walk
+that list. The three sixteen-line lists are gone, and so are
+`Level::pause_player_sounds` and `resume_player_sounds`,
+`Player::pause_sounds` and `resume_sounds`, and the virtual
+`Weapon::pause_sounds` and `resume_sounds`. Two voices keep their own rule as
+overrides: `Player::RedrawVoice` pauses only while it sounds and, on resume,
+stops if the redraw has ended; `Level::MusicVoice` resumes only from a pause,
+at `music_gain()`. Each voice gets the same bank calls in the same order as
+before, on an audible bank or a silent one. The time-up `stop_player_sounds`,
+`Player::stop_sounds`, `stop_tool_sounds` and `Weapon::stop_sounds` stay,
+because they are gameplay stops. The menu layer's `ScreenMusic`,
+`ConnectionAudio` and `ResumeAudio` were already `SoundBankObject` components.
+`GameLevel`'s results music stays its own; its suspension rules belong to
+`HYG#41`. One order changes: `Level`, `Player` and `Weapon` now resolve their
+bank as that base is built, so a missing bank throws before their other
+resources do rather than after. Startup validation refuses such content
+either way. The six probes that called the removed pause and resume methods
+now register the object with a `MatchVoices` instead.
+[The OOP guide](oop-guide.md#inheritance-and-ownership-answer-different-questions)
+states the rule, and `docs/architecture.md` and `AGENTS.md` list the new bases.
+Both presets build under `/W4 /WX`. In a clean worktree of the tip plus this
+change, the full default acceptance list passed in Release (74 cases) and in
+Debug without the four slow cases (71), and `check-startup.ps1` passed on the
+Debug executable.
 
 ### Directories by role (`HYG#51`)
 

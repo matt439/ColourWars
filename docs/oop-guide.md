@@ -62,7 +62,7 @@ The principal ownership chain is:
 ```text
 Application owns the state stack
   GameLevel owns Level
-    Level owns PaintAudio and Scene
+    Level owns PaintAudio, MatchVoices and Scene
       Scene owns Players, Structures and Projectiles
         Player owns Weapon and FigureAttachments
         StructurePaintable (and its gate/translating leaves) owns PaintTiles
@@ -83,6 +83,23 @@ identifies a human input slot. Bots have no device or pane. Explicit mappings
 connect human pane indices to participants, so a bot in P2 does not rename P3
 when P3 owns the second pane. UI containers similarly reference
 widgets owned by pages or compound widgets such as `OptionRow`.
+
+Sound has one idiom. Anything that makes a noise reaches its bank by
+inheriting the carried
+[SoundBankObject](../game/carried/sound_bank_object.h) - Level, Player, Weapon,
+MovementAudio, PaintAudio and the menu pages alike - and resolves its handles
+once, at construction. A sound that keeps playing and has to stop is a
+[MatchVoice](../game/objects/match_voices.h) member of its owner: the stage
+music, the match and room cues, a tool's firing loop, the redraw pen. Level's
+constructor registers its own voices and then each player's, which adds its
+tool's loop and its pen, in one `MatchVoices` list; pause, resume and teardown
+walk that list and nothing else. A voice with its own rule overrides it: the
+pen pauses only while it sounds and stops on resume if the redraw has ended,
+and the music resumes only from a pause, at the gain its fade and duck have
+reached. A new looping or stoppable cue becomes a `MatchVoice` and is
+registered, rather than another line in three lists. The menu layer's screen
+music, connection and count-in sounds are their own small `SoundBankObject`
+components, owned by the state that owns the screen.
 
 Polymorphic ownership requires safe destruction through the base type.
 `PaintableObject` declares a virtual destructor. Engine

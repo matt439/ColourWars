@@ -145,12 +145,12 @@ void Level::set_room_tone(bool playing)
 	this->room_tone_playing_ = playing;
 	if (playing)
 	{
-		this->sound_bank_->play_effect(this->room_tone_sound_, true,
+		this->room_tone_sound_.play(true,
 			this->tuning_->match().room_tone_sound.volume);
 	}
 	else
 	{
-		this->sound_bank_->stop_effect(this->room_tone_sound_, true);
+		this->room_tone_sound_.stop();
 	}
 }
 
@@ -159,12 +159,12 @@ void Level::skip_intro()
 	// Do not advance through the remaining story beats on a skip, or let a
 	// bypassed story cue follow the person into the split countdown.
 	this->set_room_tone(false);
-	this->sound_bank_->stop_effect(this->sigh_sound_, true);
-	this->sound_bank_->stop_effect(this->chair_sound_, true);
-	this->sound_bank_->stop_effect(this->undo_sound_, true);
-	this->sound_bank_->stop_effect(this->colour_in_sound_, true);
-	this->sound_bank_->stop_effect(this->glass_in_sound_, true);
-	this->sound_bank_->play_effect(this->skip_sound_, false,
+	this->sigh_sound_.stop();
+	this->chair_sound_.stop();
+	this->undo_sound_.stop();
+	this->colour_in_sound_.stop();
+	this->glass_in_sound_.stop();
+	this->skip_sound_.play(false,
 		this->tuning_->match().skip_sound.volume);
 	// Straight to the split-screen countdown, from its start if it had not begun.
 	this->state_ = LevelState::start_countdown;
@@ -195,25 +195,25 @@ void Level::update_opening(float dt)
 	{
 		if (crossed(before, this->opening_time_, edge))
 		{
-			this->sound_bank_->play_wave(this->hover_sound_, match.hover_sound.volume);
+			this->play_wave(this->hover_sound_, match.hover_sound.volume);
 		}
 	}
 	if (crossed(before, this->opening_time_, undo))
 	{
-		this->sound_bank_->play_effect(this->undo_sound_, false, match.undo_sound.volume);
+		this->undo_sound_.play(false, match.undo_sound.volume);
 	}
 	if (crossed(before, this->opening_time_, leave))
 	{
-		this->sound_bank_->play_effect(this->sigh_sound_, false, match.sigh_sound.volume);
+		this->sigh_sound_.play(false, match.sigh_sound.volume);
 	}
 	if (crossed(before, this->opening_time_, leave + opening_stand * timing.leave))
 	{
-		this->sound_bank_->play_effect(this->chair_sound_, false, match.chair_sound.volume);
+		this->chair_sound_.play(false, match.chair_sound.volume);
 	}
 	if (this->opening_time_ >= this->opening_length())
 	{
 		// The figures come alive in their colours as the countdown starts.
-		this->sound_bank_->play_effect(this->colour_in_sound_, false,
+		this->colour_in_sound_.play(false,
 			match.colour_in_sound.volume);
 		this->state_ = LevelState::start_countdown;
 		this->intro_countdown_ = true;
@@ -420,7 +420,7 @@ void Level::update_reveal(float dt)
 	const bool closing = this->winner_ == PlayerTeam::none;
 	if (crossed(before_time, this->reveal_time_, reveal_sit * timing.walk_in))
 	{
-		this->sound_bank_->play_effect(this->chair_sound_, false, match.chair_sound.volume);
+		this->chair_sound_.play(false, match.chair_sound.volume);
 	}
 	// A draw moves to the close button and shows no colour swatches.
 	if (!closing)
@@ -430,18 +430,18 @@ void Level::update_reveal(float dt)
 		{
 			if (crossed(before_time, this->reveal_time_, edge))
 			{
-				this->sound_bank_->play_wave(this->hover_sound_, match.hover_sound.volume);
+				this->play_wave(this->hover_sound_, match.hover_sound.volume);
 			}
 		}
 	}
 	if (crossed(before_time, this->reveal_time_, click))
 	{
-		this->sound_bank_->play_wave(closing ? this->close_sound_ : this->click_sound_,
+		this->play_wave(closing ? this->close_sound_ : this->click_sound_,
 			closing ? match.close_sound.volume : match.click_sound.volume);
 	}
 	if (crossed(before_time, this->reveal_time_, leave))
 	{
-		this->sound_bank_->play_effect(this->chair_sound_, false, match.chair_sound.volume);
+		this->chair_sound_.play(false, match.chair_sound.volume);
 	}
 	// The picture stays silent while the person is in the room. Each team
 	// gets one reaction after they leave, however many figures it contains.
@@ -453,12 +453,12 @@ void Level::update_reveal(float dt)
 			[this](const Player* player) { return player->team() != this->winner_; });
 		if (winners)
 		{
-			this->sound_bank_->play_effect(this->celebrate_sound_, false,
+			this->celebrate_sound_.play(false,
 				match.celebrate_sound.volume);
 		}
 		if (losers)
 		{
-			this->sound_bank_->play_effect(this->slump_sound_, false,
+			this->slump_sound_.play(false,
 				match.slump_sound.volume);
 		}
 	}

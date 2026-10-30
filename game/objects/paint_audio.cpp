@@ -2,18 +2,19 @@
 #include "game/objects/paint_audio.h"
 
 PaintAudio::PaintAudio(const PaintTuning* tuning, const labrador::AudioResources* audio) :
-    tuning_(tuning), bank_(audio->sound_bank(tuning->sound_bank))
+    colourwars::SoundBankObject(tuning->sound_bank, audio),
+    tuning_(tuning)
 {
     for (const SoundTuning& sound : tuning->splash_sounds)
     {
-        this->splashes_.push_back(this->bank_->resolve_wave(sound.name));
+        this->splashes_.push_back(this->resolve_wave(sound.name));
     }
     for (size_t i = 0; i < this->impacts_.size(); ++i)
     {
-        this->impacts_[i] = this->bank_->resolve_wave(tuning->impact_sounds[i].name);
+        this->impacts_[i] = this->resolve_wave(tuning->impact_sounds[i].name);
     }
-    this->capture_ = this->bank_->resolve_wave(tuning->capture_sound.name);
-    this->dud_ = this->bank_->resolve_wave(tuning->dud_sound.name);
+    this->capture_ = this->resolve_wave(tuning->capture_sound.name);
+    this->dud_ = this->resolve_wave(tuning->dud_sound.name);
     for (size_t i = 0; i < this->owners_.size(); ++i)
     {
         this->owners_[i].next_splash = i % this->splashes_.size();
@@ -42,16 +43,16 @@ void PaintAudio::contact(ProjectileType type, int owner, bool painted, bool capt
         if (painted)
         {
             const size_t kind = static_cast<size_t>(type);
-            this->bank_->play_wave(this->impacts_.at(kind),
+            this->play_wave(this->impacts_.at(kind),
                 this->tuning_->impact_sounds.at(kind).volume);
             const size_t variant = state.next_splash;
-            this->bank_->play_wave(this->splashes_[variant],
+            this->play_wave(this->splashes_[variant],
                 this->tuning_->splash_sounds[variant].volume);
             state.next_splash = (variant + 1) % this->splashes_.size();
         }
         else
         {
-            this->bank_->play_wave(this->dud_, this->tuning_->dud_sound.volume);
+            this->play_wave(this->dud_, this->tuning_->dud_sound.volume);
         }
         state.impact_remaining = this->tuning_->min_impact_interval;
     }
@@ -59,7 +60,7 @@ void PaintAudio::contact(ProjectileType type, int owner, bool painted, bool capt
     // it, and a prior dud/impact cannot hide a newly changed patch's cue.
     if (painted && captured && state.capture_remaining <= 0.0f)
     {
-        this->bank_->play_wave(this->capture_, this->tuning_->capture_sound.volume);
+        this->play_wave(this->capture_, this->tuning_->capture_sound.volume);
         state.capture_remaining = this->tuning_->min_capture_interval;
     }
 }

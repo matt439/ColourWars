@@ -33,6 +33,8 @@
 #include "game/objects/screen_cursor.h"
 #include "game/objects/figure_acting.h"
 #include "game/objects/paint_audio.h"
+#include "game/objects/match_voices.h"
+#include "game/carried/sound_bank_object.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player_badge.h"
@@ -73,12 +75,14 @@ struct CursorMarkerFrame
 
 // One paint match: countdown, clock, cameras, HUDs and music.
 // Scene owns and steps the objects; Level keeps borrowed player pointers
-// and supplies the views and game-specific overlays.
+// and supplies the views and game-specific overlays. It owns the match's
+// voices (voices_): its own and every player's, paused, resumed and stopped
+// together.
 struct InputBindings;
 class TranslatingStructurePaintable;
 class TeamGateStructurePaintable;
 
-class Level
+class Level : public colourwars::SoundBankObject
 {
 public:
 	Level(std::unique_ptr<labrador::Scene> scene,
@@ -107,7 +111,7 @@ public:
 		const MatchSetup* roster = nullptr, std::uint64_t bot_seed = 0,
 		std::vector<LevelLesson> lessons = {});
 
-	// Stop the level's voices and player weapon/redraw loops.
+	// Stop the match's voices: the level's and the player weapon/redraw loops.
 	~Level();
 
 	Level(const Level&) = delete;
@@ -351,17 +355,34 @@ private:
 	// Screen-space dividers owned outside Scene and drawn by each pane's overlay.
 	std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers_;
 
-	labrador::SoundBank* sound_bank_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
+	// The arena loop resumes only from a pause, and at the gain the fade and
+	// the duck have reached, not where it was left.
+	class MusicVoice final : public MatchVoice
+	{
+	public:
+		MusicVoice() = default;
+		MusicVoice(const Level* level, const std::string& sound_bank_name,
+			const labrador::AudioResources* audio_resources,
+			const std::string& effect_name);
+		void resume() override;
+	private:
+		const Level* level_ = nullptr;
+	};
+
+	// Every voice below, then each player's, in the order the constructor
+	// registers them. Pause, resume and teardown go through this alone.
+	MatchVoices voices_;
+
 	// Resolve the level's music and fixed match sounds once at construction.
-	labrador::SoundBank::EffectHandle music_;
-	labrador::SoundBank::EffectHandle end_sting_;
-	labrador::SoundBank::EffectHandle zoom_out_sound_;
-	labrador::SoundBank::EffectHandle countdown_sound_;
-	labrador::SoundBank::EffectHandle go_sound_;
-	labrador::SoundBank::EffectHandle time_up_sound_;
-	labrador::SoundBank::EffectHandle last_ten_sound_;
+	MusicVoice music_;
+	MatchVoice end_sting_;
+	MatchVoice zoom_out_sound_;
+	MatchVoice countdown_sound_;
+	MatchVoice go_sound_;
+	MatchVoice time_up_sound_;
+	MatchVoice last_ten_sound_;
 	// The displayed positive second most recently sounded; zero means none yet.
 	float last_ten_second_ = 0.0f;
 	float music_volume_ = 0.0f;
@@ -501,16 +522,16 @@ private:
 	float opening_time_ = 0.0f;
 	// Room cues are owned voices so a paused or skipped opening cannot leave
 	// its person making a noise after the silhouette has stopped or gone.
-	labrador::SoundBank::EffectHandle sigh_sound_;
-	labrador::SoundBank::EffectHandle chair_sound_;
-	labrador::SoundBank::EffectHandle room_tone_sound_;
+	MatchVoice sigh_sound_;
+	MatchVoice chair_sound_;
+	MatchVoice room_tone_sound_;
 	bool room_tone_playing_ = false;
-	labrador::SoundBank::EffectHandle glass_in_sound_;
-	labrador::SoundBank::EffectHandle celebrate_sound_;
-	labrador::SoundBank::EffectHandle slump_sound_;
-	labrador::SoundBank::EffectHandle colour_in_sound_;
-	labrador::SoundBank::EffectHandle skip_sound_;
-	labrador::SoundBank::EffectHandle undo_sound_;
+	MatchVoice glass_in_sound_;
+	MatchVoice celebrate_sound_;
+	MatchVoice slump_sound_;
+	MatchVoice colour_in_sound_;
+	MatchVoice skip_sound_;
+	MatchVoice undo_sound_;
 	// The countdown plays in the picture and ends by pushing through the glass.
 	bool intro_countdown_ = false;
 	bool glass_in_started_ = false;
@@ -628,9 +649,9 @@ private:
 	float zoom_out_camera_ratio() const;
 
 	bool restart_lost_music();
+	// The arena loop's gain: the stage's volume through the fade and the duck.
+	float music_gain() const;
 	void stop_player_sounds();
-	void pause_player_sounds();
-	void resume_player_sounds();
 
 	int count_projectiles() const;
 

@@ -13,6 +13,8 @@
 #include "game/objects/movement_feedback.h"
 #include "game/objects/combat_feedback.h"
 #include "game/objects/movement_audio.h"
+#include "game/objects/match_voices.h"
+#include "game/carried/sound_bank_object.h"
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/figure_clothing.h"
 #include "game/objects/figure_attachments.h"
@@ -103,7 +105,8 @@ struct FigurePose
 
 class Player final : public colourwars::MovingObject,
                      public Collider,
-                     public colourwars::AnimationObject, public labrador::TextureObject
+                     public colourwars::AnimationObject, public labrador::TextureObject,
+                     public colourwars::SoundBankObject
 {
 public:
     // Borrowed tuning and presentation must outlive the player. The builder supplies the spawn
@@ -264,9 +267,9 @@ public:
     // Lifecycle reset, separate from the audio stops.
     void reset_tool_motion();
 
-    // Pause/resume the player's audio while a menu covers the match.
-    void pause_sounds();
-    void resume_sounds();
+    // Registers the tool's loop voice, then the redraw voice, so the match
+    // pauses, resumes and stops them with its own (game/objects/match_voices.h).
+    void add_voices(MatchVoices& voices);
 
 	std::string player_move_state_string() const;
 
@@ -439,18 +442,36 @@ private:
 
     mattmath::Vector2F respawn_position_ = mattmath::Vector2F::ZERO;
 
-    labrador::SoundBank* sound_bank_ = nullptr;
     const PlaySettings* preferences_ = nullptr;
+
+    // The pen heard while the figure is redrawn at its spawn. It keeps its
+    // own playing and paused state, so a pause touches it only while it
+    // sounds, and a resume stops it instead if the redraw has ended since.
+    class RedrawVoice final : public MatchVoice
+    {
+    public:
+        RedrawVoice() = default;
+        RedrawVoice(const Player* owner, const std::string& sound_bank_name,
+            const labrador::AudioResources* audio_resources,
+            const std::string& effect_name);
+        bool playing() const;
+        void start(float volume);
+        void pause() override;
+        void resume() override;
+        void stop() override;
+    private:
+        const Player* owner_ = nullptr;
+        bool playing_ = false;
+        bool paused_ = false;
+    };
 
     // Sound handles resolved once at construction.
     labrador::SoundBank::WaveHandle damage_sound_;
     labrador::SoundBank::WaveHandle death_sound_;
     labrador::SoundBank::WaveHandle jump_sound_;
     labrador::SoundBank::WaveHandle respawn_sound_;
-    labrador::SoundBank::EffectHandle redraw_sound_;
+    RedrawVoice redraw_voice_;
     size_t redraw_index_ = 0;
-    bool redraw_playing_ = false;
-    bool redraw_paused_ = false;
 
 
     float health_regen_timer_ = 0.0f;

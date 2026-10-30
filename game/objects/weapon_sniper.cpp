@@ -30,7 +30,7 @@ void WeaponSniper::handle_shoot_sound(bool shooting_this_update, bool /*holding_
 {
     if (shooting_this_update)
     {
-        this->sound_bank_->play_wave(this->shoot_sound_,
+        this->play_wave(this->shoot_sound_,
             this->details().shoot_sound_volume);
     }
 }

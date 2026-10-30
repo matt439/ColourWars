@@ -237,8 +237,8 @@ void check_painted_player_contacts(World& world)
 void check_painted_audio_budget(World& world)
 {
     const auto& sounds = world.tuning.player().movement_sounds;
-    SoundBank* bank = world.audio.sound_bank(world.tuning.player().sound_bank);
-    MovementAudio audio(&sounds, bank, 0);
+    const std::string& bank = world.tuning.player().sound_bank;
+    MovementAudio audio(&sounds, &world.audio, bank, 0);
     const auto contact = [&](float distance, float dt, bool wet)
     {
         audio.end_contacts(true, true, true, 0.0f, distance, 0.0f, 0.0f, dt, wet);
@@ -270,7 +270,7 @@ void check_painted_audio_budget(World& world)
     std::vector<MovementAudio> seats;
     for (int seat = 0; seat < 4; ++seat)
     {
-        seats.emplace_back(&sounds, bank, seat);
+        seats.emplace_back(&sounds, &world.audio, bank, seat);
         seats.back().end_contacts(true, true, true, 0, 0, 0, 0, weapon_step, true);
         seats.back().end_contacts(true, true, true, 0, sounds.stride_distance,
             0, 0, sounds.min_step_interval, true);

@@ -13,6 +13,8 @@
 #include "engine/render/texture_object.h"
 #include "game/objects/projectile_builder.h"
 #include "game/objects/weapon_feedback.h"
+#include "game/objects/match_voices.h"
+#include "game/carried/sound_bank_object.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 
@@ -42,7 +44,8 @@ struct ToolMotionState
 
 // A concrete weapon with a shared firing workflow and overridable behaviour.
 // Player owns it through this interface; tuning selects assets and balance.
-class Weapon : public labrador::TextureObject
+class Weapon : public labrador::TextureObject,
+	public colourwars::SoundBankObject
 {
 public:
 	// Borrowed tuning must outlive the weapon; type selects its tuning record.
@@ -135,9 +138,10 @@ public:
 	// Never throws: weapons with no looping fire sound stop nothing.
 	virtual void stop_sounds();
 
-	// Pause loops while gameplay updates are suspended, preserving playback position.
-	virtual void pause_sounds();
-	virtual void resume_sounds();
+	// Registers the looping fire voice, so the match pauses it with everything
+	// else while gameplay updates are suspended, preserving its playback
+	// position, and stops it at teardown.
+	void add_voices(MatchVoices& voices);
 
 	// Visual bounds cover every rotated pose and any detached release haze.
 	// Player::bounds unions this with the body for scene culling.
@@ -153,15 +157,15 @@ public:
 	void draw_nozzle_debug(labrador::DrawList& draw_list) const;
 
 protected:
-	labrador::SoundBank* sound_bank_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
 	// Borrowed, never null: the tuning table and this weapon's resolved record.
 	const GameTuning* tuning_ = nullptr;
 	const WeaponTuning* weapon_tuning_ = nullptr;
 
-	// Loop handle resolved at construction; invalid for one-shot weapons.
-	labrador::SoundBank::EffectHandle loop_sound_;
+	// Loop voice resolved at construction; one that never sounds for one-shot
+	// weapons.
+	MatchVoice loop_voice_;
 
 	// Every weapon definition names a fire wave; resolve it at construction
 	// so a missing name is reported as a content error.
@@ -259,9 +263,9 @@ private:
 	void select_motion_pose();
 	void draw_mist_tail(labrador::DrawList& draw_list) const;
 
-	static labrador::SoundBank::EffectHandle resolve_loop_sound(
-		const labrador::SoundBank& sound_bank,
-		const WeaponLoopSounds& loop_sounds, PlayerTeam team, int sound_index);
+	// The effect name for this player's loop voice; empty for none.
+	static std::string loop_sound_name(const WeaponLoopSounds& loop_sounds,
+		PlayerTeam team, int sound_index);
 
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;

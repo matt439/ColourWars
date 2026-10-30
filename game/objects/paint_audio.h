@@ -2,12 +2,13 @@
 
 #include "game/paint_owners.h"
 #include "game/tuning.h"
+#include "game/carried/sound_bank_object.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"
 
 // One match's paint feedback. All surfaces and projectile kinds share each
 // paint owner's limits; variants never consume the gameplay random stream.
-class PaintAudio
+class PaintAudio : public colourwars::SoundBankObject
 {
 public:
     PaintAudio(const PaintTuning* tuning, const labrador::AudioResources* audio);
@@ -26,7 +27,6 @@ private:
     };
 
     const PaintTuning* tuning_;
-    labrador::SoundBank* bank_;
     std::vector<labrador::SoundBank::WaveHandle> splashes_;
     std::array<labrador::SoundBank::WaveHandle,
         static_cast<size_t>(ProjectileType::count)> impacts_;

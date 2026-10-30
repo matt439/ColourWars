@@ -121,7 +121,6 @@ comparison and physical-pad check; values remain provisional.
 | `HYG#39` | OPEN | MED | M | Pass an explicit match random stream into the level build instead of seeding the global `rand()`. [Scope](docs/code-hygiene.md#an-explicit-match-random-stream-hyg39). |
 | `HYG#40` | OPEN | MED | XL | Compose `Level` from owned parts: grouped constructor inputs, extracted collaborators and a world-query interface for the bots. [Scope](docs/code-hygiene.md#level-composed-of-owned-parts-hyg40). |
 | `HYG#41` | OPEN | MED | M | Put `GameLevel`'s focus, pause and audio rules in one owned suspension object; pair its scopes with `init()`. [Scope](docs/code-hygiene.md#gamelevels-suspension-rules-in-one-object-hyg41). |
-| `HYG#50` | OPEN | LOW | L | One audio ownership idiom and one match-level owner for pause, resume and teardown. [Scope](docs/code-hygiene.md#one-audio-idiom-hyg50). |
 | `HYG#51` | OPEN | LOW | L | Last: give `game/` role folders, `game/debug` subsystem folders and the engine-free contracts an include check. [Scope](docs/code-hygiene.md#directories-by-role-hyg51). |
 | `CI#6` | OPEN | LOW | S | Move the Release ZIP inspection into a script CI calls, and set up MSVC once per job. [Scope](docs/code-hygiene.md#release-package-rules-runnable-locally-ci6). |
 

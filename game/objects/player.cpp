@@ -62,6 +62,7 @@ Player::Player(const RectangleF& rectangle,
     TextureObject(tuning->player().idle.sheet,
                   tuning->player().idle.uniform_texture,
                   render_resources, team_colour, rotation, origin, flip, layer_depth),
+    colourwars::SoundBankObject(tuning->player().sound_bank, audio_resources),
     tuning_(tuning),
     figure_(figure),
     clothing_(tuning->player().idle, render_resources, team_colour,
@@ -71,9 +72,8 @@ Player::Player(const RectangleF& rectangle,
     movement_feedback_(movement_feedback, render_resources),
     combat_feedback_(combat_feedback, render_resources),
     view_shake_(view_shake),
-    movement_audio_(&tuning->player().movement_sounds,
-        audio_resources->sound_bank(tuning->player().sound_bank),
-        sound_index >= 0 ? sound_index : player_num),
+    movement_audio_(&tuning->player().movement_sounds, audio_resources,
+        tuning->player().sound_bank, sound_index >= 0 ? sound_index : player_num),
     respawn_redraw_(respawn_redraw, render_resources),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
@@ -123,23 +123,21 @@ Player::Player(const RectangleF& rectangle,
     this->health_ = player.starting_health;
     this->respawn_timer_ = player.respawn_delay;
 
-    this->sound_bank_ = audio_resources->sound_bank(player.sound_bank);
-
     this->damage_sound_ =
-        this->sound_bank_->resolve_wave(player.damage_sound.name);
+        this->resolve_wave(player.damage_sound.name);
     this->death_sound_ =
-        this->sound_bank_->resolve_wave(player.death_sound.name);
+        this->resolve_wave(player.death_sound.name);
     this->jump_sound_ =
-        this->sound_bank_->resolve_wave(player.jump_sound.name);
+        this->resolve_wave(player.jump_sound.name);
     this->respawn_sound_ =
-        this->sound_bank_->resolve_wave(player.respawn_sound.name);
+        this->resolve_wave(player.respawn_sound.name);
     const int index = sound_index >= 0 ? sound_index : std::max(player_num, 0) % 4;
     if (index >= static_cast<int>(player.redraw_sounds.size()))
     {
         throw std::runtime_error("Player redraw sound requires a roster index from 0 to 3");
     }
     this->redraw_index_ = static_cast<size_t>(index);
-    this->redraw_sound_ = this->sound_bank_->resolve_effect(
+    this->redraw_voice_ = RedrawVoice(this, player.sound_bank, audio_resources,
         player.redraw_sounds[this->redraw_index_].name);
 }
 
@@ -971,7 +969,7 @@ void Player::on_projectile_contact(const Projectile& source,
 
     if (this->damage_sound_timer_ >= this->player_tuning().damage_sound_delay)
 	{
-		this->sound_bank_->play_wave(this->damage_sound_, this->player_tuning().damage_sound.volume);
+		this->play_wave(this->damage_sound_, this->player_tuning().damage_sound.volume);
 		this->damage_sound_timer_ = 0.0f;
 	}
 }
@@ -1028,7 +1026,7 @@ void Player::update(float dt)
         this->pending_rumble_.elimination = true;
         this->combat_feedback_.eliminate(this->rectangle_);
         if (this->preferences_->view_shake_enabled(this->player_num_)) { this->view_shake_.eliminate(); }
-        this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
+        this->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
     }
 
     else if (this->state_ == PlayerState::alive)
@@ -1398,7 +1396,7 @@ void Player::start_jump()
         -this->player_tuning().max_velocity.y));
     this->set_air_time(0.0f);
     this->set_move_state(PlayerMoveState::jumping);
-    this->sound_bank_->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume);
+    this->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume);
 }
 
 const MovementFeedback& Player::movement_feedback() const
@@ -1594,7 +1592,7 @@ void Player::respawn()
 	this->health_ = this->player_tuning().starting_health;
 	this->primary_->reset_ammo();
 	this->state_ = PlayerState::alive;
-    this->sound_bank_->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);
+    this->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);
 }
 void Player::stop_sounds()
 {
@@ -1611,30 +1609,59 @@ void Player::reset_tool_motion()
     this->primary_->reset_motion();
     this->quiet_character_.reset();
 }
-void Player::pause_sounds()
+void Player::add_voices(MatchVoices& voices)
 {
-    this->primary_->pause_sounds();
-    if (this->redraw_playing_ && !this->redraw_paused_)
+    this->primary_->add_voices(voices);
+    voices.add(this->redraw_voice_);
+}
+
+Player::RedrawVoice::RedrawVoice(const Player* owner,
+    const std::string& sound_bank_name, const AudioResources* audio_resources,
+    const std::string& effect_name) :
+    MatchVoice(sound_bank_name, audio_resources, effect_name),
+    owner_(owner)
+{
+}
+bool Player::RedrawVoice::playing() const
+{
+    return this->playing_;
+}
+void Player::RedrawVoice::start(float volume)
+{
+    this->play(true, volume);
+    this->playing_ = true;
+}
+void Player::RedrawVoice::pause()
+{
+    if (this->playing_ && !this->paused_)
     {
-        this->sound_bank_->pause_effect(this->redraw_sound_);
-        this->redraw_paused_ = true;
+        MatchVoice::pause();
+        this->paused_ = true;
     }
 }
-void Player::resume_sounds()
+void Player::RedrawVoice::resume()
 {
-    this->primary_->resume_sounds();
-    if (this->redraw_playing_)
+    if (this->playing_)
     {
-        if (!this->redrawing())
+        if (!this->owner_->redrawing())
         {
-            this->stop_redraw_sound();
+            this->stop();
             return;
         }
-        if (this->redraw_paused_)
+        if (this->paused_)
         {
-            this->sound_bank_->resume_effect(this->redraw_sound_);
-            this->redraw_paused_ = false;
+            MatchVoice::resume();
+            this->paused_ = false;
         }
+    }
+}
+void Player::RedrawVoice::stop()
+{
+    if (this->playing_)
+    {
+        MatchVoice::stop();
+        this->playing_ = false;
+        this->paused_ = false;
     }
 }
 
@@ -1662,25 +1689,19 @@ void Player::update_redraw_sound(float dt)
         this->stop_redraw_sound();
         return;
     }
-    if (!this->redraw_playing_)
+    if (!this->redraw_voice_.playing())
     {
-        this->sound_bank_->play_effect(this->redraw_sound_, true, this->redraw_volume());
-        this->redraw_playing_ = true;
+        this->redraw_voice_.start(this->redraw_volume());
     }
     else
     {
-        this->sound_bank_->set_effect_volume(this->redraw_sound_, this->redraw_volume());
+        this->redraw_voice_.set_volume(this->redraw_volume());
     }
 }
 
 void Player::stop_redraw_sound()
 {
-    if (this->redraw_playing_)
-    {
-        this->sound_bank_->stop_effect(this->redraw_sound_, true);
-        this->redraw_playing_ = false;
-        this->redraw_paused_ = false;
-    }
+    this->redraw_voice_.stop();
 }
 void Player::set_move_state(PlayerMoveState state)
 {

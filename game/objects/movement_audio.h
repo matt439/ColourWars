@@ -1,7 +1,11 @@
 #pragma once
 
 #include "game/tuning.h"
+#include "game/carried/sound_bank_object.h"
+#include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"
+#include <string>
+#include <vector>
 
 // The same completed-contact events drive sound and cosmetic contact flecks.
 // Muting a sound changes its gain, never whether the event happened.
@@ -13,11 +17,12 @@ struct MovementContactCues
 
 // One player's movement cues. Completed contacts drive this once per tick;
 // drawing and the number of views never advance its variation or rate limits.
-class MovementAudio
+class MovementAudio : public colourwars::SoundBankObject
 {
 public:
-    MovementAudio(const PlayerMovementSounds* tuning, labrador::SoundBank* bank,
-        int player_num);
+    MovementAudio(const PlayerMovementSounds* tuning,
+        const labrador::AudioResources* audio_resources,
+        const std::string& sound_bank_name, int player_num);
 
     MovementContactCues end_contacts(bool can_act, bool supported, bool grounded,
         float impact_speed, float distance, float previous_velocity, float input, float dt,
@@ -26,7 +31,6 @@ public:
 
 private:
     const PlayerMovementSounds* tuning_;
-    labrador::SoundBank* bank_;
     std::vector<labrador::SoundBank::WaveHandle> land_;
     std::vector<labrador::SoundBank::WaveHandle> step_;
     std::vector<labrador::SoundBank::WaveHandle> step_painted_;

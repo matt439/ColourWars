@@ -27,11 +27,11 @@ WeaponRoller::WeaponRoller(const GameTuning* tuning,
     const WeaponFeedbackSounds& feedback = this->weapon_tuning_->feedback_sounds;
     if (feedback.lift.has_value())
     {
-        this->lift_sound_ = this->sound_bank_->resolve_wave(feedback.lift->name);
+        this->lift_sound_ = this->resolve_wave(feedback.lift->name);
     }
     if (feedback.settle.has_value())
     {
-        this->settle_sound_ = this->sound_bank_->resolve_wave(feedback.settle->name);
+        this->settle_sound_ = this->resolve_wave(feedback.settle->name);
     }
 }
 

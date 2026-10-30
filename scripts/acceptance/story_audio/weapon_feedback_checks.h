@@ -23,9 +23,11 @@
 			for (int i = 0; i < 10; ++i) { update(true); }
 			require(world.wave_plays(start) == 1 && world.plays(loop) == 1,
 				"Held firing repeated the weapon start or loop entry");
-			weapon->pause_sounds();
+			MatchVoices voices;
+			weapon->add_voices(voices);
+			voices.pause();
 			require(world.state(loop) == SoundState::paused, "Weapon suspension did not pause the loop");
-			weapon->resume_sounds();
+			voices.resume();
 			update(true);
 			require(world.wave_plays(start) == 1 && world.plays(loop) == 1 &&
 				world.state(loop) == SoundState::playing, "Weapon resume retriggered a start cue");
@@ -375,8 +377,10 @@
 		{
 			require(world.state(loops[index]) == SoundState::playing && world.plays(loops[index]) == 1,
 				"One player's release stopped or restarted another player's loop");
-			weapons[index]->pause_sounds();
-			weapons[index]->resume_sounds();
+			MatchVoices voices;
+			weapons[index]->add_voices(voices);
+			voices.pause();
+			voices.resume();
 			weapons[index]->stop_sounds();
 		}
 		require(world.wave_plays(tuning.feedback_sounds.stop->name) == 1,

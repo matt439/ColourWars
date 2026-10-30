@@ -3,23 +3,25 @@
 
 using namespace labrador;
 
-MovementAudio::MovementAudio(const PlayerMovementSounds* tuning, SoundBank* bank,
+MovementAudio::MovementAudio(const PlayerMovementSounds* tuning,
+    const AudioResources* audio_resources, const std::string& sound_bank_name,
     int player_num) :
-    tuning_(tuning), bank_(bank)
+    colourwars::SoundBankObject(sound_bank_name, audio_resources),
+    tuning_(tuning)
 {
     for (const SoundTuning& sound : tuning->land)
     {
-        this->land_.push_back(bank->resolve_wave(sound.name));
+        this->land_.push_back(this->resolve_wave(sound.name));
     }
     for (const SoundTuning& sound : tuning->step)
     {
-        this->step_.push_back(bank->resolve_wave(sound.name));
+        this->step_.push_back(this->resolve_wave(sound.name));
     }
     for (const SoundTuning& sound : tuning->step_painted)
     {
-        this->step_painted_.push_back(bank->resolve_wave(sound.name));
+        this->step_painted_.push_back(this->resolve_wave(sound.name));
     }
-    this->skid_ = bank->resolve_wave(tuning->skid.name);
+    this->skid_ = this->resolve_wave(tuning->skid.name);
     this->land_index_ = static_cast<size_t>(std::max(player_num, 0)) % this->land_.size();
     this->step_index_ = static_cast<size_t>(std::max(player_num, 0)) % this->step_.size();
     this->painted_index_ = static_cast<size_t>(std::max(player_num, 0)) % this->step_painted_.size();
@@ -111,7 +113,7 @@ void MovementAudio::reset()
 void MovementAudio::play(SoundBank::WaveHandle wave, const SoundTuning& tuning,
     float strength)
 {
-    this->bank_->play_wave(wave, tuning.volume * strength);
+    this->play_wave(wave, tuning.volume * strength);
 }
 
 void MovementAudio::play_painted(float strength)
