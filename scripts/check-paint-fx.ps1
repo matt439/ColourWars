@@ -39,9 +39,9 @@ function Quote-Path {
 # one resolution/palette/role so reading it never enlarges the effects.
 function Write-ContactSheet {
     param([string] $CaptureDirectory)
-    Add-Type -AssemblyName System.Drawing
+    . (Join-Path $PSScriptRoot 'drawing-references.ps1')
     if (-not ('ColourWarsPaintFxPpm' -as [type])) {
-        Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
+        Add-Type -ReferencedAssemblies $DrawingReferences -TypeDefinition @"
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;

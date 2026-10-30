@@ -3,9 +3,9 @@
 # script's $output, $executable, $StartupSeconds, $window and $transcript at
 # call time.
 
-Add-Type -AssemblyName System.Drawing
+. (Join-Path $PSScriptRoot '..\drawing-references.ps1')
 if (-not ('ColourWars.ConsoleDriver4' -as [type])) {
-    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
+    Add-Type -ReferencedAssemblies $DrawingReferences -TypeDefinition @'
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
