@@ -70,11 +70,7 @@ void GameTuning::validate_resources(const RenderResources& render,
 				" must be nonlooping with a finite, positive lifetime.");
 		}
 	};
-	splash(ProjectileType::spray, "spray");
-	splash(ProjectileType::jet, "jet");
-	splash(ProjectileType::rolling, "rolling");
-	splash(ProjectileType::mist, "mist");
-	splash(ProjectileType::ball, "ball");
+	for_each_projectile(splash);
 	for (const SoundReference& sound : this->sound_references())
 	{
 		check.sound(sound);
@@ -140,11 +136,7 @@ void GameTuning::validate_resources(const RenderResources& render,
 		// Weapon's debug marker uses the weapon's own sheet as well.
 		check.frame(prefix + ".sheet (nozzle marker)", details.sheet_name, "nozzle");
 	};
-	weapon(WeaponType::sprayer, "sprayer");
-	weapon(WeaponType::sniper, "sniper");
-	weapon(WeaponType::roller, "roller");
-	weapon(WeaponType::mister, "mister");
-	weapon(WeaponType::bucket, "bucket");
+	for_each_tuned_weapon(weapon);
 
 	const auto projectile = [&](ProjectileType type, const char* key)
 	{
@@ -152,11 +144,7 @@ void GameTuning::validate_resources(const RenderResources& render,
 		check.animation(std::string("projectiles.") + key + ".animation",
 			details.sheet_name, details.animation_strip_name);
 	};
-	projectile(ProjectileType::spray, "spray");
-	projectile(ProjectileType::jet, "jet");
-	projectile(ProjectileType::rolling, "rolling");
-	projectile(ProjectileType::mist, "mist");
-	projectile(ProjectileType::ball, "ball");
+	for_each_projectile(projectile);
 }
 
 void GameTuning::validate_match_sounds(const RenderResources& render,
@@ -196,11 +184,7 @@ std::vector<SoundReference> GameTuning::sound_references() const
 			this->paint_.sound_bank,
 			this->paint_.impact_sounds[static_cast<size_t>(type)].name);
 	};
-	impact(ProjectileType::spray, "spray");
-	impact(ProjectileType::jet, "jet");
-	impact(ProjectileType::rolling, "rolling");
-	impact(ProjectileType::mist, "mist");
-	impact(ProjectileType::ball, "ball");
+	for_each_projectile(impact);
 
 	wave("player.sounds.damage.name", this->player_.sound_bank,
 		this->player_.damage_sound.name);
@@ -266,11 +250,7 @@ std::vector<SoundReference> GameTuning::sound_references() const
 			}
 		}
 	};
-	weapon(WeaponType::sprayer, "sprayer");
-	weapon(WeaponType::sniper, "sniper");
-	weapon(WeaponType::roller, "roller");
-	weapon(WeaponType::mister, "mister");
-	weapon(WeaponType::bucket, "bucket");
+	for_each_tuned_weapon(weapon);
 	return sounds;
 }
 

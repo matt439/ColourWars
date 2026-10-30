@@ -80,38 +80,24 @@ bool MatchPlanner::is_stage_word(const std::string& word) const
 
 std::vector<std::string> MatchPlanner::weapon_names()
 {
-	return { "sprayer", "sniper", "roller", "mister", "bucket", "random" };
+	return { WEAPON_NAMES.begin(), WEAPON_NAMES.end() };
 }
 
 bool MatchPlanner::weapon_from_name(const std::string& name, WeaponType& weapon)
 {
-	static const std::pair<const char*, WeaponType> names[] = {
-		{ "sprayer", WeaponType::sprayer }, { "sniper", WeaponType::sniper },
-		{ "roller", WeaponType::roller }, { "mister", WeaponType::mister },
-		{ "bucket", WeaponType::bucket }, { "random", WeaponType::random_primary },
-	};
-	for (const auto& entry : names)
+	const std::optional<WeaponType> named = ::weapon_from_name(name);
+	if (named)
 	{
-		if (name == entry.first)
-		{
-			weapon = entry.second;
-			return true;
-		}
+		weapon = *named;
 	}
-	return false;
+	return named.has_value();
 }
 
 const char* MatchPlanner::weapon_name(WeaponType weapon)
 {
-	switch (weapon)
-	{
-	case WeaponType::sprayer: return "sprayer";
-	case WeaponType::sniper: return "sniper";
-	case WeaponType::roller: return "roller";
-	case WeaponType::mister: return "mister";
-	case WeaponType::bucket: return "bucket";
-	default: return "other";
-	}
+	// As before the table: anything but a tuned weapon, Random included, is "other".
+	const char* const name = ::weapon_name(weapon);
+	return name != nullptr && weapon != WeaponType::random_primary ? name : "other";
 }
 
 std::vector<std::string> MatchPlanner::seat_fields()

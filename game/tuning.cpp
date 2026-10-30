@@ -20,16 +20,18 @@ namespace
 		const char* key)
 	{
 		const std::string name = parent.string(key);
+		if (const std::optional<ProjectileType> type = projectile_from_name(name))
+		{
+			return *type;
+		}
 
-		if (name == "spray") { return ProjectileType::spray; }
-		if (name == "jet") { return ProjectileType::jet; }
-		if (name == "rolling") { return ProjectileType::rolling; }
-		if (name == "mist") { return ProjectileType::mist; }
-		if (name == "ball") { return ProjectileType::ball; }
-
+		std::string expected;
+		for (const char* known : PROJECTILE_NAMES)
+		{
+			expected += std::string(expected.empty() ? "" : ", ") + known;
+		}
 		throw std::runtime_error(parent.where() + ": '" + name +
-			"' is not a projectile. Expected one of spray, jet, rolling, "
-			"mist, ball.");
+			"' is not a projectile. Expected one of " + expected + ".");
 	}
 
 	colourwars::RotationOrigin read_rotation_origin(const JsonValue& parent,
@@ -333,11 +335,7 @@ namespace
 		{
 			paint.splash_animations[static_cast<size_t>(type)] = animations.string(key);
 		};
-		splash_animation(ProjectileType::spray, "spray");
-		splash_animation(ProjectileType::jet, "jet");
-		splash_animation(ProjectileType::rolling, "rolling");
-		splash_animation(ProjectileType::mist, "mist");
-		splash_animation(ProjectileType::ball, "ball");
+		for_each_projectile(splash_animation);
 		paint.splash_animation = paint.splash_animations[static_cast<size_t>(ProjectileType::spray)];
 
 		const JsonValue visual = json.object("visual");
@@ -412,11 +410,7 @@ namespace
 		{
 			paint.impact_sounds[static_cast<size_t>(type)] = read_sound(impacts, key);
 		};
-		impact(ProjectileType::spray, "spray");
-		impact(ProjectileType::jet, "jet");
-		impact(ProjectileType::rolling, "rolling");
-		impact(ProjectileType::mist, "mist");
-		impact(ProjectileType::ball, "ball");
+		for_each_projectile(impact);
 		paint.min_impact_interval = read_positive(json, "min_impact_interval");
 		paint.min_capture_interval = read_positive(json, "min_capture_interval");
 		return paint;
@@ -789,11 +783,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 		this->weapon_tuned_[index] = true;
 	};
 
-	add_weapon(WeaponType::sprayer, "sprayer");
-	add_weapon(WeaponType::sniper, "sniper");
-	add_weapon(WeaponType::roller, "roller");
-	add_weapon(WeaponType::mister, "mister");
-	add_weapon(WeaponType::bucket, "bucket");
+	for_each_tuned_weapon(add_weapon);
 
 	const JsonValue projectiles = root.object("projectiles");
 	// A per-axis speed cap: a zero or negative one has no meaning.
@@ -809,11 +799,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 		this->projectile_tuned_[index] = true;
 	};
 
-	add_projectile(ProjectileType::spray, "spray");
-	add_projectile(ProjectileType::jet, "jet");
-	add_projectile(ProjectileType::rolling, "rolling");
-	add_projectile(ProjectileType::mist, "mist");
-	add_projectile(ProjectileType::ball, "ball");
+	for_each_projectile(add_projectile);
 }
 
 const MatchTuning& GameTuning::match() const

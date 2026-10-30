@@ -1,5 +1,10 @@
 #pragma once
 
+#include <array>
+#include <cstddef>
+#include <optional>
+#include <string_view>
+
 // Projectile kinds shared by weapon tuning and projectile construction.
 enum class ProjectileType
 {
@@ -12,6 +17,37 @@ enum class ProjectileType
 	// this sentinel.
 	count
 };
+
+// The one spelling of each kind in tuning.json (a weapon's projectile and the
+// paint splash animations), indexed by ProjectileType.
+inline constexpr std::array<const char*, static_cast<size_t>(ProjectileType::count)> PROJECTILE_NAMES{
+	"spray", "jet", "rolling", "mist", "ball"
+};
+
+constexpr const char* projectile_name(ProjectileType type)
+{
+	return PROJECTILE_NAMES[static_cast<size_t>(type)];
+}
+
+// The kind a name spells; empty for any other name.
+constexpr std::optional<ProjectileType> projectile_from_name(std::string_view name)
+{
+	for (size_t index = 0; index < PROJECTILE_NAMES.size(); ++index)
+	{
+		if (name == PROJECTILE_NAMES[index]) { return static_cast<ProjectileType>(index); }
+	}
+	return std::nullopt;
+}
+
+// Calls visit(type, name) for each kind in enum order.
+template <typename Visit>
+constexpr void for_each_projectile(Visit&& visit)
+{
+	for (size_t index = 0; index < PROJECTILE_NAMES.size(); ++index)
+	{
+		visit(static_cast<ProjectileType>(index), PROJECTILE_NAMES[index]);
+	}
+}
 
 // Whether Projectile::resolve_travel tests this kind's whole travel each tick
 // (Projectile::resolve_movement_contacts), so a thin wall cannot be stepped

@@ -299,9 +299,29 @@ executable and `check_doc_links.py` passes.
 
 ### One owner for weapon and projectile names (`HYG#36`)
 
-Give `WeaponType` (and `ProjectileType`) one constexpr name table with
-`to_string`/parse beside the enum, and make tuning, validation, presentation,
-`last_match_setup` and the Debug match plan use it.
+**Done 2026-10-30.** [weapon_type.h](../game/objects/weapon_type.h) now holds
+`WEAPON_NAMES`, the one spelling of each selectable weapon (`sprayer` to
+`bucket`, then `random` for `WeaponType::random_primary`), with
+`TUNED_WEAPON_COUNT`, `weapon_name`, `weapon_from_name` and
+`for_each_tuned_weapon(visit)`, which calls `visit(type, name)` in enum order;
+[projectile_type.h](../game/objects/projectile_type.h) holds `PROJECTILE_NAMES`,
+`projectile_name`, `projectile_from_name` and `for_each_projectile`. The
+hand-written lists are gone: tuning's projectile parser (its refusal now lists
+the table), splash animations, impact sounds, weapons and projectiles in
+[tuning.cpp](../game/tuning.cpp) and their four checks in
+`tuning_validation.cpp`; the tool-motion frame check in
+`content_validation.cpp`; the idle drip, muzzle size, tool motion and grip
+readers and the weapon-select choice keys and descriptions in the presentation
+readers (`presentation_read::weapon_choice_keys` is gone);
+`last_match_setup.cpp`'s two arrays, whose reader still falls back to the
+sprayer for an unknown name or `random`; the Debug `MatchPlanner`'s list, parser
+and printer, which still prints `other` for anything but a tuned weapon; and the
+balance runner's tool parser. Every visit keeps the order the calls were
+written in, which was enum order, so diagnostics are raised in the same order.
+The other probes keep their own literal names on purpose: they check the files'
+spellings independently, or only label a failure. Both presets build under
+`/W4 /WX`; the full default acceptance list passed in Release (74 cases) and in
+Debug without the four slow cases (71, `balance_runner` included).
 
 ### Menu page geometry in one place (`HYG#37`)
 
