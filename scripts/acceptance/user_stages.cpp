@@ -426,7 +426,7 @@ namespace
 		const std::filesystem::path& scratch)
 	{
 		// A non-ASCII folder name: paths cross the engine as UTF-8.
-		const std::filesystem::path folder = fresh(scratch / L"stÃ¤ges");
+		const std::filesystem::path folder = fresh(scratch / L"stäges");
 		const rapidjson::Document base = read_document(content / "levels" / "close_quarters.json");
 
 		write_level(base, folder / "my_arena.json", [](rapidjson::Document& d)
