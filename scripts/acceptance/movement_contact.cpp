@@ -5,6 +5,7 @@
 #include "game/objects/projectile_jet.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/weapon_builder.h"
+#include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"

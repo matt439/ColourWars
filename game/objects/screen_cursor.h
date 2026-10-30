@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/objects/crude_drawing.h"
-#include "game/presentation.h"
+#include "game/presentation_match.h"
 
 // The person's mouse pointer, an arrow drawn as crudely as everything else.
 // It is the person's only presence inside the picture.

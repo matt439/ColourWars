@@ -91,6 +91,12 @@ What holds at `272ecb75`:
   `HYG#33` the match step is `GameLevel`'s own `step_match`, called from its
   `update`; the director only says how many steps run and with which
   developer filter.
+- **Gameplay headers see only the in-match presentation.** `objects/` headers
+  include [presentation_match.h](../game/presentation_match.h), and `level.h`
+  and the builders forward-declare `Presentation`, so no `objects/` or `ai/`
+  header reaches the menu records. Ten `objects/` sources do, by including
+  `presentation.h` (or `presentation_menu_text.h`) themselves; since `HYG#38`
+  no presentation source includes a `states/` header.
 - **The editor sees only the contracts**: it includes eight of the nine
   contract headers (and `simulation.h` through `horizontal_motion_contract.h`),
   and `colourwars_level_document` compiles without the engine's include path.
@@ -102,8 +108,7 @@ Where it does not hold yet:
   `match_bot_driver.h`. A world-query interface for the bots is part of
   `HYG#40`.
 - The root is not a layer of its own: `game_data.h` includes `objects/` headers,
-  `action_bindings.h` includes `states/menu_input_action.h`, and ten
-  presentation sources include `states/ui_player_badge.h` (`HYG#38`).
+  and `action_bindings.h` includes `states/menu_input_action.h`.
 - Nothing enforces the contract headers' independence; an include check is
   part of `HYG#51`. The engine's `check_engine_includes` target only stops the
   engine reaching into `game/`.
@@ -254,7 +259,7 @@ Four JSON files are read at startup, before any asset:
 |---|---|
 | `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
 | `tuning.json` | every number a match is balanced on ([game/tuning.h](../game/tuning.h)) |
-| `presentation.json` | every font, colour, offset and box size the shell is laid out from ([game/presentation.h](../game/presentation.h), with the menu-page layout records in [presentation_menu.h](../game/presentation_menu.h) and the menu text in [presentation_menu_text.h](../game/presentation_menu_text.h)) |
+| `presentation.json` | every font, colour, offset and box size the shell is laid out from ([game/presentation.h](../game/presentation.h), with the in-match records in [presentation_match.h](../game/presentation_match.h), the menu-page layout records in [presentation_menu.h](../game/presentation_menu.h) and the menu text in [presentation_menu_text.h](../game/presentation_menu_text.h)) |
 | `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records, in versioned `SaveSection`s ([game/save_section.h](../game/save_section.h)) |
 
 Tuning and presentation are two files for two audiences (a balance pass and an

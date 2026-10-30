@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/play_settings.h"
-#include "game/presentation.h"
+#include "game/presentation_match.h"
 
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
@@ -49,6 +49,8 @@
 #include <string_view>
 
 class MatchBotDriver;
+class Presentation;
+struct MenuResultsText;
 struct MatchBotSupport;
 struct MatchBotRamp;
 
@@ -566,8 +568,9 @@ private:
 	labrador::SoundBank::WaveHandle close_sound_;
 	std::unique_ptr<RevealArt> reveal_art_;
 	// Capture the wrappers alongside RevealArt's percent font, so replacement
-	// presentation text never draws against the preceding font snapshot.
-	MenuResultsText reveal_text_;
+	// presentation text never draws against the preceding font snapshot. A copy
+	// held by pointer, so the menu text records stay out of this header.
+	std::unique_ptr<const MenuResultsText> reveal_text_;
 
 	RevealBeat reveal_beat() const;
 	float reveal_length() const;

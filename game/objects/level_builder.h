@@ -15,6 +15,8 @@
 #include "engine/render/viewport_manager.h"
 #include "engine/collision/partitioner.h"
 
+class Presentation;
+
 class LevelBuilder
 {
 public:

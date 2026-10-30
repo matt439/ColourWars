@@ -2,6 +2,7 @@
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/player_badge.h"
+#include "game/presentation.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"

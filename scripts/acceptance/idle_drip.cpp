@@ -3,6 +3,7 @@
 #include "game/objects/idle_drip.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/structure.h"
+#include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"

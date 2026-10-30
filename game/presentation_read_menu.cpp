@@ -1,28 +1,14 @@
 #include "game/pch.h"
 #include "game/presentation_read.h"
-#include "game/build_info.h"
 #include "game/content_value.h"
 
 #include "engine/assets/json.h"
-#include "engine/render/text_encoding.h"
-#include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
-#include "game/input_slots.h"
 #include "game/menu_geometry.h"
-#include "game/objects/player_badge.h"
-#include "game/resource_validation.h"
-#include "game/states/ui_player_badge.h"
-#include "game/text_wrap.h"
-#include "engine/render/sprite_geometry.h"
 
 #include <cmath>
-#include <initializer_list>
-#include <limits>
-#include <optional>
-#include <sstream>
 #include <stdexcept>
-#include <string_view>
-#include <utility>
+#include <string>
 
 // Readers for the menu-page sections of presentation.json: team palette,
 // menu style, main menu, controls settings, pause, end, results and prompt bar.

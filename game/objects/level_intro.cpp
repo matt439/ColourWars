@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/presentation.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -549,8 +550,8 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 	{
 		// The coverage, each half's number in its own colour.
 		const OpeningPresentation& look = this->presentation_->opening();
-		const std::wstring texts[2] = { this->end_info_.team_a_percentage_string(this->reveal_text_),
-			this->end_info_.team_b_percentage_string(this->reveal_text_) };
+		const std::wstring texts[2] = { this->end_info_.team_a_percentage_string(*this->reveal_text_),
+			this->end_info_.team_b_percentage_string(*this->reveal_text_) };
 		const Colour colours[2] = { colour_a, colour_b };
 		for (int side = 0; side < 2; ++side)
 		{

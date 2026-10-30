@@ -9,7 +9,6 @@
 #include "game/input_slots.h"
 #include "game/menu_geometry.h"
 #include "game/player_profiles.h"
-#include "game/states/ui_player_badge.h"
 #include "game/text_wrap.h"
 
 #include <algorithm>
@@ -366,7 +365,7 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 			const std::string key = label_key(slot);
 			const RectangleF team_label = shadow_bounds(team_position,
 				label_size(key + " at Team Select", words, this->presentation_.menu_.detail_font), this->presentation_.menu_.item_shadow_offset);
-			RectangleF team_card = RectangleF::union_of(team_label, UiPlayerBadge::before(team_label, this->presentation_.player_identity_));
+			RectangleF team_card = RectangleF::union_of(team_label, this->presentation_.player_identity_.ui_badge_before(team_label));
 			team_card = RectangleF::union_of(team_card, team_icons);
 			team_card.inflate(main.setup_focus_padding);
 			check_label_bounds(key + " at Team Select", team_card, team_inside);
@@ -380,7 +379,7 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 			// default (2,2) still contributes to bounds.
 			const RectangleF weapon_label = shadow_bounds(weapon_position,
 				label_size(key + " at Weapon Select", words, this->presentation_.menu_.detail_font), Vector2F(2.0f, 2.0f));
-			RectangleF weapon_row = RectangleF::union_of(weapon_label, UiPlayerBadge::before(weapon_label, this->presentation_.player_identity_));
+			RectangleF weapon_row = RectangleF::union_of(weapon_label, this->presentation_.player_identity_.ui_badge_before(weapon_label));
 			weapon_row = RectangleF::union_of(weapon_row, weapon_contents);
 			// The row's handicap sits under its label, in the label's column,
 			// in the smaller tool-name font so the row keeps its height.

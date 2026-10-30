@@ -48,7 +48,7 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: the
-[Architecture review](#architecture-review) rows (`HYG#38`-`HYG#51`) are `OPEN`,
+[Architecture review](#architecture-review) rows (`HYG#39`-`HYG#51`) are `OPEN`,
 in the order listed there; its owed reports `ENG#27`-`ENG#33` are drafted. Before them,
 the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
@@ -117,7 +117,6 @@ comparison and physical-pad check; values remain provisional.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#38` | OPEN | LOW | S | Trim the include block copied into eight presentation sources and keep menu records out of gameplay includes. [Scope](docs/code-hygiene.md#presentation-includes-and-the-content-layer-hyg38). |
 | `HYG#39` | OPEN | MED | M | Pass an explicit match random stream into the level build instead of seeding the global `rand()`. [Scope](docs/code-hygiene.md#an-explicit-match-random-stream-hyg39). |
 | `HYG#40` | OPEN | MED | XL | Compose `Level` from owned parts: grouped constructor inputs, extracted collaborators and a world-query interface for the bots. [Scope](docs/code-hygiene.md#level-composed-of-owned-parts-hyg40). |
 | `HYG#41` | OPEN | MED | M | Put `GameLevel`'s focus, pause and audio rules in one owned suspension object; pair its scopes with `init()`. [Scope](docs/code-hygiene.md#gamelevels-suspension-rules-in-one-object-hyg41). |

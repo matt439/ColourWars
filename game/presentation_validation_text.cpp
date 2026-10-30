@@ -1,34 +1,17 @@
 #include "game/pch.h"
 #include "game/presentation_validation.h"
-#include "game/build_info.h"
-#include "game/content_value.h"
-
-#include "engine/assets/json.h"
-#include "engine/render/text_encoding.h"
-#include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
 #include "game/menu_geometry.h"
-#include "game/player_profiles.h"
-#include "game/objects/player_badge.h"
-#include "game/resource_validation.h"
-#include "game/controls_text.h"
-#include "game/states/ui_player_badge.h"
-#include "game/text_wrap.h"
-#include "engine/render/sprite_geometry.h"
 
+#include <array>
 #include <cmath>
-#include <initializer_list>
-#include <limits>
 #include <optional>
-#include <sstream>
 #include <stdexcept>
-#include <string_view>
-#include <utility>
+#include <string>
 
 using namespace labrador;
 using namespace mattmath;
-using namespace content_value;
 using namespace presentation_read;
 using namespace presentation_validation;
 using menu_consts::DESIGN_RESOLUTION;

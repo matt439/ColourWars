@@ -472,6 +472,59 @@ Move the badge geometry the roster-label checks (setup and results) need
 beside `PlayerIdentityPresentation`, and stop `presentation.h` dragging the
 menu records into gameplay objects.
 
+**Done 2026-10-31.** The eight sources that carried the copied block
+(`presentation.cpp`, `presentation_menu_text.cpp`, both readers and the
+assets, catalog, metrics and text validators) now include only what they use:
+`build_info.h` is left only in `presentation_validation_menu.cpp`, which draws
+the build label, and `objects/player_badge.h` only in
+`presentation_menu_text.cpp`, which formats `PlayerBadge::label`. The metrics
+file includes its own `presentation_validation_metrics.h` rather than the
+validator. The badge rectangle is now
+`PlayerIdentityPresentation::ui_badge_before(label)`, the same arithmetic
+`UiPlayerBadge::before` had, and `before` forwards to it, so the pages and the
+probes that call it did not change. The setup and results checks call the
+record, and no `presentation*` source includes a `states/` header.
+
+The in-match records moved unchanged from `presentation.h` into
+[presentation_match.h](../game/presentation_match.h): HUD, identity, camera,
+feedback, figure, respawn, opening, debug overlay, music mix and the team
+palette. `presentation.h` includes it with the two menu headers and keeps the
+`Presentation` class. Twenty `game/objects` headers, `level.h` among them, and
+four sources include `presentation_match.h` instead. `level.h`, `level_builder.h` and
+`player_builder.h` forward-declare `Presentation`. `level_end_info.cpp`
+includes `presentation_menu_text.h` for the `MenuResultsText` it formats.
+`Level` keeps the reveal's results text as a copy, now held by
+`std::unique_ptr<const MenuResultsText>`, so the snapshot taken with the
+reveal font is unchanged and `level.h` needs only a forward declaration. The
+nine `Level`/builder sources that call `Presentation` getters include
+`presentation.h` directly.
+
+Of the 165 files in `game/objects` and `game/ai`, 70 reached
+`presentation_menu.h` and `presentation_menu_text.h` through their includes
+before this change and 10 reach a menu header now, none of them headers and
+none in `game/ai`: nine reach both through `presentation.h`, and
+`level_end_info.cpp` reaches only `presentation_menu_text.h`.
+`level.cpp`, `level_draw.cpp`, `level_opening.cpp`, `level_practice.cpp` and
+`level_end_info.cpp` use menu records themselves: the menu style's fonts, the
+pause menu, the bot roster label and the results text. `level_audio.cpp`,
+`level_builder.cpp`, `level_dev_tools.cpp`, `level_intro.cpp` and
+`player_builder.cpp` read only in-match records, but through the `Presentation`
+class, which holds the menu records by value. Handing `Level` and the builders
+the records they read is left to `HYG#40`, which regroups `Level`'s inputs.
+Thirteen acceptance probes that used `Presentation` through `level.h`
+(`aim_marker`, `blocked_shot`, `cursor_marker`, `idle_drip`,
+`movement_contact`, `paint`, `player_identity`, `practice_workshop`,
+`quiet_character`, `teammate_markers`, the balance runner, the skirmish
+observation checks and the paint-surface fixtures) now include it. Both
+presets build under `/W4 /WX`. Every default case compiles in both presets,
+along with the opt-in cases and both painter probes in Release. In Release,
+`menu_text`, `menu_presentation`, `player_identity`, `weapon_catalog`,
+`story_audio`, `team_palette`, `aim_marker`, `teammate_markers`,
+`results_awards`, `instant_replay`, `cursor_marker`, `low_paint`, `paint`,
+`blocked_shot`, `idle_drip`, `quiet_character`, `movement_contact`,
+`practice_workshop`, `team_selection`, `stage_selection` and
+`menu_navigation` passed. `HYG#38` is complete.
+
 ### An explicit match random stream (`HYG#39`)
 
 Replace the global `srand`/`rand` seeding of a round with a `MatchRandom` value

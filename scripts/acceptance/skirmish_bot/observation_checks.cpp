@@ -8,6 +8,7 @@
 #include "game/objects/level_builder.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/weapon.h"
+#include "game/presentation.h"
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"

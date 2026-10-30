@@ -5,7 +5,6 @@
 #include "game/presentation_validation.h"
 #include "game/drawable_text.h"
 #include "game/menu_geometry.h"
-#include "game/states/ui_player_badge.h"
 
 #include <array>
 #include <cmath>
@@ -110,7 +109,7 @@ void Presentation::Validation::validate_results_contributions(const StageGeometr
 					// Results explicitly uses zero shadow. Include each actual badge
 					// position: shorter lines can put its top above a taller line's.
 					const RectangleF text(position, pen.extent);
-					const RectangleF row = RectangleF::union_of(text, UiPlayerBadge::before(text, this->presentation_.player_identity_));
+					const RectangleF row = RectangleF::union_of(text, this->presentation_.player_identity_.ui_badge_before(text));
 					check_label_bounds(team_key, row, results_panel);
 					envelope = first ? row : RectangleF::union_of(envelope, row);
 					first = false;

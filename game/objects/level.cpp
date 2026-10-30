@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/presentation.h"
 #include "game/input_slots.h"
 #include "game/objects/structure.h"
 #include "game/objects/translating_structure_paintable.h"
@@ -188,7 +189,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
 		this->acting_ = std::make_unique<FigureActing>(&look, &presentation->respawn_redraw(),
 			render_resources);
-		this->reveal_text_ = presentation->menu_text().results;
+		this->reveal_text_ = std::make_unique<const MenuResultsText>(presentation->menu_text().results);
 		this->reveal_art_ = std::make_unique<RevealArt>(&look, render_resources);
 		this->hover_sound_ = this->resolve_wave(match.hover_sound.name);
 		this->click_sound_ = this->resolve_wave(match.click_sound.name);

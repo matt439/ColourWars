@@ -8,6 +8,7 @@
 #include "game/objects/structure.h"
 #include "game/objects/structure_paintable.h"
 #include "game/objects/weapon_builder.h"
+#include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
