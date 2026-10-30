@@ -209,6 +209,7 @@ add_library(colourwars_game STATIC
     states/player_label.cpp
     states/prompt_bar.cpp
     states/results_menu.cpp
+    states/settings_panel_page.cpp
     states/stage_preview.cpp
     states/wrapped_text_drop_shadow.cpp
 )

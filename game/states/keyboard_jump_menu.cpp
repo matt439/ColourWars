@@ -1,13 +1,12 @@
 #include "game/pch.h"
 #include "game/states/keyboard_jump_menu.h"
-#include "game/objects/crude_drawing.h"
 #include <algorithm>
 
 using namespace labrador;
 using namespace mattmath;
 
 KeyboardJumpMenu::KeyboardJumpMenu(MenuContext* context, int player) :
-	PauseMenuPage(context, player),
+	SettingsPanelPage(context, player),
 	capture_input_(context->data()->gamepads(), context->data()->keyboard(), context->data()->tuning())
 {
 }
@@ -17,52 +16,19 @@ KeyboardJumpMenu::~KeyboardJumpMenu()
 	if (this->capture_active_) { this->data()->debug().end_keyboard_capture(); }
 }
 
-void KeyboardJumpMenu::fit_text(UiText& widget, const RectangleF& available)
-{
-	widget.set_scale(1.0f);
-	const RectangleF bounds = widget.bounds();
-	if (bounds.width > 0.0f && bounds.height > 0.0f)
-	{
-		widget.set_scale(std::min({ 1.0f, available.width / bounds.width,
-			available.height / bounds.height }));
-	}
-}
-
 void KeyboardJumpMenu::init()
 {
 	this->input()->reset_actions();
 	this->selection_ = this->save()->input_bindings();
-	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
-	MenuStyle style = this->menu_style();
-	style.item_font = look.item_font;
-	this->set_widget_position(look.layout.position);
-	this->set_widget_spacing(look.layout.spacing);
+	const ControlsSettingsPresentation& look = this->panel_look();
+	const MenuStyle style = this->panel_style();
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, style.disabled });
 	this->status_ink_ = look.art.focus_ink;
 	this->warning_ink_ = this->presentation().main_menu().options_warning_colour;
 	this->set_prompts(MenuPrompt::select_back);
-	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
-		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), this->render_resources(),
-		CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
-	this->paper_ = std::make_unique<MenuPaperArtwork>(RectangleF(
-		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
-		look.box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
-	this->texture_container_ = std::make_unique<UiContainer>("textures");
-	this->texture_container_->add_child(this->background_.get());
-	this->texture_container_->add_child(this->paper_.get());
-	this->text_container_ = std::make_unique<UiContainer>("text");
-	const auto add_text = [&](const char* name, const std::wstring& value,
-		const std::string& font, const Vector2F& position)
-	{
-		this->text_.push_back(std::make_unique<UiText>(name, value, font, position,
-			this->render_resources(), look.art.ink));
-		UiText* widget = this->text_.back().get();
-		this->text_container_->add_child(widget);
-		return widget;
-	};
+	this->build_panel(style);
 	const auto& copy = this->text().keyboard_jump;
-	add_text("heading", copy.heading, style.heading_font, look.heading_position);
+	this->add_text("heading", copy.heading, style.heading_font, look.heading_position);
 	// One capture row per action, showing its pending control. Left/Right
 	// change nothing; activating the row starts that action's gesture.
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
@@ -85,7 +51,7 @@ void KeyboardJumpMenu::init()
 		Button::Action activate)
 	{
 		const Vector2F position = this->calculate_widget_position(0, row);
-		UiText* widget = add_text(name, label, style.item_font, position);
+		UiText* widget = this->add_text(name, label, style.item_font, position);
 		fit_text(*widget, RectangleF(position, Vector2F(
 			look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - position.x,
 			look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
@@ -98,11 +64,9 @@ void KeyboardJumpMenu::init()
 	action("back", this->text().item(MenuItem::back), last + 2, [this] { this->close(); });
 
 	this->help_limit_ = RectangleF(look.controls_position, look.controls_size);
-	this->status_limit_ = RectangleF(look.status_position, Vector2F(
-		this->paper_->rectangle().right() - look.art.shadow_offset - look.art.focus_padding.x - look.status_position.x,
-		style.footer_y - look.status_position.y));
-	this->help_ = add_text("help", L"", look.help_font, this->help_limit_.position());
-	this->status_ = add_text("status", L"", look.help_font, this->status_limit_.position());
+	this->status_limit_ = this->status_limit(style);
+	this->help_ = this->add_text("help", L"", look.help_font, this->help_limit_.position());
+	this->status_ = this->add_text("status", L"", look.help_font, this->status_limit_.position());
 	this->refresh_values();
 	this->set_status(copy.pending_status);
 }
@@ -175,9 +139,9 @@ bool KeyboardJumpMenu::capture_pad_back()
 			input.action = MenuInputAction::none;
 		}
 	}
-	if (this->pausing_player() >= 0)
+	if (this->opening_slot() >= 0)
 	{
-		return this->pausing_player_input(inputs).action == MenuInputAction::back;
+		return this->opening_slot_input(inputs).action == MenuInputAction::back;
 	}
 	return std::any_of(inputs.begin(), inputs.end(), [](const ProcessedMenuInput& input)
 	{
@@ -263,23 +227,15 @@ void KeyboardJumpMenu::reset_pending()
 	this->set_status(this->text().keyboard_jump.pending_status);
 }
 
-void KeyboardJumpMenu::close()
-{
-	this->play_wave(this->cancel_sound_);
-	this->input()->reset_actions();
-	this->context()->pop();
-}
-
-bool KeyboardJumpMenu::debug_dismiss(bool /*leaving_match*/)
+bool KeyboardJumpMenu::debug_dismiss(bool leaving_match)
 {
 	if (this->capture_active_) { return false; }
-	this->close();
-	return true;
+	return SettingsPanelPage::debug_dismiss(leaving_match);
 }
 
 void KeyboardJumpMenu::on_suspend()
 {
-	PauseMenuPage::on_suspend();
+	SettingsPanelPage::on_suspend();
 	this->input()->reset_actions();
 	this->capture_input_.reset_actions();
 	if (this->capture_active_)
@@ -291,14 +247,14 @@ void KeyboardJumpMenu::on_suspend()
 
 void KeyboardJumpMenu::on_resume()
 {
-	PauseMenuPage::on_resume();
+	SettingsPanelPage::on_resume();
 	this->input()->reset_actions();
 	this->refresh_values();
 }
 
 void KeyboardJumpMenu::on_deactivated()
 {
-	PauseMenuPage::on_deactivated();
+	SettingsPanelPage::on_deactivated();
 	this->input()->reset_actions();
 	this->capture_input_.reset_actions();
 	if (this->capture_active_)
@@ -314,7 +270,7 @@ void KeyboardJumpMenu::update_page(float /*dt*/)
 	if (this->capture_active_) { this->update_capture(); return; }
 	this->refresh_values();
 	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	if (this->pausing_player() >= 0) { inputs = { this->pausing_player_input(inputs) }; }
+	if (this->opening_slot() >= 0) { inputs = { this->opening_slot_input(inputs) }; }
 	for (const ProcessedMenuInput& input : inputs)
 	{
 		if (input.action == MenuInputAction::back) { this->close(); return; }
